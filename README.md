@@ -26,7 +26,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Phone Provisioning** - Auto-configuration for ZIP IP phones (33G, 37G)
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
-- **Web Interface** - Browser-based management (API endpoints)
+- **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
 - **Multi-codec Support** - G.711, G.729 and more
 
 ### Security & Compliance
@@ -73,6 +73,33 @@ The PBX will start on:
 - SIP Server: UDP port 5060
 - RTP Media: UDP ports 10000-20000
 - REST API: HTTP port 8080
+- Admin Panel: http://localhost:8080/admin/
+
+## 🖥️ Admin Panel
+
+Access the web-based admin panel at `http://localhost:8080/admin/` to manage your PBX system through a modern, intuitive interface.
+
+### Features:
+- **Dashboard** - Real-time system status and statistics
+- **Extension Management** - Add, edit, and delete extensions
+- **User Management** - Manage user accounts and passwords
+- **Email Configuration** - Configure SMTP settings for voicemail notifications
+- **Active Calls** - Monitor ongoing calls
+- **Responsive Design** - Works on desktop, tablet, and mobile devices
+
+### Screenshots:
+
+**Dashboard View:**
+![Admin Dashboard](https://github.com/user-attachments/assets/fb9d6f67-e87b-4179-9777-cb54f3a45731)
+
+**Extension Management:**
+![Extension Management](https://github.com/user-attachments/assets/43bd4d95-92ae-4f1a-a38c-209ecd960c28)
+
+**Add Extension Modal:**
+![Add Extension](https://github.com/user-attachments/assets/0794e891-4247-4de7-b552-92c4c5958302)
+
+**Configuration Settings:**
+![Configuration](https://github.com/user-attachments/assets/326b2987-a7e3-4aeb-b2b6-6e728478f9e1)
 
 ## 📖 Configuration
 
@@ -143,11 +170,29 @@ curl http://localhost:8080/api/status
 # List extensions
 curl http://localhost:8080/api/extensions
 
+# Add a new extension
+curl -X POST http://localhost:8080/api/extensions \
+  -H "Content-Type: application/json" \
+  -d '{"number":"1005","name":"New User","email":"user@company.com","password":"securepass123","allow_external":true}'
+
+# Update an extension
+curl -X PUT http://localhost:8080/api/extensions/1005 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Name","email":"newemail@company.com"}'
+
+# Delete an extension
+curl -X DELETE http://localhost:8080/api/extensions/1005
+
 # List active calls
 curl http://localhost:8080/api/calls
 
-# Get call statistics
-curl http://localhost:8080/api/statistics
+# Get configuration
+curl http://localhost:8080/api/config
+
+# Update email configuration
+curl -X PUT http://localhost:8080/api/config \
+  -H "Content-Type: application/json" \
+  -d '{"smtp":{"host":"smtp.gmail.com","port":587},"email":{"from_address":"pbx@company.com"}}'
 ```
 
 ## 📱 Extension Dialing

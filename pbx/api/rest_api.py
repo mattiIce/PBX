@@ -5,8 +5,14 @@ Provides HTTP API for managing PBX features
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import threading
+import os
+import mimetypes
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
+from pbx.utils.config import Config
+
+# Admin directory path
+ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
 
 
 class PBXAPIHandler(BaseHTTPRequestHandler):
@@ -48,6 +54,25 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             if path == '/api/provisioning/devices':
                 self._handle_register_device()
+            elif path == '/api/extensions':
+                self._handle_add_extension()
+            else:
+                self._send_json({'error': 'Not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def do_PUT(self):
+        """Handle PUT requests"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+        
+        try:
+            if path.startswith('/api/extensions/'):
+                # Extract extension number from path
+                number = path.split('/')[-1]
+                self._handle_update_extension(number)
+            elif path == '/api/config':
+                self._handle_update_config()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -63,6 +88,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract MAC address from path
                 mac = path.split('/')[-1]
                 self._handle_unregister_device(mac)
+            elif path.startswith('/api/extensions/'):
+                # Extract extension number from path
+                number = path.split('/')[-1]
+                self._handle_delete_extension(number)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -80,14 +109,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_extensions()
             elif path == '/api/calls':
                 self._handle_get_calls()
+            elif path == '/api/config':
+                self._handle_get_config()
             elif path == '/api/provisioning/devices':
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
                 self._handle_get_provisioning_vendors()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
-            elif path == '/':
-                self._handle_root()
+            elif path == '/' or path == '/admin' or path == '/admin/':
+                self._handle_admin_redirect()
+            elif path.startswith('/admin/'):
+                self._handle_static_file(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -129,7 +162,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Get extensions"""
         if self.pbx_core:
             extensions = self.pbx_core.extension_registry.get_all()
-            data = [{'number': e.number, 'name': e.name, 'registered': e.registered} 
+            data = [{'number': e.number, 'name': e.name, 'email': e.config.get('email'), 
+                    'registered': e.registered, 'allow_external': e.config.get('allow_external', True)} 
                    for e in extensions]
             self._send_json(data)
         else:
@@ -229,6 +263,198 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(config_content.encode())
             else:
                 self._send_json({'error': 'Device or template not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_admin_redirect(self):
+        """Redirect to admin panel"""
+        self.send_response(302)
+        self.send_header('Location', '/admin/index.html')
+        self.end_headers()
+    
+    def _handle_static_file(self, path):
+        """Serve static files from admin directory"""
+        try:
+            # Remove /admin prefix to get relative path
+            file_path = path.replace('/admin/', '', 1)
+            full_path = os.path.join(ADMIN_DIR, file_path)
+            
+            # Prevent directory traversal attacks - ensure path stays within admin directory
+            real_admin_dir = os.path.realpath(ADMIN_DIR)
+            real_full_path = os.path.realpath(full_path)
+            
+            if not real_full_path.startswith(real_admin_dir):
+                self._send_json({'error': 'Access denied'}, 403)
+                return
+            
+            if not os.path.exists(full_path) or not os.path.isfile(full_path):
+                self._send_json({'error': 'File not found'}, 404)
+                return
+            
+            # Determine content type
+            content_type, _ = mimetypes.guess_type(full_path)
+            if not content_type:
+                content_type = 'application/octet-stream'
+            
+            # Read and serve file
+            with open(full_path, 'rb') as f:
+                content = f.read()
+            
+            self._set_headers(content_type=content_type)
+            self.wfile.write(content)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_config(self):
+        """Get current configuration"""
+        if self.pbx_core:
+            config_data = {
+                'smtp': {
+                    'host': self.pbx_core.config.get('voicemail.smtp.host', ''),
+                    'port': self.pbx_core.config.get('voicemail.smtp.port', 587),
+                    'username': self.pbx_core.config.get('voicemail.smtp.username', '')
+                },
+                'email': {
+                    'from_address': self.pbx_core.config.get('voicemail.email.from_address', '')
+                },
+                'email_notifications': self.pbx_core.config.get('voicemail.email_notifications', False)
+            }
+            self._send_json(config_data)
+        else:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+    
+    def _handle_add_extension(self):
+        """Add a new extension"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        try:
+            body = self._get_body()
+            number = body.get('number')
+            name = body.get('name')
+            email = body.get('email')
+            password = body.get('password')
+            allow_external = body.get('allow_external', True)
+            
+            if not all([number, name, password]):
+                self._send_json({'error': 'Missing required fields'}, 400)
+                return
+            
+            # Validate extension number format (4 digits)
+            if not str(number).isdigit() or len(str(number)) != 4:
+                self._send_json({'error': 'Extension number must be 4 digits'}, 400)
+                return
+            
+            # Validate password strength (minimum 8 characters)
+            if len(password) < 8:
+                self._send_json({'error': 'Password must be at least 8 characters'}, 400)
+                return
+            
+            # Validate email format if provided
+            if email and not Config.validate_email(email):
+                self._send_json({'error': 'Invalid email format'}, 400)
+                return
+            
+            # Check if extension already exists
+            if self.pbx_core.extension_registry.get(number):
+                self._send_json({'error': 'Extension already exists'}, 400)
+                return
+            
+            # Add extension to configuration
+            success = self.pbx_core.config.add_extension(number, name, email, password, allow_external)
+            
+            if success:
+                # Reload extensions
+                self.pbx_core.extension_registry.reload()
+                self._send_json({'success': True, 'message': 'Extension added successfully'})
+            else:
+                self._send_json({'error': 'Failed to add extension'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_extension(self, number):
+        """Update an existing extension"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        try:
+            body = self._get_body()
+            name = body.get('name')
+            email = body.get('email')
+            password = body.get('password')  # Optional
+            allow_external = body.get('allow_external')
+            
+            # Check if extension exists
+            extension = self.pbx_core.extension_registry.get(number)
+            if not extension:
+                self._send_json({'error': 'Extension not found'}, 404)
+                return
+            
+            # Validate password strength if provided (minimum 8 characters)
+            if password and len(password) < 8:
+                self._send_json({'error': 'Password must be at least 8 characters'}, 400)
+                return
+            
+            # Validate email format if provided
+            if email and not Config.validate_email(email):
+                self._send_json({'error': 'Invalid email format'}, 400)
+                return
+            
+            # Update extension in configuration
+            success = self.pbx_core.config.update_extension(number, name, email, password, allow_external)
+            
+            if success:
+                # Reload extensions
+                self.pbx_core.extension_registry.reload()
+                self._send_json({'success': True, 'message': 'Extension updated successfully'})
+            else:
+                self._send_json({'error': 'Failed to update extension'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_extension(self, number):
+        """Delete an extension"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        try:
+            # Check if extension exists
+            extension = self.pbx_core.extension_registry.get(number)
+            if not extension:
+                self._send_json({'error': 'Extension not found'}, 404)
+                return
+            
+            # Delete extension from configuration
+            success = self.pbx_core.config.delete_extension(number)
+            
+            if success:
+                # Reload extensions
+                self.pbx_core.extension_registry.reload()
+                self._send_json({'success': True, 'message': 'Extension deleted successfully'})
+            else:
+                self._send_json({'error': 'Failed to delete extension'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_config(self):
+        """Update system configuration"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        try:
+            body = self._get_body()
+            
+            # Update configuration
+            success = self.pbx_core.config.update_email_config(body)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'Configuration updated successfully. Restart required.'})
+            else:
+                self._send_json({'error': 'Failed to update configuration'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     

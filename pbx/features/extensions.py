@@ -81,6 +81,12 @@ class ExtensionRegistry:
             
             self.logger.info(f"Loaded extension {number} ({name})")
     
+    def reload(self):
+        """Reload extensions from configuration"""
+        self.config.load()
+        self.extensions.clear()
+        self._load_extensions()
+    
     def get(self, number):
         """
         Get extension by number
