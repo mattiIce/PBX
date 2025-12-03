@@ -1,0 +1,27 @@
+# Core dependencies for PBX system
+PyYAML>=5.1
+
+# FIPS-compliant encryption (Required for FIPS mode)
+cryptography>=41.0.0
+
+# Optional dependencies for enhanced features:
+# For production SIP/RTP, consider:
+# - pjsua (PJSIP Python bindings)
+# - aiortc (WebRTC support)
+# - twisted (Async networking)
+
+# For enhanced audio processing:
+# - pydub (Audio manipulation)
+# - sounddevice (Audio I/O)
+
+# For database backend:
+# - sqlalchemy (ORM)
+# - psycopg2 (PostgreSQL)
+
+# For web interface:
+# - flask or fastapi (Web framework)
+# - websockets (Real-time updates)
+
+# For monitoring:
+# - prometheus-client (Metrics)
+# - redis (Caching/queues)

@@ -1,0 +1,153 @@
+# PBX Configuration File
+
+server:
+  # SIP server settings
+  sip_host: "0.0.0.0"
+  sip_port: 5060
+  
+  # RTP media settings
+  rtp_port_range_start: 10000
+  rtp_port_range_end: 20000
+  
+  # Server identification
+  server_name: "InHouse-PBX"
+  version: "1.0.0"
+
+# REST API settings
+api:
+  host: "0.0.0.0"
+  port: 8080
+  enable_cors: true
+
+# Extension definitions
+extensions:
+  - number: "1001"
+    name: "Office Extension 1"
+    password: "password1001"
+    allow_external: true
+  
+  - number: "1002"
+    name: "Office Extension 2"
+    password: "password1002"
+    allow_external: true
+    
+  - number: "1003"
+    name: "Conference Room"
+    password: "password1003"
+    allow_external: false
+    
+  - number: "1004"
+    name: "Customer Service"
+    password: "password1004"
+    allow_external: true
+
+# Dial plan - routing rules
+dialplan:
+  # Internal extensions: 1xxx
+  internal_pattern: "^1[0-9]{3}$"
+  
+  # Conference rooms: 2xxx
+  conference_pattern: "^2[0-9]{3}$"
+  
+  # Voicemail: *xxx
+  voicemail_pattern: "^\\*[0-9]{3}$"
+  
+  # Call parking: 7x
+  parking_pattern: "^7[0-9]$"
+  
+  # Queues: 8xxx
+  queue_pattern: "^8[0-9]{3}$"
+
+# Call features
+features:
+  call_recording: true
+  call_transfer: true
+  call_hold: true
+  conference: true
+  voicemail: true
+  call_parking: true
+  call_queues: true
+  presence: true
+  music_on_hold: true
+  max_call_duration: 7200  # 2 hours in seconds
+  
+# Call recording settings
+recording:
+  auto_record: false
+  storage_path: "recordings"
+  format: "wav"
+
+# Voicemail settings
+voicemail:
+  storage_path: "voicemail"
+  max_message_duration: 180  # 3 minutes
+  email_notifications: false
+
+# Conference settings
+conference:
+  max_participants: 50
+  record_conferences: false
+
+# Call queue settings
+queues:
+  - number: "8001"
+    name: "Sales Queue"
+    strategy: "round_robin"
+    max_wait_time: 300
+    
+  - number: "8002"
+    name: "Support Queue"
+    strategy: "least_recent"
+    max_wait_time: 180
+
+# Call parking settings
+parking:
+  range_start: 70
+  range_end: 79
+  timeout: 120  # 2 minutes
+  
+# Presence settings
+presence:
+  auto_away_timeout: 300  # 5 minutes
+  auto_offline_timeout: 1800  # 30 minutes
+
+# Music on hold
+music_on_hold:
+  directory: "moh"
+  default_class: "default"
+  
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/pbx.log"
+  console: true
+  
+# Security
+security:
+  require_authentication: true
+  max_failed_attempts: 5
+  ban_duration: 300  # 5 minutes in seconds
+  
+  # FIPS 140-2 compliance
+  fips_mode: true  # Enable FIPS-compliant encryption
+  
+  # TLS/SRTP settings
+  enable_tls: false  # Enable TLS for SIP (SIPS)
+  tls_cert_file: ""  # Path to TLS certificate
+  tls_key_file: ""   # Path to TLS private key
+  enable_srtp: false  # Enable SRTP for encrypted media
+  
+  # Password policy
+  min_password_length: 12
+  require_strong_passwords: true
+  
+# SIP Trunks (for external calls)
+trunks:
+  # Example trunk configuration (disabled by default)
+  # - id: "trunk1"
+  #   name: "Primary Provider"
+  #   host: "sip.provider.com"
+  #   username: "your_username"
+  #   password: "your_password"
+  #   port: 5060
+  #   enabled: true
