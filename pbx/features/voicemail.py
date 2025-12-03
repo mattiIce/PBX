@@ -6,6 +6,12 @@ from datetime import datetime
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
 
+try:
+    from pbx.features.email_notification import EmailNotifier
+    EMAIL_NOTIFIER_AVAILABLE = True
+except ImportError:
+    EMAIL_NOTIFIER_AVAILABLE = False
+
 
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
@@ -147,9 +153,8 @@ class VoicemailSystem:
         
         # Initialize email notifier if config provided
         self.email_notifier = None
-        if config:
+        if config and EMAIL_NOTIFIER_AVAILABLE:
             try:
-                from pbx.features.email_notification import EmailNotifier
                 self.email_notifier = EmailNotifier(config)
             except Exception as e:
                 self.logger.error(f"Failed to initialize email notifier: {e}")

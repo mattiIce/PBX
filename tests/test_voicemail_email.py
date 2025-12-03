@@ -23,7 +23,7 @@ def test_email_notifier_config():
     config = Config('config.yml')
     
     # Check SMTP settings
-    assert config.get('voicemail.email_notifications') == True
+    assert config.get('voicemail.email_notifications') is True
     assert config.get('voicemail.smtp.host') == "192.168.1.75"
     assert config.get('voicemail.smtp.port') == 587
     assert config.get('voicemail.smtp.use_tls') == True
@@ -47,7 +47,7 @@ def test_email_notifier_initialization():
     config = Config('config.yml')
     notifier = EmailNotifier(config)
     
-    assert notifier.enabled == True
+    assert notifier.enabled is True
     assert notifier.smtp_host == "192.168.1.75"
     assert notifier.smtp_port == 587
     assert notifier.use_tls == True
@@ -70,7 +70,7 @@ def test_voicemail_with_email():
         
         # Check that email notifier is initialized
         assert vm_system.email_notifier is not None
-        assert vm_system.email_notifier.enabled == True
+        assert vm_system.email_notifier.enabled is True
         
         # Save a test message (won't actually send email without SMTP server)
         test_audio = b'RIFF' + b'\x00' * 100

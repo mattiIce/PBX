@@ -365,7 +365,7 @@ class PBXCore:
             self.logger.info(f"RTP relay connected for call {call_id}")
         
         # Cancel no-answer timer if it's running
-        if call.no_answer_timer:
+        if call and call.no_answer_timer:
             call.no_answer_timer.cancel()
             self.logger.info(f"Cancelled no-answer timer for call {call_id}")
         

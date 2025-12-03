@@ -227,11 +227,11 @@ class EmailNotifier:
         """
         try:
             # Connect to SMTP server
+            server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=10)
+            
+            # Enable TLS if configured
             if self.use_tls:
-                server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=10)
                 server.starttls()
-            else:
-                server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=10)
             
             # Login if credentials provided
             if self.username and self.password:
@@ -277,7 +277,13 @@ class EmailNotifier:
         thread.start()
     
     def _send_all_reminders(self):
-        """Send reminders to all extensions with unread voicemails"""
-        # This will be called by the voicemail system
-        # Implementation will be completed when integrated with VoicemailSystem
-        pass
+        """
+        Send reminders to all extensions with unread voicemails
+        
+        Note: This method is a placeholder for integration with VoicemailSystem.
+        The actual reminder sending is triggered by VoicemailSystem.send_daily_reminders()
+        which iterates through mailboxes and calls send_reminder() for each extension.
+        """
+        # This is intentionally minimal - the VoicemailSystem class handles
+        # the iteration and calls send_reminder() for each extension with unread messages
+        self.logger.debug("Reminder time reached - VoicemailSystem will send reminders")

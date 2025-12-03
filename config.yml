@@ -93,6 +93,8 @@ voicemail:
   no_answer_timeout: 30  # Seconds before routing to voicemail
   
   # SMTP Configuration
+  # WARNING: For production use, consider using environment variables for sensitive credentials
+  # Example: password: "${SMTP_PASSWORD}" and set SMTP_PASSWORD env var
   smtp:
     host: "192.168.1.75"
     port: 587
