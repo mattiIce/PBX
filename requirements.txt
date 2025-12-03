@@ -1,0 +1,4 @@
+# Core dependencies for PBX system
+# SIP and RTP handling would typically use libraries like:
+# - For production: consider pjsip bindings or asterisk
+# This is a minimal implementation showing the architecture
