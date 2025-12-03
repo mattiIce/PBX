@@ -5,6 +5,10 @@ server:
   sip_host: "0.0.0.0"
   sip_port: 5060
   
+  # External IP address for SDP/RTP (used in SIP messages)
+  # Set this to your server's IP address that phones can reach
+  external_ip: "192.168.1.14"
+  
   # RTP media settings
   rtp_port_range_start: 10000
   rtp_port_range_end: 20000

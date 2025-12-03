@@ -228,11 +228,8 @@ class PBXCore:
             return False
         
         # Build SDP for forwarding INVITE to callee
-        # Use the server's IP address (get from config or detect)
-        server_ip = self.config.get('server.sip_host', '0.0.0.0')
-        if server_ip == '0.0.0.0':
-            # Try to get a more specific IP
-            server_ip = self._get_server_ip()
+        # Use the server's external IP address for SDP
+        server_ip = self._get_server_ip()
         
         if rtp_ports:
             # Create new INVITE with PBX's RTP endpoint in SDP
@@ -268,11 +265,17 @@ class PBXCore:
     
     def _get_server_ip(self):
         """
-        Get server's IP address
+        Get server's IP address for SDP
         
         Returns:
             Server IP address as string
         """
+        # First, try to get configured external IP
+        external_ip = self.config.get('server.external_ip')
+        if external_ip:
+            return external_ip
+        
+        # Fallback: try to detect local IP
         import socket
         try:
             # Create a socket to determine the local IP
@@ -282,7 +285,7 @@ class PBXCore:
             s.close()
             return ip
         except Exception:
-            return "192.168.1.14"  # Fallback to configured IP
+            return "127.0.0.1"  # Last resort fallback
     
     def handle_callee_answer(self, call_id, response_message, callee_addr):
         """
@@ -325,9 +328,7 @@ class PBXCore:
         call.connect()
         
         # Send 200 OK back to caller with PBX's RTP endpoint
-        server_ip = self.config.get('server.sip_host', '0.0.0.0')
-        if server_ip == '0.0.0.0':
-            server_ip = self._get_server_ip()
+        server_ip = self._get_server_ip()
         
         if call.rtp_ports and call.caller_addr:
             # Build SDP for caller (with PBX RTP endpoint)
