@@ -116,6 +116,10 @@ class SIPServer:
             self._handle_cancel(message, addr)
         elif method == 'OPTIONS':
             self._handle_options(message, addr)
+        elif method == 'SUBSCRIBE':
+            self._handle_subscribe(message, addr)
+        elif method == 'NOTIFY':
+            self._handle_notify(message, addr)
         else:
             self.logger.warning(f"Unhandled SIP method: {method}")
             self._send_response(405, "Method Not Allowed", message, addr)
@@ -183,8 +187,33 @@ class SIPServer:
         """Handle OPTIONS request"""
         self.logger.debug(f"OPTIONS request from {addr}")
         response = SIPMessageBuilder.build_response(200, "OK", message)
-        response.set_header('Allow', 'INVITE, ACK, BYE, CANCEL, OPTIONS, REGISTER')
+        response.set_header('Allow', 'INVITE, ACK, BYE, CANCEL, OPTIONS, REGISTER, SUBSCRIBE, NOTIFY')
         self._send_message(response.build(), addr)
+    
+    def _handle_subscribe(self, message, addr):
+        """Handle SUBSCRIBE request for presence/event notifications"""
+        self.logger.debug(f"SUBSCRIBE request from {addr}")
+        
+        # Get the event type being subscribed to
+        event = message.get_header('Event')
+        expires = message.get_header('Expires') or '3600'
+        
+        if event:
+            self.logger.info(f"SUBSCRIBE for event: {event}, expires: {expires}")
+        
+        # Accept the subscription (basic implementation)
+        # In full implementation, would track subscriptions and send NOTIFY updates
+        response = SIPMessageBuilder.build_response(200, "OK", message)
+        response.set_header('Expires', expires)
+        self._send_message(response.build(), addr)
+        
+        # Optionally send initial NOTIFY (would need full NOTIFY implementation)
+    
+    def _handle_notify(self, message, addr):
+        """Handle NOTIFY request"""
+        self.logger.debug(f"NOTIFY request from {addr}")
+        # Acknowledge the notification
+        self._send_response(200, "OK", message, addr)
     
     def _handle_response(self, message, addr):
         """Handle SIP response"""
