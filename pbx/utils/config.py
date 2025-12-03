@@ -3,10 +3,14 @@ Configuration management for PBX system
 """
 import yaml
 import os
+import re
 
 
 class Config:
     """Configuration manager for PBX"""
+    
+    # Email validation regex pattern
+    EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     
     def __init__(self, config_file="config.yml"):
         """
@@ -18,6 +22,21 @@ class Config:
         self.config_file = config_file
         self.config = {}
         self.load()
+    
+    @staticmethod
+    def validate_email(email):
+        """
+        Validate email format
+        
+        Args:
+            email: Email address to validate
+            
+        Returns:
+            True if valid, False otherwise
+        """
+        if not email:
+            return False
+        return bool(Config.EMAIL_PATTERN.match(email))
     
     def load(self):
         """Load configuration from YAML file"""
@@ -111,7 +130,7 @@ class Config:
                     return False
             
             # Validate email format if provided
-            if email and '@' not in email:
+            if email and not self.validate_email(email):
                 print(f"Error adding extension: Invalid email format")
                 return False
             
@@ -151,7 +170,7 @@ class Config:
                 return False
             
             # Validate email format if provided
-            if email is not None and email and '@' not in email:
+            if email is not None and email and not self.validate_email(email):
                 print(f"Error updating extension: Invalid email format")
                 return False
             

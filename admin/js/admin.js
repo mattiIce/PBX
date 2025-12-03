@@ -157,7 +157,7 @@ function editExtension(number) {
     document.getElementById('edit-ext-number').value = ext.number;
     document.getElementById('edit-ext-name').value = ext.name;
     document.getElementById('edit-ext-email').value = ext.email || '';
-    document.getElementById('edit-ext-allow-external').checked = ext.allow_external !== false;
+    document.getElementById('edit-ext-allow-external').checked = Boolean(ext.allow_external);
     document.getElementById('edit-ext-password').value = '';
     
     document.getElementById('edit-extension-modal').classList.add('active');
@@ -236,7 +236,8 @@ async function loadConfig() {
             }
         }
     } catch (error) {
-        console.log('Config endpoint not available, using defaults');
+        // Config endpoint not available, silently use defaults
+        // This is expected when the endpoint hasn't been implemented yet
     }
 }
 

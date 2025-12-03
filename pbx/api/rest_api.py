@@ -9,6 +9,10 @@ import os
 import mimetypes
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
+from pbx.utils.config import Config
+
+# Admin directory path
+ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
 
 
 class PBXAPIHandler(BaseHTTPRequestHandler):
@@ -273,11 +277,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             # Remove /admin prefix to get relative path
             file_path = path.replace('/admin/', '', 1)
-            admin_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
-            full_path = os.path.join(admin_dir, file_path)
+            full_path = os.path.join(ADMIN_DIR, file_path)
             
             # Prevent directory traversal attacks - ensure path stays within admin directory
-            real_admin_dir = os.path.realpath(admin_dir)
+            real_admin_dir = os.path.realpath(ADMIN_DIR)
             real_full_path = os.path.realpath(full_path)
             
             if not real_full_path.startswith(real_admin_dir):
@@ -349,7 +352,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             # Validate email format if provided
-            if email and '@' not in email:
+            if email and not Config.validate_email(email):
                 self._send_json({'error': 'Invalid email format'}, 400)
                 return
             
@@ -363,7 +366,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             if success:
                 # Reload extensions
-                self.pbx_core.extension_registry._load_extensions()
+                self.pbx_core.extension_registry.reload()
                 self._send_json({'success': True, 'message': 'Extension added successfully'})
             else:
                 self._send_json({'error': 'Failed to add extension'}, 500)
@@ -395,7 +398,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             # Validate email format if provided
-            if email and '@' not in email:
+            if email and not Config.validate_email(email):
                 self._send_json({'error': 'Invalid email format'}, 400)
                 return
             
@@ -404,7 +407,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             if success:
                 # Reload extensions
-                self.pbx_core.extension_registry._load_extensions()
+                self.pbx_core.extension_registry.reload()
                 self._send_json({'success': True, 'message': 'Extension updated successfully'})
             else:
                 self._send_json({'error': 'Failed to update extension'}, 500)
@@ -429,7 +432,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             if success:
                 # Reload extensions
-                self.pbx_core.extension_registry._load_extensions()
+                self.pbx_core.extension_registry.reload()
                 self._send_json({'success': True, 'message': 'Extension deleted successfully'})
             else:
                 self._send_json({'error': 'Failed to delete extension'}, 500)
