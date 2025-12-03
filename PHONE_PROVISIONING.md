@@ -162,22 +162,10 @@ Most IP phones will automatically request configuration on boot.
 
 Access the phone's web interface or menu system and set the provisioning URL manually.
 
-**ZIP:**
+**ZIP Phones (33G and 37G):**
 - Navigate to: Settings → Auto Provisioning
 - Server URL: `http://192.168.1.14:8080/provision/$mac.cfg`
-
-**ZIP:**
-- Navigate to: Settings → Provisioning Server
-- Server Type: HTTP
-- Server Address: `192.168.1.14:8080/provision/`
-
-**ZIP:**
-- Navigate to: Admin Login → Advanced → Provisioning
-- Profile Rule: `http://192.168.1.14:8080/provision/$MA.cfg`
-
-**ZIP:**
-- Navigate to: Maintenance → Upgrade and Provisioning
-- Config Server Path: `http://192.168.1.14:8080/provision/cfg$mac.cfg`
+- Or access via phone menu: Setup → Network → Provisioning
 
 ## Configuration Templates
 
@@ -384,10 +372,7 @@ Planned improvements for phone provisioning:
 
 ### Vendor Documentation
 
-- **ZIP**: [Auto Provisioning Guide](http://support.zip.com/)
-- **ZIP**: [Provisioning Guide](https://documents.zip.com/)
-- **ZIP**: [SPA Configuration Guide](https://www.cisco.com/c/en/us/support/collaboration-endpoints/spa500-series-ip-phones/products-installation-guides-list.html)
-- **ZIP**: [Provisioning Guide](http://www.grandstream.com/support)
+- **ZIP Phones**: Contact your ZIP phone vendor for specific provisioning documentation for models 33G and 37G
 
 ---
 

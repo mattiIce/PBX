@@ -374,9 +374,7 @@ security.user_password = admin
         config_content = template.generate_config(extension_config, server_config)
         
         # Determine content type based on vendor
-        content_type = 'text/plain'
-        if device.vendor == 'zip':
-            content_type = 'text/plain'
+        content_type = 'text/plain'  # ZIP phones use plain text configuration
         
         # Mark device as provisioned
         device.mark_provisioned()
