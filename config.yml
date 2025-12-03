@@ -159,8 +159,12 @@ provisioning:
     # Example device configuration:
     # - mac: "00:15:65:12:34:56"
     #   extension: "1001"
-    #   vendor: "yealink"
-    #   model: "t46s"
+    #   vendor: "zip"
+    #   model: "33g"
+    # - mac: "00:15:65:12:34:57"
+    #   extension: "1002"
+    #   vendor: "zip"
+    #   model: "37g"
 
 # SIP Trunks (for external calls)
 trunks:

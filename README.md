@@ -23,7 +23,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 ### Modern VOIP Features
 - **Presence System** - Real-time user availability status
 - **SIP Trunk Support** - Connect to external SIP providers
-- **Phone Provisioning** - Auto-configuration for IP phones (Yealink, Polycom, Cisco, Grandstream)
+- **Phone Provisioning** - Auto-configuration for ZIP IP phones (33G, 37G)
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
 - **Web Interface** - Browser-based management (API endpoints)

@@ -10,24 +10,9 @@ Phone provisioning enables zero-touch or simplified deployment of IP phones by a
 
 The system includes built-in templates for the following vendors and models:
 
-### Yealink
-- T46S
-- T48S
-- T42S
-
-### Polycom
-- VVX 450
-- VVX 350
-- VVX 250
-
-### Cisco
-- SPA504G
-- SPA525G
-
-### Grandstream
-- GXP2160
-- GXP2140
-- GXP1628
+### ZIP (Zipit)
+- 33G - Basic SIP phone
+- 37G - Advanced SIP phone with additional features
 
 ## Configuration
 
@@ -53,13 +38,18 @@ provisioning:
   devices:
     - mac: "00:15:65:12:34:56"
       extension: "1001"
-      vendor: "yealink"
-      model: "t46s"
+      vendor: "zip"
+      model: "33g"
     
     - mac: "00:04:f2:ab:cd:ef"
       extension: "1002"
-      vendor: "polycom"
-      model: "vvx450"
+      vendor: "zip"
+      model: "37g"
+    
+    - mac: "00:04:f2:ab:cd:ab"
+      extension: "1003"
+      vendor: "zip"
+      model: "37g"
 ```
 
 ## REST API Usage
@@ -76,8 +66,8 @@ Response:
   {
     "mac_address": "001565123456",
     "extension_number": "1001",
-    "vendor": "yealink",
-    "model": "t46s",
+    "vendor": "zip",
+    "model": "33g",
     "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg",
     "created_at": "2025-12-03T10:30:00",
     "last_provisioned": "2025-12-03T10:35:00"
@@ -94,12 +84,9 @@ curl http://localhost:8080/api/provisioning/vendors
 Response:
 ```json
 {
-  "vendors": ["cisco", "grandstream", "polycom", "yealink"],
+  "vendors": ["zip"],
   "models": {
-    "yealink": ["t42s", "t46s", "t48s"],
-    "polycom": ["vvx250", "vvx350", "vvx450"],
-    "cisco": ["spa504g", "spa525g"],
-    "grandstream": ["gxp1628", "gxp2140", "gxp2160"]
+    "zip": ["33g", "37g"]
   }
 }
 ```
@@ -112,8 +99,8 @@ curl -X POST http://localhost:8080/api/provisioning/devices \
   -d '{
     "mac_address": "00:15:65:12:34:56",
     "extension_number": "1001",
-    "vendor": "yealink",
-    "model": "t46s"
+    "vendor": "zip",
+    "model": "33g"
   }'
 ```
 
@@ -124,8 +111,8 @@ Response:
   "device": {
     "mac_address": "001565123456",
     "extension_number": "1001",
-    "vendor": "yealink",
-    "model": "t46s",
+    "vendor": "zip",
+    "model": "33g",
     "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg"
   }
 }
@@ -175,20 +162,20 @@ Most IP phones will automatically request configuration on boot.
 
 Access the phone's web interface or menu system and set the provisioning URL manually.
 
-**Yealink:**
+**ZIP:**
 - Navigate to: Settings → Auto Provisioning
 - Server URL: `http://192.168.1.14:8080/provision/$mac.cfg`
 
-**Polycom:**
+**ZIP:**
 - Navigate to: Settings → Provisioning Server
 - Server Type: HTTP
 - Server Address: `192.168.1.14:8080/provision/`
 
-**Cisco:**
+**ZIP:**
 - Navigate to: Admin Login → Advanced → Provisioning
 - Profile Rule: `http://192.168.1.14:8080/provision/$MA.cfg`
 
-**Grandstream:**
+**ZIP:**
 - Navigate to: Maintenance → Upgrade and Provisioning
 - Config Server Path: `http://192.168.1.14:8080/provision/cfg$mac.cfg`
 
@@ -223,7 +210,7 @@ You can create custom templates for additional phone models or vendors.
 
 **Example Custom Template:**
 
-Create `custom_templates/yealink_t57w.template`:
+Create `custom_templates/zip_t57w.template`:
 ```ini
 #!version:1.0.0.1
 
@@ -334,8 +321,8 @@ response = requests.post(
     json={
         'mac_address': '00:15:65:12:34:56',
         'extension_number': '1005',
-        'vendor': 'yealink',
-        'model': 't46s'
+        'vendor': 'zip',
+        'model': '33g'
     }
 )
 
@@ -356,9 +343,9 @@ PBX_SERVER="http://192.168.1.14:8080"
 
 # Array of devices: MAC,Extension,Vendor,Model
 DEVICES=(
-  "00:15:65:12:34:56,1001,yealink,t46s"
-  "00:15:65:12:34:57,1002,yealink,t46s"
-  "00:04:f2:ab:cd:ef,1003,polycom,vvx450"
+  "00:15:65:12:34:56,1001,zip,33g"
+  "00:15:65:12:34:57,1002,zip,33g"
+  "00:04:f2:ab:cd:ef,1003,zip,37g"
 )
 
 for device in "${DEVICES[@]}"; do
@@ -397,10 +384,10 @@ Planned improvements for phone provisioning:
 
 ### Vendor Documentation
 
-- **Yealink**: [Auto Provisioning Guide](http://support.yealink.com/)
-- **Polycom**: [Provisioning Guide](https://documents.polycom.com/)
-- **Cisco**: [SPA Configuration Guide](https://www.cisco.com/c/en/us/support/collaboration-endpoints/spa500-series-ip-phones/products-installation-guides-list.html)
-- **Grandstream**: [Provisioning Guide](http://www.grandstream.com/support)
+- **ZIP**: [Auto Provisioning Guide](http://support.zip.com/)
+- **ZIP**: [Provisioning Guide](https://documents.zip.com/)
+- **ZIP**: [SPA Configuration Guide](https://www.cisco.com/c/en/us/support/collaboration-endpoints/spa500-series-ip-phones/products-installation-guides-list.html)
+- **ZIP**: [Provisioning Guide](http://www.grandstream.com/support)
 
 ---
 

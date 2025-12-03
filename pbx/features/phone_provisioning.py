@@ -51,6 +51,21 @@ class PhoneTemplate:
         return config
 
 
+def normalize_mac_address(mac):
+    """
+    Normalize MAC address to consistent format
+    
+    Args:
+        mac: MAC address in various formats
+        
+    Returns:
+        Normalized MAC (lowercase, no separators)
+    """
+    # Remove common separators
+    normalized = mac.lower().replace(':', '').replace('-', '').replace('.', '')
+    return normalized
+
+
 class ProvisioningDevice:
     """Represents a provisioned phone device"""
     
@@ -65,27 +80,13 @@ class ProvisioningDevice:
             model: Phone model
             config_url: URL where config can be fetched
         """
-        self.mac_address = self._normalize_mac(mac_address)
+        self.mac_address = normalize_mac_address(mac_address)
         self.extension_number = extension_number
         self.vendor = vendor.lower()
         self.model = model.lower()
         self.config_url = config_url
         self.created_at = datetime.now()
         self.last_provisioned = None
-    
-    def _normalize_mac(self, mac):
-        """
-        Normalize MAC address to consistent format
-        
-        Args:
-            mac: MAC address in various formats
-            
-        Returns:
-            Normalized MAC (lowercase, no separators)
-        """
-        # Remove common separators
-        normalized = mac.lower().replace(':', '').replace('-', '').replace('.', '')
-        return normalized
     
     def mark_provisioned(self):
         """Mark device as provisioned"""
@@ -130,125 +131,81 @@ class PhoneProvisioning:
     def _load_builtin_templates(self):
         """Load built-in phone templates"""
         
-        # Yealink T4x series template
-        yealink_t4x_template = """#!version:1.0.0.1
+        # ZIP 33G template (basic SIP phone)
+        zip_33g_template = """# ZIP 33G Configuration File
 
-# Account configuration
+# SIP Account Configuration
 account.1.enable = 1
 account.1.label = {{EXTENSION_NAME}}
 account.1.display_name = {{EXTENSION_NAME}}
-account.1.auth_name = {{EXTENSION_NUMBER}}
 account.1.user_name = {{EXTENSION_NUMBER}}
+account.1.auth_name = {{EXTENSION_NUMBER}}
 account.1.password = {{EXTENSION_PASSWORD}}
-account.1.sip_server.1.address = {{SIP_SERVER}}
-account.1.sip_server.1.port = {{SIP_PORT}}
-account.1.sip_server.1.expires = 3600
+account.1.sip_server_host = {{SIP_SERVER}}
+account.1.sip_server_port = {{SIP_PORT}}
+account.1.reg_interval = 3600
 
-# Codec settings
-account.1.codec.1.enable = 1
-account.1.codec.1.payload_type = PCMU
-account.1.codec.2.enable = 1
-account.1.codec.2.payload_type = PCMA
-account.1.codec.3.enable = 0
+# Audio Codecs
+audio.codec.1 = PCMU
+audio.codec.2 = PCMA
+audio.codec.3 = G729
 
-# Local settings
-local_time.time_zone = -8
-local_time.time_zone_name = US-Pacific
-
-# Phone settings
-phone_setting.backlight_time = 60
-phone_setting.ring_type = Ring1.wav
-"""
-        self.add_template('yealink', 't46s', yealink_t4x_template)
-        self.add_template('yealink', 't48s', yealink_t4x_template)
-        self.add_template('yealink', 't42s', yealink_t4x_template)
-        
-        # Polycom VVX series template
-        polycom_vvx_template = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<PHONE_CONFIG>
-    <ALL>
-        <!-- Registration -->
-        <reg reg.1.displayName="{{EXTENSION_NAME}}" 
-             reg.1.address="{{EXTENSION_NUMBER}}" 
-             reg.1.auth.userId="{{EXTENSION_NUMBER}}"
-             reg.1.auth.password="{{EXTENSION_PASSWORD}}"
-             reg.1.server.1.address="{{SIP_SERVER}}"
-             reg.1.server.1.port="{{SIP_PORT}}"
-             reg.1.server.1.expires="3600"/>
-        
-        <!-- Codec Configuration -->
-        <voice voice.codecPref.G711_Mu="1"
-               voice.codecPref.G711_A="2"
-               voice.codecPref.G729_AB="0"/>
-        
-        <!-- Time Settings -->
-        <tcpIpApp tcpIpApp.sntp.gmtOffset="-28800"/>
-        
-        <!-- Call Settings -->
-        <call call.hold.localReminder.enabled="1"
-              call.callsPerLineKey="1"/>
-    </ALL>
-</PHONE_CONFIG>
-"""
-        self.add_template('polycom', 'vvx450', polycom_vvx_template)
-        self.add_template('polycom', 'vvx350', polycom_vvx_template)
-        self.add_template('polycom', 'vvx250', polycom_vvx_template)
-        
-        # Cisco SPA series template
-        cisco_spa_template = """<flat-profile>
-<Line_1_>
-  <Display_Name_1_ ua="na">{{EXTENSION_NAME}}</Display_Name_1_>
-  <User_ID_1_ ua="na">{{EXTENSION_NUMBER}}</User_ID_1_>
-  <Password_1_ ua="na">{{EXTENSION_PASSWORD}}</Password_1_>
-  <Authentication_ID_1_ ua="na">{{EXTENSION_NUMBER}}</Authentication_ID_1_>
-  <Proxy_1_ ua="na">{{SIP_SERVER}}</Proxy_1_>
-  <Register_1_ ua="na">Yes</Register_1_>
-  <Register_Expires_1_ ua="na">3600</Register_Expires_1_>
-</Line_1_>
-
-<Provisioning>
-  <Profile_Rule ua="na"></Profile_Rule>
-  <Resync_On_Reset ua="na">Yes</Resync_On_Reset>
-</Provisioning>
-
-<Regional>
-  <Time_Zone ua="na">GMT-08:00</Time_Zone>
-</Regional>
-
-<Attended_Transfer ua="na">Yes</Attended_Transfer>
-<Blind_Transfer ua="na">Yes</Blind_Transfer>
-</flat-profile>
-"""
-        self.add_template('cisco', 'spa504g', cisco_spa_template)
-        self.add_template('cisco', 'spa525g', cisco_spa_template)
-        
-        # Grandstream GXP series template
-        grandstream_gxp_template = """# Grandstream Configuration File
-
-# Account 1 Settings
-P270 = {{EXTENSION_NUMBER}}
-P271 = {{EXTENSION_NAME}}
-P2 = {{SIP_SERVER}}
-P4 = {{SIP_PORT}}
-P34 = {{EXTENSION_NUMBER}}
-P35 = {{EXTENSION_NUMBER}}
-P36 = {{EXTENSION_PASSWORD}}
-P401 = 1
-
-# Codec Settings
-P57 = 0  # PCMU
-P58 = 8  # PCMA
-P59 = 18 # G729
+# Network Settings
+network.dhcp = 1
 
 # Time Zone
-P64 = -8
+time.timezone = GMT-8
 
-# Auto Answer
-P298 = 0
+# Basic Phone Settings
+phone.volume.ring = 8
+phone.volume.handset = 6
 """
-        self.add_template('grandstream', 'gxp2160', grandstream_gxp_template)
-        self.add_template('grandstream', 'gxp2140', grandstream_gxp_template)
-        self.add_template('grandstream', 'gxp1628', grandstream_gxp_template)
+        self.add_template('zip', '33g', zip_33g_template)
+        
+        # ZIP 37G template (advanced SIP phone with more features)
+        zip_37g_template = """# ZIP 37G Configuration File
+
+# SIP Account Configuration
+account.1.enable = 1
+account.1.label = {{EXTENSION_NAME}}
+account.1.display_name = {{EXTENSION_NAME}}
+account.1.user_name = {{EXTENSION_NUMBER}}
+account.1.auth_name = {{EXTENSION_NUMBER}}
+account.1.password = {{EXTENSION_PASSWORD}}
+account.1.sip_server_host = {{SIP_SERVER}}
+account.1.sip_server_port = {{SIP_PORT}}
+account.1.reg_interval = 3600
+account.1.outbound_proxy = 
+account.1.transport = UDP
+
+# Audio Codecs
+audio.codec.1 = PCMU
+audio.codec.2 = PCMA
+audio.codec.3 = G729
+
+# Network Settings
+network.dhcp = 1
+network.vlan.enable = 0
+
+# Time Zone
+time.timezone = GMT-8
+time.ntp_server = pool.ntp.org
+
+# Phone Features
+phone.volume.ring = 8
+phone.volume.handset = 6
+phone.backlight.timeout = 60
+phone.screensaver.enable = 1
+
+# Call Features
+call.hold_music = 1
+call.call_waiting = 1
+call.transfer.enable = 1
+
+# Advanced Settings
+security.user_password = admin
+"""
+        self.add_template('zip', '37g', zip_37g_template)
         
         self.logger.info(f"Loaded {len(self.templates)} built-in phone templates")
     
@@ -341,8 +298,7 @@ P298 = 0
         Returns:
             bool: True if device was found and removed
         """
-        device = ProvisioningDevice(mac_address, '', '', '')  # Just to normalize MAC
-        normalized_mac = device.mac_address
+        normalized_mac = normalize_mac_address(mac_address)
         
         if normalized_mac in self.devices:
             del self.devices[normalized_mac]
@@ -360,8 +316,7 @@ P298 = 0
         Returns:
             ProvisioningDevice or None
         """
-        device = ProvisioningDevice(mac_address, '', '', '')  # Just to normalize MAC
-        normalized_mac = device.mac_address
+        normalized_mac = normalize_mac_address(mac_address)
         return self.devices.get(normalized_mac)
     
     def get_all_devices(self):
@@ -420,9 +375,7 @@ P298 = 0
         
         # Determine content type based on vendor
         content_type = 'text/plain'
-        if device.vendor == 'polycom':
-            content_type = 'application/xml'
-        elif device.vendor in ['yealink', 'cisco', 'grandstream']:
+        if device.vendor == 'zip':
             content_type = 'text/plain'
         
         # Mark device as provisioned

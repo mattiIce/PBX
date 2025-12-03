@@ -522,11 +522,9 @@
 ## Phone Provisioning
 
 ### Auto-Configuration
-- **Multiple Vendor Support**
-  - Yealink (T4x series)
-  - Polycom (VVX series)
-  - Cisco (SPA series)
-  - Grandstream (GXP series)
+- **ZIP Phone Support**
+  - ZIP 33G (Basic SIP phone)
+  - ZIP 37G (Advanced SIP phone)
 - **Template-Based Configuration**
   - Built-in templates for common models
   - Custom template support
@@ -561,10 +559,7 @@
   - Time zone settings
   - Phone-specific settings
 - **Config File Formats**
-  - Yealink: CFG format
-  - Polycom: XML format
-  - Cisco: XML flat-profile
-  - Grandstream: CFG format
+  - ZIP phones: CFG format (plain text)
 - **Deployment Options**
   - Zero-touch provisioning
   - DHCP option 66 support
