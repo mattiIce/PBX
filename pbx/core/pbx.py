@@ -3,6 +3,7 @@ Core PBX implementation
 Central coordinator for all PBX functionality
 """
 import re
+import struct
 import threading
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, PBXLogger
@@ -681,8 +682,6 @@ class PBXCore:
         Returns:
             bytes: Complete WAV file
         """
-        import struct
-        
         # WAV file format for G.711 μ-law
         sample_rate = 8000
         bits_per_sample = 8
@@ -690,20 +689,25 @@ class PBXCore:
         audio_format = 7  # μ-law
         
         # Calculate sizes
+        # RIFF header: 12 bytes (RIFF + size + WAVE)
+        # fmt chunk: 26 bytes (chunk header + fmt data + extension)
+        # data chunk header: 8 bytes (data + size)
+        # Total header size: 46 bytes
         data_size = len(audio_data)
-        file_size = 36 + data_size
+        # File size for RIFF header is total size minus 8 bytes (RIFF + size field itself)
+        file_size = 4 + 26 + 8 + data_size  # WAVE + fmt chunk + data chunk header + data
         
-        # Build WAV header
+        # Build WAV header (12 bytes)
         wav_header = struct.pack('<4sI4s',
             b'RIFF',
             file_size,
             b'WAVE'
         )
         
-        # Format chunk
+        # Format chunk (24 bytes + 2 bytes extension = 26 bytes)
         fmt_chunk = struct.pack('<4sIHHIIHH',
             b'fmt ',
-            18,  # Chunk size (18 for non-PCM)
+            18,  # Chunk size (18 for non-PCM formats like μ-law)
             audio_format,
             num_channels,
             sample_rate,
@@ -715,7 +719,7 @@ class PBXCore:
         # Add extension size (2 bytes, value 0 for G.711)
         fmt_extension = struct.pack('<H', 0)
         
-        # Data chunk
+        # Data chunk header (8 bytes)
         data_chunk = struct.pack('<4sI',
             b'data',
             data_size

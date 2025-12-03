@@ -363,8 +363,8 @@ class RTPRecorder:
         if self.socket:
             try:
                 self.socket.close()
-            except:
-                pass
+            except (OSError, socket.error) as e:
+                self.logger.debug(f"Error closing socket: {e}")
         self.logger.info(f"RTP recorder stopped on port {self.local_port}")
     
     def _record_loop(self):
@@ -414,8 +414,12 @@ class RTPRecorder:
         Estimate recording duration based on packets received
         Assumes 20ms per packet (typical for G.711)
         
+        Note: This is an approximation. For accurate duration calculation,
+        we would need to track RTP timestamps and account for packet timing
+        variations, lost packets, or different packetization intervals.
+        
         Returns:
-            int: Duration in seconds
+            int: Duration in seconds (estimated)
         """
         with self.lock:
             num_packets = len(self.recorded_data)
