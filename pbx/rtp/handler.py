@@ -183,7 +183,7 @@ class RTPRelay:
         rtp_port = self.port_pool.pop(0)
         rtcp_port = rtp_port + 1
         
-        handler = RTPHandler(rtp_port)
+        handler = RTPRelayHandler(rtp_port, call_id)
         if handler.start():
             self.active_relays[call_id] = {
                 'rtp_port': rtp_port,
@@ -195,6 +195,20 @@ class RTPRelay:
         else:
             self.port_pool.insert(0, rtp_port)
             return None
+    
+    def set_endpoints(self, call_id, endpoint_a, endpoint_b):
+        """
+        Set both endpoints for RTP relay
+        
+        Args:
+            call_id: Call identifier
+            endpoint_a: Tuple of (host, port) for first endpoint
+            endpoint_b: Tuple of (host, port) for second endpoint
+        """
+        if call_id in self.active_relays:
+            handler = self.active_relays[call_id]['handler']
+            handler.set_endpoints(endpoint_a, endpoint_b)
+            self.logger.info(f"RTP relay {call_id}: {endpoint_a} <-> {endpoint_b}")
     
     def release_relay(self, call_id):
         """
@@ -210,3 +224,90 @@ class RTPRelay:
             self.port_pool.sort()
             del self.active_relays[call_id]
             self.logger.info(f"Released RTP relay for call {call_id}")
+
+
+class RTPRelayHandler:
+    """
+    RTP relay handler that forwards packets between two endpoints
+    """
+    
+    def __init__(self, local_port, call_id):
+        """
+        Initialize RTP relay handler
+        
+        Args:
+            local_port: Local port to bind to
+            call_id: Call identifier for logging
+        """
+        self.local_port = local_port
+        self.call_id = call_id
+        self.logger = get_logger()
+        self.socket = None
+        self.running = False
+        self.endpoint_a = None  # (host, port)
+        self.endpoint_b = None  # (host, port)
+        self.lock = threading.Lock()
+    
+    def set_endpoints(self, endpoint_a, endpoint_b):
+        """
+        Set the two endpoints to relay between
+        
+        Args:
+            endpoint_a: Tuple of (host, port)
+            endpoint_b: Tuple of (host, port)
+        """
+        with self.lock:
+            self.endpoint_a = endpoint_a
+            self.endpoint_b = endpoint_b
+    
+    def start(self):
+        """Start RTP relay handler"""
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(('0.0.0.0', self.local_port))
+            self.running = True
+            
+            self.logger.info(f"RTP relay handler started on port {self.local_port} for call {self.call_id}")
+            
+            # Start receiving thread
+            receive_thread = threading.Thread(target=self._relay_loop)
+            receive_thread.daemon = True
+            receive_thread.start()
+            
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to start RTP relay handler: {e}")
+            return False
+    
+    def stop(self):
+        """Stop RTP relay handler"""
+        self.running = False
+        if self.socket:
+            self.socket.close()
+        self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
+    
+    def _relay_loop(self):
+        """Relay RTP packets between endpoints"""
+        while self.running:
+            try:
+                data, addr = self.socket.recvfrom(2048)
+                
+                # Determine which endpoint sent this packet and forward to the other
+                with self.lock:
+                    if self.endpoint_a and self.endpoint_b:
+                        # Check if packet is from endpoint A, send to B
+                        if addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]:
+                            self.socket.sendto(data, self.endpoint_b)
+                            self.logger.debug(f"Relayed {len(data)} bytes: A->B")
+                        # Check if packet is from endpoint B, send to A
+                        elif addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]:
+                            self.socket.sendto(data, self.endpoint_a)
+                            self.logger.debug(f"Relayed {len(data)} bytes: B->A")
+                        else:
+                            # First packet from unknown endpoint, might need to learn the address
+                            self.logger.debug(f"RTP packet from unknown source: {addr}")
+                    
+            except Exception as e:
+                if self.running:
+                    self.logger.error(f"Error in RTP relay loop: {e}")

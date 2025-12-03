@@ -153,7 +153,7 @@ class SIPServer:
             call_id = message.get_header('Call-ID')
             
             # Route call through PBX core
-            success = self.pbx_core.route_call(from_header, to_header, call_id, message)
+            success = self.pbx_core.route_call(from_header, to_header, call_id, message, addr)
             
             if success:
                 self._send_response(100, "Trying", message, addr)
@@ -166,6 +166,17 @@ class SIPServer:
     def _handle_ack(self, message, addr):
         """Handle ACK request"""
         self.logger.debug(f"ACK request from {addr}")
+        
+        # Forward ACK to complete the three-way handshake
+        if self.pbx_core:
+            call_id = message.get_header('Call-ID')
+            if call_id:
+                call = self.pbx_core.call_manager.get_call(call_id)
+                if call and call.callee_addr:
+                    # Forward ACK to callee
+                    self._send_message(message.build(), call.callee_addr)
+                    self.logger.debug(f"Forwarded ACK to callee for call {call_id}")
+        
         # ACK is not responded to
     
     def _handle_bye(self, message, addr):
@@ -218,6 +229,24 @@ class SIPServer:
     def _handle_response(self, message, addr):
         """Handle SIP response"""
         self.logger.debug(f"Received response {message.status_code} from {addr}")
+        
+        # Handle responses from callee
+        if self.pbx_core and message.status_code:
+            call_id = message.get_header('Call-ID')
+            
+            if message.status_code == 180:
+                # Ringing - forward to caller
+                self.logger.info(f"Callee ringing for call {call_id}")
+                if call_id:
+                    call = self.pbx_core.call_manager.get_call(call_id)
+                    if call and call.caller_addr:
+                        self._send_message(message.build(), call.caller_addr)
+            
+            elif message.status_code == 200:
+                # OK - callee answered
+                self.logger.info(f"Callee answered call {call_id}")
+                if call_id:
+                    self.pbx_core.handle_callee_answer(call_id, message, addr)
     
     def _send_response(self, status_code, status_text, request, addr):
         """

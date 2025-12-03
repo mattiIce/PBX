@@ -152,7 +152,7 @@ class PBXCore:
         self.logger.warning(f"Could not parse extension from {from_header}")
         return False
     
-    def route_call(self, from_header, to_header, call_id, message):
+    def route_call(self, from_header, to_header, call_id, message, from_addr):
         """
         Route call from one extension to another
         
@@ -161,10 +161,14 @@ class PBXCore:
             to_header: To SIP header
             call_id: Call ID
             message: SIP INVITE message
+            from_addr: Address tuple of caller
             
         Returns:
             True if call was routed successfully
         """
+        from pbx.sip.sdp import SDPSession, SDPBuilder
+        from pbx.sip.message import SIPMessageBuilder
+        
         # Parse extension numbers
         from_match = re.search(r'sip:(\d+)@', from_header)
         to_match = re.search(r'sip:(\d+)@', to_header)
@@ -186,23 +190,173 @@ class PBXCore:
             self.logger.warning(f"Extension {to_ext} not allowed by dialplan")
             return False
         
+        # Parse SDP from caller's INVITE
+        caller_sdp = None
+        if message.body:
+            caller_sdp_obj = SDPSession()
+            caller_sdp_obj.parse(message.body)
+            caller_sdp = caller_sdp_obj.get_audio_info()
+            
+            if caller_sdp:
+                self.logger.info(f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
+        
         # Create call
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
         call.start()
+        call.original_invite = message  # Store original INVITE for later response
         
         # Allocate RTP relay
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
         if rtp_ports:
             call.rtp_ports = rtp_ports
+            
+            # Store caller's RTP info for later relay setup
+            if caller_sdp:
+                call.caller_rtp = caller_sdp
+                call.caller_addr = from_addr
+                
+                # Get the RTP handler and set remote endpoint for caller side
+                relay_info = self.rtp_relay.active_relays.get(call_id)
+                if relay_info:
+                    handler = relay_info['handler']
+                    # For now, just log - full relay needs bidirectional forwarding
+                    self.logger.info(f"RTP relay allocated on port {rtp_ports[0]}")
         
-        self.logger.info(f"Routing call {call_id}: {from_ext} -> {to_ext}")
+        # Get destination extension's address
+        dest_ext_obj = self.extension_registry.get_extension(to_ext)
+        if not dest_ext_obj or not dest_ext_obj.address:
+            self.logger.error(f"Cannot get address for extension {to_ext}")
+            return False
         
-        # In a complete implementation:
-        # 1. Forward INVITE to destination
-        # 2. Handle ringing response
-        # 3. Connect RTP streams when both parties answer
+        # Build SDP for forwarding INVITE to callee
+        # Use the server's external IP address for SDP
+        server_ip = self._get_server_ip()
+        
+        if rtp_ports:
+            # Create new INVITE with PBX's RTP endpoint in SDP
+            callee_sdp_body = SDPBuilder.build_audio_sdp(
+                server_ip,
+                rtp_ports[0],
+                session_id=call_id
+            )
+            
+            # Forward INVITE to callee
+            invite_to_callee = SIPMessageBuilder.build_request(
+                method='INVITE',
+                uri=f"sip:{to_ext}@{server_ip}",
+                from_addr=from_header,
+                to_addr=to_header,
+                call_id=call_id,
+                cseq=int(message.get_header('CSeq').split()[0]),
+                body=callee_sdp_body
+            )
+            
+            # Add required headers
+            invite_to_callee.set_header('Via', message.get_header('Via'))
+            invite_to_callee.set_header('Contact', f"<sip:{from_ext}@{server_ip}:{self.config.get('server.sip_port', 5060)}>")
+            invite_to_callee.set_header('Content-Type', 'application/sdp')
+            
+            # Send to destination
+            self.sip_server._send_message(invite_to_callee.build(), dest_ext_obj.address)
+            
+            self.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
+            self.logger.info(f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}")
         
         return True
+    
+    def _get_server_ip(self):
+        """
+        Get server's IP address for SDP
+        
+        Returns:
+            Server IP address as string
+        """
+        # First, try to get configured external IP
+        external_ip = self.config.get('server.external_ip')
+        if external_ip:
+            return external_ip
+        
+        # Fallback: try to detect local IP
+        import socket
+        try:
+            # Create a socket to determine the local IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception:
+            return "127.0.0.1"  # Last resort fallback
+    
+    def handle_callee_answer(self, call_id, response_message, callee_addr):
+        """
+        Handle when callee answers the call
+        
+        Args:
+            call_id: Call identifier
+            response_message: 200 OK response from callee
+            callee_addr: Callee's address
+        """
+        from pbx.sip.sdp import SDPSession, SDPBuilder
+        from pbx.sip.message import SIPMessageBuilder
+        
+        call = self.call_manager.get_call(call_id)
+        if not call:
+            self.logger.error(f"Call {call_id} not found")
+            return
+        
+        # Parse callee's SDP from 200 OK
+        callee_sdp = None
+        if response_message.body:
+            callee_sdp_obj = SDPSession()
+            callee_sdp_obj.parse(response_message.body)
+            callee_sdp = callee_sdp_obj.get_audio_info()
+            
+            if callee_sdp:
+                self.logger.info(f"Callee RTP: {callee_sdp['address']}:{callee_sdp['port']}")
+                call.callee_rtp = callee_sdp
+                call.callee_addr = callee_addr
+        
+        # Now we have both endpoints, set up the RTP relay
+        if call.caller_rtp and call.callee_rtp and call.rtp_ports:
+            caller_endpoint = (call.caller_rtp['address'], call.caller_rtp['port'])
+            callee_endpoint = (call.callee_rtp['address'], call.callee_rtp['port'])
+            
+            self.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
+            self.logger.info(f"RTP relay connected for call {call_id}")
+        
+        # Mark call as connected
+        call.connect()
+        
+        # Send 200 OK back to caller with PBX's RTP endpoint
+        server_ip = self._get_server_ip()
+        
+        if call.rtp_ports and call.caller_addr:
+            # Build SDP for caller (with PBX RTP endpoint)
+            caller_response_sdp = SDPBuilder.build_audio_sdp(
+                server_ip,
+                call.rtp_ports[0],
+                session_id=call_id
+            )
+            
+            # Build 200 OK for caller using original INVITE
+            if call.original_invite:
+                ok_response = SIPMessageBuilder.build_response(
+                    200,
+                    "OK",
+                    call.original_invite,
+                    body=caller_response_sdp
+                )
+                ok_response.set_header('Content-Type', 'application/sdp')
+                
+                # Build Contact header
+                sip_port = self.config.get('server.sip_port', 5060)
+                contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+                ok_response.set_header('Contact', contact_uri)
+                
+                # Send to caller
+                self.sip_server._send_message(ok_response.build(), call.caller_addr)
+                self.logger.info(f"Sent 200 OK to caller for call {call_id}")
     
     def end_call(self, call_id):
         """
