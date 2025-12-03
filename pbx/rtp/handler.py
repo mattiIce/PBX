@@ -311,3 +311,118 @@ class RTPRelayHandler:
             except Exception as e:
                 if self.running:
                     self.logger.error(f"Error in RTP relay loop: {e}")
+
+
+class RTPRecorder:
+    """
+    RTP recorder for voicemail recording
+    Records incoming RTP audio stream
+    """
+    
+    def __init__(self, local_port, call_id):
+        """
+        Initialize RTP recorder
+        
+        Args:
+            local_port: Local port to bind to
+            call_id: Call identifier for logging
+        """
+        self.local_port = local_port
+        self.call_id = call_id
+        self.logger = get_logger()
+        self.socket = None
+        self.running = False
+        self.recorded_data = []
+        self.lock = threading.Lock()
+        self.remote_endpoint = None  # Will be learned from first packet
+        
+    def start(self):
+        """Start RTP recorder"""
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(('0.0.0.0', self.local_port))
+            self.socket.settimeout(0.5)  # 500ms timeout for recv
+            self.running = True
+            
+            self.logger.info(f"RTP recorder started on port {self.local_port} for call {self.call_id}")
+            
+            # Start recording thread
+            record_thread = threading.Thread(target=self._record_loop)
+            record_thread.daemon = True
+            record_thread.start()
+            
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to start RTP recorder: {e}")
+            return False
+    
+    def stop(self):
+        """Stop RTP recorder"""
+        self.running = False
+        if self.socket:
+            try:
+                self.socket.close()
+            except (OSError, socket.error) as e:
+                self.logger.debug(f"Error closing socket: {e}")
+        self.logger.info(f"RTP recorder stopped on port {self.local_port}")
+    
+    def _record_loop(self):
+        """Record RTP packets"""
+        while self.running:
+            try:
+                data, addr = self.socket.recvfrom(2048)
+                
+                # Learn remote endpoint from first packet
+                if not self.remote_endpoint:
+                    self.remote_endpoint = addr
+                    self.logger.info(f"Learned remote RTP endpoint: {addr}")
+                
+                # Extract audio payload from RTP packet
+                if len(data) >= 12:
+                    # Parse RTP header to get payload
+                    header = struct.unpack('!BBHII', data[:12])
+                    payload_type = header[1] & 0x7F
+                    payload = data[12:]
+                    
+                    # Store the audio payload
+                    with self.lock:
+                        self.recorded_data.append(payload)
+                    
+                    self.logger.debug(f"Recorded {len(payload)} bytes from call {self.call_id}")
+                    
+            except socket.timeout:
+                # Timeout is normal, just continue
+                continue
+            except Exception as e:
+                if self.running:
+                    self.logger.error(f"Error in RTP record loop: {e}")
+    
+    def get_recorded_audio(self):
+        """
+        Get all recorded audio data
+        
+        Returns:
+            bytes: Combined audio data
+        """
+        with self.lock:
+            # Combine all recorded payloads
+            return b''.join(self.recorded_data)
+    
+    def get_duration(self):
+        """
+        Estimate recording duration based on packets received
+        Assumes 20ms per packet (typical for G.711)
+        
+        Note: This is an approximation. For accurate duration calculation,
+        we would need to track RTP timestamps and account for packet timing
+        variations, lost packets, or different packetization intervals.
+        
+        Returns:
+            int: Duration in seconds (estimated)
+        """
+        with self.lock:
+            num_packets = len(self.recorded_data)
+            # Each packet typically represents 20ms of audio
+            duration_ms = num_packets * 20
+            return duration_ms // 1000
