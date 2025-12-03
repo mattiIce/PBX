@@ -276,6 +276,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             admin_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
             full_path = os.path.join(admin_dir, file_path)
             
+            # Prevent directory traversal attacks - ensure path stays within admin directory
+            real_admin_dir = os.path.realpath(admin_dir)
+            real_full_path = os.path.realpath(full_path)
+            
+            if not real_full_path.startswith(real_admin_dir):
+                self._send_json({'error': 'Access denied'}, 403)
+                return
+            
             if not os.path.exists(full_path) or not os.path.isfile(full_path):
                 self._send_json({'error': 'File not found'}, 404)
                 return
@@ -330,6 +338,21 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Missing required fields'}, 400)
                 return
             
+            # Validate extension number format (4 digits)
+            if not str(number).isdigit() or len(str(number)) != 4:
+                self._send_json({'error': 'Extension number must be 4 digits'}, 400)
+                return
+            
+            # Validate password strength (minimum 8 characters)
+            if len(password) < 8:
+                self._send_json({'error': 'Password must be at least 8 characters'}, 400)
+                return
+            
+            # Validate email format if provided
+            if email and '@' not in email:
+                self._send_json({'error': 'Invalid email format'}, 400)
+                return
+            
             # Check if extension already exists
             if self.pbx_core.extension_registry.get(number):
                 self._send_json({'error': 'Extension already exists'}, 400)
@@ -364,6 +387,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             extension = self.pbx_core.extension_registry.get(number)
             if not extension:
                 self._send_json({'error': 'Extension not found'}, 404)
+                return
+            
+            # Validate password strength if provided (minimum 8 characters)
+            if password and len(password) < 8:
+                self._send_json({'error': 'Password must be at least 8 characters'}, 400)
+                return
+            
+            # Validate email format if provided
+            if email and '@' not in email:
+                self._send_json({'error': 'Invalid email format'}, 400)
                 return
             
             # Update extension in configuration

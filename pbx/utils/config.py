@@ -77,6 +77,12 @@ class Config:
             with open(self.config_file, 'w') as f:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             return True
+        except PermissionError as e:
+            print(f"Error saving config: Permission denied - {e}")
+            return False
+        except OSError as e:
+            print(f"Error saving config: Disk error - {e}")
+            return False
         except Exception as e:
             print(f"Error saving config: {e}")
             return False
@@ -103,6 +109,11 @@ class Config:
             for ext in self.config['extensions']:
                 if ext.get('number') == str(number):
                     return False
+            
+            # Validate email format if provided
+            if email and '@' not in email:
+                print(f"Error adding extension: Invalid email format")
+                return False
             
             # Add new extension
             new_ext = {
@@ -137,6 +148,11 @@ class Config:
         """
         try:
             if 'extensions' not in self.config:
+                return False
+            
+            # Validate email format if provided
+            if email is not None and email and '@' not in email:
+                print(f"Error updating extension: Invalid email format")
                 return False
             
             # Find and update extension
