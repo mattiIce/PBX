@@ -18,6 +18,7 @@ from pbx.features.call_parking import CallParkingSystem
 from pbx.features.cdr import CDRSystem
 from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.sip_trunk import SIPTrunkSystem
+from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.api.rest_api import PBXAPIServer
 
 
@@ -71,6 +72,13 @@ class PBXCore:
         self.moh_system = MusicOnHold()
         self.trunk_system = SIPTrunkSystem()
         
+        # Initialize phone provisioning if enabled
+        if self.config.get('provisioning.enabled', False):
+            self.phone_provisioning = PhoneProvisioning(self.config)
+            self._load_provisioning_devices()
+        else:
+            self.phone_provisioning = None
+        
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)
@@ -79,6 +87,25 @@ class PBXCore:
         self.running = False
         
         self.logger.info("PBX Core initialized with all features")
+    
+    def _load_provisioning_devices(self):
+        """Load provisioning devices from configuration"""
+        if not self.phone_provisioning:
+            return
+        
+        devices_config = self.config.get('provisioning.devices', [])
+        for device_config in devices_config:
+            mac = device_config.get('mac')
+            extension = device_config.get('extension')
+            vendor = device_config.get('vendor')
+            model = device_config.get('model')
+            
+            if all([mac, extension, vendor, model]):
+                try:
+                    self.phone_provisioning.register_device(mac, extension, vendor, model)
+                    self.logger.info(f"Loaded provisioning device {mac} for extension {extension}")
+                except Exception as e:
+                    self.logger.error(f"Failed to load provisioning device {mac}: {e}")
     
     def start(self):
         """Start PBX system"""
@@ -223,7 +250,7 @@ class PBXCore:
                     self.logger.info(f"RTP relay allocated on port {rtp_ports[0]}")
         
         # Get destination extension's address
-        dest_ext_obj = self.extension_registry.get_extension(to_ext)
+        dest_ext_obj = self.extension_registry.get(to_ext)
         if not dest_ext_obj or not dest_ext_obj.address:
             self.logger.error(f"Cannot get address for extension {to_ext}")
             return False

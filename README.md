@@ -23,6 +23,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 ### Modern VOIP Features
 - **Presence System** - Real-time user availability status
 - **SIP Trunk Support** - Connect to external SIP providers
+- **Phone Provisioning** - Auto-configuration for IP phones (Yealink, Polycom, Cisco, Grandstream)
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
 - **Web Interface** - Browser-based management (API endpoints)
@@ -226,6 +227,7 @@ For issues and questions, please open a GitHub issue.
 
 - [x] **FIPS 140-2 compliant encryption** - ✅ COMPLETED
 - [x] **TLS/SRTP encryption** - ✅ COMPLETED
+- [x] **Phone Provisioning** - ✅ COMPLETED
 - [ ] WebRTC support for browser-based calls
 - [ ] IVR (Interactive Voice Response) system
 - [ ] SMS/Messaging integration

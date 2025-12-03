@@ -519,6 +519,58 @@
   - Test extensions
   - Mock clients
 
+## Phone Provisioning
+
+### Auto-Configuration
+- **Multiple Vendor Support**
+  - Yealink (T4x series)
+  - Polycom (VVX series)
+  - Cisco (SPA series)
+  - Grandstream (GXP series)
+- **Template-Based Configuration**
+  - Built-in templates for common models
+  - Custom template support
+  - Variable substitution
+- **HTTP Provisioning Server**
+  - Serve config files via HTTP
+  - MAC-based configuration URLs
+  - TFTP alternative (HTTP-based)
+
+### Device Management
+- **Device Registration**
+  - Register devices by MAC address
+  - Associate with extensions
+  - Specify vendor and model
+- **Configuration Generation**
+  - Automatic config file generation
+  - Extension credentials
+  - Server settings
+  - Codec preferences
+- **API Management**
+  - REST API for device management
+  - List provisioned devices
+  - Register/unregister devices
+  - Query supported vendors/models
+
+### Provisioning Features
+- **Supported Configuration**
+  - Extension number and name
+  - SIP server address and port
+  - Authentication credentials
+  - Codec preferences
+  - Time zone settings
+  - Phone-specific settings
+- **Config File Formats**
+  - Yealink: CFG format
+  - Polycom: XML format
+  - Cisco: XML flat-profile
+  - Grandstream: CFG format
+- **Deployment Options**
+  - Zero-touch provisioning
+  - DHCP option 66 support
+  - Manual URL configuration
+  - Custom templates directory
+
 ## Future Enhancements
 
 ### Planned Features
@@ -527,7 +579,6 @@
 - **SMS Integration** - Text messaging
 - **Mobile Apps** - iOS/Android clients
 - **Video Conferencing** - Video calls
-- **Encryption** - TLS/SRTP support
 - **Database Backend** - Scalable storage
 - **Clustering** - Multi-server setup
 - **Advanced Analytics** - Business intelligence
