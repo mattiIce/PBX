@@ -412,6 +412,38 @@ class PBXCore:
         call = self.call_manager.get_call(call_id)
         if call:
             self.logger.info(f"Ending call {call_id}")
+            
+            # If this is a voicemail recording, complete it first
+            if call.routed_to_voicemail and hasattr(call, 'voicemail_recorder'):
+                # Cancel the timer if it exists
+                if hasattr(call, 'voicemail_timer') and call.voicemail_timer:
+                    call.voicemail_timer.cancel()
+                
+                # Get the recorder
+                recorder = call.voicemail_recorder
+                if recorder and recorder.running:
+                    # Stop recording
+                    recorder.stop()
+                    
+                    # Get recorded audio
+                    audio_data = recorder.get_recorded_audio()
+                    duration = recorder.get_duration()
+                    
+                    if audio_data and len(audio_data) > 0:
+                        # Build proper WAV file header for the recorded audio
+                        wav_data = self._build_wav_file(audio_data)
+                        
+                        # Save to voicemail system
+                        self.voicemail_system.save_message(
+                            extension_number=call.to_extension,
+                            caller_id=call.from_extension,
+                            audio_data=wav_data,
+                            duration=duration
+                        )
+                        self.logger.info(f"Saved voicemail (on hangup) for extension {call.to_extension} from {call.from_extension}, duration: {duration}s")
+                    else:
+                        self.logger.warning(f"No audio recorded for voicemail on call {call_id}")
+            
             self.call_manager.end_call(call_id)
             self.rtp_relay.release_relay(call_id)
     
@@ -510,6 +542,8 @@ class PBXCore:
             call_id: Call identifier
         """
         from pbx.sip.message import SIPMessageBuilder
+        from pbx.sip.sdp import SDPBuilder
+        from pbx.rtp.handler import RTPRecorder
         
         call = self.call_manager.get_call(call_id)
         if not call:
@@ -529,33 +563,166 @@ class PBXCore:
         call.routed_to_voicemail = True
         self.logger.info(f"No answer for call {call_id}, routing to voicemail")
         
-        # Send 486 Busy Here to caller (or could use 480 Temporarily Unavailable)
-        if call.original_invite and call.caller_addr:
-            busy_response = SIPMessageBuilder.build_response(
-                486,
-                "Busy Here - Routing to Voicemail",
-                call.original_invite
+        # Answer the call to allow voicemail recording
+        if call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports:
+            server_ip = self._get_server_ip()
+            
+            # Build SDP for the voicemail recording endpoint
+            voicemail_sdp = SDPBuilder.build_audio_sdp(
+                server_ip,
+                call.rtp_ports[0],
+                session_id=call_id
             )
-            self.sip_server._send_message(busy_response.build(), call.caller_addr)
-            self.logger.info(f"Sent 486 Busy to caller for call {call_id}")
+            
+            # Send 200 OK to answer the call for voicemail recording
+            ok_response = SIPMessageBuilder.build_response(
+                200,
+                "OK",
+                call.original_invite,
+                body=voicemail_sdp
+            )
+            ok_response.set_header('Content-Type', 'application/sdp')
+            
+            # Build Contact header
+            sip_port = self.config.get('server.sip_port', 5060)
+            contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+            ok_response.set_header('Contact', contact_uri)
+            
+            # Send to caller
+            self.sip_server._send_message(ok_response.build(), call.caller_addr)
+            self.logger.info(f"Answered call {call_id} for voicemail recording")
+            
+            # Mark call as connected
+            call.connect()
+            
+            # Start RTP recorder on the allocated port
+            recorder = RTPRecorder(call.rtp_ports[0], call_id)
+            if recorder.start():
+                # Store recorder in call object for later retrieval
+                call.voicemail_recorder = recorder
+                
+                # Set recording timeout (max voicemail duration)
+                max_duration = self.config.get('voicemail.max_message_duration', 180)
+                
+                # Schedule voicemail completion after max duration
+                voicemail_timer = threading.Timer(
+                    max_duration,
+                    self._complete_voicemail_recording,
+                    args=(call_id,)
+                )
+                voicemail_timer.start()
+                call.voicemail_timer = voicemail_timer
+                
+                self.logger.info(f"Started voicemail recording for call {call_id}, max duration: {max_duration}s")
+            else:
+                self.logger.error(f"Failed to start voicemail recorder for call {call_id}")
+                self.end_call(call_id)
+        else:
+            self.logger.error(f"Cannot route call {call_id} to voicemail - missing required information")
+            # Fallback to ending the call
+            self.end_call(call_id)
+    
+    def _complete_voicemail_recording(self, call_id):
+        """
+        Complete voicemail recording and save the message
         
-        # In a full implementation, this would:
-        # 1. Play voicemail greeting to caller
-        # 2. Record the message
-        # 3. Save to voicemail system
-        # For now, just log and create a placeholder voicemail
+        Args:
+            call_id: Call identifier
+        """
+        call = self.call_manager.get_call(call_id)
+        if not call:
+            self.logger.warning(f"Cannot complete voicemail for non-existent call {call_id}")
+            return
         
-        # Create a placeholder voicemail message
-        placeholder_audio = b'RIFF' + b'\x00' * 40  # Minimal WAV header
-        self.voicemail_system.save_message(
-            extension_number=call.to_extension,
-            caller_id=call.from_extension,
-            audio_data=placeholder_audio,
-            duration=0
-        )
+        # Get the recorder if it exists
+        recorder = getattr(call, 'voicemail_recorder', None)
+        if recorder:
+            # Stop recording
+            recorder.stop()
+            
+            # Get recorded audio
+            audio_data = recorder.get_recorded_audio()
+            duration = recorder.get_duration()
+            
+            if audio_data and len(audio_data) > 0:
+                # Build proper WAV file header for the recorded audio
+                wav_data = self._build_wav_file(audio_data)
+                
+                # Save to voicemail system
+                self.voicemail_system.save_message(
+                    extension_number=call.to_extension,
+                    caller_id=call.from_extension,
+                    audio_data=wav_data,
+                    duration=duration
+                )
+                self.logger.info(f"Saved voicemail for extension {call.to_extension} from {call.from_extension}, duration: {duration}s")
+            else:
+                self.logger.warning(f"No audio recorded for voicemail on call {call_id}")
+                # Still create a minimal voicemail to indicate the attempt
+                placeholder_audio = self._build_wav_file(b'')
+                self.voicemail_system.save_message(
+                    extension_number=call.to_extension,
+                    caller_id=call.from_extension,
+                    audio_data=placeholder_audio,
+                    duration=0
+                )
         
         # End the call
         self.end_call(call_id)
+    
+    def _build_wav_file(self, audio_data):
+        """
+        Build a proper WAV file from raw audio data
+        Assumes G.711 μ-law (PCMU) codec at 8kHz
+        
+        Args:
+            audio_data: Raw audio payload data
+            
+        Returns:
+            bytes: Complete WAV file
+        """
+        import struct
+        
+        # WAV file format for G.711 μ-law
+        sample_rate = 8000
+        bits_per_sample = 8
+        num_channels = 1
+        audio_format = 7  # μ-law
+        
+        # Calculate sizes
+        data_size = len(audio_data)
+        file_size = 36 + data_size
+        
+        # Build WAV header
+        wav_header = struct.pack('<4sI4s',
+            b'RIFF',
+            file_size,
+            b'WAVE'
+        )
+        
+        # Format chunk
+        fmt_chunk = struct.pack('<4sIHHIIHH',
+            b'fmt ',
+            18,  # Chunk size (18 for non-PCM)
+            audio_format,
+            num_channels,
+            sample_rate,
+            sample_rate * num_channels * bits_per_sample // 8,  # Byte rate
+            num_channels * bits_per_sample // 8,  # Block align
+            bits_per_sample
+        )
+        
+        # Add extension size (2 bytes, value 0 for G.711)
+        fmt_extension = struct.pack('<H', 0)
+        
+        # Data chunk
+        data_chunk = struct.pack('<4sI',
+            b'data',
+            data_size
+        )
+        
+        # Combine all parts
+        return wav_header + fmt_chunk + fmt_extension + data_chunk + audio_data
     
     def get_status(self):
         """
