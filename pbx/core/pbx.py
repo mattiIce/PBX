@@ -3,6 +3,7 @@ Core PBX implementation
 Central coordinator for all PBX functionality
 """
 import re
+import threading
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, PBXLogger
 from pbx.sip.server import SIPServer
@@ -60,7 +61,8 @@ class PBXCore:
         )
         
         # Initialize advanced features
-        self.voicemail_system = VoicemailSystem()
+        voicemail_path = self.config.get('voicemail.storage_path', 'voicemail')
+        self.voicemail_system = VoicemailSystem(storage_path=voicemail_path, config=self.config)
         self.conference_system = ConferenceSystem()
         self.recording_system = CallRecordingSystem(
             auto_record=self.config.get('features.call_recording', False)
@@ -288,6 +290,16 @@ class PBXCore:
             
             self.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
             self.logger.info(f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}")
+            
+            # Start no-answer timer to route to voicemail if not answered
+            no_answer_timeout = self.config.get('voicemail.no_answer_timeout', 30)
+            call.no_answer_timer = threading.Timer(
+                no_answer_timeout,
+                self._handle_no_answer,
+                args=(call_id,)
+            )
+            call.no_answer_timer.start()
+            self.logger.info(f"Started no-answer timer ({no_answer_timeout}s) for call {call_id}")
         
         return True
     
@@ -351,6 +363,11 @@ class PBXCore:
             
             self.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
             self.logger.info(f"RTP relay connected for call {call_id}")
+        
+        # Cancel no-answer timer if it's running
+        if call.no_answer_timer:
+            call.no_answer_timer.cancel()
+            self.logger.info(f"Cancelled no-answer timer for call {call_id}")
         
         # Mark call as connected
         call.connect()
@@ -484,6 +501,61 @@ class PBXCore:
             return True
         
         return False
+    
+    def _handle_no_answer(self, call_id):
+        """
+        Handle no-answer timeout - route call to voicemail
+        
+        Args:
+            call_id: Call identifier
+        """
+        from pbx.sip.message import SIPMessageBuilder
+        
+        call = self.call_manager.get_call(call_id)
+        if not call:
+            self.logger.warning(f"No-answer timeout for non-existent call {call_id}")
+            return
+        
+        # Check if call was already answered
+        from pbx.core.call import CallState
+        if call.state == CallState.CONNECTED:
+            self.logger.debug(f"Call {call_id} already answered, ignoring no-answer timeout")
+            return
+        
+        if call.routed_to_voicemail:
+            self.logger.debug(f"Call {call_id} already routed to voicemail")
+            return
+        
+        call.routed_to_voicemail = True
+        self.logger.info(f"No answer for call {call_id}, routing to voicemail")
+        
+        # Send 486 Busy Here to caller (or could use 480 Temporarily Unavailable)
+        if call.original_invite and call.caller_addr:
+            busy_response = SIPMessageBuilder.build_response(
+                486,
+                "Busy Here - Routing to Voicemail",
+                call.original_invite
+            )
+            self.sip_server._send_message(busy_response.build(), call.caller_addr)
+            self.logger.info(f"Sent 486 Busy to caller for call {call_id}")
+        
+        # In a full implementation, this would:
+        # 1. Play voicemail greeting to caller
+        # 2. Record the message
+        # 3. Save to voicemail system
+        # For now, just log and create a placeholder voicemail
+        
+        # Create a placeholder voicemail message
+        placeholder_audio = b'RIFF' + b'\x00' * 40  # Minimal WAV header
+        self.voicemail_system.save_message(
+            extension_number=call.to_extension,
+            caller_id=call.from_extension,
+            audio_data=placeholder_audio,
+            duration=0
+        )
+        
+        # End the call
+        self.end_call(call_id)
     
     def get_status(self):
         """

@@ -239,8 +239,10 @@ class SIPServer:
                 self.logger.info(f"Callee ringing for call {call_id}")
                 if call_id:
                     call = self.pbx_core.call_manager.get_call(call_id)
-                    if call and call.caller_addr:
-                        self._send_message(message.build(), call.caller_addr)
+                    if call:
+                        call.ring()  # Mark call as ringing
+                        if call.caller_addr:
+                            self._send_message(message.build(), call.caller_addr)
             
             elif message.status_code == 200:
                 # OK - callee answered
