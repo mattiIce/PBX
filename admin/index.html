@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBX Admin Panel</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔊 InHouse PBX Admin Panel</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status-badge">Connecting...</span>
+                <span id="system-status"></span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-button" data-tab="extensions">Extensions</button>
+            <button class="tab-button" data-tab="calls">Active Calls</button>
+            <button class="tab-button" data-tab="config">Configuration</button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2>System Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-extensions">-</div>
+                    <div class="stat-label">Registered Extensions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-calls">-</div>
+                    <div class="stat-label">Active Calls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total-calls">-</div>
+                    <div class="stat-label">Total Calls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-recordings">-</div>
+                    <div class="stat-label">Active Recordings</div>
+                </div>
+            </div>
+
+            <h3>Quick Actions</h3>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Refresh Status</button>
+                <button class="btn btn-success" onclick="showTab('extensions')">➕ Add Extension</button>
+            </div>
+        </div>
+
+        <!-- Extensions Tab -->
+        <div id="extensions" class="tab-content">
+            <div class="section-header">
+                <h2>Extension Management</h2>
+                <button class="btn btn-success" onclick="showAddExtensionModal()">➕ Add Extension</button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="extensions-table-body">
+                        <tr>
+                            <td colspan="5" class="loading">Loading extensions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Active Calls Tab -->
+        <div id="calls" class="tab-content">
+            <div class="section-header">
+                <h2>Active Calls</h2>
+                <button class="btn btn-primary" onclick="loadCalls()">🔄 Refresh</button>
+            </div>
+
+            <div class="table-container">
+                <div id="calls-list" class="calls-list">
+                    <div class="loading">Loading calls...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Tab -->
+        <div id="config" class="tab-content">
+            <h2>System Configuration</h2>
+            
+            <div class="config-section">
+                <h3>Server Settings</h3>
+                <div class="form-group">
+                    <label>SIP Port:</label>
+                    <input type="number" id="config-sip-port" value="5060" disabled>
+                </div>
+                <div class="form-group">
+                    <label>API Port:</label>
+                    <input type="number" id="config-api-port" value="8080" disabled>
+                </div>
+                <p class="config-note">⚠️ Server settings require restart and must be changed in config.yml</p>
+            </div>
+
+            <div class="config-section">
+                <h3>Email/SMTP Settings</h3>
+                <form id="email-config-form">
+                    <div class="form-group">
+                        <label>SMTP Host:</label>
+                        <input type="text" id="smtp-host" placeholder="smtp.example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Port:</label>
+                        <input type="number" id="smtp-port" placeholder="587">
+                    </div>
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" id="smtp-username" placeholder="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="smtp-password" placeholder="password">
+                    </div>
+                    <div class="form-group">
+                        <label>From Address:</label>
+                        <input type="email" id="email-from" placeholder="voicemail@company.com">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="email-notifications-enabled">
+                            Enable Email Notifications
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 Save Email Settings</button>
+                </form>
+                <p class="config-note">⚠️ Email settings are saved to config.yml and require restart</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Extension Modal -->
+    <div id="add-extension-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Extension</h3>
+                <span class="close" onclick="closeAddExtensionModal()">&times;</span>
+            </div>
+            <form id="add-extension-form">
+                <div class="form-group">
+                    <label>Extension Number:</label>
+                    <input type="text" id="new-ext-number" required pattern="[0-9]{4}" placeholder="1001">
+                    <small>4-digit number</small>
+                </div>
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="new-ext-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="new-ext-email" required placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="new-ext-password" required minlength="8" placeholder="Min 8 characters">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="new-ext-allow-external" checked>
+                        Allow External Calls
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddExtensionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Extension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Extension Modal -->
+    <div id="edit-extension-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Extension</h3>
+                <span class="close" onclick="closeEditExtensionModal()">&times;</span>
+            </div>
+            <form id="edit-extension-form">
+                <input type="hidden" id="edit-ext-number">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="edit-ext-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="edit-ext-email" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password (leave blank to keep current):</label>
+                    <input type="password" id="edit-ext-password" minlength="8">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="edit-ext-allow-external">
+                        Allow External Calls
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditExtensionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Extension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
