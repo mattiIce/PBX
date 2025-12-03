@@ -348,7 +348,11 @@ class PBXCore:
                     body=caller_response_sdp
                 )
                 ok_response.set_header('Content-Type', 'application/sdp')
-                ok_response.set_header('Contact', f"<sip:{call.to_extension}@{server_ip}:{self.config.get('server.sip_port', 5060)}>")
+                
+                # Build Contact header
+                sip_port = self.config.get('server.sip_port', 5060)
+                contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+                ok_response.set_header('Contact', contact_uri)
                 
                 # Send to caller
                 self.sip_server._send_message(ok_response.build(), call.caller_addr)
