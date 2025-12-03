@@ -50,14 +50,77 @@ List all extensions.
   {
     "number": "1001",
     "name": "Office Extension 1",
-    "registered": true
+    "email": "ext1001@company.com",
+    "registered": true,
+    "allow_external": true
   },
   {
     "number": "1002",
     "name": "Office Extension 2",
-    "registered": false
+    "email": "ext1002@company.com",
+    "registered": false,
+    "allow_external": true
   }
 ]
+```
+
+#### POST /api/extensions
+
+Add a new extension.
+
+**Request:**
+```json
+{
+  "number": "1005",
+  "name": "New User",
+  "email": "newuser@company.com",
+  "password": "securepassword123",
+  "allow_external": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Extension added successfully"
+}
+```
+
+#### PUT /api/extensions/{number}
+
+Update an existing extension.
+
+**Request:**
+```json
+{
+  "name": "Updated Name",
+  "email": "updated@company.com",
+  "password": "newpassword123",
+  "allow_external": false
+}
+```
+
+**Note:** Password is optional. If not provided, the existing password will be kept.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Extension updated successfully"
+}
+```
+
+#### DELETE /api/extensions/{number}
+
+Delete an extension.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Extension deleted successfully"
+}
 ```
 
 ### Calls
@@ -396,6 +459,57 @@ curl -X POST http://localhost:8080/api/presence/set \
   -H "Content-Type: application/json" \
   -d '{"extension":"1001","status":"away","message":"In a meeting"}'
 ```
+
+### Configuration
+
+#### GET /api/config
+
+Get current system configuration (SMTP and email settings).
+
+**Response:**
+```json
+{
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "username": "pbx@company.com"
+  },
+  "email": {
+    "from_address": "voicemail@company.com"
+  },
+  "email_notifications": true
+}
+```
+
+#### PUT /api/config
+
+Update system configuration.
+
+**Request:**
+```json
+{
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "username": "pbx@company.com",
+    "password": "app-password"
+  },
+  "email": {
+    "from_address": "voicemail@company.com"
+  },
+  "email_notifications": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Configuration updated successfully. Restart required."
+}
+```
+
+**Note:** Configuration changes are saved to `config.yml` and require a system restart to take effect.
 
 ## Integration Examples
 
