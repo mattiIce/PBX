@@ -41,6 +41,7 @@ class Call:
         self.caller_addr = None  # Caller's SIP address
         self.callee_rtp = None  # Callee's RTP endpoint info
         self.callee_addr = None  # Callee's SIP address
+        self.original_invite = None  # Original INVITE message from caller
         
     def start(self):
         """Start the call"""

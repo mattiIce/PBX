@@ -166,6 +166,17 @@ class SIPServer:
     def _handle_ack(self, message, addr):
         """Handle ACK request"""
         self.logger.debug(f"ACK request from {addr}")
+        
+        # Forward ACK to complete the three-way handshake
+        if self.pbx_core:
+            call_id = message.get_header('Call-ID')
+            if call_id:
+                call = self.pbx_core.call_manager.get_call(call_id)
+                if call and call.callee_addr:
+                    # Forward ACK to callee
+                    self._send_message(message.build(), call.callee_addr)
+                    self.logger.debug(f"Forwarded ACK to callee for call {call_id}")
+        
         # ACK is not responded to
     
     def _handle_bye(self, message, addr):

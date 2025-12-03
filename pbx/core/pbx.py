@@ -203,6 +203,7 @@ class PBXCore:
         # Create call
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
         call.start()
+        call.original_invite = message  # Store original INVITE for later response
         
         # Allocate RTP relay
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
@@ -338,19 +339,20 @@ class PBXCore:
                 session_id=call_id
             )
             
-            # Build 200 OK for caller
-            ok_response = SIPMessageBuilder.build_response(
-                200,
-                "OK",
-                response_message,
-                body=caller_response_sdp
-            )
-            ok_response.set_header('Content-Type', 'application/sdp')
-            ok_response.set_header('Contact', f"<sip:{call.to_extension}@{server_ip}:{self.config.get('server.sip_port', 5060)}>")
-            
-            # Send to caller
-            self.sip_server._send_message(ok_response.build(), call.caller_addr)
-            self.logger.info(f"Sent 200 OK to caller for call {call_id}")
+            # Build 200 OK for caller using original INVITE
+            if call.original_invite:
+                ok_response = SIPMessageBuilder.build_response(
+                    200,
+                    "OK",
+                    call.original_invite,
+                    body=caller_response_sdp
+                )
+                ok_response.set_header('Content-Type', 'application/sdp')
+                ok_response.set_header('Contact', f"<sip:{call.to_extension}@{server_ip}:{self.config.get('server.sip_port', 5060)}>")
+                
+                # Send to caller
+                self.sip_server._send_message(ok_response.build(), call.caller_addr)
+                self.logger.info(f"Sent 200 OK to caller for call {call_id}")
     
     def end_call(self, call_id):
         """
