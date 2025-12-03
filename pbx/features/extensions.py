@@ -3,6 +3,7 @@ Extension management and registry
 """
 from datetime import datetime
 from pbx.utils.logger import get_logger
+from pbx.utils.encryption import get_encryption
 
 
 class Extension:
@@ -59,6 +60,10 @@ class ExtensionRegistry:
         self.config = config
         self.logger = get_logger()
         self.extensions = {}
+        
+        # Initialize encryption for FIPS-compliant password handling
+        fips_mode = config.get('security.fips_mode', False)
+        self.encryption = get_encryption(fips_mode)
         
         # Load extensions from configuration
         self._load_extensions()
@@ -155,7 +160,7 @@ class ExtensionRegistry:
     
     def authenticate(self, number, password):
         """
-        Authenticate extension
+        Authenticate extension using FIPS-compliant password verification
         
         Args:
             number: Extension number
@@ -167,5 +172,45 @@ class ExtensionRegistry:
         extension = self.get(number)
         if extension:
             config_password = extension.config.get('password')
-            return password == config_password
+            
+            # Check if password is already hashed (contains salt)
+            password_hash = extension.config.get('password_hash')
+            password_salt = extension.config.get('password_salt')
+            
+            if password_hash and password_salt:
+                # Use FIPS-compliant verification
+                try:
+                    return self.encryption.verify_password(
+                        password, password_hash, password_salt
+                    )
+                except Exception as e:
+                    self.logger.error(f"Error verifying password: {e}")
+                    return False
+            else:
+                # Fallback to plain text comparison (not recommended for production)
+                self.logger.warning(
+                    f"Extension {number} using plain text password - "
+                    "consider migrating to hashed passwords"
+                )
+                return password == config_password
+        return False
+    
+    def hash_extension_password(self, number, password):
+        """
+        Hash an extension's password using FIPS-compliant algorithm
+        
+        Args:
+            number: Extension number
+            password: Plain text password
+            
+        Returns:
+            True if successful
+        """
+        extension = self.get(number)
+        if extension:
+            password_hash, password_salt = self.encryption.hash_password(password)
+            extension.config['password_hash'] = password_hash
+            extension.config['password_salt'] = password_salt
+            self.logger.info(f"Hashed password for extension {number}")
+            return True
         return False

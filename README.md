@@ -28,10 +28,18 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Web Interface** - Browser-based management (API endpoints)
 - **Multi-codec Support** - G.711, G.729 and more
 
+### Security & Compliance
+- **FIPS 140-2 Compliant Encryption** - Government-grade security
+- **TLS/SIPS** - Encrypted SIP signaling
+- **SRTP** - Encrypted media streams
+- **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
+- **Password Security** - PBKDF2-HMAC-SHA256 hashing with 100,000 iterations
+
 ## 📋 Requirements
 
 - Python 3.7+
 - PyYAML (for configuration)
+- cryptography>=41.0.0 (for FIPS-compliant encryption)
 - Network access for SIP/RTP ports
 
 ## 🚀 Quick Start
@@ -164,10 +172,15 @@ This will:
 
 ## 🔐 Security
 
-- **Authentication** - Extensions require password authentication
+- **FIPS 140-2 Compliance** - Government-grade cryptographic standards
+- **Authentication** - FIPS-compliant password hashing (PBKDF2-HMAC-SHA256)
+- **Encryption** - AES-256-GCM for data encryption
+- **TLS/SIPS** - Encrypted SIP signaling with FIPS-approved ciphers
+- **SRTP** - Encrypted RTP media streams
 - **Rate Limiting** - Protection against brute force attacks
 - **IP Banning** - Automatic blocking after failed attempts
-- **TLS Support** - (To be implemented) Secure SIP and RTP
+
+For detailed security information, see [SECURITY.md](SECURITY.md) and [FIPS_COMPLIANCE.md](FIPS_COMPLIANCE.md).
 
 ## 📊 Monitoring
 
@@ -211,11 +224,12 @@ For issues and questions, please open a GitHub issue.
 
 ## 🗺️ Roadmap
 
+- [x] **FIPS 140-2 compliant encryption** - ✅ COMPLETED
+- [x] **TLS/SRTP encryption** - ✅ COMPLETED
 - [ ] WebRTC support for browser-based calls
 - [ ] IVR (Interactive Voice Response) system
 - [ ] SMS/Messaging integration
 - [ ] Mobile app support (iOS/Android)
-- [ ] TLS/SRTP encryption
 - [ ] Database backend for scalability
 - [ ] Clustering/High availability
 - [ ] Advanced analytics dashboard

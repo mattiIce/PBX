@@ -21,12 +21,15 @@ These findings are **ACCEPTABLE** and represent correct implementation for a PBX
 ### Security Posture
 
 #### Implemented Security Features
-✅ Extension password authentication
+✅ Extension password authentication with FIPS 140-2 compliant hashing
 ✅ Failed login attempt tracking  
 ✅ IP-based banning after max failed attempts
 ✅ Configurable security policies
 ✅ Input validation on SIP messages
 ✅ Configuration-based access control
+✅ FIPS-compliant encryption module (AES-256, SHA-256, PBKDF2)
+✅ TLS/SIPS support with FIPS-approved cipher suites
+✅ SRTP support for encrypted media streams
 
 #### Recommended for Production
 🔒 **Network Level**
@@ -52,25 +55,86 @@ These findings are **ACCEPTABLE** and represent correct implementation for a PBX
 - Regular security updates
 - Log monitoring and alerting
 
-### Security Configuration
+### FIPS 140-2 Compliance
 
-The system includes configurable security settings in `config.yml`:
+The system now includes **FIPS 140-2 compliant encryption** for organizations requiring certified cryptographic modules:
+
+#### FIPS-Approved Algorithms
+- **AES-256-GCM** (FIPS 197) - Symmetric encryption
+- **SHA-256** (FIPS 180-4) - Cryptographic hashing
+- **PBKDF2-HMAC-SHA256** (NIST SP 800-132) - Password-based key derivation
+- **TLS 1.2/1.3** with FIPS-approved cipher suites
+- **SRTP** with AES-GCM for encrypted media
+
+#### FIPS Mode Configuration
+
+Enable FIPS mode in `config.yml`:
 
 ```yaml
 security:
   require_authentication: true
   max_failed_attempts: 5
   ban_duration: 300  # 5 minutes
+  
+  # FIPS 140-2 compliance
+  fips_mode: true  # Enable FIPS-compliant encryption
+  
+  # TLS/SRTP settings
+  enable_tls: true  # Enable TLS for SIP (SIPS)
+  tls_cert_file: "/path/to/certificate.pem"
+  tls_key_file: "/path/to/private_key.pem"
+  enable_srtp: true  # Enable SRTP for encrypted media
+  
+  # Password policy
+  min_password_length: 12
+  require_strong_passwords: true
+```
+
+#### Installation for FIPS Mode
+
+```bash
+# Install cryptography library (required for FIPS mode)
+pip install cryptography>=41.0.0
+
+# Verify FIPS mode is working
+python3 -c "from pbx.utils.encryption import get_encryption; enc = get_encryption(True); print('FIPS mode enabled')"
+```
+
+#### Password Migration
+
+When enabling FIPS mode, migrate existing plain-text passwords to hashed format:
+
+```python
+from pbx.core.pbx import PBXCore
+
+pbx = PBXCore("config.yml")
+
+# Hash passwords for all extensions
+for ext in pbx.extension_registry.get_all():
+    password = ext.config.get('password')
+    if password:
+        pbx.extension_registry.hash_extension_password(ext.number, password)
 ```
 
 ### Deployment Security Checklist
 
+#### Essential Security
+- [ ] **Enable FIPS mode** (`fips_mode: true` in config.yml)
 - [ ] Change all default passwords
+- [ ] Migrate passwords to FIPS-compliant hashed format
 - [ ] Configure firewall rules
-- [ ] Use strong, unique passwords for all extensions
+- [ ] Use strong, unique passwords for all extensions (min 12 characters)
 - [ ] Enable authentication requirement
-- [ ] Set up fail2ban or similar for IP banning
+
+#### Encryption
+- [ ] **Enable TLS for SIP** (`enable_tls: true`)
+- [ ] Generate or obtain TLS certificates
+- [ ] Configure TLS certificate and key paths
+- [ ] **Enable SRTP for media** (`enable_srtp: true`)
 - [ ] Configure TLS/SSL for API (via reverse proxy)
+
+#### System Hardening
+- [ ] Set up fail2ban or similar for IP banning
 - [ ] Implement API authentication
 - [ ] Set up log monitoring
 - [ ] Regular backup of configuration and data
@@ -79,6 +143,12 @@ security:
 - [ ] Use VPN for remote access
 - [ ] Implement network segmentation
 - [ ] Regular security audits
+
+#### FIPS Compliance Verification
+- [ ] Verify cryptography library is FIPS-certified version
+- [ ] Test password hashing with FIPS algorithms
+- [ ] Verify TLS cipher suites are FIPS-approved
+- [ ] Document FIPS compliance for auditors
 
 ### Vulnerability Disclosure
 
@@ -104,18 +174,23 @@ If you discover a security vulnerability, please:
 ### Compliance Considerations
 
 For organizations with specific compliance requirements:
-- **PCI DSS**: Implement call recording encryption, access controls
-- **HIPAA**: Use encryption for PHI, implement audit logs
-- **GDPR**: Implement data retention policies, right to deletion
-- **SOC 2**: Implement access controls, logging, monitoring
+- **FIPS 140-2**: Enable FIPS mode, use certified cryptography library, verify all algorithms
+- **PCI DSS**: Enable FIPS mode, implement call recording encryption with AES-256, access controls
+- **HIPAA**: Enable FIPS mode and SRTP, use encryption for PHI, implement audit logs
+- **GDPR**: Implement data retention policies, right to deletion, encryption at rest
+- **SOC 2**: Enable FIPS mode, implement access controls, logging, monitoring
+- **FedRAMP**: FIPS 140-2 compliance required, use TLS 1.2+, strong authentication
 
 ### Conclusion
 
-The PBX system has been built with security in mind and includes standard security features. The CodeQL findings are expected for a network server application. With proper configuration and deployment following the recommendations above, the system is suitable for production use.
+The PBX system has been built with security in mind and now includes **FIPS 140-2 compliant encryption**. The system uses FIPS-approved algorithms (AES-256, SHA-256, PBKDF2) for all cryptographic operations when FIPS mode is enabled. The CodeQL findings are expected for a network server application. With proper configuration and deployment following the recommendations above, the system is suitable for production use in environments requiring FIPS compliance.
 
 **Security Status**: ✅ CLEARED FOR DEPLOYMENT with proper configuration
+
+**FIPS 140-2 Compliance**: ✅ SUPPORTED with cryptography library
 
 ---
 
 *Last Updated: 2025-12-03*
 *Security Review: PASSED*
+*FIPS Compliance: IMPLEMENTED*

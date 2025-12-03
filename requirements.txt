@@ -1,6 +1,9 @@
 # Core dependencies for PBX system
 PyYAML>=5.1
 
+# FIPS-compliant encryption (Required for FIPS mode)
+cryptography>=41.0.0
+
 # Optional dependencies for enhanced features:
 # For production SIP/RTP, consider:
 # - pjsua (PJSIP Python bindings)
