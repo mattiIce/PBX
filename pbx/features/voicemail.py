@@ -4,40 +4,53 @@ Voicemail system
 import os
 from datetime import datetime
 from pbx.utils.logger import get_logger
+from pbx.utils.config import Config
+
+try:
+    from pbx.features.email_notification import EmailNotifier
+    EMAIL_NOTIFIER_AVAILABLE = True
+except ImportError:
+    EMAIL_NOTIFIER_AVAILABLE = False
 
 
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
     
-    def __init__(self, extension_number, storage_path="voicemail"):
+    def __init__(self, extension_number, storage_path="voicemail", config=None, email_notifier=None):
         """
         Initialize voicemail box
         
         Args:
             extension_number: Extension number
             storage_path: Path to store voicemail files
+            config: Config object
+            email_notifier: EmailNotifier object
         """
         self.extension_number = extension_number
         self.storage_path = os.path.join(storage_path, extension_number)
         self.messages = []
         self.logger = get_logger()
+        self.config = config
+        self.email_notifier = email_notifier
         
         # Create storage directory
         os.makedirs(self.storage_path, exist_ok=True)
     
-    def save_message(self, caller_id, audio_data):
+    def save_message(self, caller_id, audio_data, duration=None):
         """
         Save voicemail message
         
         Args:
             caller_id: ID of caller
             audio_data: Audio data bytes
+            duration: Duration in seconds (optional)
             
         Returns:
             Message ID
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        message_id = f"{caller_id}_{timestamp}"
+        timestamp = datetime.now()
+        timestamp_str = timestamp.strftime("%Y%m%d_%H%M%S")
+        message_id = f"{caller_id}_{timestamp_str}"
         
         file_path = os.path.join(self.storage_path, f"{message_id}.wav")
         
@@ -47,13 +60,29 @@ class VoicemailBox:
         message = {
             'id': message_id,
             'caller_id': caller_id,
-            'timestamp': datetime.now(),
+            'timestamp': timestamp,
             'file_path': file_path,
-            'listened': False
+            'listened': False,
+            'duration': duration
         }
         
         self.messages.append(message)
         self.logger.info(f"Saved voicemail for extension {self.extension_number}")
+        
+        # Send email notification if enabled
+        if self.email_notifier and self.config:
+            extension_config = self.config.get_extension(self.extension_number)
+            if extension_config:
+                email_address = extension_config.get('email')
+                if email_address:
+                    self.email_notifier.send_voicemail_notification(
+                        to_email=email_address,
+                        extension_number=self.extension_number,
+                        caller_id=caller_id,
+                        timestamp=timestamp,
+                        audio_file_path=file_path,
+                        duration=duration
+                    )
         
         return message_id
     
@@ -109,16 +138,26 @@ class VoicemailBox:
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
     
-    def __init__(self, storage_path="voicemail"):
+    def __init__(self, storage_path="voicemail", config=None):
         """
         Initialize voicemail system
         
         Args:
             storage_path: Path to store voicemail files
+            config: Config object
         """
         self.storage_path = storage_path
         self.mailboxes = {}
         self.logger = get_logger()
+        self.config = config
+        
+        # Initialize email notifier if config provided
+        self.email_notifier = None
+        if config and EMAIL_NOTIFIER_AVAILABLE:
+            try:
+                self.email_notifier = EmailNotifier(config)
+            except Exception as e:
+                self.logger.error(f"Failed to initialize email notifier: {e}")
         
         os.makedirs(storage_path, exist_ok=True)
     
@@ -135,11 +174,13 @@ class VoicemailSystem:
         if extension_number not in self.mailboxes:
             self.mailboxes[extension_number] = VoicemailBox(
                 extension_number,
-                self.storage_path
+                self.storage_path,
+                config=self.config,
+                email_notifier=self.email_notifier
             )
         return self.mailboxes[extension_number]
     
-    def save_message(self, extension_number, caller_id, audio_data):
+    def save_message(self, extension_number, caller_id, audio_data, duration=None):
         """
         Save voicemail message
         
@@ -147,12 +188,41 @@ class VoicemailSystem:
             extension_number: Extension to save message for
             caller_id: Caller ID
             audio_data: Audio data
+            duration: Duration in seconds (optional)
             
         Returns:
             Message ID
         """
         mailbox = self.get_mailbox(extension_number)
-        return mailbox.save_message(caller_id, audio_data)
+        return mailbox.save_message(caller_id, audio_data, duration)
+    
+    def send_daily_reminders(self):
+        """
+        Send daily reminders for unread voicemails
+        
+        Returns:
+            Number of reminders sent
+        """
+        if not self.email_notifier or not self.config:
+            return 0
+        
+        count = 0
+        for extension_number, mailbox in self.mailboxes.items():
+            unread_messages = mailbox.get_messages(unread_only=True)
+            if unread_messages:
+                extension_config = self.config.get_extension(extension_number)
+                if extension_config:
+                    email_address = extension_config.get('email')
+                    if email_address:
+                        if self.email_notifier.send_reminder(
+                            email_address,
+                            extension_number,
+                            len(unread_messages),
+                            unread_messages
+                        ):
+                            count += 1
+        
+        return count
     
     def get_message_count(self, extension_number, unread_only=True):
         """

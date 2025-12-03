@@ -33,6 +33,7 @@ class Call:
         self.to_extension = to_extension
         self.state = CallState.IDLE
         self.start_time = None
+        self.answer_time = None
         self.end_time = None
         self.rtp_ports = None
         self.recording = False
@@ -42,15 +43,22 @@ class Call:
         self.callee_rtp = None  # Callee's RTP endpoint info
         self.callee_addr = None  # Callee's SIP address
         self.original_invite = None  # Original INVITE message from caller
+        self.no_answer_timer = None  # Timer for routing to voicemail
+        self.routed_to_voicemail = False  # Flag to track if routed to VM
         
     def start(self):
         """Start the call"""
         self.state = CallState.CALLING
         self.start_time = datetime.now()
     
+    def ring(self):
+        """Set call state to ringing"""
+        self.state = CallState.RINGING
+    
     def connect(self):
         """Connect the call"""
         self.state = CallState.CONNECTED
+        self.answer_time = datetime.now()
     
     def hold(self):
         """Put call on hold"""
