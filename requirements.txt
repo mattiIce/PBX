@@ -1,4 +1,24 @@
 # Core dependencies for PBX system
-# SIP and RTP handling would typically use libraries like:
-# - For production: consider pjsip bindings or asterisk
-# This is a minimal implementation showing the architecture
+PyYAML>=5.1
+
+# Optional dependencies for enhanced features:
+# For production SIP/RTP, consider:
+# - pjsua (PJSIP Python bindings)
+# - aiortc (WebRTC support)
+# - twisted (Async networking)
+
+# For enhanced audio processing:
+# - pydub (Audio manipulation)
+# - sounddevice (Audio I/O)
+
+# For database backend:
+# - sqlalchemy (ORM)
+# - psycopg2 (PostgreSQL)
+
+# For web interface:
+# - flask or fastapi (Web framework)
+# - websockets (Real-time updates)
+
+# For monitoring:
+# - prometheus-client (Metrics)
+# - redis (Caching/queues)

@@ -9,6 +9,16 @@ from pbx.sip.server import SIPServer
 from pbx.rtp.handler import RTPRelay
 from pbx.core.call import CallManager
 from pbx.features.extensions import ExtensionRegistry
+from pbx.features.voicemail import VoicemailSystem
+from pbx.features.conference import ConferenceSystem
+from pbx.features.call_recording import CallRecordingSystem
+from pbx.features.call_queue import QueueSystem
+from pbx.features.presence import PresenceSystem
+from pbx.features.call_parking import CallParkingSystem
+from pbx.features.cdr import CDRSystem
+from pbx.features.music_on_hold import MusicOnHold
+from pbx.features.sip_trunk import SIPTrunkSystem
+from pbx.api.rest_api import PBXAPIServer
 
 
 class PBXCore:
@@ -33,7 +43,7 @@ class PBXCore:
         )
         self.logger = get_logger()
         
-        # Initialize components
+        # Initialize core components
         self.extension_registry = ExtensionRegistry(self.config)
         self.call_manager = CallManager()
         self.rtp_relay = RTPRelay(
@@ -48,9 +58,27 @@ class PBXCore:
             pbx_core=self
         )
         
+        # Initialize advanced features
+        self.voicemail_system = VoicemailSystem()
+        self.conference_system = ConferenceSystem()
+        self.recording_system = CallRecordingSystem(
+            auto_record=self.config.get('features.call_recording', False)
+        )
+        self.queue_system = QueueSystem()
+        self.presence_system = PresenceSystem()
+        self.parking_system = CallParkingSystem()
+        self.cdr_system = CDRSystem()
+        self.moh_system = MusicOnHold()
+        self.trunk_system = SIPTrunkSystem()
+        
+        # Initialize API server
+        api_host = self.config.get('api.host', '0.0.0.0')
+        api_port = self.config.get('api.port', 8080)
+        self.api_server = PBXAPIServer(self, api_host, api_port)
+        
         self.running = False
         
-        self.logger.info("PBX Core initialized")
+        self.logger.info("PBX Core initialized with all features")
     
     def start(self):
         """Start PBX system"""
@@ -61,6 +89,13 @@ class PBXCore:
             self.logger.error("Failed to start SIP server")
             return False
         
+        # Start API server
+        if not self.api_server.start():
+            self.logger.warning("Failed to start API server (non-critical)")
+        
+        # Register SIP trunks
+        self.trunk_system.register_all()
+        
         self.running = True
         self.logger.info("PBX system started successfully")
         return True
@@ -70,6 +105,9 @@ class PBXCore:
         self.logger.info("Stopping PBX system...")
         self.running = False
         
+        # Stop API server
+        self.api_server.stop()
+        
         # Stop SIP server
         self.sip_server.stop()
         
@@ -77,6 +115,10 @@ class PBXCore:
         for call in self.call_manager.get_active_calls():
             self.call_manager.end_call(call.call_id)
             self.rtp_relay.release_relay(call.call_id)
+            
+            # Stop any recordings
+            if self.recording_system.is_recording(call.call_id):
+                self.recording_system.stop_recording(call.call_id)
         
         self.logger.info("PBX system stopped")
     
@@ -273,5 +315,9 @@ class PBXCore:
             'running': self.running,
             'registered_extensions': self.extension_registry.get_registered_count(),
             'active_calls': len(self.call_manager.get_active_calls()),
-            'total_calls': len(self.call_manager.call_history)
+            'total_calls': len(self.call_manager.call_history),
+            'active_recordings': len(self.recording_system.active_recordings),
+            'active_conferences': len(self.conference_system.get_active_rooms()),
+            'parked_calls': len(self.parking_system.get_parked_calls()),
+            'queued_calls': sum(len(q.queue) for q in self.queue_system.queues.values())
         }
