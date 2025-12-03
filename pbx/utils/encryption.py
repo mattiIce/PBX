@@ -119,10 +119,13 @@ class FIPSEncryption:
         
         Args:
             data: Data to encrypt (bytes or str)
-            key: Encryption key (32 bytes for AES-256)
+            key: Encryption key (must be exactly 32 bytes for AES-256)
             
         Returns:
             Tuple of (encrypted_data, nonce, tag) as base64 strings
+            
+        Raises:
+            ValueError: If key length is not 32 bytes
         """
         if not CRYPTO_AVAILABLE:
             raise ImportError(
@@ -136,10 +139,12 @@ class FIPSEncryption:
         if isinstance(key, str):
             key = key.encode('utf-8')
         
-        # Ensure key is 32 bytes (256 bits)
+        # Validate key length - must be exactly 32 bytes for AES-256
         if len(key) != 32:
-            # Derive proper key using SHA-256
-            key = hashlib.sha256(key).digest()
+            raise ValueError(
+                f"Encryption key must be exactly 32 bytes for AES-256, got {len(key)} bytes. "
+                "Use derive_key() to generate proper key from password."
+            )
         
         # Generate random nonce (96 bits for GCM)
         nonce = secrets.token_bytes(12)
@@ -170,10 +175,13 @@ class FIPSEncryption:
             encrypted_data: Base64-encoded encrypted data
             nonce: Base64-encoded nonce
             tag: Base64-encoded authentication tag
-            key: Decryption key
+            key: Decryption key (must be exactly 32 bytes)
             
         Returns:
             Decrypted data as bytes
+            
+        Raises:
+            ValueError: If key length is not 32 bytes
         """
         if not CRYPTO_AVAILABLE:
             raise ImportError(
@@ -189,9 +197,11 @@ class FIPSEncryption:
         if isinstance(key, str):
             key = key.encode('utf-8')
         
-        # Ensure key is 32 bytes
+        # Validate key length
         if len(key) != 32:
-            key = hashlib.sha256(key).digest()
+            raise ValueError(
+                f"Decryption key must be exactly 32 bytes for AES-256, got {len(key)} bytes"
+            )
         
         # Create cipher
         cipher = Cipher(
@@ -218,6 +228,43 @@ class FIPSEncryption:
         """
         token = secrets.token_bytes(length)
         return base64.b64encode(token).decode('utf-8')
+    
+    def derive_key(self, password, salt=None, key_length=32):
+        """
+        Derive encryption key from password using PBKDF2 (FIPS-approved KDF)
+        
+        Args:
+            password: Password or passphrase
+            salt: Optional salt (generated if not provided)
+            key_length: Desired key length in bytes (default 32 for AES-256)
+            
+        Returns:
+            Tuple of (derived_key, salt) as bytes
+        """
+        if not salt:
+            salt = secrets.token_bytes(32)
+        
+        if isinstance(password, str):
+            password = password.encode('utf-8')
+        
+        if isinstance(salt, str):
+            salt = salt.encode('utf-8')
+        
+        if self.fips_mode and CRYPTO_AVAILABLE:
+            # Use PBKDF2 with SHA-256 (FIPS-approved)
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=key_length,
+                salt=salt,
+                iterations=100000,  # NIST recommendation
+                backend=default_backend()
+            )
+            derived = kdf.derive(password)
+        else:
+            # Fallback to hashlib
+            derived = hashlib.pbkdf2_hmac('sha256', password, salt, 100000, dklen=key_length)
+        
+        return derived, salt
     
     def hash_data(self, data):
         """

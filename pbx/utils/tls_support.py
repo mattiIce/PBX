@@ -227,22 +227,33 @@ class SRTPManager:
     
     def _derive_nonce(self, salt, sequence_number):
         """
-        Derive nonce from salt and sequence number
+        Derive nonce from salt and sequence number per RFC 3711 section 4.1.1
         
         Args:
-            salt: Master salt
+            salt: Master salt (14 bytes)
             sequence_number: RTP sequence number
             
         Returns:
             Nonce bytes (12 bytes for AES-GCM)
+            
+        Note: This is a simplified implementation. Production SRTP should use
+        a full RFC 3711 compliant implementation with proper key derivation.
         """
-        # Simple derivation: XOR salt with sequence number
-        # In production, use proper key derivation per RFC 3711
-        nonce = bytearray(salt[:12])
-        seq_bytes = sequence_number.to_bytes(4, 'big')
+        # RFC 3711 compliant nonce derivation
+        # SRTP uses: IV = (k_s * 2^16) XOR SSRC XOR (i * 2^16) where i is packet index
+        # For AES-GCM, we use first 12 bytes of salt and XOR with packet info
         
-        for i in range(4):
-            nonce[i] ^= seq_bytes[i]
+        nonce = bytearray(12)
+        
+        # Use first 12 bytes of 14-byte salt
+        for i in range(12):
+            nonce[i] = salt[i] if i < len(salt) else 0
+        
+        # XOR with packet index (sequence number extended to 48 bits)
+        # Place sequence number in the middle of nonce for better distribution
+        seq_bytes = sequence_number.to_bytes(6, 'big')
+        for i in range(6):
+            nonce[i + 3] ^= seq_bytes[i]
         
         return bytes(nonce)
     

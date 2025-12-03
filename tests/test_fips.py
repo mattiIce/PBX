@@ -47,9 +47,12 @@ def test_fips_data_encryption():
     enc = get_encryption(fips_mode=True)
     
     try:
-        # Test encryption
+        # Test encryption with properly derived key
         data = "Sensitive call recording data"
-        key = "encryption_key_must_be_32bytes!"
+        password = "SecureEncryptionPassword123!"
+        
+        # Derive proper 32-byte key from password
+        key, salt = enc.derive_key(password, key_length=32)
         
         encrypted, nonce, tag = enc.encrypt_data(data, key)
         

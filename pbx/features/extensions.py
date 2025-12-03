@@ -188,11 +188,17 @@ class ExtensionRegistry:
                     return False
             else:
                 # Fallback to plain text comparison (not recommended for production)
+                # Use constant-time comparison to prevent timing attacks
                 self.logger.warning(
                     f"Extension {number} using plain text password - "
                     "consider migrating to hashed passwords"
                 )
-                return password == config_password
+                import secrets
+                if isinstance(password, str):
+                    password = password.encode('utf-8')
+                if isinstance(config_password, str):
+                    config_password = config_password.encode('utf-8')
+                return secrets.compare_digest(password, config_password)
         return False
     
     def hash_extension_password(self, number, password):
