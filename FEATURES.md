@@ -519,6 +519,53 @@
   - Test extensions
   - Mock clients
 
+## Phone Provisioning
+
+### Auto-Configuration
+- **ZIP Phone Support**
+  - ZIP 33G (Basic SIP phone)
+  - ZIP 37G (Advanced SIP phone)
+- **Template-Based Configuration**
+  - Built-in templates for common models
+  - Custom template support
+  - Variable substitution
+- **HTTP Provisioning Server**
+  - Serve config files via HTTP
+  - MAC-based configuration URLs
+  - TFTP alternative (HTTP-based)
+
+### Device Management
+- **Device Registration**
+  - Register devices by MAC address
+  - Associate with extensions
+  - Specify vendor and model
+- **Configuration Generation**
+  - Automatic config file generation
+  - Extension credentials
+  - Server settings
+  - Codec preferences
+- **API Management**
+  - REST API for device management
+  - List provisioned devices
+  - Register/unregister devices
+  - Query supported vendors/models
+
+### Provisioning Features
+- **Supported Configuration**
+  - Extension number and name
+  - SIP server address and port
+  - Authentication credentials
+  - Codec preferences
+  - Time zone settings
+  - Phone-specific settings
+- **Config File Formats**
+  - ZIP phones: CFG format (plain text)
+- **Deployment Options**
+  - Zero-touch provisioning
+  - DHCP option 66 support
+  - Manual URL configuration
+  - Custom templates directory
+
 ## Future Enhancements
 
 ### Planned Features
@@ -527,7 +574,6 @@
 - **SMS Integration** - Text messaging
 - **Mobile Apps** - iOS/Android clients
 - **Video Conferencing** - Video calls
-- **Encryption** - TLS/SRTP support
 - **Database Backend** - Scalable storage
 - **Clustering** - Multi-server setup
 - **Advanced Analytics** - Business intelligence

@@ -145,6 +145,27 @@ security:
   min_password_length: 12
   require_strong_passwords: true
   
+# Phone Provisioning settings
+provisioning:
+  enabled: true
+  # URL format for phone configuration files
+  # Available placeholders: {mac}, {{SERVER_IP}}, {{PORT}}
+  url_format: "http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg"
+  # Optional: Directory for custom phone templates
+  custom_templates_dir: ""
+  # Devices to auto-provision
+  # Format: MAC address, extension number, vendor, model
+  devices: []
+    # Example device configuration:
+    # - mac: "00:15:65:12:34:56"
+    #   extension: "1001"
+    #   vendor: "zip"
+    #   model: "33g"
+    # - mac: "00:15:65:12:34:57"
+    #   extension: "1002"
+    #   vendor: "zip"
+    #   model: "37g"
+
 # SIP Trunks (for external calls)
 trunks:
   # Example trunk configuration (disabled by default)
