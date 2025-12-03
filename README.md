@@ -18,7 +18,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Call Parking** - Park and retrieve calls from any extension
 - **Call Transfer** - Blind and attended transfers
 - **Music on Hold** - Customizable hold music
-- **Voicemail System** - Full-featured voicemail with message management
+- **Voicemail System** - Full-featured voicemail with email notifications and auto-routing
 
 ### Modern VOIP Features
 - **Presence System** - Real-time user availability status
@@ -79,11 +79,56 @@ The PBX will start on:
 Edit `config.yml` to customize:
 
 - **Server Settings** - SIP/RTP ports and binding
-- **Extensions** - User accounts and permissions
+- **Extensions** - User accounts and email addresses
 - **Dialplan** - Call routing rules
 - **Features** - Enable/disable features
+- **Voicemail** - Email notifications and SMTP settings
 - **Call Queues** - Queue configuration
 - **SIP Trunks** - External provider settings
+
+### Voicemail-to-Email Setup
+
+The PBX system includes comprehensive voicemail-to-email functionality:
+
+```yaml
+voicemail:
+  email_notifications: true
+  no_answer_timeout: 30  # Route to voicemail after 30 seconds
+  
+  # SMTP Configuration
+  smtp:
+    host: "smtp.yourserver.com"
+    port: 587
+    use_tls: true
+    username: "your-username"
+    password: "your-password"
+  
+  # Email Settings
+  email:
+    from_address: "voicemail@yourcompany.com"
+    from_name: "PBX Voicemail System"
+    include_attachment: true
+    
+  # Daily Reminders
+  reminders:
+    enabled: true
+    time: "09:00"  # Send daily reminders at 9 AM
+    unread_only: true
+
+# Extensions with email addresses
+extensions:
+  - number: "1001"
+    name: "User Name"
+    email: "user@yourcompany.com"  # Receives voicemail notifications
+```
+
+**Features:**
+- Instant email notifications when voicemail received
+- Voicemail audio attached to email
+- All message details included (caller, timestamp, duration)
+- Daily reminders for unread voicemails
+- Automatic routing to voicemail on no-answer
+- Configurable timeout before voicemail
 
 ## 🔌 API Usage
 
@@ -228,6 +273,7 @@ For issues and questions, please open a GitHub issue.
 - [x] **FIPS 140-2 compliant encryption** - ✅ COMPLETED
 - [x] **TLS/SRTP encryption** - ✅ COMPLETED
 - [x] **Phone Provisioning** - ✅ COMPLETED
+- [x] **Voicemail-to-Email** - ✅ COMPLETED
 - [ ] WebRTC support for browser-based calls
 - [ ] IVR (Interactive Voice Response) system
 - [ ] SMS/Messaging integration

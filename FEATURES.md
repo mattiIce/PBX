@@ -120,13 +120,39 @@
   - Dial pattern: *xxx (e.g., *1001)
   - Remote access capability
   - PIN protection (framework)
+- **No-Answer Routing**
+  - Automatic routing to voicemail when call not answered
+  - Configurable timeout (default 30 seconds)
+  - Seamless caller experience
 
 ### Voicemail Configuration
 - **Customizable Settings**
   - Maximum message duration
   - Storage location
-  - Email notifications (framework)
+  - No-answer timeout
   - Greeting messages (framework)
+
+### Email Notifications
+- **Instant Notifications**
+  - Email sent immediately when voicemail received
+  - Includes all message details (caller ID, timestamp, duration)
+  - Voicemail audio attached to email
+  - Configurable email templates
+- **SMTP Configuration**
+  - Supports TLS/SSL encryption
+  - Compatible with any SMTP server
+  - Configurable authentication
+- **Daily Reminders**
+  - Scheduled reminders for unread voicemails
+  - Configurable reminder time
+  - Per-extension email addresses
+  - List of all unread messages
+- **Email Content**
+  - Caller identification
+  - Timestamp of message
+  - Message duration
+  - Extension information
+  - Direct access instructions
 
 ## Conference Calling
 
