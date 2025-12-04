@@ -636,13 +636,16 @@ chmod 755 /home/runner/work/PBX/PBX/voicemail/prompts
 
 ### Convert Audio Files to PBX Format
 ```bash
-# Convert any audio file to G.711 μ-law (PBX format)
-ffmpeg -i input.wav -ar 8000 -ac 1 -acodec pcm_mulaw output.wav
+# General format: Replace YOUR_AUDIO_FILE.wav and YOUR_OUTPUT_FILE.wav with your actual files
+# ffmpeg -i YOUR_AUDIO_FILE.wav -ar 8000 -ac 1 -acodec pcm_mulaw YOUR_OUTPUT_FILE.wav
 
-# Example: Convert MP3 to PBX format
+# Example 1: Convert a WAV file to PBX format
+# ffmpeg -i myaudio.wav -ar 8000 -ac 1 -acodec pcm_mulaw pbx-ready.wav
+
+# Example 2: Convert MP3 to PBX format
 ffmpeg -i music.mp3 -ar 8000 -ac 1 -acodec pcm_mulaw hold-music.wav
 
-# Batch convert all files in directory
+# Example 3: Batch convert all MP3 files in directory
 for file in *.mp3; do
     ffmpeg -i "$file" -ar 8000 -ac 1 -acodec pcm_mulaw "${file%.mp3}.wav"
 done
