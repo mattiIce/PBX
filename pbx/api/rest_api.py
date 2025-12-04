@@ -73,6 +73,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_extension(number)
             elif path == '/api/config':
                 self._handle_update_config()
+            elif path.startswith('/api/voicemail/'):
+                self._handle_update_voicemail(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -92,6 +94,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension number from path
                 number = path.split('/')[-1]
                 self._handle_delete_extension(number)
+            elif path.startswith('/api/voicemail/'):
+                self._handle_delete_voicemail(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -115,6 +119,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
                 self._handle_get_provisioning_vendors()
+            elif path.startswith('/api/voicemail/'):
+                self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '/' or path == '/admin' or path == '/admin/':
@@ -455,6 +461,143 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'success': True, 'message': 'Configuration updated successfully. Restart required.'})
             else:
                 self._send_json({'error': 'Failed to update configuration'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_voicemail(self, path):
+        """Get voicemail messages for an extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail not enabled'}, 500)
+            return
+        
+        try:
+            # Parse path: /api/voicemail/{extension} or /api/voicemail/{extension}/{message_id}
+            parts = path.split('/')
+            if len(parts) < 4:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            extension = parts[3]
+            
+            # Get mailbox
+            mailbox = self.pbx_core.voicemail_system.get_mailbox(extension)
+            
+            if len(parts) == 4:
+                # List all messages
+                messages = mailbox.get_messages()
+                data = []
+                for msg in messages:
+                    data.append({
+                        'id': msg['id'],
+                        'caller_id': msg['caller_id'],
+                        'timestamp': msg['timestamp'].isoformat() if msg['timestamp'] else None,
+                        'listened': msg['listened'],
+                        'duration': msg['duration']
+                    })
+                self._send_json({'messages': data})
+            elif len(parts) == 5:
+                # Get specific message or download audio
+                message_id = parts[4]
+                
+                # Find message
+                message = None
+                for msg in mailbox.get_messages():
+                    if msg['id'] == message_id:
+                        message = msg
+                        break
+                
+                if not message:
+                    self._send_json({'error': 'Message not found'}, 404)
+                    return
+                
+                # Check if request is for audio download
+                if 'download' in path or path.endswith('/audio'):
+                    # Serve audio file
+                    if os.path.exists(message['file_path']):
+                        self._set_headers(content_type='audio/wav')
+                        with open(message['file_path'], 'rb') as f:
+                            self.wfile.write(f.read())
+                    else:
+                        self._send_json({'error': 'Audio file not found'}, 404)
+                else:
+                    # Return message details
+                    self._send_json({
+                        'id': message['id'],
+                        'caller_id': message['caller_id'],
+                        'timestamp': message['timestamp'].isoformat() if message['timestamp'] else None,
+                        'listened': message['listened'],
+                        'duration': message['duration'],
+                        'file_path': message['file_path']
+                    })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_voicemail(self, path):
+        """Update voicemail settings (mark as read, update PIN)"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail not enabled'}, 500)
+            return
+        
+        try:
+            # Parse path: /api/voicemail/{extension}/pin or /api/voicemail/{extension}/{message_id}/mark-read
+            parts = path.split('/')
+            if len(parts) < 4:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            extension = parts[3]
+            body = self._get_body()
+            
+            # Get mailbox
+            mailbox = self.pbx_core.voicemail_system.get_mailbox(extension)
+            
+            if len(parts) == 5 and parts[4] == 'pin':
+                # Update PIN
+                pin = body.get('pin')
+                if not pin:
+                    self._send_json({'error': 'PIN required'}, 400)
+                    return
+                
+                if mailbox.set_pin(pin):
+                    # Also update in config
+                    self.pbx_core.config.update_voicemail_pin(extension, pin)
+                    self._send_json({'success': True, 'message': 'PIN updated successfully'})
+                else:
+                    self._send_json({'error': 'Invalid PIN format. Must be 4 digits.'}, 400)
+            elif len(parts) == 6 and parts[5] == 'mark-read':
+                # Mark message as read
+                message_id = parts[4]
+                mailbox.mark_listened(message_id)
+                self._send_json({'success': True, 'message': 'Message marked as read'})
+            else:
+                self._send_json({'error': 'Invalid operation'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_voicemail(self, path):
+        """Delete voicemail message"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail not enabled'}, 500)
+            return
+        
+        try:
+            # Parse path: /api/voicemail/{extension}/{message_id}
+            parts = path.split('/')
+            if len(parts) != 5:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            extension = parts[3]
+            message_id = parts[4]
+            
+            # Get mailbox
+            mailbox = self.pbx_core.voicemail_system.get_mailbox(extension)
+            
+            # Delete message
+            if mailbox.delete_message(message_id):
+                self._send_json({'success': True, 'message': 'Message deleted successfully'})
+            else:
+                self._send_json({'error': 'Message not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     

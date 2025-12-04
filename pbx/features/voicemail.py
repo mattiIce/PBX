@@ -32,9 +32,19 @@ class VoicemailBox:
         self.logger = get_logger()
         self.config = config
         self.email_notifier = email_notifier
+        self.pin = None  # Voicemail PIN
+        
+        # Load PIN from extension config if available
+        if config:
+            ext_config = config.get_extension(extension_number)
+            if ext_config:
+                self.pin = ext_config.get('voicemail_pin')
         
         # Create storage directory
         os.makedirs(self.storage_path, exist_ok=True)
+        
+        # Load existing messages from disk
+        self._load_messages()
     
     def save_message(self, caller_id, audio_data, duration=None):
         """
@@ -133,6 +143,69 @@ class VoicemailBox:
                 self.logger.info(f"Deleted voicemail {message_id}")
                 return True
         return False
+    
+    def _load_messages(self):
+        """Load existing voicemail messages from disk"""
+        if not os.path.exists(self.storage_path):
+            return
+        
+        for filename in os.listdir(self.storage_path):
+            if filename.endswith('.wav'):
+                file_path = os.path.join(self.storage_path, filename)
+                # Parse message info from filename: {caller_id}_{timestamp}.wav
+                name_without_ext = filename[:-4]
+                parts = name_without_ext.split('_')
+                
+                if len(parts) >= 3:
+                    caller_id = parts[0]
+                    date_str = parts[1]
+                    time_str = parts[2]
+                    
+                    try:
+                        timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                        
+                        message = {
+                            'id': name_without_ext,
+                            'caller_id': caller_id,
+                            'timestamp': timestamp,
+                            'file_path': file_path,
+                            'listened': False,  # Assume unlistened when loaded
+                            'duration': None  # Duration not stored, would need to parse WAV
+                        }
+                        
+                        self.messages.append(message)
+                    except ValueError:
+                        self.logger.warning(f"Could not parse timestamp from voicemail file: {filename}")
+    
+    def set_pin(self, pin):
+        """
+        Set voicemail PIN
+        
+        Args:
+            pin: 4-digit PIN string
+            
+        Returns:
+            True if PIN was set successfully
+        """
+        if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
+            self.logger.warning(f"Invalid PIN format for extension {self.extension_number}")
+            return False
+        
+        self.pin = str(pin)
+        self.logger.info(f"Updated voicemail PIN for extension {self.extension_number}")
+        return True
+    
+    def verify_pin(self, pin):
+        """
+        Verify voicemail PIN
+        
+        Args:
+            pin: PIN to verify
+            
+        Returns:
+            True if PIN is correct
+        """
+        return self.pin and str(pin) == str(self.pin)
 
 
 class VoicemailSystem:
