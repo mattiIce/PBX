@@ -1,111 +1,18 @@
 #!/usr/bin/env python3
 """
-Database initialization script for PBX system
+Database initialization script for PBX system (wrapper)
+
+This is a compatibility wrapper that calls the main script in ../../scripts/
 """
-import psycopg2
-from psycopg2 import sql
 import sys
+import os
 
-# Database configuration
-DB_CONFIG = {
-    'host': 'localhost',
-    'port': 5432,
-    'database': 'pbx_system',
-    'user': 'pbx_user',
-    'password': 'YourSecurePassword123!'  # Change this!
-}
+# Add the parent directory to the path to import the main script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+main_script_dir = os.path.join(script_dir, '..', '..', 'scripts')
+sys.path.insert(0, main_script_dir)
 
-def test_connection():
-    """Test database connection"""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        cur.execute("SELECT version();")
-        version = cur.fetchone()
-        print(f"✓ Connected to PostgreSQL")
-        print(f"  Version: {version[0]}")
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"✗ Connection failed: {e}")
-        return False
-
-def verify_tables():
-    """Verify all tables exist"""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        
-        tables = ['vip_callers', 'call_records', 'voicemail_messages', 'extension_settings']
-        
-        for table in tables:
-            cur.execute("""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'public' 
-                    AND table_name = %s
-                );
-            """, (table,))
-            exists = cur.fetchone()[0]
-            if exists:
-                print(f"✓ Table '{table}' exists")
-            else:
-                print(f"✗ Table '{table}' NOT FOUND")
-        
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"✗ Verification failed: {e}")
-        return False
-
-def add_sample_data():
-    """Add sample VIP caller data for testing"""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        
-        # Insert sample VIP callers
-        vip_data = [
-            ('+15551234567', 'John Smith', 'ABC Corp', 1, 'Important customer', '1001', True),
-            ('+15559876543', 'Jane Doe', 'XYZ Inc', 2, 'VVIP - Board member', '1000', True),
-            ('+15555555555', 'Bob Johnson', 'Tech Ltd', 1, 'Regular VIP', '1002', False),
-        ]
-        
-        for caller_id, name, company, priority, notes, extension, skip_queue in vip_data:
-            cur.execute("""
-                INSERT INTO vip_callers 
-                (caller_id, name, company, priority_level, notes, direct_extension, skip_queue)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (caller_id) DO NOTHING;
-            """, (caller_id, name, company, priority, notes, extension, skip_queue))
-        
-        conn.commit()
-        print(f"✓ Added {len(vip_data)} sample VIP callers")
-        
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"✗ Sample data insertion failed: {e}")
-        return False
-
+# Import and run the main initialization script
 if __name__ == "__main__":
-    print("=" * 60)
-    print("PBX Database Initialization")
-    print("=" * 60)
-    
-    if test_connection():
-        print("\n" + "=" * 60)
-        if verify_tables():
-            print("\n" + "=" * 60)
-            if add_sample_data():
-                print("\n✅ Database initialization complete!")
-            else:
-                print("\n⚠️  Sample data insertion failed")
-        else:
-            print("\n⚠️  Table verification failed")
-    else:
-        print("\n❌ Database connection failed")
-        sys.exit(1)
+    import init_database
+    # The main script will run when imported due to its __main__ block

@@ -3,16 +3,18 @@
 Database initialization script for PBX system
 """
 import psycopg2
-from psycopg2 import sql
 import sys
+import os
 
 # Database configuration
+# NOTE: For production use, replace these values with environment variables:
+#   - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 DB_CONFIG = {
-    'host': 'localhost',
-    'port': 5432,
-    'database': 'pbx_system',
-    'user': 'pbx_user',
-    'password': 'YourSecurePassword123!'  # Change this!
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'port': int(os.environ.get('DB_PORT', 5432)),
+    'database': os.environ.get('DB_NAME', 'pbx_system'),
+    'user': os.environ.get('DB_USER', 'pbx_user'),
+    'password': os.environ.get('DB_PASSWORD', 'YourSecurePassword123!')  # Change this!
 }
 
 def test_connection():
