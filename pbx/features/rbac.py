@@ -3,13 +3,13 @@ Role-Based Access Control (RBAC) System
 Manages user roles and permissions for admin panel access
 """
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from pbx.utils.logger import get_logger
 from pbx.utils.encryption import FIPSEncryption
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class Permission:
@@ -158,10 +158,12 @@ class RBACManager:
                 logger.error(f"Error loading users file: {e}")
         
         # Create default admin user if no users exist
+        password_hash, salt = self.encryption.hash_password('admin123')
         default_admin = {
             'admin': {
                 'username': 'admin',
-                'password_hash': self.encryption.hash_password('admin123'),
+                'password_hash': password_hash,
+                'password_salt': salt,
                 'role': Role.SUPER_ADMIN,
                 'email': 'admin@localhost',
                 'created_at': datetime.now().isoformat(),
@@ -197,7 +199,8 @@ class RBACManager:
             return None
         
         password_hash = user.get('password_hash')
-        if self.encryption.verify_password(password, password_hash):
+        password_salt = user.get('password_salt')
+        if self.encryption.verify_password(password, password_hash, password_salt):
             return {
                 'username': user['username'],
                 'role': user['role'],
@@ -224,9 +227,11 @@ class RBACManager:
             logger.warning(f"User {username} already exists")
             return False
         
+        password_hash, salt = self.encryption.hash_password(password)
         self.users[username] = {
             'username': username,
-            'password_hash': self.encryption.hash_password(password),
+            'password_hash': password_hash,
+            'password_salt': salt,
             'role': role,
             'email': email,
             'created_at': datetime.now().isoformat(),
@@ -254,7 +259,9 @@ class RBACManager:
         
         # Update allowed fields
         if 'password' in kwargs:
-            user['password_hash'] = self.encryption.hash_password(kwargs['password'])
+            password_hash, salt = self.encryption.hash_password(kwargs['password'])
+            user['password_hash'] = password_hash
+            user['password_salt'] = salt
         if 'role' in kwargs:
             user['role'] = kwargs['role']
         if 'email' in kwargs:

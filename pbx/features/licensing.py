@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from pbx.utils.logger import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class LicenseType:
