@@ -132,6 +132,7 @@ async function loadExtensions() {
                 </td>
                 <td>
                     <button class="btn btn-primary" onclick="editExtension('${ext.number}')">✏️ Edit</button>
+                    ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${ext.number}')">🔄 Reboot</button>` : ''}
                     <button class="btn btn-danger" onclick="deleteExtension('${ext.number}')">🗑️ Delete</button>
                 </td>
             </tr>
@@ -611,3 +612,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Phone Reboot Functions
+async function rebootPhone(extension) {
+    if (!confirm(`Send reboot signal to phone at extension ${extension}?\n\nThe phone will restart and reload its configuration.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/phones/${extension}/reboot`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showNotification(`Reboot signal sent to extension ${extension}`, 'success');
+        } else {
+            showNotification(data.error || 'Failed to send reboot signal', 'error');
+        }
+    } catch (error) {
+        console.error('Error rebooting phone:', error);
+        showNotification('Failed to send reboot signal', 'error');
+    }
+}
+
+async function rebootAllPhones() {
+    if (!confirm('Send reboot signal to ALL registered phones?\n\nAll online phones will restart and reload their configurations. This may take a few minutes.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/phones/reboot`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            const message = `Rebooted ${data.success_count} phone(s)` + 
+                          (data.failed_count > 0 ? `, ${data.failed_count} failed` : '');
+            showNotification(message, 'success');
+            
+            // Refresh extensions list after a delay to show new status
+            setTimeout(loadExtensions, 2000);
+        } else {
+            showNotification(data.error || 'Failed to reboot phones', 'error');
+        }
+    } catch (error) {
+        console.error('Error rebooting phones:', error);
+        showNotification('Failed to reboot phones', 'error');
+    }
+}

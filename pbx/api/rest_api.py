@@ -56,6 +56,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_register_device()
             elif path == '/api/extensions':
                 self._handle_add_extension()
+            elif path == '/api/phones/reboot':
+                self._handle_reboot_phones()
+            elif path.startswith('/api/phones/') and path.endswith('/reboot'):
+                # Extract extension number: /api/phones/{extension}/reboot
+                parts = path.split('/')
+                if len(parts) >= 4:
+                    extension = parts[3]
+                    self._handle_reboot_phone(extension)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -598,6 +608,54 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'success': True, 'message': 'Message deleted successfully'})
             else:
                 self._send_json({'error': 'Message not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_reboot_phone(self, extension):
+        """Reboot a specific phone"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        try:
+            # Send SIP NOTIFY to reboot the phone
+            success = self.pbx_core.phone_provisioning.reboot_phone(
+                extension,
+                self.pbx_core.sip_server
+            )
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Reboot signal sent to extension {extension}'
+                })
+            else:
+                self._send_json({
+                    'error': f'Failed to send reboot signal to extension {extension}. Extension may not be registered.'
+                }, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_reboot_phones(self):
+        """Reboot all registered phones"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        try:
+            # Send SIP NOTIFY to all registered phones
+            results = self.pbx_core.phone_provisioning.reboot_all_phones(
+                self.pbx_core.sip_server
+            )
+            
+            self._send_json({
+                'success': True,
+                'message': f'Rebooted {results["success_count"]} phones',
+                'rebooted': results['rebooted'],
+                'failed': results['failed'],
+                'success_count': results['success_count'],
+                'failed_count': results['failed_count']
+            })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     

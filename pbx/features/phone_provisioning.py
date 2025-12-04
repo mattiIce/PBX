@@ -422,3 +422,83 @@ security.user_password = admin
             for v in result:
                 result[v] = sorted(result[v])
             return result
+    
+    def reboot_phone(self, extension_number, sip_server):
+        """
+        Send SIP NOTIFY to reboot a phone
+        
+        Args:
+            extension_number: Extension number
+            sip_server: SIPServer instance to send NOTIFY
+            
+        Returns:
+            bool: True if NOTIFY was sent successfully
+        """
+        from pbx.sip.message import SIPMessageBuilder
+        
+        # Find the extension to get its registered address
+        extension = sip_server.pbx_core.extension_registry.get(extension_number)
+        if not extension or not extension.registered or not extension.address:
+            self.logger.warning(f"Extension {extension_number} not registered, cannot reboot phone")
+            return False
+        
+        try:
+            # Build SIP NOTIFY for check-sync event (triggers phone reboot/config reload)
+            server_ip = sip_server.pbx_core.config.get('server.external_ip', '127.0.0.1')
+            sip_port = sip_server.pbx_core.config.get('server.sip_port', 5060)
+            
+            notify_msg = SIPMessageBuilder.build_request(
+                method='NOTIFY',
+                uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
+                from_addr=f"<sip:{server_ip}:{sip_port}>",
+                to_addr=f"<sip:{extension_number}@{server_ip}>",
+                call_id=f"notify-reboot-{extension_number}-{datetime.now().timestamp()}",
+                cseq=1
+            )
+            
+            # Add NOTIFY-specific headers
+            notify_msg.set_header('Event', 'check-sync')
+            notify_msg.set_header('Subscription-State', 'terminated')
+            notify_msg.set_header('Content-Length', '0')
+            
+            # Send the NOTIFY message
+            sip_server._send_message(notify_msg.build(), extension.address)
+            
+            self.logger.info(f"Sent reboot NOTIFY to extension {extension_number} at {extension.address}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
+            return False
+    
+    def reboot_all_phones(self, sip_server):
+        """
+        Send SIP NOTIFY to reboot all registered phones
+        
+        Args:
+            sip_server: SIPServer instance to send NOTIFY
+            
+        Returns:
+            dict: Results with success count and list of extensions
+        """
+        results = {
+            'success_count': 0,
+            'failed_count': 0,
+            'rebooted': [],
+            'failed': []
+        }
+        
+        # Get all registered extensions
+        extensions = sip_server.pbx_core.extension_registry.get_all()
+        
+        for extension in extensions:
+            if extension.registered:
+                if self.reboot_phone(extension.number, sip_server):
+                    results['success_count'] += 1
+                    results['rebooted'].append(extension.number)
+                else:
+                    results['failed_count'] += 1
+                    results['failed'].append(extension.number)
+        
+        self.logger.info(f"Rebooted {results['success_count']} phones, {results['failed_count']} failed")
+        return results
