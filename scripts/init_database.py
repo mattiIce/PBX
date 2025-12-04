@@ -7,15 +7,31 @@ import sys
 import os
 
 # Database configuration
-# NOTE: For production use, replace these values with environment variables:
+# NOTE: For production use, set these environment variables:
 #   - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
-DB_CONFIG = {
-    'host': os.environ.get('DB_HOST', 'localhost'),
-    'port': int(os.environ.get('DB_PORT', 5432)),
-    'database': os.environ.get('DB_NAME', 'pbx_system'),
-    'user': os.environ.get('DB_USER', 'pbx_user'),
-    'password': os.environ.get('DB_PASSWORD', 'YourSecurePassword123!')  # Change this!
-}
+def get_db_config():
+    """Get database configuration from environment variables with validation"""
+    try:
+        port = int(os.environ.get('DB_PORT', 5432))
+    except ValueError:
+        print("✗ Error: DB_PORT must be a valid integer")
+        sys.exit(1)
+    
+    password = os.environ.get('DB_PASSWORD')
+    if not password:
+        print("⚠️  Warning: Using default password from script.")
+        print("   For production, set DB_PASSWORD environment variable!")
+        password = 'YourSecurePassword123!'  # Default for testing only
+    
+    return {
+        'host': os.environ.get('DB_HOST', 'localhost'),
+        'port': port,
+        'database': os.environ.get('DB_NAME', 'pbx_system'),
+        'user': os.environ.get('DB_USER', 'pbx_user'),
+        'password': password
+    }
+
+DB_CONFIG = get_db_config()
 
 def test_connection():
     """Test database connection"""
