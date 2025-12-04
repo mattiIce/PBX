@@ -118,7 +118,7 @@ def check_connection(config):
                         print(f"  Total voicemail records in database: {count}")
                 else:
                     print(f"\n⚠ voicemail_messages table does NOT exist")
-                    print(f"  Run: python -c 'from pbx.core.pbx import PBXCore; pbx = PBXCore(); pbx.database.create_tables()' to create tables")
+                    print(f"  Tables will be created automatically when PBX starts")
             else:
                 print(f"⚠ No tables found in database")
                 print(f"  Tables may need to be created")

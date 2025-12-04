@@ -71,12 +71,15 @@ def main():
             {"caller": "555-1234", "duration": 60},
         ]
         
+        # Create minimal valid WAV file structure for demo
+        # RIFF header: 'RIFF', file size (4 bytes), 'WAVE'
+        DEMO_WAV_DATA = b'RIFF' + b'\x00' * 100
+        
         message_ids = []
         for vm in test_voicemails:
-            test_audio = b'RIFF' + b'\x00' * 100  # Fake WAV data
             message_id = mailbox.save_message(
                 caller_id=vm["caller"],
-                audio_data=test_audio,
+                audio_data=DEMO_WAV_DATA,
                 duration=vm["duration"]
             )
             message_ids.append(message_id)

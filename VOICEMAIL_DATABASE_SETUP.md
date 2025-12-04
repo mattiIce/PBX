@@ -52,7 +52,7 @@ This diagnostic tool will check:
    Then in the PostgreSQL prompt:
    ```sql
    CREATE DATABASE pbx_system;
-   CREATE USER pbx_user WITH PASSWORD 'YourSecurePassword123!';
+   CREATE USER pbx_user WITH PASSWORD 'your_secure_password_here';
    GRANT ALL PRIVILEGES ON DATABASE pbx_system TO pbx_user;
    \q
    ```
@@ -65,7 +65,12 @@ This diagnostic tool will check:
      port: 5432
      name: pbx_system
      user: pbx_user
-     password: YourSecurePassword123!  # Use environment variables in production
+     password: ${DATABASE_PASSWORD}  # Use environment variables for security
+   ```
+   
+   For testing only, you can use a direct password:
+   ```yaml
+   password: your_secure_password_here  # NOT recommended for production!
    ```
 
 4. **Install Python Driver**:
