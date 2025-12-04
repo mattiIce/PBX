@@ -266,6 +266,66 @@ def test_integration_stubs():
     print("✓ Integration stubs properly structured")
 
 
+def test_database_backend():
+    """Test database backend with SQLite"""
+    print("Testing database backend...")
+    
+    from pbx.utils.database import DatabaseBackend, VIPCallerDB
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = os.path.join(tmpdir, 'test.db')
+        
+        config = {
+            'database.type': 'sqlite',
+            'database.path': db_path
+        }
+        
+        # Test database connection
+        db = DatabaseBackend(config)
+        assert db.connect()
+        assert db.enabled
+        
+        # Test table creation
+        assert db.create_tables()
+        
+        # Test VIP caller operations
+        vip_db = VIPCallerDB(db)
+        
+        # Add VIP
+        assert vip_db.add_vip('5551234', priority_level=1, name='Test VIP', notes='Test notes')
+        
+        # Check if VIP
+        assert vip_db.is_vip('5551234')
+        assert not vip_db.is_vip('5559999')
+        
+        # Get VIP
+        vip = vip_db.get_vip('5551234')
+        assert vip is not None
+        assert vip['name'] == 'Test VIP'
+        assert vip['priority_level'] == 1
+        
+        # List VIPs
+        vips = vip_db.list_vips()
+        assert len(vips) == 1
+        assert vips[0]['caller_id'] == '5551234'
+        
+        # Update VIP
+        assert vip_db.add_vip('5551234', priority_level=2, name='Updated VIP')
+        vip = vip_db.get_vip('5551234')
+        assert vip['priority_level'] == 2
+        assert vip['name'] == 'Updated VIP'
+        
+        # Remove VIP
+        assert vip_db.remove_vip('5551234')
+        assert not vip_db.is_vip('5551234')
+        
+        # Disconnect
+        db.disconnect()
+        assert not db.enabled
+        
+    print("✓ Database backend works")
+
+
 def run_all_tests():
     """Run all tests"""
     print("=" * 60)
@@ -279,6 +339,7 @@ def run_all_tests():
         test_voicemail_ivr,
         test_operator_console_features,
         test_integration_stubs,
+        test_database_backend,
     ]
     
     passed = 0
