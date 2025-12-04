@@ -49,6 +49,7 @@ cdr/
 *.local.yml
 *.local.json
 local_config/
+.env
 
 # Testing
 .pytest_cache/

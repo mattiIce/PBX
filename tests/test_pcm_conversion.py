@@ -1,9 +1,14 @@
 """
 Test PCM to G.711 μ-law conversion functionality
 """
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 import struct
 import tempfile
-import os
 
 
 def test_pcm16_to_ulaw_conversion():

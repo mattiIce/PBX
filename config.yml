@@ -1,3 +1,14 @@
+# =============================================================================
+# SECURITY WARNING: This file contains example credentials
+# =============================================================================
+# NEVER commit real passwords to version control!
+# For production use:
+# 1. Copy .env.example to .env
+# 2. Fill in your real credentials in .env
+# 3. Use environment variables instead of hardcoded values
+# See .env.example for the complete list of environment variables
+# =============================================================================
+
 server:
   sip_host: 0.0.0.0
   sip_port: 5060
@@ -20,23 +31,23 @@ database:
 extensions:
 - number: '1001'
   name: Codi Mattinson
-  password: password1001
+  password: password1001  # SECURITY: Change to strong password in production
   allow_external: true
   email: 'cmattinson@albl.com'
-  voicemail_pin: '1234'
+  voicemail_pin: '1234'  # SECURITY: Change in production
 - number: '1002'
   name: Bill Sautter
-  password: password1002
+  password: password1002  # SECURITY: Change to strong password in production
   allow_external: true
   email: 'bsautter@albl.com'
 - number: '1003'
   name: Lisa Dingman
-  password: password1003
+  password: password1003  # SECURITY: Change to strong password in production
   allow_external: false
   email: 'ldingman@albl.com'
 - number: '1004'
   name: Customer Service
-  password: password1004
+  password: password1004  # SECURITY: Change to strong password in production
   allow_external: true
   email: 'support@albl.com'
 dialplan:
@@ -71,8 +82,8 @@ voicemail:
     host: 192.168.1.75
     port: 587
     use_tls: true
-    username: cmattinson
-    password: G0N@vyBuyC@n3$
+    username: cmattinson  # SECURITY: Use environment variable SMTP_USERNAME in production
+    password: G0N@vyBuyC@n3$  # SECURITY: Use environment variable SMTP_PASSWORD in production
   email:
     from_address: 'Voicemail@albl.com'
     from_name: ABCo Voicemail

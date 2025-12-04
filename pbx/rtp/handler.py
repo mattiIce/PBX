@@ -478,8 +478,8 @@ class RTPPlayer:
         if self.socket:
             try:
                 self.socket.close()
-            except:
-                pass
+            except OSError:
+                pass  # Socket already closed
             self.socket = None
         self.logger.info(f"RTP player stopped for call {self.call_id}")
 

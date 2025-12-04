@@ -998,8 +998,8 @@ class PBXCore:
             # Ensure call is ended even if there's an error
             try:
                 self.end_call(call_id)
-            except:
-                pass
+            except Exception as e:
+                self.logger.error(f"Error ending call during cleanup: {e}")
 
     def _voicemail_ivr_session(self, call_id, call, mailbox, voicemail_ivr):
         """
@@ -1142,8 +1142,8 @@ class PBXCore:
                                         finally:
                                             try:
                                                 os.unlink(prompt_file)
-                                            except:
-                                                pass
+                                            except OSError:
+                                                pass  # File already deleted or doesn't exist
                                         
                                         time.sleep(0.3)
                                     
@@ -1159,8 +1159,8 @@ class PBXCore:
                                         finally:
                                             try:
                                                 os.unlink(prompt_file)
-                                            except:
-                                                pass
+                                            except OSError:
+                                                pass  # File already deleted or doesn't exist
                                         
                                         time.sleep(1)
                                         ivr_active = False
@@ -1190,8 +1190,8 @@ class PBXCore:
             traceback.print_exc()
             try:
                 self.end_call(call_id)
-            except:
-                pass
+            except Exception as e:
+                self.logger.error(f"Error ending call during cleanup: {e}")
 
     def _build_wav_file(self, audio_data):
         """
