@@ -2,7 +2,6 @@
 SDP (Session Description Protocol) Parser and Builder
 Used for media negotiation in SIP calls
 """
-import re
 
 
 class SDPSession:

@@ -3,7 +3,6 @@ Phone Provisioning Module
 Provides auto-configuration for IP phones (SIP phones)
 """
 import os
-import hashlib
 from datetime import datetime
 from pbx.utils.logger import get_logger
 

@@ -3,9 +3,8 @@ Database backend for PBX features
 Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 """
 from pbx.utils.logger import get_logger
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 from datetime import datetime
-import json
 
 try:
     import psycopg2

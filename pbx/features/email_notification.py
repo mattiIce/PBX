@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.audio import MIMEAudio
 from email.utils import formatdate
-from datetime import datetime, time as dt_time
+from datetime import datetime
 from pbx.utils.logger import get_logger
 import threading
 import time

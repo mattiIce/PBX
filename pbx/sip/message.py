@@ -1,7 +1,6 @@
 """
 SIP Message Parser and Builder
 """
-import re
 
 
 class SIPMessage:
