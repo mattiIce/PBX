@@ -146,3 +146,82 @@ def generate_busy_tone():
 
     header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
     return header + pcm_data
+
+
+def generate_voice_prompt(prompt_type, sample_rate=8000):
+    """
+    Generate a voice-like prompt using tone sequences
+    
+    Since we don't have TTS, we use distinctive tone patterns to represent different prompts.
+    These tones are designed to be recognizable and indicate specific messages.
+    
+    Args:
+        prompt_type: Type of prompt to generate:
+            - 'leave_message': "Please leave a message after the tone"
+            - 'enter_pin': "Please enter your PIN"
+            - 'main_menu': "Main menu. Press 1 to listen to messages..."
+            - 'message_menu': "Press 1 to replay, 2 for next, 3 to delete..."
+            - 'no_messages': "You have no messages"
+            - 'goodbye': "Goodbye"
+        sample_rate: Sample rate in Hz
+    
+    Returns:
+        bytes: Complete WAV file with prompt tones
+    
+    Note: In production, these would be replaced with actual recorded voice prompts
+    """
+    # Define tone sequences for different prompts
+    # Format: [(frequency_hz, duration_ms), ...]
+    tone_sequences = {
+        'leave_message': [
+            # Ascending tones to indicate "please leave a message"
+            (600, 200), (700, 200), (800, 200), (900, 300),
+        ],
+        'enter_pin': [
+            # Short repeating tone for PIN entry
+            (1000, 150), (0, 100), (1000, 150), (0, 100), (1000, 150),
+        ],
+        'main_menu': [
+            # Two-tone pattern for menu
+            (800, 200), (600, 200), (800, 200),
+        ],
+        'message_menu': [
+            # Quick triple beep for options
+            (900, 100), (0, 50), (900, 100), (0, 50), (900, 100),
+        ],
+        'no_messages': [
+            # Descending tones for "no messages"
+            (800, 200), (600, 200), (400, 300),
+        ],
+        'goodbye': [
+            # Descending dual tone for goodbye
+            (700, 250), (500, 300),
+        ],
+        'invalid_option': [
+            # Low buzz for invalid option
+            (300, 400),
+        ],
+        'you_have_messages': [
+            # Cheerful ascending tones
+            (600, 150), (750, 150), (900, 200),
+        ],
+    }
+    
+    sequence = tone_sequences.get(prompt_type, [(800, 300)])  # Default tone
+    
+    pcm_data = b''
+    for frequency, duration_ms in sequence:
+        if frequency == 0:
+            # Silence
+            num_samples = int(sample_rate * duration_ms / 1000)
+            pcm_data += b'\x00\x00' * num_samples
+        else:
+            # Generate tone
+            num_samples = int(sample_rate * duration_ms / 1000)
+            for i in range(num_samples):
+                t = i / sample_rate
+                value = int(MAX_16BIT_SIGNED * DEFAULT_AMPLITUDE * math.sin(2 * math.pi * frequency * t))
+                pcm_data += struct.pack('<h', value)
+    
+    header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
+    return header + pcm_data

@@ -673,10 +673,14 @@ class PBXCore:
             # Mark call as connected
             call.connect()
 
-            # Play voicemail beep tone to caller
+            # Play voicemail greeting and beep tone to caller
             if call.caller_rtp:
                 try:
-                    # Create RTP player to send beep to caller
+                    from pbx.utils.audio import generate_voice_prompt, generate_voicemail_beep
+                    import tempfile
+                    import os
+                    
+                    # Create RTP player to send audio to caller
                     # Note: Using adjacent port (rtp_port + 1) for sending audio back to caller
                     # In production, consider implementing proper port allocation to avoid conflicts
                     player = RTPPlayer(
@@ -686,14 +690,31 @@ class PBXCore:
                         call_id=call_id
                     )
                     if player.start():
+                        # Play greeting prompt: "Please leave a message after the tone"
+                        greeting_prompt = generate_voice_prompt('leave_message')
+                        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                            temp_file.write(greeting_prompt)
+                            greeting_file = temp_file.name
+                        
+                        try:
+                            player.play_file(greeting_file)
+                            import time
+                            time.sleep(0.3)  # Brief pause before beep
+                        finally:
+                            # Clean up temp file
+                            try:
+                                os.unlink(greeting_file)
+                            except:
+                                pass
+                        
                         # Play beep tone (1000 Hz, 500ms)
                         player.play_beep(frequency=1000, duration_ms=500)
                         player.stop()
-                        self.logger.info(f"Played voicemail beep for call {call_id}")
+                        self.logger.info(f"Played voicemail greeting and beep for call {call_id}")
                     else:
-                        self.logger.warning(f"Failed to start RTP player for beep on call {call_id}")
+                        self.logger.warning(f"Failed to start RTP player for greeting on call {call_id}")
                 except Exception as e:
-                    self.logger.error(f"Error playing voicemail beep: {e}")
+                    self.logger.error(f"Error playing voicemail greeting: {e}")
 
             # Start RTP recorder on the allocated port
             recorder = RTPRecorder(call.rtp_ports[0], call_id)
@@ -855,17 +876,22 @@ class PBXCore:
         # Mark call as connected
         call.connect()
 
+        # Create VoicemailIVR for this call
+        from pbx.features.voicemail import VoicemailIVR
+        voicemail_ivr = VoicemailIVR(self.voicemail_system, target_ext)
+        call.voicemail_ivr = voicemail_ivr
+
         # Get message count
         messages = mailbox.get_messages(unread_only=False)
         unread = mailbox.get_messages(unread_only=True)
 
         self.logger.info(f"Voicemail access for {target_ext}: {len(unread)} unread, {len(messages)} total")
 
-        # Play voicemail messages to the caller
+        # Start IVR-based voicemail management
         # This runs in a separate thread so it doesn't block
         playback_thread = threading.Thread(
-            target=self._playback_voicemails,
-            args=(call_id, call, mailbox, messages)
+            target=self._voicemail_ivr_session,
+            args=(call_id, call, mailbox, voicemail_ivr)
         )
         playback_thread.daemon = True
         playback_thread.start()
@@ -956,6 +982,202 @@ class PBXCore:
             import traceback
             traceback.print_exc()
             # Ensure call is ended even if there's an error
+            try:
+                self.end_call(call_id)
+            except:
+                pass
+
+    def _voicemail_ivr_session(self, call_id, call, mailbox, voicemail_ivr):
+        """
+        Interactive voicemail management session with IVR menu
+        
+        Args:
+            call_id: Call identifier
+            call: Call object
+            mailbox: VoicemailBox object
+            voicemail_ivr: VoicemailIVR object
+        """
+        import time
+        from pbx.rtp.handler import RTPPlayer, RTPRecorder
+        from pbx.utils.audio import generate_voice_prompt
+        from pbx.utils.dtmf import DTMFDetector
+        import tempfile
+        import os
+        
+        try:
+            # Wait a moment for RTP to stabilize
+            time.sleep(0.5)
+            
+            if not call.caller_rtp:
+                self.logger.warning(f"No caller RTP info for voicemail IVR {call_id}")
+                time.sleep(2)
+                self.end_call(call_id)
+                return
+            
+            # Create RTP player for sending audio prompts
+            player = RTPPlayer(
+                local_port=call.rtp_ports[0] + 1,
+                remote_host=call.caller_rtp['address'],
+                remote_port=call.caller_rtp['port'],
+                call_id=call_id
+            )
+            
+            if not player.start():
+                self.logger.error(f"Failed to start RTP player for voicemail IVR {call_id}")
+                time.sleep(2)
+                self.end_call(call_id)
+                return
+            
+            # Create DTMF detector for receiving menu selections
+            dtmf_detector = DTMFDetector(sample_rate=8000)
+            
+            # Create RTP receiver for DTMF detection
+            recorder = RTPRecorder(call.rtp_ports[0], call_id)
+            if not recorder.start():
+                self.logger.error(f"Failed to start RTP receiver for DTMF {call_id}")
+                player.stop()
+                time.sleep(2)
+                self.end_call(call_id)
+                return
+            
+            try:
+                # Welcome message - greet user with message count
+                unread_count = len(mailbox.get_messages(unread_only=True))
+                
+                # Play welcome prompt
+                if unread_count > 0:
+                    prompt = generate_voice_prompt('you_have_messages')
+                else:
+                    prompt = generate_voice_prompt('no_messages')
+                
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                    temp_file.write(prompt)
+                    prompt_file = temp_file.name
+                
+                try:
+                    player.play_file(prompt_file)
+                finally:
+                    try:
+                        os.unlink(prompt_file)
+                    except:
+                        pass
+                
+                time.sleep(0.5)
+                
+                # Play main menu prompt
+                menu_prompt = generate_voice_prompt('main_menu')
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                    temp_file.write(menu_prompt)
+                    prompt_file = temp_file.name
+                
+                try:
+                    player.play_file(prompt_file)
+                finally:
+                    try:
+                        os.unlink(prompt_file)
+                    except:
+                        pass
+                
+                self.logger.info(f"Voicemail IVR started for {call.voicemail_extension}")
+                
+                # Main IVR loop - listen for DTMF input
+                ivr_active = True
+                last_audio_check = time.time()
+                audio_buffer = []
+                
+                while ivr_active:
+                    # Check if call is still active
+                    if call.state.value == 'ended':
+                        break
+                    
+                    # Collect audio for DTMF detection
+                    time.sleep(0.1)
+                    
+                    # Check for recorded audio (DTMF tones from user)
+                    if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                        # Get recent audio data
+                        if len(recorder.recorded_data) > 0:
+                            # Collect last 0.5 seconds of audio for DTMF detection
+                            recent_audio = b''.join(recorder.recorded_data[-40:])  # ~0.5s at 160 bytes per 20ms packet
+                            
+                            if len(recent_audio) > 1600:  # Need sufficient audio for DTMF
+                                # Detect DTMF in audio
+                                digit = dtmf_detector.detect(recent_audio)
+                                
+                                if digit:
+                                    self.logger.info(f"Detected DTMF digit: {digit} in voicemail IVR")
+                                    
+                                    # Handle DTMF input through IVR
+                                    action = voicemail_ivr.handle_dtmf(digit)
+                                    
+                                    # Process IVR action
+                                    if action['action'] == 'play_message':
+                                        # Play the voicemail message
+                                        file_path = action.get('file_path')
+                                        if file_path and os.path.exists(file_path):
+                                            player.play_file(file_path)
+                                            mailbox.mark_listened(action['message_id'])
+                                            self.logger.info(f"Played voicemail {action['message_id']}")
+                                        time.sleep(0.5)
+                                    
+                                    elif action['action'] == 'play_prompt':
+                                        # Play a prompt
+                                        prompt_type = action.get('prompt', 'main_menu')
+                                        prompt_audio = generate_voice_prompt(prompt_type)
+                                        
+                                        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                            temp_file.write(prompt_audio)
+                                            prompt_file = temp_file.name
+                                        
+                                        try:
+                                            player.play_file(prompt_file)
+                                        finally:
+                                            try:
+                                                os.unlink(prompt_file)
+                                            except:
+                                                pass
+                                        
+                                        time.sleep(0.3)
+                                    
+                                    elif action['action'] == 'hangup':
+                                        # Play goodbye and end call
+                                        goodbye_prompt = generate_voice_prompt('goodbye')
+                                        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                            temp_file.write(goodbye_prompt)
+                                            prompt_file = temp_file.name
+                                        
+                                        try:
+                                            player.play_file(prompt_file)
+                                        finally:
+                                            try:
+                                                os.unlink(prompt_file)
+                                            except:
+                                                pass
+                                        
+                                        time.sleep(1)
+                                        ivr_active = False
+                                    
+                                    # Clear audio buffer after processing
+                                    recorder.recorded_data = []
+                    
+                    # Timeout after 60 seconds of no activity
+                    if time.time() - last_audio_check > 60:
+                        self.logger.info(f"Voicemail IVR timeout for {call.voicemail_extension}")
+                        ivr_active = False
+                
+                self.logger.info(f"Voicemail IVR session ended for {call.voicemail_extension}")
+            
+            finally:
+                player.stop()
+                recorder.stop()
+            
+            # End the call
+            self.end_call(call_id)
+        
+        except Exception as e:
+            self.logger.error(f"Error in voicemail IVR session: {e}")
+            import traceback
+            traceback.print_exc()
             try:
                 self.end_call(call_id)
             except:
