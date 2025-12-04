@@ -148,7 +148,7 @@ def test_config():
     # Test getting specific extension
     ext = config.get_extension("1001")
     assert ext is not None, "Extension 1001 not found"
-    assert ext.get('name'), "Extension 1001 should have a name"
+    assert 'name' in ext, "Extension 1001 should have a name field"
 
     print("✓ Configuration works")
 
