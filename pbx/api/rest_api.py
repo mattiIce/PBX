@@ -726,6 +726,6 @@ class PBXAPIServer:
         if self.server:
             try:
                 self.server.server_close()
-            except Exception as e:
+            except (OSError, socket.error) as e:
                 self.logger.error(f"Error closing API server: {e}")
         self.logger.info("API server stopped")

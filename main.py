@@ -40,15 +40,16 @@ if __name__ == "__main__":
             print("Press Ctrl+C to stop\n")
             
             # Keep running and display status periodically
+            last_status_time = time.time()
             while running:
                 time.sleep(1)
-                if not running:
-                    break
-                # Display status every 10 iterations (10 seconds)
-                if int(time.time()) % 10 == 0:
+                # Display status every 10 seconds
+                current_time = time.time()
+                if current_time - last_status_time >= 10:
                     status = pbx.get_status()
                     print(f"Status: {status['registered_extensions']} extensions registered, "
                           f"{status['active_calls']} active calls")
+                    last_status_time = current_time
             
             print("PBX system shutdown complete")
         else:
