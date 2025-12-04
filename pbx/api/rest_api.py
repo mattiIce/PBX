@@ -58,6 +58,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_extension()
             elif path == '/api/phones/reboot':
                 self._handle_reboot_phones()
+            elif path == '/api/admin/login':
+                self._handle_rbac_login()
             elif path.startswith('/api/phones/') and path.endswith('/reboot'):
                 # Extract extension number: /api/phones/{extension}/reboot
                 parts = path.split('/')
@@ -131,6 +133,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_vendors()
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
+            elif path.startswith('/api/analytics/'):
+                self._handle_analytics(self.path)
+            elif path == '/api/license':
+                self._handle_licensing()
+            elif path == '/api/admin/users':
+                self._handle_rbac_users()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '/' or path == '/admin' or path == '/admin/':
@@ -656,6 +664,94 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'success_count': results['success_count'],
                 'failed_count': results['failed_count']
             })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_analytics(self, path):
+        """Handle analytics requests (premium feature)"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'analytics'):
+            self._send_json({'error': 'Analytics not available'}, 503)
+            return
+        
+        try:
+            parsed = urlparse(path)
+            query_params = parse_qs(parsed.query)
+            days = int(query_params.get('days', ['7'])[0])
+            
+            if '/api/analytics/volume/hour' in path:
+                data = self.pbx_core.analytics.get_call_volume_by_hour(days)
+                self._send_json({'data': data, 'days': days})
+            elif '/api/analytics/volume/day' in path:
+                data = self.pbx_core.analytics.get_call_volume_by_day(days)
+                self._send_json({'data': data, 'days': days})
+            elif '/api/analytics/extension/' in path:
+                extension = path.split('/')[-1].split('?')[0]
+                data = self.pbx_core.analytics.get_extension_statistics(extension, days)
+                self._send_json(data)
+            elif '/api/analytics/top-callers' in path:
+                limit = int(query_params.get('limit', ['10'])[0])
+                data = self.pbx_core.analytics.get_top_callers(limit, days)
+                self._send_json({'data': data})
+            elif '/api/analytics/quality' in path:
+                data = self.pbx_core.analytics.get_call_quality_metrics(days)
+                self._send_json(data)
+            elif '/api/analytics/summary' in path:
+                data = self.pbx_core.analytics.generate_executive_summary(days)
+                self._send_json(data)
+            else:
+                self._send_json({'error': 'Unknown analytics endpoint'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_licensing(self):
+        """Handle license information requests"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'license_manager'):
+            self._send_json({'error': 'Licensing not available'}, 503)
+            return
+        
+        try:
+            license_info = self.pbx_core.license_manager.get_license_info()
+            self._send_json(license_info)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_rbac_login(self):
+        """Handle admin login"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'rbac_manager'):
+            self._send_json({'error': 'RBAC not available'}, 503)
+            return
+        
+        try:
+            body = self._get_body()
+            username = body.get('username')
+            password = body.get('password')
+            
+            if not username or not password:
+                self._send_json({'error': 'Username and password required'}, 400)
+                return
+            
+            user = self.pbx_core.rbac_manager.authenticate(username, password)
+            if user:
+                token = self.pbx_core.rbac_manager.create_session(username)
+                self._send_json({
+                    'success': True,
+                    'token': token,
+                    'user': user
+                })
+            else:
+                self._send_json({'error': 'Invalid credentials'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_rbac_users(self):
+        """Handle user management"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'rbac_manager'):
+            self._send_json({'error': 'RBAC not available'}, 503)
+            return
+        
+        try:
+            users = self.pbx_core.rbac_manager.get_all_users()
+            self._send_json({'users': users})
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     

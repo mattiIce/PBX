@@ -1,0 +1,21 @@
+{
+  "tier": "professional",
+  "organization": "Aluminum Blanking Company",
+  "issued_date": "2024-01-01T00:00:00",
+  "expiry_date": "2025-12-31T23:59:59",
+  "license_key": "PROF-DEMO-2024-ABCO",
+  "max_extensions": 100,
+  "custom_features": [
+    "advanced_analytics",
+    "supervisor_dashboard",
+    "voicemail_transcription",
+    "sms_integration",
+    "advanced_ivr",
+    "tiered_storage",
+    "advanced_security",
+    "call_quality_metrics",
+    "agent_performance"
+  ],
+  "support_tier": "priority",
+  "notes": "Professional tier demonstration license"
+}
