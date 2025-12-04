@@ -208,7 +208,62 @@ class VoicemailBox:
         return False
 
     def _load_messages(self):
-        """Load existing voicemail messages from disk"""
+        """Load existing voicemail messages from database or disk"""
+        # Try loading from database first if available
+        if self.database and self.database.enabled:
+            try:
+                placeholder = self._get_db_placeholder()
+                # Build query safely - placeholder is only '%s' or '?' from internal method
+                query = """
+                SELECT message_id, caller_id, file_path, duration, listened, created_at
+                FROM voicemail_messages
+                WHERE extension_number = {}
+                ORDER BY created_at DESC
+                """.format(placeholder)
+                rows = self.database.fetch_all(query, (self.extension_number,))
+                
+                for row in rows:
+                    # Convert created_at to datetime if it's a string
+                    timestamp = row['created_at']
+                    if isinstance(timestamp, str):
+                        try:
+                            # Try ISO format first (Python 3.7+)
+                            if hasattr(datetime, 'fromisoformat'):
+                                timestamp = datetime.fromisoformat(timestamp)
+                            else:
+                                # Fallback for Python < 3.7
+                                # Try common timestamp formats
+                                for fmt in ['%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S']:
+                                    try:
+                                        timestamp = datetime.strptime(timestamp, fmt)
+                                        break
+                                    except ValueError:
+                                        continue
+                                else:
+                                    # If parsing fails, use current time and log warning
+                                    self.logger.warning(f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time")
+                                    timestamp = datetime.now()
+                        except ValueError:
+                            self.logger.warning(f"Invalid timestamp format for voicemail {row['message_id']}, using current time")
+                            timestamp = datetime.now()
+                    
+                    message = {
+                        'id': row['message_id'],
+                        'caller_id': row['caller_id'],
+                        'timestamp': timestamp,
+                        'file_path': row['file_path'],
+                        'listened': bool(row['listened']),
+                        'duration': row['duration']
+                    }
+                    self.messages.append(message)
+                
+                self.logger.info(f"Loaded {len(self.messages)} voicemail messages from database for extension {self.extension_number}")
+                return
+            except Exception as e:
+                self.logger.error(f"Error loading voicemail messages from database: {e}")
+                # Fall back to loading from disk
+        
+        # Load from disk if database is not available or failed
         if not os.path.exists(self.storage_path):
             return
 

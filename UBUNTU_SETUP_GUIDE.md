@@ -221,20 +221,16 @@ GRANT USAGE, SELECT ON SEQUENCE call_records_id_seq TO pbx_user;
 CREATE TABLE voicemail_messages (
     id SERIAL PRIMARY KEY,
     message_id VARCHAR(100) UNIQUE NOT NULL,
-    extension VARCHAR(20) NOT NULL,
+    extension_number VARCHAR(20) NOT NULL,
     caller_id VARCHAR(50),
-    timestamp TIMESTAMP NOT NULL,
-    duration INTEGER,  -- in seconds
     file_path VARCHAR(500),
+    duration INTEGER,  -- in seconds
     listened BOOLEAN DEFAULT FALSE,
-    deleted BOOLEAN DEFAULT FALSE,
-    transcription TEXT,  -- Future: voice-to-text transcription
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes
-CREATE INDEX idx_vm_extension ON voicemail_messages(extension);
-CREATE INDEX idx_vm_timestamp ON voicemail_messages(timestamp);
+CREATE INDEX idx_vm_extension ON voicemail_messages(extension_number);
 CREATE INDEX idx_vm_listened ON voicemail_messages(listened);
 
 -- Grant privileges
