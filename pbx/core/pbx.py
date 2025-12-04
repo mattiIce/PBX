@@ -1041,17 +1041,16 @@ class PBXCore:
                 return
             
             try:
-                # Welcome message - greet user with message count
-                unread_count = len(mailbox.get_messages(unread_only=True))
+                # Start the IVR flow - trigger welcome state by simulating first interaction
+                # This transitions IVR from WELCOME to PIN_ENTRY state
+                initial_action = voicemail_ivr.handle_dtmf('1')  # Any digit triggers welcome->PIN transition
                 
-                # Play welcome prompt
-                if unread_count > 0:
-                    prompt = generate_voice_prompt('you_have_messages')
-                else:
-                    prompt = generate_voice_prompt('no_messages')
+                # Play the PIN entry prompt that the IVR returned
+                prompt_type = initial_action.get('prompt', 'enter_pin')
+                pin_prompt = generate_voice_prompt(prompt_type)
                 
                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                    temp_file.write(prompt)
+                    temp_file.write(pin_prompt)
                     prompt_file = temp_file.name
                 
                 try:
@@ -1064,21 +1063,7 @@ class PBXCore:
                 
                 time.sleep(0.5)
                 
-                # Play main menu prompt
-                menu_prompt = generate_voice_prompt('main_menu')
-                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                    temp_file.write(menu_prompt)
-                    prompt_file = temp_file.name
-                
-                try:
-                    player.play_file(prompt_file)
-                finally:
-                    try:
-                        os.unlink(prompt_file)
-                    except:
-                        pass
-                
-                self.logger.info(f"Voicemail IVR started for {call.voicemail_extension}")
+                self.logger.info(f"Voicemail IVR started for {call.voicemail_extension}, waiting for PIN")
                 
                 # Main IVR loop - listen for DTMF input
                 ivr_active = True
