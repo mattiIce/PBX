@@ -3,6 +3,7 @@
 Complete step-by-step guide for setting up all databases and services needed for full PBX feature implementation on Ubuntu 24.04.2 LTS.
 
 ## Table of Contents
+0. [Get the PBX Repository](#get-the-pbx-repository)
 1. [System Preparation](#system-preparation)
 2. [PostgreSQL Database Setup](#postgresql-database-setup)
 3. [Python Environment Setup](#python-environment-setup)
@@ -13,6 +14,58 @@ Complete step-by-step guide for setting up all databases and services needed for
 8. [Network Configuration](#network-configuration)
 9. [Service Configuration](#service-configuration)
 10. [Testing](#testing)
+
+---
+
+## Get the PBX Repository
+
+### First Time Setup (Clone Repository)
+```bash
+# Navigate to your desired installation directory
+cd /home/runner/work/PBX
+
+# Clone the repository
+git clone https://github.com/mattiIce/PBX.git
+cd PBX
+
+# Verify files are present
+ls -la
+```
+
+### Update Existing Installation
+If you already have the repository and want to pull the latest updates:
+
+```bash
+# Navigate to your PBX directory
+cd /home/runner/work/PBX/PBX
+
+# Fetch latest changes from the repository
+git fetch origin
+
+# Pull the latest changes (this will update scripts, requirements.txt, etc.)
+git pull origin main
+
+# Verify the updates
+git log -n 5 --oneline
+
+# Check that new files are present
+ls -la scripts/
+```
+
+**Important**: If you have made local changes to configuration files (like `config.yml`), you may need to stash or commit them before pulling:
+
+```bash
+# Option 1: Stash your local changes temporarily
+git stash
+git pull origin main
+git stash pop  # Reapply your changes
+
+# Option 2: Keep your local changes and merge
+git pull origin main --no-rebase
+
+# Option 3: View what files changed
+git diff origin/main
+```
 
 ---
 
@@ -263,14 +316,6 @@ psql -h localhost -U pbx_user -d pbx_system -W
 \q   # Exit
 ```
 
-### Install PostgreSQL Python Driver
-```bash
-# Install psycopg2 (PostgreSQL adapter for Python)
-sudo apt install -y python3-psycopg2
-# Or via pip:
-pip install psycopg2-binary
-```
-
 ---
 
 ## Python Environment Setup
@@ -302,22 +347,24 @@ pip install --upgrade pip
 
 ### Install PBX Requirements
 ```bash
-# Install base requirements
+# Install base requirements (includes psycopg2-binary for PostgreSQL)
 pip install -r requirements.txt
 
-# Install additional database requirements
-pip install sqlalchemy psycopg2-binary
+# Install additional optional dependencies as needed:
 
-# Install LDAP support (for Active Directory)
+# For LDAP support (Active Directory integration)
 pip install ldap3 pyasn1
 
-# Install scipy and numpy (for DTMF detection)
+# For DTMF detection
 pip install scipy numpy
 
-# Install API integration libraries
+# For API integrations (Microsoft 365, Zoom, etc.)
 pip install msal requests PyJWT python-dateutil
 
-# Create requirements-full.txt with all dependencies
+# For database ORM (if needed)
+pip install sqlalchemy
+
+# Save all installed packages for reference
 pip freeze > requirements-full.txt
 ```
 
@@ -371,130 +418,43 @@ sudo journalctl -u pbx.service -f
 
 ## Database Schemas
 
-### Create Database Helper Script
+### Database Initialization Script
+The database initialization script is included in the repository at `scripts/init_database.py`. This script will:
+- Test the PostgreSQL connection
+- Verify all required tables exist
+- Add sample VIP caller data for testing
+
+#### Configure Database Credentials
+
+The script supports two methods for configuring database credentials:
+
+**Method 1: Environment Variables (Recommended for Production)**
 ```bash
-# Create database initialization script
+# Set environment variables
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=pbx_system
+export DB_USER=pbx_user
+export DB_PASSWORD=YourSecurePassword123!
+```
+
+**Method 2: Edit the Script Directly (For Testing)**
+```bash
+# Edit the script and update the DB_CONFIG default values
 vim /home/runner/work/PBX/PBX/scripts/init_database.py
+# Change the password in the 'password' field (line ~18)
 ```
 
-```python
-#!/usr/bin/env python3
-"""
-Database initialization script for PBX system
-"""
-import psycopg2
-from psycopg2 import sql
-import sys
-
-# Database configuration
-DB_CONFIG = {
-    'host': 'localhost',
-    'port': 5432,
-    'database': 'pbx_system',
-    'user': 'pbx_user',
-    'password': 'YourSecurePassword123!'  # Change this!
-}
-
-def test_connection():
-    """Test database connection"""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        cur.execute("SELECT version();")
-        version = cur.fetchone()
-        print(f"✓ Connected to PostgreSQL")
-        print(f"  Version: {version[0]}")
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"✗ Connection failed: {e}")
-        return False
-
-def verify_tables():
-    """Verify all tables exist"""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        
-        tables = ['vip_callers', 'call_records', 'voicemail_messages', 'extension_settings']
-        
-        for table in tables:
-            cur.execute("""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'public' 
-                    AND table_name = %s
-                );
-            """, (table,))
-            exists = cur.fetchone()[0]
-            if exists:
-                print(f"✓ Table '{table}' exists")
-            else:
-                print(f"✗ Table '{table}' NOT FOUND")
-        
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"✗ Verification failed: {e}")
-        return False
-
-def add_sample_data():
-    """Add sample VIP caller data for testing"""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        
-        # Insert sample VIP callers
-        vip_data = [
-            ('+15551234567', 'John Smith', 'ABC Corp', 1, 'Important customer', '1001', True),
-            ('+15559876543', 'Jane Doe', 'XYZ Inc', 2, 'VVIP - Board member', '1000', True),
-            ('+15555555555', 'Bob Johnson', 'Tech Ltd', 1, 'Regular VIP', '1002', False),
-        ]
-        
-        for caller_id, name, company, priority, notes, extension, skip_queue in vip_data:
-            cur.execute("""
-                INSERT INTO vip_callers 
-                (caller_id, name, company, priority_level, notes, direct_extension, skip_queue)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (caller_id) DO NOTHING;
-            """, (caller_id, name, company, priority, notes, extension, skip_queue))
-        
-        conn.commit()
-        print(f"✓ Added {len(vip_data)} sample VIP callers")
-        
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"✗ Sample data insertion failed: {e}")
-        return False
-
-if __name__ == "__main__":
-    print("=" * 60)
-    print("PBX Database Initialization")
-    print("=" * 60)
-    
-    if test_connection():
-        print("\n" + "=" * 60)
-        if verify_tables():
-            print("\n" + "=" * 60)
-            if add_sample_data():
-                print("\n✅ Database initialization complete!")
-            else:
-                print("\n⚠️  Sample data insertion failed")
-        else:
-            print("\n⚠️  Table verification failed")
-    else:
-        print("\n❌ Database connection failed")
-        sys.exit(1)
-```
-
-Make it executable and run:
+#### Run the Initialization Script
 ```bash
-chmod +x /home/runner/work/PBX/PBX/scripts/init_database.py
-python3 /home/runner/work/PBX/PBX/scripts/init_database.py
+# Navigate to PBX directory
+cd /home/runner/work/PBX/PBX
+
+# Make the script executable (if not already)
+chmod +x scripts/init_database.py
+
+# Run the script
+python3 scripts/init_database.py
 ```
 
 ---
@@ -908,6 +868,11 @@ Add this content:
 ```bash
 # Run database initialization script
 cd /home/runner/work/PBX/PBX
+
+# Set database credentials (or edit scripts/init_database.py directly)
+export DB_PASSWORD='YourSecurePassword123!'
+
+# Run the script
 python3 scripts/init_database.py
 ```
 
