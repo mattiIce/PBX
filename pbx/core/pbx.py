@@ -1085,6 +1085,11 @@ class PBXCore:
                 last_audio_check = time.time()
                 audio_buffer = []
                 
+                # Constants for DTMF detection
+                # ~0.5s of audio at 160 bytes per 20ms RTP packet
+                DTMF_DETECTION_PACKETS = 40  # 40 packets * 20ms = 0.8s of audio
+                MIN_AUDIO_BYTES_FOR_DTMF = 1600  # Minimum audio data needed for reliable DTMF detection
+                
                 while ivr_active:
                     # Check if call is still active
                     if call.state.value == 'ended':
@@ -1097,10 +1102,10 @@ class PBXCore:
                     if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
                         # Get recent audio data
                         if len(recorder.recorded_data) > 0:
-                            # Collect last 0.5 seconds of audio for DTMF detection
-                            recent_audio = b''.join(recorder.recorded_data[-40:])  # ~0.5s at 160 bytes per 20ms packet
+                            # Collect last portion of audio for DTMF detection
+                            recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
                             
-                            if len(recent_audio) > 1600:  # Need sufficient audio for DTMF
+                            if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:  # Need sufficient audio for DTMF
                                 # Detect DTMF in audio
                                 digit = dtmf_detector.detect(recent_audio)
                                 
@@ -1157,8 +1162,10 @@ class PBXCore:
                                         time.sleep(1)
                                         ivr_active = False
                                     
-                                    # Clear audio buffer after processing
-                                    recorder.recorded_data = []
+                                    # Clear audio buffer after processing DTMF
+                                    # Note: Directly modifying internal state - consider adding clear() method to RTPRecorder
+                                    if hasattr(recorder, 'recorded_data'):
+                                        recorder.recorded_data = []
                     
                     # Timeout after 60 seconds of no activity
                     if time.time() - last_audio_check > 60:
