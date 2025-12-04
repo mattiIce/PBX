@@ -208,7 +208,45 @@ class VoicemailBox:
         return False
 
     def _load_messages(self):
-        """Load existing voicemail messages from disk"""
+        """Load existing voicemail messages from database or disk"""
+        # Try loading from database first if available
+        if self.database and self.database.enabled:
+            try:
+                placeholder = self._get_db_placeholder()
+                query = f"""
+                SELECT message_id, caller_id, file_path, duration, listened, created_at
+                FROM voicemail_messages
+                WHERE extension_number = {placeholder}
+                ORDER BY created_at DESC
+                """
+                rows = self.database.fetch_all(query, (self.extension_number,))
+                
+                for row in rows:
+                    # Convert created_at to datetime if it's a string
+                    timestamp = row['created_at']
+                    if isinstance(timestamp, str):
+                        try:
+                            timestamp = datetime.fromisoformat(timestamp)
+                        except (ValueError, AttributeError):
+                            timestamp = datetime.now()
+                    
+                    message = {
+                        'id': row['message_id'],
+                        'caller_id': row['caller_id'],
+                        'timestamp': timestamp,
+                        'file_path': row['file_path'],
+                        'listened': bool(row['listened']),
+                        'duration': row['duration']
+                    }
+                    self.messages.append(message)
+                
+                self.logger.info(f"Loaded {len(self.messages)} voicemail messages from database for extension {self.extension_number}")
+                return
+            except Exception as e:
+                self.logger.error(f"Error loading voicemail messages from database: {e}")
+                # Fall back to loading from disk
+        
+        # Load from disk if database is not available or failed
         if not os.path.exists(self.storage_path):
             return
 
