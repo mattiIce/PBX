@@ -73,13 +73,30 @@ cd PBX
 pip install -r requirements.txt
 ```
 
-3. Configure the system:
+3. Set up database (optional but recommended):
+```bash
+# For PostgreSQL (recommended for production)
+sudo apt-get install postgresql
+sudo -u postgres createdb pbx_system
+sudo -u postgres psql -c "CREATE USER pbx_user WITH PASSWORD 'YourPassword';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx_system TO pbx_user;"
+
+# Verify database connection
+python scripts/verify_database.py
+
+# Or use SQLite for testing (no setup needed)
+# Just configure database.type: sqlite in config.yml
+```
+
+See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for detailed database setup.
+
+4. Configure the system:
 ```bash
 # Edit config.yml with your settings
 nano config.yml
 ```
 
-4. Start the PBX:
+5. Start the PBX:
 ```bash
 python main.py
 ```
@@ -351,11 +368,18 @@ For issues and questions, please open a GitHub issue.
 - [x] **Outlook Integration** (Calendar, Contacts) - ✅ COMPLETED
 - [x] **Microsoft Teams** (Presence, Meetings) - ✅ COMPLETED
 
+### Database Backend
+- [x] **PostgreSQL/SQLite Support** - ✅ COMPLETED
+  - Stores voicemail metadata (caller_id, duration, timestamp, listened status)
+  - Stores CDR (Call Detail Records)
+  - Stores VIP caller database
+  - Audio files stored efficiently on file system
+  - See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for setup guide
+
 ### Future Enhancements
 - [ ] WebRTC support for browser-based calls
 - [ ] SMS/Messaging integration
 - [ ] Mobile app support (iOS/Android)
-- [ ] Database backend for scalability (PostgreSQL/MySQL)
 - [ ] Clustering/High availability
 - [ ] Advanced analytics dashboard
 - [ ] Video conferencing support

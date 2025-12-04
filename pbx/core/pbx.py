@@ -51,9 +51,11 @@ class PBXCore:
         self.database = DatabaseBackend(self.config)
         if self.database.connect():
             self.database.create_tables()
-            self.logger.info("Database backend initialized successfully")
+            self.logger.info(f"Database backend initialized successfully ({self.database.db_type})")
+            self.logger.info("Voicemail metadata will be stored in database")
         else:
             self.logger.warning("Database backend not available - running without database")
+            self.logger.warning("Voicemails will be stored ONLY as files (no database metadata)")
 
         # Initialize core components
         self.extension_registry = ExtensionRegistry(self.config)

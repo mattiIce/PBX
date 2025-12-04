@@ -84,6 +84,8 @@ class DatabaseBackend:
             return True
         except Exception as e:
             self.logger.error(f"PostgreSQL connection failed: {e}")
+            self.logger.warning("Voicemail and other data will be stored ONLY in file system")
+            self.logger.warning("To fix: Ensure PostgreSQL is running and accessible, or run 'python scripts/verify_database.py' for diagnostics")
             return False
 
     def _connect_sqlite(self) -> bool:

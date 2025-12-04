@@ -2,6 +2,8 @@
 
 This guide will help you configure PostgreSQL for the PBX system to enable advanced database features.
 
+**Note:** The PBX system stores voicemail metadata, CDR records, and VIP caller data in the database. Audio files are stored on the file system for optimal performance. See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for more details.
+
 ## Prerequisites
 
 ✅ PostgreSQL is already installed on your server
