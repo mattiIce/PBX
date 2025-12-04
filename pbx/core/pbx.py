@@ -199,9 +199,9 @@ class PBXCore:
         from pbx.sip.sdp import SDPSession, SDPBuilder
         from pbx.sip.message import SIPMessageBuilder
         
-        # Parse extension numbers
+        # Parse extension numbers - handle both regular extensions and special patterns
         from_match = re.search(r'sip:(\d+)@', from_header)
-        to_match = re.search(r'sip:(\d+)@', to_header)
+        to_match = re.search(r'sip:([*\d]+)@', to_header)  # Allow * in destination
         
         if not from_match or not to_match:
             self.logger.warning(f"Could not parse extensions from headers")
@@ -209,6 +209,10 @@ class PBXCore:
         
         from_ext = from_match.group(1)
         to_ext = to_match.group(1)
+        
+        # Check if this is a voicemail access call (*xxxx pattern)
+        if to_ext.startswith('*'):
+            return self._handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
         
         # Check if destination extension is registered
         if not self.extension_registry.is_registered(to_ext):
@@ -670,6 +674,113 @@ class PBXCore:
         
         # End the call
         self.end_call(call_id)
+    
+    def _handle_voicemail_access(self, from_ext, to_ext, call_id, message, from_addr):
+        """
+        Handle voicemail access calls (*xxxx pattern)
+        
+        Args:
+            from_ext: Calling extension
+            to_ext: Destination (e.g., *1001)
+            call_id: Call ID
+            message: SIP INVITE message
+            from_addr: Caller address
+            
+        Returns:
+            True if call was handled
+        """
+        from pbx.sip.sdp import SDPSession, SDPBuilder
+        from pbx.sip.message import SIPMessageBuilder
+        
+        # Extract the target extension from *xxxx pattern
+        target_ext = to_ext[1:]  # Remove the * prefix
+        
+        self.logger.info(f"Voicemail access: {from_ext} -> {target_ext}")
+        
+        # Verify the target extension exists
+        if not self.config.get_extension(target_ext):
+            self.logger.warning(f"Voicemail access to non-existent extension {target_ext}")
+            return False
+        
+        # Get the voicemail box
+        mailbox = self.voicemail_system.get_mailbox(target_ext)
+        
+        # Parse SDP from caller's INVITE
+        caller_sdp = None
+        if message.body:
+            caller_sdp_obj = SDPSession()
+            caller_sdp_obj.parse(message.body)
+            caller_sdp = caller_sdp_obj.get_audio_info()
+        
+        # Create call for voicemail access
+        call = self.call_manager.create_call(call_id, from_ext, f"*{target_ext}")
+        call.start()
+        call.original_invite = message
+        call.caller_addr = from_addr
+        call.caller_rtp = caller_sdp
+        call.voicemail_access = True
+        call.voicemail_extension = target_ext
+        
+        # Allocate RTP ports
+        rtp_ports = self.rtp_relay.allocate_relay(call_id)
+        if rtp_ports:
+            call.rtp_ports = rtp_ports
+        else:
+            self.logger.error(f"Failed to allocate RTP ports for voicemail access {call_id}")
+            return False
+        
+        # Answer the call
+        server_ip = self._get_server_ip()
+        
+        # Build SDP for answering
+        voicemail_sdp = SDPBuilder.build_audio_sdp(
+            server_ip,
+            call.rtp_ports[0],
+            session_id=call_id
+        )
+        
+        # Send 200 OK to answer the call
+        ok_response = SIPMessageBuilder.build_response(
+            200,
+            "OK",
+            call.original_invite,
+            body=voicemail_sdp
+        )
+        ok_response.set_header('Content-Type', 'application/sdp')
+        
+        # Build Contact header
+        sip_port = self.config.get('server.sip_port', 5060)
+        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        ok_response.set_header('Contact', contact_uri)
+        
+        # Send to caller
+        self.sip_server._send_message(ok_response.build(), call.caller_addr)
+        self.logger.info(f"Answered voicemail access call {call_id}")
+        
+        # Mark call as connected
+        call.connect()
+        
+        # Play voicemail prompts and handle PIN verification
+        # For now, we'll simulate a simple voicemail IVR by scheduling auto-hangup
+        # A full implementation would involve playing audio prompts and handling DTMF
+        
+        # Get message count
+        messages = mailbox.get_messages(unread_only=False)
+        unread = mailbox.get_messages(unread_only=True)
+        
+        self.logger.info(f"Voicemail access for {target_ext}: {len(unread)} unread, {len(messages)} total")
+        
+        # Schedule auto-hangup after 60 seconds (simulating user interaction time)
+        # In a full implementation, this would be replaced by actual IVR logic
+        voicemail_timer = threading.Timer(
+            60,
+            self.end_call,
+            args=(call_id,)
+        )
+        voicemail_timer.start()
+        call.voicemail_timer = voicemail_timer
+        
+        return True
     
     def _build_wav_file(self, audio_data):
         """
