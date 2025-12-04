@@ -1047,7 +1047,7 @@ class PBXCore:
                 
                 # Play the PIN entry prompt that the IVR returned
                 if not isinstance(initial_action, dict):
-                    self.logger.error(f"IVR handle_dtmf returned non-dict: {type(initial_action)}")
+                    self.logger.error(f"IVR handle_dtmf expected to return dict but got: {type(initial_action)}")
                     initial_action = {'action': 'play_prompt', 'prompt': 'enter_pin'}
                 
                 prompt_type = initial_action.get('prompt', 'enter_pin')
@@ -1062,7 +1062,7 @@ class PBXCore:
                 finally:
                     try:
                         os.unlink(prompt_file)
-                    except:
+                    except Exception:
                         pass
                 
                 time.sleep(0.5)
