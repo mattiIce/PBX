@@ -1041,9 +1041,9 @@ class PBXCore:
                 return
             
             try:
-                # Start the IVR flow - trigger welcome state by simulating first interaction
-                # This transitions IVR from WELCOME to PIN_ENTRY state
-                initial_action = voicemail_ivr.handle_dtmf('1')  # Any digit triggers welcome->PIN transition
+                # Start the IVR flow - transition from WELCOME to PIN_ENTRY state
+                # Use '*' which won't be collected as part of PIN (only 0-9 are collected)
+                initial_action = voicemail_ivr.handle_dtmf('*')
                 
                 # Play the PIN entry prompt that the IVR returned
                 prompt_type = initial_action.get('prompt', 'enter_pin')
