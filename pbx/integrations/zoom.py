@@ -3,8 +3,6 @@ Zoom Integration
 Enables Zoom Phone, video meetings, and collaboration features
 """
 from pbx.utils.logger import get_logger
-import json
-import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 

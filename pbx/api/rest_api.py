@@ -8,7 +8,7 @@ import socket
 import threading
 import os
 import mimetypes
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
 

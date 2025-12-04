@@ -676,7 +676,7 @@ class PBXCore:
             # Play voicemail greeting and beep tone to caller
             if call.caller_rtp:
                 try:
-                    from pbx.utils.audio import generate_voice_prompt, generate_voicemail_beep
+                    from pbx.utils.audio import generate_voice_prompt
                     import tempfile
                     import os
                     
