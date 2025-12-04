@@ -426,3 +426,170 @@ class RTPRecorder:
             # Each packet typically represents 20ms of audio
             duration_ms = num_packets * 20
             return duration_ms // 1000
+
+
+class RTPPlayer:
+    """
+    RTP Player - Sends audio to remote endpoint
+    Used for playing tones, announcements, music on hold, etc.
+    """
+    
+    def __init__(self, local_port, remote_host, remote_port, call_id=None):
+        """
+        Initialize RTP player
+        
+        Args:
+            local_port: Local UDP port to send from
+            remote_host: Remote host IP address
+            remote_port: Remote UDP port
+            call_id: Optional call identifier for logging
+        """
+        self.local_port = local_port
+        self.remote_host = remote_host
+        self.remote_port = remote_port
+        self.call_id = call_id or "unknown"
+        self.logger = get_logger()
+        self.socket = None
+        self.running = False
+        self.sequence_number = 0
+        self.timestamp = 0
+        self.ssrc = 0x87654321  # Synchronization source identifier
+        self.lock = threading.Lock()
+        
+    def start(self):
+        """Start RTP player"""
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(('0.0.0.0', self.local_port))
+            self.running = True
+            
+            self.logger.info(f"RTP player started on port {self.local_port} for call {self.call_id}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to start RTP player: {e}")
+            return False
+    
+    def stop(self):
+        """Stop RTP player"""
+        self.running = False
+        if self.socket:
+            try:
+                self.socket.close()
+            except:
+                pass
+            self.socket = None
+        self.logger.info(f"RTP player stopped for call {self.call_id}")
+    
+    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160):
+        """
+        Send audio data via RTP packets
+        
+        Args:
+            audio_data: Raw PCM audio data (16-bit signed, little-endian)
+            payload_type: RTP payload type (0 = PCMU, 8 = PCMA)
+            samples_per_packet: Number of samples per RTP packet (default 160 = 20ms at 8kHz)
+        
+        Returns:
+            bool: True if successful
+        """
+        if not self.running or not self.socket:
+            self.logger.warning(f"Cannot send audio - RTP player not running")
+            return False
+        
+        try:
+            # Split audio into packets
+            bytes_per_packet = samples_per_packet * 2  # 2 bytes per 16-bit sample
+            num_packets = (len(audio_data) + bytes_per_packet - 1) // bytes_per_packet
+            
+            for i in range(num_packets):
+                start = i * bytes_per_packet
+                end = min(start + bytes_per_packet, len(audio_data))
+                payload = audio_data[start:end]
+                
+                # Build RTP packet
+                rtp_packet = self._build_rtp_packet(payload, payload_type)
+                
+                # Send packet
+                self.socket.sendto(rtp_packet, (self.remote_host, self.remote_port))
+                
+                # Increment sequence and timestamp
+                with self.lock:
+                    self.sequence_number = (self.sequence_number + 1) & 0xFFFF
+                    self.timestamp = (self.timestamp + samples_per_packet) & 0xFFFFFFFF
+                
+                # Small delay to pace packets (20ms for 160 samples at 8kHz)
+                import time
+                time.sleep(0.020)
+            
+            self.logger.info(f"Sent {num_packets} RTP packets for call {self.call_id}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error sending audio: {e}")
+            return False
+    
+    def _build_rtp_packet(self, payload, payload_type=0):
+        """
+        Build an RTP packet
+        
+        Args:
+            payload: Audio payload bytes
+            payload_type: RTP payload type
+        
+        Returns:
+            bytes: Complete RTP packet
+        """
+        # RTP header (12 bytes)
+        # Byte 0: V(2), P(1), X(1), CC(4)
+        # V=2, P=0, X=0, CC=0
+        byte0 = 0x80  # Version 2, no padding, no extension, no CSRC
+        
+        # Byte 1: M(1), PT(7)
+        # M=0 (not first packet), PT=payload_type
+        byte1 = payload_type & 0x7F
+        
+        with self.lock:
+            header = struct.pack('>BBHII',
+                byte0,
+                byte1,
+                self.sequence_number,
+                self.timestamp,
+                self.ssrc
+            )
+        
+        return header + payload
+    
+    def play_beep(self, frequency=1000, duration_ms=500):
+        """
+        Play a beep tone
+        
+        Args:
+            frequency: Frequency in Hz
+            duration_ms: Duration in milliseconds
+        
+        Returns:
+            bool: True if successful
+        """
+        # Import audio utilities
+        try:
+            from pbx.utils.audio import generate_beep_tone
+            pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
+            return self.send_audio(pcm_data, payload_type=0)
+        except ImportError:
+            self.logger.error("Audio utilities not available")
+            return False
+    
+    def play_file(self, file_path):
+        """
+        Play an audio file (future implementation)
+        
+        Args:
+            file_path: Path to WAV file
+        
+        Returns:
+            bool: True if successful
+        """
+        # TODO: Implement WAV file reading and playback
+        self.logger.warning("play_file not yet implemented")
+        return False

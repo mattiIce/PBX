@@ -117,16 +117,3 @@ provisioning:
   custom_templates_dir: ''
   devices: []
 trunks: null
-# Premium Features Configuration
-licensing:
-  enabled: true
-  license_file: license.json
-  usage_file: usage.json
-rbac:
-  enabled: true
-  users_file: admin_users.json
-  session_timeout_hours: 8  # 8 hours for better security
-analytics:
-  enabled: true
-cdr:
-  directory: cdr

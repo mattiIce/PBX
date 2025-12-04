@@ -295,6 +295,10 @@ class PBXCore:
             # Send to destination
             self.sip_server._send_message(invite_to_callee.build(), dest_ext_obj.address)
             
+            # Store callee address for later use (e.g., to send CANCEL if routing to voicemail)
+            call.callee_addr = dest_ext_obj.address
+            call.callee_invite = invite_to_callee  # Store the INVITE for CANCEL reference
+            
             self.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
             self.logger.info(f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}")
             
@@ -550,7 +554,7 @@ class PBXCore:
         """
         from pbx.sip.message import SIPMessageBuilder
         from pbx.sip.sdp import SDPBuilder
-        from pbx.rtp.handler import RTPRecorder
+        from pbx.rtp.handler import RTPRecorder, RTPPlayer
         
         call = self.call_manager.get_call(call_id)
         if not call:
@@ -569,6 +573,21 @@ class PBXCore:
         
         call.routed_to_voicemail = True
         self.logger.info(f"No answer for call {call_id}, routing to voicemail")
+        
+        # Send CANCEL to the callee to stop their phone from ringing
+        if hasattr(call, 'callee_addr') and call.callee_addr and hasattr(call, 'callee_invite') and call.callee_invite:
+            cancel_request = SIPMessageBuilder.build_request(
+                method='CANCEL',
+                uri=call.callee_invite.uri,
+                from_addr=call.callee_invite.get_header('From'),
+                to_addr=call.callee_invite.get_header('To'),
+                call_id=call_id,
+                cseq=int(call.callee_invite.get_header('CSeq').split()[0])
+            )
+            cancel_request.set_header('Via', call.callee_invite.get_header('Via'))
+            
+            self.sip_server._send_message(cancel_request.build(), call.callee_addr)
+            self.logger.info(f"Sent CANCEL to callee {call.to_extension} to stop ringing")
         
         # Answer the call to allow voicemail recording
         if call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports:
@@ -601,6 +620,26 @@ class PBXCore:
             
             # Mark call as connected
             call.connect()
+            
+            # Play voicemail beep tone to caller
+            if call.caller_rtp:
+                try:
+                    # Create RTP player to send beep to caller
+                    player = RTPPlayer(
+                        local_port=call.rtp_ports[0] + 1,  # Use adjacent port for sending
+                        remote_host=call.caller_rtp['address'],
+                        remote_port=call.caller_rtp['port'],
+                        call_id=call_id
+                    )
+                    if player.start():
+                        # Play beep tone (1000 Hz, 500ms)
+                        player.play_beep(frequency=1000, duration_ms=500)
+                        player.stop()
+                        self.logger.info(f"Played voicemail beep for call {call_id}")
+                    else:
+                        self.logger.warning(f"Failed to start RTP player for beep on call {call_id}")
+                except Exception as e:
+                    self.logger.error(f"Error playing voicemail beep: {e}")
             
             # Start RTP recorder on the allocated port
             recorder = RTPRecorder(call.rtp_ports[0], call_id)
