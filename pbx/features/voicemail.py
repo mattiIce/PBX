@@ -48,6 +48,12 @@ class VoicemailBox:
         # Load existing messages from disk
         self._load_messages()
 
+    def _get_db_placeholder(self):
+        """Get database parameter placeholder based on database type"""
+        if self.database and self.database.db_type == 'postgresql':
+            return '%s'
+        return '?'
+
     def save_message(self, caller_id, audio_data, duration=None):
         """
         Save voicemail message
@@ -84,14 +90,11 @@ class VoicemailBox:
         # Save to database if available
         if self.database and self.database.enabled:
             try:
-                query = """
+                placeholder = self._get_db_placeholder()
+                query = f"""
                 INSERT INTO voicemail_messages 
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """ if self.database.db_type == 'postgresql' else """
-                INSERT INTO voicemail_messages 
-                (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
                 """
                 
                 params = (
@@ -156,14 +159,11 @@ class VoicemailBox:
                 # Update database if available
                 if self.database and self.database.enabled:
                     try:
-                        query = """
+                        placeholder = self._get_db_placeholder()
+                        query = f"""
                         UPDATE voicemail_messages 
-                        SET listened = %s
-                        WHERE message_id = %s
-                        """ if self.database.db_type == 'postgresql' else """
-                        UPDATE voicemail_messages 
-                        SET listened = ?
-                        WHERE message_id = ?
+                        SET listened = {placeholder}
+                        WHERE message_id = {placeholder}
                         """
                         self.database.execute(query, (True, message_id))
                         self.logger.debug(f"Updated voicemail {message_id} as listened in database")
@@ -191,12 +191,10 @@ class VoicemailBox:
                 # Delete from database if available
                 if self.database and self.database.enabled:
                     try:
-                        query = """
+                        placeholder = self._get_db_placeholder()
+                        query = f"""
                         DELETE FROM voicemail_messages 
-                        WHERE message_id = %s
-                        """ if self.database.db_type == 'postgresql' else """
-                        DELETE FROM voicemail_messages 
-                        WHERE message_id = ?
+                        WHERE message_id = {placeholder}
                         """
                         self.database.execute(query, (message_id,))
                         self.logger.debug(f"Deleted voicemail {message_id} from database")

@@ -16,7 +16,7 @@ database:
   port: 5432
   name: pbx_system
   user: pbx_user
-  password: YourSecurePassword123!
+  password: YourSecurePassword123!  # SECURITY: Change this password and consider using environment variables in production
 extensions:
 - number: '1001'
   name: Codi Mattinson
