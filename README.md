@@ -28,6 +28,21 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **REST API** - HTTP API for integration and management
 - **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
 - **Multi-codec Support** - G.711, G.729 and more
+- **DTMF Detection** - Goertzel algorithm for interactive voice menus
+
+### Operator Console Features
+- **VIP Caller Database** - Priority handling for important callers
+- **Call Screening** - Intercept and screen calls before transfer
+- **Announced Transfers** - Announce caller before completing transfer
+- **Park and Page** - Park calls and page via multiple methods
+- **BLF Monitoring** - Real-time extension busy lamp field status
+- **Company Directory** - Quick lookup with search functionality
+
+### Enterprise Integrations
+- **Zoom Integration** - Create instant or scheduled Zoom meetings from PBX
+- **Active Directory** - LDAP authentication and user directory sync
+- **Microsoft Outlook** - Calendar sync, availability, and contact integration
+- **Microsoft Teams** - Presence sync and meeting escalation
 
 ### Security & Compliance
 - **FIPS 140-2 Compliant Encryption** - Government-grade security
@@ -315,19 +330,37 @@ For issues and questions, please open a GitHub issue.
 
 ## 🗺️ Roadmap
 
+### Core Features
 - [x] **FIPS 140-2 compliant encryption** - ✅ COMPLETED
 - [x] **TLS/SRTP encryption** - ✅ COMPLETED
 - [x] **Phone Provisioning** - ✅ COMPLETED
 - [x] **Voicemail-to-Email** - ✅ COMPLETED
+- [x] **DTMF Detection (Goertzel)** - ✅ COMPLETED
+- [x] **Voicemail IVR System** - ✅ COMPLETED
+
+### Operator Console
+- [x] **VIP Caller Database** - ✅ COMPLETED
+- [x] **Call Screening & Interception** - ✅ COMPLETED
+- [x] **Announced Transfers** - ✅ COMPLETED
+- [x] **Park and Page** - ✅ COMPLETED
+- [x] **BLF Status Monitoring** - ✅ COMPLETED
+
+### Enterprise Integrations
+- [x] **Zoom Integration** (OAuth, Meetings) - ✅ COMPLETED
+- [x] **Active Directory/LDAP** (Auth, Search) - ✅ COMPLETED
+- [x] **Outlook Integration** (Calendar, Contacts) - ✅ COMPLETED
+- [x] **Microsoft Teams** (Presence, Meetings) - ✅ COMPLETED
+
+### Future Enhancements
 - [ ] WebRTC support for browser-based calls
-- [ ] IVR (Interactive Voice Response) system
 - [ ] SMS/Messaging integration
 - [ ] Mobile app support (iOS/Android)
-- [ ] Database backend for scalability
+- [ ] Database backend for scalability (PostgreSQL/MySQL)
 - [ ] Clustering/High availability
 - [ ] Advanced analytics dashboard
 - [ ] Video conferencing support
-- [ ] Integration with Microsoft Teams/Slack
+- [ ] Full SIP Direct Routing to Teams
+- [ ] CRM integrations (Salesforce, HubSpot)
 
 ---
 
