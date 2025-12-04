@@ -7,13 +7,18 @@ import signal
 import time
 from pbx.core.pbx import PBXCore
 
+# Global running flag
+running = True
+pbx = None
+
 
 def signal_handler(sig, frame):
     """Handle shutdown signal"""
+    global running, pbx
     print("\nShutting down PBX system...")
+    running = False
     if pbx:
         pbx.stop()
-    sys.exit(0)
 
 
 if __name__ == "__main__":
@@ -22,7 +27,6 @@ if __name__ == "__main__":
     print("=" * 60)
     
     # Create PBX instance
-    pbx = None
     try:
         pbx = PBXCore("config.yml")
         
@@ -36,11 +40,17 @@ if __name__ == "__main__":
             print("Press Ctrl+C to stop\n")
             
             # Keep running and display status periodically
-            while True:
-                time.sleep(10)
-                status = pbx.get_status()
-                print(f"Status: {status['registered_extensions']} extensions registered, "
-                      f"{status['active_calls']} active calls")
+            while running:
+                time.sleep(1)
+                if not running:
+                    break
+                # Display status every 10 iterations (10 seconds)
+                if int(time.time()) % 10 == 0:
+                    status = pbx.get_status()
+                    print(f"Status: {status['registered_extensions']} extensions registered, "
+                          f"{status['active_calls']} active calls")
+            
+            print("PBX system shutdown complete")
         else:
             print("Failed to start PBX system")
             sys.exit(1)

@@ -31,6 +31,8 @@ class SIPServer:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Set socket timeout to allow periodic checking of running flag
+            self.socket.settimeout(1.0)
             self.socket.bind((self.host, self.port))
             self.running = True
             
@@ -69,9 +71,14 @@ class SIPServer:
                 handler_thread.daemon = True
                 handler_thread.start()
                 
+            except socket.timeout:
+                # Timeout allows us to check running flag periodically
+                continue
             except Exception as e:
                 if self.running:
                     self.logger.error(f"Error receiving message: {e}")
+        
+        self.logger.info("SIP server listening thread stopped")
     
     def _handle_message(self, raw_message, addr):
         """
