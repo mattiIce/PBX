@@ -50,6 +50,9 @@ function showTab(tabName) {
         case 'extensions':
             loadExtensions();
             break;
+        case 'voicemail':
+            loadVoicemailTab();
+            break;
         case 'calls':
             loadCalls();
             break;
@@ -129,6 +132,7 @@ async function loadExtensions() {
                 </td>
                 <td>
                     <button class="btn btn-primary" onclick="editExtension('${ext.number}')">✏️ Edit</button>
+                    ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${ext.number}')">🔄 Reboot</button>` : ''}
                     <button class="btn btn-danger" onclick="deleteExtension('${ext.number}')">🗑️ Delete</button>
                 </td>
             </tr>
@@ -411,3 +415,252 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Voicemail Management Functions
+async function loadVoicemailTab() {
+    try {
+        // Load extensions into dropdown
+        const response = await fetch(`${API_BASE}/api/extensions`);
+        const extensions = await response.json();
+        
+        const select = document.getElementById('vm-extension-select');
+        select.innerHTML = '<option value="">Select Extension</option>';
+        
+        extensions.forEach(ext => {
+            const option = document.createElement('option');
+            option.value = ext.number;
+            option.textContent = `${ext.number} - ${ext.name}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading voicemail tab:', error);
+        showNotification('Failed to load extensions', 'error');
+    }
+}
+
+async function loadVoicemailForExtension() {
+    const extension = document.getElementById('vm-extension-select').value;
+    
+    if (!extension) {
+        document.getElementById('voicemail-pin-section').style.display = 'none';
+        document.getElementById('voicemail-messages-section').style.display = 'none';
+        return;
+    }
+    
+    // Show sections
+    document.getElementById('voicemail-pin-section').style.display = 'block';
+    document.getElementById('voicemail-messages-section').style.display = 'block';
+    document.getElementById('vm-current-extension').textContent = extension;
+    
+    try {
+        // Load voicemail messages
+        const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
+        const data = await response.json();
+        
+        const tbody = document.getElementById('voicemail-table-body');
+        
+        if (!data.messages || data.messages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No voicemail messages</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        data.messages.forEach(msg => {
+            const row = document.createElement('tr');
+            const timestamp = new Date(msg.timestamp).toLocaleString();
+            const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
+            const status = msg.listened ? 'Read' : 'Unread';
+            
+            row.innerHTML = `
+                <td>${timestamp}</td>
+                <td>${msg.caller_id}</td>
+                <td>${duration}</td>
+                <td><span class="badge ${msg.listened ? 'badge-secondary' : 'badge-primary'}">${status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="playVoicemail('${extension}', '${msg.id}')">▶ Play</button>
+                    <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">⬇ Download</button>
+                    ${!msg.listened ? `<button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">✓ Mark Read</button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">🗑 Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error loading voicemail:', error);
+        showNotification('Failed to load voicemail messages', 'error');
+    }
+}
+
+async function playVoicemail(extension, messageId) {
+    try {
+        const audioUrl = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
+        const audio = new Audio(audioUrl);
+        audio.play();
+        showNotification('Playing voicemail...', 'info');
+        
+        // Mark as read after playing
+        setTimeout(() => markVoicemailRead(extension, messageId, false), 1000);
+    } catch (error) {
+        console.error('Error playing voicemail:', error);
+        showNotification('Failed to play voicemail', 'error');
+    }
+}
+
+async function downloadVoicemail(extension, messageId) {
+    try {
+        const url = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `voicemail_${extension}_${messageId}.wav`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showNotification('Downloading voicemail...', 'info');
+    } catch (error) {
+        console.error('Error downloading voicemail:', error);
+        showNotification('Failed to download voicemail', 'error');
+    }
+}
+
+async function markVoicemailRead(extension, messageId, showMsg = true) {
+    try {
+        const response = await fetch(`${API_BASE}/api/voicemail/${extension}/${messageId}/mark-read`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            if (showMsg) {
+                showNotification('Message marked as read', 'success');
+            }
+            loadVoicemailForExtension();
+        } else {
+            throw new Error('Failed to mark as read');
+        }
+    } catch (error) {
+        console.error('Error marking voicemail as read:', error);
+        if (showMsg) {
+            showNotification('Failed to mark message as read', 'error');
+        }
+    }
+}
+
+async function deleteVoicemail(extension, messageId) {
+    if (!confirm('Are you sure you want to delete this voicemail message?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/voicemail/${extension}/${messageId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showNotification('Voicemail deleted successfully', 'success');
+            loadVoicemailForExtension();
+        } else {
+            throw new Error('Failed to delete');
+        }
+    } catch (error) {
+        console.error('Error deleting voicemail:', error);
+        showNotification('Failed to delete voicemail', 'error');
+    }
+}
+
+// Initialize voicemail PIN form
+document.addEventListener('DOMContentLoaded', function() {
+    const pinForm = document.getElementById('voicemail-pin-form');
+    if (pinForm) {
+        pinForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const extension = document.getElementById('vm-extension-select').value;
+            const pin = document.getElementById('vm-pin').value;
+            
+            if (!extension) {
+                showNotification('Please select an extension', 'error');
+                return;
+            }
+            
+            if (!/^\d{4}$/.test(pin)) {
+                showNotification('PIN must be exactly 4 digits', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/voicemail/${extension}/pin`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pin })
+                });
+                
+                if (response.ok) {
+                    showNotification('Voicemail PIN updated successfully', 'success');
+                    document.getElementById('vm-pin').value = '';
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to update PIN', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating voicemail PIN:', error);
+                showNotification('Failed to update PIN', 'error');
+            }
+        });
+    }
+});
+
+// Phone Reboot Functions
+async function rebootPhone(extension) {
+    if (!confirm(`Send reboot signal to phone at extension ${extension}?\n\nThe phone will restart and reload its configuration.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/phones/${extension}/reboot`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showNotification(`Reboot signal sent to extension ${extension}`, 'success');
+        } else {
+            showNotification(data.error || 'Failed to send reboot signal', 'error');
+        }
+    } catch (error) {
+        console.error('Error rebooting phone:', error);
+        showNotification('Failed to send reboot signal', 'error');
+    }
+}
+
+async function rebootAllPhones() {
+    if (!confirm('Send reboot signal to ALL registered phones?\n\nAll online phones will restart and reload their configurations. This may take a few minutes.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/phones/reboot`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            const message = `Rebooted ${data.success_count} phone(s)` + 
+                          (data.failed_count > 0 ? `, ${data.failed_count} failed` : '');
+            showNotification(message, 'success');
+            
+            // Refresh extensions list after a delay to show new status
+            setTimeout(loadExtensions, 2000);
+        } else {
+            showNotification(data.error || 'Failed to reboot phones', 'error');
+        }
+    } catch (error) {
+        console.error('Error rebooting phones:', error);
+        showNotification('Failed to reboot phones', 'error');
+    }
+}

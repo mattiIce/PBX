@@ -458,3 +458,51 @@ header h1 {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Voicemail Specific Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.badge-primary {
+    background: #667eea;
+    color: white;
+}
+
+.badge-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    margin-right: 5px;
+}
+
+.btn-info {
+    background: #3b82f6;
+}
+
+.btn-info:hover {
+    background: #2563eb;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+#vm-extension-select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-right: 10px;
+    font-size: 1rem;
+}

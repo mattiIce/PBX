@@ -267,3 +267,34 @@ class Config:
         except Exception as e:
             print(f"Error updating email config: {e}")
             return False
+    
+    def update_voicemail_pin(self, extension_number, pin):
+        """
+        Update voicemail PIN for an extension
+        
+        Args:
+            extension_number: Extension number
+            pin: Voicemail PIN (4 digits)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if 'extensions' not in self.config:
+                return False
+            
+            # Validate PIN format
+            if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
+                print(f"Error updating voicemail PIN: Invalid PIN format")
+                return False
+            
+            # Find and update extension
+            for ext in self.config['extensions']:
+                if ext.get('number') == str(extension_number):
+                    ext['voicemail_pin'] = str(pin)
+                    return self.save()
+            
+            return False
+        except Exception as e:
+            print(f"Error updating voicemail PIN: {e}")
+            return False

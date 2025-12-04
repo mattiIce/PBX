@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔊 InHouse PBX Admin Panel</h1>
+            <h1>🔊 Aluminum Blanking Phone System Admin Panel</h1>
             <div class="status-bar">
                 <span id="connection-status" class="status-badge">Connecting...</span>
                 <span id="system-status"></span>
@@ -19,6 +19,7 @@
         <nav class="tabs">
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
+            <button class="tab-button" data-tab="voicemail">Voicemail</button>
             <button class="tab-button" data-tab="calls">Active Calls</button>
             <button class="tab-button" data-tab="config">Configuration</button>
         </nav>
@@ -56,7 +57,10 @@
         <div id="extensions" class="tab-content">
             <div class="section-header">
                 <h2>Extension Management</h2>
-                <button class="btn btn-success" onclick="showAddExtensionModal()">➕ Add Extension</button>
+                <div>
+                    <button class="btn btn-success" onclick="showAddExtensionModal()">➕ Add Extension</button>
+                    <button class="btn btn-secondary" onclick="rebootAllPhones()">🔄 Reboot All Phones</button>
+                </div>
             </div>
 
             <div class="table-container">
@@ -76,6 +80,56 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Voicemail Tab -->
+        <div id="voicemail" class="tab-content">
+            <div class="section-header">
+                <h2>Voicemail Management</h2>
+                <div>
+                    <label for="vm-extension-select">Extension: </label>
+                    <select id="vm-extension-select" onchange="loadVoicemailForExtension()">
+                        <option value="">Select Extension</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadVoicemailForExtension()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div id="voicemail-pin-section" class="config-section" style="display: none;">
+                <h3>Voicemail PIN Management</h3>
+                <form id="voicemail-pin-form">
+                    <div class="form-group">
+                        <label>Current Extension: <span id="vm-current-extension"></span></label>
+                    </div>
+                    <div class="form-group">
+                        <label>New PIN (4 digits):</label>
+                        <input type="text" id="vm-pin" pattern="[0-9]{4}" maxlength="4" placeholder="1234" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 Update PIN</button>
+                </form>
+            </div>
+
+            <div id="voicemail-messages-section" style="display: none;">
+                <h3>Voicemail Messages</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>From</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="voicemail-table-body">
+                            <tr>
+                                <td colspan="5" class="loading">Select an extension to view voicemails</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

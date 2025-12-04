@@ -1,72 +1,43 @@
-# PBX Configuration File
-
 server:
-  # SIP server settings
-  sip_host: "0.0.0.0"
+  sip_host: 0.0.0.0
   sip_port: 5060
-  
-  # External IP address for SDP/RTP (used in SIP messages)
-  # Set this to your server's IP address that phones can reach
-  external_ip: "192.168.1.14"
-  
-  # RTP media settings
+  external_ip: 192.168.1.14
   rtp_port_range_start: 10000
   rtp_port_range_end: 20000
-  
-  # Server identification
-  server_name: "InHouse-PBX"
-  version: "1.0.0"
-
-# REST API settings
+  server_name: Aluminum Blanking Phone System
+  version: 1.0.0
 api:
-  host: "0.0.0.0"
+  host: 0.0.0.0
   port: 8080
   enable_cors: true
-
-# Extension definitions
 extensions:
-  - number: "1001"
-    name: "Office Extension 1"
-    password: "password1001"
-    allow_external: true
-    email: "ext1001@albl.com"
-  
-  - number: "1002"
-    name: "Office Extension 2"
-    password: "password1002"
-    allow_external: true
-    email: "ext1002@albl.com"
-    
-  - number: "1003"
-    name: "Conference Room"
-    password: "password1003"
-    allow_external: false
-    email: "conference@albl.com"
-    
-  - number: "1004"
-    name: "Customer Service"
-    password: "password1004"
-    allow_external: true
-    email: "support@albl.com"
-
-# Dial plan - routing rules
+- number: '1001'
+  name: Codi Mattinson
+  password: password1001
+  allow_external: true
+  email: cmattinson@albl.com
+  voicemail_pin: '1234'
+- number: '1002'
+  name: Bill Sautter
+  password: password1002
+  allow_external: true
+  email: bsautter@albl.com
+- number: '1003'
+  name: Lisa Dingman
+  password: password1003
+  allow_external: false
+  email: ldingman@albl.com
+- number: '1004'
+  name: Customer Service
+  password: password1004
+  allow_external: true
+  email: support@albl.com
 dialplan:
-  # Internal extensions: 1xxx
-  internal_pattern: "^1[0-9]{3}$"
-  
-  # Conference rooms: 2xxx
-  conference_pattern: "^2[0-9]{3}$"
-  
-  # Voicemail: *xxx
-  voicemail_pattern: "^\\*[0-9]{3}$"
-  
-  # Call parking: 7x
-  parking_pattern: "^7[0-9]$"
-  
-  # Queues: 8xxx
-  queue_pattern: "^8[0-9]{3}$"
-
-# Call features
+  internal_pattern: ^1[0-9]{3}$
+  conference_pattern: ^2[0-9]{3}$
+  voicemail_pattern: ^\*[0-9]{3}$
+  parking_pattern: ^7[0-9]$
+  queue_pattern: ^8[0-9]{3}$
 features:
   call_recording: true
   call_transfer: true
@@ -77,131 +48,72 @@ features:
   call_queues: true
   presence: true
   music_on_hold: true
-  max_call_duration: 7200  # 2 hours in seconds
-  
-# Call recording settings
+  max_call_duration: 7200
 recording:
   auto_record: false
-  storage_path: "recordings"
-  format: "wav"
-
-# Voicemail settings
+  storage_path: recordings
+  format: wav
 voicemail:
-  storage_path: "voicemail"
-  max_message_duration: 180  # 3 minutes
+  storage_path: voicemail
+  max_message_duration: 180
   email_notifications: true
-  no_answer_timeout: 30  # Seconds before routing to voicemail
-  
-  # SMTP Configuration
-  # WARNING: For production use, consider using environment variables for sensitive credentials
-  # Example: password: "${SMTP_PASSWORD}" and set SMTP_PASSWORD env var
+  no_answer_timeout: 30
   smtp:
-    host: "192.168.1.75"
+    host: 192.168.1.75
     port: 587
     use_tls: true
-    username: "cmattinson"
-    password: "G0N@vyBuyC@n3$"
-  
-  # Email Settings
+    username: cmattinson
+    password: G0N@vyBuyC@n3$
   email:
-    from_address: "Voicemail@albl.com"
-    from_name: "ABCo Voicemail"
-    subject_template: "New Voicemail from {caller_id} - {timestamp}"
+    from_address: Voicemail@albl.com
+    from_name: ABCo Voicemail
+    subject_template: New Voicemail from {caller_id} - {timestamp}
     include_attachment: true
     send_immediately: true
-    
-  # Daily reminder for unread voicemails
   reminders:
     enabled: true
-    time: "09:00"  # 9:00 AM
+    time: 09:00
     unread_only: true
-
-# Conference settings
 conference:
   max_participants: 50
   record_conferences: false
-
-# Call queue settings
 queues:
-  - number: "8001"
-    name: "Sales Queue"
-    strategy: "round_robin"
-    max_wait_time: 300
-    
-  - number: "8002"
-    name: "Support Queue"
-    strategy: "least_recent"
-    max_wait_time: 180
-
-# Call parking settings
+- number: '8001'
+  name: Sales Queue
+  strategy: round_robin
+  max_wait_time: 300
+- number: '8002'
+  name: Support Queue
+  strategy: least_recent
+  max_wait_time: 180
 parking:
   range_start: 70
   range_end: 79
-  timeout: 120  # 2 minutes
-  
-# Presence settings
+  timeout: 120
 presence:
-  auto_away_timeout: 300  # 5 minutes
-  auto_offline_timeout: 1800  # 30 minutes
-
-# Music on hold
+  auto_away_timeout: 300
+  auto_offline_timeout: 1800
 music_on_hold:
-  directory: "moh"
-  default_class: "default"
-  
-# Logging
+  directory: moh
+  default_class: default
 logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
-  file: "logs/pbx.log"
+  level: INFO
+  file: logs/pbx.log
   console: true
-  
-# Security
 security:
   require_authentication: true
   max_failed_attempts: 5
-  ban_duration: 300  # 5 minutes in seconds
-  
-  # FIPS 140-2 compliance
-  fips_mode: true  # Enable FIPS-compliant encryption
-  
-  # TLS/SRTP settings
-  enable_tls: false  # Enable TLS for SIP (SIPS)
-  tls_cert_file: ""  # Path to TLS certificate
-  tls_key_file: ""   # Path to TLS private key
-  enable_srtp: false  # Enable SRTP for encrypted media
-  
-  # Password policy
+  ban_duration: 300
+  fips_mode: true
+  enable_tls: false
+  tls_cert_file: ''
+  tls_key_file: ''
+  enable_srtp: false
   min_password_length: 12
   require_strong_passwords: true
-  
-# Phone Provisioning settings
 provisioning:
   enabled: true
-  # URL format for phone configuration files
-  # Available placeholders: {mac}, {{SERVER_IP}}, {{PORT}}
-  url_format: "http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg"
-  # Optional: Directory for custom phone templates
-  custom_templates_dir: ""
-  # Devices to auto-provision
-  # Format: MAC address, extension number, vendor, model
+  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+  custom_templates_dir: ''
   devices: []
-    # Example device configuration:
-    # - mac: "00:15:65:12:34:56"
-    #   extension: "1001"
-    #   vendor: "zip"
-    #   model: "33g"
-    # - mac: "00:15:65:12:34:57"
-    #   extension: "1002"
-    #   vendor: "zip"
-    #   model: "37g"
-
-# SIP Trunks (for external calls)
-trunks:
-  # Example trunk configuration (disabled by default)
-  # - id: "trunk1"
-  #   name: "Primary Provider"
-  #   host: "sip.provider.com"
-  #   username: "your_username"
-  #   password: "your_password"
-  #   port: 5060
-  #   enabled: true
+trunks: null
