@@ -4,7 +4,7 @@ server:
   external_ip: 192.168.1.14
   rtp_port_range_start: 10000
   rtp_port_range_end: 20000
-  server_name: InHouse-PBX
+  server_name: Aluminum Blanking Phone System
   version: 1.0.0
 api:
   host: 0.0.0.0
@@ -12,21 +12,21 @@ api:
   enable_cors: true
 extensions:
 - number: '1001'
-  name: Office Extension 1
+  name: Codi Mattinson
   password: password1001
   allow_external: true
-  email: ext1001@albl.com
+  email: cmattinson@albl.com
   voicemail_pin: '1234'
 - number: '1002'
-  name: Office Extension 2
+  name: Bill Sautter
   password: password1002
   allow_external: true
-  email: ext1002@albl.com
+  email: bsautter@albl.com
 - number: '1003'
-  name: Conference Room
+  name: Lisa Dingman
   password: password1003
   allow_external: false
-  email: conference@albl.com
+  email: ldingman@albl.com
 - number: '1004'
   name: Customer Service
   password: password1004
