@@ -45,6 +45,8 @@ class Call:
         self.original_invite = None  # Original INVITE message from caller
         self.no_answer_timer = None  # Timer for routing to voicemail
         self.routed_to_voicemail = False  # Flag to track if routed to VM
+        self.transferred = False  # Flag to track if call has been transferred
+        self.transfer_destination = None  # Destination extension for transfer
         
     def start(self):
         """Start the call"""
