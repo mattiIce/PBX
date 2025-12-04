@@ -22,6 +22,7 @@ from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.sip_trunk import SIPTrunkSystem
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.api.rest_api import PBXAPIServer
+from pbx.utils.database import DatabaseBackend
 
 
 class PBXCore:
@@ -46,6 +47,14 @@ class PBXCore:
         )
         self.logger = get_logger()
 
+        # Initialize database backend
+        self.database = DatabaseBackend(self.config)
+        if self.database.connect():
+            self.database.create_tables()
+            self.logger.info("Database backend initialized successfully")
+        else:
+            self.logger.warning("Database backend not available - running without database")
+
         # Initialize core components
         self.extension_registry = ExtensionRegistry(self.config)
         self.call_manager = CallManager()
@@ -63,7 +72,11 @@ class PBXCore:
 
         # Initialize advanced features
         voicemail_path = self.config.get('voicemail.storage_path', 'voicemail')
-        self.voicemail_system = VoicemailSystem(storage_path=voicemail_path, config=self.config)
+        self.voicemail_system = VoicemailSystem(
+            storage_path=voicemail_path,
+            config=self.config,
+            database=self.database if hasattr(self, 'database') and self.database.enabled else None
+        )
         self.conference_system = ConferenceSystem()
         self.recording_system = CallRecordingSystem(
             auto_record=self.config.get('features.call_recording', False)

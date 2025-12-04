@@ -101,12 +101,12 @@ def test_extension_email_configuration():
     ext1001 = config.get_extension("1001")
     assert ext1001 is not None
     assert 'email' in ext1001
-    assert ext1001['email'] == "ext1001@albl.com"
+    assert ext1001['email'] == "cmattinson@albl.com"
     
     ext1002 = config.get_extension("1002")
     assert ext1002 is not None
     assert 'email' in ext1002
-    assert ext1002['email'] == "ext1002@albl.com"
+    assert ext1002['email'] == "bsautter@albl.com"
     
     print("✓ Extensions have email addresses configured")
 
