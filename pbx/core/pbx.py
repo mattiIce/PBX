@@ -201,7 +201,8 @@ class PBXCore:
         
         # Parse extension numbers - handle both regular extensions and special patterns
         from_match = re.search(r'sip:(\d+)@', from_header)
-        to_match = re.search(r'sip:([*\d]+)@', to_header)  # Allow * in destination
+        # Allow * prefix for voicemail access (e.g., *1001), but validate format
+        to_match = re.search(r'sip:(\*?\d+)@', to_header)
         
         if not from_match or not to_match:
             self.logger.warning(f"Could not parse extensions from headers")
@@ -211,7 +212,8 @@ class PBXCore:
         to_ext = to_match.group(1)
         
         # Check if this is a voicemail access call (*xxxx pattern)
-        if to_ext.startswith('*'):
+        # Validate format: must be * followed by exactly 3 or 4 digits
+        if to_ext.startswith('*') and len(to_ext) >= 4 and len(to_ext) <= 5 and to_ext[1:].isdigit():
             return self._handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
         
         # Check if destination extension is registered
