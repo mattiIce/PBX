@@ -34,6 +34,12 @@ wheels/
 *.log
 logs/
 
+# PBX runtime directories
+recordings/
+voicemail/
+moh/
+cdr/
+
 # Config
 *.local.yml
 *.local.json
