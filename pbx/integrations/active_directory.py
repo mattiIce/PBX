@@ -107,9 +107,10 @@ class ActiveDirectoryIntegration:
         try:
             self.logger.info(f"Authenticating user: {username}")
             
-            # Search for user - using ldap3 which handles escaping automatically
-            # ldap3 library escapes filter values when using search parameters
-            search_filter = f"(&(objectClass=user)(sAMAccountName={username}))"
+            # Search for user - escape username to prevent LDAP injection
+            from ldap3.utils.conv import escape_filter_chars
+            safe_username = escape_filter_chars(username)
+            search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
             user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
             
             self.connection.search(
@@ -212,11 +213,15 @@ class ActiveDirectoryIntegration:
         try:
             self.logger.info(f"Searching AD for: {query}")
             
+            # Escape query to prevent LDAP injection
+            from ldap3.utils.conv import escape_filter_chars
+            safe_query = escape_filter_chars(query)
+            
             # Build search filter for multiple attributes
             search_filter = (
                 f"(&(objectClass=user)"
-                f"(|(cn=*{query}*)(displayName=*{query}*)"
-                f"(mail=*{query}*)(telephoneNumber=*{query}*)))"
+                f"(|(cn=*{safe_query}*)(displayName=*{safe_query}*)"
+                f"(mail=*{safe_query}*)(telephoneNumber=*{safe_query}*)))"
             )
             
             user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)

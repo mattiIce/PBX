@@ -389,9 +389,12 @@ class VoicemailIVR:
         """Handle PIN entry state"""
         if digit == '#':
             # PIN entry complete - verify the entered PIN
-            if self.mailbox.verify_pin(self.entered_pin):
+            pin_valid = self.mailbox.verify_pin(self.entered_pin)
+            # Clear PIN immediately after verification for security
+            self.entered_pin = ''
+            
+            if pin_valid:
                 self.state = self.STATE_MAIN_MENU
-                self.entered_pin = ''  # Clear PIN after successful verification
                 unread_count = len(self.mailbox.get_messages(unread_only=True))
                 return {
                     'action': 'play_prompt',
@@ -400,7 +403,6 @@ class VoicemailIVR:
                 }
             else:
                 self.pin_attempts += 1
-                self.entered_pin = ''  # Clear incorrect PIN
                 if self.pin_attempts >= self.max_pin_attempts:
                     self.state = self.STATE_GOODBYE
                     return {
@@ -414,8 +416,9 @@ class VoicemailIVR:
                     'message': 'Invalid PIN. Please try again.'
                 }
         elif digit in '0123456789':
-            # Collect PIN digit
-            self.entered_pin += digit
+            # Collect PIN digit (limit length to prevent abuse)
+            if len(self.entered_pin) < 10:  # Max 10 digits
+                self.entered_pin += digit
             return {
                 'action': 'collect_digit',
                 'prompt': 'continue'
