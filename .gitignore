@@ -40,6 +40,10 @@ voicemail/
 moh/
 cdr/
 
+# Database files
+*.db
+*.db-journal
+
 # Config
 *.local.yml
 *.local.json

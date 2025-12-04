@@ -16,7 +16,7 @@ except ImportError:
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
 
-    def __init__(self, extension_number, storage_path="voicemail", config=None, email_notifier=None):
+    def __init__(self, extension_number, storage_path="voicemail", config=None, email_notifier=None, database=None):
         """
         Initialize voicemail box
 
@@ -25,6 +25,7 @@ class VoicemailBox:
             storage_path: Path to store voicemail files
             config: Config object
             email_notifier: EmailNotifier object
+            database: DatabaseBackend object (optional)
         """
         self.extension_number = extension_number
         self.storage_path = os.path.join(storage_path, extension_number)
@@ -32,6 +33,7 @@ class VoicemailBox:
         self.logger = get_logger()
         self.config = config
         self.email_notifier = email_notifier
+        self.database = database
         self.pin = None  # Voicemail PIN
 
         # Load PIN from extension config if available
@@ -45,6 +47,12 @@ class VoicemailBox:
 
         # Load existing messages from disk
         self._load_messages()
+
+    def _get_db_placeholder(self):
+        """Get database parameter placeholder based on database type"""
+        if self.database and self.database.db_type == 'postgresql':
+            return '%s'
+        return '?'
 
     def save_message(self, caller_id, audio_data, duration=None):
         """
@@ -78,6 +86,33 @@ class VoicemailBox:
 
         self.messages.append(message)
         self.logger.info(f"Saved voicemail for extension {self.extension_number}")
+
+        # Save to database if available
+        if self.database and self.database.enabled:
+            try:
+                placeholder = self._get_db_placeholder()
+                query = f"""
+                INSERT INTO voicemail_messages 
+                (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+                """
+                
+                params = (
+                    message_id,
+                    self.extension_number,
+                    caller_id,
+                    file_path,
+                    duration,
+                    False,
+                    timestamp
+                )
+                
+                if self.database.execute(query, params):
+                    self.logger.info(f"Saved voicemail to database for extension {self.extension_number}")
+                else:
+                    self.logger.warning(f"Failed to save voicemail to database for extension {self.extension_number}")
+            except Exception as e:
+                self.logger.error(f"Error saving voicemail to database: {e}")
 
         # Send email notification if enabled
         if self.email_notifier and self.config:
@@ -120,6 +155,21 @@ class VoicemailBox:
         for msg in self.messages:
             if msg['id'] == message_id:
                 msg['listened'] = True
+                
+                # Update database if available
+                if self.database and self.database.enabled:
+                    try:
+                        placeholder = self._get_db_placeholder()
+                        query = f"""
+                        UPDATE voicemail_messages 
+                        SET listened = {placeholder}
+                        WHERE message_id = {placeholder}
+                        """
+                        self.database.execute(query, (True, message_id))
+                        self.logger.debug(f"Updated voicemail {message_id} as listened in database")
+                    except Exception as e:
+                        self.logger.error(f"Error updating voicemail in database: {e}")
+                
                 break
 
     def delete_message(self, message_id):
@@ -137,6 +187,19 @@ class VoicemailBox:
                 # Delete file
                 if os.path.exists(msg['file_path']):
                     os.remove(msg['file_path'])
+
+                # Delete from database if available
+                if self.database and self.database.enabled:
+                    try:
+                        placeholder = self._get_db_placeholder()
+                        query = f"""
+                        DELETE FROM voicemail_messages 
+                        WHERE message_id = {placeholder}
+                        """
+                        self.database.execute(query, (message_id,))
+                        self.logger.debug(f"Deleted voicemail {message_id} from database")
+                    except Exception as e:
+                        self.logger.error(f"Error deleting voicemail from database: {e}")
 
                 # Remove from list
                 self.messages.pop(i)
@@ -211,18 +274,20 @@ class VoicemailBox:
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
 
-    def __init__(self, storage_path="voicemail", config=None):
+    def __init__(self, storage_path="voicemail", config=None, database=None):
         """
         Initialize voicemail system
 
         Args:
             storage_path: Path to store voicemail files
             config: Config object
+            database: DatabaseBackend object (optional)
         """
         self.storage_path = storage_path
         self.mailboxes = {}
         self.logger = get_logger()
         self.config = config
+        self.database = database
 
         # Initialize email notifier if config provided
         self.email_notifier = None
@@ -249,7 +314,8 @@ class VoicemailSystem:
                 extension_number,
                 self.storage_path,
                 config=self.config,
-                email_notifier=self.email_notifier
+                email_notifier=self.email_notifier,
+                database=self.database
             )
         return self.mailboxes[extension_number]
 
