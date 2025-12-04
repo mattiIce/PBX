@@ -16,7 +16,7 @@ cryptography>=41.0.0
 
 # For database backend:
 # - sqlalchemy (ORM)
-# - psycopg2 (PostgreSQL)
+psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
 
 # For web interface:
 # - flask or fastapi (Web framework)
