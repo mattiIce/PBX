@@ -803,27 +803,111 @@ class PBXCore:
         # Mark call as connected
         call.connect()
         
-        # Play voicemail prompts and handle PIN verification
-        # For now, we'll simulate a simple voicemail IVR by scheduling auto-hangup
-        # A full implementation would involve playing audio prompts and handling DTMF
-        
         # Get message count
         messages = mailbox.get_messages(unread_only=False)
         unread = mailbox.get_messages(unread_only=True)
         
         self.logger.info(f"Voicemail access for {target_ext}: {len(unread)} unread, {len(messages)} total")
         
-        # Schedule auto-hangup after 60 seconds (simulating user interaction time)
-        # In a full implementation, this would be replaced by actual IVR logic
-        voicemail_timer = threading.Timer(
-            60,
-            self.end_call,
-            args=(call_id,)
+        # Play voicemail messages to the caller
+        # This runs in a separate thread so it doesn't block
+        playback_thread = threading.Thread(
+            target=self._playback_voicemails,
+            args=(call_id, call, mailbox, messages)
         )
-        voicemail_timer.start()
-        call.voicemail_timer = voicemail_timer
+        playback_thread.daemon = True
+        playback_thread.start()
         
         return True
+    
+    def _playback_voicemails(self, call_id, call, mailbox, messages):
+        """
+        Play voicemail messages to caller
+        
+        Args:
+            call_id: Call identifier
+            call: Call object
+            mailbox: VoicemailBox object
+            messages: List of message dictionaries
+        """
+        import time
+        from pbx.rtp.handler import RTPPlayer
+        
+        try:
+            # Wait a moment for RTP to stabilize
+            time.sleep(0.5)
+            
+            # Create RTP player to send audio to caller
+            if not call.caller_rtp:
+                self.logger.warning(f"No caller RTP info for voicemail playback {call_id}")
+                # End call after short delay
+                time.sleep(2)
+                self.end_call(call_id)
+                return
+            
+            player = RTPPlayer(
+                local_port=call.rtp_ports[0] + 1,
+                remote_host=call.caller_rtp['address'],
+                remote_port=call.caller_rtp['port'],
+                call_id=call_id
+            )
+            
+            if not player.start():
+                self.logger.error(f"Failed to start RTP player for voicemail playback {call_id}")
+                time.sleep(2)
+                self.end_call(call_id)
+                return
+            
+            try:
+                # Play each voicemail message
+                if not messages:
+                    # No messages - play short beep and hang up
+                    self.logger.info(f"No voicemail messages for {call.voicemail_extension}")
+                    player.play_beep(frequency=400, duration_ms=500)
+                    time.sleep(2)
+                else:
+                    # Play messages
+                    self.logger.info(f"Playing {len(messages)} voicemail messages for {call.voicemail_extension}")
+                    
+                    for idx, message in enumerate(messages):
+                        # Play a beep between messages
+                        if idx > 0:
+                            time.sleep(0.5)
+                            player.play_beep(frequency=800, duration_ms=300)
+                            time.sleep(0.5)
+                        
+                        # Play the voicemail message
+                        file_path = message['file_path']
+                        self.logger.info(f"Playing voicemail {idx + 1}/{len(messages)}: {file_path}")
+                        
+                        if player.play_file(file_path):
+                            # Mark message as listened
+                            mailbox.mark_listened(message['id'])
+                            self.logger.info(f"Marked voicemail {message['id']} as listened")
+                        else:
+                            self.logger.warning(f"Failed to play voicemail: {file_path}")
+                        
+                        # Pause between messages
+                        time.sleep(1)
+                    
+                    self.logger.info(f"Finished playing all voicemails for {call.voicemail_extension}")
+                    time.sleep(1)
+                
+            finally:
+                player.stop()
+            
+            # End the call after playback
+            self.end_call(call_id)
+            
+        except Exception as e:
+            self.logger.error(f"Error in voicemail playback: {e}")
+            import traceback
+            traceback.print_exc()
+            # Try to end call gracefully
+            try:
+                self.end_call(call_id)
+            except:
+                pass
     
     def _build_wav_file(self, audio_data):
         """

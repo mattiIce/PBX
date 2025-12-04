@@ -483,14 +483,15 @@ class RTPPlayer:
             self.socket = None
         self.logger.info(f"RTP player stopped for call {self.call_id}")
     
-    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160):
+    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160, bytes_per_sample=2):
         """
         Send audio data via RTP packets
         
         Args:
-            audio_data: Raw PCM audio data (16-bit signed, little-endian)
+            audio_data: Raw PCM audio data
             payload_type: RTP payload type (0 = PCMU, 8 = PCMA)
             samples_per_packet: Number of samples per RTP packet (default 160 = 20ms at 8kHz)
+            bytes_per_sample: Bytes per sample (1 for G.711, 2 for 16-bit PCM)
         
         Returns:
             bool: True if successful
@@ -501,7 +502,7 @@ class RTPPlayer:
         
         try:
             # Split audio into packets
-            bytes_per_packet = samples_per_packet * 2  # 2 bytes per 16-bit sample
+            bytes_per_packet = samples_per_packet * bytes_per_sample
             num_packets = (len(audio_data) + bytes_per_packet - 1) // bytes_per_packet
             
             for i in range(num_packets):
@@ -577,14 +578,15 @@ class RTPPlayer:
         try:
             from pbx.utils.audio import generate_beep_tone
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
-            return self.send_audio(pcm_data, payload_type=0)
+            # Beep tone is 16-bit PCM, 2 bytes per sample
+            return self.send_audio(pcm_data, payload_type=0, bytes_per_sample=2)
         except ImportError:
             self.logger.error("Audio utilities not available")
             return False
     
     def play_file(self, file_path):
         """
-        Play an audio file (future implementation)
+        Play an audio file
         
         Args:
             file_path: Path to WAV file
@@ -592,6 +594,42 @@ class RTPPlayer:
         Returns:
             bool: True if successful
         """
-        # TODO: Implement WAV file reading and playback
-        self.logger.warning("play_file not yet implemented")
-        return False
+        import os
+        
+        if not os.path.exists(file_path):
+            self.logger.error(f"Audio file not found: {file_path}")
+            return False
+        
+        try:
+            # Read WAV file
+            with open(file_path, 'rb') as f:
+                wav_data = f.read()
+            
+            # Parse WAV header to find audio data
+            # WAV format: RIFF header (12 bytes) + chunks
+            if not wav_data.startswith(b'RIFF') or b'WAVE' not in wav_data[:20]:
+                self.logger.error(f"Invalid WAV file: {file_path}")
+                return False
+            
+            # Find the data chunk
+            data_pos = wav_data.find(b'data')
+            if data_pos == -1:
+                self.logger.error(f"No data chunk in WAV file: {file_path}")
+                return False
+            
+            # Read data chunk size (4 bytes after 'data')
+            data_size = struct.unpack('<I', wav_data[data_pos + 4:data_pos + 8])[0]
+            
+            # Extract audio data (skip 'data' + size = 8 bytes)
+            audio_data = wav_data[data_pos + 8:data_pos + 8 + data_size]
+            
+            # For G.711 μ-law (8-bit samples), we can send directly
+            # Each sample is 1 byte, so 160 bytes = 160 samples = 20ms at 8kHz
+            samples_per_packet = 160
+            
+            # Send audio in chunks (G.711 is 1 byte per sample)
+            return self.send_audio(audio_data, payload_type=0, samples_per_packet=samples_per_packet, bytes_per_sample=1)
+            
+        except Exception as e:
+            self.logger.error(f"Error playing file {file_path}: {e}")
+            return False
