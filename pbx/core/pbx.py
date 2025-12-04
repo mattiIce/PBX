@@ -690,22 +690,36 @@ class PBXCore:
                         call_id=call_id
                     )
                     if player.start():
-                        # Play greeting prompt: "Please leave a message after the tone"
-                        greeting_prompt = generate_voice_prompt('leave_message')
-                        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                            temp_file.write(greeting_prompt)
-                            greeting_file = temp_file.name
+                        # Check for custom greeting first
+                        mailbox = self.voicemail.get_mailbox(call.to_extension)
+                        custom_greeting_path = mailbox.get_greeting_path()
+                        greeting_file = None
+                        temp_file_created = False
+                        
+                        if custom_greeting_path:
+                            # Use custom greeting
+                            greeting_file = custom_greeting_path
+                            self.logger.info(f"Using custom greeting for extension {call.to_extension}")
+                        else:
+                            # Use default tone prompt: "Please leave a message after the tone"
+                            greeting_prompt = generate_voice_prompt('leave_message')
+                            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                temp_file.write(greeting_prompt)
+                                greeting_file = temp_file.name
+                                temp_file_created = True
+                            self.logger.info(f"Using default greeting for extension {call.to_extension}")
                         
                         try:
                             player.play_file(greeting_file)
                             import time
                             time.sleep(0.3)  # Brief pause before beep
                         finally:
-                            # Clean up temp file
-                            try:
-                                os.unlink(greeting_file)
-                            except:
-                                pass
+                            # Clean up temp file only if we created one
+                            if temp_file_created:
+                                try:
+                                    os.unlink(greeting_file)
+                                except:
+                                    pass
                         
                         # Play beep tone (1000 Hz, 500ms)
                         player.play_beep(frequency=1000, duration_ms=500)
