@@ -213,12 +213,13 @@ class VoicemailBox:
         if self.database and self.database.enabled:
             try:
                 placeholder = self._get_db_placeholder()
-                query = f"""
+                # Build query safely - placeholder is only '%s' or '?' from internal method
+                query = """
                 SELECT message_id, caller_id, file_path, duration, listened, created_at
                 FROM voicemail_messages
-                WHERE extension_number = {placeholder}
+                WHERE extension_number = {}
                 ORDER BY created_at DESC
-                """
+                """.format(placeholder)
                 rows = self.database.fetch_all(query, (self.extension_number,))
                 
                 for row in rows:
@@ -226,8 +227,24 @@ class VoicemailBox:
                     timestamp = row['created_at']
                     if isinstance(timestamp, str):
                         try:
-                            timestamp = datetime.fromisoformat(timestamp)
-                        except (ValueError, AttributeError):
+                            # Try ISO format first (Python 3.7+)
+                            if hasattr(datetime, 'fromisoformat'):
+                                timestamp = datetime.fromisoformat(timestamp)
+                            else:
+                                # Fallback for Python < 3.7
+                                # Try common timestamp formats
+                                for fmt in ['%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S']:
+                                    try:
+                                        timestamp = datetime.strptime(timestamp, fmt)
+                                        break
+                                    except ValueError:
+                                        continue
+                                else:
+                                    # If parsing fails, use current time and log warning
+                                    self.logger.warning(f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time")
+                                    timestamp = datetime.now()
+                        except ValueError:
+                            self.logger.warning(f"Invalid timestamp format for voicemail {row['message_id']}, using current time")
                             timestamp = datetime.now()
                     
                     message = {
