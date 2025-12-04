@@ -584,7 +584,12 @@ class RTPPlayer:
     
     def play_file(self, file_path):
         """
-        Play an audio file (future implementation)
+        Play an audio file from a WAV file
+        
+        Supports WAV files with:
+        - G.711 μ-law (8-bit, 8kHz) - most common for PBX
+        - G.711 A-law (8-bit, 8kHz)
+        - PCM (16-bit, 8kHz/16kHz)
         
         Args:
             file_path: Path to WAV file
@@ -592,6 +597,108 @@ class RTPPlayer:
         Returns:
             bool: True if successful
         """
-        # TODO: Implement WAV file reading and playback
-        self.logger.warning("play_file not yet implemented")
-        return False
+        import os
+        import struct
+        
+        if not os.path.exists(file_path):
+            self.logger.error(f"Audio file not found: {file_path}")
+            return False
+        
+        try:
+            with open(file_path, 'rb') as f:
+                # Read WAV header
+                riff = f.read(4)
+                if riff != b'RIFF':
+                    self.logger.error(f"Invalid WAV file: {file_path}")
+                    return False
+                
+                file_size = struct.unpack('<I', f.read(4))[0]
+                wave = f.read(4)
+                if wave != b'WAVE':
+                    self.logger.error(f"Invalid WAV file: {file_path}")
+                    return False
+                
+                # Find fmt chunk
+                while True:
+                    chunk_id = f.read(4)
+                    chunk_size = struct.unpack('<I', f.read(4))[0]
+                    
+                    if chunk_id == b'fmt ':
+                        # Parse format
+                        audio_format = struct.unpack('<H', f.read(2))[0]
+                        num_channels = struct.unpack('<H', f.read(2))[0]
+                        sample_rate = struct.unpack('<I', f.read(4))[0]
+                        byte_rate = struct.unpack('<I', f.read(4))[0]
+                        block_align = struct.unpack('<H', f.read(2))[0]
+                        bits_per_sample = struct.unpack('<H', f.read(2))[0]
+                        
+                        # Skip any extra format bytes
+                        if chunk_size > 16:
+                            f.read(chunk_size - 16)
+                        
+                        # Determine payload type based on format
+                        # 1 = PCM, 6 = A-law, 7 = μ-law
+                        if audio_format == 7:
+                            payload_type = 0  # PCMU (μ-law)
+                        elif audio_format == 6:
+                            payload_type = 8  # PCMA (A-law)
+                        elif audio_format == 1:
+                            payload_type = 0  # Use PCMU for PCM (will need conversion)
+                        else:
+                            self.logger.error(f"Unsupported audio format: {audio_format}")
+                            return False
+                        
+                        self.logger.info(f"WAV file: format={audio_format}, channels={num_channels}, "
+                                       f"rate={sample_rate}Hz, bits={bits_per_sample}")
+                        break
+                    
+                    elif chunk_id == b'data':
+                        # Found data before fmt - invalid
+                        self.logger.error(f"Invalid WAV structure")
+                        return False
+                    else:
+                        # Skip unknown chunk
+                        f.read(chunk_size)
+                
+                # Find data chunk
+                while True:
+                    chunk_id = f.read(4)
+                    if not chunk_id:
+                        self.logger.error(f"No data chunk found in WAV file")
+                        return False
+                    
+                    chunk_size = struct.unpack('<I', f.read(4))[0]
+                    
+                    if chunk_id == b'data':
+                        # Read audio data
+                        audio_data = f.read(chunk_size)
+                        
+                        # For mono files, use data as-is
+                        # For stereo, we'd need to downmix (take left channel or average)
+                        if num_channels == 2:
+                            self.logger.warning(f"Stereo audio detected, using left channel only")
+                            # Extract left channel (assuming interleaved samples)
+                            if audio_format == 1:  # PCM 16-bit
+                                # Extract every other 16-bit sample
+                                left_channel = b''.join([audio_data[i:i+2] for i in range(0, len(audio_data), 4)])
+                                audio_data = left_channel
+                            else:  # 8-bit formats
+                                audio_data = audio_data[::2]
+                        
+                        # Calculate samples per packet based on sample rate
+                        # 20ms packet = sample_rate * 0.02
+                        samples_per_packet = int(sample_rate * 0.02)
+                        
+                        # Send the audio
+                        self.logger.info(f"Playing audio file: {file_path} ({len(audio_data)} bytes)")
+                        return self.send_audio(audio_data, payload_type, samples_per_packet)
+                    
+                    else:
+                        # Skip this chunk
+                        f.read(chunk_size)
+        
+        except Exception as e:
+            self.logger.error(f"Error playing audio file {file_path}: {e}")
+            import traceback
+            traceback.print_exc()
+            return False

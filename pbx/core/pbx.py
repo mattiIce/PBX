@@ -460,7 +460,7 @@ class PBXCore:
     
     def transfer_call(self, call_id, new_destination):
         """
-        Transfer call to new destination
+        Transfer call to new destination using SIP REFER
         
         Args:
             call_id: Call identifier
@@ -469,16 +469,55 @@ class PBXCore:
         Returns:
             True if transfer initiated
         """
+        from pbx.sip.message import SIPMessageBuilder
+        
         call = self.call_manager.get_call(call_id)
         if not call:
+            self.logger.error(f"Call {call_id} not found for transfer")
             return False
         
-        self.logger.info(f"Transferring call {call_id} to {new_destination}")
+        # Verify new destination exists
+        if not self.extension_registry.is_registered(new_destination):
+            self.logger.error(f"Transfer destination {new_destination} not registered")
+            return False
         
-        # In a complete implementation:
-        # 1. Send REFER message to transfer call
-        # 2. Handle transfer response
-        # 3. Update call routing
+        self.logger.info(f"Transferring call {call_id} from {call.from_extension} to {new_destination}")
+        
+        # Determine which party to send REFER to (typically the caller)
+        refer_to_addr = call.caller_addr if call.caller_addr else call.callee_addr
+        if not refer_to_addr:
+            self.logger.error(f"No address found for REFER in call {call_id}")
+            return False
+        
+        # Build REFER message
+        server_ip = self._get_server_ip()
+        sip_port = self.config.get('server.sip_port', 5060)
+        
+        refer_msg = SIPMessageBuilder.build_request(
+            method='REFER',
+            uri=f"sip:{call.from_extension}@{server_ip}",
+            from_addr=f"<sip:{call.to_extension}@{server_ip}>",
+            to_addr=f"<sip:{call.from_extension}@{server_ip}>",
+            call_id=call_id,
+            cseq=1
+        )
+        
+        # Add Refer-To header with new destination
+        refer_msg.set_header('Refer-To', f"<sip:{new_destination}@{server_ip}>")
+        
+        # Add Referred-By header
+        refer_msg.set_header('Referred-By', f"<sip:{call.to_extension}@{server_ip}>")
+        
+        # Add Contact header
+        refer_msg.set_header('Contact', f"<sip:{call.to_extension}@{server_ip}:{sip_port}>")
+        
+        # Send REFER message
+        self.sip_server._send_message(refer_msg.build(), refer_to_addr)
+        self.logger.info(f"Sent REFER to {refer_to_addr} for call {call_id} to transfer to {new_destination}")
+        
+        # Mark call as transferred
+        call.transferred = True
+        call.transfer_destination = new_destination
         
         return True
     

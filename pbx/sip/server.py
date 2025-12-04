@@ -127,6 +127,8 @@ class SIPServer:
             self._handle_subscribe(message, addr)
         elif method == 'NOTIFY':
             self._handle_notify(message, addr)
+        elif method == 'REFER':
+            self._handle_refer(message, addr)
         else:
             self.logger.warning(f"Unhandled SIP method: {method}")
             self._send_response(405, "Method Not Allowed", message, addr)
@@ -232,6 +234,24 @@ class SIPServer:
         self.logger.debug(f"NOTIFY request from {addr}")
         # Acknowledge the notification
         self._send_response(200, "OK", message, addr)
+    
+    def _handle_refer(self, message, addr):
+        """Handle REFER request for call transfer"""
+        self.logger.info(f"REFER request from {addr}")
+        
+        # Get the Refer-To header
+        refer_to = message.get_header('Refer-To')
+        if not refer_to:
+            self._send_response(400, "Bad Request - Missing Refer-To", message, addr)
+            return
+        
+        self.logger.info(f"REFER to: {refer_to}")
+        
+        # Accept the REFER request
+        self._send_response(202, "Accepted", message, addr)
+        
+        # In a full implementation, would initiate new call to refer-to destination
+        # and send NOTIFY messages about transfer progress
     
     def _handle_response(self, message, addr):
         """Handle SIP response"""
