@@ -611,14 +611,40 @@ class RTPPlayer:
                 self.logger.error(f"Invalid WAV file: {file_path}")
                 return False
             
+            # Find and validate the format chunk
+            fmt_pos = wav_data.find(b'fmt ')
+            if fmt_pos == -1 or fmt_pos + 20 > len(wav_data):
+                self.logger.error(f"No valid format chunk in WAV file: {file_path}")
+                return False
+            
+            # Parse format chunk to verify audio format
+            # Format chunk: 'fmt ' (4) + chunk_size (4) + format_tag (2) + ...
+            fmt_chunk_size = struct.unpack('<I', wav_data[fmt_pos + 4:fmt_pos + 8])[0]
+            audio_format = struct.unpack('<H', wav_data[fmt_pos + 8:fmt_pos + 10])[0]
+            
+            # Verify it's G.711 μ-law (format 7) or A-law (format 6)
+            if audio_format not in (6, 7):
+                self.logger.error(f"Unsupported audio format {audio_format} in WAV file: {file_path} (only G.711 μ-law/A-law supported)")
+                return False
+            
             # Find the data chunk
             data_pos = wav_data.find(b'data')
             if data_pos == -1:
                 self.logger.error(f"No data chunk in WAV file: {file_path}")
                 return False
             
+            # Validate bounds before reading data chunk size
+            if data_pos + 8 > len(wav_data):
+                self.logger.error(f"Truncated WAV file: {file_path}")
+                return False
+            
             # Read data chunk size (4 bytes after 'data')
             data_size = struct.unpack('<I', wav_data[data_pos + 4:data_pos + 8])[0]
+            
+            # Validate data size
+            if data_pos + 8 + data_size > len(wav_data):
+                self.logger.error(f"Invalid data size in WAV file: {file_path}")
+                return False
             
             # Extract audio data (skip 'data' + size = 8 bytes)
             audio_data = wav_data[data_pos + 8:data_pos + 8 + data_size]
