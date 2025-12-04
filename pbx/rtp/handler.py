@@ -488,8 +488,10 @@ class RTPPlayer:
         Send audio data via RTP packets
         
         Args:
-            audio_data: Raw PCM audio data (16-bit signed, little-endian)
-            payload_type: RTP payload type (0 = PCMU, 8 = PCMA)
+            audio_data: Raw audio data (format depends on payload_type)
+                        - For PCMU/PCMA (PT 0/8): 8-bit samples (1 byte per sample)
+                        - For PCM (PT 10/11): 16-bit samples (2 bytes per sample)
+            payload_type: RTP payload type (0 = PCMU, 8 = PCMA, 10 = L16 stereo, 11 = L16 mono)
             samples_per_packet: Number of samples per RTP packet (default 160 = 20ms at 8kHz)
         
         Returns:
@@ -500,8 +502,16 @@ class RTPPlayer:
             return False
         
         try:
+            # Determine bytes per sample based on payload type
+            # G.711 formats (PCMU, PCMA) are 8-bit = 1 byte per sample
+            # PCM formats are typically 16-bit = 2 bytes per sample
+            if payload_type in [0, 8]:  # PCMU or PCMA
+                bytes_per_sample = 1
+            else:  # PCM or other formats
+                bytes_per_sample = 2
+            
             # Split audio into packets
-            bytes_per_packet = samples_per_packet * 2  # 2 bytes per 16-bit sample
+            bytes_per_packet = samples_per_packet * bytes_per_sample
             num_packets = (len(audio_data) + bytes_per_packet - 1) // bytes_per_packet
             
             for i in range(num_packets):
@@ -643,7 +653,10 @@ class RTPPlayer:
                         elif audio_format == 6:
                             payload_type = 8  # PCMA (A-law)
                         elif audio_format == 1:
-                            payload_type = 0  # Use PCMU for PCM (will need conversion)
+                            # PCM format - use L16 payload type
+                            payload_type = 11 if num_channels == 1 else 10
+                            self.logger.warning(f"PCM format detected - using payload type {payload_type}. "
+                                              f"Note: Most VoIP phones expect G.711 (μ-law/A-law) format.")
                         else:
                             self.logger.error(f"Unsupported audio format: {audio_format}")
                             return False
@@ -674,15 +687,15 @@ class RTPPlayer:
                         audio_data = f.read(chunk_size)
                         
                         # For mono files, use data as-is
-                        # For stereo, we'd need to downmix (take left channel or average)
+                        # For stereo, we'd need to downmix (take left channel)
                         if num_channels == 2:
-                            self.logger.warning(f"Stereo audio detected, using left channel only")
+                            self.logger.warning(f"Stereo audio detected, extracting left channel only")
                             # Extract left channel (assuming interleaved samples)
                             if audio_format == 1:  # PCM 16-bit
-                                # Extract every other 16-bit sample
-                                left_channel = b''.join([audio_data[i:i+2] for i in range(0, len(audio_data), 4)])
-                                audio_data = left_channel
-                            else:  # 8-bit formats
+                                # Extract every other 16-bit sample (left channel)
+                                # More efficient using slice with step
+                                audio_data = audio_data[::4] + audio_data[1::4]
+                            else:  # 8-bit formats (G.711)
                                 audio_data = audio_data[::2]
                         
                         # Calculate samples per packet based on sample rate
