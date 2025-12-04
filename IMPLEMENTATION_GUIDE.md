@@ -576,7 +576,7 @@ Create or record WAV files (G.711 μ-law, 8kHz, mono):
 Tools for creating prompts:
 - **Text-to-Speech**: AWS Polly, Google Cloud TTS, Azure TTS
 - **Recording**: Audacity (free) or professional voice talent
-- **Format conversion**: `ffmpeg -i YOUR_AUDIO_FILE -ar 8000 -ac 1 -acodec pcm_mulaw output.wav` (replace YOUR_AUDIO_FILE with your actual audio file)
+- **Format conversion**: `ffmpeg -i YOUR_AUDIO_FILE.wav -ar 8000 -ac 1 -acodec pcm_mulaw output.wav`
 
 #### C. Implementation Steps
 1. **DTMF Detection**:
@@ -725,8 +725,8 @@ sudo apt install wireshark
 # FFmpeg - Audio conversion
 sudo apt install ffmpeg
 
-# Convert to G.711 μ-law (replace YOUR_AUDIO_FILE with your actual audio file)
-ffmpeg -i YOUR_AUDIO_FILE -ar 8000 -ac 1 -acodec pcm_mulaw output.wav
+# Convert to G.711 μ-law (replace YOUR_AUDIO_FILE.wav with your actual audio file)
+ffmpeg -i YOUR_AUDIO_FILE.wav -ar 8000 -ac 1 -acodec pcm_mulaw output.wav
 
 # SoX - Audio processing
 sudo apt install sox
