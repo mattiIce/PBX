@@ -37,6 +37,7 @@ logs/
 # PBX runtime directories
 recordings/
 voicemail/
+test_voicemail/
 moh/
 cdr/
 
