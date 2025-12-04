@@ -625,8 +625,10 @@ class PBXCore:
             if call.caller_rtp:
                 try:
                     # Create RTP player to send beep to caller
+                    # Note: Using adjacent port (rtp_port + 1) for sending audio back to caller
+                    # In production, consider implementing proper port allocation to avoid conflicts
                     player = RTPPlayer(
-                        local_port=call.rtp_ports[0] + 1,  # Use adjacent port for sending
+                        local_port=call.rtp_ports[0] + 1,  # Adjacent port for sending
                         remote_host=call.caller_rtp['address'],
                         remote_port=call.caller_rtp['port'],
                         call_id=call_id

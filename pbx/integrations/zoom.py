@@ -33,15 +33,17 @@ class ZoomIntegration:
         
         Returns:
             bool: True if authentication successful
+        
+        Raises:
+            NotImplementedError: This functionality is not yet implemented
         """
         if not self.enabled:
             return False
         
-        self.logger.info("Authenticating with Zoom...")
+        self.logger.warning("Zoom authentication not yet implemented")
         # TODO: Implement Server-to-Server OAuth
         # POST https://zoom.us/oauth/token?grant_type=account_credentials
-        
-        return False
+        raise NotImplementedError("Zoom authentication not yet implemented")
     
     def create_meeting(self, topic: str, start_time: str, duration_minutes: int):
         """

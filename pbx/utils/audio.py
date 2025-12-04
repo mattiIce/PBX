@@ -6,6 +6,11 @@ import struct
 import math
 
 
+# Audio generation constants
+MAX_16BIT_SIGNED = 32767  # Maximum value for 16-bit signed integer
+DEFAULT_AMPLITUDE = 0.5  # Default amplitude (50% of maximum)
+
+
 def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     """
     Generate a simple beep tone in raw PCM format
@@ -24,7 +29,7 @@ def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     for i in range(num_samples):
         # Generate sine wave
         t = i / sample_rate
-        value = int(32767 * 0.5 * math.sin(2 * math.pi * frequency * t))
+        value = int(MAX_16BIT_SIGNED * DEFAULT_AMPLITUDE * math.sin(2 * math.pi * frequency * t))
         samples.append(struct.pack('<h', value))  # 16-bit signed little-endian
     
     return b''.join(samples)

@@ -33,17 +33,19 @@ class TeamsIntegration:
         
         Returns:
             bool: True if authentication successful
+        
+        Raises:
+            NotImplementedError: This functionality is not yet implemented
         """
         if not self.enabled:
             return False
         
-        self.logger.info("Authenticating with Microsoft Teams...")
+        self.logger.warning("Microsoft Teams authentication not yet implemented")
         # TODO: Implement OAuth 2.0 flow
         # 1. Request token from https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token
         # 2. Store access_token and refresh_token
         # 3. Set up token refresh mechanism
-        
-        return False
+        raise NotImplementedError("Microsoft Teams authentication not yet implemented")
     
     def sync_presence(self, extension_number: str, status: str):
         """

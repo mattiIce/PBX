@@ -461,6 +461,8 @@ class RTPPlayer:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
+            # This is intentional for VoIP systems which need to handle multi-homed servers
             self.socket.bind(('0.0.0.0', self.local_port))
             self.running = True
             
@@ -571,7 +573,7 @@ class RTPPlayer:
         Returns:
             bool: True if successful
         """
-        # Import audio utilities
+        # Note: Import here to avoid circular dependency with audio module
         try:
             from pbx.utils.audio import generate_beep_tone
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
