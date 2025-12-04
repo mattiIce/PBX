@@ -18,7 +18,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Call Parking** - Park and retrieve calls from any extension
 - **Call Transfer** - Blind and attended transfers
 - **Music on Hold** - Customizable hold music
-- **Voicemail System** - Full-featured voicemail with email notifications and auto-routing
+- **Voicemail System** - Full-featured voicemail with custom greeting recording, email notifications, and auto-routing
 
 ### Modern VOIP Features
 - **Presence System** - Real-time user availability status

@@ -63,6 +63,8 @@ recording:
 voicemail:
   storage_path: voicemail
   max_message_duration: 180
+  max_greeting_duration: 30
+  allow_custom_greetings: true
   email_notifications: true
   no_answer_timeout: 30
   smtp:

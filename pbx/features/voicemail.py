@@ -13,6 +13,10 @@ except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
 
+# Constants
+GREETING_FILENAME = "greeting.wav"
+
+
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
 
@@ -35,6 +39,7 @@ class VoicemailBox:
         self.email_notifier = email_notifier
         self.database = database
         self.pin = None  # Voicemail PIN
+        self.greeting_path = os.path.join(self.storage_path, GREETING_FILENAME)  # Custom greeting file
 
         # Load PIN from extension config if available
         if config:
@@ -325,6 +330,62 @@ class VoicemailBox:
         """
         return self.pin and str(pin) == str(self.pin)
 
+    def has_custom_greeting(self):
+        """
+        Check if a custom greeting has been recorded
+
+        Returns:
+            True if custom greeting exists
+        """
+        return os.path.exists(self.greeting_path)
+
+    def save_greeting(self, audio_data):
+        """
+        Save custom voicemail greeting
+
+        Args:
+            audio_data: Audio data bytes (WAV format)
+
+        Returns:
+            True if greeting was saved successfully
+        """
+        try:
+            with open(self.greeting_path, 'wb') as f:
+                f.write(audio_data)
+            self.logger.info(f"Saved custom greeting for extension {self.extension_number}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving greeting for extension {self.extension_number}: {e}")
+            return False
+
+    def get_greeting_path(self):
+        """
+        Get path to custom greeting file
+
+        Returns:
+            Path to greeting file if it exists, None otherwise
+        """
+        if self.has_custom_greeting():
+            return self.greeting_path
+        return None
+
+    def delete_greeting(self):
+        """
+        Delete custom greeting
+
+        Returns:
+            True if greeting was deleted
+        """
+        try:
+            if os.path.exists(self.greeting_path):
+                os.remove(self.greeting_path)
+                self.logger.info(f"Deleted custom greeting for extension {self.extension_number}")
+                return True
+            return False
+        except Exception as e:
+            self.logger.error(f"Error deleting greeting for extension {self.extension_number}: {e}")
+            return False
+
 
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
@@ -445,6 +506,7 @@ class VoicemailIVR:
     STATE_MAIN_MENU = 'main_menu'
     STATE_PLAYING_MESSAGE = 'playing_message'
     STATE_MESSAGE_MENU = 'message_menu'
+    STATE_OPTIONS_MENU = 'options_menu'
     STATE_RECORDING_GREETING = 'recording_greeting'
     STATE_GOODBYE = 'goodbye'
 
@@ -493,6 +555,10 @@ class VoicemailIVR:
             return self._handle_playing_message(digit)
         elif self.state == self.STATE_MESSAGE_MENU:
             return self._handle_message_menu(digit)
+        elif self.state == self.STATE_OPTIONS_MENU:
+            return self._handle_options_menu(digit)
+        elif self.state == self.STATE_RECORDING_GREETING:
+            return self._handle_recording_greeting(digit)
         else:
             return {'action': 'unknown_state', 'prompt': 'goodbye'}
 
@@ -578,6 +644,7 @@ class VoicemailIVR:
         
         elif digit == '2':
             # Options menu
+            self.state = self.STATE_OPTIONS_MENU
             return {
                 'action': 'play_prompt',
                 'prompt': 'options_menu',
@@ -681,3 +748,59 @@ class VoicemailIVR:
             'prompt': 'invalid_option',
             'message': 'Invalid option. Please try again.'
         }
+
+    def _handle_options_menu(self, digit: str) -> dict:
+        """Handle options menu state"""
+        if digit == '1':
+            # Record greeting
+            self.state = self.STATE_RECORDING_GREETING
+            return {
+                'action': 'start_recording',
+                'recording_type': 'greeting',
+                'prompt': 'record_greeting',
+                'message': 'Record your greeting after the tone. Press # when finished.'
+            }
+        
+        elif digit == '*':
+            # Return to main menu
+            self.state = self.STATE_MAIN_MENU
+            unread_count = len(self.mailbox.get_messages(unread_only=True))
+            return {
+                'action': 'play_prompt',
+                'prompt': 'main_menu',
+                'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+            }
+        
+        return {
+            'action': 'play_prompt',
+            'prompt': 'invalid_option',
+            'message': 'Invalid option. Please try again.'
+        }
+
+    def _handle_recording_greeting(self, digit: str) -> dict:
+        """Handle recording greeting state"""
+        if digit == '#':
+            # Finish recording
+            return {
+                'action': 'stop_recording',
+                'save_as': 'greeting',
+                'message': 'Greeting recorded. Press 1 to listen, 2 to re-record, * to save and return to main menu'
+            }
+        
+        # During recording, other digits are ignored
+        return {
+            'action': 'continue_recording',
+            'prompt': 'continue'
+        }
+
+    def save_recorded_greeting(self, audio_data):
+        """
+        Save the recorded greeting
+
+        Args:
+            audio_data: Audio data bytes
+
+        Returns:
+            True if greeting was saved successfully
+        """
+        return self.mailbox.save_greeting(audio_data)
