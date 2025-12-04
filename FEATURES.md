@@ -119,18 +119,52 @@
 - **Voicemail Access**
   - Dial pattern: *xxx (e.g., *1001)
   - Remote access capability
-  - PIN protection (framework)
+  - PIN protection
+  - Interactive IVR menu system
 - **No-Answer Routing**
   - Automatic routing to voicemail when call not answered
   - Configurable timeout (default 30 seconds)
+  - Voice prompt greeting before recording
   - Seamless caller experience
+
+### Interactive Voicemail Menu (IVR)
+When accessing voicemail (*xxxx), users are guided through an interactive menu:
+- **Welcome & PIN Entry**
+  - Prompts for PIN authentication
+  - Message count announcement
+  - Security protection with attempt limits
+- **Main Menu Options**
+  - Press 1: Listen to messages
+  - Press 2: Access options menu
+  - Press *: Exit voicemail system
+- **Message Playback Menu**
+  - Press 1: Replay current message
+  - Press 2: Skip to next message
+  - Press 3: Delete current message
+  - Press *: Return to main menu
+- **Voice Prompts**
+  - Tone-based prompts guide users through the system
+  - Clear navigation instructions
+  - Error handling for invalid options
+
+### Leaving a Voicemail
+When a call goes to voicemail:
+- **Greeting Message**
+  - Automatic greeting prompt played to caller
+  - Clear instruction to leave a message
+  - Professional tone sequence
+- **Recording Process**
+  - Beep tone signals recording start
+  - Configurable maximum message duration
+  - Automatic save on hangup
+  - Email notification sent to mailbox owner
 
 ### Voicemail Configuration
 - **Customizable Settings**
   - Maximum message duration
   - Storage location
   - No-answer timeout
-  - Greeting messages (framework)
+  - PIN security settings
 
 ### Email Notifications
 - **Instant Notifications**
