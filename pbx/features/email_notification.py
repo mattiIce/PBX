@@ -15,18 +15,18 @@ import time
 
 class EmailNotifier:
     """Handles email notifications for voicemail"""
-    
+
     def __init__(self, config):
         """
         Initialize email notifier
-        
+
         Args:
             config: Config object
         """
         self.config = config
         self.logger = get_logger()
         self.enabled = config.get('voicemail.email_notifications', False)
-        
+
         if self.enabled:
             # SMTP settings
             self.smtp_host = config.get('voicemail.smtp.host')
@@ -34,33 +34,33 @@ class EmailNotifier:
             self.use_tls = config.get('voicemail.smtp.use_tls', True)
             self.username = config.get('voicemail.smtp.username')
             self.password = config.get('voicemail.smtp.password')
-            
+
             # Email settings
             self.from_address = config.get('voicemail.email.from_address')
             self.from_name = config.get('voicemail.email.from_name', 'PBX Voicemail')
-            self.subject_template = config.get('voicemail.email.subject_template', 
+            self.subject_template = config.get('voicemail.email.subject_template',
                                               'New Voicemail from {caller_id}')
             self.include_attachment = config.get('voicemail.email.include_attachment', True)
             self.send_immediately = config.get('voicemail.email.send_immediately', True)
-            
+
             # Reminder settings
             self.reminders_enabled = config.get('voicemail.reminders.enabled', False)
             self.reminder_time = config.get('voicemail.reminders.time', '09:00')
             self.reminders_unread_only = config.get('voicemail.reminders.unread_only', True)
-            
+
             # Start reminder thread if enabled
             if self.reminders_enabled:
                 self._start_reminder_thread()
-            
+
             self.logger.info("Email notifications enabled")
         else:
             self.logger.info("Email notifications disabled")
-    
-    def send_voicemail_notification(self, to_email, extension_number, caller_id, 
+
+    def send_voicemail_notification(self, to_email, extension_number, caller_id,
                                     timestamp, audio_file_path=None, duration=None):
         """
         Send voicemail notification email
-        
+
         Args:
             to_email: Recipient email address
             extension_number: Extension that received the voicemail
@@ -68,24 +68,24 @@ class EmailNotifier:
             timestamp: Timestamp of the voicemail
             audio_file_path: Path to audio file (optional)
             duration: Duration of the message in seconds (optional)
-            
+
         Returns:
             True if email sent successfully
         """
         if not self.enabled:
             return False
-        
+
         if not to_email:
             self.logger.warning(f"No email address for extension {extension_number}")
             return False
-        
+
         try:
             # Create message
             msg = MIMEMultipart()
             msg['From'] = f"{self.from_name} <{self.from_address}>"
             msg['To'] = to_email
             msg['Date'] = formatdate(localtime=True)
-            
+
             # Format subject
             subject = self.subject_template.format(
                 caller_id=caller_id,
@@ -93,27 +93,27 @@ class EmailNotifier:
                 extension=extension_number
             )
             msg['Subject'] = subject
-            
+
             # Create email body
             body = self._create_email_body(
                 extension_number, caller_id, timestamp, duration
             )
             msg.attach(MIMEText(body, 'plain'))
-            
+
             # Attach audio file if requested and available
             if self.include_attachment and audio_file_path and os.path.exists(audio_file_path):
                 try:
                     with open(audio_file_path, 'rb') as f:
                         audio_data = f.read()
-                    
+
                     audio = MIMEAudio(audio_data, 'wav')
-                    audio.add_header('Content-Disposition', 'attachment', 
+                    audio.add_header('Content-Disposition', 'attachment',
                                    filename=os.path.basename(audio_file_path))
                     msg.attach(audio)
                     self.logger.debug(f"Attached audio file: {audio_file_path}")
                 except Exception as e:
                     self.logger.error(f"Failed to attach audio file: {e}")
-            
+
             # Send email
             try:
                 self._send_email(msg)
@@ -122,30 +122,30 @@ class EmailNotifier:
             except Exception as e:
                 self.logger.warning(f"Could not send email notification: {e}")
                 return False
-            
+
         except Exception as e:
             self.logger.error(f"Failed to prepare voicemail notification: {e}")
             return False
-    
+
     def send_reminder(self, to_email, extension_number, unread_count, messages):
         """
         Send daily reminder about unread voicemails
-        
+
         Args:
             to_email: Recipient email address
             extension_number: Extension number
             unread_count: Number of unread messages
             messages: List of message dictionaries
-            
+
         Returns:
             True if email sent successfully
         """
         if not self.enabled or not self.reminders_enabled:
             return False
-        
+
         if not to_email or unread_count == 0:
             return False
-        
+
         try:
             # Create message
             msg = MIMEMultipart()
@@ -153,12 +153,12 @@ class EmailNotifier:
             msg['To'] = to_email
             msg['Date'] = formatdate(localtime=True)
             msg['Subject'] = f"Voicemail Reminder: {unread_count} Unread Message{'s' if unread_count > 1 else ''}"
-            
+
             # Create body
             body = f"Hello,\n\n"
             body += f"You have {unread_count} unread voicemail message{'s' if unread_count > 1 else ''} "
             body += f"in your mailbox (Extension {extension_number}):\n\n"
-            
+
             for i, msg_info in enumerate(messages, 1):
                 caller = msg_info.get('caller_id', 'Unknown')
                 ts = msg_info.get('timestamp')
@@ -167,32 +167,32 @@ class EmailNotifier:
                 else:
                     ts_str = str(ts)
                 body += f"{i}. From: {caller}, Received: {ts_str}\n"
-            
+
             body += f"\nPlease check your voicemail by dialing *{extension_number}\n\n"
             body += "Best regards,\n"
             body += f"{self.from_name}"
-            
+
             msg.attach(MIMEText(body, 'plain'))
-            
+
             # Send email
             self._send_email(msg)
             self.logger.info(f"Sent voicemail reminder to {to_email}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
-    
+
     def _create_email_body(self, extension_number, caller_id, timestamp, duration=None):
         """
         Create email body text
-        
+
         Args:
             extension_number: Extension number
             caller_id: Caller ID
             timestamp: Timestamp
             duration: Duration in seconds
-            
+
         Returns:
             Email body text
         """
@@ -201,46 +201,46 @@ class EmailNotifier:
         body += "Message Details:\n"
         body += f"  Extension: {extension_number}\n"
         body += f"  From: {caller_id}\n"
-        
+
         if isinstance(timestamp, datetime):
             body += f"  Received: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n"
         else:
             body += f"  Received: {timestamp}\n"
-        
+
         if duration:
             mins = int(duration // 60)
             secs = int(duration % 60)
             body += f"  Duration: {mins}:{secs:02d}\n"
-        
+
         body += f"\nTo listen to this message, please dial *{extension_number}\n"
         body += "\nBest regards,\n"
         body += f"{self.from_name}\n"
-        
+
         return body
-    
+
     def _send_email(self, msg):
         """
         Send email via SMTP
-        
+
         Args:
             msg: MIMEMultipart message object
         """
         try:
             # Connect to SMTP server
             server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=10)
-            
+
             # Enable TLS if configured
             if self.use_tls:
                 server.starttls()
-            
+
             # Login if credentials provided
             if self.username and self.password:
                 server.login(self.username, self.password)
-            
+
             # Send email
             server.send_message(msg)
             server.quit()
-            
+
         except smtplib.SMTPException as e:
             self.logger.error(f"SMTP error: {e}")
             raise
@@ -250,7 +250,7 @@ class EmailNotifier:
         except Exception as e:
             self.logger.error(f"Error sending email: {e}")
             raise
-    
+
     def _start_reminder_thread(self):
         """Start background thread for daily reminders"""
         def reminder_loop():
@@ -260,7 +260,7 @@ class EmailNotifier:
                     # Check if it's time to send reminders
                     now = datetime.now()
                     reminder_hour, reminder_min = map(int, self.reminder_time.split(':'))
-                    
+
                     if now.hour == reminder_hour and now.minute == reminder_min:
                         self.logger.info("Sending daily voicemail reminders")
                         self._send_all_reminders()
@@ -272,14 +272,14 @@ class EmailNotifier:
                 except Exception as e:
                     self.logger.error(f"Error in reminder thread: {e}")
                     time.sleep(60)
-        
+
         thread = threading.Thread(target=reminder_loop, daemon=True)
         thread.start()
-    
+
     def _send_all_reminders(self):
         """
         Send reminders to all extensions with unread voicemails
-        
+
         Note: This method is a placeholder for integration with VoicemailSystem.
         The actual reminder sending is triggered by VoicemailSystem.send_daily_reminders()
         which iterates through mailboxes and calls send_reminder() for each extension.

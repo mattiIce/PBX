@@ -10,11 +10,11 @@ from pbx.utils.logger import get_logger
 
 class PhoneTemplate:
     """Represents a phone configuration template"""
-    
+
     def __init__(self, vendor, model, template_content):
         """
         Initialize phone template
-        
+
         Args:
             vendor: Phone vendor (e.g., 'yealink', 'polycom')
             model: Phone model (e.g., 't46s', 'vvx450')
@@ -23,41 +23,41 @@ class PhoneTemplate:
         self.vendor = vendor.lower()
         self.model = model.lower()
         self.template_content = template_content
-    
+
     def generate_config(self, extension_config, server_config):
         """
         Generate configuration from template
-        
+
         Args:
             extension_config: Extension configuration dict
             server_config: Server configuration dict
-            
+
         Returns:
             Generated configuration string
         """
         # Replace placeholders in template
         config = self.template_content
-        
+
         # Extension information
         config = config.replace('{{EXTENSION_NUMBER}}', str(extension_config.get('number', '')))
         config = config.replace('{{EXTENSION_NAME}}', str(extension_config.get('name', '')))
         config = config.replace('{{EXTENSION_PASSWORD}}', str(extension_config.get('password', '')))
-        
+
         # Server information
         config = config.replace('{{SIP_SERVER}}', str(server_config.get('sip_host', '')))
         config = config.replace('{{SIP_PORT}}', str(server_config.get('sip_port', '5060')))
         config = config.replace('{{SERVER_NAME}}', str(server_config.get('server_name', 'PBX')))
-        
+
         return config
 
 
 def normalize_mac_address(mac):
     """
     Normalize MAC address to consistent format
-    
+
     Args:
         mac: MAC address in various formats
-        
+
     Returns:
         Normalized MAC (lowercase, no separators)
     """
@@ -68,11 +68,11 @@ def normalize_mac_address(mac):
 
 class ProvisioningDevice:
     """Represents a provisioned phone device"""
-    
+
     def __init__(self, mac_address, extension_number, vendor, model, config_url=None):
         """
         Initialize provisioning device
-        
+
         Args:
             mac_address: Device MAC address (normalized format)
             extension_number: Associated extension number
@@ -87,11 +87,11 @@ class ProvisioningDevice:
         self.config_url = config_url
         self.created_at = datetime.now()
         self.last_provisioned = None
-    
+
     def mark_provisioned(self):
         """Mark device as provisioned"""
         self.last_provisioned = datetime.now()
-    
+
     def to_dict(self):
         """Convert to dictionary"""
         return {
@@ -107,11 +107,11 @@ class ProvisioningDevice:
 
 class PhoneProvisioning:
     """Phone provisioning management"""
-    
+
     def __init__(self, config):
         """
         Initialize phone provisioning
-        
+
         Args:
             config: Config object
         """
@@ -119,18 +119,18 @@ class PhoneProvisioning:
         self.logger = get_logger()
         self.devices = {}  # MAC address -> ProvisioningDevice
         self.templates = {}  # (vendor, model) -> PhoneTemplate
-        
+
         # Initialize built-in templates
         self._load_builtin_templates()
-        
+
         # Load custom templates if configured
         self._load_custom_templates()
-        
+
         self.logger.info("Phone provisioning initialized")
-    
+
     def _load_builtin_templates(self):
         """Load built-in phone templates"""
-        
+
         # ZIP 33G template (basic SIP phone)
         zip_33g_template = """# ZIP 33G Configuration File
 
@@ -161,7 +161,7 @@ phone.volume.ring = 8
 phone.volume.handset = 6
 """
         self.add_template('zip', '33g', zip_33g_template)
-        
+
         # ZIP 37G template (advanced SIP phone with more features)
         zip_37g_template = """# ZIP 37G Configuration File
 
@@ -175,7 +175,7 @@ account.1.password = {{EXTENSION_PASSWORD}}
 account.1.sip_server_host = {{SIP_SERVER}}
 account.1.sip_server_port = {{SIP_PORT}}
 account.1.reg_interval = 3600
-account.1.outbound_proxy = 
+account.1.outbound_proxy =
 account.1.transport = UDP
 
 # Audio Codecs
@@ -206,13 +206,13 @@ call.transfer.enable = 1
 security.user_password = admin
 """
         self.add_template('zip', '37g', zip_37g_template)
-        
+
         self.logger.info(f"Loaded {len(self.templates)} built-in phone templates")
-    
+
     def _load_custom_templates(self):
         """Load custom templates from configuration"""
         custom_templates_dir = self.config.get('provisioning.custom_templates_dir', None)
-        
+
         if custom_templates_dir and os.path.exists(custom_templates_dir):
             try:
                 for filename in os.listdir(custom_templates_dir):
@@ -223,19 +223,19 @@ security.user_password = admin
                         if len(parts) >= 2:
                             vendor = parts[0]
                             model = '_'.join(parts[1:])
-                            
+
                             with open(filepath, 'r') as f:
                                 template_content = f.read()
-                            
+
                             self.add_template(vendor, model, template_content)
                             self.logger.info(f"Loaded custom template for {vendor} {model}")
             except Exception as e:
                 self.logger.error(f"Error loading custom templates: {e}")
-    
+
     def add_template(self, vendor, model, template_content):
         """
         Add a phone template
-        
+
         Args:
             vendor: Phone vendor
             model: Phone model
@@ -243,99 +243,99 @@ security.user_password = admin
         """
         key = (vendor.lower(), model.lower())
         self.templates[key] = PhoneTemplate(vendor, model, template_content)
-    
+
     def get_template(self, vendor, model):
         """
         Get phone template
-        
+
         Args:
             vendor: Phone vendor
             model: Phone model
-            
+
         Returns:
             PhoneTemplate or None
         """
         key = (vendor.lower(), model.lower())
         return self.templates.get(key)
-    
+
     def register_device(self, mac_address, extension_number, vendor, model):
         """
         Register a device for provisioning
-        
+
         Args:
             mac_address: Device MAC address
             extension_number: Associated extension number
             vendor: Phone vendor
             model: Phone model
-            
+
         Returns:
             ProvisioningDevice
         """
         device = ProvisioningDevice(mac_address, extension_number, vendor, model)
-        
+
         # Generate config URL based on MAC
-        provisioning_url_format = self.config.get('provisioning.url_format', 
+        provisioning_url_format = self.config.get('provisioning.url_format',
                                                   'http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg')
         config_url = provisioning_url_format.replace('{mac}', device.mac_address)
-        config_url = config_url.replace('{{SERVER_IP}}', 
+        config_url = config_url.replace('{{SERVER_IP}}',
                                        self.config.get('server.external_ip', '127.0.0.1'))
-        config_url = config_url.replace('{{PORT}}', 
+        config_url = config_url.replace('{{PORT}}',
                                        str(self.config.get('api.port', '8080')))
-        
+
         device.config_url = config_url
         self.devices[device.mac_address] = device
-        
+
         self.logger.info(f"Registered device {mac_address} for extension {extension_number}")
         return device
-    
+
     def unregister_device(self, mac_address):
         """
         Unregister a device
-        
+
         Args:
             mac_address: Device MAC address
-            
+
         Returns:
             bool: True if device was found and removed
         """
         normalized_mac = normalize_mac_address(mac_address)
-        
+
         if normalized_mac in self.devices:
             del self.devices[normalized_mac]
             self.logger.info(f"Unregistered device {mac_address}")
             return True
         return False
-    
+
     def get_device(self, mac_address):
         """
         Get device by MAC address
-        
+
         Args:
             mac_address: Device MAC address
-            
+
         Returns:
             ProvisioningDevice or None
         """
         normalized_mac = normalize_mac_address(mac_address)
         return self.devices.get(normalized_mac)
-    
+
     def get_all_devices(self):
         """
         Get all registered devices
-        
+
         Returns:
             List of ProvisioningDevice objects
         """
         return list(self.devices.values())
-    
+
     def generate_config(self, mac_address, extension_registry):
         """
         Generate configuration for a device
-        
+
         Args:
             mac_address: Device MAC address
             extension_registry: ExtensionRegistry instance
-            
+
         Returns:
             tuple: (config_string, content_type) or (None, None)
         """
@@ -343,49 +343,49 @@ security.user_password = admin
         if not device:
             self.logger.warning(f"Device {mac_address} not found for provisioning")
             return None, None
-        
+
         # Get template
         template = self.get_template(device.vendor, device.model)
         if not template:
             self.logger.warning(f"Template not found for {device.vendor} {device.model}")
             return None, None
-        
+
         # Get extension configuration
         extension = extension_registry.get(device.extension_number)
         if not extension:
             self.logger.warning(f"Extension {device.extension_number} not found")
             return None, None
-        
+
         # Build extension config dict
         extension_config = {
             'number': extension.number,
             'name': extension.name,
             'password': extension.config.get('password', '')
         }
-        
+
         # Build server config dict
         server_config = {
             'sip_host': self.config.get('server.external_ip', '127.0.0.1'),
             'sip_port': self.config.get('server.sip_port', 5060),
             'server_name': self.config.get('server.server_name', 'PBX')
         }
-        
+
         # Generate configuration
         config_content = template.generate_config(extension_config, server_config)
-        
+
         # Determine content type based on vendor
         content_type = 'text/plain'  # ZIP phones use plain text configuration
-        
+
         # Mark device as provisioned
         device.mark_provisioned()
-        
+
         self.logger.info(f"Generated config for device {mac_address}")
         return config_content, content_type
-    
+
     def get_supported_vendors(self):
         """
         Get list of supported vendors
-        
+
         Returns:
             List of vendor names
         """
@@ -393,14 +393,14 @@ security.user_password = admin
         for vendor, model in self.templates.keys():
             vendors.add(vendor)
         return sorted(list(vendors))
-    
+
     def get_supported_models(self, vendor=None):
         """
         Get list of supported models
-        
+
         Args:
             vendor: Optional vendor filter
-            
+
         Returns:
             List of models or dict of vendor -> models
         """
@@ -422,31 +422,31 @@ security.user_password = admin
             for v in result:
                 result[v] = sorted(result[v])
             return result
-    
+
     def reboot_phone(self, extension_number, sip_server):
         """
         Send SIP NOTIFY to reboot a phone
-        
+
         Args:
             extension_number: Extension number
             sip_server: SIPServer instance to send NOTIFY
-            
+
         Returns:
             bool: True if NOTIFY was sent successfully
         """
         from pbx.sip.message import SIPMessageBuilder
-        
+
         # Find the extension to get its registered address
         extension = sip_server.pbx_core.extension_registry.get(extension_number)
         if not extension or not extension.registered or not extension.address:
             self.logger.warning(f"Extension {extension_number} not registered, cannot reboot phone")
             return False
-        
+
         try:
             # Build SIP NOTIFY for check-sync event (triggers phone reboot/config reload)
             server_ip = sip_server.pbx_core.config.get('server.external_ip', '127.0.0.1')
             sip_port = sip_server.pbx_core.config.get('server.sip_port', 5060)
-            
+
             notify_msg = SIPMessageBuilder.build_request(
                 method='NOTIFY',
                 uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
@@ -455,29 +455,29 @@ security.user_password = admin
                 call_id=f"notify-reboot-{extension_number}-{datetime.now().timestamp()}",
                 cseq=1
             )
-            
+
             # Add NOTIFY-specific headers
             notify_msg.set_header('Event', 'check-sync')
             notify_msg.set_header('Subscription-State', 'terminated')
             notify_msg.set_header('Content-Length', '0')
-            
+
             # Send the NOTIFY message
             sip_server._send_message(notify_msg.build(), extension.address)
-            
+
             self.logger.info(f"Sent reboot NOTIFY to extension {extension_number} at {extension.address}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
             return False
-    
+
     def reboot_all_phones(self, sip_server):
         """
         Send SIP NOTIFY to reboot all registered phones
-        
+
         Args:
             sip_server: SIPServer instance to send NOTIFY
-            
+
         Returns:
             dict: Results with success count and list of extensions
         """
@@ -487,10 +487,10 @@ security.user_password = admin
             'rebooted': [],
             'failed': []
         }
-        
+
         # Get all registered extensions
         extensions = sip_server.pbx_core.extension_registry.get_all()
-        
+
         for extension in extensions:
             if extension.registered:
                 if self.reboot_phone(extension.number, sip_server):
@@ -499,6 +499,6 @@ security.user_password = admin
                 else:
                     results['failed_count'] += 1
                     results['failed'].append(extension.number)
-        
+
         self.logger.info(f"Rebooted {results['success_count']} phones, {results['failed_count']} failed")
         return results

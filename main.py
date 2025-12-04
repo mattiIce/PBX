@@ -25,20 +25,20 @@ if __name__ == "__main__":
     print("=" * 60)
     print("InHouse PBX System v1.0.0")
     print("=" * 60)
-    
+
     # Create PBX instance
     try:
         pbx = PBXCore("config.yml")
-        
+
         # Register signal handler for graceful shutdown
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        
+
         # Start PBX
         if pbx.start():
             print("\nPBX system is running...")
             print("Press Ctrl+C to stop\n")
-            
+
             # Keep running and display status periodically
             last_status_time = time.time()
             while running:
@@ -50,12 +50,12 @@ if __name__ == "__main__":
                     print(f"Status: {status['registered_extensions']} extensions registered, "
                           f"{status['active_calls']} active calls")
                     last_status_time = current_time
-            
+
             print("PBX system shutdown complete")
         else:
             print("Failed to start PBX system")
             sys.exit(1)
-            
+
     except FileNotFoundError as e:
         print(f"Configuration error: {e}")
         sys.exit(1)
