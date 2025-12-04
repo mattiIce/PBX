@@ -116,6 +116,11 @@
   - Listen to messages
   - Delete messages
   - Message indicators
+- **Custom Greetings**
+  - Record personalized voicemail greetings
+  - Easy recording through IVR menu
+  - Automatic playback to callers
+  - Maximum 30 seconds duration
 - **Voicemail Access**
   - Dial pattern: *xxx (e.g., *1001)
   - Remote access capability
@@ -124,7 +129,7 @@
 - **No-Answer Routing**
   - Automatic routing to voicemail when call not answered
   - Configurable timeout (default 30 seconds)
-  - Voice prompt greeting before recording
+  - Custom or default greeting played before recording
   - Seamless caller experience
 
 ### Interactive Voicemail Menu (IVR)
@@ -142,6 +147,13 @@ When accessing voicemail (*xxxx), users are guided through an interactive menu:
   - Press 2: Skip to next message
   - Press 3: Delete current message
   - Press *: Return to main menu
+- **Options Menu**
+  - Press 1: Record custom greeting
+  - Press *: Return to main menu
+- **Greeting Recording**
+  - Record after tone prompt
+  - Press # to finish recording
+  - Automatic save and activation
 - **Voice Prompts**
   - Tone-based prompts guide users through the system
   - Clear navigation instructions
@@ -150,12 +162,13 @@ When accessing voicemail (*xxxx), users are guided through an interactive menu:
 ### Leaving a Voicemail
 When a call goes to voicemail:
 - **Greeting Message**
-  - Automatic greeting prompt played to caller
+  - Custom greeting played if recorded by extension owner
+  - Default system greeting used if no custom greeting exists
   - Clear instruction to leave a message
-  - Professional tone sequence
+  - Professional tone or personalized message
 - **Recording Process**
   - Beep tone signals recording start
-  - Configurable maximum message duration
+  - Configurable maximum message duration (default: 180 seconds)
   - Automatic save on hangup
   - Email notification sent to mailbox owner
 

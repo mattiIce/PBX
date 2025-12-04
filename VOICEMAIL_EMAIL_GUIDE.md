@@ -147,7 +147,7 @@ When you access your voicemail, you'll be guided through an interactive menu sys
 
 2. **Main Menu**
    - Press `1` - Listen to your messages
-   - Press `2` - Access options menu (future: record greeting, change PIN)
+   - Press `2` - Access options menu (record greeting, change settings)
    - Press `*` - Exit voicemail system
 
 3. **Message Playback Menu** (while listening to messages)
@@ -155,6 +155,15 @@ When you access your voicemail, you'll be guided through an interactive menu sys
    - Press `2` - Skip to next message
    - Press `3` - Delete the current message
    - Press `*` - Return to main menu
+
+4. **Options Menu**
+   - Press `1` - Record a custom voicemail greeting
+   - Press `*` - Return to main menu
+
+5. **Recording Greeting**
+   - Record your greeting after the tone
+   - Press `#` when finished recording
+   - Your custom greeting will be played to callers when they leave you a voicemail
 
 ### Example Session
 
@@ -175,6 +184,51 @@ When you access your voicemail, you'll be guided through an interactive menu sys
 14. You: Press * again to exit
 15. System: [Goodbye tone]
 ```
+
+## Recording Your Custom Greeting
+
+### Overview
+You can record a personalized voicemail greeting that will be played to callers when they leave you a message. This allows you to create a professional, personalized message instead of using the default system greeting.
+
+### How to Record a Custom Greeting
+
+1. **Access Your Voicemail**
+   - Dial `*` followed by your extension number (e.g., `*1001`)
+   - Enter your 4-digit PIN followed by `#`
+
+2. **Navigate to Options Menu**
+   - From the main menu, press `2` to access options
+
+3. **Start Recording**
+   - Press `1` to record your greeting
+   - Listen for the tone indicating recording has started
+   - Speak your greeting message (maximum 30 seconds)
+   - Examples:
+     - "Hi, you've reached John Smith. I'm unable to take your call right now. Please leave a message and I'll get back to you as soon as possible."
+     - "You've reached extension 1001. Please leave your name, number, and a brief message after the beep."
+
+4. **Finish Recording**
+   - Press `#` when you're done recording
+   - Your greeting will be saved automatically
+
+5. **Return to Main Menu**
+   - Press `*` to return to the main menu
+   - Press `*` again to exit the voicemail system
+
+### Tips for a Good Greeting
+- Speak clearly and at a moderate pace
+- Include your name and/or extension number
+- Keep it professional and concise (10-20 seconds is ideal)
+- Let callers know you'll return their call
+- Re-record if you're not satisfied with the first attempt
+
+### Using Your Custom Greeting
+Once recorded, your custom greeting will automatically play to callers when:
+- They call your extension and you don't answer
+- The call is routed to voicemail after the configured timeout (default: 30 seconds)
+
+### Reverting to Default Greeting
+To use the default system greeting again, you would need to delete your custom greeting file from the voicemail directory or contact your system administrator.
 
 ## Testing
 
