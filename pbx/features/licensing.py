@@ -308,6 +308,14 @@ class LicenseManager:
     def update_license(self, license_key: str, license_data: Dict) -> bool:
         """
         Update license with new key and data
+        
+        NOTE: This is a basic implementation without cryptographic validation.
+        Production implementation should include:
+        - RSA/ECDSA signature verification
+        - License server validation
+        - Hardware binding
+        - Tamper detection
+        
         Args:
             license_key: License key string
             license_data: License data dictionary
@@ -315,7 +323,10 @@ class LicenseManager:
             True if successful
         """
         try:
-            # In production, this would validate the license key cryptographically
+            # TODO: Add cryptographic license validation
+            # Example: Verify license_key signature against license_data using public key
+            logger.warning("License validation not implemented - using basic file-based licensing")
+            
             self.license_data = license_data
             self.license_data['license_key'] = license_key
             self._save_license()

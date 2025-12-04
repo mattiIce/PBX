@@ -82,14 +82,19 @@ def test_rbac():
     
     manager = RBACManager(config)
     
-    # Test default admin user
-    user = manager.authenticate('admin', 'admin123')
+    # The default admin user will have a random password
+    # Create a known test user instead
+    test_password = 'test_admin_pass123'
+    manager.create_user('test_admin', test_password, Role.SUPER_ADMIN, 'test@test.com')
+    
+    # Test admin user authentication
+    user = manager.authenticate('test_admin', test_password)
     assert user is not None
     assert user['role'] == Role.SUPER_ADMIN
     
     # Test permission checking
-    assert manager.has_permission('admin', Permission.VIEW_DASHBOARD)
-    assert manager.has_permission('admin', Permission.SYSTEM_ADMIN)
+    assert manager.has_permission('test_admin', Permission.VIEW_DASHBOARD)
+    assert manager.has_permission('test_admin', Permission.SYSTEM_ADMIN)
     
     # Create a supervisor user
     assert manager.create_user('supervisor1', 'pass123', Role.SUPERVISOR, 'super@test.com')

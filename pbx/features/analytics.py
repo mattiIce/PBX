@@ -209,37 +209,52 @@ class AnalyticsEngine:
     def get_call_quality_metrics(self, days: int = 7) -> Dict:
         """
         Get call quality metrics (placeholder for future QoS implementation)
+        
+        NOTE: This is a placeholder that returns sample data.
+        Actual implementation requires RTP packet analysis for jitter, latency,
+        and packet loss calculations. MOS scores require codec-specific quality algorithms.
+        
         Args:
             days: Number of days to analyze
         Returns:
-            Dictionary with call quality metrics
+            Dictionary with call quality metrics (currently returns placeholder data)
         """
+        logger.warning("get_call_quality_metrics() returns placeholder data - full QoS analysis not yet implemented")
         return {
             'average_mos': 4.2,  # Mean Opinion Score (1-5)
             'average_jitter_ms': 2.5,
             'average_latency_ms': 45,
             'packet_loss_percentage': 0.5,
             'calls_with_quality_issues': 0,
-            'total_calls_analyzed': 0
+            'total_calls_analyzed': 0,
+            'note': 'Placeholder data - QoS analysis requires RTP packet inspection'
         }
     
     def get_cost_analysis(self, days: int = 30) -> Dict:
         """
-        Get cost analysis for calls (premium feature)
+        Get cost analysis for calls (premium feature - placeholder)
+        
+        NOTE: This is a placeholder that returns zero costs.
+        Actual implementation requires:
+        - SIP trunk pricing configuration
+        - International rate tables
+        - Per-minute billing rules
+        - Call destination analysis
+        
         Args:
             days: Number of days to analyze
         Returns:
-            Dictionary with cost metrics
+            Dictionary with cost metrics (currently returns zeros)
         """
-        # Placeholder for cost calculation
-        # Would integrate with trunk pricing, international rates, etc.
+        logger.warning("get_cost_analysis() returns placeholder data - cost tracking not yet implemented")
         return {
             'total_cost': 0.0,
             'inbound_cost': 0.0,
             'outbound_cost': 0.0,
             'international_cost': 0.0,
             'cost_per_minute': 0.0,
-            'cost_by_extension': {}
+            'cost_by_extension': {},
+            'note': 'Placeholder data - requires trunk pricing configuration'
         }
     
     def generate_executive_summary(self, days: int = 7) -> Dict:

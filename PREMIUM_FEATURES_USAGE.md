@@ -274,12 +274,16 @@ GET /api/admin/users
 
 ### Default Credentials
 
-The system creates a default admin user on first run:
+The system creates a default admin user on first run with a **randomly generated password** for security.
 
 - **Username**: `admin`
-- **Password**: `admin123`
+- **Password**: Randomly generated (displayed in logs on first run)
 
-**⚠️ Important**: Change the default password immediately in production!
+**⚠️ Important**: 
+- The random password is displayed in the logs ONLY ONCE when the admin user is first created
+- Save this password immediately - it cannot be recovered
+- Check the PBX logs for the password on first startup
+- You can reset the password by deleting `admin_users.json` and restarting (generates a new random password)
 
 ---
 
@@ -402,6 +406,7 @@ licensing:
 rbac:
   enabled: true
   users_file: admin_users.json
+  session_timeout_hours: 8  # Session timeout (default: 24 hours)
 
 analytics:
   enabled: true

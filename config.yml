@@ -125,6 +125,7 @@ licensing:
 rbac:
   enabled: true
   users_file: admin_users.json
+  session_timeout_hours: 8  # 8 hours for better security
 analytics:
   enabled: true
 cdr:

@@ -144,6 +144,7 @@ class RBACManager:
         """Initialize RBAC manager"""
         self.config = config
         self.users_file = Path(config.get('rbac.users_file', 'admin_users.json'))
+        self.session_timeout_hours = config.get('rbac.session_timeout_hours', 24)
         self.encryption = FIPSEncryption(config)
         self.users = self._load_users()
         self.sessions = {}  # Active sessions: {token: user_data}
@@ -158,7 +159,13 @@ class RBACManager:
                 logger.error(f"Error loading users file: {e}")
         
         # Create default admin user if no users exist
-        password_hash, salt = self.encryption.hash_password('admin123')
+        # Generate a random password for security
+        import secrets
+        import string
+        alphabet = string.ascii_letters + string.digits + string.punctuation
+        default_password = ''.join(secrets.choice(alphabet) for i in range(16))
+        
+        password_hash, salt = self.encryption.hash_password(default_password)
         default_admin = {
             'admin': {
                 'username': 'admin',
@@ -172,6 +179,15 @@ class RBACManager:
             }
         }
         self._save_users(default_admin)
+        
+        # Log the generated password (should be displayed to user on first run)
+        logger.warning("=" * 70)
+        logger.warning("NEW ADMIN USER CREATED")
+        logger.warning(f"Username: admin")
+        logger.warning(f"Password: {default_password}")
+        logger.warning("SAVE THIS PASSWORD - IT WILL NOT BE SHOWN AGAIN!")
+        logger.warning("=" * 70)
+        
         return default_admin
     
     def _save_users(self, users: Dict = None):
@@ -377,10 +393,10 @@ class RBACManager:
         if not session:
             return None
         
-        # Check if session is expired (24 hours)
+        # Check if session is expired
         try:
             last_activity = datetime.fromisoformat(session['last_activity'])
-            if datetime.now() - last_activity > timedelta(hours=24):
+            if datetime.now() - last_activity > timedelta(hours=self.session_timeout_hours):
                 del self.sessions[token]
                 return None
         except (ValueError, TypeError):
