@@ -4,6 +4,7 @@ Provides HTTP API for managing PBX features
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
+import socket
 import threading
 import os
 import mimetypes
@@ -690,6 +691,8 @@ class PBXAPIServer:
         """Start API server"""
         try:
             self.server = HTTPServer((self.host, self.port), PBXAPIHandler)
+            # Set timeout on socket to allow periodic checking of running flag
+            self.server.socket.settimeout(1.0)
             self.running = True
             
             self.logger.info(f"API server started on http://{self.host}:{self.port}")
@@ -707,11 +710,22 @@ class PBXAPIServer:
     def _run(self):
         """Run server"""
         while self.running:
-            self.server.handle_request()
+            try:
+                self.server.handle_request()
+            except socket.timeout:
+                # Timeout allows us to check running flag periodically
+                continue
+            except Exception as e:
+                if self.running:
+                    self.logger.error(f"Error handling request: {e}")
+        self.logger.info("API server thread stopped")
     
     def stop(self):
         """Stop API server"""
         self.running = False
         if self.server:
-            self.server.shutdown()
+            try:
+                self.server.server_close()
+            except (OSError, socket.error) as e:
+                self.logger.error(f"Error closing API server: {e}")
         self.logger.info("API server stopped")

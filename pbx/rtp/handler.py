@@ -483,15 +483,17 @@ class RTPPlayer:
             self.socket = None
         self.logger.info(f"RTP player stopped for call {self.call_id}")
     
-    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160, bytes_per_sample=2):
+    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160, bytes_per_sample=None):
         """
         Send audio data via RTP packets
         
         Args:
-            audio_data: Raw PCM audio data
-            payload_type: RTP payload type (0 = PCMU, 8 = PCMA)
+            audio_data: Raw audio data (format depends on payload_type)
+                        - For PCMU/PCMA (PT 0/8): 8-bit samples (1 byte per sample)
+                        - For PCM (PT 10/11): 16-bit samples (2 bytes per sample)
+            payload_type: RTP payload type (0 = PCMU, 8 = PCMA, 10 = L16 stereo, 11 = L16 mono)
             samples_per_packet: Number of samples per RTP packet (default 160 = 20ms at 8kHz)
-            bytes_per_sample: Bytes per sample (1 for G.711, 2 for 16-bit PCM)
+            bytes_per_sample: Bytes per sample (None=auto-detect, 1 for G.711, 2 for 16-bit PCM)
         
         Returns:
             bool: True if successful
@@ -501,6 +503,15 @@ class RTPPlayer:
             return False
         
         try:
+            # Determine bytes per sample if not explicitly provided
+            if bytes_per_sample is None:
+                # G.711 formats (PCMU, PCMA) are 8-bit = 1 byte per sample
+                # PCM formats are typically 16-bit = 2 bytes per sample
+                if payload_type in [0, 8]:  # PCMU or PCMA
+                    bytes_per_sample = 1
+                else:  # PCM or other formats
+                    bytes_per_sample = 2
+            
             # Split audio into packets
             bytes_per_packet = samples_per_packet * bytes_per_sample
             num_packets = (len(audio_data) + bytes_per_packet - 1) // bytes_per_packet
@@ -578,15 +589,19 @@ class RTPPlayer:
         try:
             from pbx.utils.audio import generate_beep_tone
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
-            # Beep tone is 16-bit PCM, 2 bytes per sample
-            return self.send_audio(pcm_data, payload_type=0, bytes_per_sample=2)
+            return self.send_audio(pcm_data, payload_type=0)
         except ImportError:
             self.logger.error("Audio utilities not available")
             return False
     
     def play_file(self, file_path):
         """
-        Play an audio file
+        Play an audio file from a WAV file
+        
+        Supports WAV files with:
+        - G.711 μ-law (8-bit, 8kHz) - most common for PBX
+        - G.711 A-law (8-bit, 8kHz)
+        - PCM (16-bit, 8kHz/16kHz)
         
         Args:
             file_path: Path to WAV file
@@ -595,67 +610,152 @@ class RTPPlayer:
             bool: True if successful
         """
         import os
+        import struct
         
         if not os.path.exists(file_path):
             self.logger.error(f"Audio file not found: {file_path}")
             return False
         
         try:
-            # Read WAV file
             with open(file_path, 'rb') as f:
-                wav_data = f.read()
-            
-            # Parse WAV header to find audio data
-            # WAV format: RIFF header (12 bytes) + chunks
-            if not wav_data.startswith(b'RIFF') or b'WAVE' not in wav_data[:20]:
-                self.logger.error(f"Invalid WAV file: {file_path}")
-                return False
-            
-            # Find and validate the format chunk
-            fmt_pos = wav_data.find(b'fmt ')
-            if fmt_pos == -1 or fmt_pos + 20 > len(wav_data):
-                self.logger.error(f"No valid format chunk in WAV file: {file_path}")
-                return False
-            
-            # Parse format chunk to verify audio format
-            # Format chunk: 'fmt ' (4) + chunk_size (4) + format_tag (2) + ...
-            fmt_chunk_size = struct.unpack('<I', wav_data[fmt_pos + 4:fmt_pos + 8])[0]
-            audio_format = struct.unpack('<H', wav_data[fmt_pos + 8:fmt_pos + 10])[0]
-            
-            # Verify it's G.711 μ-law (format 7) or A-law (format 6)
-            if audio_format not in (6, 7):
-                self.logger.error(f"Unsupported audio format {audio_format} in WAV file: {file_path} (only G.711 μ-law/A-law supported)")
-                return False
-            
-            # Find the data chunk
-            data_pos = wav_data.find(b'data')
-            if data_pos == -1:
-                self.logger.error(f"No data chunk in WAV file: {file_path}")
-                return False
-            
-            # Validate bounds before reading data chunk size
-            if data_pos + 8 > len(wav_data):
-                self.logger.error(f"Truncated WAV file: {file_path}")
-                return False
-            
-            # Read data chunk size (4 bytes after 'data')
-            data_size = struct.unpack('<I', wav_data[data_pos + 4:data_pos + 8])[0]
-            
-            # Validate data size
-            if data_pos + 8 + data_size > len(wav_data):
-                self.logger.error(f"Invalid data size in WAV file: {file_path}")
-                return False
-            
-            # Extract audio data (skip 'data' + size = 8 bytes)
-            audio_data = wav_data[data_pos + 8:data_pos + 8 + data_size]
-            
-            # For G.711 μ-law (8-bit samples), we can send directly
-            # Each sample is 1 byte, so 160 bytes = 160 samples = 20ms at 8kHz
-            samples_per_packet = 160
-            
-            # Send audio in chunks (G.711 is 1 byte per sample)
-            return self.send_audio(audio_data, payload_type=0, samples_per_packet=samples_per_packet, bytes_per_sample=1)
-            
+                # Read WAV header
+                riff = f.read(4)
+                if riff != b'RIFF' or len(riff) < 4:
+                    self.logger.error(f"Invalid WAV file (bad RIFF header): {file_path}")
+                    return False
+                
+                size_bytes = f.read(4)
+                if len(size_bytes) < 4:
+                    self.logger.error(f"Truncated WAV file (no file size): {file_path}")
+                    return False
+                file_size = struct.unpack('<I', size_bytes)[0]
+                
+                wave = f.read(4)
+                if wave != b'WAVE' or len(wave) < 4:
+                    self.logger.error(f"Invalid WAV file (bad WAVE marker): {file_path}")
+                    return False
+                
+                # Find fmt chunk
+                while True:
+                    chunk_id = f.read(4)
+                    if not chunk_id or len(chunk_id) < 4:
+                        self.logger.error(f"No format chunk found in WAV file: {file_path}")
+                        return False
+                    
+                    size_bytes = f.read(4)
+                    if not size_bytes or len(size_bytes) < 4:
+                        self.logger.error(f"Truncated chunk size in WAV file: {file_path}")
+                        return False
+                    chunk_size = struct.unpack('<I', size_bytes)[0]
+                    
+                    if chunk_id == b'fmt ':
+                        # Validate fmt chunk size (minimum 16 bytes for basic format)
+                        if chunk_size < 16:
+                            self.logger.error(f"Invalid fmt chunk size in WAV file: {file_path}")
+                            return False
+                        
+                        # Parse format
+                        fmt_data = f.read(16)
+                        if len(fmt_data) < 16:
+                            self.logger.error(f"Truncated fmt chunk in WAV file: {file_path}")
+                            return False
+                        
+                        audio_format = struct.unpack('<H', fmt_data[0:2])[0]
+                        num_channels = struct.unpack('<H', fmt_data[2:4])[0]
+                        sample_rate = struct.unpack('<I', fmt_data[4:8])[0]
+                        byte_rate = struct.unpack('<I', fmt_data[8:12])[0]
+                        block_align = struct.unpack('<H', fmt_data[12:14])[0]
+                        bits_per_sample = struct.unpack('<H', fmt_data[14:16])[0]
+                        
+                        # Skip any extra format bytes
+                        if chunk_size > 16:
+                            extra_bytes = f.read(chunk_size - 16)
+                        
+                        # Determine payload type based on format
+                        # 1 = PCM, 6 = A-law, 7 = μ-law
+                        if audio_format == 7:
+                            payload_type = 0  # PCMU (μ-law)
+                        elif audio_format == 6:
+                            payload_type = 8  # PCMA (A-law)
+                        elif audio_format == 1:
+                            # PCM format - use L16 payload type
+                            payload_type = 11 if num_channels == 1 else 10
+                            self.logger.warning(f"PCM format detected - using payload type {payload_type}. "
+                                              f"Note: Most VoIP phones expect G.711 (μ-law/A-law) format.")
+                        else:
+                            self.logger.error(f"Unsupported audio format: {audio_format}")
+                            return False
+                        
+                        self.logger.info(f"WAV file: format={audio_format}, channels={num_channels}, "
+                                       f"rate={sample_rate}Hz, bits={bits_per_sample}")
+                        break
+                    
+                    elif chunk_id == b'data':
+                        # Found data before fmt - invalid
+                        self.logger.error(f"Invalid WAV structure")
+                        return False
+                    else:
+                        # Skip unknown chunk
+                        f.read(chunk_size)
+                
+                # Find data chunk
+                while True:
+                    chunk_id = f.read(4)
+                    if not chunk_id or len(chunk_id) < 4:
+                        self.logger.error(f"No data chunk found in WAV file: {file_path}")
+                        return False
+                    
+                    size_bytes = f.read(4)
+                    if not size_bytes or len(size_bytes) < 4:
+                        self.logger.error(f"Truncated data chunk size in WAV file: {file_path}")
+                        return False
+                    chunk_size = struct.unpack('<I', size_bytes)[0]
+                    
+                    if chunk_id == b'data':
+                        # Validate data size is reasonable
+                        if chunk_size == 0:
+                            self.logger.error(f"Empty data chunk in WAV file: {file_path}")
+                            return False
+                        if chunk_size > 100 * 1024 * 1024:  # 100MB limit
+                            self.logger.error(f"Data chunk too large ({chunk_size} bytes) in WAV file: {file_path}")
+                            return False
+                        
+                        # Read audio data
+                        audio_data = f.read(chunk_size)
+                        if len(audio_data) < chunk_size:
+                            self.logger.warning(f"Truncated audio data in WAV file: {file_path} "
+                                              f"(expected {chunk_size}, got {len(audio_data)})")
+                            # Continue with partial data rather than failing completely
+                        
+                        # For mono files, use data as-is
+                        # For stereo, we'd need to downmix (take left channel)
+                        if num_channels == 2:
+                            self.logger.warning(f"Stereo audio detected, extracting left channel only")
+                            # Extract left channel (assuming interleaved samples)
+                            if audio_format == 1:  # PCM 16-bit
+                                # Extract every other 16-bit sample (left channel)
+                                # More efficient using slice with step
+                                audio_data = audio_data[::4] + audio_data[1::4]
+                            else:  # 8-bit formats (G.711)
+                                audio_data = audio_data[::2]
+                        
+                        # Calculate samples per packet based on sample rate
+                        # 20ms packet = sample_rate * 0.02
+                        samples_per_packet = int(sample_rate * 0.02)
+                        
+                        # Send the audio
+                        self.logger.info(f"Playing audio file: {file_path} ({len(audio_data)} bytes)")
+                        return self.send_audio(audio_data, payload_type, samples_per_packet)
+                    
+                    else:
+                        # Skip this chunk (with size validation)
+                        if chunk_size > 100 * 1024 * 1024:  # 100MB limit
+                            self.logger.error(f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}")
+                            return False
+                        f.read(chunk_size)
+        
         except Exception as e:
-            self.logger.error(f"Error playing file {file_path}: {e}")
+            self.logger.error(f"Error playing audio file {file_path}: {e}")
+            import traceback
+            traceback.print_exc()
             return False
