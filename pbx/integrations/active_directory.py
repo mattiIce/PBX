@@ -3,6 +3,14 @@ Active Directory / LDAP Integration
 Provides SSO, user provisioning, and group-based permissions
 """
 from pbx.utils.logger import get_logger
+from typing import Optional, Dict, List
+
+try:
+    import ldap3
+    from ldap3 import Server, Connection, ALL, SUBTREE
+    LDAP3_AVAILABLE = True
+except ImportError:
+    LDAP3_AVAILABLE = False
 
 
 class ActiveDirectoryIntegration:
@@ -18,36 +26,68 @@ class ActiveDirectoryIntegration:
         self.logger = get_logger()
         self.config = config
         self.enabled = config.get('integrations.active_directory.enabled', False)
-        self.ldap_server = config.get('integrations.active_directory.ldap_server')
+        self.ldap_server = config.get('integrations.active_directory.server', 
+                                      config.get('integrations.active_directory.ldap_server'))
         self.base_dn = config.get('integrations.active_directory.base_dn')
         self.bind_dn = config.get('integrations.active_directory.bind_dn')
         self.bind_password = config.get('integrations.active_directory.bind_password')
+        self.use_ssl = config.get('integrations.active_directory.use_ssl', True)
         self.auto_provision = config.get('integrations.active_directory.auto_provision', False)
         self.connection = None
+        self.server = None
 
         if self.enabled:
-            self.logger.info("Active Directory integration enabled")
+            if not LDAP3_AVAILABLE:
+                self.logger.error("Active Directory integration requires 'ldap3' library. Install with: pip install ldap3")
+                self.enabled = False
+            else:
+                self.logger.info("Active Directory integration enabled")
 
-    def connect(self):
+    def connect(self) -> bool:
         """
         Connect to Active Directory server
 
         Returns:
             bool: True if connection successful
         """
-        if not self.enabled:
+        if not self.enabled or not LDAP3_AVAILABLE:
             return False
 
-        self.logger.info(f"Connecting to Active Directory: {self.ldap_server}")
-        # TODO: Implement LDAP connection
-        # Use python-ldap library:
-        # import ldap
-        # conn = ldap.initialize(self.ldap_server)
-        # conn.simple_bind_s(self.bind_dn, self.bind_password)
+        if self.connection and self.connection.bound:
+            return True
 
-        return False
+        if not all([self.ldap_server, self.base_dn, self.bind_dn, self.bind_password]):
+            self.logger.error("Active Directory credentials not configured properly")
+            return False
 
-    def authenticate_user(self, username: str, password: str):
+        try:
+            self.logger.info(f"Connecting to Active Directory: {self.ldap_server}")
+            
+            # Create server object
+            self.server = Server(self.ldap_server, get_info=ALL, use_ssl=self.use_ssl)
+            
+            # Create connection
+            self.connection = Connection(
+                self.server,
+                user=self.bind_dn,
+                password=self.bind_password,
+                auto_bind=True,
+                raise_exceptions=True
+            )
+            
+            if self.connection.bound:
+                self.logger.info("Successfully connected to Active Directory")
+                return True
+            else:
+                self.logger.error("Failed to bind to Active Directory")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error connecting to Active Directory: {e}")
+            self.connection = None
+            return False
+
+    def authenticate_user(self, username: str, password: str) -> Optional[Dict]:
         """
         Authenticate user against Active Directory
 
@@ -58,16 +98,63 @@ class ActiveDirectoryIntegration:
         Returns:
             dict: User information if authenticated, None otherwise
         """
-        if not self.enabled:
+        if not self.enabled or not LDAP3_AVAILABLE:
             return None
 
-        self.logger.info(f"Authenticating user: {username}")
-        # TODO: Perform LDAP bind with user credentials
-        # 1. Search for user DN
-        # 2. Attempt bind with user DN and password
-        # 3. Return user attributes if successful
+        if not self.connect():
+            return None
 
-        return None
+        try:
+            self.logger.info(f"Authenticating user: {username}")
+            
+            # Search for user - escape username to prevent LDAP injection
+            from ldap3.utils.conv import escape_filter_chars
+            safe_username = escape_filter_chars(username)
+            search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
+            user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
+            
+            self.connection.search(
+                search_base=user_search_base,
+                search_filter=search_filter,
+                search_scope=SUBTREE,
+                attributes=['sAMAccountName', 'displayName', 'mail', 'telephoneNumber', 'memberOf']
+            )
+            
+            if not self.connection.entries:
+                self.logger.warning(f"User not found: {username}")
+                return None
+            
+            user_entry = self.connection.entries[0]
+            user_dn = user_entry.entry_dn
+            
+            # Attempt to bind with user credentials
+            user_conn = Connection(
+                self.server,
+                user=user_dn,
+                password=password,
+                auto_bind=True,
+                raise_exceptions=True
+            )
+            
+            if user_conn.bound:
+                self.logger.info(f"User authenticated successfully: {username}")
+                user_conn.unbind()
+                
+                # Return user information
+                return {
+                    'username': str(user_entry.sAMAccountName),
+                    'display_name': str(user_entry.displayName) if hasattr(user_entry, 'displayName') else username,
+                    'email': str(user_entry.mail) if hasattr(user_entry, 'mail') else None,
+                    'phone': str(user_entry.telephoneNumber) if hasattr(user_entry, 'telephoneNumber') else None,
+                    'groups': [str(g) for g in user_entry.memberOf] if hasattr(user_entry, 'memberOf') else []
+                }
+            else:
+                self.logger.warning(f"Authentication failed for user: {username}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error authenticating user {username}: {e}")
+            return None
 
     def sync_users(self):
         """
@@ -106,7 +193,7 @@ class ActiveDirectoryIntegration:
 
         return []
 
-    def search_users(self, query: str, max_results: int = 50):
+    def search_users(self, query: str, max_results: int = 50) -> List[Dict]:
         """
         Search for users in Active Directory
 
@@ -117,14 +204,51 @@ class ActiveDirectoryIntegration:
         Returns:
             list: List of user dictionaries
         """
-        if not self.enabled:
+        if not self.enabled or not LDAP3_AVAILABLE:
             return []
 
-        self.logger.info(f"Searching AD for: {query}")
-        # TODO: Perform LDAP search
-        # Search attributes: cn, displayName, telephoneNumber, mail
+        if not self.connect():
+            return []
 
-        return []
+        try:
+            self.logger.info(f"Searching AD for: {query}")
+            
+            # Escape query to prevent LDAP injection
+            from ldap3.utils.conv import escape_filter_chars
+            safe_query = escape_filter_chars(query)
+            
+            # Build search filter for multiple attributes
+            search_filter = (
+                f"(&(objectClass=user)"
+                f"(|(cn=*{safe_query}*)(displayName=*{safe_query}*)"
+                f"(mail=*{safe_query}*)(telephoneNumber=*{safe_query}*)))"
+            )
+            
+            user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
+            
+            self.connection.search(
+                search_base=user_search_base,
+                search_filter=search_filter,
+                search_scope=SUBTREE,
+                attributes=['sAMAccountName', 'displayName', 'mail', 'telephoneNumber'],
+                size_limit=max_results
+            )
+            
+            results = []
+            for entry in self.connection.entries:
+                results.append({
+                    'username': str(entry.sAMAccountName),
+                    'display_name': str(entry.displayName) if hasattr(entry, 'displayName') else str(entry.sAMAccountName),
+                    'email': str(entry.mail) if hasattr(entry, 'mail') else None,
+                    'phone': str(entry.telephoneNumber) if hasattr(entry, 'telephoneNumber') else None
+                })
+            
+            self.logger.info(f"Found {len(results)} users matching: {query}")
+            return results
+            
+        except Exception as e:
+            self.logger.error(f"Error searching users: {e}")
+            return []
 
     def get_user_photo(self, username: str):
         """

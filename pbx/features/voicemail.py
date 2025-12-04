@@ -310,3 +310,253 @@ class VoicemailSystem:
         """
         mailbox = self.get_mailbox(extension_number)
         return len(mailbox.get_messages(unread_only))
+
+
+class VoicemailIVR:
+    """
+    Interactive Voice Response system for voicemail access
+    Handles DTMF-based menu navigation
+    """
+
+    # IVR States
+    STATE_WELCOME = 'welcome'
+    STATE_PIN_ENTRY = 'pin_entry'
+    STATE_MAIN_MENU = 'main_menu'
+    STATE_PLAYING_MESSAGE = 'playing_message'
+    STATE_MESSAGE_MENU = 'message_menu'
+    STATE_RECORDING_GREETING = 'recording_greeting'
+    STATE_GOODBYE = 'goodbye'
+
+    def __init__(self, voicemail_system: VoicemailSystem, extension_number: str):
+        """
+        Initialize voicemail IVR for an extension
+
+        Args:
+            voicemail_system: VoicemailSystem instance
+            extension_number: Extension accessing voicemail
+        """
+        self.voicemail_system = voicemail_system
+        self.extension_number = extension_number
+        self.mailbox = voicemail_system.get_mailbox(extension_number)
+        self.logger = get_logger()
+        
+        # IVR state
+        self.state = self.STATE_WELCOME
+        self.pin_attempts = 0
+        self.max_pin_attempts = 3
+        self.current_message_index = 0
+        self.current_messages = []
+        self.entered_pin = ''  # Collect PIN digits from user
+        
+        self.logger.info(f"Voicemail IVR initialized for extension {extension_number}")
+
+    def handle_dtmf(self, digit: str) -> dict:
+        """
+        Handle DTMF digit based on current state
+
+        Args:
+            digit: DTMF digit ('0'-'9', '*', '#')
+
+        Returns:
+            dict: Action to take {'action': str, 'prompt': str, ...}
+        """
+        self.logger.debug(f"IVR state={self.state}, digit={digit}")
+
+        if self.state == self.STATE_WELCOME:
+            return self._handle_welcome(digit)
+        elif self.state == self.STATE_PIN_ENTRY:
+            return self._handle_pin_entry(digit)
+        elif self.state == self.STATE_MAIN_MENU:
+            return self._handle_main_menu(digit)
+        elif self.state == self.STATE_PLAYING_MESSAGE:
+            return self._handle_playing_message(digit)
+        elif self.state == self.STATE_MESSAGE_MENU:
+            return self._handle_message_menu(digit)
+        else:
+            return {'action': 'unknown_state', 'prompt': 'goodbye'}
+
+    def _handle_welcome(self, digit: str) -> dict:
+        """Handle welcome state"""
+        # Transition to PIN entry automatically
+        self.state = self.STATE_PIN_ENTRY
+        return {
+            'action': 'play_prompt',
+            'prompt': 'enter_pin',
+            'message': 'Please enter your PIN followed by pound'
+        }
+
+    def _handle_pin_entry(self, digit: str) -> dict:
+        """Handle PIN entry state"""
+        if digit == '#':
+            # PIN entry complete - verify the entered PIN
+            pin_valid = self.mailbox.verify_pin(self.entered_pin)
+            # Clear PIN immediately after verification for security
+            self.entered_pin = ''
+            
+            if pin_valid:
+                self.state = self.STATE_MAIN_MENU
+                unread_count = len(self.mailbox.get_messages(unread_only=True))
+                return {
+                    'action': 'play_prompt',
+                    'prompt': 'main_menu',
+                    'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+                }
+            else:
+                self.pin_attempts += 1
+                if self.pin_attempts >= self.max_pin_attempts:
+                    self.state = self.STATE_GOODBYE
+                    return {
+                        'action': 'hangup',
+                        'prompt': 'goodbye',
+                        'message': 'Too many failed attempts. Goodbye.'
+                    }
+                return {
+                    'action': 'play_prompt',
+                    'prompt': 'invalid_pin',
+                    'message': 'Invalid PIN. Please try again.'
+                }
+        elif digit in '0123456789':
+            # Collect PIN digit (limit length to prevent abuse)
+            if len(self.entered_pin) < 10:  # Max 10 digits
+                self.entered_pin += digit
+            return {
+                'action': 'collect_digit',
+                'prompt': 'continue'
+            }
+        else:
+            # Invalid input, ignore
+            return {
+                'action': 'collect_digit',
+                'prompt': 'continue'
+            }
+
+    def _handle_main_menu(self, digit: str) -> dict:
+        """Handle main menu state"""
+        if digit == '1':
+            # Listen to messages
+            self.current_messages = self.mailbox.get_messages(unread_only=True)
+            if not self.current_messages:
+                self.current_messages = self.mailbox.get_messages(unread_only=False)
+            
+            if self.current_messages:
+                self.current_message_index = 0
+                self.state = self.STATE_PLAYING_MESSAGE
+                msg = self.current_messages[0]
+                return {
+                    'action': 'play_message',
+                    'message_id': msg['id'],
+                    'file_path': msg['file_path'],
+                    'caller_id': msg['caller_id']
+                }
+            else:
+                return {
+                    'action': 'play_prompt',
+                    'prompt': 'no_messages',
+                    'message': 'You have no messages'
+                }
+        
+        elif digit == '2':
+            # Options menu
+            return {
+                'action': 'play_prompt',
+                'prompt': 'options_menu',
+                'message': 'Press 1 to record greeting, * to return to main menu'
+            }
+        
+        elif digit == '*':
+            # Exit
+            self.state = self.STATE_GOODBYE
+            return {
+                'action': 'hangup',
+                'prompt': 'goodbye',
+                'message': 'Goodbye'
+            }
+        
+        return {
+            'action': 'play_prompt',
+            'prompt': 'invalid_option',
+            'message': 'Invalid option. Please try again.'
+        }
+
+    def _handle_playing_message(self, digit: str) -> dict:
+        """Handle message playback state"""
+        # Automatically transition to message menu after playback
+        self.state = self.STATE_MESSAGE_MENU
+        return {
+            'action': 'play_prompt',
+            'prompt': 'message_menu',
+            'message': 'Press 1 to replay, 2 for next message, 3 to delete, * for main menu'
+        }
+
+    def _handle_message_menu(self, digit: str) -> dict:
+        """Handle message menu state"""
+        if digit == '1':
+            # Replay current message
+            msg = self.current_messages[self.current_message_index]
+            self.state = self.STATE_PLAYING_MESSAGE
+            return {
+                'action': 'play_message',
+                'message_id': msg['id'],
+                'file_path': msg['file_path'],
+                'caller_id': msg['caller_id']
+            }
+        
+        elif digit == '2':
+            # Next message
+            self.current_message_index += 1
+            if self.current_message_index < len(self.current_messages):
+                msg = self.current_messages[self.current_message_index]
+                self.state = self.STATE_PLAYING_MESSAGE
+                return {
+                    'action': 'play_message',
+                    'message_id': msg['id'],
+                    'file_path': msg['file_path'],
+                    'caller_id': msg['caller_id']
+                }
+            else:
+                self.state = self.STATE_MAIN_MENU
+                return {
+                    'action': 'play_prompt',
+                    'prompt': 'no_more_messages',
+                    'message': 'No more messages. Returning to main menu.'
+                }
+        
+        elif digit == '3':
+            # Delete current message
+            msg = self.current_messages[self.current_message_index]
+            self.mailbox.delete_message(msg['id'])
+            
+            # Move to next message or main menu
+            if self.current_message_index < len(self.current_messages) - 1:
+                self.current_message_index += 1
+                msg = self.current_messages[self.current_message_index]
+                self.state = self.STATE_PLAYING_MESSAGE
+                return {
+                    'action': 'play_message',
+                    'message_id': msg['id'],
+                    'file_path': msg['file_path'],
+                    'caller_id': msg['caller_id']
+                }
+            else:
+                self.state = self.STATE_MAIN_MENU
+                return {
+                    'action': 'play_prompt',
+                    'prompt': 'message_deleted',
+                    'message': 'Message deleted. Returning to main menu.'
+                }
+        
+        elif digit == '*':
+            # Return to main menu
+            self.state = self.STATE_MAIN_MENU
+            unread_count = len(self.mailbox.get_messages(unread_only=True))
+            return {
+                'action': 'play_prompt',
+                'prompt': 'main_menu',
+                'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+            }
+        
+        return {
+            'action': 'play_prompt',
+            'prompt': 'invalid_option',
+            'message': 'Invalid option. Please try again.'
+        }

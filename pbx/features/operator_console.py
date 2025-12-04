@@ -3,8 +3,11 @@ Operator Console / Receptionist Features
 Provides advanced call handling for receptionists and front desk staff
 """
 from pbx.utils.logger import get_logger
+from pbx.core.call import CallState
 from datetime import datetime
 from typing import Dict, List, Optional
+import json
+import os
 
 
 class OperatorConsole:
@@ -32,6 +35,10 @@ class OperatorConsole:
 
         # Call screening queue
         self.screening_queue = []  # List of calls waiting for screening
+
+        # VIP caller database
+        self.vip_db_path = config.get('features.operator_console.vip_db_path', 'vip_callers.json')
+        self.vip_callers = self._load_vip_database()
 
         if self.enabled:
             self.logger.info(f"Operator console enabled for extensions: {self.operator_extensions}")
@@ -125,6 +132,7 @@ class OperatorConsole:
 
         call = self.pbx_core.call_manager.get_call(call_id)
         if not call:
+            self.logger.warning(f"Call {call_id} not found")
             return False
 
         self.logger.info(f"Operator {operator_extension} screening call {call_id}")
@@ -137,13 +145,28 @@ class OperatorConsole:
             'original_destination': call.to_extension
         })
 
-        # TODO: Implement call interception and operator connection
-        # This would involve:
-        # 1. Pause the original call routing
-        # 2. Connect operator to caller
-        # 3. Allow operator to announce and transfer
+        # Intercept the call - put original destination on hold
+        if call.state == CallState.RINGING or call.state == CallState.CALLING:
+            # Call hasn't been answered yet, redirect to operator
+            original_destination = call.to_extension
+            call.to_extension = operator_extension
+            
+            # Store original destination for later transfer
+            if not hasattr(call, 'screening_info'):
+                call.screening_info = {}
+            call.screening_info['original_destination'] = original_destination
+            call.screening_info['operator'] = operator_extension
+            call.screening_info['is_screening'] = True
+            
+            self.logger.info(f"Redirected call {call_id} from {original_destination} to operator {operator_extension}")
+            return True
+        elif call.state == CallState.CONNECTED:
+            # Call already connected, put it on hold and notify operator
+            call.hold()
+            self.logger.info(f"Put call {call_id} on hold for operator screening")
+            return True
 
-        return True
+        return False
 
     def announce_and_transfer(self, call_id: str, announcement: str, target_extension: str) -> bool:
         """
@@ -160,23 +183,58 @@ class OperatorConsole:
         if not self.enabled or not self.enable_call_announce:
             return False
 
+        call = self.pbx_core.call_manager.get_call(call_id)
+        if not call:
+            self.logger.warning(f"Call {call_id} not found for announced transfer")
+            return False
+
         self.logger.info(f"Announcing call {call_id} to {target_extension}: {announcement}")
 
-        # TODO: Implement announced transfer
-        # 1. Place original call on hold
-        # 2. Call target extension
-        # 3. Play announcement (or speak to them)
-        # 4. Complete transfer if accepted, otherwise return to operator
+        # Step 1: Place original call on hold
+        call.hold()
+        
+        # Step 2: Store announcement for the target
+        # In a real implementation, this would:
+        # - Create a new call to the target extension
+        # - Play the announcement (using TTS or pre-recorded message)
+        # - Wait for target to accept or reject
+        # - Complete the transfer if accepted, or return to operator if rejected
+        
+        if not hasattr(call, 'transfer_info'):
+            call.transfer_info = {}
+        
+        call.transfer_info['announcement'] = announcement
+        call.transfer_info['target_extension'] = target_extension
+        call.transfer_info['transfer_type'] = 'announced'
+        call.transfer_info['initiated_at'] = datetime.now().isoformat()
 
-        return False
+        # Use the existing transfer mechanism
+        # In a production system, this would wait for target acknowledgment
+        # For now, we log the announcement and proceed with transfer
+        self.logger.info(f"Announcement logged: '{announcement}' for transfer to {target_extension}")
+        
+        # Attempt the transfer (the actual SIP transfer would happen in the call manager)
+        try:
+            # Resume the call and transfer it
+            call.resume()
+            # The actual transfer would be handled by the SIP server
+            # This is a placeholder for the transfer mechanism
+            call.transfer_target = target_extension
+            self.logger.info(f"Transfer initiated for call {call_id} to {target_extension}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to transfer call {call_id}: {e}")
+            call.resume()  # Resume call with operator if transfer fails
+            return False
 
-    def park_and_page(self, call_id: str, page_message: str) -> Optional[str]:
+    def park_and_page(self, call_id: str, page_message: str, page_method: str = 'log') -> Optional[str]:
         """
         Park call and page staff member
 
         Args:
             call_id: Call identifier
             page_message: Page message
+            page_method: Paging method ('log', 'multicast', 'sip', 'email')
 
         Returns:
             str: Park slot number or None
@@ -187,14 +245,61 @@ class OperatorConsole:
         self.logger.info(f"Parking call {call_id} and paging: {page_message}")
 
         # Park the call
-        if hasattr(self.pbx_core, 'call_parking'):
-            slot = self.pbx_core.call_parking.park_call(call_id)
+        if hasattr(self.pbx_core, 'parking_system'):
+            slot = self.pbx_core.parking_system.park_call(call_id)
             if slot:
-                # TODO: Send page notification (could be via speakers, SMS, etc.)
-                self.logger.info(f"Paged: '{page_message}' - retrieve call at {slot}")
+                # Send page notification based on configured method
+                self._send_page_notification(page_message, slot, page_method)
                 return slot
 
         return None
+
+    def _send_page_notification(self, message: str, park_slot: str, method: str = 'log'):
+        """
+        Send page notification via configured method
+
+        Args:
+            message: Page message
+            park_slot: Park slot number
+            method: Notification method
+        """
+        full_message = f"{message} - Retrieve call at {park_slot}"
+        
+        if method == 'log':
+            # Log-based paging (default)
+            self.logger.info(f"PAGE: {full_message}")
+            
+        elif method == 'multicast':
+            # Multicast paging to speakers
+            # In production, this would send RTP stream to multicast address
+            multicast_addr = self.config.get('features.operator_console.paging.multicast_address', '224.0.1.1')
+            multicast_port = self.config.get('features.operator_console.paging.multicast_port', 5004)
+            self.logger.info(f"Would send multicast page to {multicast_addr}:{multicast_port}: {full_message}")
+            
+        elif method == 'sip':
+            # SIP-based paging
+            paging_uri = self.config.get('features.operator_console.paging.sip_uri', 'sip:page-all@pbx.local')
+            self.logger.info(f"Would send SIP page to {paging_uri}: {full_message}")
+            
+        elif method == 'email':
+            # Email notification (if voicemail system with email is configured)
+            if hasattr(self.pbx_core, 'voicemail_system'):
+                # Would send email notification
+                self.logger.info(f"Would send email page: {full_message}")
+                
+        else:
+            self.logger.warning(f"Unknown paging method: {method}")
+        
+        # Store page in history for tracking
+        if not hasattr(self, 'page_history'):
+            self.page_history = []
+        
+        self.page_history.append({
+            'message': full_message,
+            'method': method,
+            'timestamp': datetime.now().isoformat(),
+            'park_slot': park_slot
+        })
 
     def get_directory(self, search_query: str = None) -> List[Dict]:
         """
@@ -231,23 +336,118 @@ class OperatorConsole:
 
         return sorted(directory, key=lambda x: x['name'])
 
-    def mark_vip_caller(self, caller_id: str, priority_level: int = 1):
+    def _load_vip_database(self) -> Dict:
+        """
+        Load VIP caller database from JSON file
+
+        Returns:
+            dict: VIP caller database
+        """
+        if os.path.exists(self.vip_db_path):
+            try:
+                with open(self.vip_db_path, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                self.logger.error(f"Failed to load VIP database: {e}")
+                return {}
+        return {}
+
+    def _save_vip_database(self):
+        """Save VIP caller database to JSON file"""
+        try:
+            with open(self.vip_db_path, 'w') as f:
+                json.dump(self.vip_callers, f, indent=2)
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to save VIP database: {e}")
+            return False
+
+    def mark_vip_caller(self, caller_id: str, priority_level: int = 1, name: str = None, notes: str = None):
         """
         Mark a caller as VIP for priority handling
 
         Args:
-            caller_id: Caller identifier
-            priority_level: Priority level (1=high, 2=medium, 3=normal)
+            caller_id: Caller identifier (phone number)
+            priority_level: Priority level (1=VIP, 2=VVIP, 3=Executive)
+            name: Optional caller name
+            notes: Optional notes about the caller
 
         Returns:
-            bool: True if marked
+            bool: True if marked successfully
         """
-        # TODO: Implement VIP caller database
-        # Store VIP status and priority level
-        # Future: Integrate with CRM to auto-detect VIP customers
+        if not caller_id:
+            return False
+
+        # Normalize caller ID (remove formatting)
+        caller_id = caller_id.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+
+        vip_entry = {
+            'caller_id': caller_id,
+            'priority_level': priority_level,
+            'name': name,
+            'notes': notes,
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }
+
+        self.vip_callers[caller_id] = vip_entry
+        self._save_vip_database()
 
         self.logger.info(f"Marked {caller_id} as VIP (priority {priority_level})")
         return True
+
+    def unmark_vip_caller(self, caller_id: str) -> bool:
+        """
+        Remove VIP status from a caller
+
+        Args:
+            caller_id: Caller identifier
+
+        Returns:
+            bool: True if removed successfully
+        """
+        caller_id = caller_id.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+
+        if caller_id in self.vip_callers:
+            del self.vip_callers[caller_id]
+            self._save_vip_database()
+            self.logger.info(f"Removed VIP status from {caller_id}")
+            return True
+        return False
+
+    def get_vip_caller(self, caller_id: str) -> Optional[Dict]:
+        """
+        Get VIP caller information
+
+        Args:
+            caller_id: Caller identifier
+
+        Returns:
+            dict: VIP caller information or None
+        """
+        caller_id = caller_id.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+        return self.vip_callers.get(caller_id)
+
+    def is_vip_caller(self, caller_id: str) -> bool:
+        """
+        Check if caller is marked as VIP
+
+        Args:
+            caller_id: Caller identifier
+
+        Returns:
+            bool: True if caller is VIP
+        """
+        return self.get_vip_caller(caller_id) is not None
+
+    def list_vip_callers(self) -> List[Dict]:
+        """
+        List all VIP callers
+
+        Returns:
+            list: List of VIP caller entries
+        """
+        return list(self.vip_callers.values())
 
     def get_call_queue_status(self) -> Dict:
         """
