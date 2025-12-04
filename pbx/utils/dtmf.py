@@ -37,7 +37,9 @@ class DTMFDetector:
         # Goertzel coefficients for each DTMF frequency
         self.coefficients = {}
         for freq in DTMF_LOW_FREQS + DTMF_HIGH_FREQS:
-            k = int(0.5 + (samples_per_frame * freq / sample_rate))
+            # Calculate the nearest DFT bin for this frequency
+            # 0.5 added for proper rounding to nearest integer
+            k = int(round(samples_per_frame * freq / sample_rate))
             omega = (2.0 * math.pi * k) / samples_per_frame
             self.coefficients[freq] = 2.0 * math.cos(omega)
         
@@ -59,11 +61,12 @@ class DTMFDetector:
         q2 = 0.0
         
         for sample in samples:
+            # Goertzel difference equation
             q0 = coeff * q1 - q2 + sample
             q2 = q1
             q1 = q0
         
-        # Calculate magnitude
+        # Calculate magnitude from final state
         magnitude = math.sqrt(q1 * q1 + q2 * q2 - q1 * q2 * coeff)
         return magnitude
 

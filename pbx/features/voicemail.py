@@ -346,6 +346,7 @@ class VoicemailIVR:
         self.max_pin_attempts = 3
         self.current_message_index = 0
         self.current_messages = []
+        self.entered_pin = ''  # Collect PIN digits from user
         
         self.logger.info(f"Voicemail IVR initialized for extension {extension_number}")
 
@@ -387,10 +388,10 @@ class VoicemailIVR:
     def _handle_pin_entry(self, digit: str) -> dict:
         """Handle PIN entry state"""
         if digit == '#':
-            # PIN entry complete - verify (in real implementation, collect digits)
-            # For now, assume PIN is already collected
-            if self.mailbox.verify_pin(self.mailbox.pin):
+            # PIN entry complete - verify the entered PIN
+            if self.mailbox.verify_pin(self.entered_pin):
                 self.state = self.STATE_MAIN_MENU
+                self.entered_pin = ''  # Clear PIN after successful verification
                 unread_count = len(self.mailbox.get_messages(unread_only=True))
                 return {
                     'action': 'play_prompt',
@@ -399,6 +400,7 @@ class VoicemailIVR:
                 }
             else:
                 self.pin_attempts += 1
+                self.entered_pin = ''  # Clear incorrect PIN
                 if self.pin_attempts >= self.max_pin_attempts:
                     self.state = self.STATE_GOODBYE
                     return {
@@ -411,10 +413,19 @@ class VoicemailIVR:
                     'prompt': 'invalid_pin',
                     'message': 'Invalid PIN. Please try again.'
                 }
-        return {
-            'action': 'collect_digit',
-            'prompt': 'continue'
-        }
+        elif digit in '0123456789':
+            # Collect PIN digit
+            self.entered_pin += digit
+            return {
+                'action': 'collect_digit',
+                'prompt': 'continue'
+            }
+        else:
+            # Invalid input, ignore
+            return {
+                'action': 'collect_digit',
+                'prompt': 'continue'
+            }
 
     def _handle_main_menu(self, digit: str) -> dict:
         """Handle main menu state"""

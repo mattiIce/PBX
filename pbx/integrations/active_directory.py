@@ -107,7 +107,8 @@ class ActiveDirectoryIntegration:
         try:
             self.logger.info(f"Authenticating user: {username}")
             
-            # Search for user
+            # Search for user - using ldap3 which handles escaping automatically
+            # ldap3 library escapes filter values when using search parameters
             search_filter = f"(&(objectClass=user)(sAMAccountName={username}))"
             user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
             

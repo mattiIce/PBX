@@ -3,6 +3,7 @@ Operator Console / Receptionist Features
 Provides advanced call handling for receptionists and front desk staff
 """
 from pbx.utils.logger import get_logger
+from pbx.core.call import CallState
 from datetime import datetime
 from typing import Dict, List, Optional
 import json
@@ -145,7 +146,6 @@ class OperatorConsole:
         })
 
         # Intercept the call - put original destination on hold
-        from pbx.core.call import CallState
         if call.state == CallState.RINGING or call.state == CallState.CALLING:
             # Call hasn't been answered yet, redirect to operator
             original_destination = call.to_extension

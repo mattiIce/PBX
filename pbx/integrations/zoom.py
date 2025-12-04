@@ -14,6 +14,9 @@ try:
 except ImportError:
     REQUESTS_AVAILABLE = False
 
+# Token expiry buffer in seconds (refresh 5 minutes before expiry)
+TOKEN_EXPIRY_BUFFER_SECONDS = 300
+
 
 class ZoomIntegration:
     """Zoom integration handler"""
@@ -79,7 +82,7 @@ class ZoomIntegration:
                 data = response.json()
                 self.access_token = data.get('access_token')
                 expires_in = data.get('expires_in', 3600)
-                self.token_expiry = datetime.now() + timedelta(seconds=expires_in - 300)  # 5 min buffer
+                self.token_expiry = datetime.now() + timedelta(seconds=expires_in - TOKEN_EXPIRY_BUFFER_SECONDS)
                 
                 self.logger.info("Zoom authentication successful")
                 return True

@@ -4,7 +4,7 @@ Provides calendar sync, contact sync, and presence integration
 """
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 try:
     import requests
@@ -183,9 +183,10 @@ class OutlookIntegration:
         if not self.enabled:
             return "unknown"
 
-        now = datetime.now()
-        start_time = now.isoformat() + 'Z'
-        end_time = (now + timedelta(hours=1)).isoformat() + 'Z'
+        # Use timezone-aware datetime
+        now = datetime.now(timezone.utc)
+        start_time = now.isoformat()
+        end_time = (now + timedelta(hours=1)).isoformat()
         
         # Check current calendar events
         events = self.get_calendar_events(user_email, start_time, end_time)
@@ -194,6 +195,7 @@ class OutlookIntegration:
             # User has active or upcoming meeting
             for event in events:
                 if not event.get('is_cancelled'):
+                    # Parse event times as timezone-aware
                     event_start = datetime.fromisoformat(event['start'].replace('Z', '+00:00'))
                     event_end = datetime.fromisoformat(event['end'].replace('Z', '+00:00'))
                     
