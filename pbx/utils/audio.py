@@ -4,11 +4,78 @@ Provides audio generation and processing functions
 """
 import struct
 import math
+import warnings
 
 
 # Audio generation constants
 MAX_16BIT_SIGNED = 32767  # Maximum value for 16-bit signed integer
 DEFAULT_AMPLITUDE = 0.5  # Default amplitude (50% of maximum)
+
+
+def pcm16_to_ulaw(pcm_data):
+    """
+    Convert 16-bit PCM audio data to G.711 μ-law format
+    
+    Args:
+        pcm_data: Raw 16-bit PCM audio data (little-endian signed)
+    
+    Returns:
+        bytes: G.711 μ-law encoded audio data (8-bit per sample)
+    
+    Note:
+        This function uses Python's audioop module which is deprecated in Python 3.11+
+        and will be removed in Python 3.13. For production use, consider using an
+        alternative library like 'pydub' or implementing the conversion algorithm directly.
+    """
+    try:
+        import audioop
+        # Suppress deprecation warning for audioop
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            # Convert 16-bit linear PCM to μ-law (1 = mono, 2 bytes per sample for 16-bit)
+            ulaw_data = audioop.lin2ulaw(pcm_data, 2)
+        return ulaw_data
+    except ImportError:
+        # Fallback: implement μ-law encoding manually if audioop is not available
+        # This is a simplified implementation of μ-law encoding
+        ulaw_data = bytearray()
+        
+        # μ-law constants
+        BIAS = 0x84
+        CLIP = 32635
+        
+        for i in range(0, len(pcm_data), 2):
+            # Read 16-bit little-endian sample
+            if i + 1 >= len(pcm_data):
+                break
+            sample = struct.unpack('<h', pcm_data[i:i+2])[0]
+            
+            # Get sign and magnitude
+            sign = 0x80 if sample < 0 else 0x00
+            sample = abs(sample)
+            
+            # Clip the sample
+            if sample > CLIP:
+                sample = CLIP
+            
+            # Add bias
+            sample = sample + BIAS
+            
+            # Find exponent (position of highest set bit in range)
+            # Start from highest exponent and work down
+            exponent = 0
+            for exp in range(7, -1, -1):
+                if sample & (1 << (exp + 3)):
+                    exponent = exp
+                    break
+            
+            mantissa = (sample >> (exponent + 3)) & 0x0F
+            
+            # Compose μ-law byte
+            ulaw_byte = ~(sign | (exponent << 4) | mantissa) & 0xFF
+            ulaw_data.append(ulaw_byte)
+        
+        return bytes(ulaw_data)
 
 
 def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):

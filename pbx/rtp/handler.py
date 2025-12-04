@@ -673,15 +673,17 @@ class RTPPlayer:
 
                         # Determine payload type based on format
                         # 1 = PCM, 6 = A-law, 7 = μ-law
+                        convert_to_ulaw = False
                         if audio_format == 7:
                             payload_type = 0  # PCMU (μ-law)
                         elif audio_format == 6:
                             payload_type = 8  # PCMA (A-law)
                         elif audio_format == 1:
-                            # PCM format - use L16 payload type
-                            payload_type = 11 if num_channels == 1 else 10
-                            self.logger.warning(f"PCM format detected - using payload type {payload_type}. "
-                                              f"Note: Most VoIP phones expect G.711 (μ-law/A-law) format.")
+                            # PCM format - convert to G.711 μ-law for compatibility
+                            payload_type = 0  # PCMU (μ-law)
+                            convert_to_ulaw = True
+                            self.logger.info(f"PCM format detected - will convert to G.711 μ-law (PCMU) "
+                                           f"for VoIP compatibility.")
                         else:
                             self.logger.error(f"Unsupported audio format: {audio_format}")
                             return False
@@ -738,6 +740,17 @@ class RTPPlayer:
                                 audio_data = audio_data[::4] + audio_data[1::4]
                             else:  # 8-bit formats (G.711)
                                 audio_data = audio_data[::2]
+
+                        # Convert PCM to G.711 μ-law if needed
+                        if convert_to_ulaw:
+                            try:
+                                from pbx.utils.audio import pcm16_to_ulaw
+                                original_size = len(audio_data)
+                                audio_data = pcm16_to_ulaw(audio_data)
+                                self.logger.info(f"Converted PCM to G.711 μ-law: {original_size} bytes -> {len(audio_data)} bytes")
+                            except Exception as e:
+                                self.logger.error(f"Failed to convert PCM to μ-law: {e}")
+                                return False
 
                         # Calculate samples per packet based on sample rate
                         # 20ms packet = sample_rate * 0.02
