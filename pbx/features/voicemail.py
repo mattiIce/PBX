@@ -13,6 +13,10 @@ except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
 
+# Constants
+GREETING_FILENAME = "greeting.wav"
+
+
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
 
@@ -35,7 +39,7 @@ class VoicemailBox:
         self.email_notifier = email_notifier
         self.database = database
         self.pin = None  # Voicemail PIN
-        self.greeting_path = os.path.join(self.storage_path, "greeting.wav")  # Custom greeting file
+        self.greeting_path = os.path.join(self.storage_path, GREETING_FILENAME)  # Custom greeting file
 
         # Load PIN from extension config if available
         if config:

@@ -13,6 +13,11 @@ from pbx.features.voicemail import VoicemailSystem, VoicemailIVR, VoicemailBox
 from pbx.utils.config import Config
 
 
+def create_fake_audio():
+    """Helper function to create fake audio data for testing"""
+    return b'RIFF' + b'\x00' * 100
+
+
 def test_greeting_storage():
     """Test that greeting can be saved and retrieved"""
     print("Testing greeting storage...")
@@ -28,7 +33,7 @@ def test_greeting_storage():
         assert mailbox.get_greeting_path() is None, "Greeting path should be None initially"
         
         # Create fake audio data
-        fake_audio = b'RIFF' + b'\x00' * 100
+        fake_audio = create_fake_audio()
         
         # Save greeting
         result = mailbox.save_greeting(fake_audio)
@@ -59,7 +64,7 @@ def test_greeting_deletion():
         mailbox = vm_system.get_mailbox('1001')
         
         # Save greeting
-        fake_audio = b'RIFF' + b'\x00' * 100
+        fake_audio = create_fake_audio()
         mailbox.save_greeting(fake_audio)
         assert mailbox.has_custom_greeting(), "Should have greeting after saving"
         
@@ -134,7 +139,7 @@ def test_ivr_save_recorded_greeting():
         ivr = VoicemailIVR(vm_system, '1001')
         
         # Create fake audio data
-        fake_audio = b'RIFF' + b'\x00' * 100
+        fake_audio = create_fake_audio()
         
         # Save greeting through IVR
         result = ivr.save_recorded_greeting(fake_audio)
@@ -178,7 +183,7 @@ def test_greeting_persistence():
         # Create first mailbox instance and save greeting
         vm_system1 = VoicemailSystem(storage_path=temp_dir, config=config)
         mailbox1 = vm_system1.get_mailbox('1001')
-        fake_audio = b'RIFF' + b'\x00' * 100
+        fake_audio = create_fake_audio()
         mailbox1.save_greeting(fake_audio)
         assert mailbox1.has_custom_greeting(), "First instance should have greeting"
         

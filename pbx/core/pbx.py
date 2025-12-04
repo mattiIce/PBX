@@ -718,8 +718,8 @@ class PBXCore:
                             if temp_file_created:
                                 try:
                                     os.unlink(greeting_file)
-                                except:
-                                    pass
+                                except (OSError, FileNotFoundError) as e:
+                                    self.logger.debug(f"Could not delete temp greeting file: {e}")
                         
                         # Play beep tone (1000 Hz, 500ms)
                         player.play_beep(frequency=1000, duration_ms=500)
