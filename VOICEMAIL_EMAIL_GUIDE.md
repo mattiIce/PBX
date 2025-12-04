@@ -78,8 +78,11 @@ extensions:
 1. User A calls Extension 1001
 2. Extension 1001 rings for 30 seconds (configurable)
 3. If not answered, call is automatically routed to voicemail
-4. Caller hears greeting and can leave a message
-5. Message is saved and email notification sent immediately
+4. Caller hears a greeting prompt: "Please leave a message after the tone"
+5. A beep tone signals the start of recording
+6. Caller leaves their message
+7. Message is saved when caller hangs up
+8. Email notification sent immediately to extension owner
 
 ### Email Notification
 
@@ -127,6 +130,50 @@ Please check your voicemail by dialing *1001
 
 Best regards,
 ABCo Voicemail
+```
+
+## Accessing Your Voicemail
+
+To check your voicemail messages, dial `*` followed by your extension number (e.g., `*1001`).
+
+### Interactive Voicemail Menu
+
+When you access your voicemail, you'll be guided through an interactive menu system:
+
+1. **Welcome & Authentication**
+   - System announces the number of new messages
+   - Enter your 4-digit PIN followed by `#`
+   - After 3 failed attempts, the system will disconnect
+
+2. **Main Menu**
+   - Press `1` - Listen to your messages
+   - Press `2` - Access options menu (future: record greeting, change PIN)
+   - Press `*` - Exit voicemail system
+
+3. **Message Playback Menu** (while listening to messages)
+   - Press `1` - Replay the current message
+   - Press `2` - Skip to next message
+   - Press `3` - Delete the current message
+   - Press `*` - Return to main menu
+
+### Example Session
+
+```
+1. Dial *1001 from your phone
+2. System: [Tone prompt indicating message count]
+3. System: [Tone prompt requesting PIN]
+4. You: Enter 1234# (your PIN)
+5. System: [Main menu tone]
+6. You: Press 1 to listen to messages
+7. System: [Plays first voicemail message]
+8. System: [Message menu tone]
+9. You: Press 2 to hear next message
+10. System: [Plays second voicemail message]
+11. You: Press 3 to delete this message
+12. System: [Message deleted confirmation]
+13. You: Press * to return to main menu
+14. You: Press * again to exit
+15. System: [Goodbye tone]
 ```
 
 ## Testing
