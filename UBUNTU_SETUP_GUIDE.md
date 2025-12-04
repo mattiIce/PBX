@@ -823,8 +823,8 @@ voicemail:
     username: ""
     password: ""
   email:
-    from_address: "pbx@yourdomain.com"
-    from_name: "PBX Voicemail System"
+    from_address: 'pbx@yourdomain.com'
+    from_name: 'PBX Voicemail System'
     include_attachment: true
 ```
 
