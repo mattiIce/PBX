@@ -61,11 +61,12 @@ def pcm16_to_ulaw(pcm_data):
             # Add bias
             sample = sample + BIAS
             
-            # Find exponent and mantissa
-            exponent = 7
-            for exp_mask in range(7, -1, -1):
-                if sample & (1 << (exp_mask + 3)):
-                    exponent = exp_mask
+            # Find exponent (position of highest set bit in range)
+            # Start from highest exponent and work down
+            exponent = 0
+            for exp in range(7, -1, -1):
+                if sample & (1 << (exp + 3)):
+                    exponent = exp
                     break
             
             mantissa = (sample >> (exponent + 3)) & 0x0F

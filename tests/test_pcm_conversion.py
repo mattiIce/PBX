@@ -73,7 +73,7 @@ def test_pcm_wav_to_ulaw_with_rtp():
         player.stop()
         
         # The conversion should succeed
-        assert result == True, "Playing PCM WAV file should succeed after conversion to μ-law"
+        assert result is True, "Playing PCM WAV file should succeed after conversion to μ-law"
         
         print(f"✓ Successfully played PCM WAV file with automatic conversion to G.711 μ-law")
         
@@ -134,7 +134,7 @@ def test_ulaw_wav_still_works():
         player.stop()
         
         # Should succeed without conversion
-        assert result == True, "Playing μ-law WAV file should succeed without conversion"
+        assert result is True, "Playing μ-law WAV file should succeed without conversion"
         
         print(f"✓ Successfully played μ-law WAV file (no conversion needed)")
         
