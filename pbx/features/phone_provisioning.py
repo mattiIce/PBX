@@ -478,10 +478,25 @@ P30 = 13   # GMT-8
         
         device = self.get_device(mac_address)
         if not device:
+            normalized = normalize_mac_address(mac_address)
             error_msg = f"Device {mac_address} not registered in provisioning system"
             self.logger.warning(error_msg)
-            self.logger.warning(f"  Normalized MAC: {normalize_mac_address(mac_address)}")
+            self.logger.warning(f"  Normalized MAC: {normalized}")
             self.logger.warning(f"  Registered devices: {list(self.devices.keys())}")
+            
+            # Provide helpful guidance
+            if normalized not in self.devices:
+                self.logger.warning(f"  → Device needs to be registered first")
+                self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
+                self.logger.warning(f"     with JSON: {{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}")
+                
+                # Check if there are similar MACs (might be a format issue)
+                mac_prefix = normalized[:6]  # First 6 chars (OUI)
+                similar_macs = [m for m in self.devices.keys() if m.startswith(mac_prefix)]
+                if similar_macs:
+                    self.logger.warning(f"  → Similar MACs found (same vendor): {similar_macs}")
+                    self.logger.warning(f"     This might be a typo in the MAC address")
+            
             request_log['error'] = error_msg
             self._add_request_log(request_log)
             return None, None
