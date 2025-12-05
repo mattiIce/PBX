@@ -1060,17 +1060,31 @@ async function loadProvisioningDevices() {
     }
 }
 
-function showAddDeviceModal() {
+async function showAddDeviceModal() {
     // Populate extension dropdown
     const extensionSelect = document.getElementById('device-extension');
-    extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+    extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
     
-    currentExtensions.forEach(ext => {
-        const option = document.createElement('option');
-        option.value = ext.number;
-        option.textContent = `${ext.number} - ${ext.name}`;
-        extensionSelect.appendChild(option);
-    });
+    // Fetch extensions if not already loaded
+    try {
+        const response = await fetch(`${API_BASE}/api/extensions`);
+        if (response.ok) {
+            const extensions = await response.json();
+            extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+            
+            extensions.forEach(ext => {
+                const option = document.createElement('option');
+                option.value = ext.number;
+                option.textContent = `${ext.number} - ${ext.name}`;
+                extensionSelect.appendChild(option);
+            });
+        } else {
+            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+        }
+    } catch (error) {
+        console.error('Error loading extensions:', error);
+        extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+    }
     
     // Populate vendor dropdown
     const vendorSelect = document.getElementById('device-vendor');

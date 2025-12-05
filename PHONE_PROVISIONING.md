@@ -6,6 +6,35 @@ The PBX system includes a comprehensive phone provisioning system that allows au
 
 Phone provisioning enables zero-touch or simplified deployment of IP phones by automatically generating and serving configuration files. When a phone boots up, it can request its configuration from the PBX server, eliminating the need for manual configuration of each device.
 
+## Quick Setup
+
+The PBX now provides **two easy ways** to set up phone provisioning:
+
+### 1. Interactive CLI Setup (Recommended for initial setup)
+
+Run the interactive setup wizard that will guide you through the provisioning setup:
+
+```bash
+python scripts/setup_phone_provisioning.py
+```
+
+The wizard will:
+- Ask you for provisioning settings (server IP, port, etc.)
+- Help you add phone devices one by one
+- Register devices via API (if PBX is running) or save to config.yml
+- Show you next steps to complete the setup
+
+### 2. Web Admin Interface (Recommended for ongoing management)
+
+1. Access the admin panel: `http://your-pbx-ip:8080/admin/`
+2. Click on the **"Phone Provisioning"** tab
+3. Enable auto-provisioning and configure settings
+4. Click **"Add Device"** to register phones
+5. Fill in the MAC address, extension, vendor, and model
+6. The phone will automatically download its configuration on boot
+
+Both methods use the same underlying REST API and configuration system.
+
 ## Supported Phone Vendors
 
 The system includes built-in templates for the following vendors and models:
