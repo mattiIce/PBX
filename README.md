@@ -24,6 +24,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Presence System** - Real-time user availability status
 - **SIP Trunk Support** - Connect to external SIP providers
 - **Phone Provisioning** - Auto-configuration for ZIP IP phones (33G, 37G)
+- **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
 - **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
@@ -373,8 +374,10 @@ For issues and questions, please open a GitHub issue.
   - Stores voicemail metadata (caller_id, duration, timestamp, listened status)
   - Stores CDR (Call Detail Records)
   - Stores VIP caller database
+  - Stores registered phone tracking (MAC addresses, IP addresses, extensions)
   - Audio files stored efficiently on file system
   - See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for setup guide
+  - See [PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md) for phone tracking details
 
 ### Future Enhancements
 - [ ] WebRTC support for browser-based calls

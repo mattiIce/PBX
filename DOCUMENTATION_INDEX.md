@@ -26,6 +26,7 @@ Learn about specific features:
 - **[CALL_FLOW.md](CALL_FLOW.md)** - How phone-to-phone calls work through the system
 - **[VOICEMAIL_EMAIL_GUIDE.md](VOICEMAIL_EMAIL_GUIDE.md)** - Voicemail-to-email configuration and usage
 - **[PHONE_PROVISIONING.md](PHONE_PROVISIONING.md)** - Auto-configuration for IP phones
+- **[PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md)** - Automatic tracking of registered phones by MAC/IP address
 
 ## Integration Guides
 
