@@ -10,7 +10,7 @@ import threading
 import os
 import mimetypes
 import traceback
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
 
@@ -296,7 +296,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             return
         
         # Get limit from query parameter if provided
-        from urllib.parse import parse_qs
         parsed = urlparse(self.path)
         query_params = parse_qs(parsed.query)
         limit = int(query_params.get('limit', [50])[0])
