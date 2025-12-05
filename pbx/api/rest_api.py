@@ -75,9 +75,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/provisioning/templates/') and path.endswith('/export'):
                 # /api/provisioning/templates/{vendor}/{model}/export
                 parts = path.split('/')
-                if len(parts) >= 6:
+                if len(parts) >= 7:
                     vendor = parts[4]
-                    model = parts[5].replace('/export', '')
+                    model = parts[5]
                     self._handle_export_template(vendor, model)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)

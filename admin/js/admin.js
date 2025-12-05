@@ -1179,21 +1179,65 @@ function displayTemplatesList(templates) {
         return;
     }
     
-    tbody.innerHTML = templates.map(template => `
-        <tr>
-            <td>${template.vendor}</td>
-            <td>${template.model}</td>
-            <td>${template.is_custom ? '<span class="badge badge-success">Custom</span>' : '<span class="badge badge-info">Built-in</span>'}</td>
-            <td>${(template.size / 1024).toFixed(1)} KB</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="viewTemplate('${template.vendor}', '${template.model}')">👁️ View</button>
-                <button class="btn btn-sm btn-success" onclick="exportTemplate('${template.vendor}', '${template.model}')">💾 Export</button>
-                ${template.is_custom ? 
-                    `<button class="btn btn-sm btn-warning" onclick="editTemplate('${template.vendor}', '${template.model}')">✏️ Edit</button>` : 
-                    ''}
-            </td>
-        </tr>
-    `).join('');
+    // Clear existing content
+    tbody.innerHTML = '';
+    
+    // Create rows safely without XSS vulnerabilities
+    templates.forEach(template => {
+        const row = document.createElement('tr');
+        
+        // Vendor cell
+        const vendorCell = document.createElement('td');
+        vendorCell.textContent = template.vendor;
+        row.appendChild(vendorCell);
+        
+        // Model cell
+        const modelCell = document.createElement('td');
+        modelCell.textContent = template.model;
+        row.appendChild(modelCell);
+        
+        // Type cell
+        const typeCell = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = template.is_custom ? 'badge badge-success' : 'badge badge-info';
+        badge.textContent = template.is_custom ? 'Custom' : 'Built-in';
+        typeCell.appendChild(badge);
+        row.appendChild(typeCell);
+        
+        // Size cell
+        const sizeCell = document.createElement('td');
+        sizeCell.textContent = (template.size / 1024).toFixed(1) + ' KB';
+        row.appendChild(sizeCell);
+        
+        // Actions cell
+        const actionsCell = document.createElement('td');
+        
+        // View button
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn btn-sm btn-primary';
+        viewBtn.textContent = '👁️ View';
+        viewBtn.onclick = () => viewTemplate(template.vendor, template.model);
+        actionsCell.appendChild(viewBtn);
+        
+        // Export button
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-sm btn-success';
+        exportBtn.textContent = '💾 Export';
+        exportBtn.onclick = () => exportTemplate(template.vendor, template.model);
+        actionsCell.appendChild(exportBtn);
+        
+        // Edit button (only for custom templates)
+        if (template.is_custom) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-sm btn-warning';
+            editBtn.textContent = '✏️ Edit';
+            editBtn.onclick = () => editTemplate(template.vendor, template.model);
+            actionsCell.appendChild(editBtn);
+        }
+        
+        row.appendChild(actionsCell);
+        tbody.appendChild(row);
+    });
 }
 
 async function viewTemplate(vendor, model) {
