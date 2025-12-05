@@ -162,12 +162,25 @@ class DatabaseBackend:
         except Exception as e:
             error_msg = str(e).lower()
             # Check if this is a permission error on existing objects
-            if not critical and ("must be owner" in error_msg or "permission denied" in error_msg):
+            # Common patterns across PostgreSQL, MySQL, SQLite
+            permission_errors = [
+                "must be owner",           # PostgreSQL
+                "permission denied",       # PostgreSQL/SQLite
+                "access denied",           # MySQL
+                "insufficient privileges", # Oracle
+            ]
+            already_exists_errors = [
+                "already exists",
+                "duplicate",
+                "unique constraint",
+            ]
+            
+            if not critical and any(pattern in error_msg for pattern in permission_errors):
                 # This is expected when tables/indexes exist but user lacks ownership
                 # Log as debug instead of error to avoid alarming users
                 self.logger.debug(f"Skipping {context}: {e}")
                 return True  # Return True since this is not a critical failure
-            elif "already exists" in error_msg or "duplicate" in error_msg:
+            elif any(pattern in error_msg for pattern in already_exists_errors):
                 # Object already exists - this is fine
                 self.logger.debug(f"{context.capitalize()} already exists: {e}")
                 return True
