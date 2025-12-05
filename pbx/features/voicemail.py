@@ -90,10 +90,15 @@ class VoicemailBox:
         }
 
         self.messages.append(message)
-        self.logger.info(f"Saved voicemail for extension {self.extension_number}")
+        self.logger.info(f"Voicemail saved to file system for extension {self.extension_number}")
+        self.logger.info(f"  Message ID: {message_id}")
+        self.logger.info(f"  Caller ID: {caller_id}")
+        self.logger.info(f"  File path: {file_path}")
+        self.logger.info(f"  Duration: {duration}s" if duration else "  Duration: unknown")
 
         # Save to database if available
         if self.database and self.database.enabled:
+            self.logger.info(f"Saving voicemail metadata to database...")
             try:
                 placeholder = self._get_db_placeholder()
                 query = f"""
@@ -112,12 +117,24 @@ class VoicemailBox:
                     timestamp
                 )
                 
+                self.logger.debug(f"  Database type: {self.database.db_type}")
+                self.logger.debug(f"  Executing INSERT query for message_id: {message_id}")
+                
                 if self.database.execute(query, params):
-                    self.logger.info(f"Saved voicemail to database for extension {self.extension_number}")
+                    self.logger.info(f"✓ Voicemail metadata successfully saved to {self.database.db_type} database")
+                    self.logger.info(f"  Extension: {self.extension_number}")
+                    self.logger.info(f"  Message ID: {message_id}")
+                    self.logger.info(f"  Caller: {caller_id}")
                 else:
-                    self.logger.warning(f"Failed to save voicemail to database for extension {self.extension_number}")
+                    self.logger.warning(f"✗ Failed to save voicemail metadata to database for extension {self.extension_number}")
+                    self.logger.warning(f"  Message ID: {message_id}")
             except Exception as e:
-                self.logger.error(f"Error saving voicemail to database: {e}")
+                self.logger.error(f"✗ Error saving voicemail to database: {e}")
+                self.logger.error(f"  Message ID: {message_id}")
+                self.logger.error(f"  Extension: {self.extension_number}")
+        else:
+            self.logger.warning(f"Database not available - voicemail metadata NOT saved to database")
+            self.logger.warning(f"  Message ID: {message_id} stored as file only")
 
         # Send email notification if enabled
         if self.email_notifier and self.config:
@@ -160,9 +177,11 @@ class VoicemailBox:
         for msg in self.messages:
             if msg['id'] == message_id:
                 msg['listened'] = True
+                self.logger.info(f"Marked voicemail {message_id} as listened")
                 
                 # Update database if available
                 if self.database and self.database.enabled:
+                    self.logger.info(f"Updating voicemail listened status in database...")
                     try:
                         placeholder = self._get_db_placeholder()
                         query = f"""
@@ -171,9 +190,11 @@ class VoicemailBox:
                         WHERE message_id = {placeholder}
                         """
                         self.database.execute(query, (True, message_id))
-                        self.logger.debug(f"Updated voicemail {message_id} as listened in database")
+                        self.logger.info(f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database")
                     except Exception as e:
-                        self.logger.error(f"Error updating voicemail in database: {e}")
+                        self.logger.error(f"✗ Error updating voicemail in database: {e}")
+                else:
+                    self.logger.warning(f"Database not available - listened status not persisted to database")
                 
                 break
 
@@ -189,12 +210,16 @@ class VoicemailBox:
         """
         for i, msg in enumerate(self.messages):
             if msg['id'] == message_id:
+                self.logger.info(f"Deleting voicemail {message_id}...")
+                
                 # Delete file
                 if os.path.exists(msg['file_path']):
                     os.remove(msg['file_path'])
+                    self.logger.info(f"  ✓ Deleted audio file: {msg['file_path']}")
 
                 # Delete from database if available
                 if self.database and self.database.enabled:
+                    self.logger.info(f"Deleting voicemail from database...")
                     try:
                         placeholder = self._get_db_placeholder()
                         query = f"""
@@ -202,13 +227,15 @@ class VoicemailBox:
                         WHERE message_id = {placeholder}
                         """
                         self.database.execute(query, (message_id,))
-                        self.logger.debug(f"Deleted voicemail {message_id} from database")
+                        self.logger.info(f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database")
                     except Exception as e:
-                        self.logger.error(f"Error deleting voicemail from database: {e}")
+                        self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
+                else:
+                    self.logger.warning(f"  Database not available - only file deleted")
 
                 # Remove from list
                 self.messages.pop(i)
-                self.logger.info(f"Deleted voicemail {message_id}")
+                self.logger.info(f"✓ Voicemail {message_id} deleted successfully")
                 return True
         return False
 
@@ -216,6 +243,7 @@ class VoicemailBox:
         """Load existing voicemail messages from database or disk"""
         # Try loading from database first if available
         if self.database and self.database.enabled:
+            self.logger.info(f"Loading voicemail messages from database for extension {self.extension_number}...")
             try:
                 placeholder = self._get_db_placeholder()
                 # Build query safely - placeholder is only '%s' or '?' from internal method
@@ -225,6 +253,7 @@ class VoicemailBox:
                 WHERE extension_number = {}
                 ORDER BY created_at DESC
                 """.format(placeholder)
+                self.logger.debug(f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}")
                 rows = self.database.fetch_all(query, (self.extension_number,))
                 
                 for row in rows:
@@ -261,12 +290,19 @@ class VoicemailBox:
                         'duration': row['duration']
                     }
                     self.messages.append(message)
+                    self.logger.debug(f"  Loaded message: {row['message_id']} from {row['caller_id']}")
                 
-                self.logger.info(f"Loaded {len(self.messages)} voicemail messages from database for extension {self.extension_number}")
+                self.logger.info(f"✓ Successfully loaded {len(self.messages)} voicemail message(s) from {self.database.db_type} database")
+                if len(self.messages) > 0:
+                    unread_count = sum(1 for m in self.messages if not m['listened'])
+                    self.logger.info(f"  Total: {len(self.messages)} messages ({unread_count} unread)")
                 return
             except Exception as e:
-                self.logger.error(f"Error loading voicemail messages from database: {e}")
+                self.logger.error(f"✗ Error loading voicemail messages from database: {e}")
+                self.logger.warning(f"  Falling back to loading from file system")
                 # Fall back to loading from disk
+        else:
+            self.logger.warning(f"Database not available - loading voicemails from file system only")
         
         # Load from disk if database is not available or failed
         if not os.path.exists(self.storage_path):
