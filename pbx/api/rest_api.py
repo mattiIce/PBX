@@ -130,6 +130,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
                 self._handle_get_provisioning_vendors()
+            elif path == '/api/registered-phones':
+                self._handle_get_registered_phones()
+            elif path.startswith('/api/registered-phones/extension/'):
+                # Extract extension: /api/registered-phones/extension/{number}
+                extension = path.split('/')[-1]
+                self._handle_get_registered_phones_by_extension(extension)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -161,6 +167,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 <li>POST /api/provisioning/devices - Register a device</li>
                 <li>DELETE /api/provisioning/devices/{mac} - Unregister a device</li>
                 <li>GET /provision/{mac}.cfg - Get device configuration</li>
+                <li>GET /api/registered-phones - List all registered phones (MAC/IP tracking)</li>
+                <li>GET /api/registered-phones/extension/{number} - List registered phones for extension</li>
             </ul>
         </body>
         </html>
@@ -216,6 +224,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(data)
         else:
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+
+    def _handle_get_registered_phones(self):
+        """Get all registered phones from database"""
+        if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+            try:
+                phones = self.pbx_core.registered_phones_db.list_all()
+                self._send_json(phones)
+            except Exception as e:
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_registered_phones_by_extension(self, extension):
+        """Get registered phones for a specific extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+            try:
+                phones = self.pbx_core.registered_phones_db.get_by_extension(extension)
+                self._send_json(phones)
+            except Exception as e:
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_register_device(self):
         """Register a device for provisioning"""
