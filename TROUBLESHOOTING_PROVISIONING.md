@@ -176,8 +176,9 @@ Shows:
 - Phone still displays old name
 
 **Solution:**
-- See "Quick Fix: Phone Display Name Not Updating" section above
-- Enable `reboot_phones_after_sync: true` in config.yml
+- See "Automatic Phone Management" section above
+- The system automatically handles this - phone reboots are triggered automatically after AD sync
+- No configuration needed!
 
 ### Issue: Device not registered
 

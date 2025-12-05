@@ -2,12 +2,14 @@
 Phone Provisioning Module
 Provides auto-configuration for IP phones (SIP phones)
 
-Note: When extension names are updated (e.g., via AD sync), phones need to
-fetch their configuration again to display the updated names. You can either:
-1. Manually reboot phones (power cycle or via phone menu)
-2. Use the API: POST /api/phones/reboot or POST /api/phones/{extension}/reboot
-3. Enable automatic phone reboot after AD sync in config.yml:
-   integrations.active_directory.reboot_phones_after_sync: true
+Note: The system automatically triggers phone reboots when needed:
+- After device registration (if extension is currently registered)
+- After AD sync updates extension names
+This ensures phones always fetch fresh configuration with updated settings.
+
+Manual reboot options if needed:
+- Power cycle phone or use phone menu
+- API: POST /api/phones/reboot or POST /api/phones/{extension}/reboot
 """
 import os
 from datetime import datetime

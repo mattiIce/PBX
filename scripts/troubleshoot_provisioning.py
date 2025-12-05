@@ -269,51 +269,80 @@ def test_config_download(mac_address, host='localhost', port=8080):
         return False
 
 
+def print_network_recommendations():
+    """Print network connectivity recommendations"""
+    print("\n1. Check Network Connectivity:")
+    print("   - Ensure phones can reach the PBX server IP address")
+    print("   - Test with: ping <pbx-server-ip> from phone's network")
+    print("   - Verify firewall allows access to port 8080")
+
+
+def print_phone_config_recommendations():
+    """Print phone configuration recommendations"""
+    print("\n2. Verify Phone Configuration:")
+    print("   - Check phone's provisioning URL setting")
+    print("   - URL format: http://<pbx-ip>:8080/provision/$mac.cfg")
+    print("   - Some phones use $MA instead of $mac")
+    print("   - Ensure phone is using DHCP Option 66 OR manual URL")
+
+
+def print_device_registration_recommendations():
+    """Print device registration recommendations"""
+    print("\n3. Check Device Registration:")
+    print("   - Use: curl http://localhost:8080/api/provisioning/devices")
+    print("   - Register devices with POST /api/provisioning/devices")
+    print("   - Ensure MAC address format matches (phone may use different format)")
+    print("   - Note: System automatically triggers phone reboot after registration")
+
+
+def print_log_review_recommendations():
+    """Print log review recommendations"""
+    print("\n4. Review Logs:")
+    print("   - Check logs/pbx.log for detailed provisioning logs")
+    print("   - Look for 'Provisioning request received' messages")
+    print("   - Check for errors in config generation")
+
+
+def print_manual_test_recommendations():
+    """Print manual testing recommendations"""
+    print("\n5. Test Manually:")
+    print("   - Get MAC address from phone (usually in phone menu: Status → Network)")
+    print("   - Test URL: curl http://<pbx-ip>:8080/provision/<mac>.cfg")
+    print("   - If successful, issue is with phone configuration")
+    print("   - If failed, issue is with PBX device registration")
+
+
+def print_common_issues():
+    """Print common issues"""
+    print("\n6. Common Issues:")
+    print("   - Wrong MAC address format (use : or - or no separator)")
+    print("   - Phone not on same network as PBX")
+    print("   - Firewall blocking port 8080")
+    print("   - server.external_ip set to 127.0.0.1 (should be actual IP)")
+    print("   - Device not registered in provisioning system")
+    print("   - Wrong vendor/model in device registration")
+
+
+def print_reprovisioning_recommendations():
+    """Print re-provisioning recommendations"""
+    print("\n7. Force Phone to Re-provision:")
+    print("   - System automatically reboots phones after registration and AD sync")
+    print("   - Manual reboot: power cycle or use phone menu")
+    print("   - API: POST /api/phones/<extension>/reboot")
+    print("   - Some phones need factory reset for new provisioning URL")
+
+
 def print_recommendations():
     """Print troubleshooting recommendations"""
     print_section("Troubleshooting Recommendations")
     
-    print("""
-1. Check Network Connectivity:
-   - Ensure phones can reach the PBX server IP address
-   - Test with: ping <pbx-server-ip> from phone's network
-   - Verify firewall allows access to port 8080
-
-2. Verify Phone Configuration:
-   - Check phone's provisioning URL setting
-   - URL format: http://<pbx-ip>:8080/provision/$mac.cfg
-   - Some phones use $MA instead of $mac
-   - Ensure phone is using DHCP Option 66 OR manual URL
-
-3. Check Device Registration:
-   - Use: curl http://localhost:8080/api/provisioning/devices
-   - Register devices with POST /api/provisioning/devices
-   - Ensure MAC address format matches (phone may use different format)
-
-4. Review Logs:
-   - Check logs/pbx.log for detailed provisioning logs
-   - Look for "Provisioning request received" messages
-   - Check for errors in config generation
-
-5. Test Manually:
-   - Get MAC address from phone (usually in phone menu: Status → Network)
-   - Test URL: curl http://<pbx-ip>:8080/provision/<mac>.cfg
-   - If successful, issue is with phone configuration
-   - If failed, issue is with PBX device registration
-
-6. Common Issues:
-   - Wrong MAC address format (use : or - or no separator)
-   - Phone not on same network as PBX
-   - Firewall blocking port 8080
-   - server.external_ip set to 127.0.0.1 (should be actual IP)
-   - Device not registered in provisioning system
-   - Wrong vendor/model in device registration
-
-7. Force Phone to Re-provision:
-   - Reboot phone (power cycle or menu)
-   - Or use: POST /api/phones/<extension>/reboot
-   - Some phones need factory reset for new provisioning URL
-""")
+    print_network_recommendations()
+    print_phone_config_recommendations()
+    print_device_registration_recommendations()
+    print_log_review_recommendations()
+    print_manual_test_recommendations()
+    print_common_issues()
+    print_reprovisioning_recommendations()
 
 
 def main():

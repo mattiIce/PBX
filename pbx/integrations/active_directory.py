@@ -418,9 +418,11 @@ class ActiveDirectoryIntegration:
                 self.logger.info("Auto-provisioning: Automatically triggering phone reboots to update display names from AD sync...")
                 
                 # Find extensions that have provisioned devices and were updated
+                # Use set for O(1) lookup performance with many devices
+                ad_extension_set = set(ad_extension_numbers)
                 devices_to_reboot = []
                 for device in phone_provisioning.get_all_devices():
-                    if device.extension_number in ad_extension_numbers:
+                    if device.extension_number in ad_extension_set:
                         devices_to_reboot.append(device.extension_number)
                 
                 if devices_to_reboot:
