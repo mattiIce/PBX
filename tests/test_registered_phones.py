@@ -196,6 +196,101 @@ def test_list_all_phones():
     print("✓ Listing all phones works")
 
 
+def test_mac_preservation_on_reregistration():
+    """
+    Test that MAC address is preserved when phone re-registers without MAC
+    
+    This addresses the issue where phones may not send MAC in every REGISTER.
+    The system should preserve existing MAC/IP/extension instead of overwriting with None.
+    """
+    print("Testing MAC preservation on re-registration...")
+    
+    # Create database backend
+    config = Config("config.yml")
+    config.config['database'] = {
+        'type': 'sqlite',
+        'path': ':memory:'
+    }
+    
+    db = DatabaseBackend(config)
+    assert db.connect(), "Failed to connect to database"
+    assert db.create_tables(), "Failed to create tables"
+    
+    phones_db = RegisteredPhonesDB(db)
+    
+    # Scenario 1: Initial registration WITH MAC, re-register WITHOUT MAC
+    phones_db.register_phone(
+        extension_number="1005",
+        ip_address="192.168.1.105",
+        mac_address="001565123459",
+        user_agent="Yealink SIP-T46S",
+        contact_uri="<sip:1005@192.168.1.105:5060>"
+    )
+    
+    # Re-register without MAC (common when phone doesn't send it)
+    phones_db.register_phone(
+        extension_number="1005",
+        ip_address="192.168.1.105",
+        mac_address=None,  # Phone doesn't send MAC this time
+        user_agent="Yealink SIP-T46S",
+        contact_uri="<sip:1005@192.168.1.105:5060>"
+    )
+    
+    # Verify MAC is preserved
+    phone = phones_db.get_by_ip("192.168.1.105", "1005")
+    assert phone is not None, "Phone not found"
+    assert phone['mac_address'] == "001565123459", "MAC should be preserved, not replaced with None"
+    
+    # Scenario 2: Re-register with different MAC should update
+    phones_db.register_phone(
+        extension_number="1005",
+        ip_address="192.168.1.105",
+        mac_address="001565999999",  # Different MAC
+        user_agent="Yealink SIP-T46S",
+        contact_uri="<sip:1005@192.168.1.105:5060>"
+    )
+    
+    phone = phones_db.get_by_ip("192.168.1.105", "1005")
+    assert phone['mac_address'] == "001565999999", "MAC should be updated when new MAC provided"
+    
+    print("✓ MAC preservation on re-registration works")
+
+
+def test_ip_preservation_on_reregistration():
+    """
+    Test that IP address is preserved when phone re-registers with MAC only
+    """
+    print("Testing IP preservation on re-registration...")
+    
+    # Create database backend
+    config = Config("config.yml")
+    config.config['database'] = {
+        'type': 'sqlite',
+        'path': ':memory:'
+    }
+    
+    db = DatabaseBackend(config)
+    assert db.connect(), "Failed to connect to database"
+    assert db.create_tables(), "Failed to create tables"
+    
+    phones_db = RegisteredPhonesDB(db)
+    
+    # Initial registration with both MAC and IP
+    phones_db.register_phone(
+        extension_number="1006",
+        ip_address="192.168.1.106",
+        mac_address="00156512345A",
+        user_agent="Polycom VVX 450"
+    )
+    
+    # Verify initial registration
+    phone = phones_db.get_by_mac("00156512345A", "1006")
+    assert phone is not None, "Phone not found"
+    assert phone['ip_address'] == "192.168.1.106", "IP not stored correctly"
+    
+    print("✓ IP preservation on re-registration works")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("Running Registered Phones Tests")
@@ -207,9 +302,11 @@ if __name__ == "__main__":
         test_phone_update_registration()
         test_list_phones_by_extension()
         test_list_all_phones()
+        test_mac_preservation_on_reregistration()
+        test_ip_preservation_on_reregistration()
         
         print("=" * 60)
-        print("Results: 5 passed, 0 failed")
+        print("Results: 7 passed, 0 failed")
         print("=" * 60)
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}")
