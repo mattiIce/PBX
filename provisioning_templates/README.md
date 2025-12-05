@@ -27,7 +27,14 @@ All templates support the following placeholders that are automatically replaced
 
 ## How to Customize Templates
 
-### Option 1: Export Built-in Template
+### Option 1: Export All Templates at Once (Recommended)
+Use the command-line script to export all built-in templates:
+```bash
+python scripts/export_all_templates.py
+```
+This will export all 6 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Grandstream GXP2170) to this directory. You can then edit any template you want to customize.
+
+### Option 2: Export via Admin Panel
 1. Access the admin panel at `http://your-pbx-ip:8080/admin/`
 2. Go to the "Phone Provisioning" tab
 3. Click "View Templates"
@@ -35,14 +42,14 @@ All templates support the following placeholders that are automatically replaced
 5. The template will be saved to this directory
 6. Edit the exported file with your customizations
 
-### Option 2: Create from Scratch
+### Option 3: Create from Scratch
 1. Create a new `.template` file following the naming convention
 2. Add your configuration using vendor-specific syntax
 3. Use placeholders ({{EXTENSION_NUMBER}}, etc.) where dynamic values are needed
 4. Save the file
 5. Restart the PBX or reload templates via API
 
-### Option 3: Use the API
+### Option 4: Use the API
 ```bash
 # View a template
 curl http://your-pbx-ip:8080/api/provisioning/templates/yealink/t46s
