@@ -13,6 +13,7 @@ import traceback
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
+from pbx.features.phone_provisioning import normalize_mac_address
 
 # Admin directory path
 ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
@@ -686,7 +687,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         device = self.pbx_core.phone_provisioning.get_device(mac)
                         if device:
                             # Store/update the IP-MAC-Extension mapping
-                            from pbx.features.phone_provisioning import normalize_mac_address
                             normalized_mac = normalize_mac_address(mac)
                             
                             # Store the mapping in the database
