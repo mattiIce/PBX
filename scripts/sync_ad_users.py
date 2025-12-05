@@ -156,11 +156,37 @@ def main():
     print()
     
     try:
+        # Initialize database backend
+        from pbx.utils.database import DatabaseBackend, ExtensionDB
+        db_config = {
+            'database.type': config.get('database.type', 'sqlite'),
+            'database.host': config.get('database.host', 'localhost'),
+            'database.port': config.get('database.port', 5432),
+            'database.name': config.get('database.name', 'pbx_system'),
+            'database.user': config.get('database.user', 'pbx_user'),
+            'database.password': config.get('database.password', ''),
+            'database.path': config.get('database.path', 'pbx.db'),
+        }
+        
+        database = DatabaseBackend(db_config)
+        extension_db = None
+        
+        if database.connect():
+            database.create_tables()
+            extension_db = ExtensionDB(database)
+            print("✓ Connected to database - extensions will be synced to database")
+        else:
+            print("⚠ Database not available - extensions will be synced to config.yml")
+            database = None  # Set to None if connection failed
+        
+        print()
+        
         # Initialize extension registry for live updates
-        extension_registry = ExtensionRegistry(config)
+        # Check both database exists and is enabled before passing
+        extension_registry = ExtensionRegistry(config, database=database if (database and database.enabled) else None)
         
         # Run sync
-        synced_count = ad.sync_users(extension_registry=extension_registry)
+        synced_count = ad.sync_users(extension_registry=extension_registry, extension_db=extension_db)
         
         print()
         print("=" * 70)

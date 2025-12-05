@@ -51,18 +51,23 @@ class PBXCore:
         # Initialize database backend
         self.database = DatabaseBackend(self.config)
         self.registered_phones_db = None
+        self.extension_db = None
         if self.database.connect():
             self.database.create_tables()
+            from pbx.utils.database import ExtensionDB
             self.registered_phones_db = RegisteredPhonesDB(self.database)
+            self.extension_db = ExtensionDB(self.database)
             self.logger.info(f"Database backend initialized successfully ({self.database.db_type})")
-            self.logger.info("Voicemail metadata and phone registrations will be stored in database")
+            self.logger.info("Extensions, voicemail metadata, and phone registrations will be stored in database")
         else:
             self.logger.warning("Database backend not available - running without database")
+            self.logger.warning("Extensions will be loaded from config.yml only")
             self.logger.warning("Voicemails will be stored ONLY as files (no database metadata)")
             self.logger.warning("Phone registrations will not be persisted")
 
         # Initialize core components
-        self.extension_registry = ExtensionRegistry(self.config)
+        # Pass database to extension registry so it can load extensions from DB
+        self.extension_registry = ExtensionRegistry(self.config, database=self.database if self.database.enabled else None)
         self.call_manager = CallManager()
         self.rtp_relay = RTPRelay(
             self.config.get('server.rtp_port_range_start', 10000),

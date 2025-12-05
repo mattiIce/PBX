@@ -119,6 +119,18 @@ curl -X POST http://localhost:8080/api/admin/sync-ad-users
 
 ## How It Works
 
+### Storage Location
+
+**Starting with this version, extensions are stored in the database** (not config.yml):
+- ✅ Extensions synced from AD are stored in the database
+- ✅ Marked with `ad_synced=true` flag
+- ✅ AD username tracked for reference
+- ✅ Can be viewed/edited in admin web interface
+- ✅ Changes persist across restarts
+- ✅ No need to edit config.yml manually
+
+See [EXTENSION_DATABASE_GUIDE.md](EXTENSION_DATABASE_GUIDE.md) for complete database documentation.
+
 ### User Discovery
 
 The sync process:
@@ -129,7 +141,7 @@ The sync process:
    - `telephoneNumber=*` (has a phone number)
    - Account is enabled (not disabled)
 3. **Extracts attributes**:
-   - `sAMAccountName` → Username
+   - `sAMAccountName` → Username (stored in database)
    - `displayName` → Extension name
    - `mail` → Email address
    - `telephoneNumber` → Extension number
@@ -157,19 +169,22 @@ For new extensions:
 
 **Creating New Extensions:**
 - AD user has `telephoneNumber` but no matching PBX extension
-- Creates extension with random password
-- Sets `ad_synced: true` marker
+- Creates extension in database with random 4-digit password
+- Sets `ad_synced=true` and stores AD username
+- Extension immediately available for SIP registration
 
 **Updating Existing Extensions:**
 - Extension number matches AD user's phone number
-- Updates: display name, email address
+- Updates: display name, email address, AD username
 - Preserves: existing password, registration status
+- Database record updated automatically
 
 **Deactivating Removed Users:**
-- Extension marked as `ad_synced: true`
+- Extension marked as `ad_synced=true` in database
 - User no longer in AD or lost `telephoneNumber`
-- Sets `allow_external: false` (disables external calls)
-- Does NOT delete the extension (preserves call history)
+- Sets `allow_external=false` (disables external calls)
+- Does NOT delete the extension (preserves call history and voicemail)
+- Extension still visible in admin interface with "AD" badge
 
 ## Sync Results
 
@@ -186,6 +201,51 @@ User synchronization complete: 15 total, 3 created, 12 updated, 1 deactivated, 2
 - **Skipped**: Users without required fields (phone number, etc.)
 
 ## Testing
+
+### Verify AD Integration Setup
+
+Before syncing users, test that your AD integration is configured correctly:
+
+```bash
+# Run the comprehensive AD integration test
+python scripts/test_ad_integration.py
+
+# With verbose output for detailed information
+python scripts/test_ad_integration.py --verbose
+```
+
+The test script will check:
+- ✓ Configuration is valid and complete
+- ✓ Required dependencies (ldap3) are installed
+- ✓ Connection to AD server succeeds
+- ✓ Authentication with bind credentials works
+- ✓ User search and discovery functions
+- ✓ User attributes are retrieved correctly
+- ✓ Extensions can be synced without conflicts
+- ✓ Overall integration readiness
+
+**Example output:**
+```
+======================================================================
+Test Summary
+======================================================================
+Total tests: 15
+Passed: 13
+Failed: 0
+Warnings: 2
+
+✓ ALL TESTS PASSED
+
+Active Directory integration is configured correctly!
+
+Next steps:
+  1. Run the sync script:
+     python scripts/sync_ad_users.py
+
+  2. Verify extensions were created in config.yml
+
+  3. Test SIP registration with a synced extension
+```
 
 ### Test with Specific Users
 
@@ -204,8 +264,41 @@ The configuration includes test users: `cmattinson` and `bsautter`
 
 3. **Check created extensions:**
    ```bash
-   grep -A 5 "cmattinson\|bsautter" config.yml
+   # List all extensions from database
+   python scripts/list_extensions_from_db.py
+   
+   # Or list only AD-synced extensions
+   python scripts/list_extensions_from_db.py --ad-only
    ```
+
+4. **View in admin interface:**
+   - Start PBX: `python main.py`
+   - Open: `http://localhost:8080/admin/`
+   - Go to **Extensions** tab
+   - AD-synced extensions show green "AD" badge
+
+### Verify Sync Completed Successfully
+
+After running the sync, verify it worked:
+
+1. **Check the sync output** - Look for success message:
+   ```
+   Synchronization Complete: 15 users synchronized
+   ```
+
+2. **Verify extensions in config.yml:**
+   ```bash
+   # Count synced extensions
+   grep -c "ad_synced: true" config.yml
+   ```
+
+3. **List all synced users:**
+   ```bash
+   # View synced extensions with details
+   grep -B 3 "ad_synced: true" config.yml
+   ```
+
+4. **Test authentication** - Try registering a SIP phone with one of the synced extensions
 
 ### Troubleshooting
 

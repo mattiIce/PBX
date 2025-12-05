@@ -158,12 +158,13 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self, extension_registry=None):
+    def sync_users(self, extension_registry=None, extension_db=None):
         """
         Synchronize users from Active Directory
 
         Args:
             extension_registry: Optional ExtensionRegistry instance for live updates
+            extension_db: Optional ExtensionDB instance for database storage
 
         Returns:
             int: Number of users synchronized
@@ -198,9 +199,16 @@ class ActiveDirectoryIntegration:
             
             self.logger.info(f"Found {len(self.connection.entries)} users in Active Directory")
             
-            # Get PBX config for updating extensions
-            from pbx.utils.config import Config
-            pbx_config = Config(self.config.get('config_file', 'config.yml'))
+            # Use database if available, otherwise fall back to config.yml
+            use_database = extension_db is not None
+            
+            if use_database:
+                self.logger.info("Syncing to database")
+            else:
+                self.logger.info("Syncing to config.yml (database not available)")
+                # Get PBX config for updating extensions
+                from pbx.utils.config import Config
+                pbx_config = Config(self.config.get('config_file', 'config.yml'))
             
             synced_count = 0
             created_count = 0
@@ -235,22 +243,39 @@ class ActiveDirectoryIntegration:
                     
                     ad_extension_numbers.add(extension_number)
                     
-                    # Check if extension exists
-                    existing_ext = pbx_config.get_extension(extension_number)
+                    # Check if extension exists (database or config depending on mode)
+                    if use_database:
+                        existing_ext = extension_db.get(extension_number)
+                    else:
+                        existing_ext = pbx_config.get_extension(extension_number)
                     
                     if existing_ext:
                         # Update existing extension
                         self.logger.debug(f"Updating extension {extension_number} for user {username}")
                         
-                        if pbx_config.update_extension(
-                            number=extension_number,
-                            name=display_name,
-                            email=email
-                            # Don't update password - keep existing
-                        ):
-                            # Mark as AD-synced
-                            existing_ext['ad_synced'] = True
-                            
+                        if use_database:
+                            # Update in database
+                            success = extension_db.update(
+                                number=extension_number,
+                                name=display_name,
+                                email=email,
+                                ad_synced=True,
+                                ad_username=username
+                                # Don't update password - keep existing
+                            )
+                        else:
+                            # Update in config.yml
+                            success = pbx_config.update_extension(
+                                number=extension_number,
+                                name=display_name,
+                                email=email
+                                # Don't update password - keep existing
+                            )
+                            if success:
+                                # Mark as AD-synced in config
+                                existing_ext['ad_synced'] = True
+                        
+                        if success:
                             updated_count += 1
                             synced_count += 1
                             
@@ -272,20 +297,38 @@ class ActiveDirectoryIntegration:
                         
                         # Log extension creation without exposing password
                         self.logger.info(f"Creating extension {extension_number} for user {username}")
-                        # Password can be retrieved from config.yml or reset via admin interface
+                        # Password can be retrieved from database or reset via admin interface
                         
-                        if pbx_config.add_extension(
-                            number=extension_number,
-                            name=display_name,
-                            email=email or '',
-                            password=random_password,
-                            allow_external=True
-                        ):
-                            # Mark newly created extension as AD-synced
-                            new_ext_config = pbx_config.get_extension(extension_number)
-                            if new_ext_config:
-                                new_ext_config['ad_synced'] = True
-                            
+                        if use_database:
+                            # Add to database
+                            # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                            password_hash = random_password
+                            success = extension_db.add(
+                                number=extension_number,
+                                name=display_name,
+                                email=email or None,
+                                password_hash=password_hash,
+                                allow_external=True,
+                                voicemail_pin=None,
+                                ad_synced=True,
+                                ad_username=username
+                            )
+                        else:
+                            # Add to config.yml
+                            success = pbx_config.add_extension(
+                                number=extension_number,
+                                name=display_name,
+                                email=email or '',
+                                password=random_password,
+                                allow_external=True
+                            )
+                            if success:
+                                # Mark newly created extension as AD-synced
+                                new_ext_config = pbx_config.get_extension(extension_number)
+                                if new_ext_config:
+                                    new_ext_config['ad_synced'] = True
+                        
+                        if success:
                             created_count += 1
                             synced_count += 1
                             
@@ -321,7 +364,13 @@ class ActiveDirectoryIntegration:
             deactivated_count = 0
             if self.config.get('integrations.active_directory.deactivate_removed_users', True):
                 self.logger.info("Checking for removed users to deactivate...")
-                all_extensions = pbx_config.get_extensions()
+                
+                if use_database:
+                    # Get all AD-synced extensions from database
+                    all_extensions = extension_db.get_ad_synced()
+                else:
+                    # Get all extensions from config
+                    all_extensions = pbx_config.get_extensions()
                 
                 for ext in all_extensions:
                     ext_number = ext.get('number')
@@ -333,10 +382,18 @@ class ActiveDirectoryIntegration:
                                 self.logger.info(f"Deactivating extension {ext_number} (user removed from AD)")
                                 # Mark as inactive instead of deleting
                                 # Keep ad_synced=True so we know it was previously managed by AD
-                                pbx_config.update_extension(
-                                    number=ext_number,
-                                    allow_external=False
-                                )
+                                
+                                if use_database:
+                                    extension_db.update(
+                                        number=ext_number,
+                                        allow_external=False
+                                    )
+                                else:
+                                    pbx_config.update_extension(
+                                        number=ext_number,
+                                        allow_external=False
+                                    )
+                                
                                 if extension_registry:
                                     registry_ext = extension_registry.get(ext_number)
                                     if registry_ext:
@@ -344,8 +401,9 @@ class ActiveDirectoryIntegration:
                                         # Keep ad_synced=True to maintain history
                                 deactivated_count += 1
             
-            # Save all changes
-            pbx_config.save()
+            # Save all changes (only needed for config.yml mode)
+            if not use_database:
+                pbx_config.save()
             
             self.logger.info(
                 f"User synchronization complete: "

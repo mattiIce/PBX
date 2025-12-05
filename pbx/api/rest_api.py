@@ -198,7 +198,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core:
             extensions = self.pbx_core.extension_registry.get_all()
             data = [{'number': e.number, 'name': e.name, 'email': e.config.get('email'),
-                    'registered': e.registered, 'allow_external': e.config.get('allow_external', True)}
+                    'registered': e.registered, 'allow_external': e.config.get('allow_external', True),
+                    'ad_synced': e.config.get('ad_synced', False), 'voicemail_pin': e.config.get('voicemail_pin')}
                    for e in extensions]
             self._send_json(data)
         else:
@@ -418,6 +419,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             email = body.get('email')
             password = body.get('password')
             allow_external = body.get('allow_external', True)
+            voicemail_pin = body.get('voicemail_pin')
 
             if not all([number, name, password]):
                 self._send_json({'error': 'Missing required fields'}, 400)
@@ -443,8 +445,24 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Extension already exists'}, 400)
                 return
 
-            # Add extension to configuration
-            success = self.pbx_core.config.add_extension(number, name, email, password, allow_external)
+            # Try to add to database first, fall back to config.yml
+            if self.pbx_core.extension_db:
+                # Add to database
+                # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                password_hash = password
+                success = self.pbx_core.extension_db.add(
+                    number=number,
+                    name=name,
+                    password_hash=password_hash,
+                    email=email if email else None,
+                    allow_external=allow_external,
+                    voicemail_pin=voicemail_pin if voicemail_pin else None,
+                    ad_synced=False,
+                    ad_username=None
+                )
+            else:
+                # Fall back to config.yml
+                success = self.pbx_core.config.add_extension(number, name, email, password, allow_external)
 
             if success:
                 # Reload extensions
@@ -467,6 +485,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             email = body.get('email')
             password = body.get('password')  # Optional
             allow_external = body.get('allow_external')
+            voicemail_pin = body.get('voicemail_pin')
 
             # Check if extension exists
             extension = self.pbx_core.extension_registry.get(number)
@@ -484,8 +503,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Invalid email format'}, 400)
                 return
 
-            # Update extension in configuration
-            success = self.pbx_core.config.update_extension(number, name, email, password, allow_external)
+            # Try to update in database first, fall back to config.yml
+            if self.pbx_core.extension_db:
+                # Update in database
+                # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                password_hash = password if password else None
+                success = self.pbx_core.extension_db.update(
+                    number=number,
+                    name=name,
+                    email=email,
+                    password_hash=password_hash,
+                    allow_external=allow_external,
+                    voicemail_pin=voicemail_pin
+                )
+            else:
+                # Fall back to config.yml
+                success = self.pbx_core.config.update_extension(number, name, email, password, allow_external)
 
             if success:
                 # Reload extensions
@@ -509,8 +542,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Extension not found'}, 404)
                 return
 
-            # Delete extension from configuration
-            success = self.pbx_core.config.delete_extension(number)
+            # Try to delete from database first, fall back to config.yml
+            if self.pbx_core.extension_db:
+                # Delete from database
+                success = self.pbx_core.extension_db.delete(number)
+            else:
+                # Fall back to config.yml
+                success = self.pbx_core.config.delete_extension(number)
 
             if success:
                 # Reload extensions
