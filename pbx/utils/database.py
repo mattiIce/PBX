@@ -2,6 +2,7 @@
 Database backend for PBX features
 Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 """
+import os
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
 from datetime import datetime
@@ -56,12 +57,15 @@ class DatabaseBackend:
         Returns:
             bool: True if connected successfully
         """
+        self.logger.info(f"Initiating database connection (type: {self.db_type})...")
         try:
             if self.db_type == 'postgresql':
                 return self._connect_postgresql()
             elif self.db_type == 'sqlite':
                 return self._connect_sqlite()
-            return False
+            else:
+                self.logger.error(f"Unsupported database type: {self.db_type}")
+                return False
         except Exception as e:
             self.logger.error(f"Database connection error: {e}")
             return False
@@ -69,37 +73,57 @@ class DatabaseBackend:
     def _connect_postgresql(self) -> bool:
         """Connect to PostgreSQL database"""
         if not POSTGRES_AVAILABLE:
+            self.logger.error("PostgreSQL driver (psycopg2) not available")
             return False
+
+        host = self.config.get('database.host', 'localhost')
+        port = self.config.get('database.port', 5432)
+        database = self.config.get('database.name', 'pbx')
+        user = self.config.get('database.user', 'pbx')
+        
+        self.logger.info(f"Connecting to PostgreSQL database...")
+        self.logger.info(f"  Host: {host}")
+        self.logger.info(f"  Port: {port}")
+        self.logger.info(f"  Database: {database}")
+        self.logger.info(f"  User: {user}")
 
         try:
             self.connection = psycopg2.connect(
-                host=self.config.get('database.host', 'localhost'),
-                port=self.config.get('database.port', 5432),
-                database=self.config.get('database.name', 'pbx'),
-                user=self.config.get('database.user', 'pbx'),
+                host=host,
+                port=port,
+                database=database,
+                user=user,
                 password=self.config.get('database.password', '')
             )
             self.enabled = True
-            self.logger.info("Connected to PostgreSQL database")
+            self.logger.info("✓ Successfully connected to PostgreSQL database")
+            self.logger.info(f"  Connection established: {host}:{port}/{database}")
             return True
         except Exception as e:
-            self.logger.error(f"PostgreSQL connection failed: {e}")
+            self.logger.error(f"✗ PostgreSQL connection failed: {e}")
+            self.logger.warning("Voicemail and other data will be stored ONLY in file system")
+            self.logger.warning("To fix: Ensure PostgreSQL is running and accessible, or run 'python scripts/verify_database.py' for diagnostics")
             return False
 
     def _connect_sqlite(self) -> bool:
         """Connect to SQLite database"""
         if not SQLITE_AVAILABLE:
+            self.logger.error("SQLite not available in this Python installation")
             return False
 
+        db_path = self.config.get('database.path', 'pbx.db')
+        self.logger.info(f"Connecting to SQLite database...")
+        self.logger.info(f"  Database file: {db_path}")
+
         try:
-            db_path = self.config.get('database.path', 'pbx.db')
             self.connection = sqlite3.connect(db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
             self.enabled = True
-            self.logger.info(f"Connected to SQLite database: {db_path}")
+            self.logger.info(f"✓ Successfully connected to SQLite database")
+            self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
             return True
         except Exception as e:
-            self.logger.error(f"SQLite connection failed: {e}")
+            self.logger.error(f"✗ SQLite connection failed: {e}")
             return False
 
     def disconnect(self):
