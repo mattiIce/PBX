@@ -301,7 +301,8 @@ class ActiveDirectoryIntegration:
                         
                         if use_database:
                             # Add to database
-                            password_hash = random_password  # TODO: Implement proper password hashing
+                            # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                            password_hash = random_password
                             success = extension_db.add(
                                 number=extension_number,
                                 name=display_name,

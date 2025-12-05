@@ -398,6 +398,7 @@ class ADIntegrationTester:
         print("     result = ad.authenticate_user('username', 'password')")
         print("     print(result)")
         print()
+        print("Note: Extensions are stored in database. Use scripts/list_extensions_from_db.py to view.")
         
         return True
     

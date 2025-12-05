@@ -125,19 +125,26 @@ async function loadExtensions() {
             return;
         }
         
+        // Helper function to escape HTML to prevent XSS
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
         tbody.innerHTML = extensions.map(ext => `
             <tr>
-                <td><strong>${ext.number}</strong>${ext.ad_synced ? ' <span class="ad-badge" title="Synced from Active Directory">AD</span>' : ''}</td>
-                <td>${ext.name}</td>
-                <td>${ext.email || 'Not set'}</td>
+                <td><strong>${escapeHtml(ext.number)}</strong>${ext.ad_synced ? ' <span class="ad-badge" title="Synced from Active Directory">AD</span>' : ''}</td>
+                <td>${escapeHtml(ext.name)}</td>
+                <td>${ext.email ? escapeHtml(ext.email) : 'Not set'}</td>
                 <td class="${ext.registered ? 'status-online' : 'status-offline'}">
                     ${ext.registered ? '● Online' : '○ Offline'}
                 </td>
                 <td>${ext.allow_external ? 'Yes' : 'No'}</td>
                 <td>
-                    <button class="btn btn-primary" onclick="editExtension('${ext.number}')">✏️ Edit</button>
-                    ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${ext.number}')">🔄 Reboot</button>` : ''}
-                    <button class="btn btn-danger" onclick="deleteExtension('${ext.number}')">🗑️ Delete</button>
+                    <button class="btn btn-primary" onclick="editExtension('${escapeHtml(ext.number)}')">✏️ Edit</button>
+                    ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${escapeHtml(ext.number)}')">🔄 Reboot</button>` : ''}
+                    <button class="btn btn-danger" onclick="deleteExtension('${escapeHtml(ext.number)}')">🗑️ Delete</button>
                 </td>
             </tr>
         `).join('');

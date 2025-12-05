@@ -177,11 +177,13 @@ def main():
             print("✓ Connected to database - extensions will be synced to database")
         else:
             print("⚠ Database not available - extensions will be synced to config.yml")
+            database = None  # Set to None if connection failed
         
         print()
         
         # Initialize extension registry for live updates
-        extension_registry = ExtensionRegistry(config, database=database if database.enabled else None)
+        # Check both database exists and is enabled before passing
+        extension_registry = ExtensionRegistry(config, database=database if (database and database.enabled) else None)
         
         # Run sync
         synced_count = ad.sync_users(extension_registry=extension_registry, extension_db=extension_db)

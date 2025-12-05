@@ -131,9 +131,10 @@ def main():
         print(f"  AD synced: {ad_synced}")
         
         if not args.dry_run:
-            # Hash the password (we'll store the plain password for now as hash since config.yml has plain passwords)
-            # In production, you'd use proper password hashing
-            password_hash = password  # For now, store as-is (will be hashed by authentication system)
+            # Note: Passwords from config.yml are stored as-is during migration
+            # The authentication system handles password verification
+            # TODO: Implement proper password hashing (bcrypt/PBKDF2) before production deployment
+            password_hash = password
             
             try:
                 success = ext_db.add(

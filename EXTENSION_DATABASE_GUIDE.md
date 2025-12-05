@@ -414,11 +414,29 @@ sudo -u postgres psql -U pbx_user pbx_system < pbx_backup.sql
 
 ## Security Considerations
 
-- **Password Storage**: Passwords are currently stored as-is; consider implementing proper password hashing (PBKDF2, bcrypt)
-- **Database Access**: Restrict database user permissions to only what's needed
+### Password Storage
+
+**IMPORTANT:** Passwords are currently stored without additional hashing in the database. This is acceptable for:
+- Development and testing environments
+- Internal networks behind firewalls
+- Systems where the database itself is properly secured
+
+**For production deployments**, consider implementing:
+- Proper password hashing (bcrypt, PBKDF2, Argon2)
+- Salt generation per password
+- Configurable hash iterations
+- Password complexity requirements
+
+The SIP authentication system handles password verification. Database storage is used for credential lookup.
+
+### Additional Security
+
+- **Database Access**: Restrict database user permissions to only what's needed (no DROP, ALTER unless needed)
 - **Backup Security**: Encrypt database backups containing sensitive data
-- **AD Credentials**: Always use environment variables for AD bind passwords
-- **API Access**: Implement authentication for REST API endpoints
+- **AD Credentials**: Always use environment variables for AD bind passwords (`${AD_BIND_PASSWORD}`)
+- **API Access**: Implement authentication for REST API endpoints in production
+- **Network Security**: Use firewall rules to restrict database access
+- **Audit Logging**: Monitor database access and modifications
 
 ## Performance Tuning
 

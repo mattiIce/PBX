@@ -448,7 +448,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Try to add to database first, fall back to config.yml
             if self.pbx_core.extension_db:
                 # Add to database
-                password_hash = password  # TODO: Implement proper password hashing
+                # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                password_hash = password
                 success = self.pbx_core.extension_db.add(
                     number=number,
                     name=name,
@@ -505,7 +506,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Try to update in database first, fall back to config.yml
             if self.pbx_core.extension_db:
                 # Update in database
-                password_hash = password if password else None  # TODO: Implement proper password hashing
+                # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                password_hash = password if password else None
                 success = self.pbx_core.extension_db.update(
                     number=number,
                     name=name,
