@@ -232,18 +232,8 @@ class PBXCore:
                         
                         # Ensure extension is loaded in registry (if not already)
                         if not self.extension_registry.get(extension_number):
-                            from pbx.features.extensions import Extension
-                            # Create Extension object from database data
-                            ext_config = {
-                                'number': db_extension['number'],
-                                'name': db_extension['name'],
-                                'email': db_extension.get('email', ''),
-                                'password_hash': db_extension.get('password_hash', ''),
-                                'allow_external': db_extension.get('allow_external', True),
-                                'voicemail_pin': db_extension.get('voicemail_pin', ''),
-                                'ad_synced': db_extension.get('ad_synced', False),
-                            }
-                            extension_obj = Extension(extension_number, db_extension['name'], ext_config)
+                            # Create Extension object from database data using helper method
+                            extension_obj = ExtensionRegistry.create_extension_from_db(db_extension)
                             self.extension_registry.extensions[extension_number] = extension_obj
                             self.logger.debug(f"Loaded extension {extension_number} into registry from database")
                 except Exception as e:

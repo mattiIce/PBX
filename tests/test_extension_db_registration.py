@@ -19,9 +19,6 @@ def test_database_extension_registration():
     print("Testing database-based extension registration...")
     
     # Create PBX with in-memory database
-    from pbx.utils.config import Config
-    from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB, ExtensionDB
-    
     config = Config("config.yml")
     config.config['database'] = {
         'type': 'sqlite',
