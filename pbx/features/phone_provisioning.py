@@ -166,6 +166,8 @@ account.1.sip_server.1.expires = 600
 account.1.sip_server_host.legacy = {{SIP_SERVER}}
 
 # Voicemail Configuration
+# Note: Using *EXTENSION for direct voicemail access (e.g., *1501)
+# Exported config shows "voice.mail" but that's phone's default, not our PBX pattern
 voice_mail.number.1 = *{{EXTENSION_NUMBER}}
 
 # Account Features
@@ -310,6 +312,8 @@ rtpmap = 18
 ;;============================================================================
 ;; VOICEMAIL
 ;;============================================================================
+; Note: Using *EXTENSION for direct voicemail access (e.g., *1501)
+; This matches the PBX dialplan pattern for voicemail access
 [ Message ]
 VoiceNumber0 = *{{EXTENSION_NUMBER}}
 """
