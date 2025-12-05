@@ -849,6 +849,11 @@ P30 = 13   # GMT-8
         Returns:
             tuple: (success, message, filepath)
         """
+        # Validate vendor and model to prevent path traversal
+        import re
+        if not re.match(r'^[a-z0-9_]+$', vendor.lower()) or not re.match(r'^[a-z0-9_]+$', model.lower()):
+            return False, "Invalid vendor or model name. Only alphanumeric and underscore allowed.", None
+        
         template = self.get_template(vendor, model)
         if not template:
             return False, f"Template not found for {vendor} {model}", None
@@ -890,6 +895,11 @@ P30 = 13   # GMT-8
         Returns:
             tuple: (success, message)
         """
+        # Validate vendor and model to prevent path traversal
+        import re
+        if not re.match(r'^[a-z0-9_]+$', vendor.lower()) or not re.match(r'^[a-z0-9_]+$', model.lower()):
+            return False, "Invalid vendor or model name. Only alphanumeric and underscore allowed."
+        
         # Get custom templates directory
         custom_dir = self.config.get('provisioning.custom_templates_dir', 'provisioning_templates')
         

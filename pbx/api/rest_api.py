@@ -78,7 +78,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if len(parts) >= 7:
                     vendor = parts[4]
                     model = parts[5]
-                    self._handle_export_template(vendor, model)
+                    # Validate vendor and model to prevent path traversal
+                    import re
+                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                        self._handle_export_template(vendor, model)
+                    else:
+                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/provisioning/reload-templates':
@@ -114,7 +119,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if len(parts) >= 6:
                     vendor = parts[4]
                     model = parts[5]
-                    self._handle_update_template(vendor, model)
+                    # Validate vendor and model to prevent path traversal
+                    import re
+                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                        self._handle_update_template(vendor, model)
+                    else:
+                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path.startswith('/api/extensions/'):
@@ -177,7 +187,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if len(parts) >= 6:
                     vendor = parts[4]
                     model = parts[5]
-                    self._handle_get_template_content(vendor, model)
+                    # Validate vendor and model to prevent path traversal
+                    import re
+                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                        self._handle_get_template_content(vendor, model)
+                    else:
+                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/provisioning/diagnostics':

@@ -1305,14 +1305,28 @@ function showTemplateViewModal(vendor, model, content, placeholders, editable) {
     textarea.value = content;
     textarea.readOnly = !editable;
     
-    // Display available placeholders
-    placeholdersDiv.innerHTML = `
-        <strong>Available Placeholders:</strong>
-        <ul>
-            ${placeholders.map(p => `<li><code>${p}</code></li>`).join('')}
-        </ul>
-        <p><small>These placeholders will be automatically replaced with device-specific information when a phone requests configuration.</small></p>
-    `;
+    // Display available placeholders safely
+    placeholdersDiv.innerHTML = ''; // Clear first
+    
+    const strong = document.createElement('strong');
+    strong.textContent = 'Available Placeholders:';
+    placeholdersDiv.appendChild(strong);
+    
+    const ul = document.createElement('ul');
+    placeholders.forEach(p => {
+        const li = document.createElement('li');
+        const code = document.createElement('code');
+        code.textContent = p;
+        li.appendChild(code);
+        ul.appendChild(li);
+    });
+    placeholdersDiv.appendChild(ul);
+    
+    const p = document.createElement('p');
+    const small = document.createElement('small');
+    small.textContent = 'These placeholders will be automatically replaced with device-specific information when a phone requests configuration.';
+    p.appendChild(small);
+    placeholdersDiv.appendChild(p);
     
     // Set up save button
     saveBtn.style.display = editable ? 'inline-block' : 'none';
