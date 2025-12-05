@@ -461,6 +461,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.info(f"✓ Provisioning config delivered: {len(config_content)} bytes to {request_info['ip']}")
             else:
                 logger.warning(f"✗ Provisioning failed for MAC {mac} from {request_info['ip']}")
+                logger.warning(f"  See detailed error above for troubleshooting guidance")
                 self._send_json({'error': 'Device or template not found'}, 404)
         except Exception as e:
             logger.error(f"Error handling provisioning request: {e}")
