@@ -70,6 +70,33 @@ class ExtensionRegistry:
         # Load extensions (from database if available, otherwise from config)
         self._load_extensions()
 
+    @staticmethod
+    def create_extension_from_db(db_extension):
+        """
+        Create an Extension object from database data
+        
+        Args:
+            db_extension: Dictionary containing extension data from database
+            
+        Returns:
+            Extension object
+        """
+        number = db_extension['number']
+        name = db_extension['name']
+        
+        # Create config dict from database data
+        ext_config = {
+            'number': number,
+            'name': name,
+            'email': db_extension.get('email', ''),
+            'password_hash': db_extension.get('password_hash', ''),
+            'allow_external': db_extension.get('allow_external', True),
+            'voicemail_pin': db_extension.get('voicemail_pin', ''),
+            'ad_synced': db_extension.get('ad_synced', False),
+        }
+        
+        return Extension(number, name, ext_config)
+
     def _load_extensions(self):
         """Load extensions from database or configuration"""
         # Try to load from database first
@@ -85,18 +112,8 @@ class ExtensionRegistry:
                         number = ext_data['number']
                         name = ext_data['name']
                         
-                        # Create config dict from database data
-                        ext_config = {
-                            'number': number,
-                            'name': name,
-                            'email': ext_data.get('email', ''),
-                            'password': ext_data.get('password_hash', ''),  # Will be used for auth
-                            'allow_external': ext_data.get('allow_external', True),
-                            'voicemail_pin': ext_data.get('voicemail_pin', ''),
-                            'ad_synced': ext_data.get('ad_synced', False),
-                        }
-                        
-                        extension = Extension(number, name, ext_config)
+                        # Create Extension object from database data using helper method
+                        extension = self.create_extension_from_db(ext_data)
                         self.extensions[number] = extension
                         
                         ad_marker = " [AD]" if ext_data.get('ad_synced') else ""
