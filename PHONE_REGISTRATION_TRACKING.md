@@ -24,6 +24,20 @@ The system automatically tracks phone registrations without any manual intervent
 3. Registration information is stored in the `registered_phones` database table
 4. On re-registration, existing records are updated with the latest information
 
+### Automatic Cleanup on Boot
+
+To prevent stale or outdated registrations from persisting:
+
+1. **All phone registrations are cleared when the PBX server boots**
+2. This ensures the table only contains currently active registrations
+3. Phones automatically re-register when they reconnect (typically every 30-60 seconds)
+4. Old/outdated registrations (e.g., phones that have been reassigned) are removed
+
+**Why this matters:**
+- Prevents confusion from old registration data (e.g., extension 1001 showing even though it's now 1234)
+- Ensures the registered phones list accurately reflects the current state
+- Phones will re-register automatically - no manual intervention needed
+
 ### MAC Address Extraction
 
 The system attempts to extract MAC addresses from:
