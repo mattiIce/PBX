@@ -571,6 +571,12 @@ class RegisteredPhonesDB:
         
         if existing:
             # Update existing registration
+            # Preserve existing values if new values are None (device didn't send them)
+            updated_mac = mac_address if mac_address is not None else existing.get('mac_address')
+            updated_ip = ip_address if ip_address is not None else existing.get('ip_address')
+            updated_user_agent = user_agent if user_agent is not None else existing.get('user_agent')
+            updated_contact_uri = contact_uri if contact_uri is not None else existing.get('contact_uri')
+            
             query = """
             UPDATE registered_phones 
             SET mac_address = %s, ip_address = %s, user_agent = %s, 
@@ -582,7 +588,7 @@ class RegisteredPhonesDB:
                 contact_uri = ?, last_registered = ?
             WHERE id = ?
             """
-            params = (mac_address, ip_address, user_agent, contact_uri, 
+            params = (updated_mac, updated_ip, updated_user_agent, updated_contact_uri, 
                      datetime.now(), existing['id'])
             return self.db.execute(query, params)
         else:
