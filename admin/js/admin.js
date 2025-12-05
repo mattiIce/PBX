@@ -190,9 +190,14 @@ async function syncADUsers() {
             method: 'POST'
         });
         
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
-        if (response.ok && data.success) {
+        if (data.success) {
             showNotification(data.message || `Successfully synced ${data.synced_count} users`, 'success');
             // Refresh both AD status and extensions
             loadADStatus();
@@ -217,6 +222,9 @@ async function loadExtensions() {
     
     try {
         const response = await fetch(`${API_BASE}/api/extensions`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const extensions = await response.json();
         currentExtensions = extensions;
         

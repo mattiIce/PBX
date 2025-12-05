@@ -112,7 +112,6 @@ class PBXCore:
             ad_config = {
                 'integrations.active_directory.enabled': self.config.get('integrations.active_directory.enabled'),
                 'integrations.active_directory.server': self.config.get('integrations.active_directory.server'),
-                'integrations.active_directory.ldap_server': self.config.get('integrations.active_directory.server'),
                 'integrations.active_directory.base_dn': self.config.get('integrations.active_directory.base_dn'),
                 'integrations.active_directory.bind_dn': self.config.get('integrations.active_directory.bind_dn'),
                 'integrations.active_directory.bind_password': self.config.get('integrations.active_directory.bind_password'),
@@ -1457,7 +1456,7 @@ class PBXCore:
             )
             
             # Reload extensions after sync
-            self.extension_registry.reload_extensions()
+            self.extension_registry.reload()
             
             return {
                 'success': True,

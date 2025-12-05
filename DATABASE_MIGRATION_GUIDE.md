@@ -129,7 +129,7 @@ This will:
 ### Managing Extensions
 
 **Via Admin Web Interface:**
-1. Open http://localhost:8080/admin/
+1. Open http://YOUR_SERVER_IP:8080/admin/ (replace YOUR_SERVER_IP with your actual server address, e.g., localhost, 192.168.1.100)
 2. Go to "Extensions" tab
 3. Use "Add Extension" button to create new extensions
 4. Click "Edit" or "Delete" on existing extensions
@@ -181,7 +181,7 @@ python scripts/sync_ad_users.py
 ```
 
 Or use the admin web interface:
-1. Open http://localhost:8080/admin/
+1. Open http://YOUR_SERVER_IP:8080/admin/ (replace YOUR_SERVER_IP with your server address)
 2. Go to "Dashboard" tab
 3. Click "Sync Users from AD" button
 
