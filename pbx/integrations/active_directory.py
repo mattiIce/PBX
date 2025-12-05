@@ -412,36 +412,41 @@ class ActiveDirectoryIntegration:
                 f"{deactivated_count} deactivated, {skipped_count} skipped"
             )
             
-            # Trigger phone reboots if provisioning is available and users were updated
+            # Automatically trigger phone reboots if provisioning is available and users were updated
             # This ensures phones fetch fresh config with updated display names from AD
             if phone_provisioning and (updated_count > 0 or created_count > 0):
-                self.logger.info("Triggering phone reboots to update display names from AD sync...")
-                reboot_config = self.config.get('integrations.active_directory.reboot_phones_after_sync', False)
+                self.logger.info("Auto-provisioning: Automatically triggering phone reboots to update display names from AD sync...")
                 
-                if reboot_config:
-                    # Find extensions that have provisioned devices and were updated
-                    devices_to_reboot = []
-                    for device in phone_provisioning.get_all_devices():
-                        if device.extension_number in ad_extension_numbers:
-                            devices_to_reboot.append(device.extension_number)
-                    
-                    if devices_to_reboot:
-                        self.logger.info(f"Rebooting {len(devices_to_reboot)} phones to apply AD name changes")
-                        # Note: This requires SIP server to be available
-                        # The actual reboot will be triggered via SIP NOTIFY in the API handler
-                    else:
-                        self.logger.info("No provisioned devices found for updated extensions")
+                # Find extensions that have provisioned devices and were updated
+                devices_to_reboot = []
+                for device in phone_provisioning.get_all_devices():
+                    if device.extension_number in ad_extension_numbers:
+                        devices_to_reboot.append(device.extension_number)
+                
+                if devices_to_reboot:
+                    self.logger.info(f"Auto-provisioning: Will reboot {len(devices_to_reboot)} phones to apply AD name changes")
+                    # Store the extensions to reboot for later trigger
+                    # This will be picked up by the sync caller to trigger actual reboots
+                    return {
+                        'synced_count': synced_count,
+                        'extensions_to_reboot': devices_to_reboot
+                    }
                 else:
-                    self.logger.info("Automatic phone reboot is disabled. Set 'integrations.active_directory.reboot_phones_after_sync: true' to enable")
-                    self.logger.info("To manually update phone display names, reboot phones or call: POST /api/phones/reboot")
+                    self.logger.info("Auto-provisioning: No provisioned devices found for updated extensions")
             
-            return synced_count
+            return {
+                'synced_count': synced_count,
+                'extensions_to_reboot': []
+            }
             
         except Exception as e:
             self.logger.error(f"Error synchronizing users from Active Directory: {e}")
             import traceback
             traceback.print_exc()
-            return 0
+            return {
+                'synced_count': 0,
+                'extensions_to_reboot': []
+            }
 
     def get_user_groups(self, username: str):
         """

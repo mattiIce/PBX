@@ -164,9 +164,13 @@ Response:
     "vendor": "zultys",
     "model": "zip33g",
     "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg"
-  }
+  },
+  "reboot_triggered": true,
+  "message": "Device registered and phone reboot triggered automatically"
 }
 ```
+
+**Note:** The system automatically triggers a phone reboot (via SIP NOTIFY) if the extension is currently registered. This ensures the phone immediately fetches its fresh configuration without manual intervention.
 
 ### Unregister a Device
 
@@ -364,13 +368,18 @@ This is typically not a provisioning issue. Check:
 
 ### Phone Display Name Not Updating from Active Directory
 
-When Active Directory synchronization updates user names, phones need to fetch their configuration again to display the updated names.
+**Good News**: As of this version, phone reboots are **automatically triggered** after Active Directory synchronization updates user names. No manual intervention or configuration required!
 
-**Problem**: After AD sync, phone still shows old display name instead of AD user's name.
+**How It Works**:
+- When AD sync updates extension names, the system automatically detects which phones need updating
+- PBX sends SIP NOTIFY messages to trigger phone reboots
+- Phones reboot and fetch fresh configuration with updated display names
+- All happens automatically during the AD sync process
 
-**Solution Options**:
+**Manual Options** (if needed):
+If you need to manually trigger a reboot:
 
-1. **Manual Phone Reboot** (Immediate fix):
+1. **Via API**:
    ```bash
    # Reboot all phones
    curl -X POST http://192.168.1.14:8080/api/phones/reboot
@@ -379,28 +388,10 @@ When Active Directory synchronization updates user names, phones need to fetch t
    curl -X POST http://192.168.1.14:8080/api/phones/1001/reboot
    ```
 
-2. **Enable Automatic Reboot After AD Sync** (Recommended):
-   
-   Add to `config.yml`:
-   ```yaml
-   integrations:
-     active_directory:
-       enabled: true
-       reboot_phones_after_sync: true  # Add this line
-   ```
-   
-   With this setting, phones will automatically reboot after AD sync to pick up name changes.
-
-3. **Manual Phone Reboot via Phone Menu**:
+2. **Via Phone Menu**:
    - Access phone menu (varies by vendor)
    - Navigate to System → Reboot
    - Phone will fetch fresh config on startup
-
-**How It Works**:
-- Extension names are stored in the PBX and used in phone config templates
-- When AD sync updates a name, it updates the extension data
-- Phones only fetch config on boot or when triggered
-- Rebooting the phone causes it to request fresh config with updated display name
 
 **Verify Name Update**:
 ```bash

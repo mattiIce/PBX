@@ -1,54 +1,56 @@
 # Phone Auto-Provisioning Troubleshooting Guide
 
-## Quick Fix: Phone Display Name Not Updating from Active Directory
+## Automatic Phone Management
 
-If you've fixed the provisioning URL issue but the phone still shows the old name instead of the AD user's name, here's why and how to fix it:
+**Good News**: Starting with this version, the PBX automatically handles phone reboots during provisioning operations. No manual intervention required!
 
-### The Problem
+### Automatic Behavior
 
-When Active Directory sync updates user names in the PBX, the phones don't automatically see these changes. This is because:
+1. **Device Registration**: When you register a new device via the API, the system automatically triggers a phone reboot if the extension is currently registered
+2. **AD Sync Updates**: When Active Directory sync updates user names, the system automatically reboots affected phones to apply the changes
+3. **Zero Configuration**: These behaviors are built-in and always active - no configuration needed
 
-1. Phones only fetch their configuration when they boot up
-2. AD sync updates the extension names in the PBX database/config
-3. But phones keep using their cached configuration until they reboot
+### How It Works
 
-### Solution 1: Manual Phone Reboot (Immediate Fix)
+**After Device Registration:**
+```bash
+curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
+  -H "Content-Type: application/json" \
+  -d '{"mac_address":"00:15:65:12:34:56","extension_number":"1001","vendor":"yealink","model":"t46s"}'
 
-Reboot the phone(s) to force them to fetch fresh configuration with updated names:
+# Response includes:
+# "reboot_triggered": true
+# "message": "Device registered and phone reboot triggered automatically"
+```
+
+The phone will:
+1. Receive SIP NOTIFY from PBX
+2. Automatically reboot
+3. Fetch fresh configuration on startup
+4. Display correct extension name and settings
+
+**After AD Sync:**
+```bash
+curl -X POST http://your-pbx-ip:8080/api/integrations/ad/sync
+
+# System automatically:
+# 1. Updates extension names from AD
+# 2. Identifies phones needing updates
+# 3. Sends SIP NOTIFY to trigger reboots
+# 4. Phones fetch fresh config with updated names
+```
+
+### Manual Options (if needed)
+
+While automatic reboots handle most cases, you can still manually trigger reboots:
 
 ```bash
-# Reboot all phones at once
+# Reboot all phones
 curl -X POST http://your-pbx-ip:8080/api/phones/reboot
 
-# Or reboot a specific extension
+# Or reboot specific extension
 curl -X POST http://your-pbx-ip:8080/api/phones/1001/reboot
 ```
-
-You can also reboot phones manually via their physical interface (varies by phone model).
-
-### Solution 2: Enable Automatic Reboot After AD Sync (Recommended)
-
-To avoid this issue in the future, enable automatic phone reboots after AD sync:
-
-**Edit `config.yml`:**
-
-```yaml
-integrations:
-  active_directory:
-    enabled: true
-    server: ldaps://your-ad-server:636
-    base_dn: DC=company,DC=com
-    # ... other AD settings ...
-    
-    # Add this line to enable automatic phone reboot after AD sync
-    reboot_phones_after_sync: true
-```
-
-With this setting enabled:
-- When AD sync runs (manually or automatically)
-- And user names are updated
-- PBX will automatically send SIP NOTIFY to phones
-- Phones will reboot and fetch fresh config with updated display names
 
 ### Verify the Fix
 

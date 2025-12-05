@@ -356,6 +356,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_register_device(self):
         """Register a device for provisioning"""
+        logger = get_logger()
+        
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
@@ -374,10 +376,39 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             device = self.pbx_core.phone_provisioning.register_device(
                 mac, extension, vendor, model
             )
-            self._send_json({
+            
+            # Automatically trigger phone reboot after registration
+            # This ensures the phone fetches its fresh configuration immediately
+            reboot_triggered = False
+            try:
+                ext = self.pbx_core.extension_registry.get(extension)
+                if ext and ext.registered:
+                    logger.info(f"Auto-provisioning: Automatically rebooting phone for extension {extension} after device registration")
+                    reboot_triggered = self.pbx_core.phone_provisioning.reboot_phone(
+                        extension, self.pbx_core.sip_server
+                    )
+                    if reboot_triggered:
+                        logger.info(f"Auto-provisioning: Successfully triggered reboot for extension {extension}")
+                    else:
+                        logger.info(f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
+                else:
+                    logger.info(f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
+            except Exception as reboot_error:
+                logger.warning(f"Auto-provisioning: Could not auto-reboot phone for extension {extension}: {reboot_error}")
+                # Don't fail the registration if reboot fails
+            
+            response = {
                 'success': True,
                 'device': device.to_dict()
-            })
+            }
+            if reboot_triggered:
+                response['reboot_triggered'] = True
+                response['message'] = 'Device registered and phone reboot triggered automatically'
+            else:
+                response['reboot_triggered'] = False
+                response['message'] = 'Device registered. Phone will fetch config on next boot.'
+            
+            self._send_json(response)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
