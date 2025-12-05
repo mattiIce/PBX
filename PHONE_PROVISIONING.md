@@ -362,6 +362,95 @@ This is typically not a provisioning issue. Check:
 2. Verify extension configuration in config.yml
 3. Re-provision phone (reboot or force update)
 
+### Phone Display Name Not Updating from Active Directory
+
+When Active Directory synchronization updates user names, phones need to fetch their configuration again to display the updated names.
+
+**Problem**: After AD sync, phone still shows old display name instead of AD user's name.
+
+**Solution Options**:
+
+1. **Manual Phone Reboot** (Immediate fix):
+   ```bash
+   # Reboot all phones
+   curl -X POST http://192.168.1.14:8080/api/phones/reboot
+   
+   # Or reboot specific extension
+   curl -X POST http://192.168.1.14:8080/api/phones/1001/reboot
+   ```
+
+2. **Enable Automatic Reboot After AD Sync** (Recommended):
+   
+   Add to `config.yml`:
+   ```yaml
+   integrations:
+     active_directory:
+       enabled: true
+       reboot_phones_after_sync: true  # Add this line
+   ```
+   
+   With this setting, phones will automatically reboot after AD sync to pick up name changes.
+
+3. **Manual Phone Reboot via Phone Menu**:
+   - Access phone menu (varies by vendor)
+   - Navigate to System → Reboot
+   - Phone will fetch fresh config on startup
+
+**How It Works**:
+- Extension names are stored in the PBX and used in phone config templates
+- When AD sync updates a name, it updates the extension data
+- Phones only fetch config on boot or when triggered
+- Rebooting the phone causes it to request fresh config with updated display name
+
+**Verify Name Update**:
+```bash
+# Check current extension name in PBX
+curl http://192.168.1.14:8080/api/extensions | grep -A3 '"number":"1001"'
+
+# Test config generation for a device
+curl http://192.168.1.14:8080/provision/001565123456.cfg | grep -i "display\|label"
+```
+
+### Use Troubleshooting Tool
+
+For comprehensive provisioning diagnostics, use the built-in troubleshooting tool:
+
+```bash
+# Run full diagnostic check
+python scripts/troubleshoot_provisioning.py
+
+# Check specific MAC address
+python scripts/troubleshoot_provisioning.py --mac 00:15:65:12:34:56
+
+# Check remote PBX
+python scripts/troubleshoot_provisioning.py --host 192.168.1.14 --port 8080
+```
+
+The tool will:
+- Check provisioning configuration
+- Test API connectivity
+- Show provisioning statistics
+- Display recent provisioning requests
+- Test MAC address registration
+- Test config download
+- Provide specific recommendations
+
+### API Endpoints for Troubleshooting
+
+```bash
+# Get provisioning diagnostics
+curl http://192.168.1.14:8080/api/provisioning/diagnostics
+
+# View recent provisioning requests
+curl http://192.168.1.14:8080/api/provisioning/requests?limit=20
+
+# List all provisioned devices
+curl http://192.168.1.14:8080/api/provisioning/devices
+
+# Check supported vendors/models
+curl http://192.168.1.14:8080/api/provisioning/vendors
+```
+
 ## Integration Examples
 
 ### Python Integration

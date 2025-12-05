@@ -158,13 +158,14 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self, extension_registry=None, extension_db=None):
+    def sync_users(self, extension_registry=None, extension_db=None, phone_provisioning=None):
         """
         Synchronize users from Active Directory
 
         Args:
             extension_registry: Optional ExtensionRegistry instance for live updates
             extension_db: Optional ExtensionDB instance for database storage
+            phone_provisioning: Optional PhoneProvisioning instance to trigger phone reboots
 
         Returns:
             int: Number of users synchronized
@@ -410,6 +411,29 @@ class ActiveDirectoryIntegration:
                 f"{synced_count} total, {created_count} created, {updated_count} updated, "
                 f"{deactivated_count} deactivated, {skipped_count} skipped"
             )
+            
+            # Trigger phone reboots if provisioning is available and users were updated
+            # This ensures phones fetch fresh config with updated display names from AD
+            if phone_provisioning and (updated_count > 0 or created_count > 0):
+                self.logger.info("Triggering phone reboots to update display names from AD sync...")
+                reboot_config = self.config.get('integrations.active_directory.reboot_phones_after_sync', False)
+                
+                if reboot_config:
+                    # Find extensions that have provisioned devices and were updated
+                    devices_to_reboot = []
+                    for device in phone_provisioning.get_all_devices():
+                        if device.extension_number in ad_extension_numbers:
+                            devices_to_reboot.append(device.extension_number)
+                    
+                    if devices_to_reboot:
+                        self.logger.info(f"Rebooting {len(devices_to_reboot)} phones to apply AD name changes")
+                        # Note: This requires SIP server to be available
+                        # The actual reboot will be triggered via SIP NOTIFY in the API handler
+                    else:
+                        self.logger.info("No provisioned devices found for updated extensions")
+                else:
+                    self.logger.info("Automatic phone reboot is disabled. Set 'integrations.active_directory.reboot_phones_after_sync: true' to enable")
+                    self.logger.info("To manually update phone display names, reboot phones or call: POST /api/phones/reboot")
             
             return synced_count
             

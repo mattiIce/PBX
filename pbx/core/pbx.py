@@ -1482,7 +1482,8 @@ class PBXCore:
             self.logger.info("Manual AD user sync triggered")
             synced_count = self.ad_integration.sync_users(
                 extension_registry=self.extension_registry,
-                extension_db=self.extension_db
+                extension_db=self.extension_db,
+                phone_provisioning=self.phone_provisioning if hasattr(self, 'phone_provisioning') else None
             )
             
             # Reload extensions after sync
