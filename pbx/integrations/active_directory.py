@@ -266,9 +266,13 @@ class ActiveDirectoryIntegration:
                             self.logger.warning(f"Failed to update extension {extension_number}")
                     else:
                         # Create new extension with random 4-digit password
+                        # Note: 4-digit passwords meet user requirement but provide limited security
+                        # Consider using longer passwords for production environments
                         random_password = ''.join([str(secrets.randbelow(10)) for _ in range(4)])
                         
-                        self.logger.info(f"Creating extension {extension_number} for user {username} (password: {random_password})")
+                        # Log extension creation without exposing password
+                        self.logger.info(f"Creating extension {extension_number} for user {username}")
+                        # Password can be retrieved from config.yml or reset via admin interface
                         
                         if pbx_config.add_extension(
                             number=extension_number,
@@ -328,6 +332,7 @@ class ActiveDirectoryIntegration:
                             if ext.get('ad_synced', False):
                                 self.logger.info(f"Deactivating extension {ext_number} (user removed from AD)")
                                 # Mark as inactive instead of deleting
+                                # Keep ad_synced=True so we know it was previously managed by AD
                                 pbx_config.update_extension(
                                     number=ext_number,
                                     allow_external=False
@@ -336,7 +341,7 @@ class ActiveDirectoryIntegration:
                                     registry_ext = extension_registry.get(ext_number)
                                     if registry_ext:
                                         registry_ext.config['allow_external'] = False
-                                        registry_ext.config['ad_synced'] = False
+                                        # Keep ad_synced=True to maintain history
                                 deactivated_count += 1
             
             # Save all changes

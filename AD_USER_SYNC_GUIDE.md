@@ -145,8 +145,13 @@ The extension number is derived from the AD `telephoneNumber` attribute:
 
 For new extensions:
 - Generates random 4-digit password (e.g., `8472`)
-- Password is logged during creation for initial setup
-- Users can change password later via SIP phone or web interface
+- **Security Note**: 4-digit passwords provide basic security (10,000 combinations). For production environments with external access, consider:
+  - Implementing longer passwords (8+ characters)
+  - Using alphanumeric combinations
+  - Enforcing password changes on first login
+  - Enabling FIPS-compliant password hashing (already supported)
+- Passwords are stored in `config.yml` (not logged for security)
+- Users should change passwords after initial setup via SIP phone or web interface
 
 ### Create vs Update Logic
 
