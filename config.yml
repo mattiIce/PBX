@@ -137,3 +137,42 @@ provisioning:
   custom_templates_dir: ''
   devices: []
 trunks: null
+integrations:
+  active_directory:
+    enabled: false  # Set to true when ready to use
+    server: ldaps://192.168.1.22:636  # Primary DC: albl-pdc1
+    # Fallback server: ldaps://192.168.1.23:636  # Secondary DC: albl-sdc1
+    base_dn: DC=albl,DC=com
+    user_search_base: CN=Users,DC=albl,DC=com
+    bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com
+    bind_password: Q1g0ng248!  # SECURITY: Use environment variable in production
+    use_ssl: true
+    auto_provision: true  # Automatically create/update PBX extensions from AD
+    deactivate_removed_users: true  # Disable extensions when users are removed from AD
+    # Group mapping for future implementation
+    # group_permissions:
+    #   CN=PBX_Admins,OU=Groups,DC=albl,DC=com:
+    #     - admin
+    #   CN=Sales,OU=Groups,DC=albl,DC=com:
+    #     - external_calling
+  zoom:
+    enabled: false
+    account_id: ''
+    client_id: ''
+    client_secret: ''
+    phone_enabled: false
+    api_base_url: https://api.zoom.us/v2
+  outlook:
+    enabled: false
+    tenant_id: ''
+    client_id: ''
+    client_secret: ''
+    sync_interval: 300
+    auto_dnd_in_meetings: true
+  teams:
+    enabled: false
+    tenant_id: ''
+    client_id: ''
+    client_secret: ''
+    sip_domain: ''
+    sbc_fqdn: ''

@@ -156,24 +156,198 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self):
+    def sync_users(self, extension_registry=None):
         """
         Synchronize users from Active Directory
+
+        Args:
+            extension_registry: Optional ExtensionRegistry instance for live updates
 
         Returns:
             int: Number of users synchronized
         """
-        if not self.enabled or not self.auto_provision:
+        if not self.enabled or not self.auto_provision or not LDAP3_AVAILABLE:
             return 0
 
-        self.logger.info("Syncing users from Active Directory...")
-        # TODO: Query AD for users and create/update PBX extensions
-        # 1. Search for users in specified OU
-        # 2. Extract phone number, email, name
-        # 3. Create or update PBX extensions
-        # 4. Map AD groups to PBX roles
+        if not self.connect():
+            self.logger.error("Failed to connect to Active Directory")
+            return 0
 
-        return 0
+        try:
+            self.logger.info("Starting user synchronization from Active Directory...")
+            
+            # Get user search base
+            user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
+            
+            # Search for all users with telephoneNumber attribute
+            # Using objectClass=user and filtering for accounts with phone numbers
+            search_filter = '(&(objectClass=user)(telephoneNumber=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))'
+            
+            self.connection.search(
+                search_base=user_search_base,
+                search_filter=search_filter,
+                search_scope=SUBTREE,
+                attributes=['sAMAccountName', 'displayName', 'mail', 'telephoneNumber', 'memberOf']
+            )
+            
+            if not self.connection.entries:
+                self.logger.warning("No users found in Active Directory")
+                return 0
+            
+            self.logger.info(f"Found {len(self.connection.entries)} users in Active Directory")
+            
+            # Get PBX config for updating extensions
+            from pbx.utils.config import Config
+            pbx_config = Config(self.config.get('config_file', 'config.yml'))
+            
+            synced_count = 0
+            created_count = 0
+            updated_count = 0
+            skipped_count = 0
+            
+            # Track extension numbers for deactivation check
+            ad_extension_numbers = set()
+            
+            for entry in self.connection.entries:
+                try:
+                    username = str(entry.sAMAccountName) if hasattr(entry, 'sAMAccountName') else None
+                    display_name = str(entry.displayName) if hasattr(entry, 'displayName') else username
+                    email = str(entry.mail) if hasattr(entry, 'mail') else None
+                    phone_number = str(entry.telephoneNumber) if hasattr(entry, 'telephoneNumber') else None
+                    
+                    # Skip if no username or phone number
+                    if not username or not phone_number:
+                        self.logger.debug(f"Skipping user {username}: missing required fields")
+                        skipped_count += 1
+                        continue
+                    
+                    # Use phone number as extension number (Option A)
+                    # Clean phone number to get just digits (remove spaces, dashes, etc.)
+                    import re
+                    extension_number = re.sub(r'[^0-9]', '', phone_number)
+                    
+                    # Validate extension number
+                    if not extension_number or len(extension_number) < 3:
+                        self.logger.warning(f"Skipping user {username}: invalid extension number from phone {phone_number}")
+                        skipped_count += 1
+                        continue
+                    
+                    ad_extension_numbers.add(extension_number)
+                    
+                    # Check if extension exists
+                    existing_ext = pbx_config.get_extension(extension_number)
+                    
+                    if existing_ext:
+                        # Update existing extension
+                        self.logger.debug(f"Updating extension {extension_number} for user {username}")
+                        
+                        if pbx_config.update_extension(
+                            number=extension_number,
+                            name=display_name,
+                            email=email
+                            # Don't update password - keep existing
+                        ):
+                            updated_count += 1
+                            synced_count += 1
+                            
+                            # Update in live registry if provided
+                            if extension_registry:
+                                ext = extension_registry.get(extension_number)
+                                if ext:
+                                    ext.name = display_name
+                                    if email:
+                                        ext.config['email'] = email
+                        else:
+                            self.logger.warning(f"Failed to update extension {extension_number}")
+                    else:
+                        # Create new extension with random 4-digit password
+                        import secrets
+                        random_password = ''.join([str(secrets.randbelow(10)) for _ in range(4)])
+                        
+                        self.logger.info(f"Creating extension {extension_number} for user {username} (password: {random_password})")
+                        
+                        if pbx_config.add_extension(
+                            number=extension_number,
+                            name=display_name,
+                            email=email or '',
+                            password=random_password,
+                            allow_external=True
+                        ):
+                            created_count += 1
+                            synced_count += 1
+                            
+                            # Add to live registry if provided
+                            if extension_registry:
+                                from pbx.features.extensions import Extension
+                                new_ext = Extension(
+                                    extension_number,
+                                    display_name,
+                                    {
+                                        'number': extension_number,
+                                        'name': display_name,
+                                        'email': email or '',
+                                        'password': random_password,
+                                        'allow_external': True
+                                    }
+                                )
+                                extension_registry.extensions[extension_number] = new_ext
+                        else:
+                            self.logger.warning(f"Failed to create extension {extension_number}")
+                    
+                    # TODO: Map AD groups to PBX roles/permissions
+                    # This is marked for future implementation per user request
+                    # groups = [str(g) for g in entry.memberOf] if hasattr(entry, 'memberOf') else []
+                    
+                except Exception as e:
+                    self.logger.error(f"Error syncing user {username if 'username' in locals() else 'unknown'}: {e}")
+                    continue
+            
+            # Deactivate extensions for users removed from AD
+            deactivated_count = 0
+            if self.config.get('integrations.active_directory.deactivate_removed_users', True):
+                self.logger.info("Checking for removed users to deactivate...")
+                all_extensions = pbx_config.get_extensions()
+                
+                for ext in all_extensions:
+                    ext_number = ext.get('number')
+                    # Only check extensions that could be AD-synced (numeric, reasonable length)
+                    if ext_number and ext_number.isdigit() and len(ext_number) >= 3:
+                        if ext_number not in ad_extension_numbers:
+                            # Check if extension has AD metadata marker
+                            if ext.get('ad_synced', False):
+                                self.logger.info(f"Deactivating extension {ext_number} (user removed from AD)")
+                                # Mark as inactive instead of deleting
+                                pbx_config.update_extension(
+                                    number=ext_number,
+                                    allow_external=False
+                                )
+                                if extension_registry:
+                                    registry_ext = extension_registry.get(ext_number)
+                                    if registry_ext:
+                                        registry_ext.config['allow_external'] = False
+                                        registry_ext.config['ad_synced'] = False
+                                deactivated_count += 1
+            
+            # Mark synced extensions as AD-managed
+            for ext_num in ad_extension_numbers:
+                ext = pbx_config.get_extension(ext_num)
+                if ext and not ext.get('ad_synced'):
+                    ext['ad_synced'] = True
+            pbx_config.save()
+            
+            self.logger.info(
+                f"User synchronization complete: "
+                f"{synced_count} total, {created_count} created, {updated_count} updated, "
+                f"{deactivated_count} deactivated, {skipped_count} skipped"
+            )
+            
+            return synced_count
+            
+        except Exception as e:
+            self.logger.error(f"Error synchronizing users from Active Directory: {e}")
+            import traceback
+            traceback.print_exc()
+            return 0
 
     def get_user_groups(self, username: str):
         """

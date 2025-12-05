@@ -339,6 +339,10 @@ def test_new_integration_implementations():
     result = teams.send_chat_message('test@example.com', 'Hello from PBX')
     assert result is False, "Should return False when integration is disabled"
     
+    # Test Active Directory - sync_users implementation
+    sync_result = ad.sync_users()
+    assert sync_result == 0, "Should return 0 when integration is disabled or auto_provision is off"
+    
     print("✓ New integration implementations work correctly")
 
 
