@@ -131,7 +131,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
                 self._handle_get_provisioning_vendors()
-            elif path == '/api/registered-phones':
+            elif path == '/api/registered-phones' or path == '/api/registered-phones/':
                 self._handle_get_registered_phones()
             elif path.startswith('/api/registered-phones/extension/'):
                 # Extract extension: /api/registered-phones/extension/{number}
