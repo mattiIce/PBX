@@ -200,14 +200,38 @@ Example:
 http://192.168.1.14:8080/provision/001565123456.cfg
 ```
 
+### ⚠️ IMPORTANT: MAC Variable Formats
+
+**Different phone vendors use different MAC address variable formats in provisioning URLs.**
+
+When configuring phones, you must use the correct variable format for your phone vendor:
+
+| Vendor | MAC Variable | Example URL |
+|--------|-------------|-------------|
+| **Zultys** | `$mac` | `http://192.168.1.14:8080/provision/$mac.cfg` |
+| **Yealink** | `$mac` | `http://192.168.1.14:8080/provision/$mac.cfg` |
+| **Polycom** | `$mac` | `http://192.168.1.14:8080/provision/$mac.cfg` |
+| **Grandstream** | `$mac` | `http://192.168.1.14:8080/provision/$mac.cfg` |
+| **Cisco** | `$MA` | `http://192.168.1.14:8080/provision/$MA.cfg` |
+
+**Common Mistake:** Using `{mac}` instead of `$mac` will cause the phone to request the literal string "{mac}" instead of its actual MAC address, resulting in provisioning failure.
+
+**Note:** While DHCP Option 66 documentation often shows `{mac}` as a placeholder for humans, actual phone configuration requires the vendor-specific variable format shown above.
+
 ### Setting Up Phones
 
 #### Method 1: DHCP Option 66 (Recommended)
 
-Configure your DHCP server to provide the provisioning server URL:
+Configure your DHCP server to provide the provisioning server URL **using the correct MAC variable for your phones**:
 
+**For Zultys, Yealink, Polycom, Grandstream:**
 ```
-Option 66: http://192.168.1.14:8080/provision/{mac}.cfg
+Option 66: http://192.168.1.14:8080/provision/$mac.cfg
+```
+
+**For Cisco:**
+```
+Option 66: http://192.168.1.14:8080/provision/$MA.cfg
 ```
 
 Most IP phones will automatically request configuration on boot.

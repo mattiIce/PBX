@@ -613,7 +613,54 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'path': path
             }
             
-            logger.info(f"Provisioning config request: path={path}, MAC={mac}, IP={request_info['ip']}")
+            logger.info(f"Provisioning config request: path={path}, IP={request_info['ip']}")
+            
+            # Detect if MAC is a placeholder variable (not an actual MAC address)
+            # Common placeholders: {mac}, $mac, $MA, {MAC}, etc.
+            mac_placeholders = ['{mac}', '$mac', '{MAC}', '$MAC', '{Ma}', '$Ma', '$MA']
+            if mac in mac_placeholders:
+                logger.error(f"CONFIGURATION ERROR: Phone requested provisioning with placeholder '{mac}' instead of actual MAC address")
+                logger.error(f"  Request from IP: {request_info['ip']}")
+                logger.error(f"  User-Agent: {request_info['user_agent']}")
+                logger.error(f"")
+                logger.error(f"  ⚠️  ROOT CAUSE: Phone is configured with wrong MAC variable format")
+                logger.error(f"")
+                logger.error(f"  📋 SOLUTION: Update provisioning URL to use correct MAC variable for your phone:")
+                logger.error(f"")
+                
+                # Detect vendor from User-Agent and provide specific guidance
+                user_agent = request_info['user_agent'].lower()
+                if 'zultys' in user_agent:
+                    logger.error(f"  ✓ Zultys Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"    Configure in: Phone Menu → Setup → Network → Provisioning")
+                    logger.error(f"    Or DHCP Option 66: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                elif 'yealink' in user_agent:
+                    logger.error(f"  ✓ Yealink Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"    Configure in: Web Interface → Settings → Auto Provision")
+                elif 'polycom' in user_agent:
+                    logger.error(f"  ✓ Polycom Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"    Configure in: Web Interface → Settings → Provisioning Server")
+                elif 'cisco' in user_agent:
+                    logger.error(f"  ✓ Cisco Phones - Use: http://YOUR_PBX_IP:8080/provision/$MA.cfg")
+                    logger.error(f"    Note: Cisco uses $MA instead of $mac")
+                    logger.error(f"    Configure in: Web Interface → Admin Login → Voice → Provisioning")
+                elif 'grandstream' in user_agent:
+                    logger.error(f"  ✓ Grandstream Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"    Configure in: Web Interface → Maintenance → Upgrade and Provisioning")
+                else:
+                    logger.error(f"  Common MAC variable formats by vendor:")
+                    logger.error(f"    • Zultys, Yealink, Polycom, Grandstream: $mac")
+                    logger.error(f"    • Cisco: $MA")
+                logger.error(f"")
+                logger.error(f"  📖 See PHONE_PROVISIONING.md for detailed vendor-specific instructions")
+                
+                self._send_json({
+                    'error': 'Configuration error: MAC address placeholder detected',
+                    'details': f'Phone is using placeholder "{mac}" instead of actual MAC. Update provisioning URL to use correct MAC variable format for your phone vendor.'
+                }, 400)
+                return
+            
+            logger.info(f"  MAC address from request: {mac}")
 
             # Generate configuration
             config_content, content_type = self.pbx_core.phone_provisioning.generate_config(
