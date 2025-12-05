@@ -2,7 +2,9 @@
 
 ## Summary of Findings
 
-After analyzing exported configuration files from actual Zultys phones, we've discovered important differences between the ZIP 33G and ZIP 37G models.
+**UPDATE**: After real-world testing, we've confirmed that ZIP 37G phones can successfully use the same flat `.cfg` format as ZIP 33G phones. The original analysis identified format differences in backup files, but provisioning works with the simpler flat format.
+
+After analyzing exported configuration files from actual Zultys phones, we initially discovered differences between the ZIP 33G and ZIP 37G models in their backup formats. However, for **provisioning purposes**, both models accept the same flat `.cfg` format.
 
 ## Configuration File Formats
 
@@ -28,16 +30,25 @@ voice_mail.number.1 = *1501
 ```
 
 ### ZIP 37G Format  
-- **File Type**: TAR archive (`.bin`)
-- **Format**: Multiple INI files with `[Section]` structure
+- **Backup File Type**: TAR archive (`.bin`)
+- **Backup Format**: Multiple INI files with `[Section]` structure
 - **Export File**: `config.bin` - TAR archive containing factory/ directory
-- **Contents**:
-  - `factory/system.ini` - System/network/auto-provision settings
-  - `factory/user.ini` - User preferences/voicemail/features
-  - `factory/voip/sipAccount1.cfg` - SIP account configuration (INI format)
-  - Additional XML and config files
+- **Provisioning Format**: **Accepts flat `.cfg` format (same as ZIP 33G)** ✅
 
-**Key Characteristics:**
+**Note**: While ZIP 37G backup files use TAR archives with INI format, the phones can accept flat `.cfg` provisioning files with the same format as ZIP 33G. This has been confirmed working in production.
+
+**For Provisioning (RECOMMENDED):**
+```
+#!version:1.0.0.1
+account.1.enable = 1
+account.1.label = Lisa Dingman
+account.1.display_name = Lisa Dingman
+account.1.user_name = 1501
+account.1.auth_name = Lisa Dingman
+account.1.sip_server.1.address = 192.168.1.14
+```
+
+**For Backup (TAR archive format):**
 ```ini
 [ AutoProvision ]
 bEnablePowerOn = 1
@@ -64,10 +75,10 @@ SIPServerHost = 192.168.1.14
 - URL format: `http://192.168.1.14:8080/provision/000bea85f554.cfg`
 
 **ZIP 37G:**
-- Requires `config.bin` (TAR archive with multiple INI files)
-- More complex structure with sectioned configuration
-- Multiple files for different settings categories
-- URL format: `http://192.168.1.14:8080/provision/000bea85bc14.cfg` (but downloads .bin)
+- **Provisioning**: Accepts flat `.cfg` file (same as ZIP 33G) ✅
+- **Backup**: Uses `config.bin` (TAR archive with multiple INI files)
+- For provisioning, the simpler flat format works great
+- URL format: `http://192.168.1.14:8080/provision/000bea85bc14.cfg`
 
 ### 2. Auto-Provision Parameters NOT in Config Files
 
@@ -133,11 +144,15 @@ Our templates now:
 
 ### 2. ZIP 37G Template (`provisioning_templates/zultys_zip37g.template`)
 ```
-✓ Changed to INI format with [sections]
-✓ Added proper section headers
-✓ Updated parameter names to match INI structure
-✓ Added note about config.bin TAR requirement
-✓ Provided simplified flat format for basic compatibility
+✓ **UPDATED**: Now uses flat .cfg format (same as ZIP 33G)
+✓ Confirmed working with real ZIP 37G phones
+✓ Added version header: #!version:1.0.0.1
+✓ Updated SIP server format: account.1.sip_server.1.address
+✓ Added legacy parameter: account.1.sip_server_host.legacy
+✓ Fixed auth_name: Uses {{EXTENSION_NAME}} not {{EXTENSION_NUMBER}}
+✓ Added missing parameters: phone_setting.*, linekey.*
+✓ Added codec slot 6 disable
+✓ Added LLDP settings
 ```
 
 ## Why Configuration Wasn't Applying
@@ -199,17 +214,17 @@ curl http://192.168.1.14:8080/provision/000bea85f554.cfg
 ## Recommendations
 
 ### For ZIP 33G Users
-✅ Current templates should work correctly
+✅ Current templates work correctly
 - Use the `.cfg` format
 - Parameters match exported config
-- Phone should apply settings
+- Phone applies settings successfully
 
 ### For ZIP 37G Users
-⚠️ Limited support currently
-- Template provides INI format
-- May have limited compatibility with flat file delivery
-- **Recommendation**: Consider generating proper `config.bin` TAR archive
-- Future enhancement: Add TAR generation for full ZIP 37G support
+✅ **UPDATED**: Now using flat `.cfg` format (same as ZIP 33G)
+- ZIP 37G phones **can accept** the same flat `.cfg` format as ZIP 33G
+- Confirmed working in production environments
+- No need for complex `config.bin` TAR archive generation
+- Future enhancement: Optional TAR generation for advanced features remains available if needed
 
 ## Next Steps
 
