@@ -162,6 +162,11 @@ class PBXCore:
         """Start PBX system"""
         self.logger.info("Starting PBX system...")
 
+        # Clear registered phones table on boot to remove stale registrations
+        if self.registered_phones_db:
+            self.logger.info("Clearing stale phone registrations from previous sessions...")
+            self.registered_phones_db.clear_all()
+
         # Start SIP server
         if not self.sip_server.start():
             self.logger.error("Failed to start SIP server")

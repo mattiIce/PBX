@@ -710,6 +710,20 @@ class RegisteredPhonesDB:
         """
         return self.db.execute(query, (phone_id,))
 
+    def clear_all(self) -> bool:
+        """
+        Clear all phone registrations from the table.
+        This is typically called on server boot to remove stale registrations.
+        
+        Returns:
+            bool: True if successful
+        """
+        query = "DELETE FROM registered_phones"
+        success = self.db.execute(query)
+        if success:
+            self.logger.info("Cleared all phone registrations from database")
+        return success
+
 
 class ExtensionDB:
     """Extension database operations"""
