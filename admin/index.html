@@ -20,6 +20,7 @@
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
+            <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
             <button class="tab-button" data-tab="voicemail">Voicemail</button>
             <button class="tab-button" data-tab="calls">Active Calls</button>
             <button class="tab-button" data-tab="config">Configuration</button>
@@ -143,6 +144,92 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Phone Provisioning Tab -->
+        <div id="provisioning" class="tab-content">
+            <div class="section-header">
+                <h2>Phone Auto-Provisioning Setup</h2>
+                <button class="btn btn-primary" onclick="loadProvisioningDevices()">🔄 Refresh</button>
+            </div>
+
+            <div class="config-section">
+                <h3>Provisioning Settings</h3>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="provisioning-enabled" onchange="toggleProvisioningEnabled()">
+                        Enable Auto-Provisioning
+                    </label>
+                </div>
+                <div id="provisioning-settings" style="display: none;">
+                    <div class="form-group">
+                        <label>Server IP Address:</label>
+                        <input type="text" id="provisioning-server-ip" placeholder="192.168.1.14">
+                        <small>IP address that phones will use to download configuration</small>
+                    </div>
+                    <div class="form-group">
+                        <label>API Port:</label>
+                        <input type="number" id="provisioning-port" value="8080">
+                    </div>
+                    <div class="form-group">
+                        <label>Provisioning URL Format:</label>
+                        <input type="text" id="provisioning-url-format" readonly>
+                        <small>Phones will download from: http://SERVER:PORT/provision/{mac}.cfg</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Custom Templates Directory (optional):</label>
+                        <input type="text" id="provisioning-custom-dir" placeholder="custom_templates">
+                    </div>
+                    <button class="btn btn-success" onclick="saveProvisioningSettings()">💾 Save Settings</button>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Supported Phone Models</h3>
+                <div id="supported-vendors-list" class="info-box">
+                    <p>Loading supported vendors...</p>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <div class="section-header">
+                    <h3>Provisioned Devices</h3>
+                    <button class="btn btn-success" onclick="showAddDeviceModal()">➕ Add Device</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>MAC Address</th>
+                                <th>Extension</th>
+                                <th>Vendor</th>
+                                <th>Model</th>
+                                <th>Created</th>
+                                <th>Last Provisioned</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="provisioning-devices-table-body">
+                            <tr>
+                                <td colspan="7" class="loading">Loading provisioned devices...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Next Steps</h3>
+                <div class="info-box">
+                    <ol>
+                        <li><strong>Configure DHCP Server:</strong> Set Option 66 to provide the provisioning URL to phones automatically</li>
+                        <li><strong>Add Devices:</strong> Register each phone with its MAC address and extension number</li>
+                        <li><strong>Reboot Phones:</strong> Phones will automatically download their configuration on boot</li>
+                        <li><strong>Alternative:</strong> Manually configure provisioning URL in each phone's settings</li>
+                    </ol>
+                    <p>📚 For detailed instructions, see <a href="https://github.com/mattiIce/PBX/blob/main/PHONE_PROVISIONING.md" target="_blank">PHONE_PROVISIONING.md</a></p>
+                </div>
             </div>
         </div>
 
@@ -332,6 +419,46 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditExtensionModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Extension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Device Modal -->
+    <div id="add-device-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Phone Device</h3>
+                <span class="close" onclick="closeAddDeviceModal()">&times;</span>
+            </div>
+            <form id="add-device-form">
+                <div class="form-group">
+                    <label>MAC Address:</label>
+                    <input type="text" id="device-mac" required placeholder="00:15:65:12:34:56" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
+                    <small>Format: 00:15:65:12:34:56 (found on phone label or network settings)</small>
+                </div>
+                <div class="form-group">
+                    <label>Extension Number:</label>
+                    <select id="device-extension" required>
+                        <option value="">Select Extension</option>
+                    </select>
+                    <small>Extension this phone will be assigned to</small>
+                </div>
+                <div class="form-group">
+                    <label>Phone Vendor:</label>
+                    <select id="device-vendor" required onchange="updateModelOptions()">
+                        <option value="">Select Vendor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Phone Model:</label>
+                    <select id="device-model" required>
+                        <option value="">Select Vendor First</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddDeviceModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Device</button>
                 </div>
             </form>
         </div>
