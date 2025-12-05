@@ -134,13 +134,15 @@ class DatabaseBackend:
             self.enabled = False
             self.logger.info("Database disconnected")
 
-    def execute(self, query: str, params: tuple = None) -> bool:
+    def _execute_with_context(self, query: str, context: str = "query", params: tuple = None, critical: bool = True) -> bool:
         """
-        Execute a query (INSERT, UPDATE, DELETE)
+        Execute a query with better error context
 
         Args:
             query: SQL query
+            context: Description of the operation (e.g., "table creation", "index creation")
             params: Query parameters
+            critical: If False, log permission errors as warnings instead of errors
 
         Returns:
             bool: True if successful
@@ -158,10 +160,36 @@ class DatabaseBackend:
             cursor.close()
             return True
         except Exception as e:
-            self.logger.error(f"Query execution error: {e}")
-            if self.connection:
-                self.connection.rollback()
-            return False
+            error_msg = str(e).lower()
+            # Check if this is a permission error on existing objects
+            if not critical and ("must be owner" in error_msg or "permission denied" in error_msg):
+                # This is expected when tables/indexes exist but user lacks ownership
+                # Log as debug instead of error to avoid alarming users
+                self.logger.debug(f"Skipping {context}: {e}")
+                return True  # Return True since this is not a critical failure
+            elif "already exists" in error_msg or "duplicate" in error_msg:
+                # Object already exists - this is fine
+                self.logger.debug(f"{context.capitalize()} already exists: {e}")
+                return True
+            else:
+                # This is an actual error
+                self.logger.error(f"Error during {context}: {e}")
+                if self.connection:
+                    self.connection.rollback()
+                return False
+
+    def execute(self, query: str, params: tuple = None) -> bool:
+        """
+        Execute a query (INSERT, UPDATE, DELETE)
+
+        Args:
+            query: SQL query
+            params: Query parameters
+
+        Returns:
+            bool: True if successful
+        """
+        return self._execute_with_context(query, "query execution", params, critical=True)
 
     def fetch_one(self, query: str, params: tuple = None) -> Optional[Dict]:
         """
@@ -325,10 +353,10 @@ class DatabaseBackend:
         # Execute table creation
         success = True
         for table_sql in [vip_table, cdr_table, voicemail_table]:
-            if not self.execute(table_sql):
+            if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
-        # Create indexes
+        # Create indexes - use permissive execution that handles existing indexes gracefully
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_vip_caller_id ON vip_callers(caller_id)",
             "CREATE INDEX IF NOT EXISTS idx_vip_priority ON vip_callers(priority_level)",
@@ -340,7 +368,9 @@ class DatabaseBackend:
         ]
 
         for index_sql in indexes:
-            self.execute(index_sql)
+            # Index creation failures are non-critical - indexes may already exist
+            # or user may lack permissions on pre-existing tables
+            self._execute_with_context(index_sql, "index creation", critical=False)
 
         if success:
             self.logger.info("Database tables created successfully")
