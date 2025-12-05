@@ -1,0 +1,32 @@
+#!version:1.0.0.1
+
+# Yealink T46S Configuration File
+
+# Account 1
+account.1.enable = 1
+account.1.label = {{EXTENSION_NAME}}
+account.1.display_name = {{EXTENSION_NAME}}
+account.1.auth_name = {{EXTENSION_NUMBER}}
+account.1.user_name = {{EXTENSION_NUMBER}}
+account.1.password = {{EXTENSION_PASSWORD}}
+account.1.sip_server.1.address = {{SIP_SERVER}}
+account.1.sip_server.1.port = {{SIP_PORT}}
+account.1.sip_server.1.expires = 3600
+
+# Codecs
+account.1.codec.1.enable = 1
+account.1.codec.1.payload_type = PCMU
+account.1.codec.2.enable = 1
+account.1.codec.2.payload_type = PCMA
+account.1.codec.3.enable = 1
+account.1.codec.3.payload_type = G729
+
+# Network
+network.internet_port.type = 0
+network.internet_port.dhcp = 1
+
+# Time
+local_time.time_zone = -8
+local_time.ntp_server1 = pool.ntp.org
+
+# Custom comment added by test
