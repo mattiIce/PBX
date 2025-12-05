@@ -283,19 +283,23 @@ def test_mac_placeholder_detection():
     print("Testing MAC placeholder detection...")
     
     from pbx.features.phone_provisioning import normalize_mac_address
+    from pbx.api.rest_api import MAC_ADDRESS_PLACEHOLDERS
     
     # Test that placeholders are NOT normalized like regular MACs
     # These should remain as-is or be detected separately in the API handler
-    placeholders = ['{mac}', '$mac', '{MAC}', '$MAC', '{Ma}', '$Ma', '$MA']
+    placeholders = MAC_ADDRESS_PLACEHOLDERS
+    
+    # Verify we have the expected placeholders defined
+    expected_placeholders = ['{mac}', '$mac', '{MAC}', '$MAC', '{Ma}', '$Ma', '$MA']
+    assert len(placeholders) == len(expected_placeholders), \
+        f"Expected {len(expected_placeholders)} placeholders, got {len(placeholders)}"
     
     # These are placeholders and shouldn't be normalized like real MACs
     for placeholder in placeholders:
-        # Normalize function will strip some characters but keep the identifier
-        result = normalize_mac_address(placeholder)
         # The important part is the API layer detects these as placeholders
         # This test verifies the placeholder strings exist in our detection list
-        assert placeholder in ['{mac}', '$mac', '{MAC}', '$MAC', '{Ma}', '$Ma', '$MA'], \
-            f"Placeholder {placeholder} should be in detection list"
+        assert placeholder in MAC_ADDRESS_PLACEHOLDERS, \
+            f"Placeholder {placeholder} should be in MAC_ADDRESS_PLACEHOLDERS constant"
     
     # Test that actual MAC addresses are normalized correctly
     real_macs = [
