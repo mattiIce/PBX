@@ -147,6 +147,13 @@ class PhoneProvisioning:
         # Zultys ZIP 33G template (basic SIP phone)
         zultys_zip33g_template = """# Zultys ZIP 33G Configuration File
 
+# Auto Provision Settings
+# These settings ensure the phone automatically applies configuration changes
+auto_provision.power_on.enable = 1
+auto_provision.repeat.enable = 1
+auto_provision.repeat.minutes = 1440
+auto_provision.mode = 1
+
 # SIP Account Configuration
 # Line Active
 account.1.enable = 1
@@ -208,6 +215,13 @@ phone.volume.handset = 6
 
         # Zultys ZIP 37G template (advanced SIP phone with more features)
         zultys_zip37g_template = """# Zultys ZIP 37G Configuration File
+
+# Auto Provision Settings
+# These settings ensure the phone automatically applies configuration changes
+auto_provision.power_on.enable = 1
+auto_provision.repeat.enable = 1
+auto_provision.repeat.minutes = 1440
+auto_provision.mode = 1
 
 # SIP Account Configuration
 # Account Active
