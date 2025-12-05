@@ -82,15 +82,15 @@ def test_provisioning_device_registration():
     device = provisioning.register_device(
         "00:15:65:12:34:56",
         "1001",
-        "zip",
-        "33g"
+        "zultys",
+        "zip33g"
     )
     
     assert device is not None, "Device registration failed"
     assert device.mac_address == "001565123456", f"Unexpected MAC: {device.mac_address}"
     assert device.extension_number == "1001", f"Unexpected extension: {device.extension_number}"
-    assert device.vendor == "zip", f"Unexpected vendor: {device.vendor}"
-    assert device.model == "33g", f"Unexpected model: {device.model}"
+    assert device.vendor == "zultys", f"Unexpected vendor: {device.vendor}"
+    assert device.model == "zip33g", f"Unexpected model: {device.model}"
     
     # Retrieve the device
     retrieved = provisioning.get_device("00:15:65:12:34:56")
@@ -118,19 +118,23 @@ def test_supported_vendors_and_models():
     # Get supported vendors
     vendors = provisioning.get_supported_vendors()
     assert len(vendors) > 0, "No vendors found"
-    assert 'zip' in vendors, "ZIP not in vendors"
+    assert 'zultys' in vendors, "Zultys not in vendors"
+    assert 'yealink' in vendors, "Yealink not in vendors"
+    assert 'polycom' in vendors, "Polycom not in vendors"
+    assert 'cisco' in vendors, "Cisco not in vendors"
+    assert 'grandstream' in vendors, "Grandstream not in vendors"
     
-    # Get models for ZIP
-    zip_models = provisioning.get_supported_models('zip')
-    assert len(zip_models) > 0, "No ZIP models found"
-    assert '33g' in zip_models, "33G not in ZIP models"
-    assert '37g' in zip_models, "37G not in ZIP models"
+    # Get models for Zultys
+    zultys_models = provisioning.get_supported_models('zultys')
+    assert len(zultys_models) > 0, "No Zultys models found"
+    assert 'zip33g' in zultys_models, "ZIP33G not in Zultys models"
+    assert 'zip37g' in zultys_models, "ZIP37G not in Zultys models"
     
     # Get all models
     all_models = provisioning.get_supported_models()
     assert isinstance(all_models, dict), "Expected dict for all models"
-    assert 'zip' in all_models, "ZIP not in all models"
-    assert len(all_models['zip']) == 2, f"Expected 2 ZIP models, got {len(all_models['zip'])}"
+    assert 'zultys' in all_models, "Zultys not in all models"
+    assert len(all_models['zultys']) == 2, f"Expected 2 Zultys models, got {len(all_models['zultys'])}"
     
     print("✓ Supported vendors and models work")
 
@@ -142,13 +146,29 @@ def test_builtin_templates():
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
     
-    # Check ZIP 33G template
-    zip_33g_template = provisioning.get_template('zip', '33g')
-    assert zip_33g_template is not None, "ZIP 33G template not found"
+    # Check Zultys ZIP 33G template
+    zultys_zip33g_template = provisioning.get_template('zultys', 'zip33g')
+    assert zultys_zip33g_template is not None, "Zultys ZIP33G template not found"
     
-    # Check ZIP 37G template
-    zip_37g_template = provisioning.get_template('zip', '37g')
-    assert zip_37g_template is not None, "ZIP 37G template not found"
+    # Check Zultys ZIP 37G template
+    zultys_zip37g_template = provisioning.get_template('zultys', 'zip37g')
+    assert zultys_zip37g_template is not None, "Zultys ZIP37G template not found"
+    
+    # Check Yealink T46S template
+    yealink_t46s_template = provisioning.get_template('yealink', 't46s')
+    assert yealink_t46s_template is not None, "Yealink T46S template not found"
+    
+    # Check Polycom VVX450 template
+    polycom_vvx450_template = provisioning.get_template('polycom', 'vvx450')
+    assert polycom_vvx450_template is not None, "Polycom VVX450 template not found"
+    
+    # Check Cisco SPA504G template
+    cisco_spa504g_template = provisioning.get_template('cisco', 'spa504g')
+    assert cisco_spa504g_template is not None, "Cisco SPA504G template not found"
+    
+    # Check Grandstream GXP2170 template
+    grandstream_gxp2170_template = provisioning.get_template('grandstream', 'gxp2170')
+    assert grandstream_gxp2170_template is not None, "Grandstream GXP2170 template not found"
     
     print("✓ Built-in templates exist")
 
@@ -165,8 +185,8 @@ def test_config_generation():
     device = provisioning.register_device(
         "00:15:65:12:34:56",
         "1001",
-        "zip",
-        "33g"
+        "zultys",
+        "zip33g"
     )
     
     # Generate configuration
@@ -200,7 +220,7 @@ if __name__ == "__main__":
         test_config_generation()
         
         print("=" * 60)
-        print("Results: 6 passed, 0 failed")
+        print("All tests passed!")
         print("=" * 60)
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}")

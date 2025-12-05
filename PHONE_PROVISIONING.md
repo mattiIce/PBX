@@ -39,9 +39,21 @@ Both methods use the same underlying REST API and configuration system.
 
 The system includes built-in templates for the following vendors and models:
 
-### ZIP (Zipit)
-- 33G - Basic SIP phone
-- 37G - Advanced SIP phone with additional features
+### Zultys
+- ZIP 33G - Basic SIP phone
+- ZIP 37G - Advanced SIP phone with additional features
+
+### Yealink
+- T46S - Popular business IP phone with color display
+
+### Polycom
+- VVX 450 - Business media phone with touchscreen
+
+### Cisco
+- SPA504G - 4-line IP phone with 2-port switch
+
+### Grandstream
+- GXP2170 - High-end IP phone with 12 lines
 
 ## Configuration
 
@@ -67,18 +79,23 @@ provisioning:
   devices:
     - mac: "00:15:65:12:34:56"
       extension: "1001"
-      vendor: "zip"
-      model: "33g"
+      vendor: "zultys"
+      model: "zip33g"
     
     - mac: "00:04:f2:ab:cd:ef"
       extension: "1002"
-      vendor: "zip"
-      model: "37g"
+      vendor: "zultys"
+      model: "zip37g"
+    
+    - mac: "00:04:f2:12:ab:cd"
+      extension: "1003"
+      vendor: "yealink"
+      model: "t46s"
     
     - mac: "00:04:f2:ab:cd:ab"
-      extension: "1003"
-      vendor: "zip"
-      model: "37g"
+      extension: "1004"
+      vendor: "polycom"
+      model: "vvx450"
 ```
 
 ## REST API Usage
@@ -95,8 +112,8 @@ Response:
   {
     "mac_address": "001565123456",
     "extension_number": "1001",
-    "vendor": "zip",
-    "model": "33g",
+    "vendor": "zultys",
+    "model": "zip33g",
     "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg",
     "created_at": "2025-12-03T10:30:00",
     "last_provisioned": "2025-12-03T10:35:00"
@@ -113,9 +130,13 @@ curl http://localhost:8080/api/provisioning/vendors
 Response:
 ```json
 {
-  "vendors": ["zip"],
+  "vendors": ["cisco", "grandstream", "polycom", "yealink", "zultys"],
   "models": {
-    "zip": ["33g", "37g"]
+    "cisco": ["spa504g"],
+    "grandstream": ["gxp2170"],
+    "polycom": ["vvx450"],
+    "yealink": ["t46s"],
+    "zultys": ["zip33g", "zip37g"]
   }
 }
 ```
@@ -128,8 +149,8 @@ curl -X POST http://localhost:8080/api/provisioning/devices \
   -d '{
     "mac_address": "00:15:65:12:34:56",
     "extension_number": "1001",
-    "vendor": "zip",
-    "model": "33g"
+    "vendor": "zultys",
+    "model": "zip33g"
   }'
 ```
 
@@ -140,8 +161,8 @@ Response:
   "device": {
     "mac_address": "001565123456",
     "extension_number": "1001",
-    "vendor": "zip",
-    "model": "33g",
+    "vendor": "zultys",
+    "model": "zip33g",
     "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg"
   }
 }
@@ -191,10 +212,26 @@ Most IP phones will automatically request configuration on boot.
 
 Access the phone's web interface or menu system and set the provisioning URL manually.
 
-**ZIP Phones (33G and 37G):**
+**Zultys ZIP Phones (33G and 37G):**
 - Navigate to: Settings → Auto Provisioning
 - Server URL: `http://192.168.1.14:8080/provision/$mac.cfg`
 - Or access via phone menu: Setup → Network → Provisioning
+
+**Yealink Phones:**
+- Web Interface: Settings → Auto Provision
+- Server URL: `http://192.168.1.14:8080/provision/$mac.cfg`
+
+**Polycom Phones:**
+- Web Interface: Settings → Provisioning Server
+- Server URL: `http://192.168.1.14:8080/provision/$mac.cfg`
+
+**Cisco Phones:**
+- Web Interface: Admin Login → Voice → Provisioning
+- Profile Rule: `http://192.168.1.14:8080/provision/$MA.cfg`
+
+**Grandstream Phones:**
+- Web Interface: Maintenance → Upgrade and Provisioning
+- Config Server Path: `http://192.168.1.14:8080/provision/`
 
 ## Configuration Templates
 
@@ -227,7 +264,7 @@ You can create custom templates for additional phone models or vendors.
 
 **Example Custom Template:**
 
-Create `custom_templates/zip_t57w.template`:
+Create `custom_templates/yealink_t57w.template`:
 ```ini
 #!version:1.0.0.1
 
@@ -338,8 +375,8 @@ response = requests.post(
     json={
         'mac_address': '00:15:65:12:34:56',
         'extension_number': '1005',
-        'vendor': 'zip',
-        'model': '33g'
+        'vendor': 'yealink',
+        'model': 't46s'
     }
 )
 
@@ -360,9 +397,10 @@ PBX_SERVER="http://192.168.1.14:8080"
 
 # Array of devices: MAC,Extension,Vendor,Model
 DEVICES=(
-  "00:15:65:12:34:56,1001,zip,33g"
-  "00:15:65:12:34:57,1002,zip,33g"
-  "00:04:f2:ab:cd:ef,1003,zip,37g"
+  "00:15:65:12:34:56,1001,zultys,zip33g"
+  "00:15:65:12:34:57,1002,zultys,zip37g"
+  "00:04:f2:ab:cd:ef,1003,yealink,t46s"
+  "00:04:f2:12:ab:cd,1004,polycom,vvx450"
 )
 
 for device in "${DEVICES[@]}"; do
@@ -395,13 +433,21 @@ Planned improvements for phone provisioning:
 - [ ] Bulk import/export of device configurations
 - [ ] Phone status monitoring
 - [ ] Automatic MAC address discovery
-- [ ] Support for additional vendors (Fanvil, Sangoma, etc.)
+- [ ] Support for additional vendors and models (Fanvil, Sangoma, Avaya, etc.)
+- [ ] Additional Yealink models (T42S, T48S, T54W, T57W)
+- [ ] Additional Polycom models (VVX 250, VVX 350, VVX 410)
+- [ ] Additional Cisco models (SPA525G2, SPA303)
+- [ ] Additional Grandstream models (GXP1620, GXP1628, GXP2135)
 
 ## References
 
 ### Vendor Documentation
 
-- **ZIP Phones**: Contact your ZIP phone vendor for specific provisioning documentation for models 33G and 37G
+- **Zultys ZIP Phones**: Contact Zultys for specific provisioning documentation for ZIP 33G and ZIP 37G models
+- **Yealink**: [Yealink Auto Provisioning Guide](http://support.yealink.com/documentFront/forwardToDocumentFrontDisplayPage)
+- **Polycom**: [Polycom UC Software Administration Guide](https://documents.polycom.com/)
+- **Cisco**: [Cisco Small Business SPA500 Series IP Phones Administration Guide](https://www.cisco.com/c/en/us/support/collaboration-endpoints/small-business-spa-500-series-ip-phones/products-maintenance-guides-list.html)
+- **Grandstream**: [Grandstream Device Management System](http://www.grandstream.com/support/tools)
 
 ---
 
