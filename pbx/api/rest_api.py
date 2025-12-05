@@ -234,7 +234,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._send_json({'error': str(e)}, 500)
         else:
-            self._send_json({'error': 'Database not available'}, 500)
+            # Return empty array when database is not available (graceful degradation)
+            self._send_json([])
 
     def _handle_get_registered_phones_by_extension(self, extension):
         """Get registered phones for a specific extension"""
@@ -245,7 +246,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._send_json({'error': str(e)}, 500)
         else:
-            self._send_json({'error': 'Database not available'}, 500)
+            # Return empty array when database is not available (graceful degradation)
+            self._send_json([])
 
     def _handle_register_device(self):
         """Register a device for provisioning"""
