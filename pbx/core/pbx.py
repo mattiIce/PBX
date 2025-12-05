@@ -219,9 +219,44 @@ class PBXCore:
         if match:
             extension_number = match.group(1)
 
-            # Verify extension exists in configuration
-            extension = self.config.get_extension(extension_number)
-            if extension:
+            # Verify extension exists - check database first, then config
+            extension_exists = False
+            
+            # Check extensions database table first (if available)
+            if self.extension_db:
+                try:
+                    db_extension = self.extension_db.get(extension_number)
+                    if db_extension:
+                        extension_exists = True
+                        self.logger.debug(f"Extension {extension_number} found in database")
+                        
+                        # Ensure extension is loaded in registry (if not already)
+                        if not self.extension_registry.get(extension_number):
+                            from pbx.features.extensions import Extension
+                            # Create Extension object from database data
+                            ext_config = {
+                                'number': db_extension['number'],
+                                'name': db_extension['name'],
+                                'email': db_extension.get('email', ''),
+                                'password_hash': db_extension.get('password_hash', ''),
+                                'allow_external': db_extension.get('allow_external', True),
+                                'voicemail_pin': db_extension.get('voicemail_pin', ''),
+                                'ad_synced': db_extension.get('ad_synced', False),
+                            }
+                            extension_obj = Extension(extension_number, db_extension['name'], ext_config)
+                            self.extension_registry.extensions[extension_number] = extension_obj
+                            self.logger.debug(f"Loaded extension {extension_number} into registry from database")
+                except Exception as e:
+                    self.logger.debug(f"Error checking extension in database: {e}")
+            
+            # Fall back to config if not found in database or database not available
+            if not extension_exists:
+                extension = self.config.get_extension(extension_number)
+                if extension:
+                    extension_exists = True
+                    self.logger.debug(f"Extension {extension_number} found in config")
+            
+            if extension_exists:
                 self.extension_registry.register(extension_number, addr)
                 self.logger.info(f"Extension {extension_number} registered from {addr}")
                 
