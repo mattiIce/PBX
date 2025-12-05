@@ -262,6 +262,232 @@ find . -name "*.db" -type f
 
 If the table doesn't exist, the PBX will create it automatically on next startup or you can create it manually using the CREATE TABLE statements above.
 
+## Updating Phone Extension When Reprovisioning
+
+When you reprovision a phone to a different extension (e.g., moving a phone with MAC `001565123456` from extension `1001` to extension `1002`), you need to update the `registered_phones` table to reflect this change. Otherwise, you may end up with duplicate entries for the same MAC address.
+
+### Why This Matters
+
+The `registered_phones` table tracks which phones are registered to which extensions. When you move a phone to a different extension:
+
+1. **Provisioning Configuration**: Update in `config.yml` or via the Admin Panel to change the phone's extension
+2. **Registered Phones Table**: Update the database to reflect the new extension assignment
+
+If you don't update the database, the system may have stale data showing the phone registered to the old extension.
+
+### Option 1: Update Extension via SQL
+
+**PostgreSQL:**
+```bash
+psql -h localhost -U pbx_user -d pbx_system << EOF
+-- Update phone's extension by MAC address
+UPDATE registered_phones 
+SET extension_number = '1002', last_registered = CURRENT_TIMESTAMP
+WHERE mac_address = '001565123456';
+
+-- Verify the change
+SELECT mac_address, extension_number, ip_address, last_registered 
+FROM registered_phones 
+WHERE mac_address = '001565123456';
+EOF
+```
+
+**SQLite:**
+```bash
+sqlite3 pbx_system.db << EOF
+-- Update phone's extension by MAC address
+UPDATE registered_phones 
+SET extension_number = '1002', last_registered = datetime('now')
+WHERE mac_address = '001565123456';
+
+-- Verify the change
+SELECT mac_address, extension_number, ip_address, last_registered 
+FROM registered_phones 
+WHERE mac_address = '001565123456';
+EOF
+```
+
+### Option 2: Delete Old Registration and Let Phone Re-register
+
+A simpler approach is to remove the old registration and let the phone register again with its new extension:
+
+**PostgreSQL:**
+```bash
+psql -h localhost -U pbx_user -d pbx_system -c "DELETE FROM registered_phones WHERE mac_address = '001565123456';"
+```
+
+**SQLite:**
+```bash
+sqlite3 pbx_system.db "DELETE FROM registered_phones WHERE mac_address = '001565123456';"
+```
+
+After deletion, when the phone reboots and registers with its new extension, it will create a fresh entry in the table.
+
+### Option 3: Using Python Script
+
+Create a script to update the phone's extension programmatically:
+
+```python
+#!/usr/bin/env python3
+"""
+Update phone extension in registered_phones table
+"""
+import psycopg2  # or sqlite3 for SQLite
+from datetime import datetime
+
+# For PostgreSQL
+def update_phone_extension_postgresql(mac_address, new_extension):
+    conn = psycopg2.connect(
+        host='localhost',
+        port=5432,
+        database='pbx_system',
+        user='pbx_user',
+        password='YOUR_PASSWORD'  # Update with your password
+    )
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE registered_phones SET extension_number = %s, last_registered = %s WHERE mac_address = %s",
+        (new_extension, datetime.now(), mac_address)
+    )
+    rows_affected = cursor.rowcount
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print(f"✓ Updated {rows_affected} phone(s) - MAC {mac_address} -> Extension {new_extension}")
+
+# For SQLite
+def update_phone_extension_sqlite(mac_address, new_extension):
+    import sqlite3
+    conn = sqlite3.connect('pbx_system.db')
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE registered_phones SET extension_number = ?, last_registered = ? WHERE mac_address = ?",
+        (new_extension, datetime.now(), mac_address)
+    )
+    rows_affected = cursor.rowcount
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print(f"✓ Updated {rows_affected} phone(s) - MAC {mac_address} -> Extension {new_extension}")
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) != 3:
+        print("Usage: python update_phone_extension.py <mac_address> <new_extension>")
+        print("Example: python update_phone_extension.py 001565123456 1002")
+        sys.exit(1)
+    
+    mac = sys.argv[1]
+    ext = sys.argv[2]
+    
+    # Uncomment the appropriate line for your database:
+    update_phone_extension_postgresql(mac, ext)
+    # update_phone_extension_sqlite(mac, ext)
+```
+
+Save as `update_phone_extension.py` and run:
+```bash
+python update_phone_extension.py 001565123456 1002
+```
+
+### Option 4: Using the PBX Python API
+
+If you have access to the PBX code, you can use the `RegisteredPhonesDB` class:
+
+```python
+from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
+from pbx.utils.config import Config
+
+# Load configuration
+config = Config("config.yml")
+
+# Connect to database
+db = DatabaseBackend(config)
+db.connect()
+
+# Create registered phones DB instance
+phones_db = RegisteredPhonesDB(db)
+
+# Update phone extension
+success = phones_db.update_phone_extension(
+    mac_address="001565123456",
+    new_extension_number="1002"
+)
+
+if success:
+    print("✓ Phone extension updated successfully")
+else:
+    print("✗ Failed to update phone extension")
+
+# Disconnect
+db.disconnect()
+```
+
+### Best Practice: Complete Reprovisioning Workflow
+
+When moving a phone to a different extension, follow these steps:
+
+1. **Update Provisioning Configuration:**
+   - Via Admin Panel: Navigate to "Phone Provisioning" tab, edit the device, change extension
+   - Via `config.yml`: Update the device's extension number in the `provisioning.devices` section
+
+2. **Update Registered Phones Table:**
+   - Use one of the options above to update or delete the old registration
+
+3. **Reboot the Phone:**
+   - Power cycle the phone or use the phone's menu to reboot
+   - The phone will fetch new configuration with the updated extension
+
+4. **Verify Registration:**
+   - Check the Admin Panel's "Registered Phones" tab
+   - Confirm the phone shows the new extension
+
+### Troubleshooting Duplicate Entries
+
+If you end up with duplicate entries (same MAC, different extensions), you can clean them up:
+
+**PostgreSQL:**
+```bash
+psql -h localhost -U pbx_user -d pbx_system << EOF
+-- Find duplicates
+SELECT mac_address, extension_number, last_registered 
+FROM registered_phones 
+WHERE mac_address = '001565123456'
+ORDER BY last_registered DESC;
+
+-- Keep only the most recent registration
+DELETE FROM registered_phones 
+WHERE mac_address = '001565123456' 
+AND id NOT IN (
+    SELECT id FROM registered_phones 
+    WHERE mac_address = '001565123456' 
+    ORDER BY last_registered DESC 
+    LIMIT 1
+);
+EOF
+```
+
+**SQLite:**
+```bash
+sqlite3 pbx_system.db << EOF
+-- Find duplicates
+SELECT mac_address, extension_number, last_registered 
+FROM registered_phones 
+WHERE mac_address = '001565123456'
+ORDER BY last_registered DESC;
+
+-- Keep only the most recent registration
+DELETE FROM registered_phones 
+WHERE mac_address = '001565123456' 
+AND id NOT IN (
+    SELECT id FROM registered_phones 
+    WHERE mac_address = '001565123456' 
+    ORDER BY last_registered DESC 
+    LIMIT 1
+);
+EOF
+```
+
 ## Related Documentation
 
 - [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md) - Phone provisioning setup

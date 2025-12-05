@@ -716,6 +716,43 @@ class RegisteredPhonesDB:
         """
         return self.db.execute(query, (phone_id,))
 
+    def update_phone_extension(self, mac_address: str, new_extension_number: str) -> bool:
+        """
+        Update the extension number for a phone identified by MAC address.
+        This is useful when reprovisioning a phone to a different extension.
+        
+        Note: This will update ALL registrations with the given MAC address,
+        effectively moving the phone to the new extension.
+        
+        Args:
+            mac_address: MAC address of the phone to update
+            new_extension_number: New extension number to assign
+            
+        Returns:
+            bool: True if successful (returns True even if no rows were updated)
+        """
+        if not mac_address:
+            self.logger.error("Cannot update phone extension: MAC address is required")
+            return False
+            
+        query = """
+        UPDATE registered_phones 
+        SET extension_number = %s, last_registered = %s
+        WHERE mac_address = %s
+        """ if self.db.db_type == 'postgresql' else """
+        UPDATE registered_phones 
+        SET extension_number = ?, last_registered = ?
+        WHERE mac_address = ?
+        """
+        
+        params = (new_extension_number, datetime.now(), mac_address)
+        success = self.db.execute(query, params)
+        
+        if success:
+            self.logger.info(f"Updated phone {mac_address} to extension {new_extension_number}")
+        
+        return success
+
     def clear_all(self) -> bool:
         """
         Clear all phone registrations from the table.
