@@ -219,7 +219,14 @@ class PBXCore:
                         else:
                             self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address} (no MAC)")
                     except Exception as e:
-                        self.logger.warning(f"Failed to store phone registration in database: {e}")
+                        import traceback
+                        self.logger.error(f"Failed to store phone registration in database: {e}")
+                        self.logger.error(f"  Extension: {extension_number}")
+                        self.logger.error(f"  IP Address: {ip_address}")
+                        self.logger.error(f"  MAC Address: {mac_address}")
+                        self.logger.error(f"  User Agent: {user_agent}")
+                        self.logger.error(f"  Contact URI: {contact}")
+                        self.logger.error(f"  Traceback: {traceback.format_exc()}")
                 
                 return True
             else:
