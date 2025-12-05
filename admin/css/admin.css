@@ -506,3 +506,14 @@ header h1 {
     margin-right: 10px;
     font-size: 1rem;
 }
+
+/* Error Message Styling */
+.error-message {
+    color: #dc3545;
+    font-weight: 500;
+    padding: 20px;
+    text-align: center;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+}
