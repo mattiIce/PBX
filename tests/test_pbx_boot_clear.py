@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Integration test to verify PBX clears registered phones on boot
+Integration test to verify PBX does NOT clear registered phones on boot
 """
 import sys
 import os
@@ -14,9 +14,9 @@ from pbx.core.pbx import PBXCore
 from pbx.utils.database import RegisteredPhonesDB
 
 
-def test_pbx_clears_phones_on_boot():
-    """Test that PBX clears registered phones table on boot"""
-    print("Testing PBX clears phones on boot...")
+def test_pbx_preserves_phones_on_boot():
+    """Test that PBX preserves registered phones table on boot"""
+    print("Testing PBX preserves phones on boot...")
     
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
@@ -72,19 +72,19 @@ extensions: []
         # Create a new PBX instance (simulating server restart)
         pbx2 = PBXCore(config_path)
         
-        # Start the PBX (this should clear the phones table)
+        # Start the PBX (this should NOT clear the phones table)
         success = pbx2.start()
         assert success, "Failed to start PBX"
         
-        # Verify phones table was cleared
+        # Verify phones table was preserved
         phones = pbx2.registered_phones_db.list_all()
-        assert len(phones) == 0, f"Expected 0 phones after boot, got {len(phones)}"
-        print(f"  Phones cleared on boot: {len(phones)} phones remaining")
+        assert len(phones) == 2, f"Expected 2 phones after boot, got {len(phones)}"
+        print(f"  Phones preserved on boot: {len(phones)} phones remaining")
         
         # Stop the PBX
         pbx2.stop()
         
-        print("✓ PBX clears registered phones on boot")
+        print("✓ PBX preserves registered phones on boot")
         
     finally:
         # Clean up
@@ -93,11 +93,11 @@ extensions: []
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Running PBX Boot Clear Integration Test")
+    print("Running PBX Boot Preserve Integration Test")
     print("=" * 60)
     
     try:
-        test_pbx_clears_phones_on_boot()
+        test_pbx_preserves_phones_on_boot()
         
         print("=" * 60)
         print("Results: 1 passed, 0 failed")
