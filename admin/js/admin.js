@@ -113,7 +113,7 @@ function refreshDashboard() {
 // Extensions Functions
 async function loadExtensions() {
     const tbody = document.getElementById('extensions-table-body');
-    tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading extensions...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="loading">Loading extensions...</td></tr>';
     
     try {
         const response = await fetch(`${API_BASE}/api/extensions`);
@@ -121,18 +121,19 @@ async function loadExtensions() {
         currentExtensions = extensions;
         
         if (extensions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="loading">No extensions found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="loading">No extensions found</td></tr>';
             return;
         }
         
         tbody.innerHTML = extensions.map(ext => `
             <tr>
-                <td><strong>${ext.number}</strong></td>
+                <td><strong>${ext.number}</strong>${ext.ad_synced ? ' <span class="ad-badge" title="Synced from Active Directory">AD</span>' : ''}</td>
                 <td>${ext.name}</td>
                 <td>${ext.email || 'Not set'}</td>
                 <td class="${ext.registered ? 'status-online' : 'status-offline'}">
                     ${ext.registered ? '● Online' : '○ Offline'}
                 </td>
+                <td>${ext.allow_external ? 'Yes' : 'No'}</td>
                 <td>
                     <button class="btn btn-primary" onclick="editExtension('${ext.number}')">✏️ Edit</button>
                     ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${ext.number}')">🔄 Reboot</button>` : ''}
@@ -142,7 +143,7 @@ async function loadExtensions() {
         `).join('');
     } catch (error) {
         console.error('Error loading extensions:', error);
-        tbody.innerHTML = '<tr><td colspan="5" class="loading">Error loading extensions</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Error loading extensions</td></tr>';
     }
 }
 

@@ -409,9 +409,40 @@ class DatabaseBackend:
         )
         """
 
+        # Extensions table - stores user extensions/phone numbers
+        extensions_table = """
+        CREATE TABLE IF NOT EXISTS extensions (
+            id SERIAL PRIMARY KEY,
+            number VARCHAR(20) UNIQUE NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            password_hash VARCHAR(255) NOT NULL,
+            allow_external BOOLEAN DEFAULT TRUE,
+            voicemail_pin VARCHAR(10),
+            ad_synced BOOLEAN DEFAULT FALSE,
+            ad_username VARCHAR(100),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS extensions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            number VARCHAR(20) UNIQUE NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            password_hash VARCHAR(255) NOT NULL,
+            allow_external BOOLEAN DEFAULT 1,
+            voicemail_pin VARCHAR(10),
+            ad_synced BOOLEAN DEFAULT 0,
+            ad_username VARCHAR(100),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+
         # Execute table creation
         success = True
-        for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table]:
+        for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table, extensions_table]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
@@ -425,7 +456,10 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_vm_extension ON voicemail_messages(extension_number)",
             "CREATE INDEX IF NOT EXISTS idx_vm_listened ON voicemail_messages(listened)",
             "CREATE INDEX IF NOT EXISTS idx_phones_mac ON registered_phones(mac_address)",
-            "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension_number)"
+            "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension_number)",
+            "CREATE INDEX IF NOT EXISTS idx_ext_number ON extensions(number)",
+            "CREATE INDEX IF NOT EXISTS idx_ext_email ON extensions(email)",
+            "CREATE INDEX IF NOT EXISTS idx_ext_ad_synced ON extensions(ad_synced)"
         ]
 
         for index_sql in indexes:
@@ -675,3 +709,197 @@ class RegisteredPhonesDB:
         DELETE FROM registered_phones WHERE id = ?
         """
         return self.db.execute(query, (phone_id,))
+
+
+class ExtensionDB:
+    """Extension database operations"""
+
+    def __init__(self, db: DatabaseBackend):
+        """
+        Initialize extension database
+        
+        Args:
+            db: Database backend instance
+        """
+        self.db = db
+        self.logger = get_logger()
+
+    def add(self, number: str, name: str, password_hash: str, email: str = None, 
+            allow_external: bool = True, voicemail_pin: str = None, 
+            ad_synced: bool = False, ad_username: str = None) -> bool:
+        """
+        Add a new extension
+        
+        Args:
+            number: Extension number
+            name: Display name
+            password_hash: Hashed password
+            email: Email address (optional)
+            allow_external: Allow external calls
+            voicemail_pin: Voicemail PIN (optional)
+            ad_synced: Whether synced from Active Directory
+            ad_username: Active Directory username (optional)
+            
+        Returns:
+            bool: True if successful
+        """
+        query = """
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """ if self.db.db_type == 'postgresql' else """
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        return self.db.execute(query, (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username))
+
+    def get(self, number: str) -> Optional[Dict]:
+        """
+        Get extension by number
+        
+        Args:
+            number: Extension number
+            
+        Returns:
+            dict: Extension data or None
+        """
+        query = """
+        SELECT * FROM extensions WHERE number = %s
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM extensions WHERE number = ?
+        """
+        return self.db.fetch_one(query, (number,))
+
+    def get_all(self) -> List[Dict]:
+        """
+        Get all extensions
+        
+        Returns:
+            list: List of all extensions
+        """
+        query = """
+        SELECT * FROM extensions ORDER BY number
+        """
+        return self.db.fetch_all(query)
+
+    def get_ad_synced(self) -> List[Dict]:
+        """
+        Get all AD-synced extensions
+        
+        Returns:
+            list: List of AD-synced extensions
+        """
+        query = """
+        SELECT * FROM extensions WHERE ad_synced = %s ORDER BY number
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM extensions WHERE ad_synced = 1 ORDER BY number
+        """
+        return self.db.fetch_all(query, (True,)) if self.db.db_type == 'postgresql' else self.db.fetch_all(query)
+
+    def update(self, number: str, name: str = None, email: str = None, 
+               password_hash: str = None, allow_external: bool = None,
+               voicemail_pin: str = None, ad_synced: bool = None, 
+               ad_username: str = None) -> bool:
+        """
+        Update an extension
+        
+        Args:
+            number: Extension number
+            name: Display name (optional)
+            email: Email address (optional)
+            password_hash: Hashed password (optional)
+            allow_external: Allow external calls (optional)
+            voicemail_pin: Voicemail PIN (optional)
+            ad_synced: Whether synced from Active Directory (optional)
+            ad_username: Active Directory username (optional)
+            
+        Returns:
+            bool: True if successful
+        """
+        # Build update query dynamically based on provided fields
+        updates = []
+        params = []
+        
+        if name is not None:
+            updates.append("name = %s" if self.db.db_type == 'postgresql' else "name = ?")
+            params.append(name)
+        
+        if email is not None:
+            updates.append("email = %s" if self.db.db_type == 'postgresql' else "email = ?")
+            params.append(email)
+        
+        if password_hash is not None:
+            updates.append("password_hash = %s" if self.db.db_type == 'postgresql' else "password_hash = ?")
+            params.append(password_hash)
+        
+        if allow_external is not None:
+            updates.append("allow_external = %s" if self.db.db_type == 'postgresql' else "allow_external = ?")
+            params.append(allow_external)
+        
+        if voicemail_pin is not None:
+            updates.append("voicemail_pin = %s" if self.db.db_type == 'postgresql' else "voicemail_pin = ?")
+            params.append(voicemail_pin)
+        
+        if ad_synced is not None:
+            updates.append("ad_synced = %s" if self.db.db_type == 'postgresql' else "ad_synced = ?")
+            params.append(ad_synced)
+        
+        if ad_username is not None:
+            updates.append("ad_username = %s" if self.db.db_type == 'postgresql' else "ad_username = ?")
+            params.append(ad_username)
+        
+        if not updates:
+            return True  # Nothing to update
+        
+        # Add updated_at timestamp
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        
+        # Add number to params for WHERE clause
+        params.append(number)
+        
+        query = f"""
+        UPDATE extensions 
+        SET {', '.join(updates)}
+        WHERE number = {'%s' if self.db.db_type == 'postgresql' else '?'}
+        """
+        
+        return self.db.execute(query, tuple(params))
+
+    def delete(self, number: str) -> bool:
+        """
+        Delete an extension
+        
+        Args:
+            number: Extension number
+            
+        Returns:
+            bool: True if successful
+        """
+        query = """
+        DELETE FROM extensions WHERE number = %s
+        """ if self.db.db_type == 'postgresql' else """
+        DELETE FROM extensions WHERE number = ?
+        """
+        return self.db.execute(query, (number,))
+
+    def search(self, query_str: str) -> List[Dict]:
+        """
+        Search extensions by number, name, or email
+        
+        Args:
+            query_str: Search query
+            
+        Returns:
+            list: List of matching extensions
+        """
+        search_pattern = f"%{query_str}%"
+        query = """
+        SELECT * FROM extensions 
+        WHERE number LIKE %s OR name LIKE %s OR email LIKE %s
+        ORDER BY number
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM extensions 
+        WHERE number LIKE ? OR name LIKE ? OR email LIKE ?
+        ORDER BY number
+        """
+        return self.db.fetch_all(query, (search_pattern, search_pattern, search_pattern))
