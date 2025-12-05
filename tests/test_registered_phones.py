@@ -291,6 +291,111 @@ def test_ip_preservation_on_reregistration():
     print("✓ IP preservation on re-registration works")
 
 
+def test_update_phone_extension():
+    """
+    Test updating a phone's extension when reprovisioning to a different extension
+    
+    This addresses the scenario where a phone (identified by MAC) is moved from
+    one extension to another. The system should update the extension number
+    rather than creating duplicate entries.
+    """
+    print("Testing phone extension update (reprovisioning)...")
+    
+    # Create database backend
+    config = Config("config.yml")
+    config.config['database'] = {
+        'type': 'sqlite',
+        'path': ':memory:'
+    }
+    
+    db = DatabaseBackend(config)
+    assert db.connect(), "Failed to connect to database"
+    assert db.create_tables(), "Failed to create tables"
+    
+    phones_db = RegisteredPhonesDB(db)
+    
+    # Scenario: Phone is initially provisioned to extension 1001
+    phones_db.register_phone(
+        extension_number="1001",
+        ip_address="192.168.1.100",
+        mac_address="001565AABBCC",
+        user_agent="Yealink SIP-T46S",
+        contact_uri="<sip:1001@192.168.1.100:5060>"
+    )
+    
+    # Verify initial registration
+    phone = phones_db.get_by_mac("001565AABBCC")
+    assert phone is not None, "Phone not found after initial registration"
+    assert phone['extension_number'] == "1001", "Wrong initial extension"
+    assert phone['mac_address'] == "001565AABBCC", "Wrong MAC address"
+    
+    # Now reprovision the phone to extension 1002
+    success = phones_db.update_phone_extension(
+        mac_address="001565AABBCC",
+        new_extension_number="1002"
+    )
+    assert success, "Failed to update phone extension"
+    
+    # Verify the extension was updated
+    phone = phones_db.get_by_mac("001565AABBCC")
+    assert phone is not None, "Phone not found after extension update"
+    assert phone['extension_number'] == "1002", "Extension not updated correctly"
+    assert phone['mac_address'] == "001565AABBCC", "MAC address should remain the same"
+    assert phone['ip_address'] == "192.168.1.100", "IP address should remain the same"
+    
+    # Verify we don't have duplicate entries for this MAC
+    all_phones = phones_db.list_all()
+    mac_count = sum(1 for p in all_phones if p['mac_address'] == "001565AABBCC")
+    assert mac_count == 1, f"Expected 1 entry for MAC, found {mac_count} (possible duplicate)"
+    
+    # Verify old extension 1001 has no phones registered
+    old_ext_phones = phones_db.get_by_extension("1001")
+    assert len(old_ext_phones) == 0, "Old extension should have no phones"
+    
+    # Verify new extension 1002 has this phone
+    new_ext_phones = phones_db.get_by_extension("1002")
+    assert len(new_ext_phones) == 1, "New extension should have exactly 1 phone"
+    assert new_ext_phones[0]['mac_address'] == "001565AABBCC", "Wrong phone on new extension"
+    
+    print("✓ Phone extension update (reprovisioning) works")
+
+
+def test_update_phone_extension_without_mac():
+    """
+    Test that update_phone_extension requires a MAC address
+    """
+    print("Testing phone extension update validation...")
+    
+    # Create database backend
+    config = Config("config.yml")
+    config.config['database'] = {
+        'type': 'sqlite',
+        'path': ':memory:'
+    }
+    
+    db = DatabaseBackend(config)
+    assert db.connect(), "Failed to connect to database"
+    assert db.create_tables(), "Failed to create tables"
+    
+    phones_db = RegisteredPhonesDB(db)
+    
+    # Try to update with None MAC - should return False
+    success = phones_db.update_phone_extension(
+        mac_address=None,
+        new_extension_number="1003"
+    )
+    assert not success, "Should fail when MAC address is None"
+    
+    # Try to update with empty MAC - should return False
+    success = phones_db.update_phone_extension(
+        mac_address="",
+        new_extension_number="1003"
+    )
+    assert not success, "Should fail when MAC address is empty"
+    
+    print("✓ Phone extension update validation works")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("Running Registered Phones Tests")
@@ -304,9 +409,11 @@ if __name__ == "__main__":
         test_list_all_phones()
         test_mac_preservation_on_reregistration()
         test_ip_preservation_on_reregistration()
+        test_update_phone_extension()
+        test_update_phone_extension_without_mac()
         
         print("=" * 60)
-        print("Results: 7 passed, 0 failed")
+        print("Results: 9 passed, 0 failed")
         print("=" * 60)
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}")
