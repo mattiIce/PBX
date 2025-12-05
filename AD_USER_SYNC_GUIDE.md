@@ -187,6 +187,51 @@ User synchronization complete: 15 total, 3 created, 12 updated, 1 deactivated, 2
 
 ## Testing
 
+### Verify AD Integration Setup
+
+Before syncing users, test that your AD integration is configured correctly:
+
+```bash
+# Run the comprehensive AD integration test
+python scripts/test_ad_integration.py
+
+# With verbose output for detailed information
+python scripts/test_ad_integration.py --verbose
+```
+
+The test script will check:
+- ✓ Configuration is valid and complete
+- ✓ Required dependencies (ldap3) are installed
+- ✓ Connection to AD server succeeds
+- ✓ Authentication with bind credentials works
+- ✓ User search and discovery functions
+- ✓ User attributes are retrieved correctly
+- ✓ Extensions can be synced without conflicts
+- ✓ Overall integration readiness
+
+**Example output:**
+```
+======================================================================
+Test Summary
+======================================================================
+Total tests: 15
+Passed: 13
+Failed: 0
+Warnings: 2
+
+✓ ALL TESTS PASSED
+
+Active Directory integration is configured correctly!
+
+Next steps:
+  1. Run the sync script:
+     python scripts/sync_ad_users.py
+
+  2. Verify extensions were created in config.yml
+
+  3. Test SIP registration with a synced extension
+```
+
 ### Test with Specific Users
 
 The configuration includes test users: `cmattinson` and `bsautter`
@@ -206,6 +251,29 @@ The configuration includes test users: `cmattinson` and `bsautter`
    ```bash
    grep -A 5 "cmattinson\|bsautter" config.yml
    ```
+
+### Verify Sync Completed Successfully
+
+After running the sync, verify it worked:
+
+1. **Check the sync output** - Look for success message:
+   ```
+   Synchronization Complete: 15 users synchronized
+   ```
+
+2. **Verify extensions in config.yml:**
+   ```bash
+   # Count synced extensions
+   grep -c "ad_synced: true" config.yml
+   ```
+
+3. **List all synced users:**
+   ```bash
+   # View synced extensions with details
+   grep -B 3 "ad_synced: true" config.yml
+   ```
+
+4. **Test authentication** - Try registering a SIP phone with one of the synced extensions
 
 ### Troubleshooting
 
