@@ -130,8 +130,8 @@ class PhoneProvisioning:
     def _load_builtin_templates(self):
         """Load built-in phone templates"""
 
-        # ZIP 33G template (basic SIP phone)
-        zip_33g_template = """# ZIP 33G Configuration File
+        # Zultys ZIP 33G template (basic SIP phone)
+        zultys_zip33g_template = """# Zultys ZIP 33G Configuration File
 
 # SIP Account Configuration
 account.1.enable = 1
@@ -159,10 +159,10 @@ time.timezone = GMT-8
 phone.volume.ring = 8
 phone.volume.handset = 6
 """
-        self.add_template('zip', '33g', zip_33g_template)
+        self.add_template('zultys', 'zip33g', zultys_zip33g_template)
 
-        # ZIP 37G template (advanced SIP phone with more features)
-        zip_37g_template = """# ZIP 37G Configuration File
+        # Zultys ZIP 37G template (advanced SIP phone with more features)
+        zultys_zip37g_template = """# Zultys ZIP 37G Configuration File
 
 # SIP Account Configuration
 account.1.enable = 1
@@ -204,7 +204,113 @@ call.transfer.enable = 1
 # Advanced Settings
 security.user_password = admin
 """
-        self.add_template('zip', '37g', zip_37g_template)
+        self.add_template('zultys', 'zip37g', zultys_zip37g_template)
+
+        # Yealink T46S template (popular business phone)
+        yealink_t46s_template = """#!version:1.0.0.1
+
+# Yealink T46S Configuration File
+
+# Account 1
+account.1.enable = 1
+account.1.label = {{EXTENSION_NAME}}
+account.1.display_name = {{EXTENSION_NAME}}
+account.1.auth_name = {{EXTENSION_NUMBER}}
+account.1.user_name = {{EXTENSION_NUMBER}}
+account.1.password = {{EXTENSION_PASSWORD}}
+account.1.sip_server.1.address = {{SIP_SERVER}}
+account.1.sip_server.1.port = {{SIP_PORT}}
+account.1.sip_server.1.expires = 3600
+
+# Codecs
+account.1.codec.1.enable = 1
+account.1.codec.1.payload_type = PCMU
+account.1.codec.2.enable = 1
+account.1.codec.2.payload_type = PCMA
+account.1.codec.3.enable = 1
+account.1.codec.3.payload_type = G729
+
+# Network
+network.internet_port.type = 0
+network.internet_port.dhcp = 1
+
+# Time
+local_time.time_zone = -8
+local_time.ntp_server1 = pool.ntp.org
+"""
+        self.add_template('yealink', 't46s', yealink_t46s_template)
+
+        # Polycom VVX 450 template
+        polycom_vvx450_template = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Polycom VVX 450 Configuration -->
+<polycomConfig>
+  <reg reg.1.displayName="{{EXTENSION_NAME}}"
+       reg.1.address="{{EXTENSION_NUMBER}}"
+       reg.1.auth.userId="{{EXTENSION_NUMBER}}"
+       reg.1.auth.password="{{EXTENSION_PASSWORD}}"
+       reg.1.server.1.address="{{SIP_SERVER}}"
+       reg.1.server.1.port="{{SIP_PORT}}"
+       reg.1.server.1.expires="3600"/>
+  
+  <voice voice.codecPref.G711_Mu="1"
+         voice.codecPref.G711_A="2"
+         voice.codecPref.G729_AB="3"/>
+  
+  <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"/>
+</polycomConfig>
+"""
+        self.add_template('polycom', 'vvx450', polycom_vvx450_template)
+
+        # Cisco SPA504G template
+        cisco_spa504g_template = """# Cisco SPA504G Configuration
+
+# Line 1
+Line_Enable_1_ : Yes
+Display_Name_1_ : {{EXTENSION_NAME}}
+User_ID_1_ : {{EXTENSION_NUMBER}}
+Password_1_ : {{EXTENSION_PASSWORD}}
+Proxy_1_ : {{SIP_SERVER}}
+Register_Expires_1_ : 3600
+
+# Codecs
+Preferred_Codec_1_ : G711u
+Preferred_Codec_2_ : G711a
+Preferred_Codec_3_ : G729a
+
+# Network
+Internet_Connection_Type : DHCP
+
+# Regional
+Time_Zone : GMT-08:00
+Primary_NTP_Server : pool.ntp.org
+"""
+        self.add_template('cisco', 'spa504g', cisco_spa504g_template)
+
+        # Grandstream GXP2170 template
+        grandstream_gxp2170_template = """# Grandstream GXP2170 Configuration
+
+# Account 1
+P270 = {{EXTENSION_NUMBER}}
+P271 = {{EXTENSION_NAME}}
+P35 = {{EXTENSION_NUMBER}}
+P34 = {{EXTENSION_PASSWORD}}
+P47 = {{SIP_SERVER}}
+P48 = {{SIP_PORT}}
+P2 = 3600
+
+# Codecs
+P57 = 0    # PCMU
+P58 = 8    # PCMA
+P46 = 18   # G729
+
+# Network
+P8 = 0     # DHCP enabled
+
+# Time
+P64 = pool.ntp.org
+P30 = 13   # GMT-8
+"""
+        self.add_template('grandstream', 'gxp2170', grandstream_gxp2170_template)
 
         self.logger.info(f"Loaded {len(self.templates)} built-in phone templates")
 
@@ -373,7 +479,10 @@ security.user_password = admin
         config_content = template.generate_config(extension_config, server_config)
 
         # Determine content type based on vendor
-        content_type = 'text/plain'  # ZIP phones use plain text configuration
+        if device.vendor == 'polycom':
+            content_type = 'application/xml'
+        else:
+            content_type = 'text/plain'
 
         # Mark device as provisioned
         device.mark_provisioned()

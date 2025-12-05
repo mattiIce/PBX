@@ -139,9 +139,13 @@ class PhoneProvisioningSetup:
         if not REQUESTS_AVAILABLE or not self.pbx_running:
             # Return defaults if PBX is not running
             return {
-                'vendors': ['zip'],
+                'vendors': ['zultys', 'yealink', 'polycom', 'cisco', 'grandstream'],
                 'models': {
-                    'zip': ['33g', '37g']
+                    'zultys': ['zip33g', 'zip37g'],
+                    'yealink': ['t46s'],
+                    'polycom': ['vvx450'],
+                    'cisco': ['spa504g'],
+                    'grandstream': ['gxp2170']
                 }
             }
         
