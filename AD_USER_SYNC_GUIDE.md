@@ -119,6 +119,18 @@ curl -X POST http://localhost:8080/api/admin/sync-ad-users
 
 ## How It Works
 
+### Storage Location
+
+**Starting with this version, extensions are stored in the database** (not config.yml):
+- ✅ Extensions synced from AD are stored in the database
+- ✅ Marked with `ad_synced=true` flag
+- ✅ AD username tracked for reference
+- ✅ Can be viewed/edited in admin web interface
+- ✅ Changes persist across restarts
+- ✅ No need to edit config.yml manually
+
+See [EXTENSION_DATABASE_GUIDE.md](EXTENSION_DATABASE_GUIDE.md) for complete database documentation.
+
 ### User Discovery
 
 The sync process:
@@ -129,7 +141,7 @@ The sync process:
    - `telephoneNumber=*` (has a phone number)
    - Account is enabled (not disabled)
 3. **Extracts attributes**:
-   - `sAMAccountName` → Username
+   - `sAMAccountName` → Username (stored in database)
    - `displayName` → Extension name
    - `mail` → Email address
    - `telephoneNumber` → Extension number
@@ -157,19 +169,22 @@ For new extensions:
 
 **Creating New Extensions:**
 - AD user has `telephoneNumber` but no matching PBX extension
-- Creates extension with random password
-- Sets `ad_synced: true` marker
+- Creates extension in database with random 4-digit password
+- Sets `ad_synced=true` and stores AD username
+- Extension immediately available for SIP registration
 
 **Updating Existing Extensions:**
 - Extension number matches AD user's phone number
-- Updates: display name, email address
+- Updates: display name, email address, AD username
 - Preserves: existing password, registration status
+- Database record updated automatically
 
 **Deactivating Removed Users:**
-- Extension marked as `ad_synced: true`
+- Extension marked as `ad_synced=true` in database
 - User no longer in AD or lost `telephoneNumber`
-- Sets `allow_external: false` (disables external calls)
-- Does NOT delete the extension (preserves call history)
+- Sets `allow_external=false` (disables external calls)
+- Does NOT delete the extension (preserves call history and voicemail)
+- Extension still visible in admin interface with "AD" badge
 
 ## Sync Results
 
@@ -249,8 +264,18 @@ The configuration includes test users: `cmattinson` and `bsautter`
 
 3. **Check created extensions:**
    ```bash
-   grep -A 5 "cmattinson\|bsautter" config.yml
+   # List all extensions from database
+   python scripts/list_extensions_from_db.py
+   
+   # Or list only AD-synced extensions
+   python scripts/list_extensions_from_db.py --ad-only
    ```
+
+4. **View in admin interface:**
+   - Start PBX: `python main.py`
+   - Open: `http://localhost:8080/admin/`
+   - Go to **Extensions** tab
+   - AD-synced extensions show green "AD" badge
 
 ### Verify Sync Completed Successfully
 
