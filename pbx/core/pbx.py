@@ -22,7 +22,7 @@ from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.sip_trunk import SIPTrunkSystem
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.api.rest_api import PBXAPIServer
-from pbx.utils.database import DatabaseBackend
+from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
 class PBXCore:
@@ -49,13 +49,16 @@ class PBXCore:
 
         # Initialize database backend
         self.database = DatabaseBackend(self.config)
+        self.registered_phones_db = None
         if self.database.connect():
             self.database.create_tables()
+            self.registered_phones_db = RegisteredPhonesDB(self.database)
             self.logger.info(f"Database backend initialized successfully ({self.database.db_type})")
-            self.logger.info("Voicemail metadata will be stored in database")
+            self.logger.info("Voicemail metadata and phone registrations will be stored in database")
         else:
             self.logger.warning("Database backend not available - running without database")
             self.logger.warning("Voicemails will be stored ONLY as files (no database metadata)")
+            self.logger.warning("Phone registrations will not be persisted")
 
         # Initialize core components
         self.extension_registry = ExtensionRegistry(self.config)
@@ -167,13 +170,15 @@ class PBXCore:
 
         self.logger.info("PBX system stopped")
 
-    def register_extension(self, from_header, addr):
+    def register_extension(self, from_header, addr, user_agent=None, contact=None):
         """
-        Register extension
+        Register extension and store phone information
 
         Args:
             from_header: SIP From header
             addr: Network address (host, port)
+            user_agent: User-Agent header from SIP REGISTER
+            contact: Contact header from SIP REGISTER
 
         Returns:
             True if registration successful
@@ -189,6 +194,33 @@ class PBXCore:
             if extension:
                 self.extension_registry.register(extension_number, addr)
                 self.logger.info(f"Extension {extension_number} registered from {addr}")
+                
+                # Store phone registration in database
+                if self.registered_phones_db:
+                    ip_address = addr[0]  # Extract IP from (host, port) tuple
+                    
+                    # Try to extract MAC address from Contact URI or User-Agent
+                    # Common patterns:
+                    # - Contact: <sip:1001@192.168.1.100:5060;mac=00:11:22:33:44:55>
+                    # - Contact: <sip:1001@192.168.1.100:5060>;+sip.instance="<urn:uuid:00112233-4455-6677-8899-aabbccddeeff>"
+                    # - User-Agent: Yealink SIP-T46S 66.85.0.5 00:15:65:12:34:56
+                    mac_address = self._extract_mac_address(contact, user_agent)
+                    
+                    try:
+                        self.registered_phones_db.register_phone(
+                            extension_number=extension_number,
+                            ip_address=ip_address,
+                            mac_address=mac_address,
+                            user_agent=user_agent,
+                            contact_uri=contact
+                        )
+                        if mac_address:
+                            self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address}, mac={mac_address}")
+                        else:
+                            self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address} (no MAC)")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to store phone registration in database: {e}")
+                
                 return True
             else:
                 self.logger.warning(f"Unknown extension {extension_number} attempted registration")
@@ -196,6 +228,51 @@ class PBXCore:
 
         self.logger.warning(f"Could not parse extension from {from_header}")
         return False
+
+    def _extract_mac_address(self, contact, user_agent):
+        """
+        Extract MAC address from SIP headers
+        
+        Args:
+            contact: Contact header
+            user_agent: User-Agent header
+            
+        Returns:
+            MAC address string or None
+        """
+        mac_address = None
+        
+        # Try to extract from Contact header
+        if contact:
+            # Pattern 1: mac=XX:XX:XX:XX:XX:XX or mac=XX-XX-XX-XX-XX-XX
+            mac_match = re.search(r'mac=([0-9a-fA-F:]{17}|[0-9a-fA-F-]{17})', contact)
+            if mac_match:
+                mac_address = mac_match.group(1).lower()
+            
+            # Pattern 2: Instance ID that may contain MAC
+            # <urn:uuid:00112233-4455-6677-8899-aabbccddeeff>
+            instance_match = re.search(r'sip\.instance="<urn:uuid:([0-9a-f-]+)>"', contact, re.IGNORECASE)
+            if not mac_address and instance_match:
+                # Some devices use UUID derived from MAC
+                uuid_str = instance_match.group(1).replace('-', '')
+                # Last 12 chars might be MAC
+                if len(uuid_str) >= 12:
+                    potential_mac = uuid_str[-12:]
+                    # Format as MAC: XX:XX:XX:XX:XX:XX
+                    mac_address = ':'.join([potential_mac[i:i+2] for i in range(0, 12, 2)])
+        
+        # Try to extract from User-Agent
+        if not mac_address and user_agent:
+            # Pattern: User-Agent might end with MAC like "... 00:15:65:12:34:56"
+            mac_match = re.search(r'([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}', user_agent)
+            if mac_match:
+                mac_address = mac_match.group(0).lower()
+        
+        # Normalize MAC address format (remove separators, lowercase)
+        if mac_address:
+            mac_address = mac_address.replace(':', '').replace('-', '').lower()
+        
+        return mac_address
 
     def route_call(self, from_header, to_header, call_id, message, from_addr):
         """

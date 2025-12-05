@@ -139,10 +139,14 @@ class SIPServer:
 
         # Extract extension from URI or From header
         from_header = message.get_header('From')
+        
+        # Extract additional registration info
+        user_agent = message.get_header('User-Agent')
+        contact = message.get_header('Contact')
 
         if self.pbx_core:
             # Simple registration - in production, verify credentials
-            success = self.pbx_core.register_extension(from_header, addr)
+            success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
 
             if success:
                 self._send_response(200, "OK", message, addr)

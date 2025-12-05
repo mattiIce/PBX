@@ -363,9 +363,38 @@ class DatabaseBackend:
         )
         """
 
+        # Registered phones table - tracks phones by MAC (if available) or IP address
+        registered_phones_table = """
+        CREATE TABLE IF NOT EXISTS registered_phones (
+            id SERIAL PRIMARY KEY,
+            mac_address VARCHAR(20),
+            extension_number VARCHAR(20) NOT NULL,
+            user_agent VARCHAR(255),
+            ip_address VARCHAR(50) NOT NULL,
+            first_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            contact_uri VARCHAR(255),
+            UNIQUE(mac_address, extension_number),
+            UNIQUE(ip_address, extension_number)
+        )
+        """ if self.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS registered_phones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mac_address VARCHAR(20),
+            extension_number VARCHAR(20) NOT NULL,
+            user_agent VARCHAR(255),
+            ip_address VARCHAR(50) NOT NULL,
+            first_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            contact_uri VARCHAR(255),
+            UNIQUE(mac_address, extension_number),
+            UNIQUE(ip_address, extension_number)
+        )
+        """
+
         # Execute table creation
         success = True
-        for table_sql in [vip_table, cdr_table, voicemail_table]:
+        for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
@@ -377,7 +406,9 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_cdr_from ON call_records(from_extension)",
             "CREATE INDEX IF NOT EXISTS idx_cdr_start_time ON call_records(start_time)",
             "CREATE INDEX IF NOT EXISTS idx_vm_extension ON voicemail_messages(extension_number)",
-            "CREATE INDEX IF NOT EXISTS idx_vm_listened ON voicemail_messages(listened)"
+            "CREATE INDEX IF NOT EXISTS idx_vm_listened ON voicemail_messages(listened)",
+            "CREATE INDEX IF NOT EXISTS idx_phones_mac ON registered_phones(mac_address)",
+            "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension_number)"
         ]
 
         for index_sql in indexes:
@@ -449,3 +480,181 @@ class VIPCallerDB:
     def is_vip(self, caller_id: str) -> bool:
         """Check if caller is VIP"""
         return self.get_vip(caller_id) is not None
+
+
+class RegisteredPhonesDB:
+    """Registered phones database operations"""
+
+    def __init__(self, db: DatabaseBackend):
+        """
+        Initialize registered phones database
+
+        Args:
+            db: Database backend instance
+        """
+        self.db = db
+        self.logger = get_logger()
+
+    def register_phone(self, extension_number: str, ip_address: str, 
+                      mac_address: str = None, user_agent: str = None, 
+                      contact_uri: str = None) -> bool:
+        """
+        Register or update a phone registration
+        
+        Args:
+            extension_number: Extension number
+            ip_address: IP address of the phone
+            mac_address: MAC address (optional, can be None)
+            user_agent: User-Agent header from SIP message
+            contact_uri: Contact URI from SIP message
+            
+        Returns:
+            bool: True if successful
+        """
+        # First check if this phone is already registered (by MAC or IP)
+        existing = None
+        if mac_address:
+            existing = self.get_by_mac(mac_address, extension_number)
+        if not existing:
+            existing = self.get_by_ip(ip_address, extension_number)
+        
+        if existing:
+            # Update existing registration
+            query = """
+            UPDATE registered_phones 
+            SET mac_address = %s, ip_address = %s, user_agent = %s, 
+                contact_uri = %s, last_registered = %s
+            WHERE id = %s
+            """ if self.db.db_type == 'postgresql' else """
+            UPDATE registered_phones 
+            SET mac_address = ?, ip_address = ?, user_agent = ?, 
+                contact_uri = ?, last_registered = ?
+            WHERE id = ?
+            """
+            params = (mac_address, ip_address, user_agent, contact_uri, 
+                     datetime.now(), existing['id'])
+            return self.db.execute(query, params)
+        else:
+            # Insert new registration
+            query = """
+            INSERT INTO registered_phones 
+            (mac_address, extension_number, ip_address, user_agent, contact_uri, 
+             first_registered, last_registered)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """ if self.db.db_type == 'postgresql' else """
+            INSERT INTO registered_phones 
+            (mac_address, extension_number, ip_address, user_agent, contact_uri, 
+             first_registered, last_registered)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+            now = datetime.now()
+            params = (mac_address, extension_number, ip_address, user_agent, 
+                     contact_uri, now, now)
+            return self.db.execute(query, params)
+
+    def get_by_mac(self, mac_address: str, extension_number: str = None) -> Optional[Dict]:
+        """
+        Get phone registration by MAC address
+        
+        Args:
+            mac_address: MAC address
+            extension_number: Optional extension filter
+            
+        Returns:
+            dict: Phone registration data or None
+        """
+        if extension_number:
+            query = """
+            SELECT * FROM registered_phones 
+            WHERE mac_address = %s AND extension_number = %s
+            """ if self.db.db_type == 'postgresql' else """
+            SELECT * FROM registered_phones 
+            WHERE mac_address = ? AND extension_number = ?
+            """
+            return self.db.fetch_one(query, (mac_address, extension_number))
+        else:
+            query = """
+            SELECT * FROM registered_phones WHERE mac_address = %s
+            """ if self.db.db_type == 'postgresql' else """
+            SELECT * FROM registered_phones WHERE mac_address = ?
+            """
+            return self.db.fetch_one(query, (mac_address,))
+
+    def get_by_ip(self, ip_address: str, extension_number: str = None) -> Optional[Dict]:
+        """
+        Get phone registration by IP address
+        
+        Args:
+            ip_address: IP address
+            extension_number: Optional extension filter
+            
+        Returns:
+            dict: Phone registration data or None
+        """
+        if extension_number:
+            query = """
+            SELECT * FROM registered_phones 
+            WHERE ip_address = %s AND extension_number = %s
+            """ if self.db.db_type == 'postgresql' else """
+            SELECT * FROM registered_phones 
+            WHERE ip_address = ? AND extension_number = ?
+            """
+            return self.db.fetch_one(query, (ip_address, extension_number))
+        else:
+            query = """
+            SELECT * FROM registered_phones WHERE ip_address = %s
+            """ if self.db.db_type == 'postgresql' else """
+            SELECT * FROM registered_phones WHERE ip_address = ?
+            """
+            return self.db.fetch_one(query, (ip_address,))
+
+    def get_by_extension(self, extension_number: str) -> List[Dict]:
+        """
+        Get all phone registrations for an extension
+        
+        Args:
+            extension_number: Extension number
+            
+        Returns:
+            list: List of phone registration data
+        """
+        query = """
+        SELECT * FROM registered_phones 
+        WHERE extension_number = %s
+        ORDER BY last_registered DESC
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM registered_phones 
+        WHERE extension_number = ?
+        ORDER BY last_registered DESC
+        """
+        return self.db.fetch_all(query, (extension_number,))
+
+    def list_all(self) -> List[Dict]:
+        """
+        List all registered phones
+        
+        Returns:
+            list: List of all phone registrations
+        """
+        query = """
+        SELECT * FROM registered_phones 
+        ORDER BY last_registered DESC
+        """
+        return self.db.fetch_all(query)
+
+    def remove_phone(self, phone_id: int) -> bool:
+        """
+        Remove a phone registration
+        
+        Args:
+            phone_id: Phone registration ID
+            
+        Returns:
+            bool: True if successful
+        """
+        query = """
+        DELETE FROM registered_phones WHERE id = %s
+        """ if self.db.db_type == 'postgresql' else """
+        DELETE FROM registered_phones WHERE id = ?
+        """
+        return self.db.execute(query, (phone_id,))
