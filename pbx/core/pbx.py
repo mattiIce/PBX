@@ -770,7 +770,7 @@ class PBXCore:
                     )
                     if player.start():
                         # Check for custom greeting first
-                        mailbox = self.voicemail.get_mailbox(call.to_extension)
+                        mailbox = self.voicemail_system.get_mailbox(call.to_extension)
                         custom_greeting_path = mailbox.get_greeting_path()
                         greeting_file = None
                         temp_file_created = False

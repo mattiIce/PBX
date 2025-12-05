@@ -19,6 +19,7 @@
         <nav class="tabs">
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
+            <button class="tab-button" data-tab="phones">Registered Phones</button>
             <button class="tab-button" data-tab="voicemail">Voicemail</button>
             <button class="tab-button" data-tab="calls">Active Calls</button>
             <button class="tab-button" data-tab="config">Configuration</button>
@@ -77,6 +78,33 @@
                     <tbody id="extensions-table-body">
                         <tr>
                             <td colspan="5" class="loading">Loading extensions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Registered Phones Tab -->
+        <div id="phones" class="tab-content">
+            <div class="section-header">
+                <h2>Registered Phones (Database)</h2>
+                <button class="btn btn-primary" onclick="loadRegisteredPhones()">🔄 Refresh</button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Extension</th>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>User Agent</th>
+                            <th>Last Registration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registered-phones-table-body">
+                        <tr>
+                            <td colspan="5" class="loading">Loading registered phones...</td>
                         </tr>
                     </tbody>
                 </table>
