@@ -211,10 +211,38 @@ class ZoomIntegration:
         Returns:
             dict: User status (available, busy, etc.) or None
         """
-        if not self.enabled or not self.phone_enabled:
+        if not self.enabled or not self.phone_enabled or not REQUESTS_AVAILABLE:
             return None
 
-        # TODO: Query Zoom Phone API
-        # GET https://api.zoom.us/v2/phone/users/{userId}/settings
+        # Authenticate first
+        if not self.authenticate():
+            return None
 
-        return None
+        try:
+            url = f"{self.api_base_url}/phone/users/{user_id}/settings"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            self.logger.info(f"Getting Zoom Phone status for user {user_id}")
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.logger.info(f"Retrieved Zoom Phone status for user {user_id}")
+                return {
+                    'user_id': user_id,
+                    'status': data.get('calling_plans', [{}])[0].get('status', 'unknown') if data.get('calling_plans') else 'unknown',
+                    'extension_number': data.get('extension_number'),
+                    'phone_numbers': data.get('phone_numbers', []),
+                    'raw_data': data
+                }
+            else:
+                self.logger.warning(f"Failed to get Zoom Phone status: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error getting Zoom Phone status: {e}")
+            return None

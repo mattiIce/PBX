@@ -195,14 +195,86 @@ class TeamsIntegration:
         Returns:
             bool: True if successful
         """
-        if not self.enabled:
+        if not self.enabled or not REQUESTS_AVAILABLE or not MSAL_AVAILABLE:
             return False
 
-        self.logger.info(f"Sending Teams chat to {to_user}")
-        # TODO: Use Microsoft Graph API
-        # POST https://graph.microsoft.com/v1.0/chats/{chat-id}/messages
+        # Authenticate first
+        if not self.authenticate():
+            return False
 
-        return False
+        try:
+            # First, we need to create or get a 1:1 chat with the user
+            # Create a chat endpoint
+            chat_url = f"{self.graph_endpoint}/chats"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Create a 1:1 chat
+            chat_body = {
+                'chatType': 'oneOnOne',
+                'members': [
+                    {
+                        '@odata.type': '#microsoft.graph.aadUserConversationMember',
+                        'user@odata.bind': f"https://graph.microsoft.com/v1.0/users('{to_user}')",
+                        'roles': ['owner']
+                    }
+                ]
+            }
+            
+            self.logger.info(f"Creating/getting chat with {to_user}")
+            chat_response = requests.post(chat_url, headers=headers, json=chat_body, timeout=10)
+            
+            # Note: If chat already exists, API may return 201 or we need to get existing chat
+            # For simplicity, we'll handle both cases
+            chat_id = None
+            if chat_response.status_code in [200, 201]:
+                chat_id = chat_response.json().get('id')
+            else:
+                # Try to find existing chat
+                search_url = f"{self.graph_endpoint}/me/chats"
+                search_response = requests.get(search_url, headers=headers, timeout=10)
+                if search_response.status_code == 200:
+                    chats = search_response.json().get('value', [])
+                    for chat in chats:
+                        if chat.get('chatType') == 'oneOnOne':
+                            # Check if this chat is with the target user
+                            members = chat.get('members', [])
+                            for member in members:
+                                if member.get('userId') == to_user or member.get('email') == to_user:
+                                    chat_id = chat.get('id')
+                                    break
+                        if chat_id:
+                            break
+            
+            if not chat_id:
+                self.logger.error(f"Failed to create or find chat with {to_user}")
+                return False
+            
+            # Send message to the chat
+            message_url = f"{self.graph_endpoint}/chats/{chat_id}/messages"
+            message_body = {
+                'body': {
+                    'content': message,
+                    'contentType': 'text'
+                }
+            }
+            
+            self.logger.info(f"Sending message to chat {chat_id}")
+            message_response = requests.post(message_url, headers=headers, json=message_body, timeout=10)
+            
+            if message_response.status_code == 201:
+                self.logger.info(f"Successfully sent Teams chat message to {to_user}")
+                return True
+            else:
+                self.logger.warning(f"Failed to send Teams chat message: {message_response.status_code} - {message_response.text}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error sending Teams chat message: {e}")
+            return False
 
     def create_meeting_from_call(self, call_id: str, subject: str = None, participants: List[str] = None) -> Optional[Dict]:
         """

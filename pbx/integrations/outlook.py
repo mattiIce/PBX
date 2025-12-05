@@ -281,14 +281,73 @@ class OutlookIntegration:
         Returns:
             bool: True if logged successfully
         """
-        if not self.enabled:
+        if not self.enabled or not REQUESTS_AVAILABLE or not MSAL_AVAILABLE:
             return False
 
-        self.logger.info(f"Logging call to calendar for {user_email}")
-        # TODO: Create calendar event
-        # POST https://graph.microsoft.com/v1.0/users/{userPrincipalName}/calendar/events
+        # Authenticate first
+        if not self.authenticate():
+            return False
 
-        return False
+        try:
+            url = f"{self.graph_endpoint}/users/{user_email}/calendar/events"
+            
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Extract call details
+            from_number = call_details.get('from', 'Unknown')
+            to_number = call_details.get('to', 'Unknown')
+            duration = call_details.get('duration', 0)
+            timestamp = call_details.get('timestamp', datetime.now(timezone.utc).isoformat())
+            direction = call_details.get('direction', 'inbound')
+            
+            # Parse timestamp
+            if isinstance(timestamp, str):
+                start_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            else:
+                start_time = datetime.now(timezone.utc)
+            
+            # Calculate end time based on duration
+            end_time = start_time + timedelta(seconds=duration)
+            
+            # Create event body
+            event_body = {
+                'subject': f'Phone Call - {from_number if direction == "inbound" else to_number}',
+                'body': {
+                    'contentType': 'text',
+                    'content': f'Phone call details:\n'
+                              f'Direction: {direction}\n'
+                              f'From: {from_number}\n'
+                              f'To: {to_number}\n'
+                              f'Duration: {duration} seconds'
+                },
+                'start': {
+                    'dateTime': start_time.isoformat(),
+                    'timeZone': 'UTC'
+                },
+                'end': {
+                    'dateTime': end_time.isoformat(),
+                    'timeZone': 'UTC'
+                },
+                'categories': ['Phone Call'],
+                'isReminderOn': False
+            }
+            
+            self.logger.info(f"Logging call to calendar for {user_email}")
+            response = requests.post(url, headers=headers, json=event_body, timeout=10)
+            
+            if response.status_code == 201:
+                self.logger.info(f"Successfully logged call to calendar for {user_email}")
+                return True
+            else:
+                self.logger.warning(f"Failed to log call to calendar: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error logging call to calendar: {e}")
+            return False
 
     def get_out_of_office_status(self, user_email: str) -> Optional[Dict]:
         """
