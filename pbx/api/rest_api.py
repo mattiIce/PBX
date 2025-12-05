@@ -17,9 +17,11 @@ from pbx.utils.config import Config
 # Admin directory path
 ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
 
-# MAC address placeholders used by different phone vendors
-# These should NOT be treated as actual MAC addresses
-MAC_ADDRESS_PLACEHOLDERS = ['{mac}', '$mac', '{MAC}', '$MAC', '{Ma}', '$Ma', '$MA']
+# MAC address placeholders that indicate misconfiguration
+# These are literal strings that appear in URLs when phones are misconfigured
+# Note: $mac and $MA are CORRECT variables that phones should use - they should NOT be in this list
+# Only include literal placeholders like {mac} that indicate the phone didn't substitute its actual MAC
+MAC_ADDRESS_PLACEHOLDERS = ['{mac}', '{MAC}', '{Ma}']
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -619,8 +621,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             logger.info(f"Provisioning config request: path={path}, IP={request_info['ip']}")
             
-            # Detect if MAC is a placeholder variable (not an actual MAC address)
-            # Common placeholders: {mac}, $mac, $MA, {MAC}, etc.
+            # Detect if MAC is a literal placeholder (misconfiguration)
+            # Examples: {mac}, {MAC} - these indicate the phone didn't substitute its actual MAC
+            # Note: $mac and $MA are not checked here - those are the CORRECT variable formats
             if mac in MAC_ADDRESS_PLACEHOLDERS:
                 logger.error(f"CONFIGURATION ERROR: Phone requested provisioning with placeholder '{mac}' instead of actual MAC address")
                 logger.error(f"  Request from IP: {request_info['ip']}")

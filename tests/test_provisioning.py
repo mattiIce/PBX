@@ -286,11 +286,15 @@ def test_mac_placeholder_detection():
     from pbx.api.rest_api import MAC_ADDRESS_PLACEHOLDERS
     
     # Verify the constant has key placeholder patterns
-    # We expect common patterns like {mac}, $mac, and variations
+    # We expect literal placeholders like {mac} that indicate misconfiguration
+    # Note: $mac and $MA are CORRECT variables and should NOT be in this list
     assert len(MAC_ADDRESS_PLACEHOLDERS) > 0, "MAC_ADDRESS_PLACEHOLDERS should not be empty"
     assert '{mac}' in MAC_ADDRESS_PLACEHOLDERS, "Should include {mac} placeholder"
-    assert '$mac' in MAC_ADDRESS_PLACEHOLDERS, "Should include $mac placeholder"
-    assert '$MA' in MAC_ADDRESS_PLACEHOLDERS, "Should include $MA placeholder (for Cisco)"
+    assert '{MAC}' in MAC_ADDRESS_PLACEHOLDERS, "Should include {MAC} placeholder"
+    
+    # Verify that correct MAC variables are NOT in the placeholder list
+    assert '$mac' not in MAC_ADDRESS_PLACEHOLDERS, "$mac is a valid MAC variable, not a placeholder"
+    assert '$MA' not in MAC_ADDRESS_PLACEHOLDERS, "$MA is a valid MAC variable (Cisco), not a placeholder"
     
     # Test that actual MAC addresses are NOT in the placeholder list
     real_macs = [
@@ -314,10 +318,11 @@ def test_mac_placeholder_detection():
     # Test that placeholder detection works correctly for common cases
     # This simulates what happens in the API endpoint
     test_cases = [
-        ('{mac}', True, "Common documentation placeholder"),
-        ('$mac', True, "Zultys/Yealink placeholder"),
-        ('$MA', True, "Cisco placeholder"),
-        ('{MAC}', True, "Uppercase placeholder"),
+        ('{mac}', True, "Literal {mac} placeholder (misconfiguration)"),
+        ('{MAC}', True, "Literal {MAC} placeholder (misconfiguration)"),
+        ('{Ma}', True, "Literal {Ma} placeholder (misconfiguration)"),
+        ('$mac', False, "Valid MAC variable for Zultys/Yealink/Polycom/Grandstream"),
+        ('$MA', False, "Valid MAC variable for Cisco"),
         ('000bea85ed68', False, "Valid normalized MAC"),
         ('00:0B:EA:85:ED:68', False, "Valid MAC with colons"),
     ]
