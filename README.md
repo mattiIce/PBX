@@ -23,7 +23,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 ### Modern VOIP Features
 - **Presence System** - Real-time user availability status
 - **SIP Trunk Support** - Connect to external SIP providers
-- **Phone Provisioning** - Auto-configuration for multiple IP phone brands (Zultys, Yealink, Polycom, Cisco, Grandstream)
+- **Phone Provisioning** - Auto-configuration for multiple IP phone brands (Zultys, Yealink, Polycom, Cisco, Grandstream) with customizable templates
 - **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
@@ -378,6 +378,16 @@ For issues and questions, please open a GitHub issue.
   - Audio files stored efficiently on file system
   - See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for setup guide
   - See [PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md) for phone tracking details
+  - See [CLEAR_REGISTERED_PHONES.md](CLEAR_REGISTERED_PHONES.md) for clearing phone registration data
+
+### Phone Provisioning
+- [x] **Auto-Configuration for IP Phones** - ✅ COMPLETED
+  - Supports Zultys, Yealink, Polycom, Cisco, Grandstream
+  - Template-based configuration with automatic device information population
+  - Customizable templates via web interface and API
+  - Template management (view, export, edit, reload)
+  - See [PROVISIONING_TEMPLATE_CUSTOMIZATION.md](PROVISIONING_TEMPLATE_CUSTOMIZATION.md) for template customization
+  - See [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md) for provisioning setup guide
 
 ### Future Enhancements
 - [ ] WebRTC support for browser-based calls

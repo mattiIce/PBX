@@ -72,6 +72,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             if path == '/api/provisioning/devices':
                 self._handle_register_device()
+            elif path.startswith('/api/provisioning/templates/') and path.endswith('/export'):
+                # /api/provisioning/templates/{vendor}/{model}/export
+                parts = path.split('/')
+                if len(parts) >= 7:
+                    vendor = parts[4]
+                    model = parts[5]
+                    # Validate vendor and model to prevent path traversal
+                    import re
+                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                        self._handle_export_template(vendor, model)
+                    else:
+                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
+            elif path == '/api/provisioning/reload-templates':
+                self._handle_reload_templates()
             elif path == '/api/extensions':
                 self._handle_add_extension()
             elif path == '/api/phones/reboot':
@@ -97,7 +113,21 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path
 
         try:
-            if path.startswith('/api/extensions/'):
+            if path.startswith('/api/provisioning/templates/'):
+                # /api/provisioning/templates/{vendor}/{model}
+                parts = path.split('/')
+                if len(parts) >= 6:
+                    vendor = parts[4]
+                    model = parts[5]
+                    # Validate vendor and model to prevent path traversal
+                    import re
+                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                        self._handle_update_template(vendor, model)
+                    else:
+                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
+            elif path.startswith('/api/extensions/'):
                 # Extract extension number from path
                 number = path.split('/')[-1]
                 self._handle_update_extension(number)
@@ -149,6 +179,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
                 self._handle_get_provisioning_vendors()
+            elif path == '/api/provisioning/templates':
+                self._handle_get_provisioning_templates()
+            elif path.startswith('/api/provisioning/templates/'):
+                # /api/provisioning/templates/{vendor}/{model}
+                parts = path.split('/')
+                if len(parts) >= 6:
+                    vendor = parts[4]
+                    model = parts[5]
+                    # Validate vendor and model to prevent path traversal
+                    import re
+                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                        self._handle_get_template_content(vendor, model)
+                    else:
+                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/provisioning/diagnostics':
                 self._handle_get_provisioning_diagnostics()
             elif path == '/api/provisioning/requests':
@@ -198,6 +244,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 <li>POST /api/provisioning/devices - Register a device</li>
                 <li>DELETE /api/provisioning/devices/{mac} - Unregister a device</li>
                 <li>GET /provision/{mac}.cfg - Get device configuration</li>
+                <li>GET /api/provisioning/templates - List all provisioning templates</li>
+                <li>GET /api/provisioning/templates/{vendor}/{model} - Get template content</li>
+                <li>POST /api/provisioning/templates/{vendor}/{model}/export - Export template to file</li>
+                <li>PUT /api/provisioning/templates/{vendor}/{model} - Update template content</li>
+                <li>POST /api/provisioning/reload-templates - Reload all templates from disk</li>
                 <li>GET /api/registered-phones - List all registered phones (MAC/IP tracking)</li>
                 <li>GET /api/registered-phones/with-mac - List registered phones with MAC addresses from provisioning</li>
                 <li>GET /api/registered-phones/extension/{number} - List registered phones for extension</li>
@@ -321,6 +372,103 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             'limit': limit,
             'requests': requests
         })
+    
+    def _handle_get_provisioning_templates(self):
+        """Get list of all provisioning templates"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        templates = self.pbx_core.phone_provisioning.list_all_templates()
+        self._send_json({
+            'templates': templates,
+            'total': len(templates)
+        })
+    
+    def _handle_get_template_content(self, vendor, model):
+        """Get content of a specific template"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        content = self.pbx_core.phone_provisioning.get_template_content(vendor, model)
+        if content:
+            self._send_json({
+                'vendor': vendor,
+                'model': model,
+                'content': content,
+                'placeholders': [
+                    '{{EXTENSION_NUMBER}}',
+                    '{{EXTENSION_NAME}}',
+                    '{{EXTENSION_PASSWORD}}',
+                    '{{SIP_SERVER}}',
+                    '{{SIP_PORT}}',
+                    '{{SERVER_NAME}}'
+                ]
+            })
+        else:
+            self._send_json({'error': f'Template not found for {vendor} {model}'}, 404)
+    
+    def _handle_export_template(self, vendor, model):
+        """Export template to file"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        success, message, filepath = self.pbx_core.phone_provisioning.export_template_to_file(vendor, model)
+        if success:
+            self._send_json({
+                'success': True,
+                'message': message,
+                'filepath': filepath,
+                'vendor': vendor,
+                'model': model
+            })
+        else:
+            self._send_json({'error': message}, 404)
+    
+    def _handle_update_template(self, vendor, model):
+        """Update template content"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        try:
+            body = self._get_body()
+            content = body.get('content')
+            
+            if not content:
+                self._send_json({'error': 'Missing template content'}, 400)
+                return
+            
+            success, message = self.pbx_core.phone_provisioning.update_template(vendor, model, content)
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': message,
+                    'vendor': vendor,
+                    'model': model
+                })
+            else:
+                self._send_json({'error': message}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_reload_templates(self):
+        """Reload all templates from disk"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        success, message, stats = self.pbx_core.phone_provisioning.reload_templates()
+        if success:
+            self._send_json({
+                'success': True,
+                'message': message,
+                'statistics': stats
+            })
+        else:
+            self._send_json({'error': message}, 500)
 
     def _handle_get_registered_phones(self):
         """Get all registered phones from database"""

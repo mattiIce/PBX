@@ -1153,3 +1153,237 @@ async function deleteDevice(mac) {
         showNotification('Error deleting device: ' + error.message, 'error');
     }
 }
+
+// Template management functions
+async function loadProvisioningTemplates() {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates`);
+        if (response.ok) {
+            const data = await response.json();
+            displayTemplatesList(data.templates || []);
+        } else {
+            showNotification('Error loading templates', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading templates:', error);
+        showNotification('Error loading templates: ' + error.message, 'error');
+    }
+}
+
+function displayTemplatesList(templates) {
+    const tbody = document.getElementById('templates-table-body');
+    if (!tbody) return;
+    
+    if (templates.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No templates found</td></tr>';
+        return;
+    }
+    
+    // Clear existing content
+    tbody.innerHTML = '';
+    
+    // Create rows safely without XSS vulnerabilities
+    templates.forEach(template => {
+        const row = document.createElement('tr');
+        
+        // Vendor cell
+        const vendorCell = document.createElement('td');
+        vendorCell.textContent = template.vendor;
+        row.appendChild(vendorCell);
+        
+        // Model cell
+        const modelCell = document.createElement('td');
+        modelCell.textContent = template.model;
+        row.appendChild(modelCell);
+        
+        // Type cell
+        const typeCell = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = template.is_custom ? 'badge badge-success' : 'badge badge-info';
+        badge.textContent = template.is_custom ? 'Custom' : 'Built-in';
+        typeCell.appendChild(badge);
+        row.appendChild(typeCell);
+        
+        // Size cell
+        const sizeCell = document.createElement('td');
+        sizeCell.textContent = (template.size / 1024).toFixed(1) + ' KB';
+        row.appendChild(sizeCell);
+        
+        // Actions cell
+        const actionsCell = document.createElement('td');
+        
+        // View button
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn btn-sm btn-primary';
+        viewBtn.textContent = '👁️ View';
+        viewBtn.onclick = () => viewTemplate(template.vendor, template.model);
+        actionsCell.appendChild(viewBtn);
+        
+        // Export button
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-sm btn-success';
+        exportBtn.textContent = '💾 Export';
+        exportBtn.onclick = () => exportTemplate(template.vendor, template.model);
+        actionsCell.appendChild(exportBtn);
+        
+        // Edit button (only for custom templates)
+        if (template.is_custom) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-sm btn-warning';
+            editBtn.textContent = '✏️ Edit';
+            editBtn.onclick = () => editTemplate(template.vendor, template.model);
+            actionsCell.appendChild(editBtn);
+        }
+        
+        row.appendChild(actionsCell);
+        tbody.appendChild(row);
+    });
+}
+
+async function viewTemplate(vendor, model) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        if (response.ok) {
+            const data = await response.json();
+            showTemplateViewModal(vendor, model, data.content, data.placeholders, false);
+        } else {
+            showNotification('Error loading template', 'error');
+        }
+    } catch (error) {
+        console.error('Error viewing template:', error);
+        showNotification('Error viewing template: ' + error.message, 'error');
+    }
+}
+
+async function exportTemplate(vendor, model) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}/export`, {
+            method: 'POST'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            showNotification(`Template exported to: ${data.filepath}`, 'success');
+            loadProvisioningTemplates(); // Refresh list
+        } else {
+            const error = await response.json();
+            showNotification('Error exporting template: ' + error.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error exporting template:', error);
+        showNotification('Error exporting template: ' + error.message, 'error');
+    }
+}
+
+async function editTemplate(vendor, model) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        if (response.ok) {
+            const data = await response.json();
+            showTemplateViewModal(vendor, model, data.content, data.placeholders, true);
+        } else {
+            showNotification('Error loading template', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading template:', error);
+        showNotification('Error loading template: ' + error.message, 'error');
+    }
+}
+
+function showTemplateViewModal(vendor, model, content, placeholders, editable) {
+    const modal = document.getElementById('template-view-modal');
+    const title = document.getElementById('template-modal-title');
+    const textarea = document.getElementById('template-content');
+    const placeholdersDiv = document.getElementById('template-placeholders');
+    const saveBtn = document.getElementById('save-template-btn');
+    
+    if (!modal) return;
+    
+    title.textContent = editable ? 
+        `Edit Template: ${vendor} ${model}` : 
+        `View Template: ${vendor} ${model}`;
+    
+    textarea.value = content;
+    textarea.readOnly = !editable;
+    
+    // Display available placeholders safely
+    placeholdersDiv.innerHTML = ''; // Clear first
+    
+    const strong = document.createElement('strong');
+    strong.textContent = 'Available Placeholders:';
+    placeholdersDiv.appendChild(strong);
+    
+    const ul = document.createElement('ul');
+    placeholders.forEach(p => {
+        const li = document.createElement('li');
+        const code = document.createElement('code');
+        code.textContent = p;
+        li.appendChild(code);
+        ul.appendChild(li);
+    });
+    placeholdersDiv.appendChild(ul);
+    
+    const p = document.createElement('p');
+    const small = document.createElement('small');
+    small.textContent = 'These placeholders will be automatically replaced with device-specific information when a phone requests configuration.';
+    p.appendChild(small);
+    placeholdersDiv.appendChild(p);
+    
+    // Set up save button
+    saveBtn.style.display = editable ? 'inline-block' : 'none';
+    saveBtn.onclick = async () => {
+        await saveTemplateContent(vendor, model, textarea.value);
+    };
+    
+    modal.style.display = 'block';
+}
+
+function closeTemplateViewModal() {
+    const modal = document.getElementById('template-view-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function saveTemplateContent(vendor, model, content) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+        
+        if (response.ok) {
+            showNotification('Template updated successfully', 'success');
+            closeTemplateViewModal();
+            loadProvisioningTemplates(); // Refresh list
+        } else {
+            const error = await response.json();
+            showNotification('Error updating template: ' + error.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving template:', error);
+        showNotification('Error saving template: ' + error.message, 'error');
+    }
+}
+
+async function reloadTemplates() {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/reload-templates`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification(`Templates reloaded: ${data.statistics.total_templates} templates from ${data.statistics.vendors} vendors`, 'success');
+            loadProvisioningTemplates(); // Refresh list
+        } else {
+            const error = await response.json();
+            showNotification('Error reloading templates: ' + error.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error reloading templates:', error);
+        showNotification('Error reloading templates: ' + error.message, 'error');
+    }
+}

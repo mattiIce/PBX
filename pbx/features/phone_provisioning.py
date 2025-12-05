@@ -793,3 +793,164 @@ P30 = 13   # GMT-8
 
         self.logger.info(f"Rebooted {results['success_count']} phones, {results['failed_count']} failed")
         return results
+    
+    def list_all_templates(self):
+        """
+        List all available templates (both built-in and custom)
+        
+        Returns:
+            List of dicts with template information
+        """
+        templates_list = []
+        for (vendor, model), template in self.templates.items():
+            # Check if template is customized (exists in custom dir)
+            is_custom = False
+            custom_dir = self.config.get('provisioning.custom_templates_dir', 'provisioning_templates')
+            template_filename = f"{vendor}_{model}.template"
+            template_path = os.path.join(custom_dir, template_filename)
+            
+            if os.path.exists(template_path):
+                is_custom = True
+            
+            templates_list.append({
+                'vendor': vendor,
+                'model': model,
+                'is_custom': is_custom,
+                'template_path': template_path if is_custom else 'built-in',
+                'size': len(template.template_content)
+            })
+        
+        return sorted(templates_list, key=lambda x: (x['vendor'], x['model']))
+    
+    def get_template_content(self, vendor, model):
+        """
+        Get the content of a specific template
+        
+        Args:
+            vendor: Phone vendor
+            model: Phone model
+            
+        Returns:
+            Template content string or None
+        """
+        template = self.get_template(vendor, model)
+        if template:
+            return template.template_content
+        return None
+    
+    def export_template_to_file(self, vendor, model):
+        """
+        Export a template to the custom templates directory
+        
+        Args:
+            vendor: Phone vendor
+            model: Phone model
+            
+        Returns:
+            tuple: (success, message, filepath)
+        """
+        # Validate vendor and model to prevent path traversal
+        import re
+        if not re.match(r'^[a-z0-9_-]+$', vendor.lower()) or not re.match(r'^[a-z0-9_-]+$', model.lower()):
+            return False, "Invalid vendor or model name. Only alphanumeric, underscore, and hyphen allowed.", None
+        
+        template = self.get_template(vendor, model)
+        if not template:
+            return False, f"Template not found for {vendor} {model}", None
+        
+        # Get custom templates directory
+        custom_dir = self.config.get('provisioning.custom_templates_dir', 'provisioning_templates')
+        
+        # Create directory if it doesn't exist
+        if not os.path.exists(custom_dir):
+            try:
+                os.makedirs(custom_dir)
+                self.logger.info(f"Created custom templates directory: {custom_dir}")
+            except Exception as e:
+                return False, f"Failed to create directory: {e}", None
+        
+        # Write template to file
+        template_filename = f"{vendor.lower()}_{model.lower()}.template"
+        template_path = os.path.join(custom_dir, template_filename)
+        
+        try:
+            with open(template_path, 'w') as f:
+                f.write(template.template_content)
+            
+            self.logger.info(f"Exported template to: {template_path}")
+            return True, f"Template exported to {template_path}", template_path
+        except Exception as e:
+            self.logger.error(f"Failed to export template: {e}")
+            return False, f"Failed to export template: {e}", None
+    
+    def update_template(self, vendor, model, content):
+        """
+        Update a template with new content
+        
+        Args:
+            vendor: Phone vendor
+            model: Phone model
+            content: New template content
+            
+        Returns:
+            tuple: (success, message)
+        """
+        # Validate vendor and model to prevent path traversal
+        import re
+        if not re.match(r'^[a-z0-9_-]+$', vendor.lower()) or not re.match(r'^[a-z0-9_-]+$', model.lower()):
+            return False, "Invalid vendor or model name. Only alphanumeric, underscore, and hyphen allowed."
+        
+        # Get custom templates directory
+        custom_dir = self.config.get('provisioning.custom_templates_dir', 'provisioning_templates')
+        
+        # Create directory if it doesn't exist
+        if not os.path.exists(custom_dir):
+            try:
+                os.makedirs(custom_dir)
+            except Exception as e:
+                return False, f"Failed to create directory: {e}"
+        
+        # Write template to file
+        template_filename = f"{vendor.lower()}_{model.lower()}.template"
+        template_path = os.path.join(custom_dir, template_filename)
+        
+        try:
+            with open(template_path, 'w') as f:
+                f.write(content)
+            
+            # Update in memory
+            self.add_template(vendor, model, content)
+            
+            self.logger.info(f"Updated template: {vendor} {model}")
+            return True, f"Template updated successfully"
+        except Exception as e:
+            self.logger.error(f"Failed to update template: {e}")
+            return False, f"Failed to update template: {e}"
+    
+    def reload_templates(self):
+        """
+        Reload all templates from disk
+        
+        Returns:
+            tuple: (success, message, stats)
+        """
+        try:
+            # Clear existing templates
+            self.templates.clear()
+            
+            # Reload built-in templates
+            self._load_builtin_templates()
+            
+            # Reload custom templates (these will override built-ins)
+            self._load_custom_templates()
+            
+            stats = {
+                'total_templates': len(self.templates),
+                'vendors': len(self.get_supported_vendors())
+            }
+            
+            self.logger.info(f"Reloaded {stats['total_templates']} templates")
+            return True, "Templates reloaded successfully", stats
+        except Exception as e:
+            self.logger.error(f"Failed to reload templates: {e}")
+            return False, f"Failed to reload templates: {e}", None
