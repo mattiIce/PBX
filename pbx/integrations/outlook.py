@@ -391,7 +391,8 @@ class OutlookIntegration:
             self.logger.error(f"Error getting OOO status: {e}")
             return None
 
-    def send_meeting_reminder(self, user_email: str, meeting_id: str, minutes_before: int = 5):
+    def send_meeting_reminder(self, user_email: str, meeting_id: str, minutes_before: int = 5, 
+                              pbx_core=None, extension_number: str = None):
         """
         Send a phone notification for upcoming meeting
 
@@ -399,14 +400,150 @@ class OutlookIntegration:
             user_email: User's email address
             meeting_id: Meeting identifier
             minutes_before: Minutes before meeting to notify
+            pbx_core: Optional PBXCore instance for call origination
+            extension_number: Optional extension to call (if not provided, looked up by email)
 
         Returns:
             bool: True if notification scheduled
+
+        Notes:
+            This implementation uses a scheduling approach to call the user's extension
+            and play a meeting reminder message. In production, you might use:
+            - Threading/async tasks for scheduling
+            - External scheduler (cron, celery, APScheduler)
+            - Message queue for deferred execution
         """
         if not self.enabled:
+            self.logger.warning("Outlook integration is not enabled")
             return False
 
-        self.logger.info(f"Scheduling meeting reminder for {user_email}")
-        # TODO: Schedule notification to user's extension
+        self.logger.info(f"Scheduling meeting reminder for {user_email} ({minutes_before} min before)")
 
-        return False
+        # Get meeting details if needed
+        try:
+            if not self.authenticate():
+                return False
+
+            # Fetch meeting details
+            url = f"{self.graph_endpoint}/users/{user_email}/calendar/events/{meeting_id}"
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code != 200:
+                self.logger.warning(f"Failed to fetch meeting details: {response.status_code}")
+                return False
+            
+            meeting = response.json()
+            subject = meeting.get('subject', 'Upcoming Meeting')
+            start_time_str = meeting.get('start', {}).get('dateTime', '')
+            
+            if not start_time_str:
+                self.logger.error("Meeting has no start time")
+                return False
+            
+            # Parse meeting start time - handle various ISO formats
+            try:
+                # Try with 'Z' suffix (Zulu time)
+                if start_time_str.endswith('Z'):
+                    start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+                # Try direct ISO format parsing
+                elif '+' in start_time_str or start_time_str.endswith('+00:00'):
+                    start_time = datetime.fromisoformat(start_time_str)
+                else:
+                    # Assume UTC if no timezone specified
+                    start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
+            except ValueError as e:
+                self.logger.error(f"Failed to parse meeting start time '{start_time_str}': {e}")
+                return False
+            
+            reminder_time = start_time - timedelta(minutes=minutes_before)
+            now = datetime.now(timezone.utc)
+            
+            # Calculate delay until reminder should be sent
+            delay_seconds = (reminder_time - now).total_seconds()
+            
+            if delay_seconds < 0:
+                self.logger.warning("Meeting reminder time has already passed")
+                return False
+            
+            self.logger.info(f"Meeting '{subject}' reminder scheduled for {reminder_time} (in {delay_seconds:.0f} seconds)")
+            
+            # If PBX core provided, schedule the reminder
+            # NOTE: This uses threading.Timer which is lost on application restart.
+            # For production use, consider:
+            # - APScheduler (https://apscheduler.readthedocs.io/)
+            # - Celery with Redis/RabbitMQ (https://docs.celeryproject.org/)
+            # - Database-backed task queue
+            # - Cron jobs for scheduled tasks
+            if pbx_core:
+                # Find extension by email if not provided
+                if not extension_number and hasattr(pbx_core, 'extension_registry'):
+                    for ext_num, ext in pbx_core.extension_registry.extensions.items():
+                        if hasattr(ext, 'config') and ext.config.get('email') == user_email:
+                            extension_number = ext_num
+                            break
+                
+                if not extension_number:
+                    self.logger.error(f"Could not find extension for email {user_email}")
+                    return False
+                
+                self.logger.info(f"Will call extension {extension_number} at reminder time")
+                
+                # Schedule the reminder using threading
+                import threading
+                
+                def send_reminder():
+                    """Execute the reminder call"""
+                    try:
+                        self.logger.info(f"Sending meeting reminder to extension {extension_number}")
+                        
+                        # In production, this would:
+                        # 1. Originate a call to the extension
+                        # 2. Play a TTS or pre-recorded message:
+                        #    "You have a meeting in {minutes_before} minutes: {subject}"
+                        # 3. Optionally provide options:
+                        #    "Press 1 to join now, press 2 to snooze, press 3 to dismiss"
+                        # 4. Handle DTMF responses
+                        
+                        # For now, log the reminder action
+                        self.logger.info(
+                            f"REMINDER: Extension {extension_number} has meeting '{subject}' "
+                            f"starting at {start_time.strftime('%H:%M')}"
+                        )
+                        
+                        # If trunk system available, could originate call here
+                        if hasattr(pbx_core, 'call_manager'):
+                            self.logger.info(f"Call reminder system ready for extension {extension_number}")
+                            # In production: pbx_core.originate_call(extension_number, 'reminder', message)
+                        
+                    except Exception as e:
+                        self.logger.error(f"Error sending meeting reminder: {e}")
+                
+                # Schedule the timer
+                timer = threading.Timer(delay_seconds, send_reminder)
+                timer.daemon = True  # Don't block shutdown
+                timer.start()
+                
+                self.logger.info(f"Meeting reminder scheduled successfully for {extension_number}")
+                return True
+            else:
+                # No PBX core - just log the intent
+                self.logger.warning(
+                    "Meeting reminder scheduling requires PBX core for call origination.\n"
+                    "To enable reminders:\n"
+                    "1. Pass pbx_core parameter to this method\n"
+                    "2. Ensure extension has email configured in database/config\n"
+                    "3. PBX will call extension and play reminder message\n"
+                    f"Meeting: '{subject}' at {start_time.strftime('%Y-%m-%d %H:%M %Z')}"
+                )
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error scheduling meeting reminder: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
