@@ -323,9 +323,31 @@ sqlite3 pbx_system.db "DELETE FROM registered_phones WHERE mac_address = '001565
 
 After deletion, when the phone reboots and registers with its new extension, it will create a fresh entry in the table.
 
-### Option 3: Using Python Script
+### Option 3: Using the Provided Script (Recommended)
 
-Create a script to update the phone's extension programmatically:
+The PBX system includes a ready-to-use script for updating phone extensions:
+
+```bash
+python scripts/update_phone_extension.py <mac_address> <new_extension>
+```
+
+Example:
+```bash
+python scripts/update_phone_extension.py 001565123456 1002
+# or with colons in MAC address:
+python scripts/update_phone_extension.py 00:15:65:12:34:56 1002
+```
+
+The script will:
+- Connect to your configured database (PostgreSQL or SQLite)
+- Show you the current phone information
+- Ask for confirmation before making changes
+- Update the extension and verify the change
+- Provide next steps for completing the reprovisioning
+
+### Option 4: Create Your Own Python Script
+
+If you prefer to create a custom script, here's an example:
 
 ```python
 #!/usr/bin/env python3
@@ -390,7 +412,7 @@ Save as `update_phone_extension.py` and run:
 python update_phone_extension.py 001565123456 1002
 ```
 
-### Option 4: Using the PBX Python API
+### Option 5: Using the PBX Python API
 
 If you have access to the PBX code, you can use the `RegisteredPhonesDB` class:
 
