@@ -99,6 +99,9 @@ async function loadDashboard() {
         
         const systemStatus = document.getElementById('system-status');
         systemStatus.textContent = `System: ${data.running ? 'Running' : 'Stopped'}`;
+        
+        // Load AD integration status
+        loadADStatus();
     } catch (error) {
         console.error('Error loading dashboard:', error);
         showNotification('Failed to load dashboard data', 'error');
@@ -110,6 +113,108 @@ function refreshDashboard() {
     showNotification('Dashboard refreshed', 'success');
 }
 
+// AD Integration Functions
+async function loadADStatus() {
+    try {
+        const response = await fetch(`${API_BASE}/api/integrations/ad/status`);
+        const data = await response.json();
+        
+        // Update status badge
+        const statusBadge = document.getElementById('ad-status-badge');
+        if (data.enabled) {
+            statusBadge.textContent = 'Enabled';
+            statusBadge.className = 'status-badge enabled';
+        } else {
+            statusBadge.textContent = 'Disabled';
+            statusBadge.className = 'status-badge disabled';
+        }
+        
+        // Update connection status
+        const connectionStatus = document.getElementById('ad-connection-status');
+        if (data.connected) {
+            connectionStatus.textContent = '✓ Connected';
+            connectionStatus.style.color = '#10b981';
+        } else {
+            connectionStatus.textContent = '✗ Not Connected';
+            connectionStatus.style.color = '#ef4444';
+        }
+        
+        // Update server
+        document.getElementById('ad-server').textContent = data.server || 'Not configured';
+        
+        // Update auto provision
+        document.getElementById('ad-auto-provision').textContent = data.auto_provision ? 'Yes' : 'No';
+        
+        // Update synced users count
+        document.getElementById('ad-synced-users').textContent = data.synced_users || 0;
+        
+        // Update error message
+        const errorElement = document.getElementById('ad-error');
+        if (data.error) {
+            errorElement.textContent = data.error;
+            errorElement.style.color = '#d32f2f';
+        } else {
+            errorElement.textContent = 'None';
+            errorElement.style.color = '#10b981';
+        }
+        
+        // Enable/disable sync button based on status
+        const syncBtn = document.getElementById('ad-sync-btn');
+        if (data.enabled && data.connected) {
+            syncBtn.disabled = false;
+        } else {
+            syncBtn.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error loading AD status:', error);
+        document.getElementById('ad-status-badge').textContent = 'Error';
+        document.getElementById('ad-status-badge').className = 'status-badge disconnected';
+    }
+}
+
+function refreshADStatus() {
+    loadADStatus();
+    showNotification('AD status refreshed', 'success');
+}
+
+async function syncADUsers() {
+    const syncBtn = document.getElementById('ad-sync-btn');
+    const originalText = syncBtn.textContent;
+    
+    // Disable button and show loading state
+    syncBtn.disabled = true;
+    syncBtn.textContent = '⏳ Syncing...';
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/integrations/ad/sync`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(data.message || `Successfully synced ${data.synced_count} users`, 'success');
+            // Refresh both AD status and extensions
+            loadADStatus();
+            loadExtensions();
+        } else {
+            showNotification(data.error || 'Failed to sync users', 'error');
+        }
+    } catch (error) {
+        console.error('Error syncing AD users:', error);
+        showNotification('Error syncing AD users', 'error');
+    } finally {
+        // Re-enable button
+        syncBtn.textContent = originalText;
+        syncBtn.disabled = false;
+    }
+}
+
 // Extensions Functions
 async function loadExtensions() {
     const tbody = document.getElementById('extensions-table-body');
@@ -117,6 +222,9 @@ async function loadExtensions() {
     
     try {
         const response = await fetch(`${API_BASE}/api/extensions`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const extensions = await response.json();
         currentExtensions = extensions;
         

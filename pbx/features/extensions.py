@@ -133,6 +133,10 @@ class ExtensionRegistry:
         self.extensions.clear()
         self._load_extensions()
 
+    def reload_extensions(self):
+        """Alias for reload() - reload extensions from database or configuration"""
+        self.reload()
+
     def get(self, number):
         """
         Get extension by number
