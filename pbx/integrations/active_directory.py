@@ -185,13 +185,52 @@ class ActiveDirectoryIntegration:
         Returns:
             list: List of group names
         """
-        if not self.enabled:
+        if not self.enabled or not LDAP3_AVAILABLE:
             return []
 
-        # TODO: Query user's memberOf attribute
-        # Return list of group DNs or group names
+        if not self.connect():
+            return []
 
-        return []
+        try:
+            self.logger.info(f"Getting groups for user: {username}")
+            
+            # Search for user - escape username to prevent LDAP injection
+            from ldap3.utils.conv import escape_filter_chars
+            safe_username = escape_filter_chars(username)
+            search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
+            user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
+            
+            self.connection.search(
+                search_base=user_search_base,
+                search_filter=search_filter,
+                search_scope=SUBTREE,
+                attributes=['memberOf']
+            )
+            
+            if not self.connection.entries:
+                self.logger.warning(f"User not found: {username}")
+                return []
+            
+            user_entry = self.connection.entries[0]
+            
+            # Extract group names from DNs
+            groups = []
+            if hasattr(user_entry, 'memberOf'):
+                for group_dn in user_entry.memberOf:
+                    # Extract CN from DN (e.g., "CN=Sales,OU=Groups,DC=domain,DC=local" -> "Sales")
+                    dn_str = str(group_dn)
+                    if dn_str.startswith('CN='):
+                        cn_end = dn_str.find(',')
+                        if cn_end > 0:
+                            group_name = dn_str[3:cn_end]
+                            groups.append(group_name)
+            
+            self.logger.info(f"Found {len(groups)} groups for user {username}")
+            return groups
+            
+        except Exception as e:
+            self.logger.error(f"Error getting groups for user {username}: {e}")
+            return []
 
     def search_users(self, query: str, max_results: int = 50) -> List[Dict]:
         """
@@ -260,9 +299,43 @@ class ActiveDirectoryIntegration:
         Returns:
             bytes: Photo data (JPEG) or None
         """
-        if not self.enabled:
+        if not self.enabled or not LDAP3_AVAILABLE:
             return None
 
-        # TODO: Query thumbnailPhoto attribute
+        if not self.connect():
+            return None
 
-        return None
+        try:
+            self.logger.info(f"Getting photo for user: {username}")
+            
+            # Search for user - escape username to prevent LDAP injection
+            from ldap3.utils.conv import escape_filter_chars
+            safe_username = escape_filter_chars(username)
+            search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
+            user_search_base = self.config.get('integrations.active_directory.user_search_base', self.base_dn)
+            
+            self.connection.search(
+                search_base=user_search_base,
+                search_filter=search_filter,
+                search_scope=SUBTREE,
+                attributes=['thumbnailPhoto']
+            )
+            
+            if not self.connection.entries:
+                self.logger.warning(f"User not found: {username}")
+                return None
+            
+            user_entry = self.connection.entries[0]
+            
+            # Return photo bytes if available
+            if hasattr(user_entry, 'thumbnailPhoto') and user_entry.thumbnailPhoto.value:
+                photo_data = user_entry.thumbnailPhoto.value
+                self.logger.info(f"Retrieved photo for user {username} ({len(photo_data)} bytes)")
+                return photo_data
+            else:
+                self.logger.info(f"No photo available for user {username}")
+                return None
+            
+        except Exception as e:
+            self.logger.error(f"Error getting photo for user {username}: {e}")
+            return None

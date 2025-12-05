@@ -266,6 +266,82 @@ def test_integration_stubs():
     print("✓ Integration stubs properly structured")
 
 
+def test_new_integration_implementations():
+    """Test newly implemented integration features"""
+    print("Testing newly implemented integration features...")
+    
+    from pbx.integrations.zoom import ZoomIntegration
+    from pbx.integrations.active_directory import ActiveDirectoryIntegration
+    from pbx.integrations.outlook import OutlookIntegration
+    from pbx.integrations.teams import TeamsIntegration
+    
+    # Test Zoom - get_phone_user_status implementation
+    zoom_config = {
+        'integrations.zoom.enabled': False,
+        'integrations.zoom.account_id': 'test',
+        'integrations.zoom.client_id': 'test',
+        'integrations.zoom.client_secret': 'test',
+        'integrations.zoom.phone_enabled': True
+    }
+    zoom = ZoomIntegration(zoom_config)
+    
+    # Should return None when disabled
+    status = zoom.get_phone_user_status('test_user')
+    assert status is None, "Should return None when integration is disabled"
+    
+    # Test Active Directory - get_user_groups implementation
+    ad_config = {
+        'integrations.active_directory.enabled': False,
+        'integrations.active_directory.server': 'ldap://test.local',
+        'integrations.active_directory.base_dn': 'DC=test,DC=local'
+    }
+    ad = ActiveDirectoryIntegration(ad_config)
+    
+    # Should return empty list when disabled
+    groups = ad.get_user_groups('testuser')
+    assert groups == [], "Should return empty list when integration is disabled"
+    
+    # Test Active Directory - get_user_photo implementation
+    photo = ad.get_user_photo('testuser')
+    assert photo is None, "Should return None when integration is disabled"
+    
+    # Test Outlook - log_call_to_calendar implementation
+    outlook_config = {
+        'integrations.outlook.enabled': False,
+        'integrations.outlook.tenant_id': 'test',
+        'integrations.outlook.client_id': 'test',
+        'integrations.outlook.client_secret': 'test'
+    }
+    outlook = OutlookIntegration(outlook_config)
+    
+    call_details = {
+        'from': '555-1234',
+        'to': '555-5678',
+        'duration': 120,
+        'direction': 'inbound',
+        'timestamp': '2024-01-15T10:00:00Z'
+    }
+    
+    # Should return False when disabled
+    result = outlook.log_call_to_calendar('test@example.com', call_details)
+    assert result is False, "Should return False when integration is disabled"
+    
+    # Test Teams - send_chat_message implementation
+    teams_config = {
+        'integrations.teams.enabled': False,
+        'integrations.microsoft_teams.tenant_id': 'test',
+        'integrations.microsoft_teams.client_id': 'test',
+        'integrations.microsoft_teams.client_secret': 'test'
+    }
+    teams = TeamsIntegration(teams_config)
+    
+    # Should return False when disabled
+    result = teams.send_chat_message('test@example.com', 'Hello from PBX')
+    assert result is False, "Should return False when integration is disabled"
+    
+    print("✓ New integration implementations work correctly")
+
+
 def test_database_backend():
     """Test database backend with SQLite"""
     print("Testing database backend...")
@@ -339,6 +415,7 @@ def run_all_tests():
         test_voicemail_ivr,
         test_operator_console_features,
         test_integration_stubs,
+        test_new_integration_implementations,
         test_database_backend,
     ]
     
