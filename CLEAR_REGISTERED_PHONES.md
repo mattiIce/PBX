@@ -380,9 +380,9 @@ if __name__ == '__main__':
     mac = sys.argv[1]
     ext = sys.argv[2]
     
-    # Uncomment the appropriate line for your database:
-    update_phone_extension_postgresql(mac, ext)
-    # update_phone_extension_sqlite(mac, ext)
+    # Uncomment the appropriate line below for your database type:
+    # update_phone_extension_postgresql(mac, ext)  # For PostgreSQL
+    # update_phone_extension_sqlite(mac, ext)      # For SQLite
 ```
 
 Save as `update_phone_extension.py` and run:

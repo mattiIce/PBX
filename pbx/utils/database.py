@@ -729,7 +729,8 @@ class RegisteredPhonesDB:
             new_extension_number: New extension number to assign
             
         Returns:
-            bool: True if successful (returns True even if no rows were updated)
+            bool: True if the SQL execution succeeded, False on error. 
+            Note: Returns True even if no matching rows were found to update.
         """
         if not mac_address:
             self.logger.error("Cannot update phone extension: MAC address is required")
