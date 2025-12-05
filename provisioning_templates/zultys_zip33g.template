@@ -1,0 +1,58 @@
+# Zultys ZIP 33G Configuration File
+
+# SIP Account Configuration
+# Line Active
+account.1.enable = 1
+# Label
+account.1.label = {{EXTENSION_NAME}}
+# Display Name
+account.1.display_name = {{EXTENSION_NAME}}
+# Register Name
+account.1.register_name = {{EXTENSION_NAME}}
+# User Name
+account.1.user_name = {{EXTENSION_NUMBER}}
+account.1.auth_name = {{EXTENSION_NUMBER}}
+# Password
+account.1.password = {{EXTENSION_PASSWORD}}
+# SIP Server 1
+account.1.sip_server_host = {{SIP_SERVER}}
+account.1.sip_server_port = {{SIP_PORT}}
+# Transport
+account.1.transport = UDP
+# Server Expires
+account.1.reg_interval = 600
+# Server Retry Counts
+account.1.retry_counts = 3
+# SIP Server 2
+account.1.sip_server2_host = 
+account.1.sip_server2_port = 5060
+account.1.sip_server2_transport = UDP
+account.1.sip_server2_expires = 3600
+account.1.sip_server2_retry_counts = 3
+# Enable Outbound Proxy Server
+account.1.outbound_proxy_enable = 0
+# Outbound Proxy Server 1
+account.1.outbound_proxy_host = 
+account.1.outbound_proxy_port = 5060
+# Outbound Proxy Server 2
+account.1.outbound_proxy2_host = 
+account.1.outbound_proxy2_port = 5060
+# Proxy Fallback Interval
+account.1.proxy_fallback_interval = 3600
+# NAT
+account.1.nat.enable = 0
+
+# Audio Codecs
+audio.codec.1 = PCMU
+audio.codec.2 = PCMA
+audio.codec.3 = G729
+
+# Network Settings
+network.dhcp = 1
+
+# Time Zone
+time.timezone = GMT-8
+
+# Basic Phone Settings
+phone.volume.ring = 8
+phone.volume.handset = 6

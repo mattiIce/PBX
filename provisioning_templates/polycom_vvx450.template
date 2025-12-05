@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Polycom VVX 450 Configuration -->
+<polycomConfig>
+  <reg reg.1.displayName="{{EXTENSION_NAME}}"
+       reg.1.address="{{EXTENSION_NUMBER}}"
+       reg.1.auth.userId="{{EXTENSION_NUMBER}}"
+       reg.1.auth.password="{{EXTENSION_PASSWORD}}"
+       reg.1.server.1.address="{{SIP_SERVER}}"
+       reg.1.server.1.port="{{SIP_PORT}}"
+       reg.1.server.1.expires="3600"/>
+  
+  <voice voice.codecPref.G711_Mu="1"
+         voice.codecPref.G711_A="2"
+         voice.codecPref.G729_AB="3"/>
+  
+  <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"
+            tcpIpApp.sntp.gmtOffset="-28800"/>
+</polycomConfig>

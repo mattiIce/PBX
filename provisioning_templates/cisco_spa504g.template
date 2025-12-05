@@ -1,0 +1,21 @@
+# Cisco SPA504G Configuration
+
+# Line 1
+Line_Enable_1_ : Yes
+Display_Name_1_ : {{EXTENSION_NAME}}
+User_ID_1_ : {{EXTENSION_NUMBER}}
+Password_1_ : {{EXTENSION_PASSWORD}}
+Proxy_1_ : {{SIP_SERVER}}
+Register_Expires_1_ : 3600
+
+# Codecs
+Preferred_Codec_1_ : G711u
+Preferred_Codec_2_ : G711a
+Preferred_Codec_3_ : G729a
+
+# Network
+Internet_Connection_Type : DHCP
+
+# Regional
+Time_Zone : GMT-08:00
+Primary_NTP_Server : pool.ntp.org

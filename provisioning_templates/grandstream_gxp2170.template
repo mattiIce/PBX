@@ -1,0 +1,22 @@
+# Grandstream GXP2170 Configuration
+
+# Account 1
+P270 = {{EXTENSION_NUMBER}}
+P271 = {{EXTENSION_NAME}}
+P35 = {{EXTENSION_NUMBER}}
+P34 = {{EXTENSION_PASSWORD}}
+P47 = {{SIP_SERVER}}
+P48 = {{SIP_PORT}}
+P2 = 3600
+
+# Codecs
+P57 = 0    # PCMU
+P58 = 8    # PCMA
+P46 = 18   # G729
+
+# Network
+P8 = 0     # DHCP enabled
+
+# Time
+P64 = pool.ntp.org
+P30 = 13   # GMT-8
