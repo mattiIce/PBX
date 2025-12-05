@@ -256,7 +256,8 @@ local_time.ntp_server1 = pool.ntp.org
          voice.codecPref.G711_A="2"
          voice.codecPref.G729_AB="3"/>
   
-  <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"/>
+  <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"
+            tcpIpApp.sntp.gmtOffset="-28800"/>
 </polycomConfig>
 """
         self.add_template('polycom', 'vvx450', polycom_vvx450_template)
@@ -479,10 +480,11 @@ P30 = 13   # GMT-8
         config_content = template.generate_config(extension_config, server_config)
 
         # Determine content type based on vendor
-        if device.vendor == 'polycom':
-            content_type = 'application/xml'
-        else:
-            content_type = 'text/plain'
+        # Mapping of vendors to their content types
+        vendor_content_types = {
+            'polycom': 'application/xml',
+        }
+        content_type = vendor_content_types.get(device.vendor, 'text/plain')
 
         # Mark device as provisioned
         device.mark_provisioned()
