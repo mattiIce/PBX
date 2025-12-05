@@ -145,6 +145,63 @@ Shows:
 
 ## Common Issues and Solutions
 
+### Issue: Device not registered in provisioning system
+
+**Symptoms:**
+- Phone tries to fetch config but gets 404 error
+- Logs show: "Device {mac} not registered in provisioning system"
+- Phone displays provisioning error
+
+**New Enhanced Error Messages:**
+
+The system now provides detailed, actionable guidance when a device is not registered:
+
+```
+2025-12-05 19:27:15 - PBX - WARNING - Device 00:0B:EA:85:AB:CD not registered in provisioning system
+2025-12-05 19:27:15 - PBX - WARNING -   Normalized MAC: 000bea85abcd
+2025-12-05 19:27:15 - PBX - WARNING -   Registered devices: ['000bea85ed68', '000bea85f554']
+2025-12-05 19:27:15 - PBX - WARNING -   → Device needs to be registered first
+2025-12-05 19:27:15 - PBX - WARNING -   → Register via API: POST /api/provisioning/devices
+2025-12-05 19:27:15 - PBX - WARNING -      with JSON: {"mac_address":"00:0B:EA:85:AB:CD","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}
+2025-12-05 19:27:15 - PBX - WARNING -   → Similar MACs found (same vendor): ['000bea85ed68', '000bea85f554']
+2025-12-05 19:27:15 - PBX - WARNING -      This might be a typo in the MAC address
+```
+
+**Solution:**
+
+1. **Register the device via API:**
+   ```bash
+   curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
+     -H "Content-Type: application/json" \
+     -d '{"mac_address":"00:0B:EA:85:AB:CD","extension_number":"1001","vendor":"zultys","model":"zip33g"}'
+   ```
+
+2. **If similar MACs are shown in logs:**
+   - Check for typos in the MAC address
+   - Verify the phone's actual MAC (usually in phone menu: Status → Network)
+   - Use the exact MAC format doesn't matter (colons, dashes, or none - all work)
+
+3. **Verify registration:**
+   ```bash
+   curl http://your-pbx-ip:8080/api/provisioning/devices
+   ```
+
+4. **Test config download:**
+   ```bash
+   curl http://your-pbx-ip:8080/provision/000bea85abcd.cfg
+   ```
+
+**MAC Address Format Support:**
+
+The system automatically normalizes MAC addresses in any format:
+- `00:0B:EA:85:ED:68` (colon-separated)
+- `00-0B-EA-85-ED-68` (dash-separated)
+- `000B.EA85.ED68` (dot-separated, Cisco style)
+- `000BEA85ED68` (no separators)
+- `000bea85ed68` (lowercase, no separators)
+
+All normalize to: `000bea85ed68`
+
 ### Issue: Provisioning URL was partial/incomplete
 
 **Symptoms:**
