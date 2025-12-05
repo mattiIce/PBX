@@ -31,23 +31,23 @@ database:
 extensions:
 - number: '1001'
   name: Codi Mattinson
-  password: password1001  # SECURITY: Change to strong password in production
+  password: 'password1001'  # SECURITY: Change to strong password in production
   allow_external: true
   email: 'cmattinson@albl.com'
   voicemail_pin: '1234'  # SECURITY: Change in production
 - number: '1002'
   name: Bill Sautter
-  password: password1002  # SECURITY: Change to strong password in production
+  password: 'password1002'  # SECURITY: Change to strong password in production
   allow_external: true
   email: 'bsautter@albl.com'
 - number: '1003'
   name: Lisa Dingman
-  password: password1003  # SECURITY: Change to strong password in production
+  password: 'password1003'  # SECURITY: Change to strong password in production
   allow_external: false
   email: 'ldingman@albl.com'
 - number: '1004'
   name: Customer Service
-  password: password1004  # SECURITY: Change to strong password in production
+  password: 'password1004'  # SECURITY: Change to strong password in production
   allow_external: true
   email: 'support@albl.com'
 dialplan:
@@ -82,8 +82,8 @@ voicemail:
     host: 192.168.1.75
     port: 587
     use_tls: true
-    username: cmattinson  # SECURITY: Use environment variable SMTP_USERNAME in production
-    password: G0N@vyBuyC@n3$  # SECURITY: Use environment variable SMTP_PASSWORD in production
+    username: 'cmattinson'  # SECURITY: Use environment variable SMTP_USERNAME in production
+    password: 'G0N@vyBuyC@n3$'  # SECURITY: Use environment variable SMTP_PASSWORD in production
   email:
     from_address: 'Voicemail@albl.com'
     from_name: ABCo Voicemail
@@ -139,7 +139,7 @@ provisioning:
 trunks: null
 integrations:
   active_directory:
-    enabled: false  # Set to true when ready to use
+    enabled: true  # Set to true when ready to use
     server: ldaps://192.168.1.22:636  # Primary DC: albl-pdc1
     # Fallback server: ldaps://192.168.1.23:636  # Secondary DC: albl-sdc1
     base_dn: DC=albl,DC=com
