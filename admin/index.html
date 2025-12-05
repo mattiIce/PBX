@@ -194,6 +194,39 @@
 
             <div class="config-section">
                 <div class="section-header">
+                    <h3>Provisioning Templates</h3>
+                    <div>
+                        <button class="btn btn-primary" onclick="loadProvisioningTemplates()">🔄 Refresh Templates</button>
+                        <button class="btn btn-success" onclick="reloadTemplates()">♻️ Reload from Disk</button>
+                    </div>
+                </div>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p>📁 <strong>Templates Location:</strong> <code>provisioning_templates/</code></p>
+                    <p>Templates contain placeholders like <code>{{EXTENSION_NUMBER}}</code>, <code>{{EXTENSION_NAME}}</code>, <code>{{SIP_SERVER}}</code> that are automatically replaced with device-specific information when a phone requests configuration.</p>
+                    <p>💡 <strong>Tip:</strong> Export a built-in template, customize it, and reload to use your custom version.</p>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Vendor</th>
+                                <th>Model</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="templates-table-body">
+                            <tr>
+                                <td colspan="5" class="loading">Click "Refresh Templates" to load templates</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <div class="section-header">
                     <h3>Provisioned Devices</h3>
                     <button class="btn btn-success" onclick="showAddDeviceModal()">➕ Add Device</button>
                 </div>
@@ -461,6 +494,29 @@
                     <button type="submit" class="btn btn-success">Add Device</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Template View/Edit Modal -->
+    <div id="template-view-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="template-modal-title">View Template</h3>
+                <span class="close" onclick="closeTemplateViewModal()">&times;</span>
+            </div>
+            <div style="padding: 20px;">
+                <div id="template-placeholders" class="info-box" style="margin-bottom: 15px;">
+                    <!-- Placeholder information will be inserted here -->
+                </div>
+                <div class="form-group">
+                    <label>Template Content:</label>
+                    <textarea id="template-content" rows="20" style="font-family: monospace; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTemplateViewModal()">Close</button>
+                    <button type="button" id="save-template-btn" class="btn btn-success" style="display: none;">💾 Save Changes</button>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -1153,3 +1153,179 @@ async function deleteDevice(mac) {
         showNotification('Error deleting device: ' + error.message, 'error');
     }
 }
+
+// Template management functions
+async function loadProvisioningTemplates() {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates`);
+        if (response.ok) {
+            const data = await response.json();
+            displayTemplatesList(data.templates || []);
+        } else {
+            showNotification('Error loading templates', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading templates:', error);
+        showNotification('Error loading templates: ' + error.message, 'error');
+    }
+}
+
+function displayTemplatesList(templates) {
+    const tbody = document.getElementById('templates-table-body');
+    if (!tbody) return;
+    
+    if (templates.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No templates found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = templates.map(template => `
+        <tr>
+            <td>${template.vendor}</td>
+            <td>${template.model}</td>
+            <td>${template.is_custom ? '<span class="badge badge-success">Custom</span>' : '<span class="badge badge-info">Built-in</span>'}</td>
+            <td>${(template.size / 1024).toFixed(1)} KB</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewTemplate('${template.vendor}', '${template.model}')">👁️ View</button>
+                <button class="btn btn-sm btn-success" onclick="exportTemplate('${template.vendor}', '${template.model}')">💾 Export</button>
+                ${template.is_custom ? 
+                    `<button class="btn btn-sm btn-warning" onclick="editTemplate('${template.vendor}', '${template.model}')">✏️ Edit</button>` : 
+                    ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function viewTemplate(vendor, model) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        if (response.ok) {
+            const data = await response.json();
+            showTemplateViewModal(vendor, model, data.content, data.placeholders, false);
+        } else {
+            showNotification('Error loading template', 'error');
+        }
+    } catch (error) {
+        console.error('Error viewing template:', error);
+        showNotification('Error viewing template: ' + error.message, 'error');
+    }
+}
+
+async function exportTemplate(vendor, model) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}/export`, {
+            method: 'POST'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            showNotification(`Template exported to: ${data.filepath}`, 'success');
+            loadProvisioningTemplates(); // Refresh list
+        } else {
+            const error = await response.json();
+            showNotification('Error exporting template: ' + error.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error exporting template:', error);
+        showNotification('Error exporting template: ' + error.message, 'error');
+    }
+}
+
+async function editTemplate(vendor, model) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        if (response.ok) {
+            const data = await response.json();
+            showTemplateViewModal(vendor, model, data.content, data.placeholders, true);
+        } else {
+            showNotification('Error loading template', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading template:', error);
+        showNotification('Error loading template: ' + error.message, 'error');
+    }
+}
+
+function showTemplateViewModal(vendor, model, content, placeholders, editable) {
+    const modal = document.getElementById('template-view-modal');
+    const title = document.getElementById('template-modal-title');
+    const textarea = document.getElementById('template-content');
+    const placeholdersDiv = document.getElementById('template-placeholders');
+    const saveBtn = document.getElementById('save-template-btn');
+    
+    if (!modal) return;
+    
+    title.textContent = editable ? 
+        `Edit Template: ${vendor} ${model}` : 
+        `View Template: ${vendor} ${model}`;
+    
+    textarea.value = content;
+    textarea.readOnly = !editable;
+    
+    // Display available placeholders
+    placeholdersDiv.innerHTML = `
+        <strong>Available Placeholders:</strong>
+        <ul>
+            ${placeholders.map(p => `<li><code>${p}</code></li>`).join('')}
+        </ul>
+        <p><small>These placeholders will be automatically replaced with device-specific information when a phone requests configuration.</small></p>
+    `;
+    
+    // Set up save button
+    saveBtn.style.display = editable ? 'inline-block' : 'none';
+    saveBtn.onclick = async () => {
+        await saveTemplateContent(vendor, model, textarea.value);
+    };
+    
+    modal.style.display = 'block';
+}
+
+function closeTemplateViewModal() {
+    const modal = document.getElementById('template-view-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function saveTemplateContent(vendor, model, content) {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+        
+        if (response.ok) {
+            showNotification('Template updated successfully', 'success');
+            closeTemplateViewModal();
+            loadProvisioningTemplates(); // Refresh list
+        } else {
+            const error = await response.json();
+            showNotification('Error updating template: ' + error.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving template:', error);
+        showNotification('Error saving template: ' + error.message, 'error');
+    }
+}
+
+async function reloadTemplates() {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/reload-templates`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification(`Templates reloaded: ${data.statistics.total_templates} templates from ${data.statistics.vendors} vendors`, 'success');
+            loadProvisioningTemplates(); // Refresh list
+        } else {
+            const error = await response.json();
+            showNotification('Error reloading templates: ' + error.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error reloading templates:', error);
+        showNotification('Error reloading templates: ' + error.message, 'error');
+    }
+}

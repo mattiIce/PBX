@@ -134,7 +134,7 @@ security:
 provisioning:
   enabled: true
   url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-  custom_templates_dir: ''
+  custom_templates_dir: 'provisioning_templates'
   devices: []
 trunks: null
 integrations:
