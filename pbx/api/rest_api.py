@@ -402,13 +402,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         
         # Normalize the identifier to detect if it's a MAC or IP
         from pbx.features.phone_provisioning import normalize_mac_address
+        import re
         
-        # Check if it looks like a MAC address (contains hex chars and separators)
-        is_mac = any(c in identifier.lower() for c in [':', '-']) or \
-                 (len(identifier.replace(':', '').replace('-', '').replace('.', '')) == 12)
+        # Check if it looks like a MAC address using regex
+        # Matches formats: XX:XX:XX:XX:XX:XX, XX-XX-XX-XX-XX-XX, XXXXXXXXXXXX
+        mac_pattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$')
+        is_mac = bool(mac_pattern.match(identifier))
         
-        # Check if it looks like an IP address
-        is_ip = identifier.count('.') == 3
+        # Check if it looks like an IP address using regex
+        # Matches valid IPv4 addresses
+        ip_pattern = re.compile(r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
+        is_ip = bool(ip_pattern.match(identifier))
         
         # Try MAC address lookup
         if is_mac:

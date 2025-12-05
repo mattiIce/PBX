@@ -239,8 +239,10 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.RequestException as e:
+        # Catches ConnectionError, Timeout, HTTPError, etc.
         print("\n✗ Error: Could not connect to PBX server")
+        print(f"Details: {e}")
         print("Make sure the PBX is running and accessible")
         sys.exit(1)
     except Exception as e:

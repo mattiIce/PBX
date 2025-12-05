@@ -6,7 +6,7 @@ import sys
 import os
 import json
 
-# Add parent directory to path
+# Add parent directory to path (consistent with other test files in this repo)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.features.phone_provisioning import PhoneProvisioning, normalize_mac_address
