@@ -116,7 +116,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Handle GET requests"""
         parsed = urlparse(self.path)
-        path = parsed.path
+        path = parsed.path.rstrip('/')
 
         try:
             if path == '/api/status':
@@ -141,7 +141,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
-            elif path == '/' or path == '/admin' or path == '/admin/':
+            elif path == '' or path == '/admin':
                 self._handle_admin_redirect()
             elif path.startswith('/admin/'):
                 self._handle_static_file(path)
