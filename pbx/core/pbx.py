@@ -106,6 +106,31 @@ class PBXCore:
         else:
             self.phone_provisioning = None
 
+        # Initialize Active Directory integration
+        if self.config.get('integrations.active_directory.enabled', False):
+            from pbx.integrations.active_directory import ActiveDirectoryIntegration
+            ad_config = {
+                'integrations.active_directory.enabled': self.config.get('integrations.active_directory.enabled'),
+                'integrations.active_directory.server': self.config.get('integrations.active_directory.server'),
+                'integrations.active_directory.ldap_server': self.config.get('integrations.active_directory.server'),
+                'integrations.active_directory.base_dn': self.config.get('integrations.active_directory.base_dn'),
+                'integrations.active_directory.bind_dn': self.config.get('integrations.active_directory.bind_dn'),
+                'integrations.active_directory.bind_password': self.config.get('integrations.active_directory.bind_password'),
+                'integrations.active_directory.use_ssl': self.config.get('integrations.active_directory.use_ssl', True),
+                'integrations.active_directory.auto_provision': self.config.get('integrations.active_directory.auto_provision', False),
+                'integrations.active_directory.user_search_base': self.config.get('integrations.active_directory.user_search_base'),
+                'integrations.active_directory.deactivate_removed_users': self.config.get('integrations.active_directory.deactivate_removed_users', True),
+                'config_file': config_file
+            }
+            self.ad_integration = ActiveDirectoryIntegration(ad_config)
+            if self.ad_integration.enabled:
+                self.logger.info("Active Directory integration initialized")
+            else:
+                self.logger.warning("Active Directory integration enabled in config but failed to initialize")
+                self.ad_integration = None
+        else:
+            self.ad_integration = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)
@@ -1358,3 +1383,93 @@ class PBXCore:
             'parked_calls': len(self.parking_system.get_parked_calls()),
             'queued_calls': sum(len(q.queue) for q in self.queue_system.queues.values())
         }
+
+    def get_ad_integration_status(self):
+        """
+        Get Active Directory integration status
+
+        Returns:
+            Dictionary with AD integration status
+        """
+        if not self.ad_integration:
+            return {
+                'enabled': False,
+                'connected': False,
+                'auto_provision': False,
+                'server': None,
+                'last_sync': None,
+                'synced_users': 0,
+                'error': None
+            }
+
+        # Try to connect to check status
+        connected = False
+        error = None
+        try:
+            connected = self.ad_integration.connect()
+        except Exception as e:
+            error = str(e)
+
+        # Get count of AD-synced extensions
+        synced_count = 0
+        if self.extension_db:
+            try:
+                synced_extensions = self.extension_db.get_ad_synced()
+                synced_count = len(synced_extensions)
+            except Exception as e:
+                self.logger.error(f"Error getting AD-synced extension count: {e}")
+
+        return {
+            'enabled': self.ad_integration.enabled,
+            'connected': connected,
+            'auto_provision': self.ad_integration.auto_provision,
+            'server': self.ad_integration.ldap_server,
+            'synced_users': synced_count,
+            'error': error
+        }
+
+    def sync_ad_users(self):
+        """
+        Manually trigger Active Directory user synchronization
+
+        Returns:
+            dict: Sync results with count and status
+        """
+        if not self.ad_integration:
+            return {
+                'success': False,
+                'error': 'Active Directory integration is not enabled',
+                'synced_count': 0
+            }
+
+        if not self.ad_integration.enabled:
+            return {
+                'success': False,
+                'error': 'Active Directory integration is disabled',
+                'synced_count': 0
+            }
+
+        try:
+            self.logger.info("Manual AD user sync triggered")
+            synced_count = self.ad_integration.sync_users(
+                extension_registry=self.extension_registry,
+                extension_db=self.extension_db
+            )
+            
+            # Reload extensions after sync
+            self.extension_registry.reload_extensions()
+            
+            return {
+                'success': True,
+                'synced_count': synced_count,
+                'error': None
+            }
+        except Exception as e:
+            self.logger.error(f"Error during AD sync: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': str(e),
+                'synced_count': 0
+            }

@@ -77,6 +77,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._handle_reboot_phone(extension)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
+            elif path == '/api/integrations/ad/sync':
+                self._handle_ad_sync()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -146,6 +148,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension: /api/registered-phones/extension/{number}
                 extension = path.split('/')[-1]
                 self._handle_get_registered_phones_by_extension(extension)
+            elif path == '/api/integrations/ad/status':
+                self._handle_ad_status()
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -736,6 +740,40 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({
                     'error': f'Failed to send reboot signal to extension {extension}. Extension may not be registered.'
+                }, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_ad_status(self):
+        """Get Active Directory integration status"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            status = self.pbx_core.get_ad_integration_status()
+            self._send_json(status)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_ad_sync(self):
+        """Manually trigger Active Directory user synchronization"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            result = self.pbx_core.sync_ad_users()
+            if result['success']:
+                self._send_json({
+                    'success': True,
+                    'message': f'Successfully synchronized {result["synced_count"]} users from Active Directory',
+                    'synced_count': result['synced_count']
+                })
+            else:
+                self._send_json({
+                    'success': False,
+                    'error': result['error']
                 }, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)

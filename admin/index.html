@@ -47,6 +47,40 @@
                 </div>
             </div>
 
+            <h3>Active Directory Integration</h3>
+            <div class="config-section" id="ad-integration-section">
+                <div class="ad-status-grid">
+                    <div class="ad-status-item">
+                        <strong>Status:</strong> 
+                        <span id="ad-status-badge" class="status-badge">Loading...</span>
+                    </div>
+                    <div class="ad-status-item">
+                        <strong>Connection:</strong> 
+                        <span id="ad-connection-status">-</span>
+                    </div>
+                    <div class="ad-status-item">
+                        <strong>Server:</strong> 
+                        <span id="ad-server">-</span>
+                    </div>
+                    <div class="ad-status-item">
+                        <strong>Auto Provision:</strong> 
+                        <span id="ad-auto-provision">-</span>
+                    </div>
+                    <div class="ad-status-item">
+                        <strong>Synced Users:</strong> 
+                        <span id="ad-synced-users">-</span>
+                    </div>
+                    <div class="ad-status-item">
+                        <strong>Last Error:</strong> 
+                        <span id="ad-error" style="color: #d32f2f;">-</span>
+                    </div>
+                </div>
+                <div class="action-buttons" style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="refreshADStatus()">🔄 Refresh AD Status</button>
+                    <button class="btn btn-success" onclick="syncADUsers()" id="ad-sync-btn">🔄 Sync Users from AD</button>
+                </div>
+            </div>
+
             <h3>Quick Actions</h3>
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Refresh Status</button>
