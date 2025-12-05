@@ -145,11 +145,63 @@ Shows:
 
 ## Common Issues and Solutions
 
+### Issue: Phone requesting with MAC placeholder instead of actual MAC
+
+**Symptoms:**
+- Logs show: "CONFIGURATION ERROR: Phone requested provisioning with placeholder '{mac}' instead of actual MAC address"
+- Phone tries to fetch config but gets 400 error
+- Phone displays provisioning error
+- User-Agent shows phone vendor (e.g., "Zultys ZIP 33G")
+
+**Root Cause:**
+Phone is configured with wrong MAC variable format. Different vendors use different MAC variables:
+- Zultys, Yealink, Polycom, Grandstream use: `$mac`
+- Cisco uses: `$MA`
+
+**Solution:**
+
+1. **Update Phone Configuration** with correct MAC variable for your vendor:
+
+   **For Zultys phones:**
+   - Phone Menu → Setup → Network → Provisioning
+   - Set Server URL to: `http://192.168.1.14:8080/provision/$mac.cfg`
+   - Note: Use `$mac` NOT `{mac}`
+
+   **For Yealink phones:**
+   - Web Interface → Settings → Auto Provision
+   - Set Server URL to: `http://192.168.1.14:8080/provision/$mac.cfg`
+
+   **For Polycom phones:**
+   - Web Interface → Settings → Provisioning Server
+   - Set Server URL to: `http://192.168.1.14:8080/provision/$mac.cfg`
+
+   **For Cisco phones:**
+   - Web Interface → Admin Login → Voice → Provisioning
+   - Set Profile Rule to: `http://192.168.1.14:8080/provision/$MA.cfg`
+   - Note: Cisco uses `$MA` instead of `$mac`
+
+   **For Grandstream phones:**
+   - Web Interface → Maintenance → Upgrade and Provisioning
+   - Set Config Server Path to: `http://192.168.1.14:8080/provision/$mac.cfg`
+
+2. **Update DHCP Option 66** (if using DHCP provisioning):
+   ```
+   # For Zultys, Yealink, Polycom, Grandstream:
+   Option 66: http://192.168.1.14:8080/provision/$mac.cfg
+   
+   # For Cisco:
+   Option 66: http://192.168.1.14:8080/provision/$MA.cfg
+   ```
+
+3. **Reboot the phone** to apply new provisioning URL
+
+**The system will now provide detailed vendor-specific guidance when this error occurs.**
+
 ### Issue: Device not registered in provisioning system
 
 **Symptoms:**
 - Phone tries to fetch config but gets 404 error
-- Logs show: "Device {mac} not registered in provisioning system"
+- Logs show: "Device not registered in provisioning system" with actual MAC address
 - Phone displays provisioning error
 
 **New Enhanced Error Messages:**

@@ -278,6 +278,63 @@ def test_similar_mac_detection():
     print("✓ Similar MAC detection works")
 
 
+def test_mac_placeholder_detection():
+    """Test that MAC address placeholders are detected properly"""
+    print("Testing MAC placeholder detection...")
+    
+    from pbx.features.phone_provisioning import normalize_mac_address
+    from pbx.api.rest_api import MAC_ADDRESS_PLACEHOLDERS
+    
+    # Verify the constant has key placeholder patterns
+    # We expect literal placeholders like {mac} that indicate misconfiguration
+    # Note: $mac and $MA are CORRECT variables and should NOT be in this list
+    assert len(MAC_ADDRESS_PLACEHOLDERS) > 0, "MAC_ADDRESS_PLACEHOLDERS should not be empty"
+    assert '{mac}' in MAC_ADDRESS_PLACEHOLDERS, "Should include {mac} placeholder"
+    assert '{MAC}' in MAC_ADDRESS_PLACEHOLDERS, "Should include {MAC} placeholder"
+    
+    # Verify that correct MAC variables are NOT in the placeholder list
+    assert '$mac' not in MAC_ADDRESS_PLACEHOLDERS, "$mac is a valid MAC variable, not a placeholder"
+    assert '$MA' not in MAC_ADDRESS_PLACEHOLDERS, "$MA is a valid MAC variable (Cisco), not a placeholder"
+    
+    # Test that actual MAC addresses are NOT in the placeholder list
+    real_macs = [
+        "00:15:65:12:34:56",
+        "00-15-65-12-34-56",
+        "0015.6512.3456",
+        "001565123456"
+    ]
+    
+    for mac in real_macs:
+        # Verify real MACs are not mistaken for placeholders
+        assert mac not in MAC_ADDRESS_PLACEHOLDERS, \
+            f"Real MAC {mac} should not be in placeholder list"
+        
+        # Verify normalized MACs are also not placeholders
+        normalized = normalize_mac_address(mac)
+        assert normalized == "001565123456", f"MAC {mac} should normalize to 001565123456, got {normalized}"
+        assert normalized not in MAC_ADDRESS_PLACEHOLDERS, \
+            f"Normalized MAC {normalized} should not be in placeholder list"
+    
+    # Test that placeholder detection works correctly for common cases
+    # This simulates what happens in the API endpoint
+    test_cases = [
+        ('{mac}', True, "Literal {mac} placeholder (misconfiguration)"),
+        ('{MAC}', True, "Literal {MAC} placeholder (misconfiguration)"),
+        ('{Ma}', True, "Literal {Ma} placeholder (misconfiguration)"),
+        ('$mac', False, "Valid MAC variable for Zultys/Yealink/Polycom/Grandstream"),
+        ('$MA', False, "Valid MAC variable for Cisco"),
+        ('000bea85ed68', False, "Valid normalized MAC"),
+        ('00:0B:EA:85:ED:68', False, "Valid MAC with colons"),
+    ]
+    
+    for mac_value, should_be_placeholder, description in test_cases:
+        is_placeholder = mac_value in MAC_ADDRESS_PLACEHOLDERS
+        assert is_placeholder == should_be_placeholder, \
+            f"Failed for {description}: {mac_value} (expected placeholder={should_be_placeholder}, got {is_placeholder})"
+    
+    print("✓ MAC placeholder detection works")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("Running Phone Provisioning Tests")
@@ -292,6 +349,7 @@ if __name__ == "__main__":
         test_config_generation()
         test_unregistered_device_error_message()
         test_similar_mac_detection()
+        test_mac_placeholder_detection()
         
         print("=" * 60)
         print("All tests passed!")

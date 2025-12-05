@@ -20,6 +20,8 @@
 provisioning:
   enabled: true
   url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+  # Note: {mac} in config.yml is a template placeholder for documentation
+  # Actual phone configuration should use $mac or $MA depending on vendor
 
 server:
   external_ip: 192.168.1.14  # YOUR actual IP, not 127.0.0.1
@@ -175,16 +177,28 @@ curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
 
 ### 3. Configure Phone URL (One-Time Setup)
 
+**⚠️ IMPORTANT:** Use the correct MAC variable format for your phone vendor:
+- Zultys, Yealink, Polycom, Grandstream: `$mac`
+- Cisco: `$MA`
+
 **Option A: DHCP Option 66 (Recommended)**
-Configure your DHCP server:
+Configure your DHCP server with the appropriate MAC variable for your phones:
 ```
-Option 66: http://192.168.1.14:8080/provision/{mac}.cfg
+# For Zultys, Yealink, Polycom, Grandstream:
+Option 66: http://192.168.1.14:8080/provision/$mac.cfg
+
+# For Cisco:
+Option 66: http://192.168.1.14:8080/provision/$MA.cfg
 ```
 
 **Option B: Manual Phone Configuration**
-In phone's web interface or menu, set provisioning URL:
+In phone's web interface or menu, set provisioning URL using the correct MAC variable:
 ```
+# Zultys, Yealink, Polycom, Grandstream:
 http://192.168.1.14:8080/provision/$mac.cfg
+
+# Cisco:
+http://192.168.1.14:8080/provision/$MA.cfg
 ```
 
 ### 4. Run AD Sync (If Using AD)
