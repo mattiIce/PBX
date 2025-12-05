@@ -508,8 +508,8 @@ function initializeForms() {
                 
                 if (response.ok) {
                     const data = await response.json();
-                    showNotification('Device registered successfully!', 'success');
-                    alert('Configuration URL:\n' + data.device.config_url + '\n\nThe phone will download its configuration from this URL when it boots.');
+                    const msg = 'Device registered successfully! Config URL: ' + data.device.config_url;
+                    showNotification(msg, 'success');
                     closeAddDeviceModal();
                     loadProvisioningDevices();
                 } else {
@@ -976,17 +976,19 @@ async function saveProvisioningSettings() {
     const customDir = document.getElementById('provisioning-custom-dir').value;
     
     if (!serverIP) {
-        alert('Please enter a server IP address');
+        showNotification('Please enter a server IP address', 'error');
         return;
     }
     
-    alert('⚠️ Provisioning settings need to be updated in config.yml and require a server restart.\n\n' +
-          'Please update your config.yml file with:\n\n' +
+    const configMsg = `Provisioning settings need to be updated in config.yml:\n\n` +
           `provisioning:\n` +
           `  enabled: ${enabled}\n` +
           `  url_format: http://${serverIP}:${port}/provision/{mac}.cfg\n` +
           `  custom_templates_dir: "${customDir}"\n\n` +
-          'Then restart the PBX server.');
+          'Then restart the PBX server.';
+    
+    showNotification('Settings saved. Update config.yml and restart required.', 'info');
+    console.log(configMsg);
 }
 
 async function loadSupportedVendors() {
@@ -1140,14 +1142,14 @@ async function deleteDevice(mac) {
         });
         
         if (response.ok) {
-            alert('Device deleted successfully');
+            showNotification('Device deleted successfully', 'success');
             loadProvisioningDevices();
         } else {
             const data = await response.json();
-            alert('Failed to delete device: ' + (data.error || 'Unknown error'));
+            showNotification('Failed to delete device: ' + (data.error || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error deleting device:', error);
-        alert('Error deleting device: ' + error.message);
+        showNotification('Error deleting device: ' + error.message, 'error');
     }
 }

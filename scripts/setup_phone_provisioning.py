@@ -130,7 +130,7 @@ class PhoneProvisioningSetup:
             response = requests.get(f"{self.api_url}/api/status", timeout=2)
             self.pbx_running = response.status_code == 200
             return self.pbx_running
-        except:
+        except Exception:
             self.pbx_running = False
             return False
     
@@ -149,7 +149,7 @@ class PhoneProvisioningSetup:
             response = requests.get(f"{self.api_url}/api/provisioning/vendors", timeout=2)
             if response.status_code == 200:
                 return response.json()
-        except:
+        except Exception:
             pass
         
         return {'vendors': [], 'models': {}}
