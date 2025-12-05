@@ -50,6 +50,9 @@ function showTab(tabName) {
         case 'extensions':
             loadExtensions();
             break;
+        case 'phones':
+            loadRegisteredPhones();
+            break;
         case 'voicemail':
             loadVoicemailTab();
             break;
@@ -662,5 +665,67 @@ async function rebootAllPhones() {
     } catch (error) {
         console.error('Error rebooting phones:', error);
         showNotification('Failed to reboot phones', 'error');
+    }
+}
+
+// Registered Phones Functions
+async function loadRegisteredPhones() {
+    const tbody = document.getElementById('registered-phones-table-body');
+    tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading registered phones...</td></tr>';
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/registered-phones`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const phones = await response.json();
+        
+        if (!phones || phones.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="loading">No registered phones found in database</td></tr>';
+            return;
+        }
+        
+        // Clear table body
+        tbody.innerHTML = '';
+        
+        // Create rows safely using DOM methods to prevent XSS
+        phones.forEach(phone => {
+            const row = document.createElement('tr');
+            
+            // Extension number
+            const extCell = document.createElement('td');
+            const extStrong = document.createElement('strong');
+            extStrong.textContent = phone.extension_number || 'Unknown';
+            extCell.appendChild(extStrong);
+            row.appendChild(extCell);
+            
+            // IP Address
+            const ipCell = document.createElement('td');
+            ipCell.textContent = phone.ip_address || 'Unknown';
+            row.appendChild(ipCell);
+            
+            // MAC Address
+            const macCell = document.createElement('td');
+            macCell.textContent = phone.mac_address || 'Unknown';
+            row.appendChild(macCell);
+            
+            // User Agent
+            const uaCell = document.createElement('td');
+            uaCell.textContent = phone.user_agent || 'Unknown';
+            row.appendChild(uaCell);
+            
+            // Last Registration
+            const regCell = document.createElement('td');
+            regCell.textContent = phone.last_registration ? new Date(phone.last_registration).toLocaleString() : 'Never';
+            row.appendChild(regCell);
+            
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error loading registered phones:', error);
+        tbody.innerHTML = '<tr><td colspan="5" class="loading">Error loading registered phones</td></tr>';
+        showNotification('Failed to load registered phones from database', 'error');
     }
 }
