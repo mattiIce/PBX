@@ -445,8 +445,21 @@ class OutlookIntegration:
                 self.logger.error("Meeting has no start time")
                 return False
             
-            # Parse meeting start time
-            start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+            # Parse meeting start time - handle various ISO formats
+            try:
+                # Try with 'Z' suffix (Zulu time)
+                if start_time_str.endswith('Z'):
+                    start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+                # Try direct ISO format parsing
+                elif '+' in start_time_str or start_time_str.endswith('+00:00'):
+                    start_time = datetime.fromisoformat(start_time_str)
+                else:
+                    # Assume UTC if no timezone specified
+                    start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
+            except ValueError as e:
+                self.logger.error(f"Failed to parse meeting start time '{start_time_str}': {e}")
+                return False
+            
             reminder_time = start_time - timedelta(minutes=minutes_before)
             now = datetime.now(timezone.utc)
             
@@ -460,6 +473,12 @@ class OutlookIntegration:
             self.logger.info(f"Meeting '{subject}' reminder scheduled for {reminder_time} (in {delay_seconds:.0f} seconds)")
             
             # If PBX core provided, schedule the reminder
+            # NOTE: This uses threading.Timer which is lost on application restart.
+            # For production use, consider:
+            # - APScheduler (https://apscheduler.readthedocs.io/)
+            # - Celery with Redis/RabbitMQ (https://docs.celeryproject.org/)
+            # - Database-backed task queue
+            # - Cron jobs for scheduled tasks
             if pbx_core:
                 # Find extension by email if not provided
                 if not extension_number and hasattr(pbx_core, 'extension_registry'):

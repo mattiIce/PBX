@@ -20,6 +20,24 @@ from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
 
 
+class MockConfig:
+    """Mock config object that mimics Config class behavior"""
+    def __init__(self, data):
+        self.data = data
+    
+    def get(self, key, default=None):
+        keys = key.split('.')
+        val = self.data
+        for k in keys:
+            if isinstance(val, dict):
+                val = val.get(k)
+            else:
+                return default
+            if val is None:
+                return default
+        return val if val is not None else default
+
+
 class MockTrunk:
     """Mock SIP trunk for testing"""
     def __init__(self, name, host):
@@ -63,23 +81,6 @@ def test_zoom_phone_routing():
     """Test Zoom Phone SIP trunk routing"""
     print("\nTesting Zoom Phone routing...")
     
-    # Create a mock config object that mimics Config class behavior
-    class MockConfig:
-        def __init__(self, data):
-            self.data = data
-        
-        def get(self, key, default=None):
-            keys = key.split('.')
-            val = self.data
-            for k in keys:
-                if isinstance(val, dict):
-                    val = val.get(k)
-                else:
-                    return default
-                if val is None:
-                    return default
-            return val if val is not None else default
-    
     config = MockConfig({
         'integrations': {
             'zoom': {
@@ -116,23 +117,6 @@ def test_zoom_phone_routing():
 def test_teams_direct_routing():
     """Test Microsoft Teams Direct Routing"""
     print("\nTesting Teams Direct Routing...")
-    
-    # Create a mock config object
-    class MockConfig:
-        def __init__(self, data):
-            self.data = data
-        
-        def get(self, key, default=None):
-            keys = key.split('.')
-            val = self.data
-            for k in keys:
-                if isinstance(val, dict):
-                    val = val.get(k)
-                else:
-                    return default
-                if val is None:
-                    return default
-            return val if val is not None else default
     
     config = MockConfig({
         'integrations': {
@@ -181,23 +165,6 @@ def test_teams_direct_routing():
 def test_outlook_meeting_reminder():
     """Test Outlook meeting reminder scheduling"""
     print("\nTesting Outlook meeting reminder...")
-    
-    # Create a mock config object
-    class MockConfig:
-        def __init__(self, data):
-            self.data = data
-        
-        def get(self, key, default=None):
-            keys = key.split('.')
-            val = self.data
-            for k in keys:
-                if isinstance(val, dict):
-                    val = val.get(k)
-                else:
-                    return default
-                if val is None:
-                    return default
-            return val if val is not None else default
     
     config = MockConfig({
         'integrations': {

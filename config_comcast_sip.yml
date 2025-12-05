@@ -16,6 +16,7 @@ server:
   sip_host: "0.0.0.0"           # Listen on all interfaces
   sip_port: 5060                # Standard SIP port
   public_ip: "YOUR_PUBLIC_IP"   # Your Comcast static IP
+                                 # Example: "68.87.123.45"
   
   # RTP port range for media
   rtp_port_range_start: 16384   # Comcast recommended range
@@ -45,7 +46,9 @@ sip_trunks:
     # Authentication - Comcast typically uses IP-based auth
     # Some accounts may require username/password
     username: "YOUR_COMCAST_USERNAME"      # From Comcast (if required)
+                                            # Example: "acme_corp" or leave empty if IP-auth
     password: "YOUR_COMCAST_PASSWORD"      # From Comcast (if required)
+                                            # Example: "C0mc@st2024!" or leave empty if IP-auth
     auth_realm: "voiceedge.com"            # Comcast SIP realm
     
     # Trunk settings

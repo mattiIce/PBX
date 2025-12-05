@@ -16,6 +16,7 @@ server:
   sip_host: "0.0.0.0"           # Listen on all interfaces
   sip_port: 5060                # Standard SIP port
   public_ip: "YOUR_PUBLIC_IP"   # Your public IP address (required for AT&T)
+                                 # Example: "203.0.113.10"
   
   # RTP port range for media
   rtp_port_range_start: 10000
@@ -35,8 +36,11 @@ sip_trunks:
     
     # Authentication credentials from AT&T
     username: "YOUR_ATT_USERNAME"          # From AT&T portal
+                                            # Example: "company123"
     password: "YOUR_ATT_PASSWORD"          # From AT&T portal
+                                            # Example: "SecureP@ssw0rd!"
     auth_username: "YOUR_ATT_AUTH_USER"    # May be same as username
+                                            # Example: "company123" or "company123@att.com"
     
     # Trunk settings
     max_channels: 23              # Number of concurrent calls (adjust based on your plan)
@@ -55,6 +59,7 @@ sip_trunks:
     
     # Caller ID settings
     from_domain: "your-domain.att.com"     # Your registered domain with AT&T
+                                            # Example: "acmecompany.att.com"
     
   # Optional: Secondary trunk for redundancy
   - id: att_secondary
