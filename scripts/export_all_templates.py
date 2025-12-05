@@ -18,16 +18,36 @@ from pbx.utils.config import Config
 
 def main():
     """Export all built-in templates to files"""
+    import argparse
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description='Export all built-in phone provisioning templates to files',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python scripts/export_all_templates.py
+  python scripts/export_all_templates.py --config config.yml
+  python scripts/export_all_templates.py --config /path/to/custom_config.yml
+        """
+    )
+    parser.add_argument(
+        '--config',
+        default='config.yml',
+        help='Path to configuration file (default: config.yml)'
+    )
+    args = parser.parse_args()
+    
     print("=" * 70)
     print("Export All Provisioning Templates")
     print("=" * 70)
     print()
     
     # Load config
-    config_path = 'config.yml'
+    config_path = args.config
     if not os.path.exists(config_path):
         print(f"❌ Config file not found: {config_path}")
-        print("   Please run this script from the PBX root directory")
+        print("   Please specify a valid config file path")
         return 1
     
     print(f"📋 Loading configuration from {config_path}...")
@@ -84,11 +104,16 @@ def main():
     
     # Show next steps
     if exported_count > 0:
+        # Get API URL from config
+        api_host = config.get('server.external_ip', 'localhost')
+        api_port = config.get('api.port', 8080)
+        api_url = f"http://{api_host}:{api_port}"
+        
         print("Next steps:")
         print("1. Review the exported templates in the provisioning_templates directory")
         print("2. Customize any templates as needed")
         print("3. Restart the PBX server or reload templates:")
-        print("   curl -X POST http://localhost:8080/api/provisioning/reload-templates")
+        print(f"   curl -X POST {api_url}/api/provisioning/reload-templates")
         print()
     
     return 0 if failed_count == 0 else 1
