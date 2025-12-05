@@ -1,4 +1,4 @@
-# InHouse PBX System
+# Aluminum Blanking Phone System
 
 A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built from scratch in Python. This system provides enterprise-grade telephony features for internal communication and external connectivity.
 
