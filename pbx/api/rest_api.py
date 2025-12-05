@@ -8,6 +8,7 @@ import socket
 import threading
 import os
 import mimetypes
+import traceback
 from urllib.parse import urlparse
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
@@ -233,7 +234,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 phones = self.pbx_core.registered_phones_db.list_all()
                 self._send_json(phones)
             except Exception as e:
-                import traceback
                 logger.error(f"Error loading registered phones from database: {e}")
                 logger.error(f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
                 logger.error(f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
@@ -257,7 +257,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 phones = self.pbx_core.registered_phones_db.get_by_extension(extension)
                 self._send_json(phones)
             except Exception as e:
-                import traceback
                 logger.error(f"Error loading registered phones for extension {extension} from database: {e}")
                 logger.error(f"  Extension: {extension}")
                 logger.error(f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")

@@ -3,6 +3,7 @@ Database backend for PBX features
 Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 """
 import os
+import traceback
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
 from datetime import datetime
@@ -160,7 +161,6 @@ class DatabaseBackend:
             cursor.close()
             return True
         except Exception as e:
-            import traceback
             error_msg = str(e).lower()
             # Check if this is a permission error on existing objects
             # Common patterns across PostgreSQL, MySQL, SQLite
@@ -245,7 +245,6 @@ class DatabaseBackend:
                 return dict(row) if self.db_type == 'postgresql' else {k: row[k] for k in row.keys()}
             return None
         except Exception as e:
-            import traceback
             self.logger.error(f"Fetch one error: {e}")
             self.logger.error(f"  Query: {query}")
             self.logger.error(f"  Parameters: {params}")
@@ -286,7 +285,6 @@ class DatabaseBackend:
             else:
                 return [{k: row[k] for k in row.keys()} for row in rows]
         except Exception as e:
-            import traceback
             self.logger.error(f"Fetch all error: {e}")
             self.logger.error(f"  Query: {query}")
             self.logger.error(f"  Parameters: {params}")

@@ -5,6 +5,7 @@ Central coordinator for all PBX functionality
 import re
 import struct
 import threading
+import traceback
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, PBXLogger
 from pbx.sip.server import SIPServer
@@ -219,7 +220,6 @@ class PBXCore:
                         else:
                             self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address} (no MAC)")
                     except Exception as e:
-                        import traceback
                         self.logger.error(f"Failed to store phone registration in database: {e}")
                         self.logger.error(f"  Extension: {extension_number}")
                         self.logger.error(f"  IP Address: {ip_address}")
