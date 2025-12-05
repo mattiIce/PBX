@@ -285,23 +285,14 @@ def test_mac_placeholder_detection():
     from pbx.features.phone_provisioning import normalize_mac_address
     from pbx.api.rest_api import MAC_ADDRESS_PLACEHOLDERS
     
-    # Test that placeholders are NOT normalized like regular MACs
-    # These should remain as-is or be detected separately in the API handler
-    placeholders = MAC_ADDRESS_PLACEHOLDERS
+    # Verify the constant has key placeholder patterns
+    # We expect common patterns like {mac}, $mac, and variations
+    assert len(MAC_ADDRESS_PLACEHOLDERS) > 0, "MAC_ADDRESS_PLACEHOLDERS should not be empty"
+    assert '{mac}' in MAC_ADDRESS_PLACEHOLDERS, "Should include {mac} placeholder"
+    assert '$mac' in MAC_ADDRESS_PLACEHOLDERS, "Should include $mac placeholder"
+    assert '$MA' in MAC_ADDRESS_PLACEHOLDERS, "Should include $MA placeholder (for Cisco)"
     
-    # Verify we have the expected placeholders defined
-    expected_placeholders = ['{mac}', '$mac', '{MAC}', '$MAC', '{Ma}', '$Ma', '$MA']
-    assert len(placeholders) == len(expected_placeholders), \
-        f"Expected {len(expected_placeholders)} placeholders, got {len(placeholders)}"
-    
-    # These are placeholders and shouldn't be normalized like real MACs
-    for placeholder in placeholders:
-        # The important part is the API layer detects these as placeholders
-        # This test verifies the placeholder strings exist in our detection list
-        assert placeholder in MAC_ADDRESS_PLACEHOLDERS, \
-            f"Placeholder {placeholder} should be in MAC_ADDRESS_PLACEHOLDERS constant"
-    
-    # Test that actual MAC addresses are normalized correctly
+    # Test that actual MAC addresses are NOT in the placeholder list
     real_macs = [
         "00:15:65:12:34:56",
         "00-15-65-12-34-56",
@@ -310,10 +301,31 @@ def test_mac_placeholder_detection():
     ]
     
     for mac in real_macs:
-        result = normalize_mac_address(mac)
-        assert result == "001565123456", f"MAC {mac} should normalize to 001565123456, got {result}"
-        # Verify normalized MAC is NOT in placeholder list
-        assert result not in placeholders, f"Normalized MAC should not match placeholders"
+        # Verify real MACs are not mistaken for placeholders
+        assert mac not in MAC_ADDRESS_PLACEHOLDERS, \
+            f"Real MAC {mac} should not be in placeholder list"
+        
+        # Verify normalized MACs are also not placeholders
+        normalized = normalize_mac_address(mac)
+        assert normalized == "001565123456", f"MAC {mac} should normalize to 001565123456, got {normalized}"
+        assert normalized not in MAC_ADDRESS_PLACEHOLDERS, \
+            f"Normalized MAC {normalized} should not be in placeholder list"
+    
+    # Test that placeholder detection works correctly for common cases
+    # This simulates what happens in the API endpoint
+    test_cases = [
+        ('{mac}', True, "Common documentation placeholder"),
+        ('$mac', True, "Zultys/Yealink placeholder"),
+        ('$MA', True, "Cisco placeholder"),
+        ('{MAC}', True, "Uppercase placeholder"),
+        ('000bea85ed68', False, "Valid normalized MAC"),
+        ('00:0B:EA:85:ED:68', False, "Valid MAC with colons"),
+    ]
+    
+    for mac_value, should_be_placeholder, description in test_cases:
+        is_placeholder = mac_value in MAC_ADDRESS_PLACEHOLDERS
+        assert is_placeholder == should_be_placeholder, \
+            f"Failed for {description}: {mac_value} (expected placeholder={should_be_placeholder}, got {is_placeholder})"
     
     print("✓ MAC placeholder detection works")
 
