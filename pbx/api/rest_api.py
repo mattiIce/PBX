@@ -8,6 +8,7 @@ import socket
 import threading
 import os
 import mimetypes
+import traceback
 from urllib.parse import urlparse
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
@@ -227,26 +228,49 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_registered_phones(self):
         """Get all registered phones from database"""
+        logger = get_logger()
         if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
             try:
                 phones = self.pbx_core.registered_phones_db.list_all()
                 self._send_json(phones)
             except Exception as e:
-                self._send_json({'error': str(e)}, 500)
+                logger.error(f"Error loading registered phones from database: {e}")
+                logger.error(f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
+                logger.error(f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
+                logger.error(f"  Traceback: {traceback.format_exc()}")
+                self._send_json({'error': str(e), 'details': 'Check server logs for full error details'}, 500)
         else:
             # Return empty array when database is not available (graceful degradation)
+            logger.warning("Registered phones database not available - returning empty list")
+            if self.pbx_core:
+                logger.warning(f"  pbx_core exists: True")
+                logger.warning(f"  has registered_phones_db attr: {hasattr(self.pbx_core, 'registered_phones_db')}")
+                if hasattr(self.pbx_core, 'registered_phones_db'):
+                    logger.warning(f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}")
             self._send_json([])
 
     def _handle_get_registered_phones_by_extension(self, extension):
         """Get registered phones for a specific extension"""
+        logger = get_logger()
         if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
             try:
                 phones = self.pbx_core.registered_phones_db.get_by_extension(extension)
                 self._send_json(phones)
             except Exception as e:
-                self._send_json({'error': str(e)}, 500)
+                logger.error(f"Error loading registered phones for extension {extension} from database: {e}")
+                logger.error(f"  Extension: {extension}")
+                logger.error(f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
+                logger.error(f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
+                logger.error(f"  Traceback: {traceback.format_exc()}")
+                self._send_json({'error': str(e), 'details': 'Check server logs for full error details'}, 500)
         else:
             # Return empty array when database is not available (graceful degradation)
+            logger.warning(f"Registered phones database not available for extension {extension} - returning empty list")
+            if self.pbx_core:
+                logger.warning(f"  pbx_core exists: True")
+                logger.warning(f"  has registered_phones_db attr: {hasattr(self.pbx_core, 'registered_phones_db')}")
+                if hasattr(self.pbx_core, 'registered_phones_db'):
+                    logger.warning(f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}")
             self._send_json([])
 
     def _handle_register_device(self):

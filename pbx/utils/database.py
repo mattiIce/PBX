@@ -3,6 +3,7 @@ Database backend for PBX features
 Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 """
 import os
+import traceback
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
 from datetime import datetime
@@ -185,8 +186,12 @@ class DatabaseBackend:
                 self.logger.debug(f"{context.capitalize()} already exists: {e}")
                 return True
             else:
-                # This is an actual error
+                # This is an actual error - log verbosely
                 self.logger.error(f"Error during {context}: {e}")
+                self.logger.error(f"  Query: {query}")
+                self.logger.error(f"  Parameters: {params}")
+                self.logger.error(f"  Database type: {self.db_type}")
+                self.logger.error(f"  Traceback: {traceback.format_exc()}")
                 if self.connection:
                     self.connection.rollback()
                 return False
@@ -202,6 +207,10 @@ class DatabaseBackend:
         Returns:
             bool: True if successful
         """
+        if not self.enabled or not self.connection:
+            self.logger.error("Execute called but database is not enabled or connected")
+            self.logger.error(f"  Enabled: {self.enabled}, Connection: {self.connection is not None}")
+            return False
         return self._execute_with_context(query, "query execution", params, critical=True)
 
     def fetch_one(self, query: str, params: tuple = None) -> Optional[Dict]:
@@ -237,6 +246,10 @@ class DatabaseBackend:
             return None
         except Exception as e:
             self.logger.error(f"Fetch one error: {e}")
+            self.logger.error(f"  Query: {query}")
+            self.logger.error(f"  Parameters: {params}")
+            self.logger.error(f"  Database type: {self.db_type}")
+            self.logger.error(f"  Traceback: {traceback.format_exc()}")
             return None
 
     def fetch_all(self, query: str, params: tuple = None) -> List[Dict]:
@@ -273,6 +286,10 @@ class DatabaseBackend:
                 return [{k: row[k] for k in row.keys()} for row in rows]
         except Exception as e:
             self.logger.error(f"Fetch all error: {e}")
+            self.logger.error(f"  Query: {query}")
+            self.logger.error(f"  Parameters: {params}")
+            self.logger.error(f"  Database type: {self.db_type}")
+            self.logger.error(f"  Traceback: {traceback.format_exc()}")
             return []
 
     def create_tables(self):

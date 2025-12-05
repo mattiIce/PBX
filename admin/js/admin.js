@@ -677,7 +677,20 @@ async function loadRegisteredPhones() {
         const response = await fetch(`${API_BASE}/api/registered-phones`);
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            // Try to parse error response from API
+            let errorMessage = `HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMessage = errorData.error;
+                    if (errorData.details) {
+                        errorMessage += ` - ${errorData.details}`;
+                    }
+                }
+            } catch (parseError) {
+                // If parsing fails, keep the HTTP status message
+            }
+            throw new Error(errorMessage);
         }
         
         const phones = await response.json();
@@ -718,14 +731,26 @@ async function loadRegisteredPhones() {
             
             // Last Registration
             const regCell = document.createElement('td');
-            regCell.textContent = phone.last_registration ? new Date(phone.last_registration).toLocaleString() : 'Never';
+            regCell.textContent = phone.last_registered ? new Date(phone.last_registered).toLocaleString() : 'Never';
             row.appendChild(regCell);
             
             tbody.appendChild(row);
         });
     } catch (error) {
         console.error('Error loading registered phones:', error);
-        tbody.innerHTML = '<tr><td colspan="5" class="loading">Error loading registered phones</td></tr>';
-        showNotification('Failed to load registered phones from database', 'error');
+        
+        // Display error message in table
+        const errorCell = document.createElement('td');
+        errorCell.colSpan = 5;
+        errorCell.className = 'error-message';
+        errorCell.textContent = `Error: ${error.message}`;
+        
+        const errorRow = document.createElement('tr');
+        errorRow.appendChild(errorCell);
+        
+        tbody.innerHTML = '';
+        tbody.appendChild(errorRow);
+        
+        showNotification(`Failed to load registered phones: ${error.message}`, 'error');
     }
 }
