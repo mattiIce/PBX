@@ -4,6 +4,7 @@ Provides HTTP API for managing PBX features
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
+from datetime import datetime, date
 import socket
 import threading
 import os
@@ -15,6 +16,14 @@ from pbx.utils.config import Config
 
 # Admin directory path
 ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects"""
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class PBXAPIHandler(BaseHTTPRequestHandler):
@@ -34,7 +43,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _send_json(self, data, status=200):
         """Send JSON response"""
         self._set_headers(status)
-        self.wfile.write(json.dumps(data).encode())
+        self.wfile.write(json.dumps(data, cls=DateTimeEncoder).encode())
 
     def _get_body(self):
         """Get request body"""
