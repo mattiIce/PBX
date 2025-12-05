@@ -53,6 +53,9 @@ function showTab(tabName) {
         case 'phones':
             loadRegisteredPhones();
             break;
+        case 'provisioning':
+            loadProvisioning();
+            break;
         case 'voicemail':
             loadVoicemailTab();
             break;
@@ -477,6 +480,59 @@ function initializeForms() {
             showNotification('Failed to save configuration', 'error');
         }
     });
+    
+    // Add Device Form
+    const addDeviceForm = document.getElementById('add-device-form');
+    if (addDeviceForm) {
+        addDeviceForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const mac = document.getElementById('device-mac').value;
+            const extension = document.getElementById('device-extension').value;
+            const vendor = document.getElementById('device-vendor').value;
+            const model = document.getElementById('device-model').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/provisioning/devices`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mac_address: mac,
+                        extension_number: extension,
+                        vendor: vendor,
+                        model: model
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification('Device registered successfully!', 'success');
+                    alert('Configuration URL:\n' + data.device.config_url + '\n\nThe phone will download its configuration from this URL when it boots.');
+                    closeAddDeviceModal();
+                    loadProvisioningDevices();
+                } else {
+                    const data = await response.json();
+                    showNotification(data.error || 'Failed to register device', 'error');
+                }
+            } catch (error) {
+                console.error('Error registering device:', error);
+                showNotification('Error registering device: ' + error.message, 'error');
+            }
+        });
+    }
+    
+    // Provisioning settings change handlers
+    const serverIPInput = document.getElementById('provisioning-server-ip');
+    const portInput = document.getElementById('provisioning-port');
+    
+    if (serverIPInput) {
+        serverIPInput.addEventListener('input', updateProvisioningUrlFormat);
+    }
+    if (portInput) {
+        portInput.addEventListener('input', updateProvisioningUrlFormat);
+    }
 }
 
 // Notification System
@@ -868,5 +924,216 @@ async function loadRegisteredPhones() {
         tbody.appendChild(errorRow);
         
         showNotification(`Failed to load registered phones: ${error.message}`, 'error');
+    }
+}
+
+// ============================================================================
+// Phone Provisioning Functions
+// ============================================================================
+let supportedVendors = [];
+let supportedModels = {};
+
+async function loadProvisioning() {
+    await loadProvisioningSettings();
+    await loadSupportedVendors();
+    await loadProvisioningDevices();
+}
+
+async function loadProvisioningSettings() {
+    try {
+        const response = await fetch(`${API_BASE}/api/status`);
+        if (response.ok) {
+            const data = await response.json();
+            // Get current server IP from status or use default
+            const serverIP = data.server_ip || window.location.hostname;
+            document.getElementById('provisioning-server-ip').value = serverIP;
+            
+            // Update URL format display
+            updateProvisioningUrlFormat();
+        }
+    } catch (error) {
+        console.error('Error loading provisioning settings:', error);
+    }
+}
+
+function toggleProvisioningEnabled() {
+    const enabled = document.getElementById('provisioning-enabled').checked;
+    const settingsDiv = document.getElementById('provisioning-settings');
+    settingsDiv.style.display = enabled ? 'block' : 'none';
+}
+
+function updateProvisioningUrlFormat() {
+    const serverIP = document.getElementById('provisioning-server-ip').value || 'SERVER';
+    const port = document.getElementById('provisioning-port').value || '8080';
+    const urlFormat = `http://${serverIP}:${port}/provision/{mac}.cfg`;
+    document.getElementById('provisioning-url-format').value = urlFormat;
+}
+
+async function saveProvisioningSettings() {
+    const enabled = document.getElementById('provisioning-enabled').checked;
+    const serverIP = document.getElementById('provisioning-server-ip').value;
+    const port = document.getElementById('provisioning-port').value;
+    const customDir = document.getElementById('provisioning-custom-dir').value;
+    
+    if (!serverIP) {
+        alert('Please enter a server IP address');
+        return;
+    }
+    
+    alert('⚠️ Provisioning settings need to be updated in config.yml and require a server restart.\n\n' +
+          'Please update your config.yml file with:\n\n' +
+          `provisioning:\n` +
+          `  enabled: ${enabled}\n` +
+          `  url_format: http://${serverIP}:${port}/provision/{mac}.cfg\n` +
+          `  custom_templates_dir: "${customDir}"\n\n` +
+          'Then restart the PBX server.');
+}
+
+async function loadSupportedVendors() {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/vendors`);
+        if (response.ok) {
+            const data = await response.json();
+            supportedVendors = data.vendors || [];
+            supportedModels = data.models || {};
+            
+            // Display supported vendors
+            const vendorsList = document.getElementById('supported-vendors-list');
+            if (supportedVendors.length > 0) {
+                let html = '<ul>';
+                for (const vendor of supportedVendors) {
+                    html += `<li><strong>${vendor.toUpperCase()}</strong>: `;
+                    const models = supportedModels[vendor] || [];
+                    html += models.map(m => m.toUpperCase()).join(', ');
+                    html += '</li>';
+                }
+                html += '</ul>';
+                vendorsList.innerHTML = html;
+            } else {
+                vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading supported vendors:', error);
+        document.getElementById('supported-vendors-list').innerHTML = 
+            '<p class="error">Error loading vendors: ' + error.message + '</p>';
+    }
+}
+
+async function loadProvisioningDevices() {
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/devices`);
+        const tbody = document.getElementById('provisioning-devices-table-body');
+        
+        if (response.ok) {
+            const devices = await response.json();
+            
+            if (devices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Click "Add Device" to register phones.</td></tr>';
+            } else {
+                tbody.innerHTML = devices.map(device => {
+                    const createdDate = device.created_at ? new Date(device.created_at).toLocaleString() : '-';
+                    const provisionedDate = device.last_provisioned ? new Date(device.last_provisioned).toLocaleString() : 'Never';
+                    
+                    return `
+                        <tr>
+                            <td><code>${device.mac_address}</code></td>
+                            <td>${device.extension_number}</td>
+                            <td>${device.vendor.toUpperCase()}</td>
+                            <td>${device.model.toUpperCase()}</td>
+                            <td>${createdDate}</td>
+                            <td>${provisionedDate}</td>
+                            <td>
+                                <button class="btn btn-small btn-danger" onclick="deleteDevice('${device.mac_address}')">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" class="error">Error loading devices</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading provisioning devices:', error);
+        document.getElementById('provisioning-devices-table-body').innerHTML = 
+            '<tr><td colspan="7" class="error">Error: ' + error.message + '</td></tr>';
+    }
+}
+
+function showAddDeviceModal() {
+    // Populate extension dropdown
+    const extensionSelect = document.getElementById('device-extension');
+    extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+    
+    currentExtensions.forEach(ext => {
+        const option = document.createElement('option');
+        option.value = ext.number;
+        option.textContent = `${ext.number} - ${ext.name}`;
+        extensionSelect.appendChild(option);
+    });
+    
+    // Populate vendor dropdown
+    const vendorSelect = document.getElementById('device-vendor');
+    vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
+    
+    supportedVendors.forEach(vendor => {
+        const option = document.createElement('option');
+        option.value = vendor;
+        option.textContent = vendor.toUpperCase();
+        vendorSelect.appendChild(option);
+    });
+    
+    // Reset model dropdown
+    document.getElementById('device-model').innerHTML = '<option value="">Select Vendor First</option>';
+    
+    // Show modal
+    document.getElementById('add-device-modal').style.display = 'block';
+}
+
+function closeAddDeviceModal() {
+    document.getElementById('add-device-modal').style.display = 'none';
+    document.getElementById('add-device-form').reset();
+}
+
+function updateModelOptions() {
+    const vendor = document.getElementById('device-vendor').value;
+    const modelSelect = document.getElementById('device-model');
+    
+    if (!vendor) {
+        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+        return;
+    }
+    
+    const models = supportedModels[vendor] || [];
+    modelSelect.innerHTML = '<option value="">Select Model</option>';
+    
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model.toUpperCase();
+        modelSelect.appendChild(option);
+    });
+}
+
+async function deleteDevice(mac) {
+    if (!confirm(`Are you sure you want to delete device ${mac}?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/provisioning/devices/${mac}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Device deleted successfully');
+            loadProvisioningDevices();
+        } else {
+            const data = await response.json();
+            alert('Failed to delete device: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error deleting device:', error);
+        alert('Error deleting device: ' + error.message);
     }
 }
