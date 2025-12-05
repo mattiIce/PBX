@@ -487,7 +487,11 @@ P30 = 13   # GMT-8
             # Provide helpful guidance
             self.logger.warning(f"  → Device needs to be registered first")
             self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
-            self.logger.warning(f"     with JSON: {{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}")
+            self.logger.warning(f"  → Example:")
+            self.logger.warning(f"     curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+            self.logger.warning(f"       -H 'Content-Type: application/json' \\")
+            self.logger.warning(f"       -d '{{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
+            self.logger.warning(f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys")
             
             # Check if there are similar MACs (might be a format issue)
             mac_prefix = normalized[:6]  # First 6 chars (OUI)

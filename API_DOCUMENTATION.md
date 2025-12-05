@@ -511,6 +511,208 @@ Update system configuration.
 
 **Note:** Configuration changes are saved to `config.yml` and require a system restart to take effect.
 
+## Phone Registration & MAC/IP Tracking
+
+### Overview
+
+The PBX system tracks phones in two ways:
+1. **Provisioning System** - Stores MAC addresses assigned to extensions during device registration
+2. **SIP Registration** - Tracks IP addresses when phones actually register via SIP
+
+The challenge: **Phones provide their IP when registering but often don't provide their MAC address**. The correlation endpoints solve this problem by linking these two data sources.
+
+### GET /api/registered-phones
+
+List all phones that have registered via SIP (tracks IP addresses).
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "user_agent": "Yealink SIP-T46S 66.85.0.5",
+    "ip_address": "192.168.1.100",
+    "first_registered": "2025-12-05T10:00:00",
+    "last_registered": "2025-12-05T12:00:00",
+    "contact_uri": "<sip:1001@192.168.1.100:5060>"
+  },
+  {
+    "id": 2,
+    "mac_address": null,
+    "extension_number": "1002",
+    "user_agent": "Generic SIP Phone",
+    "ip_address": "192.168.1.101",
+    "first_registered": "2025-12-05T10:05:00",
+    "last_registered": "2025-12-05T12:05:00",
+    "contact_uri": "<sip:1002@192.168.1.101:5060>"
+  }
+]
+```
+
+### GET /api/registered-phones/with-mac
+
+**NEW:** Enhanced endpoint that correlates registered phones with provisioning data to provide MAC addresses.
+
+This endpoint:
+- Lists all phones from SIP registration (IP addresses)
+- Cross-references with provisioning system (MAC addresses)
+- Adds MAC, vendor, and model information when available
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "user_agent": "Yealink SIP-T46S 66.85.0.5",
+    "ip_address": "192.168.1.100",
+    "first_registered": "2025-12-05T10:00:00",
+    "last_registered": "2025-12-05T12:00:00",
+    "contact_uri": "<sip:1001@192.168.1.100:5060>",
+    "mac_source": "sip_registration",
+    "vendor": "yealink",
+    "model": "t46s",
+    "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg"
+  },
+  {
+    "id": 2,
+    "mac_address": "001565abcdef",
+    "extension_number": "1002",
+    "user_agent": "PolycomVVX-VVX_450-UA/5.9.0.9373",
+    "ip_address": "192.168.1.101",
+    "first_registered": "2025-12-05T10:05:00",
+    "last_registered": "2025-12-05T12:05:00",
+    "contact_uri": "<sip:1002@192.168.1.101:5060>",
+    "mac_source": "provisioning",
+    "vendor": "polycom",
+    "model": "vvx450",
+    "config_url": "http://192.168.1.14:8080/provision/001565abcdef.cfg"
+  }
+]
+```
+
+**Key Features:**
+- If phone provided MAC in SIP: `mac_source: "sip_registration"`
+- If MAC came from provisioning: `mac_source: "provisioning"`
+- Includes vendor, model, and config URL from provisioning system
+
+### GET /api/registered-phones/extension/{number}
+
+List all registered phones for a specific extension.
+
+**Example:**
+```bash
+curl http://localhost:8080/api/registered-phones/extension/1001
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "ip_address": "192.168.1.100",
+    "user_agent": "Yealink SIP-T46S 66.85.0.5",
+    "first_registered": "2025-12-05T10:00:00",
+    "last_registered": "2025-12-05T12:00:00"
+  }
+]
+```
+
+### GET /api/phone-lookup/{mac_or_ip}
+
+**NEW:** Unified lookup endpoint that accepts either a MAC address or IP address and returns correlated information.
+
+**Lookup by MAC Address:**
+```bash
+curl http://localhost:8080/api/phone-lookup/00:15:65:12:34:56
+```
+
+**Response:**
+```json
+{
+  "identifier": "00:15:65:12:34:56",
+  "type": "mac",
+  "provisioned_device": {
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "vendor": "yealink",
+    "model": "t46s",
+    "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg"
+  },
+  "registered_phone": {
+    "id": 1,
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "ip_address": "192.168.1.100",
+    "user_agent": "Yealink SIP-T46S 66.85.0.5"
+  },
+  "correlation": {
+    "matched": true,
+    "extension": "1001",
+    "mac_address": "001565123456",
+    "ip_address": "192.168.1.100",
+    "vendor": "yealink",
+    "model": "t46s"
+  }
+}
+```
+
+**Lookup by IP Address:**
+```bash
+curl http://localhost:8080/api/phone-lookup/192.168.1.100
+```
+
+**Response:**
+```json
+{
+  "identifier": "192.168.1.100",
+  "type": "ip",
+  "registered_phone": {
+    "id": 1,
+    "extension_number": "1001",
+    "ip_address": "192.168.1.100",
+    "mac_address": null,
+    "user_agent": "Polycom VVX 450"
+  },
+  "provisioned_device": {
+    "mac_address": "001565abcdef",
+    "extension_number": "1001",
+    "vendor": "polycom",
+    "model": "vvx450"
+  },
+  "correlation": {
+    "matched": true,
+    "extension": "1001",
+    "mac_address": "001565abcdef",
+    "ip_address": "192.168.1.100",
+    "vendor": "polycom",
+    "model": "vvx450"
+  }
+}
+```
+
+**Use Cases:**
+
+1. **Given IP, find MAC:**
+   - Phone registers with IP 192.168.1.100
+   - Look up by IP to find extension 1001
+   - Cross-reference with provisioning to get MAC address
+
+2. **Given MAC, find IP:**
+   - Device provisioned with MAC 00:15:65:12:34:56
+   - Look up by MAC to find it's registered to extension 1001
+   - Get current IP address from registration data
+
+3. **Identify which phone is which:**
+   - See phone on network with IP 192.168.1.101
+   - Use lookup to determine it's the Polycom VVX 450 for extension 1002
+   - Get MAC address for inventory/asset management
+
 ## Integration Examples
 
 ### CRM Integration

@@ -442,6 +442,210 @@ curl http://192.168.1.14:8080/api/provisioning/devices
 curl http://192.168.1.14:8080/api/provisioning/vendors
 ```
 
+## MAC Address to IP Address Correlation
+
+### Problem Statement
+
+When phones register via SIP, they provide their IP address but often **do not provide their MAC address** in SIP headers. This makes it difficult to identify which physical phone is which when you only see an IP address in the logs.
+
+The PBX system tracks phones in two places:
+1. **Provisioning System** - Stores MAC addresses (from when you register devices)
+2. **SIP Registration** - Stores IP addresses (from when phones actually connect)
+
+### Solution: Correlation API Endpoints
+
+The system provides API endpoints that correlate these two data sources, allowing you to:
+- Given an IP address → Find the MAC address
+- Given a MAC address → Find the current IP address
+- See all phones with both MAC and IP information
+
+### GET /api/registered-phones/with-mac
+
+List all registered phones with MAC addresses correlated from provisioning data.
+
+**Example:**
+```bash
+curl http://192.168.1.14:8080/api/registered-phones/with-mac
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "extension_number": "1001",
+    "ip_address": "192.168.1.100",
+    "mac_address": "001565123456",
+    "user_agent": "Yealink SIP-T46S 66.85.0.5",
+    "mac_source": "provisioning",
+    "vendor": "yealink",
+    "model": "t46s",
+    "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg",
+    "first_registered": "2025-12-05T10:00:00",
+    "last_registered": "2025-12-05T12:00:00"
+  }
+]
+```
+
+**Key Fields:**
+- `mac_source`: Shows if MAC came from `"sip_registration"` or `"provisioning"`
+- `vendor`, `model`: From provisioning system
+- `config_url`: Where phone gets its configuration
+
+### GET /api/phone-lookup/{mac_or_ip}
+
+Unified lookup endpoint that accepts either MAC address or IP address.
+
+**Lookup by IP Address:**
+```bash
+# When you see IP 192.168.1.100 and want to know which phone it is
+curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.100
+```
+
+**Response:**
+```json
+{
+  "identifier": "192.168.1.100",
+  "type": "ip",
+  "registered_phone": {
+    "extension_number": "1001",
+    "ip_address": "192.168.1.100",
+    "user_agent": "Yealink SIP-T46S"
+  },
+  "provisioned_device": {
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "vendor": "yealink",
+    "model": "t46s"
+  },
+  "correlation": {
+    "matched": true,
+    "extension": "1001",
+    "mac_address": "001565123456",
+    "ip_address": "192.168.1.100",
+    "vendor": "yealink",
+    "model": "t46s"
+  }
+}
+```
+
+**Lookup by MAC Address:**
+```bash
+# When you have MAC and want to know current IP
+curl http://192.168.1.14:8080/api/phone-lookup/00:15:65:12:34:56
+```
+
+**Response:**
+```json
+{
+  "identifier": "00:15:65:12:34:56",
+  "type": "mac",
+  "provisioned_device": {
+    "mac_address": "001565123456",
+    "extension_number": "1001",
+    "vendor": "yealink",
+    "model": "t46s"
+  },
+  "registered_phone": {
+    "extension_number": "1001",
+    "ip_address": "192.168.1.100"
+  },
+  "correlation": {
+    "matched": true,
+    "extension": "1001",
+    "mac_address": "001565123456",
+    "ip_address": "192.168.1.100",
+    "vendor": "yealink",
+    "model": "t46s"
+  }
+}
+```
+
+### Use Case Examples
+
+#### 1. Identify Unknown IP Address
+
+**Problem:** You see phone traffic from IP 192.168.1.105 and want to identify which phone it is.
+
+**Solution:**
+```bash
+curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.105
+```
+
+**Result:** Get extension, MAC address, vendor, and model
+
+#### 2. Find Current IP for Provisioned Device
+
+**Problem:** You provisioned device with MAC 00:15:65:AB:CD:EF and want to know what IP it got from DHCP.
+
+**Solution:**
+```bash
+curl http://192.168.1.14:8080/api/phone-lookup/00:15:65:AB:CD:EF
+```
+
+**Result:** Get current IP address from SIP registration
+
+#### 3. Asset Inventory
+
+**Problem:** Need complete inventory of all phones with MAC and IP addresses.
+
+**Solution:**
+```bash
+curl http://192.168.1.14:8080/api/registered-phones/with-mac | jq .
+```
+
+**Result:** Complete list with MAC, IP, vendor, model for each phone
+
+#### 4. Troubleshooting Phone Issues
+
+**Problem:** User on extension 1002 reports issues, need to identify exact device.
+
+**Solution:**
+```bash
+curl http://192.168.1.14:8080/api/registered-phones/extension/1002
+```
+
+**Result:** Get all registration details including IP and MAC
+
+### Python Example
+
+See `examples/phone_lookup_example.py` for a complete Python script demonstrating these endpoints:
+
+```bash
+python examples/phone_lookup_example.py http://192.168.1.14:8080
+```
+
+### Workflow: Provisioning and Tracking
+
+1. **Register device in provisioning system** (stores MAC):
+   ```bash
+   curl -X POST http://192.168.1.14:8080/api/provisioning/devices \
+     -H "Content-Type: application/json" \
+     -d '{
+       "mac_address": "00:15:65:12:34:56",
+       "extension_number": "1001",
+       "vendor": "yealink",
+       "model": "t46s"
+     }'
+   ```
+
+2. **Phone boots and registers via SIP** (stores IP):
+   - Phone automatically registers
+   - System captures IP address
+   - MAC may or may not be in SIP headers
+
+3. **Query correlation to get both MAC and IP**:
+   ```bash
+   # By IP
+   curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.100
+   
+   # By MAC
+   curl http://192.168.1.14:8080/api/phone-lookup/00:15:65:12:34:56
+   
+   # All phones with both
+   curl http://192.168.1.14:8080/api/registered-phones/with-mac
+   ```
+
 ## Integration Examples
 
 ### Python Integration
