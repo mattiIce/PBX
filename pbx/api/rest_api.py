@@ -677,6 +677,30 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._set_headers(content_type=content_type)
                 self.wfile.write(config_content.encode())
                 logger.info(f"✓ Provisioning config delivered: {len(config_content)} bytes to {request_info['ip']}")
+                
+                # Store IP to MAC mapping in database for admin panel tracking
+                # This allows correlation between provisioned devices and their network addresses
+                if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+                    try:
+                        # Get the device to find its extension number
+                        device = self.pbx_core.phone_provisioning.get_device(mac)
+                        if device:
+                            # Store/update the IP-MAC-Extension mapping
+                            from pbx.features.phone_provisioning import normalize_mac_address
+                            normalized_mac = normalize_mac_address(mac)
+                            
+                            # Store the mapping in the database
+                            self.pbx_core.registered_phones_db.register_phone(
+                                extension_number=device.extension_number,
+                                ip_address=request_info['ip'],
+                                mac_address=normalized_mac,
+                                user_agent=request_info.get('user_agent', 'Unknown'),
+                                contact_uri=None  # Not available during provisioning request
+                            )
+                            logger.info(f"  Stored IP-MAC mapping: {request_info['ip']} → {normalized_mac} (ext {device.extension_number})")
+                    except Exception as e:
+                        # Don't fail provisioning if database storage fails
+                        logger.warning(f"  Could not store IP-MAC mapping in database: {e}")
             else:
                 logger.warning(f"✗ Provisioning failed for MAC {mac} from IP {request_info['ip']}")
                 logger.warning(f"  Reason: Device not registered or template not found")
