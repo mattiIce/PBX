@@ -148,10 +148,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_requests()
             elif path == '/api/registered-phones':
                 self._handle_get_registered_phones()
+            elif path == '/api/registered-phones/with-mac':
+                self._handle_get_registered_phones_with_mac()
             elif path.startswith('/api/registered-phones/extension/'):
                 # Extract extension: /api/registered-phones/extension/{number}
                 extension = path.split('/')[-1]
                 self._handle_get_registered_phones_by_extension(extension)
+            elif path.startswith('/api/phone-lookup/'):
+                # Extract identifier: /api/phone-lookup/{mac_or_ip}
+                identifier = path.split('/')[-1]
+                self._handle_phone_lookup(identifier)
             elif path == '/api/integrations/ad/status':
                 self._handle_ad_status()
             elif path.startswith('/api/voicemail/'):
@@ -186,7 +192,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 <li>DELETE /api/provisioning/devices/{mac} - Unregister a device</li>
                 <li>GET /provision/{mac}.cfg - Get device configuration</li>
                 <li>GET /api/registered-phones - List all registered phones (MAC/IP tracking)</li>
+                <li>GET /api/registered-phones/with-mac - List registered phones with MAC addresses from provisioning</li>
                 <li>GET /api/registered-phones/extension/{number} - List registered phones for extension</li>
+                <li>GET /api/phone-lookup/{mac_or_ip} - Unified lookup by MAC or IP address with correlation</li>
             </ul>
         </body>
         </html>
@@ -330,6 +338,159 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     logger.warning(f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}")
             self._send_json([])
 
+    def _handle_get_registered_phones_with_mac(self):
+        """Get registered phones with MAC addresses from provisioning system"""
+        logger = get_logger()
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        # Get registered phones (IP + Extension from SIP registrations)
+        registered_phones = []
+        if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+            try:
+                registered_phones = self.pbx_core.registered_phones_db.list_all()
+            except Exception as e:
+                logger.error(f"Error loading registered phones: {e}")
+        
+        # Get provisioned devices (MAC + Extension from provisioning config)
+        provisioned_devices = {}
+        if hasattr(self.pbx_core, 'phone_provisioning'):
+            try:
+                devices = self.pbx_core.phone_provisioning.get_all_devices()
+                # Create a lookup by extension
+                for device in devices:
+                    provisioned_devices[device.extension_number] = device
+            except Exception as e:
+                logger.error(f"Error loading provisioned devices: {e}")
+        
+        # Correlate the two data sources
+        enhanced_phones = []
+        for phone in registered_phones:
+            enhanced = dict(phone)
+            extension = phone.get('extension_number')
+            
+            # Add MAC from provisioning if available and not already present
+            if extension and extension in provisioned_devices and not phone.get('mac_address'):
+                device = provisioned_devices[extension]
+                enhanced['mac_address'] = device.mac_address
+                enhanced['vendor'] = device.vendor
+                enhanced['model'] = device.model
+                enhanced['config_url'] = device.config_url
+                enhanced['mac_source'] = 'provisioning'
+            elif phone.get('mac_address'):
+                enhanced['mac_source'] = 'sip_registration'
+            
+            enhanced_phones.append(enhanced)
+        
+        self._send_json(enhanced_phones)
+
+    def _handle_phone_lookup(self, identifier):
+        """Unified phone lookup by MAC or IP address"""
+        logger = get_logger()
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        result = {
+            'identifier': identifier,
+            'type': None,
+            'registered_phone': None,
+            'provisioned_device': None,
+            'correlation': None
+        }
+        
+        # Normalize the identifier to detect if it's a MAC or IP
+        from pbx.features.phone_provisioning import normalize_mac_address
+        
+        # Check if it looks like a MAC address (contains hex chars and separators)
+        is_mac = any(c in identifier.lower() for c in [':', '-']) or \
+                 (len(identifier.replace(':', '').replace('-', '').replace('.', '')) == 12)
+        
+        # Check if it looks like an IP address
+        is_ip = identifier.count('.') == 3
+        
+        # Try MAC address lookup
+        if is_mac:
+            result['type'] = 'mac'
+            normalized_mac = normalize_mac_address(identifier)
+            
+            # Check provisioning system
+            if hasattr(self.pbx_core, 'phone_provisioning'):
+                device = self.pbx_core.phone_provisioning.get_device(identifier)
+                if device:
+                    result['provisioned_device'] = device.to_dict()
+            
+            # Check registered phones
+            if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+                try:
+                    phone = self.pbx_core.registered_phones_db.get_by_mac(normalized_mac)
+                    if phone:
+                        result['registered_phone'] = phone
+                except Exception as e:
+                    logger.error(f"Error looking up MAC in registered_phones: {e}")
+        
+        # Try IP address lookup
+        elif is_ip:
+            result['type'] = 'ip'
+            
+            # Check registered phones first
+            if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+                try:
+                    phone = self.pbx_core.registered_phones_db.get_by_ip(identifier)
+                    if phone:
+                        result['registered_phone'] = phone
+                        
+                        # Now try to find MAC from provisioning using the extension
+                        extension = phone.get('extension_number')
+                        if extension and hasattr(self.pbx_core, 'phone_provisioning'):
+                            device = None
+                            # Search through provisioned devices for this extension
+                            for dev in self.pbx_core.phone_provisioning.get_all_devices():
+                                if dev.extension_number == extension:
+                                    device = dev
+                                    break
+                            if device:
+                                result['provisioned_device'] = device.to_dict()
+                except Exception as e:
+                    logger.error(f"Error looking up IP in registered_phones: {e}")
+        else:
+            result['type'] = 'unknown'
+            self._send_json({'error': f'Could not determine if {identifier} is a MAC address or IP address'}, 400)
+            return
+        
+        # Add correlation summary
+        if result['registered_phone'] and result['provisioned_device']:
+            result['correlation'] = {
+                'matched': True,
+                'extension': result['registered_phone'].get('extension_number'),
+                'mac_address': result['provisioned_device'].get('mac_address'),
+                'ip_address': result['registered_phone'].get('ip_address'),
+                'vendor': result['provisioned_device'].get('vendor'),
+                'model': result['provisioned_device'].get('model')
+            }
+        elif result['registered_phone']:
+            result['correlation'] = {
+                'matched': False,
+                'message': 'Phone is registered but not provisioned in the system',
+                'extension': result['registered_phone'].get('extension_number'),
+                'ip_address': result['registered_phone'].get('ip_address')
+            }
+        elif result['provisioned_device']:
+            result['correlation'] = {
+                'matched': False,
+                'message': 'Device is provisioned but not currently registered',
+                'extension': result['provisioned_device'].get('extension_number'),
+                'mac_address': result['provisioned_device'].get('mac_address')
+            }
+        else:
+            result['correlation'] = {
+                'matched': False,
+                'message': 'No information found for this identifier'
+            }
+        
+        self._send_json(result)
+
     def _handle_get_registered_phones_by_extension(self, extension):
         """Get registered phones for a specific extension"""
         logger = get_logger()
@@ -460,8 +621,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(config_content.encode())
                 logger.info(f"✓ Provisioning config delivered: {len(config_content)} bytes to {request_info['ip']}")
             else:
-                logger.warning(f"✗ Provisioning failed for MAC {mac} from {request_info['ip']}")
-                logger.warning(f"  See detailed error above for troubleshooting guidance")
+                logger.warning(f"✗ Provisioning failed for MAC {mac} from IP {request_info['ip']}")
+                logger.warning(f"  Reason: Device not registered or template not found")
+                logger.warning(f"  See detailed error messages above for troubleshooting guidance")
+                logger.warning(f"  To register this device:")
+                logger.warning(f"    curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+                logger.warning(f"      -H 'Content-Type: application/json' \\")
+                logger.warning(f"      -d '{{\"mac_address\":\"{mac}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
                 self._send_json({'error': 'Device or template not found'}, 404)
         except Exception as e:
             logger.error(f"Error handling provisioning request: {e}")
