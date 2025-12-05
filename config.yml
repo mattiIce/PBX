@@ -145,7 +145,10 @@ integrations:
     base_dn: DC=albl,DC=com
     user_search_base: CN=Users,DC=albl,DC=com
     bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com
-    bind_password: Q1g0ng248!  # SECURITY: Use environment variable in production
+    # SECURITY WARNING: Password is hardcoded below for initial setup only
+    # For production, use environment variable: ${AD_BIND_PASSWORD}
+    # Or store in a secure secrets manager and never commit to version control
+    bind_password: Q1g0ng248!  # TODO: Replace with environment variable before production use
     use_ssl: true
     auto_provision: true  # Automatically create/update PBX extensions from AD
     deactivate_removed_users: true  # Disable extensions when users are removed from AD

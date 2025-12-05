@@ -4,6 +4,8 @@ Provides SSO, user provisioning, and group-based permissions
 """
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
+import re
+import secrets
 
 try:
     import ldap3
@@ -223,7 +225,6 @@ class ActiveDirectoryIntegration:
                     
                     # Use phone number as extension number (Option A)
                     # Clean phone number to get just digits (remove spaces, dashes, etc.)
-                    import re
                     extension_number = re.sub(r'[^0-9]', '', phone_number)
                     
                     # Validate extension number
@@ -247,6 +248,9 @@ class ActiveDirectoryIntegration:
                             email=email
                             # Don't update password - keep existing
                         ):
+                            # Mark as AD-synced
+                            existing_ext['ad_synced'] = True
+                            
                             updated_count += 1
                             synced_count += 1
                             
@@ -257,11 +261,11 @@ class ActiveDirectoryIntegration:
                                     ext.name = display_name
                                     if email:
                                         ext.config['email'] = email
+                                    ext.config['ad_synced'] = True
                         else:
                             self.logger.warning(f"Failed to update extension {extension_number}")
                     else:
                         # Create new extension with random 4-digit password
-                        import secrets
                         random_password = ''.join([str(secrets.randbelow(10)) for _ in range(4)])
                         
                         self.logger.info(f"Creating extension {extension_number} for user {username} (password: {random_password})")
@@ -273,6 +277,11 @@ class ActiveDirectoryIntegration:
                             password=random_password,
                             allow_external=True
                         ):
+                            # Mark newly created extension as AD-synced
+                            new_ext_config = pbx_config.get_extension(extension_number)
+                            if new_ext_config:
+                                new_ext_config['ad_synced'] = True
+                            
                             created_count += 1
                             synced_count += 1
                             
@@ -287,7 +296,8 @@ class ActiveDirectoryIntegration:
                                         'name': display_name,
                                         'email': email or '',
                                         'password': random_password,
-                                        'allow_external': True
+                                        'allow_external': True,
+                                        'ad_synced': True
                                     }
                                 )
                                 extension_registry.extensions[extension_number] = new_ext
@@ -299,7 +309,8 @@ class ActiveDirectoryIntegration:
                     # groups = [str(g) for g in entry.memberOf] if hasattr(entry, 'memberOf') else []
                     
                 except Exception as e:
-                    self.logger.error(f"Error syncing user {username if 'username' in locals() else 'unknown'}: {e}")
+                    user_desc = username if username else "unknown"
+                    self.logger.error(f"Error syncing user {user_desc}: {e}")
                     continue
             
             # Deactivate extensions for users removed from AD
@@ -328,11 +339,7 @@ class ActiveDirectoryIntegration:
                                         registry_ext.config['ad_synced'] = False
                                 deactivated_count += 1
             
-            # Mark synced extensions as AD-managed
-            for ext_num in ad_extension_numbers:
-                ext = pbx_config.get_extension(ext_num)
-                if ext and not ext.get('ad_synced'):
-                    ext['ad_synced'] = True
+            # Save all changes
             pbx_config.save()
             
             self.logger.info(
