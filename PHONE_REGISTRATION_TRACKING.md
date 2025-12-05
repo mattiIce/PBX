@@ -24,6 +24,21 @@ The system automatically tracks phone registrations without any manual intervent
 3. Registration information is stored in the `registered_phones` database table
 4. On re-registration, existing records are updated with the latest information
 
+### Data Preservation on Re-registration
+
+Phones typically re-register every 30-60 seconds to maintain their registration. However, not all phones send complete information in every REGISTER message. The system intelligently preserves existing data:
+
+- **MAC Address Preservation**: If a phone initially registers with a MAC address but later re-registers without it, the stored MAC is preserved
+- **IP Address Preservation**: Similar preservation applies to IP addresses
+- **User-Agent Preservation**: Preserves device model/firmware information
+- **Contact URI Preservation**: Maintains SIP contact information
+
+**Why this matters:**
+- Some phones only send MAC address in the initial registration, not in subsequent re-registrations
+- Preserves valuable device identification data throughout the phone's connection
+- Ensures accurate phone inventory even when devices don't send complete info every time
+- Prevents loss of MAC addresses that are critical for device identification and troubleshooting
+
 ### Automatic Cleanup on Boot
 
 To prevent stale or outdated registrations from persisting:
