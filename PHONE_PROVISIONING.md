@@ -164,9 +164,13 @@ Response:
     "vendor": "zultys",
     "model": "zip33g",
     "config_url": "http://192.168.1.14:8080/provision/001565123456.cfg"
-  }
+  },
+  "reboot_triggered": true,
+  "message": "Device registered and phone reboot triggered automatically"
 }
 ```
+
+**Note:** The system automatically triggers a phone reboot (via SIP NOTIFY) if the extension is currently registered. This ensures the phone immediately fetches its fresh configuration without manual intervention.
 
 ### Unregister a Device
 
@@ -361,6 +365,82 @@ This is typically not a provisioning issue. Check:
 1. Check device registration matches correct extension
 2. Verify extension configuration in config.yml
 3. Re-provision phone (reboot or force update)
+
+### Phone Display Name Not Updating from Active Directory
+
+**Good News**: As of this version, phone reboots are **automatically triggered** after Active Directory synchronization updates user names. No manual intervention or configuration required!
+
+**How It Works**:
+- When AD sync updates extension names, the system automatically detects which phones need updating
+- PBX sends SIP NOTIFY messages to trigger phone reboots
+- Phones reboot and fetch fresh configuration with updated display names
+- All happens automatically during the AD sync process
+
+**Manual Options** (if needed):
+If you need to manually trigger a reboot:
+
+1. **Via API**:
+   ```bash
+   # Reboot all phones
+   curl -X POST http://192.168.1.14:8080/api/phones/reboot
+   
+   # Or reboot specific extension
+   curl -X POST http://192.168.1.14:8080/api/phones/1001/reboot
+   ```
+
+2. **Via Phone Menu**:
+   - Access phone menu (varies by vendor)
+   - Navigate to System → Reboot
+   - Phone will fetch fresh config on startup
+
+**Verify Name Update**:
+```bash
+# Check current extension name in PBX
+curl http://192.168.1.14:8080/api/extensions | grep -A3 '"number":"1001"'
+
+# Test config generation for a device
+curl http://192.168.1.14:8080/provision/001565123456.cfg | grep -i "display\|label"
+```
+
+### Use Troubleshooting Tool
+
+For comprehensive provisioning diagnostics, use the built-in troubleshooting tool:
+
+```bash
+# Run full diagnostic check
+python scripts/troubleshoot_provisioning.py
+
+# Check specific MAC address
+python scripts/troubleshoot_provisioning.py --mac 00:15:65:12:34:56
+
+# Check remote PBX
+python scripts/troubleshoot_provisioning.py --host 192.168.1.14 --port 8080
+```
+
+The tool will:
+- Check provisioning configuration
+- Test API connectivity
+- Show provisioning statistics
+- Display recent provisioning requests
+- Test MAC address registration
+- Test config download
+- Provide specific recommendations
+
+### API Endpoints for Troubleshooting
+
+```bash
+# Get provisioning diagnostics
+curl http://192.168.1.14:8080/api/provisioning/diagnostics
+
+# View recent provisioning requests
+curl http://192.168.1.14:8080/api/provisioning/requests?limit=20
+
+# List all provisioned devices
+curl http://192.168.1.14:8080/api/provisioning/devices
+
+# Check supported vendors/models
+curl http://192.168.1.14:8080/api/provisioning/vendors
+```
 
 ## Integration Examples
 

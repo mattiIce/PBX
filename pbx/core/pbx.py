@@ -1480,17 +1480,41 @@ class PBXCore:
 
         try:
             self.logger.info("Manual AD user sync triggered")
-            synced_count = self.ad_integration.sync_users(
+            sync_result = self.ad_integration.sync_users(
                 extension_registry=self.extension_registry,
-                extension_db=self.extension_db
+                extension_db=self.extension_db,
+                phone_provisioning=self.phone_provisioning if hasattr(self, 'phone_provisioning') else None
             )
+            
+            # Handle both old (int) and new (dict) return types for backward compatibility
+            if isinstance(sync_result, int):
+                synced_count = sync_result
+                extensions_to_reboot = []
+            else:
+                synced_count = sync_result.get('synced_count', 0)
+                extensions_to_reboot = sync_result.get('extensions_to_reboot', [])
             
             # Reload extensions after sync
             self.extension_registry.reload()
             
+            # Automatically trigger phone reboots for updated extensions
+            rebooted_count = 0
+            if extensions_to_reboot and hasattr(self, 'phone_provisioning') and self.phone_provisioning:
+                self.logger.info(f"Auto-provisioning: Automatically rebooting {len(extensions_to_reboot)} phones after AD sync")
+                for extension_number in extensions_to_reboot:
+                    try:
+                        if self.phone_provisioning.reboot_phone(extension_number, self.sip_server):
+                            rebooted_count += 1
+                    except Exception as reboot_error:
+                        self.logger.warning(f"Could not reboot phone for extension {extension_number}: {reboot_error}")
+                
+                if rebooted_count > 0:
+                    self.logger.info(f"Auto-provisioning: Successfully triggered reboot for {rebooted_count} phones")
+            
             return {
                 'success': True,
                 'synced_count': synced_count,
+                'rebooted_count': rebooted_count,
                 'error': None
             }
         except Exception as e:
@@ -1500,5 +1524,6 @@ class PBXCore:
             return {
                 'success': False,
                 'error': str(e),
-                'synced_count': 0
+                'synced_count': 0,
+                'rebooted_count': 0
             }

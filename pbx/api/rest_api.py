@@ -10,7 +10,7 @@ import threading
 import os
 import mimetypes
 import traceback
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
 
@@ -142,6 +142,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
                 self._handle_get_provisioning_vendors()
+            elif path == '/api/provisioning/diagnostics':
+                self._handle_get_provisioning_diagnostics()
+            elif path == '/api/provisioning/requests':
+                self._handle_get_provisioning_requests()
             elif path == '/api/registered-phones':
                 self._handle_get_registered_phones()
             elif path.startswith('/api/registered-phones/extension/'):
@@ -239,6 +243,69 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(data)
         else:
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+    
+    def _handle_get_provisioning_diagnostics(self):
+        """Get provisioning system diagnostics"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        provisioning = self.pbx_core.phone_provisioning
+        
+        # Gather diagnostic information
+        diagnostics = {
+            'enabled': True,
+            'configuration': {
+                'url_format': self.pbx_core.config.get('provisioning.url_format', 'Not configured'),
+                'external_ip': self.pbx_core.config.get('server.external_ip', 'Not configured'),
+                'api_port': self.pbx_core.config.get('api.port', 'Not configured'),
+                'sip_host': self.pbx_core.config.get('server.sip_host', 'Not configured'),
+                'sip_port': self.pbx_core.config.get('server.sip_port', 'Not configured'),
+                'custom_templates_dir': self.pbx_core.config.get('provisioning.custom_templates_dir', 'Not configured')
+            },
+            'statistics': {
+                'total_devices': len(provisioning.devices),
+                'total_templates': len(provisioning.templates),
+                'total_requests': len(provisioning.provision_requests),
+                'successful_requests': sum(1 for r in provisioning.provision_requests if r.get('success')),
+                'failed_requests': sum(1 for r in provisioning.provision_requests if not r.get('success'))
+            },
+            'devices': [d.to_dict() for d in provisioning.get_all_devices()],
+            'vendors': provisioning.get_supported_vendors(),
+            'models': provisioning.get_supported_models(),
+            'recent_requests': provisioning.get_request_history(limit=20)
+        }
+        
+        # Add warnings for common issues
+        warnings = []
+        if diagnostics['configuration']['external_ip'] == 'Not configured':
+            warnings.append('server.external_ip is not configured - phones may not be able to reach the PBX')
+        if diagnostics['statistics']['total_devices'] == 0:
+            warnings.append('No devices registered - use POST /api/provisioning/devices to register devices')
+        if diagnostics['statistics']['failed_requests'] > 0:
+            warnings.append(f"{diagnostics['statistics']['failed_requests']} provisioning requests failed - check recent_requests for details")
+        
+        diagnostics['warnings'] = warnings
+        
+        self._send_json(diagnostics)
+    
+    def _handle_get_provisioning_requests(self):
+        """Get provisioning request history"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+        
+        # Get limit from query parameter if provided
+        parsed = urlparse(self.path)
+        query_params = parse_qs(parsed.query)
+        limit = int(query_params.get('limit', [50])[0])
+        
+        requests = self.pbx_core.phone_provisioning.get_request_history(limit=limit)
+        self._send_json({
+            'total': len(self.pbx_core.phone_provisioning.provision_requests),
+            'limit': limit,
+            'requests': requests
+        })
 
     def _handle_get_registered_phones(self):
         """Get all registered phones from database"""
@@ -289,6 +356,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_register_device(self):
         """Register a device for provisioning"""
+        logger = get_logger()
+        
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
@@ -307,10 +376,39 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             device = self.pbx_core.phone_provisioning.register_device(
                 mac, extension, vendor, model
             )
-            self._send_json({
+            
+            # Automatically trigger phone reboot after registration
+            # This ensures the phone fetches its fresh configuration immediately
+            reboot_triggered = False
+            try:
+                ext = self.pbx_core.extension_registry.get(extension)
+                if ext and ext.registered:
+                    logger.info(f"Auto-provisioning: Automatically rebooting phone for extension {extension} after device registration")
+                    reboot_triggered = self.pbx_core.phone_provisioning.reboot_phone(
+                        extension, self.pbx_core.sip_server
+                    )
+                    if reboot_triggered:
+                        logger.info(f"Auto-provisioning: Successfully triggered reboot for extension {extension}")
+                    else:
+                        logger.info(f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
+                else:
+                    logger.info(f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
+            except Exception as reboot_error:
+                logger.warning(f"Auto-provisioning: Could not auto-reboot phone for extension {extension}: {reboot_error}")
+                # Don't fail the registration if reboot fails
+            
+            response = {
                 'success': True,
                 'device': device.to_dict()
-            })
+            }
+            if reboot_triggered:
+                response['reboot_triggered'] = True
+                response['message'] = 'Device registered and phone reboot triggered automatically'
+            else:
+                response['reboot_triggered'] = False
+                response['message'] = 'Device registered. Phone will fetch config on next boot.'
+            
+            self._send_json(response)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
@@ -331,7 +429,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_provisioning_request(self, path):
         """Handle phone provisioning config request"""
+        logger = get_logger()
+        
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            logger.error("Phone provisioning not enabled but provisioning request received")
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
@@ -339,18 +440,32 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Extract MAC address from path: /provision/{mac}.cfg
             filename = path.split('/')[-1]
             mac = filename.replace('.cfg', '')
+            
+            # Gather request information for logging
+            request_info = {
+                'ip': self.client_address[0] if self.client_address else 'Unknown',
+                'user_agent': self.headers.get('User-Agent', 'Unknown'),
+                'path': path
+            }
+            
+            logger.info(f"Provisioning config request: path={path}, MAC={mac}, IP={request_info['ip']}")
 
             # Generate configuration
             config_content, content_type = self.pbx_core.phone_provisioning.generate_config(
-                mac, self.pbx_core.extension_registry
+                mac, self.pbx_core.extension_registry, request_info
             )
 
             if config_content:
                 self._set_headers(content_type=content_type)
                 self.wfile.write(config_content.encode())
+                logger.info(f"✓ Provisioning config delivered: {len(config_content)} bytes to {request_info['ip']}")
             else:
+                logger.warning(f"✗ Provisioning failed for MAC {mac} from {request_info['ip']}")
                 self._send_json({'error': 'Device or template not found'}, 404)
         except Exception as e:
+            logger.error(f"Error handling provisioning request: {e}")
+            logger.error(f"  Path: {path}")
+            logger.error(f"  Traceback: {traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
 
     def _handle_admin_redirect(self):

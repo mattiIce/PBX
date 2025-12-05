@@ -158,13 +158,14 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self, extension_registry=None, extension_db=None):
+    def sync_users(self, extension_registry=None, extension_db=None, phone_provisioning=None):
         """
         Synchronize users from Active Directory
 
         Args:
             extension_registry: Optional ExtensionRegistry instance for live updates
             extension_db: Optional ExtensionDB instance for database storage
+            phone_provisioning: Optional PhoneProvisioning instance to trigger phone reboots
 
         Returns:
             int: Number of users synchronized
@@ -411,13 +412,43 @@ class ActiveDirectoryIntegration:
                 f"{deactivated_count} deactivated, {skipped_count} skipped"
             )
             
-            return synced_count
+            # Automatically trigger phone reboots if provisioning is available and users were updated
+            # This ensures phones fetch fresh config with updated display names from AD
+            if phone_provisioning and (updated_count > 0 or created_count > 0):
+                self.logger.info("Auto-provisioning: Automatically triggering phone reboots to update display names from AD sync...")
+                
+                # Find extensions that have provisioned devices and were updated
+                # Use set for O(1) lookup performance with many devices
+                ad_extension_set = set(ad_extension_numbers)
+                devices_to_reboot = []
+                for device in phone_provisioning.get_all_devices():
+                    if device.extension_number in ad_extension_set:
+                        devices_to_reboot.append(device.extension_number)
+                
+                if devices_to_reboot:
+                    self.logger.info(f"Auto-provisioning: Will reboot {len(devices_to_reboot)} phones to apply AD name changes")
+                    # Store the extensions to reboot for later trigger
+                    # This will be picked up by the sync caller to trigger actual reboots
+                    return {
+                        'synced_count': synced_count,
+                        'extensions_to_reboot': devices_to_reboot
+                    }
+                else:
+                    self.logger.info("Auto-provisioning: No provisioned devices found for updated extensions")
+            
+            return {
+                'synced_count': synced_count,
+                'extensions_to_reboot': []
+            }
             
         except Exception as e:
             self.logger.error(f"Error synchronizing users from Active Directory: {e}")
             import traceback
             traceback.print_exc()
-            return 0
+            return {
+                'synced_count': 0,
+                'extensions_to_reboot': []
+            }
 
     def get_user_groups(self, username: str):
         """
