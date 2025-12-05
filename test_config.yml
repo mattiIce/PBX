@@ -1,0 +1,156 @@
+api:
+  enable_cors: true
+  host: 0.0.0.0
+  port: 8080
+conference:
+  max_participants: 50
+  record_conferences: false
+database:
+  path: test_pbx.db
+  type: sqlite
+dialplan:
+  conference_pattern: ^2[0-9]{3}$
+  internal_pattern: ^1[0-9]{3}$
+  parking_pattern: ^7[0-9]$
+  queue_pattern: ^8[0-9]{3}$
+  voicemail_pattern: ^\*[0-9]{3}$
+extensions:
+- allow_external: true
+  email: cmattinson@albl.com
+  name: Codi Mattinson
+  number: '1001'
+  password: password1001
+  voicemail_pin: '1234'
+- allow_external: true
+  email: bsautter@albl.com
+  name: Bill Sautter
+  number: '1002'
+  password: password1002
+- allow_external: false
+  email: ldingman@albl.com
+  name: Lisa Dingman
+  number: '1003'
+  password: password1003
+- allow_external: true
+  email: support@albl.com
+  name: Customer Service
+  number: '1004'
+  password: password1004
+features:
+  call_hold: true
+  call_parking: true
+  call_queues: true
+  call_recording: true
+  call_transfer: true
+  conference: true
+  max_call_duration: 7200
+  music_on_hold: true
+  presence: true
+  voicemail: true
+integrations:
+  active_directory:
+    auto_provision: true
+    base_dn: DC=albl,DC=com
+    bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com
+    bind_password: Q1g0ng248!
+    deactivate_removed_users: true
+    enabled: false
+    server: ldaps://192.168.1.22:636
+    use_ssl: true
+    user_search_base: CN=Users,DC=albl,DC=com
+  outlook:
+    auto_dnd_in_meetings: true
+    client_id: ''
+    client_secret: ''
+    enabled: false
+    sync_interval: 300
+    tenant_id: ''
+  teams:
+    client_id: ''
+    client_secret: ''
+    enabled: false
+    sbc_fqdn: ''
+    sip_domain: ''
+    tenant_id: ''
+  zoom:
+    account_id: ''
+    api_base_url: https://api.zoom.us/v2
+    client_id: ''
+    client_secret: ''
+    enabled: false
+    phone_enabled: false
+logging:
+  console: true
+  file: logs/pbx.log
+  level: INFO
+music_on_hold:
+  default_class: default
+  directory: moh
+parking:
+  range_end: 79
+  range_start: 70
+  timeout: 120
+presence:
+  auto_away_timeout: 300
+  auto_offline_timeout: 1800
+provisioning:
+  custom_templates_dir: ''
+  devices: []
+  enabled: true
+  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+queues:
+- max_wait_time: 300
+  name: Sales Queue
+  number: '8001'
+  strategy: round_robin
+- max_wait_time: 180
+  name: Support Queue
+  number: '8002'
+  strategy: least_recent
+recording:
+  auto_record: false
+  format: wav
+  storage_path: recordings
+security:
+  ban_duration: 300
+  enable_srtp: false
+  enable_tls: false
+  fips_mode: true
+  max_failed_attempts: 5
+  min_password_length: 12
+  require_authentication: true
+  require_strong_passwords: true
+  tls_cert_file: ''
+  tls_key_file: ''
+server:
+  external_ip: 192.168.1.14
+  rtp_port_range_end: 20000
+  rtp_port_range_start: 10000
+  server_name: Aluminum Blanking Phone System
+  sip_host: 0.0.0.0
+  sip_port: 5060
+  version: 1.0.0
+trunks: null
+voicemail:
+  allow_custom_greetings: true
+  email:
+    from_address: Voicemail@albl.com
+    from_name: ABCo Voicemail
+    include_attachment: true
+    send_immediately: true
+    subject_template: New Voicemail from {caller_id} - {timestamp}
+  email_notifications: true
+  max_greeting_duration: 30
+  max_message_duration: 180
+  no_answer_timeout: 30
+  reminders:
+    enabled: true
+    time: 09:00
+    unread_only: true
+  smtp:
+    host: 192.168.1.75
+    password: G0N@vyBuyC@n3$
+    port: 587
+    use_tls: true
+    username: cmattinson
+  storage_path: voicemail
