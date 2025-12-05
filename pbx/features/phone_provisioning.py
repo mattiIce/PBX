@@ -118,6 +118,8 @@ class PhoneProvisioning:
         self.logger = get_logger()
         self.devices = {}  # MAC address -> ProvisioningDevice
         self.templates = {}  # (vendor, model) -> PhoneTemplate
+        self.provision_requests = []  # Track provisioning requests for troubleshooting
+        self.max_request_history = 100  # Keep last 100 requests
 
         # Initialize built-in templates
         self._load_builtin_templates()
@@ -126,6 +128,9 @@ class PhoneProvisioning:
         self._load_custom_templates()
 
         self.logger.info("Phone provisioning initialized")
+        self.logger.info(f"Provisioning URL format: {self.config.get('provisioning.url_format', 'Not configured')}")
+        self.logger.info(f"Server external IP: {self.config.get('server.external_ip', 'Not configured')}")
+        self.logger.info(f"API port: {self.config.get('api.port', 'Not configured')}")
 
     def _load_builtin_templates(self):
         """Load built-in phone templates"""
@@ -434,34 +439,68 @@ P30 = 13   # GMT-8
         """
         return list(self.devices.values())
 
-    def generate_config(self, mac_address, extension_registry):
+    def generate_config(self, mac_address, extension_registry, request_info=None):
         """
         Generate configuration for a device
 
         Args:
             mac_address: Device MAC address
             extension_registry: ExtensionRegistry instance
+            request_info: Optional dict with request details (ip, user_agent, etc.)
 
         Returns:
             tuple: (config_string, content_type) or (None, None)
         """
+        # Log the provisioning request for troubleshooting
+        request_log = {
+            'timestamp': datetime.now().isoformat(),
+            'mac_address': mac_address,
+            'normalized_mac': normalize_mac_address(mac_address),
+            'ip_address': request_info.get('ip') if request_info else None,
+            'user_agent': request_info.get('user_agent') if request_info else None,
+            'success': False,
+            'error': None
+        }
+        
+        self.logger.info(f"Provisioning request received for MAC: {mac_address}")
+        if request_info:
+            self.logger.info(f"  Request from IP: {request_info.get('ip', 'Unknown')}")
+            self.logger.info(f"  User-Agent: {request_info.get('user_agent', 'Unknown')}")
+        
         device = self.get_device(mac_address)
         if not device:
-            self.logger.warning(f"Device {mac_address} not found for provisioning")
+            error_msg = f"Device {mac_address} not registered in provisioning system"
+            self.logger.warning(error_msg)
+            self.logger.warning(f"  Normalized MAC: {normalize_mac_address(mac_address)}")
+            self.logger.warning(f"  Registered devices: {list(self.devices.keys())}")
+            request_log['error'] = error_msg
+            self._add_request_log(request_log)
             return None, None
 
+        self.logger.info(f"  Found device: vendor={device.vendor}, model={device.model}, extension={device.extension_number}")
+        
         # Get template
         template = self.get_template(device.vendor, device.model)
         if not template:
-            self.logger.warning(f"Template not found for {device.vendor} {device.model}")
+            error_msg = f"Template not found for {device.vendor} {device.model}"
+            self.logger.warning(error_msg)
+            self.logger.warning(f"  Available templates: {list(self.templates.keys())}")
+            request_log['error'] = error_msg
+            self._add_request_log(request_log)
             return None, None
 
         # Get extension configuration
         extension = extension_registry.get(device.extension_number)
         if not extension:
-            self.logger.warning(f"Extension {device.extension_number} not found")
+            error_msg = f"Extension {device.extension_number} not found"
+            self.logger.warning(error_msg)
+            self.logger.warning(f"  Available extensions: {[e.number for e in extension_registry.get_all()]}")
+            request_log['error'] = error_msg
+            self._add_request_log(request_log)
             return None, None
 
+        self.logger.info(f"  Extension found: {extension.number} ({extension.name})")
+        
         # Build extension config dict
         extension_config = {
             'number': extension.number,
@@ -476,6 +515,8 @@ P30 = 13   # GMT-8
             'server_name': self.config.get('server.server_name', 'PBX')
         }
 
+        self.logger.info(f"  Server config: SIP={server_config['sip_host']}:{server_config['sip_port']}")
+        
         # Generate configuration
         config_content = template.generate_config(extension_config, server_config)
 
@@ -489,8 +530,38 @@ P30 = 13   # GMT-8
         # Mark device as provisioned
         device.mark_provisioned()
 
-        self.logger.info(f"Generated config for device {mac_address}")
+        self.logger.info(f"✓ Successfully generated config for device {mac_address}")
+        self.logger.info(f"  Config size: {len(config_content)} bytes, Content-Type: {content_type}")
+        
+        request_log['success'] = True
+        request_log['vendor'] = device.vendor
+        request_log['model'] = device.model
+        request_log['extension'] = device.extension_number
+        request_log['config_size'] = len(config_content)
+        self._add_request_log(request_log)
+        
         return config_content, content_type
+    
+    def _add_request_log(self, request_log):
+        """Add request to history, keeping only recent requests"""
+        self.provision_requests.append(request_log)
+        # Keep only the last N requests
+        if len(self.provision_requests) > self.max_request_history:
+            self.provision_requests = self.provision_requests[-self.max_request_history:]
+    
+    def get_request_history(self, limit=None):
+        """
+        Get provisioning request history
+        
+        Args:
+            limit: Optional limit on number of requests to return
+            
+        Returns:
+            List of request log dicts
+        """
+        if limit:
+            return self.provision_requests[-limit:]
+        return self.provision_requests
 
     def get_supported_vendors(self):
         """
