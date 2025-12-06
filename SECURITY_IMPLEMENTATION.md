@@ -34,7 +34,7 @@ The system uses:
 - **PBKDF2-HMAC-SHA256** for password hashing (NIST SP 800-132)
 - **AES-256-GCM** for data encryption (FIPS 197)
 - **SHA-256** for checksums and hashing (FIPS 180-4)
-- **100,000 iterations** for key derivation (NIST recommended)
+- **600,000 iterations** for key derivation (OWASP 2024 recommendation, enhanced from 100,000)
 
 ### Requirements
 

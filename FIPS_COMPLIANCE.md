@@ -26,8 +26,9 @@ The PBX system uses the following FIPS 140-2 approved algorithms:
 ### Key Derivation
 - **PBKDF2-HMAC-SHA256** (NIST SP 800-132)
   - Password-Based Key Derivation Function 2
-  - 100,000 iterations (NIST recommendation)
+  - 600,000 iterations (OWASP 2024 recommendation)
   - Used for password storage
+  - Note: NIST SP 800-132 is under revision; OWASP currently recommends 600,000+ iterations
 
 ### Transport Security
 - **TLS 1.2/1.3** with FIPS-approved cipher suites:
@@ -191,7 +192,7 @@ python3 verify_fips.py
 ## FIPS Compliance Features
 
 ### Password Security
-- ✅ PBKDF2-HMAC-SHA256 with 100,000 iterations
+- ✅ PBKDF2-HMAC-SHA256 with 600,000 iterations (OWASP 2024 recommendation)
 - ✅ Cryptographically secure salt generation
 - ✅ Constant-time comparison to prevent timing attacks
 - ✅ Automatic password strength validation
@@ -358,7 +359,7 @@ openssl s_client -connect localhost:5061 -tls1_2
 ### Performance Considerations
 
 FIPS-compliant encryption may impact performance:
-- Password hashing: ~100ms per authentication (100,000 PBKDF2 iterations)
+- Password hashing: ~600ms per authentication (600,000 PBKDF2 iterations, increased from 100,000 for enhanced security)
 - TLS handshake: ~50-100ms additional latency
 - SRTP encryption: Minimal impact (<5% CPU for typical call loads)
 
@@ -367,12 +368,23 @@ Optimize for high-load environments:
 - Cache authenticated sessions
 - Consider hardware acceleration (AES-NI)
 
+**Note on Iteration Count:**
+The iteration count has been increased from 100,000 to 600,000 to align with OWASP 2024 recommendations. While NIST SP 800-132 (2010) originally recommended 1,000-10,000,000 iterations, current best practices from OWASP suggest 600,000 as the minimum for PBKDF2-HMAC-SHA256. This provides better protection against modern GPU-based attacks while maintaining reasonable performance for authentication operations.
+
 ## References
 
+### NIST Standards
 - [NIST FIPS 140-2 Standard](https://csrc.nist.gov/publications/detail/fips/140/2/final)
 - [NIST SP 800-132 (PBKDF2)](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-132.pdf)
+- [NIST SP 800-132 Revision Announcement](https://www.nist.gov/news-events/news/2023/05/nist-revise-sp-800-132-recommendation-password-based-key-derivation-part-1)
 - [FIPS 197 (AES)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)
 - [FIPS 180-4 (SHA-2)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf)
+
+### Industry Best Practices
+- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) - **Recommends 600,000 iterations for PBKDF2 (2024)**
+- [OWASP Transport Layer Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html)
+
+### RFCs
 - [RFC 5246 (TLS 1.2)](https://tools.ietf.org/html/rfc5246)
 - [RFC 3711 (SRTP)](https://tools.ietf.org/html/rfc3711)
 

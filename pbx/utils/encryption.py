@@ -63,7 +63,7 @@ class FIPSEncryption:
             self.logger.info("FIPS 140-2 compliant encryption ENABLED")
             self.logger.info("  ✓ Using PBKDF2-HMAC-SHA256 for password hashing")
             self.logger.info("  ✓ Using AES-256-GCM for data encryption")
-            self.logger.info("  ✓ 100,000 iterations for key derivation (NIST recommended)")
+            self.logger.info("  ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)")
         elif not fips_mode:
             self.logger.warning("FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
 
@@ -94,13 +94,13 @@ class FIPSEncryption:
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=100000,  # NIST recommendation
+                iterations=600000,  # OWASP 2024 recommendation
                 backend=default_backend()
             )
             hashed = kdf.derive(password)
         else:
             # Fallback to hashlib (still secure, but may not be FIPS certified)
-            hashed = hashlib.pbkdf2_hmac('sha256', password, salt, 100000)
+            hashed = hashlib.pbkdf2_hmac('sha256', password, salt, 600000)
 
         # Return base64-encoded strings for storage
         return (
@@ -276,13 +276,13 @@ class FIPSEncryption:
                 algorithm=hashes.SHA256(),
                 length=key_length,
                 salt=salt,
-                iterations=100000,  # NIST recommendation
+                iterations=600000,  # OWASP 2024 recommendation
                 backend=default_backend()
             )
             derived = kdf.derive(password)
         else:
             # Fallback to hashlib
-            derived = hashlib.pbkdf2_hmac('sha256', password, salt, 100000, dklen=key_length)
+            derived = hashlib.pbkdf2_hmac('sha256', password, salt, 600000, dklen=key_length)
 
         return derived, salt
 
