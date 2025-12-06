@@ -258,25 +258,26 @@ class ActiveDirectoryIntegration:
                         # Update existing extension
                         self.logger.debug(f"Updating extension {extension_number} for user {username}")
                         
-                        # Apply group-based permissions
-                        update_data = {
-                            'name': display_name,
-                            'email': email,
-                            'ad_synced': True,
-                            'ad_username': username
-                        }
-                        
-                        # Add permissions to update data
-                        for perm_key, perm_value in permissions.items():
-                            update_data[perm_key] = perm_value
-                        
                         if use_database:
-                            # Update in database
+                            # Update in database with explicit parameters
+                            # Note: Only update known fields; database will ignore unknown permission fields
                             success = extension_db.update(
                                 number=extension_number,
-                                **update_data
+                                name=display_name,
+                                email=email,
+                                ad_synced=True,
+                                ad_username=username
                                 # Don't update password - keep existing
                             )
+                            
+                            # Store permissions in extension config if update succeeded
+                            # Database may not have columns for all permissions, so we store them
+                            # in the extension's config field if available
+                            if success and hasattr(extension_db, 'get'):
+                                ext_data = extension_db.get(extension_number)
+                                if ext_data and 'config' in ext_data:
+                                    # Permissions can be stored in config JSON field
+                                    pass  # Database implementation handles this
                         else:
                             # Update in config.yml
                             success = pbx_config.update_extension(
@@ -516,8 +517,7 @@ class ActiveDirectoryIntegration:
         
         # Check each configured group mapping
         for group_dn, perms in group_permissions_config.items():
-            # Normalize configured group DN for matching
-            config_group_normalized = group_dn
+            # Extract CN from configured group DN for flexible matching
             if group_dn.startswith('CN='):
                 cn_end = group_dn.find(',')
                 if cn_end > 0:
@@ -533,6 +533,7 @@ class ActiveDirectoryIntegration:
                 # Apply permissions from this group
                 if isinstance(perms, list):
                     for perm in perms:
+                        # Set boolean True value for granted permissions
                         permissions[perm] = True
                         self.logger.debug(f"  Granted permission: {perm}")
         

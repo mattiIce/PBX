@@ -430,18 +430,18 @@ def test_ad_group_permissions_mapping():
     # Test case 1: User in admin group
     user_groups = ['CN=PBX_Admins,OU=Groups,DC=test,DC=local', 'CN=Domain Users,OU=Groups,DC=test,DC=local']
     permissions = ad._map_groups_to_permissions(user_groups)
-    assert permissions.get('admin') == True, "Admin permission should be granted"
-    assert permissions.get('manage_extensions') == True, "Manage extensions permission should be granted"
-    assert permissions.get('view_cdr') == True, "View CDR permission should be granted"
+    assert permissions.get('admin') is True, "Admin permission should be granted"
+    assert permissions.get('manage_extensions') is True, "Manage extensions permission should be granted"
+    assert permissions.get('view_cdr') is True, "View CDR permission should be granted"
     assert 'external_calling' not in permissions, "External calling should not be granted"
     
     # Test case 2: User in multiple groups
     user_groups = ['CN=Sales,OU=Groups,DC=test,DC=local', 'CN=Support,OU=Groups,DC=test,DC=local']
     permissions = ad._map_groups_to_permissions(user_groups)
-    assert permissions.get('external_calling') == True, "External calling should be granted"
-    assert permissions.get('international_calling') == True, "International calling should be granted"
-    assert permissions.get('call_recording') == True, "Call recording should be granted"
-    assert permissions.get('call_queues') == True, "Call queues should be granted"
+    assert permissions.get('external_calling') is True, "External calling should be granted"
+    assert permissions.get('international_calling') is True, "International calling should be granted"
+    assert permissions.get('call_recording') is True, "Call recording should be granted"
+    assert permissions.get('call_queues') is True, "Call queues should be granted"
     assert 'admin' not in permissions, "Admin permission should not be granted"
     
     # Test case 3: User with no matching groups
@@ -452,8 +452,8 @@ def test_ad_group_permissions_mapping():
     # Test case 4: User with CN-only group names (short format)
     user_groups = ['Sales', 'Executives']  # Short format without full DN
     permissions = ad._map_groups_to_permissions(user_groups)
-    assert permissions.get('external_calling') == True, "Should match by CN short name"
-    assert permissions.get('vip_status') == True, "Should match by CN short name"
+    assert permissions.get('external_calling') is True, "Should match by CN short name"
+    assert permissions.get('vip_status') is True, "Should match by CN short name"
     
     # Test case 5: Empty group list
     user_groups = []
