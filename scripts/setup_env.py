@@ -291,10 +291,12 @@ def main():
     if update_mode == 'specific':
         print("Available variables:")
         all_vars = []
+        var_info_map = {}  # Create flat mapping for efficient lookup
         idx = 1
         for category, vars_dict in ENV_VARS.items():
-            for var_name in vars_dict.keys():
+            for var_name, var_info in vars_dict.items():
                 all_vars.append(var_name)
+                var_info_map[var_name] = var_info
                 current = new_env.get(var_name, '')
                 status = '(set)' if current else '(not set)'
                 print(f"  {idx}. {var_name} {status}")
@@ -302,22 +304,37 @@ def main():
         
         print()
         selection = input("Enter variable numbers to update (comma-separated, e.g., 1,3,5): ").strip()
-        selected_indices = [int(x.strip()) - 1 for x in selection.split(',') if x.strip().isdigit()]
+        
+        # Parse selections and track invalid inputs
+        selected_indices = []
+        invalid_inputs = []
+        for item in selection.split(','):
+            item = item.strip()
+            if item.isdigit():
+                selected_indices.append(int(item) - 1)
+            elif item:  # Non-empty but not a digit
+                invalid_inputs.append(item)
+        
+        # Warn about invalid inputs
+        if invalid_inputs:
+            print(f"⚠ Ignoring invalid selections: {', '.join(invalid_inputs)}")
         
         if not selected_indices:
             print("⚠ No valid selections made. Exiting.")
             return
         
+        # Track out-of-range selections
+        out_of_range = [str(i + 1) for i in selected_indices if i < 0 or i >= len(all_vars)]
+        if out_of_range:
+            print(f"⚠ Ignoring out-of-range selections: {', '.join(out_of_range)}")
+        
+        # Process valid selections
         for i in selected_indices:
             if 0 <= i < len(all_vars):
                 var_name = all_vars[i]
-                # Find var_info
-                for vars_dict in ENV_VARS.values():
-                    if var_name in vars_dict:
-                        var_info = vars_dict[var_name]
-                        current_value = new_env.get(var_name, '')
-                        new_env[var_name] = prompt_for_value(var_name, var_info, current_value)
-                        break
+                var_info = var_info_map[var_name]
+                current_value = new_env.get(var_name, '')
+                new_env[var_name] = prompt_for_value(var_name, var_info, current_value)
     else:
         for category, vars_dict in ENV_VARS.items():
             print(f"\n{'=' * 70}")
