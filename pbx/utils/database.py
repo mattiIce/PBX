@@ -417,10 +417,15 @@ class DatabaseBackend:
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255),
             password_hash VARCHAR(255) NOT NULL,
+            password_salt VARCHAR(255),
             allow_external BOOLEAN DEFAULT TRUE,
-            voicemail_pin VARCHAR(10),
+            voicemail_pin_hash VARCHAR(255),
+            voicemail_pin_salt VARCHAR(255),
             ad_synced BOOLEAN DEFAULT FALSE,
             ad_username VARCHAR(100),
+            password_changed_at TIMESTAMP,
+            failed_login_attempts INTEGER DEFAULT 0,
+            account_locked_until TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -431,18 +436,49 @@ class DatabaseBackend:
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255),
             password_hash VARCHAR(255) NOT NULL,
+            password_salt VARCHAR(255),
             allow_external BOOLEAN DEFAULT 1,
-            voicemail_pin VARCHAR(10),
+            voicemail_pin_hash VARCHAR(255),
+            voicemail_pin_salt VARCHAR(255),
             ad_synced BOOLEAN DEFAULT 0,
             ad_username VARCHAR(100),
+            password_changed_at TIMESTAMP,
+            failed_login_attempts INTEGER DEFAULT 0,
+            account_locked_until TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
 
+        # Security audit log table
+        security_audit_table = """
+        CREATE TABLE IF NOT EXISTS security_audit (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            event_type VARCHAR(50) NOT NULL,
+            identifier VARCHAR(100) NOT NULL,
+            ip_address VARCHAR(45),
+            success BOOLEAN DEFAULT TRUE,
+            details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS security_audit (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            event_type VARCHAR(50) NOT NULL,
+            identifier VARCHAR(100) NOT NULL,
+            ip_address VARCHAR(45),
+            success BOOLEAN DEFAULT 1,
+            details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+
         # Execute table creation
         success = True
-        for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table, extensions_table]:
+        for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table, 
+                         extensions_table, security_audit_table]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
@@ -459,7 +495,10 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension_number)",
             "CREATE INDEX IF NOT EXISTS idx_ext_number ON extensions(number)",
             "CREATE INDEX IF NOT EXISTS idx_ext_email ON extensions(email)",
-            "CREATE INDEX IF NOT EXISTS idx_ext_ad_synced ON extensions(ad_synced)"
+            "CREATE INDEX IF NOT EXISTS idx_ext_ad_synced ON extensions(ad_synced)",
+            "CREATE INDEX IF NOT EXISTS idx_security_audit_timestamp ON security_audit(timestamp)",
+            "CREATE INDEX IF NOT EXISTS idx_security_audit_identifier ON security_audit(identifier)",
+            "CREATE INDEX IF NOT EXISTS idx_security_audit_event_type ON security_audit(event_type)"
         ]
 
         for index_sql in indexes:
