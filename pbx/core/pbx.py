@@ -828,7 +828,7 @@ class PBXCore:
             # Play voicemail greeting and beep tone to caller
             if call.caller_rtp:
                 try:
-                    from pbx.utils.audio import generate_voice_prompt
+                    from pbx.utils.audio import get_prompt_audio
                     import tempfile
                     import os
                     
@@ -853,8 +853,9 @@ class PBXCore:
                             greeting_file = custom_greeting_path
                             self.logger.info(f"Using custom greeting for extension {call.to_extension}")
                         else:
-                            # Use default tone prompt: "Please leave a message after the tone"
-                            greeting_prompt = generate_voice_prompt('leave_message')
+                            # Use default prompt: "Please leave a message after the tone"
+                            # Try to load from voicemail_prompts/leave_message.wav, fallback to tone generation
+                            greeting_prompt = get_prompt_audio('leave_message')
                             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                                 temp_file.write(greeting_prompt)
                                 greeting_file = temp_file.name
@@ -1055,7 +1056,7 @@ class PBXCore:
             session: Auto attendant session
         """
         from pbx.rtp.handler import RTPPlayer, RTPDTMFListener
-        from pbx.utils.audio import generate_voice_prompt
+        from pbx.utils.audio import get_prompt_audio
         import time
         import tempfile
         import os
@@ -1094,8 +1095,8 @@ class PBXCore:
             if audio_file and os.path.exists(audio_file):
                 player.play_file(audio_file)
             else:
-                # Use generated prompt
-                prompt_data = generate_voice_prompt('auto_attendant_welcome')
+                # Try to load from auto_attendant/welcome.wav, fallback to tone generation
+                prompt_data = get_prompt_audio('welcome', prompt_dir='auto_attendant')
                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                     temp_file.write(prompt_data)
                     temp_file_path = temp_file.name
@@ -1114,7 +1115,8 @@ class PBXCore:
             if menu_audio and os.path.exists(menu_audio):
                 player.play_file(menu_audio)
             else:
-                prompt_data = generate_voice_prompt('auto_attendant_menu')
+                # Try to load from auto_attendant/main_menu.wav, fallback to tone generation
+                prompt_data = get_prompt_audio('main_menu', prompt_dir='auto_attendant')
                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                     temp_file.write(prompt_data)
                     temp_file_path = temp_file.name
@@ -1151,7 +1153,8 @@ class PBXCore:
                         if transfer_audio and os.path.exists(transfer_audio):
                             player.play_file(transfer_audio)
                         else:
-                            prompt_data = generate_voice_prompt('transferring')
+                            # Try to load from auto_attendant/transferring.wav, fallback to tone generation
+                            prompt_data = get_prompt_audio('transferring', prompt_dir='auto_attendant')
                             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                                 temp_file.write(prompt_data)
                                 temp_file_path = temp_file.name
@@ -1414,7 +1417,7 @@ class PBXCore:
         """
         import time
         from pbx.rtp.handler import RTPPlayer, RTPRecorder
-        from pbx.utils.audio import generate_voice_prompt
+        from pbx.utils.audio import get_prompt_audio
         from pbx.utils.dtmf import DTMFDetector
         import tempfile
         import os
@@ -1466,7 +1469,8 @@ class PBXCore:
                     initial_action = {'action': 'play_prompt', 'prompt': 'enter_pin'}
                 
                 prompt_type = initial_action.get('prompt', 'enter_pin')
-                pin_prompt = generate_voice_prompt(prompt_type)
+                # Try to load from voicemail_prompts/ directory, fallback to tone generation
+                pin_prompt = get_prompt_audio(prompt_type)
                 
                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                     temp_file.write(pin_prompt)
@@ -1532,7 +1536,8 @@ class PBXCore:
                                     elif action['action'] == 'play_prompt':
                                         # Play a prompt
                                         prompt_type = action.get('prompt', 'main_menu')
-                                        prompt_audio = generate_voice_prompt(prompt_type)
+                                        # Try to load from voicemail_prompts/ directory, fallback to tone generation
+                                        prompt_audio = get_prompt_audio(prompt_type)
                                         
                                         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                                             temp_file.write(prompt_audio)
@@ -1550,7 +1555,8 @@ class PBXCore:
                                     
                                     elif action['action'] == 'hangup':
                                         # Play goodbye and end call
-                                        goodbye_prompt = generate_voice_prompt('goodbye')
+                                        # Try to load from voicemail_prompts/ directory, fallback to tone generation
+                                        goodbye_prompt = get_prompt_audio('goodbye')
                                         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                                             temp_file.write(goodbye_prompt)
                                             prompt_file = temp_file.name

@@ -328,3 +328,59 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
     
     header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
     return header + pcm_data
+
+
+def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
+    """
+    Load a voice prompt WAV file from disk
+    
+    Args:
+        prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
+        prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
+    
+    Returns:
+        bytes: WAV file contents if file exists, None otherwise
+    
+    Note: This function attempts to load actual recorded voice prompts.
+          If the file doesn't exist, the caller should fall back to generate_voice_prompt()
+    """
+    import os
+    
+    # Build path to prompt file
+    prompt_file = os.path.join(prompt_dir, f"{prompt_type}.wav")
+    
+    # Check if file exists
+    if os.path.exists(prompt_file):
+        try:
+            with open(prompt_file, 'rb') as f:
+                return f.read()
+        except Exception:
+            # If we can't read the file, return None so caller can use fallback
+            pass
+    
+    return None
+
+
+def get_prompt_audio(prompt_type, prompt_dir='voicemail_prompts', sample_rate=8000):
+    """
+    Get voice prompt audio, trying to load from file first, then generating tones as fallback
+    
+    This is a convenience function that combines load_prompt_file() and generate_voice_prompt().
+    It first attempts to load a recorded WAV file, and if that fails, generates tone-based prompts.
+    
+    Args:
+        prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
+        prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
+        sample_rate: Sample rate for generated prompts if file not found
+    
+    Returns:
+        bytes: Complete WAV file data (either from file or generated)
+    """
+    # Try to load from file first
+    audio_data = load_prompt_file(prompt_type, prompt_dir)
+    
+    if audio_data is not None:
+        return audio_data
+    
+    # Fallback to generated tone prompts
+    return generate_voice_prompt(prompt_type, sample_rate)
