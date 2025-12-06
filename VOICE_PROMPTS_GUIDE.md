@@ -4,7 +4,18 @@ This guide explains how to create and customize voice prompts for the PBX system
 
 ## Overview
 
-The PBX system includes tone-based placeholder prompts that work out of the box. For production use, you should replace these with professionally recorded voice prompts for a better user experience.
+The PBX system includes REAL voice prompts generated using eSpeak TTS that work out of the box. The voice quality is robotic but clear and intelligible. For production use, you may want to replace these with professionally recorded voice prompts for a more natural sound.
+
+## Quick Start - Regenerate Voice Prompts
+
+To regenerate the voice prompts (e.g., to change company name):
+
+```bash
+cd /path/to/pbx
+python3 scripts/generate_espeak_voices.py --company "Your Company Name"
+```
+
+This uses free, offline eSpeak TTS to generate actual voice prompts. No internet connection required!
 
 ## Generated Prompt Files
 

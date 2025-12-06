@@ -280,10 +280,10 @@ class AutoAttendant:
 
 def generate_auto_attendant_prompts(output_dir='auto_attendant'):
     """
-    Generate tone-based audio prompts for auto attendant
+    Generate audio prompts for auto attendant
     
-    This creates basic tone sequences for each prompt type.
-    In production, these should be replaced with professionally recorded prompts.
+    NOTE: This function generates tone-based prompts as a fallback.
+    For REAL VOICE prompts, use: scripts/generate_espeak_voices.py
     
     Args:
         output_dir: Directory to save audio files
@@ -293,6 +293,10 @@ def generate_auto_attendant_prompts(output_dir='auto_attendant'):
     import math
     
     logger = get_logger()
+    
+    logger.warning("This function generates TONE prompts (not voice).")
+    logger.warning("For REAL VOICE prompts, use: python3 scripts/generate_espeak_voices.py")
+    logger.warning("Continuing with tone generation...")
     
     # Create output directory
     if not os.path.exists(output_dir):
@@ -324,5 +328,5 @@ def generate_auto_attendant_prompts(output_dir='auto_attendant'):
             logger.error(f"Error generating {prompt_name}: {e}")
     
     logger.info(f"Auto attendant prompts generated in {output_dir}")
-    logger.info("NOTE: These are tone-based placeholders.")
-    logger.info("For production, replace with professionally recorded voice prompts.")
+    logger.info("NOTE: These are tone-based placeholders (not real voice).")
+    logger.info("For REAL VOICE, run: python3 scripts/generate_espeak_voices.py")
