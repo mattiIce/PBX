@@ -230,8 +230,11 @@ def write_env_file(env_vars, env_file):
             f.write(f"# {category}\n")
             for var_name in vars_dict.keys():
                 value = env_vars.get(var_name, '')
-                # Quote values that contain spaces
-                if ' ' in value:
+                # Quote values that contain spaces or special characters
+                # Escape existing quotes to avoid malformed entries
+                if ' ' in value or '"' in value or "'" in value:
+                    # Escape existing double quotes
+                    value = value.replace('"', '\\"')
                     value = f'"{value}"'
                 f.write(f"{var_name}={value}\n")
             f.write("\n")
@@ -310,9 +313,15 @@ def main():
         invalid_inputs = []
         for item in selection.split(','):
             item = item.strip()
-            if item.isdigit():
-                selected_indices.append(int(item) - 1)
-            elif item:  # Non-empty but not a digit
+            if not item:
+                continue
+            try:
+                num = int(item)
+                if num > 0:  # Only accept positive numbers
+                    selected_indices.append(num - 1)
+                else:
+                    invalid_inputs.append(item)
+            except ValueError:
                 invalid_inputs.append(item)
         
         # Warn about invalid inputs
