@@ -6,6 +6,7 @@ and can be pushed to IP phones
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
 from datetime import datetime
+import json
 
 
 class PhoneBook:
@@ -362,7 +363,6 @@ class PhoneBook:
         if not self.enabled:
             return "[]"
         
-        import json
         entries = sorted(self.entries.values(), key=lambda x: x['name'])
         return json.dumps(entries, indent=2, default=str)
     

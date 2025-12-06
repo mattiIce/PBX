@@ -5,6 +5,7 @@ Provides support for overhead paging via digital-to-analog converters
 from pbx.utils.logger import get_logger
 from typing import Optional, Dict, List
 from datetime import datetime
+import uuid
 
 
 class PagingSystem:
@@ -120,8 +121,8 @@ class PagingSystem:
             self.logger.warning(f"Extension {to_extension} is not a paging extension")
             return None
         
-        # Generate page ID
-        page_id = f"page-{datetime.now().strftime('%Y%m%d%H%M%S')}-{from_extension}"
+        # Generate page ID with UUID to ensure uniqueness
+        page_id = f"page-{datetime.now().strftime('%Y%m%d%H%M%S')}-{from_extension}-{uuid.uuid4().hex[:8]}"
         
         # Determine zone(s)
         if to_extension == self.all_call_extension:
