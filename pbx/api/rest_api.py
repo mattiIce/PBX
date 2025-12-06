@@ -963,7 +963,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Try to add to database first, fall back to config.yml
             if self.pbx_core.extension_db:
                 # Add to database
-                # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
+                # Currently storing plain password; system supports both plain and hashed passwords
                 password_hash = password
                 success = self.pbx_core.extension_db.add(
                     number=number,
@@ -1021,7 +1022,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Try to update in database first, fall back to config.yml
             if self.pbx_core.extension_db:
                 # Update in database
-                # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
+                # Currently storing plain password; system supports both plain and hashed passwords
                 password_hash = password if password else None
                 success = self.pbx_core.extension_db.update(
                     number=number,
