@@ -138,6 +138,22 @@ class PBXCore:
         else:
             self.ad_integration = None
 
+        # Initialize phone book if enabled
+        if self.config.get('features.phone_book.enabled', False):
+            from pbx.features.phone_book import PhoneBook
+            self.phone_book = PhoneBook(self.config, database=self.database if self.database.enabled else None)
+            self.logger.info("Phone book feature initialized")
+        else:
+            self.phone_book = None
+
+        # Initialize paging system if enabled
+        if self.config.get('features.paging.enabled', False):
+            from pbx.features.paging import PagingSystem
+            self.paging_system = PagingSystem(self.config, database=self.database if self.database.enabled else None)
+            self.logger.info("Paging system initialized")
+        else:
+            self.paging_system = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)

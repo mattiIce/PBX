@@ -154,3 +154,31 @@ voicemail:
     use_tls: true
     username: cmattinson
   storage_path: voicemail
+
+# Phone Book Configuration
+features:
+  phone_book:
+    enabled: true
+    auto_sync_from_ad: true  # Automatically sync from Active Directory
+
+# Paging System Configuration (Stub Implementation)
+  paging:
+    enabled: false  # Set to true to enable paging
+    prefix: "7"  # Dial 7xx for paging
+    all_call_extension: "700"  # Dial 700 to page all zones
+    dac_type: "sip_gateway"  # Type of DAC device
+    zones: []  # Add paging zones here
+    dac_devices: []  # Add DAC devices here
+    # Example zone configuration:
+    # zones:
+    #   - extension: "701"
+    #     name: "Zone 1 - Office"
+    #     description: "Main office area"
+    #     dac_device: "paging-gateway-1"
+    # Example DAC device configuration:
+    # dac_devices:
+    #   - device_id: "paging-gateway-1"
+    #     device_type: "cisco_vg224"
+    #     sip_uri: "sip:paging@192.168.1.100:5060"
+    #     ip_address: "192.168.1.100"
+    #     port: 5060

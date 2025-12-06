@@ -26,6 +26,8 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **SIP Trunk Support** - Connect to external SIP providers
 - **Phone Provisioning** - Auto-configuration for multiple IP phone brands (Zultys, Yealink, Polycom, Cisco, Grandstream) with customizable templates
 - **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
+- **Phone Book System** - Centralized directory with AD sync, pushed to IP phones in multiple formats (Yealink, Cisco XML)
+- **Paging System (Stub)** - Framework for overhead paging via digital-to-analog converters
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
 - **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
@@ -405,6 +407,24 @@ For issues and questions, please open a GitHub issue.
   - See [PROVISIONING_TEMPLATE_CUSTOMIZATION.md](PROVISIONING_TEMPLATE_CUSTOMIZATION.md) for template customization
   - See [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md) for provisioning setup guide
 
+### Phone Book & Directory
+- [x] **Phone Book System** - ✅ COMPLETED
+  - Centralized company directory
+  - Active Directory synchronization
+  - Multiple export formats (Yealink XML, Cisco XML, JSON)
+  - Database storage with search capability
+  - Push to IP phones automatically
+  - See [PHONE_BOOK_GUIDE.md](PHONE_BOOK_GUIDE.md) for setup guide
+
+### Paging System
+- [x] **Paging System (Stub)** - ⚠️ STUB IMPLEMENTATION
+  - Framework for overhead paging
+  - Zone-based paging configuration
+  - Digital-to-analog converter device management
+  - All-call and zone-specific paging
+  - Requires hardware integration for full functionality
+  - See [PAGING_SYSTEM_GUIDE.md](PAGING_SYSTEM_GUIDE.md) for implementation guide
+
 ### Future Enhancements
 - [ ] WebRTC support for browser-based calls
 - [ ] SMS/Messaging integration
@@ -415,6 +435,7 @@ For issues and questions, please open a GitHub issue.
 - [ ] Full SIP Direct Routing to Teams
 - [ ] CRM integrations (Salesforce, HubSpot)
 - [ ] Professional voice recordings for auto attendant (TTS or voice actor)
+- [ ] Complete paging system hardware integration
 
 ---
 

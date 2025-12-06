@@ -129,6 +129,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/integrations/ad/sync':
                 self._handle_ad_sync()
+            elif path == '/api/phone-book':
+                self._handle_add_phone_book_entry()
+            elif path == '/api/phone-book/sync':
+                self._handle_sync_phone_book()
+            elif path == '/api/paging/zones':
+                self._handle_add_paging_zone()
+            elif path == '/api/paging/devices':
+                self._handle_configure_paging_device()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -183,6 +191,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_delete_extension(number)
             elif path.startswith('/api/voicemail/'):
                 self._handle_delete_voicemail(path)
+            elif path.startswith('/api/phone-book/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_delete_phone_book_entry(extension)
+            elif path.startswith('/api/paging/zones/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_delete_paging_zone(extension)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -240,6 +256,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_phone_lookup(identifier)
             elif path == '/api/integrations/ad/status':
                 self._handle_ad_status()
+            elif path == '/api/phone-book':
+                self._handle_get_phone_book()
+            elif path == '/api/phone-book/export/xml':
+                self._handle_export_phone_book_xml()
+            elif path == '/api/phone-book/export/cisco-xml':
+                self._handle_export_phone_book_cisco_xml()
+            elif path == '/api/phone-book/export/json':
+                self._handle_export_phone_book_json()
+            elif path.startswith('/api/phone-book/search'):
+                self._handle_search_phone_book()
+            elif path == '/api/paging/zones':
+                self._handle_get_paging_zones()
+            elif path == '/api/paging/devices':
+                self._handle_get_paging_devices()
+            elif path == '/api/paging/active':
+                self._handle_get_active_pages()
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -1344,6 +1376,333 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         """Override to use PBX logger"""
         pass  # Suppress default logging
+
+    # Phone Book API handlers
+    def _handle_get_phone_book(self):
+        """Get all phone book entries"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            entries = self.pbx_core.phone_book.get_all_entries()
+            self._send_json(entries)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_export_phone_book_xml(self):
+        """Export phone book as XML (Yealink format)"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            xml_content = self.pbx_core.phone_book.export_xml()
+            self._set_headers(content_type='application/xml')
+            self.wfile.write(xml_content.encode())
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_export_phone_book_cisco_xml(self):
+        """Export phone book as Cisco XML format"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            xml_content = self.pbx_core.phone_book.export_cisco_xml()
+            self._set_headers(content_type='application/xml')
+            self.wfile.write(xml_content.encode())
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_export_phone_book_json(self):
+        """Export phone book as JSON"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            json_content = self.pbx_core.phone_book.export_json()
+            self._set_headers(content_type='application/json')
+            self.wfile.write(json_content.encode())
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_search_phone_book(self):
+        """Search phone book entries"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            parsed = urlparse(self.path)
+            query_params = parse_qs(parsed.query)
+            query = query_params.get('q', [''])[0]
+            
+            if not query:
+                self._send_json({'error': 'Query parameter "q" is required'}, 400)
+                return
+            
+            results = self.pbx_core.phone_book.search(query)
+            self._send_json(results)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_phone_book_entry(self):
+        """Add or update a phone book entry"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            data = self._get_body()
+            extension = data.get('extension')
+            name = data.get('name')
+            
+            if not extension or not name:
+                self._send_json({'error': 'Extension and name are required'}, 400)
+                return
+            
+            success = self.pbx_core.phone_book.add_entry(
+                extension=extension,
+                name=name,
+                department=data.get('department'),
+                email=data.get('email'),
+                mobile=data.get('mobile'),
+                office_location=data.get('office_location'),
+                ad_synced=data.get('ad_synced', False)
+            )
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Phone book entry added/updated: {extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to add phone book entry'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_phone_book_entry(self, extension: str):
+        """Delete a phone book entry"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.phone_book.remove_entry(extension)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Phone book entry deleted: {extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to delete phone book entry'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_sync_phone_book(self):
+        """Sync phone book from Active Directory"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
+            self._send_json({'error': 'Phone book feature not enabled'}, 500)
+            return
+        
+        if not hasattr(self.pbx_core, 'ad_integration') or not self.pbx_core.ad_integration:
+            self._send_json({'error': 'Active Directory integration not enabled'}, 500)
+            return
+        
+        try:
+            synced_count = self.pbx_core.phone_book.sync_from_ad(
+                self.pbx_core.ad_integration,
+                self.pbx_core.extension_registry
+            )
+            
+            self._send_json({
+                'success': True,
+                'message': f'Phone book synced from Active Directory',
+                'synced_count': synced_count
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # Paging System API handlers
+    def _handle_get_paging_zones(self):
+        """Get all paging zones"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        try:
+            zones = self.pbx_core.paging_system.get_zones()
+            self._send_json(zones)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_paging_devices(self):
+        """Get all paging DAC devices"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        try:
+            devices = self.pbx_core.paging_system.get_dac_devices()
+            self._send_json(devices)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_active_pages(self):
+        """Get all active paging sessions"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        try:
+            active_pages = self.pbx_core.paging_system.get_active_pages()
+            self._send_json(active_pages)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_paging_zone(self):
+        """Add a paging zone"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        try:
+            data = self._get_body()
+            extension = data.get('extension')
+            name = data.get('name')
+            
+            if not extension or not name:
+                self._send_json({'error': 'Extension and name are required'}, 400)
+                return
+            
+            success = self.pbx_core.paging_system.add_zone(
+                extension=extension,
+                name=name,
+                description=data.get('description'),
+                dac_device=data.get('dac_device')
+            )
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Paging zone added: {extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to add paging zone'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_paging_zone(self, extension: str):
+        """Delete a paging zone"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.paging_system.remove_zone(extension)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Paging zone deleted: {extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to delete paging zone'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_configure_paging_device(self):
+        """Configure a paging DAC device"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
+            self._send_json({'error': 'Paging system not enabled'}, 500)
+            return
+        
+        try:
+            data = self._get_body()
+            device_id = data.get('device_id')
+            device_type = data.get('device_type')
+            
+            if not device_id or not device_type:
+                self._send_json({'error': 'device_id and device_type are required'}, 400)
+                return
+            
+            success = self.pbx_core.paging_system.configure_dac_device(
+                device_id=device_id,
+                device_type=device_type,
+                sip_uri=data.get('sip_uri'),
+                ip_address=data.get('ip_address'),
+                port=data.get('port', 5060)
+            )
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'DAC device configured: {device_id}'
+                })
+            else:
+                self._send_json({'error': 'Failed to configure DAC device'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
 
 
 class PBXAPIServer:
