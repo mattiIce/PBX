@@ -41,6 +41,12 @@ test_voicemail/
 moh/
 cdr/
 
+# Generated voice files (generate with scripts/generate_tts_prompts.py)
+auto_attendant/*.wav
+voicemail_prompts/*.wav
+!auto_attendant/.gitkeep
+!voicemail_prompts/.gitkeep
+
 # Database files
 *.db
 *.db-journal

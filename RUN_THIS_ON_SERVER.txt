@@ -2,6 +2,9 @@
                     SIMPLE INSTRUCTIONS FOR YOUR SERVER
 ================================================================================
 
+IMPORTANT: Voice files are NOT included in the repository.
+You MUST generate them on your server (takes 2-3 minutes).
+
 Once you have this code on your server, run these commands:
 
 1. Install the voice generator (one time only):
