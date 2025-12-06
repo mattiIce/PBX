@@ -21,8 +21,11 @@ class EnvironmentLoader:
         'DB_PORT': '5432',
         'DB_NAME': 'pbx_system',
         'DB_USER': 'pbx_user',
-        # DB_PASSWORD has no default - must be explicitly set
+        # DB_PASSWORD has no default - must be explicitly set for PostgreSQL
+        'SMTP_HOST': '',  # Empty default - set in .env if using email notifications
         'SMTP_PORT': '587',
+        'SMTP_USERNAME': '',  # Empty default - set in .env if using email notifications
+        # SMTP_PASSWORD has no default - must be explicitly set if using email
     }
     
     def __init__(self):
@@ -67,7 +70,7 @@ class EnvironmentLoader:
                 elif var_name in self.DEFAULT_VALUES:
                     env_value = self.DEFAULT_VALUES[var_name]
                     self.logger.info(
-                        f"Environment variable {var_name} not set, using default: {env_value}"
+                        f"Environment variable {var_name} not set, using default value"
                     )
                 else:
                     self.logger.error(
