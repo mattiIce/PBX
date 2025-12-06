@@ -48,7 +48,7 @@ for file in "${AA_FILES[@]}"; do
     if [ -f "auto_attendant/$file" ]; then
         SIZE=$(stat -f%z "auto_attendant/$file" 2>/dev/null || stat -c%s "auto_attendant/$file" 2>/dev/null)
         echo "  ✓ $file ($SIZE bytes)"
-        ((AA_COUNT++))
+        AA_COUNT=$((AA_COUNT + 1))
     else
         echo "  ✗ $file (missing)"
         MISSING_FILES+=("auto_attendant/$file")
@@ -61,7 +61,7 @@ for file in "${VM_FILES[@]}"; do
     if [ -f "voicemail_prompts/$file" ]; then
         SIZE=$(stat -f%z "voicemail_prompts/$file" 2>/dev/null || stat -c%s "voicemail_prompts/$file" 2>/dev/null)
         echo "  ✓ $file ($SIZE bytes)"
-        ((VM_COUNT++))
+        VM_COUNT=$((VM_COUNT + 1))
     else
         echo "  ✗ $file (missing)"
         MISSING_FILES+=("voicemail_prompts/$file")
@@ -110,10 +110,10 @@ if [ ${#MISSING_FILES[@]} -gt 0 ]; then
         AA_COUNT=0
         VM_COUNT=0
         for file in "${AA_FILES[@]}"; do
-            [ -f "auto_attendant/$file" ] && ((AA_COUNT++))
+            [ -f "auto_attendant/$file" ] && AA_COUNT=$((AA_COUNT + 1))
         done
         for file in "${VM_FILES[@]}"; do
-            [ -f "voicemail_prompts/$file" ] && ((VM_COUNT++))
+            [ -f "voicemail_prompts/$file" ] && VM_COUNT=$((VM_COUNT + 1))
         done
         
         echo ""
