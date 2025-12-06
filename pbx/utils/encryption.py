@@ -28,24 +28,44 @@ class FIPSEncryption:
     - AES-256 for encryption (FIPS 197)
     """
 
-    def __init__(self, fips_mode=False):
+    def __init__(self, fips_mode=False, enforce_fips=False):
         """
         Initialize FIPS encryption
 
         Args:
             fips_mode: Enable FIPS compliance mode
+            enforce_fips: If True, raise error when FIPS mode requested but not available
         """
         self.fips_mode = fips_mode
         self.logger = get_logger()
 
         if fips_mode and not CRYPTO_AVAILABLE:
-            self.logger.warning(
-                "FIPS mode enabled but cryptography library not available. "
-                "Install with: pip install cryptography"
+            error_msg = (
+                "FIPS mode is enabled but the 'cryptography' library is not available. "
+                "Install with: pip install cryptography\n"
+                "FIPS 140-2 compliance requires the cryptography library for:\n"
+                "  - PBKDF2-HMAC-SHA256 password hashing\n"
+                "  - AES-256-GCM encryption\n"
+                "  - Secure key derivation"
             )
+            
+            if enforce_fips:
+                self.logger.error(error_msg)
+                raise ImportError(
+                    "FIPS mode enforcement failed: cryptography library not available. "
+                    "Install with: pip install cryptography"
+                )
+            else:
+                self.logger.warning(error_msg)
+                self.logger.warning("Falling back to standard library (non-FIPS compliant)")
 
-        if fips_mode:
-            self.logger.info("FIPS 140-2 compliant encryption enabled")
+        if fips_mode and CRYPTO_AVAILABLE:
+            self.logger.info("FIPS 140-2 compliant encryption ENABLED")
+            self.logger.info("  ✓ Using PBKDF2-HMAC-SHA256 for password hashing")
+            self.logger.info("  ✓ Using AES-256-GCM for data encryption")
+            self.logger.info("  ✓ 100,000 iterations for key derivation (NIST recommended)")
+        elif not fips_mode:
+            self.logger.warning("FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
 
     def hash_password(self, password, salt=None):
         """
@@ -293,17 +313,18 @@ class FIPSEncryption:
 _encryption_instance = None
 
 
-def get_encryption(fips_mode=False):
+def get_encryption(fips_mode=False, enforce_fips=False):
     """
     Get or create encryption instance
 
     Args:
         fips_mode: Enable FIPS mode
+        enforce_fips: If True, raise error when FIPS mode requested but not available
 
     Returns:
         FIPSEncryption instance
     """
     global _encryption_instance
     if _encryption_instance is None:
-        _encryption_instance = FIPSEncryption(fips_mode)
+        _encryption_instance = FIPSEncryption(fips_mode, enforce_fips)
     return _encryption_instance

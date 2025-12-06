@@ -39,12 +39,39 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     pbx_core = None  # Set by PBXAPIServer
 
     def _set_headers(self, status=200, content_type='application/json'):
-        """Set response headers"""
+        """Set response headers with security enhancements"""
         self.send_response(status)
         self.send_header('Content-type', content_type)
+        
+        # CORS headers
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        
+        # Security headers
+        # X-Content-Type-Options: Prevent MIME type sniffing
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        
+        # X-Frame-Options: Prevent clickjacking
+        self.send_header('X-Frame-Options', 'DENY')
+        
+        # X-XSS-Protection: Enable XSS filter (for older browsers)
+        self.send_header('X-XSS-Protection', '1; mode=block')
+        
+        # Strict-Transport-Security: Enforce HTTPS (when using HTTPS)
+        # Note: Only add this when actually using HTTPS
+        # self.send_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+        
+        # Content-Security-Policy: Restrict resource loading
+        csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+        self.send_header('Content-Security-Policy', csp)
+        
+        # Referrer-Policy: Control referrer information
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        
+        # Permissions-Policy: Control browser features
+        self.send_header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+        
         self.end_headers()
 
     def _send_json(self, data, status=200):

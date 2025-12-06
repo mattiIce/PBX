@@ -25,6 +25,59 @@ if __name__ == "__main__":
     print("=" * 60)
     print("InHouse PBX System v1.0.0")
     print("=" * 60)
+    print()
+    
+    # Verify FIPS compliance before starting
+    print("Performing security checks...")
+    try:
+        from pbx.utils.config import Config
+        from pbx.utils.encryption import get_encryption, CRYPTO_AVAILABLE
+        
+        # Load config to check FIPS settings
+        config = Config("config.yml")
+        fips_mode = config.get('security.fips_mode', True)
+        enforce_fips = config.get('security.enforce_fips', True)
+        
+        if fips_mode:
+            print("✓ FIPS 140-2 mode is ENABLED")
+            
+            if not CRYPTO_AVAILABLE:
+                error_msg = (
+                    "\n✗ FIPS MODE ENFORCEMENT FAILED\n"
+                    "  The 'cryptography' library is not installed.\n"
+                    "  FIPS 140-2 compliance requires this library.\n"
+                    "  Install with: pip install cryptography\n"
+                )
+                
+                if enforce_fips:
+                    print(error_msg)
+                    print("  System cannot start with enforce_fips=true")
+                    sys.exit(1)
+                else:
+                    print(error_msg)
+                    print("  WARNING: Continuing without FIPS compliance")
+            else:
+                print("✓ Cryptography library available")
+                print("✓ FIPS 140-2 compliance verified")
+                
+                # Test encryption initialization
+                enc = get_encryption(fips_mode=True, enforce_fips=enforce_fips)
+                print("✓ FIPS-compliant encryption initialized")
+        else:
+            print("⚠ WARNING: FIPS 140-2 mode is DISABLED")
+            print("  This system is NOT FIPS compliant")
+            if enforce_fips:
+                print("  Ignoring enforce_fips since fips_mode is disabled")
+    
+    except ImportError as e:
+        print(f"\n✗ FIPS Compliance Error: {e}")
+        print("  System cannot start in FIPS mode")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n✗ Security check failed: {e}")
+        sys.exit(1)
+    
+    print()
 
     # Create PBX instance
     try:

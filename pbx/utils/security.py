@@ -365,9 +365,16 @@ class SecurePasswordManager:
         self.logger = get_logger()
         self.config = config or {}
         
-        # Get FIPS mode from config
-        fips_mode = self.config.get('security.fips_mode', False)
-        self.encryption = get_encryption(fips_mode)
+        # Get FIPS mode from config - default to True for security
+        fips_mode = self.config.get('security.fips_mode', True)
+        
+        # Enforce FIPS mode if explicitly enabled in config
+        enforce_fips = fips_mode and self.config.get('security.enforce_fips', True)
+        
+        if fips_mode:
+            self.logger.info("Initializing password manager with FIPS 140-2 compliance")
+        
+        self.encryption = get_encryption(fips_mode, enforce_fips)
         self.policy = PasswordPolicy(config)
     
     def hash_password(self, password: str) -> Tuple[str, str]:

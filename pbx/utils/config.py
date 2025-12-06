@@ -4,6 +4,7 @@ Configuration management for PBX system
 import yaml
 import os
 import re
+from pbx.utils.env_loader import get_env_loader, load_env_file
 
 
 class Config:
@@ -12,15 +13,25 @@ class Config:
     # Email validation regex pattern
     EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
-    def __init__(self, config_file="config.yml"):
+    def __init__(self, config_file="config.yml", load_env=True):
         """
         Initialize configuration
 
         Args:
             config_file: Path to configuration file
+            load_env: Whether to load .env file and resolve environment variables
         """
         self.config_file = config_file
         self.config = {}
+        self.env_loader = None
+        self.env_enabled = load_env
+        
+        # Load .env file if it exists
+        if load_env:
+            env_file = os.path.join(os.path.dirname(config_file), '.env')
+            load_env_file(env_file)
+            self.env_loader = get_env_loader()
+        
         self.load()
 
     @staticmethod
@@ -39,10 +50,14 @@ class Config:
         return bool(Config.EMAIL_PATTERN.match(email))
 
     def load(self):
-        """Load configuration from YAML file"""
+        """Load configuration from YAML file and resolve environment variables"""
         if os.path.exists(self.config_file):
             with open(self.config_file, 'r') as f:
                 self.config = yaml.safe_load(f) or {}
+            
+            # Resolve environment variables in configuration
+            if self.env_enabled and self.env_loader:
+                self.config = self.env_loader.resolve_config(self.config)
         else:
             raise FileNotFoundError(f"Configuration file not found: {self.config_file}")
 
