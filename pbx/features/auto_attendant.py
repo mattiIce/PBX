@@ -93,9 +93,9 @@ class AutoAttendant:
         """
         self.logger.info(f"Starting auto attendant session for call {call_id} from {from_extension}")
         
-        # Initialize session state
+        # Initialize session state - start in MAIN_MENU to accept DTMF input
         session = {
-            'state': AAState.WELCOME,
+            'state': AAState.MAIN_MENU,
             'call_id': call_id,
             'from_extension': from_extension,
             'retry_count': 0,

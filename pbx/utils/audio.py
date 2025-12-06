@@ -288,6 +288,26 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
             # Success tone for transfer
             (800, 150), (1000, 150), (1200, 200),
         ],
+        'invalid_pin': [
+            # Error tone for invalid PIN
+            (300, 400), (0, 100), (300, 400),
+        ],
+        'recording_greeting': [
+            # Recording prompt tones
+            (700, 200), (900, 200), (1100, 300),
+        ],
+        'greeting_saved': [
+            # Success confirmation
+            (1000, 200), (1200, 200), (1000, 200),
+        ],
+        'message_deleted': [
+            # Deletion confirmation - descending
+            (900, 150), (700, 150), (500, 200),
+        ],
+        'end_of_messages': [
+            # End notification - neutral tone
+            (600, 300), (500, 300),
+        ],
     }
     
     sequence = tone_sequences.get(prompt_type, [(800, 300)])  # Default tone
