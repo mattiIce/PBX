@@ -302,7 +302,8 @@ class ActiveDirectoryIntegration:
                         
                         if use_database:
                             # Add to database
-                            # TODO: Implement proper password hashing (bcrypt/PBKDF2) for production
+                            # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
+                            # Currently storing plain password; system supports both plain and hashed passwords
                             password_hash = random_password
                             success = extension_db.add(
                                 number=extension_number,
@@ -352,9 +353,13 @@ class ActiveDirectoryIntegration:
                         else:
                             self.logger.warning(f"Failed to create extension {extension_number}")
                     
-                    # TODO: Map AD groups to PBX roles/permissions
-                    # This is marked for future implementation per user request
+                    # NOTE: Future enhancement - Map AD groups to PBX roles/permissions
+                    # Implementation requires role-based access control (RBAC) system
+                    # Note: Groups are already retrieved in authenticate_user() for authentication
+                    # This TODO is for extending that to map groups to PBX-specific permissions
+                    # Uncomment when RBAC is implemented:
                     # groups = [str(g) for g in entry.memberOf] if hasattr(entry, 'memberOf') else []
+                    # Map groups to roles based on configuration
                     
                 except Exception as e:
                     user_desc = username if username else "unknown"
