@@ -2,6 +2,8 @@
 
 A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built from scratch in Python. This system provides enterprise-grade telephony features for internal communication and external connectivity.
 
+> **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) for a complete business overview, ROI analysis, and strategic recommendations.
+
 ## 🌟 Features
 
 ### Core PBX Features

@@ -2,6 +2,12 @@
 
 This document helps you navigate the comprehensive documentation for the PBX system.
 
+## Executive Overview
+
+For executives, managers, and decision-makers:
+
+- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** - Comprehensive executive summary with business value, ROI analysis, and strategic recommendations
+
 ## Getting Started
 
 Start here if you're new to the PBX system:
@@ -132,10 +138,18 @@ Must read:
 ### Project Manager
 
 Must read:
-1. README.md
-2. FEATURES.md
-3. SUMMARY.md
-4. DEPLOYMENT_CHECKLIST.md
+1. EXECUTIVE_SUMMARY.md
+2. README.md
+3. FEATURES.md
+4. SUMMARY.md
+5. DEPLOYMENT_CHECKLIST.md
+
+### Executive / Business Leader
+
+Must read:
+1. EXECUTIVE_SUMMARY.md (complete business case)
+2. README.md (technical capabilities overview)
+3. DEPLOYMENT_CHECKLIST.md (implementation readiness)
 
 ## Support and Contributing
 
