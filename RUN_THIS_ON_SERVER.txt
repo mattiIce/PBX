@@ -1,0 +1,89 @@
+================================================================================
+                    SIMPLE INSTRUCTIONS FOR YOUR SERVER
+================================================================================
+
+IMPORTANT: Voice files are NOT included in the repository.
+You MUST generate them on your server (takes 2-3 minutes).
+
+Once you have this code on your server, run these commands:
+
+1. Install the voice generator (one time only):
+   
+   pip3 install gTTS pydub
+
+
+2. Generate natural-sounding voices:
+   
+   cd /home/user/PBX    # (adjust path to where you put PBX)
+   python3 scripts/generate_tts_prompts.py --company "Aluminum Blanking Company"
+
+
+3. Restart the PBX:
+   
+   sudo systemctl restart pbx
+   
+   OR if not using systemd:
+   
+   python3 main.py
+
+
+DONE! That's it.
+
+Your auto attendant will now have natural, human-sounding voices from Google TTS.
+
+Test by calling your PBX and dialing 0.
+
+
+================================================================================
+                                 NOTES
+================================================================================
+
+- This requires internet connection (you said your server has it)
+- It's completely FREE (no API key, no account needed)
+- The voices sound MUCH better than the current ones
+- Takes about 2-3 minutes to generate all 17 voice files
+- If something fails, see SETUP_GTTS_VOICES.md for troubleshooting
+
+
+================================================================================
+                            WHAT GETS GENERATED
+================================================================================
+
+Auto Attendant (5 files):
+  - welcome.wav
+  - main_menu.wav
+  - invalid.wav
+  - timeout.wav
+  - transferring.wav
+
+Voicemail (12 files):
+  - enter_pin.wav
+  - invalid_pin.wav
+  - main_menu.wav
+  - message_menu.wav
+  - no_messages.wav
+  - you_have_messages.wav
+  - goodbye.wav
+  - leave_message.wav
+  - recording_greeting.wav
+  - greeting_saved.wav
+  - message_deleted.wav
+  - end_of_messages.wav
+
+
+All in proper telephony format (8000 Hz, 16-bit, mono WAV).
+
+
+================================================================================
+                              ALTERNATIVE
+================================================================================
+
+If for some reason gTTS doesn't work (firewall blocks Google, etc.):
+
+The current voices (Festival) are already included and work fine.
+They're not as natural as gTTS but still pretty good.
+
+You don't HAVE to upgrade, but gTTS sounds much better!
+
+
+================================================================================

@@ -639,11 +639,83 @@ When a call goes to voicemail:
   - Manual URL configuration
   - Custom templates directory
 
+## Auto Attendant (IVR)
+
+### Auto Attendant Features
+- **Automated Call Answering**
+  - Welcome greeting for incoming calls
+  - Professional menu system
+  - Extension 0 (configurable)
+- **Menu Options**
+  - DTMF-based navigation
+  - Configurable menu items
+  - Transfer to extensions or queues
+  - Operator fallback
+- **Call Routing**
+  - Direct transfer to sales queue
+  - Support queue routing
+  - Department extensions
+  - Operator (extension 0)
+
+### Menu Configuration
+- **Customizable Menu**
+  - Define menu options in config.yml
+  - Map DTMF digits to destinations
+  - Descriptive labels
+  - Flexible routing
+- **Timeout Handling**
+  - Configurable timeout (default 10 seconds)
+  - Maximum retry attempts
+  - Automatic operator transfer
+  - Invalid input handling
+
+### Audio Prompts
+- **Voice Files**
+  - Welcome greeting (welcome.wav)
+  - Main menu (main_menu.wav)
+  - Invalid option (invalid.wav)
+  - Timeout message (timeout.wav)
+  - Transfer message (transferring.wav)
+- **Customization**
+  - Replace tone-based prompts with recordings
+  - Professional voice actor recordings
+  - Text-to-Speech (TTS) integration
+  - Multiple language support (future)
+
+### Usage
+- **Accessing Auto Attendant**
+  - Dial extension 0
+  - Hear welcome greeting
+  - Listen to menu options
+  - Press digit to select option
+- **Example Menu**
+  - Press 1: Sales Queue
+  - Press 2: Support Queue
+  - Press 3: Accounting
+  - Press 0: Operator
+
+### Configuration Example
+```yaml
+auto_attendant:
+  enabled: true
+  extension: '0'
+  timeout: 10
+  max_retries: 3
+  operator_extension: '1001'
+  audio_path: 'auto_attendant'
+  menu_options:
+    - digit: '1'
+      destination: '8001'
+      description: 'Sales Queue'
+    - digit: '2'
+      destination: '8002'
+      description: 'Support Queue'
+```
+
 ## Future Enhancements
 
 ### Planned Features
 - **WebRTC Support** - Browser-based calling
-- **IVR System** - Interactive voice menus
 - **SMS Integration** - Text messaging
 - **Mobile Apps** - iOS/Android clients
 - **Video Conferencing** - Video calls

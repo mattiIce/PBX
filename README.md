@@ -12,6 +12,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Call Management** - Hold, resume, transfer, and forward calls
 
 ### Advanced Call Features
+- **Auto Attendant (IVR)** - Automated call answering with menu options for routing calls
 - **Call Recording** - Record calls for compliance and quality assurance
 - **Call Queues (ACD)** - Automatic Call Distribution with multiple strategies
 - **Conference Calling** - Multi-party conference rooms
@@ -232,6 +233,7 @@ curl -X PUT http://localhost:8080/api/config \
 
 ### Dialplan Patterns
 
+- **0** - Auto attendant (automated menu system)
 - **1xxx** - Internal extensions (e.g., 1001, 1002)
 - **2xxx** - Conference rooms (e.g., 2001)
 - **7x** - Call parking slots (e.g., 70-79)
@@ -240,6 +242,7 @@ curl -X PUT http://localhost:8080/api/config \
 
 ### Example Calls
 
+- Dial `0` - Access auto attendant menu
 - Dial `1002` - Call extension 1002
 - Dial `2001` - Join conference room 2001
 - Dial `8001` - Enter sales queue
@@ -355,6 +358,7 @@ For issues and questions, please open a GitHub issue.
 - [x] **Voicemail-to-Email** - ✅ COMPLETED
 - [x] **DTMF Detection (Goertzel)** - ✅ COMPLETED
 - [x] **Voicemail IVR System** - ✅ COMPLETED
+- [x] **Auto Attendant (IVR)** - ✅ COMPLETED
 
 ### Operator Console
 - [x] **VIP Caller Database** - ✅ COMPLETED
@@ -398,6 +402,7 @@ For issues and questions, please open a GitHub issue.
 - [ ] Video conferencing support
 - [ ] Full SIP Direct Routing to Teams
 - [ ] CRM integrations (Salesforce, HubSpot)
+- [ ] Professional voice recordings for auto attendant (TTS or voice actor)
 
 ---
 
