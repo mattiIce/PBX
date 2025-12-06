@@ -5,6 +5,7 @@ Provides audio generation and processing functions
 import struct
 import math
 import warnings
+import os
 
 
 # Audio generation constants
@@ -344,8 +345,6 @@ def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
     Note: This function attempts to load actual recorded voice prompts.
           If the file doesn't exist, the caller should fall back to generate_voice_prompt()
     """
-    import os
-    
     # Build path to prompt file
     prompt_file = os.path.join(prompt_dir, f"{prompt_type}.wav")
     
@@ -354,9 +353,13 @@ def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
         try:
             with open(prompt_file, 'rb') as f:
                 return f.read()
-        except Exception:
-            # If we can't read the file, return None so caller can use fallback
-            pass
+        except (IOError, OSError) as e:
+            # If we can't read the file (permission issues, disk errors, etc.),
+            # return None so caller can use fallback tone generation
+            # In production, consider logging this error for debugging
+            import warnings
+            warnings.warn(f"Failed to read prompt file {prompt_file}: {e}")
+            return None
     
     return None
 
