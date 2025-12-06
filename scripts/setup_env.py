@@ -231,9 +231,10 @@ def write_env_file(env_vars, env_file):
             for var_name in vars_dict.keys():
                 value = env_vars.get(var_name, '')
                 # Quote values that contain spaces or special characters
-                # Escape existing quotes to avoid malformed entries
+                # When wrapping in double quotes, only double quotes need escaping
+                # Single quotes are safe inside double quotes
                 if ' ' in value or '"' in value or "'" in value:
-                    # Escape existing double quotes
+                    # Escape existing double quotes to prevent syntax errors
                     value = value.replace('"', '\\"')
                     value = f'"{value}"'
                 f.write(f"{var_name}={value}\n")
@@ -317,7 +318,7 @@ def main():
                 continue
             try:
                 num = int(item)
-                if num > 0:  # Only accept positive numbers
+                if num >= 1:  # Only accept positive numbers starting from 1
                     selected_indices.append(num - 1)
                 else:
                     invalid_inputs.append(item)
