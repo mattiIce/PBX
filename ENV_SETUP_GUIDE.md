@@ -4,10 +4,12 @@
 
 ### Where is the .env file?
 
-The `.env` file is located in the **root directory** of the PBX project:
+The `.env` file is located in the **root directory** of the PBX project.
+
+If your PBX project is installed at `/path/to/your/pbx/project`, then the `.env` file would be at:
 
 ```
-/home/runner/work/PBX/PBX/.env
+/path/to/your/pbx/project/.env
 ```
 
 Or if you're in the project directory, it's simply:
@@ -272,8 +274,8 @@ python scripts/setup_env.py
 **Solution**: You're probably in the wrong directory. Navigate to the project root:
 
 ```bash
-cd /home/runner/work/PBX/PBX
-# or wherever your PBX project is located
+cd /path/to/your/pbx/project
+# For example: cd /opt/pbx or cd ~/PBX
 
 # Then run setup
 python scripts/setup_env.py

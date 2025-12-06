@@ -166,8 +166,13 @@ def read_existing_env():
     return env_vars, env_file
 
 
-def prompt_for_value(var_name, var_info, current_value=None):
+def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
     """Prompt user for an environment variable value"""
+    # Prevent infinite recursion
+    if retry_count >= 3:
+        print("  ⚠ Maximum retries reached. Using empty value.")
+        return ''
+    
     desc = var_info['description']
     default = current_value if current_value else var_info.get('default', '')
     example = var_info.get('example', '')
@@ -208,7 +213,7 @@ def prompt_for_value(var_name, var_info, current_value=None):
             return default
         elif required:
             print("  ⚠ This value is required!")
-            return prompt_for_value(var_name, var_info, current_value)
+            return prompt_for_value(var_name, var_info, current_value, retry_count + 1)
     
     return new_value
 
@@ -298,6 +303,10 @@ def main():
         print()
         selection = input("Enter variable numbers to update (comma-separated, e.g., 1,3,5): ").strip()
         selected_indices = [int(x.strip()) - 1 for x in selection.split(',') if x.strip().isdigit()]
+        
+        if not selected_indices:
+            print("⚠ No valid selections made. Exiting.")
+            return
         
         for i in selected_indices:
             if 0 <= i < len(all_vars):
