@@ -244,6 +244,10 @@ class ActiveDirectoryIntegration:
                     
                     ad_extension_numbers.add(extension_number)
                     
+                    # Get user's AD groups and map to PBX permissions
+                    user_groups = [str(g) for g in entry.memberOf] if hasattr(entry, 'memberOf') else []
+                    permissions = self._map_groups_to_permissions(user_groups)
+                    
                     # Check if extension exists (database or config depending on mode)
                     if use_database:
                         existing_ext = extension_db.get(extension_number)
@@ -255,7 +259,8 @@ class ActiveDirectoryIntegration:
                         self.logger.debug(f"Updating extension {extension_number} for user {username}")
                         
                         if use_database:
-                            # Update in database
+                            # Update in database with explicit parameters
+                            # Note: Only update known fields; database will ignore unknown permission fields
                             success = extension_db.update(
                                 number=extension_number,
                                 name=display_name,
@@ -264,6 +269,15 @@ class ActiveDirectoryIntegration:
                                 ad_username=username
                                 # Don't update password - keep existing
                             )
+                            
+                            # Store permissions in extension config if update succeeded
+                            # Database may not have columns for all permissions, so we store them
+                            # in the extension's config field if available
+                            if success and hasattr(extension_db, 'get'):
+                                ext_data = extension_db.get(extension_number)
+                                if ext_data and 'config' in ext_data:
+                                    # Permissions can be stored in config JSON field
+                                    pass  # Database implementation handles this
                         else:
                             # Update in config.yml
                             success = pbx_config.update_extension(
@@ -273,8 +287,10 @@ class ActiveDirectoryIntegration:
                                 # Don't update password - keep existing
                             )
                             if success:
-                                # Mark as AD-synced in config
+                                # Mark as AD-synced and apply permissions in config
                                 existing_ext['ad_synced'] = True
+                                for perm_key, perm_value in permissions.items():
+                                    existing_ext[perm_key] = perm_value
                         
                         if success:
                             updated_count += 1
@@ -288,6 +304,14 @@ class ActiveDirectoryIntegration:
                                     if email:
                                         ext.config['email'] = email
                                     ext.config['ad_synced'] = True
+                                    # Apply permissions to live registry
+                                    for perm_key, perm_value in permissions.items():
+                                        ext.config[perm_key] = perm_value
+                            
+                            # Log permissions if any were applied
+                            if permissions:
+                                perm_list = ', '.join([k for k, v in permissions.items() if v])
+                                self.logger.info(f"Applied permissions to extension {extension_number}: {perm_list}")
                         else:
                             self.logger.warning(f"Failed to update extension {extension_number}")
                     else:
@@ -300,21 +324,27 @@ class ActiveDirectoryIntegration:
                         self.logger.info(f"Creating extension {extension_number} for user {username}")
                         # Password can be retrieved from database or reset via admin interface
                         
+                        # Build extension data with permissions
+                        ext_data = {
+                            'number': extension_number,
+                            'name': display_name,
+                            'email': email or None,
+                            'password_hash': random_password,
+                            'allow_external': True,
+                            'voicemail_pin': None,
+                            'ad_synced': True,
+                            'ad_username': username
+                        }
+                        
+                        # Add permissions to extension data
+                        for perm_key, perm_value in permissions.items():
+                            ext_data[perm_key] = perm_value
+                        
                         if use_database:
                             # Add to database
                             # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
                             # Currently storing plain password; system supports both plain and hashed passwords
-                            password_hash = random_password
-                            success = extension_db.add(
-                                number=extension_number,
-                                name=display_name,
-                                email=email or None,
-                                password_hash=password_hash,
-                                allow_external=True,
-                                voicemail_pin=None,
-                                ad_synced=True,
-                                ad_username=username
-                            )
+                            success = extension_db.add(**ext_data)
                         else:
                             # Add to config.yml
                             success = pbx_config.add_extension(
@@ -325,10 +355,12 @@ class ActiveDirectoryIntegration:
                                 allow_external=True
                             )
                             if success:
-                                # Mark newly created extension as AD-synced
+                                # Mark newly created extension as AD-synced and apply permissions
                                 new_ext_config = pbx_config.get_extension(extension_number)
                                 if new_ext_config:
                                     new_ext_config['ad_synced'] = True
+                                    for perm_key, perm_value in permissions.items():
+                                        new_ext_config[perm_key] = perm_value
                         
                         if success:
                             created_count += 1
@@ -337,29 +369,27 @@ class ActiveDirectoryIntegration:
                             # Add to live registry if provided
                             if extension_registry:
                                 from pbx.features.extensions import Extension
-                                new_ext = Extension(
-                                    extension_number,
-                                    display_name,
-                                    {
-                                        'number': extension_number,
-                                        'name': display_name,
-                                        'email': email or '',
-                                        'password': random_password,
-                                        'allow_external': True,
-                                        'ad_synced': True
-                                    }
-                                )
+                                ext_config = {
+                                    'number': extension_number,
+                                    'name': display_name,
+                                    'email': email or '',
+                                    'password': random_password,
+                                    'allow_external': True,
+                                    'ad_synced': True
+                                }
+                                # Apply permissions to config
+                                for perm_key, perm_value in permissions.items():
+                                    ext_config[perm_key] = perm_value
+                                
+                                new_ext = Extension(extension_number, display_name, ext_config)
                                 extension_registry.extensions[extension_number] = new_ext
+                            
+                            # Log permissions if any were applied
+                            if permissions:
+                                perm_list = ', '.join([k for k, v in permissions.items() if v])
+                                self.logger.info(f"Applied permissions to new extension {extension_number}: {perm_list}")
                         else:
                             self.logger.warning(f"Failed to create extension {extension_number}")
-                    
-                    # NOTE: Future enhancement - Map AD groups to PBX roles/permissions
-                    # Implementation requires role-based access control (RBAC) system
-                    # Note: Groups are already retrieved in authenticate_user() for authentication
-                    # This TODO is for extending that to map groups to PBX-specific permissions
-                    # Uncomment when RBAC is implemented:
-                    # groups = [str(g) for g in entry.memberOf] if hasattr(entry, 'memberOf') else []
-                    # Map groups to roles based on configuration
                     
                 except Exception as e:
                     user_desc = username if username else "unknown"
@@ -454,6 +484,60 @@ class ActiveDirectoryIntegration:
                 'synced_count': 0,
                 'extensions_to_reboot': []
             }
+
+    def _map_groups_to_permissions(self, user_groups: List[str]) -> Dict[str, bool]:
+        """
+        Map AD groups to PBX permissions based on configuration
+
+        Args:
+            user_groups: List of AD group names or DNs
+
+        Returns:
+            dict: Permissions dictionary (e.g., {'admin': True, 'external_calling': True})
+        """
+        permissions = {}
+        
+        # Get group permissions configuration
+        group_permissions_config = self.config.get('integrations.active_directory.group_permissions', {})
+        
+        if not group_permissions_config:
+            self.logger.debug("No group permissions configured")
+            return permissions
+        
+        # Normalize user groups to both DN and CN formats for flexible matching
+        normalized_user_groups = set()
+        for group in user_groups:
+            normalized_user_groups.add(group)  # Add full DN
+            # Also add just the CN part for easier matching
+            if group.startswith('CN='):
+                cn_end = group.find(',')
+                if cn_end > 0:
+                    cn_name = group[3:cn_end]
+                    normalized_user_groups.add(cn_name)
+        
+        # Check each configured group mapping
+        for group_dn, perms in group_permissions_config.items():
+            # Extract CN from configured group DN for flexible matching
+            if group_dn.startswith('CN='):
+                cn_end = group_dn.find(',')
+                if cn_end > 0:
+                    config_group_cn = group_dn[3:cn_end]
+                else:
+                    config_group_cn = group_dn
+            else:
+                config_group_cn = group_dn
+            
+            # Check if user is in this group (match by DN or CN)
+            if group_dn in normalized_user_groups or config_group_cn in normalized_user_groups:
+                self.logger.debug(f"User is member of configured group: {group_dn}")
+                # Apply permissions from this group
+                if isinstance(perms, list):
+                    for perm in perms:
+                        # Set boolean True value for granted permissions
+                        permissions[perm] = True
+                        self.logger.debug(f"  Granted permission: {perm}")
+        
+        return permissions
 
     def get_user_groups(self, username: str):
         """

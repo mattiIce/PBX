@@ -22,12 +22,15 @@ api:
   port: 8080
   enable_cors: true
 database:
-  type: postgresql
-  host: localhost
-  port: 5432
-  name: pbx_system
-  user: pbx_user
-  password: '@1am9ms!'  # SECURITY: Change this password and consider using environment variables in production
+  type: sqlite  # Use sqlite by default (change to postgresql for production)
+  # PostgreSQL configuration (used when type: postgresql)
+  host: localhost  # Override with ${DB_HOST} environment variable
+  port: 5432  # Override with ${DB_PORT} environment variable
+  name: pbx_system  # Override with ${DB_NAME} environment variable
+  user: pbx_user  # Override with ${DB_USER} environment variable
+  password: ''  # REQUIRED in production: Set ${DB_PASSWORD} in .env file
+  # SQLite configuration (used when type: sqlite)
+  path: pbx.db  # SQLite database file path
 extensions:
 - number: '1001'
   name: Codi Mattinson
@@ -143,16 +146,48 @@ logging:
   file: logs/pbx.log
   console: true
 security:
+  # Authentication
   require_authentication: true
-  max_failed_attempts: 5
-  ban_duration: 300
-  fips_mode: true
+  
+  # FIPS Compliance (REQUIRED FOR PRODUCTION)
+  fips_mode: true  # Enable FIPS 140-2 compliant encryption
+  enforce_fips: true  # Fail startup if FIPS mode cannot be enabled (requires cryptography library)
+  
+  # Password Policy
+  password:
+    min_length: 12  # Minimum password length
+    max_length: 128  # Maximum password length
+    require_uppercase: true  # Require at least one uppercase letter
+    require_lowercase: true  # Require at least one lowercase letter
+    require_digit: true  # Require at least one digit
+    require_special: true  # Require at least one special character
+  
+  # Rate Limiting & Brute Force Protection
+  rate_limit:
+    max_attempts: 5  # Maximum failed login attempts
+    window_seconds: 300  # Time window for counting attempts (5 minutes)
+    lockout_duration: 900  # Account lockout duration (15 minutes)
+  
+  # Security Audit Logging
+  audit:
+    enabled: true  # Enable security audit logging
+    log_to_database: true  # Store audit logs in database
+    log_to_file: false  # Also log to file (optional)
+    log_file: 'logs/security_audit.log'
+  
+  # TLS/SSL Configuration
   enable_tls: false
   tls_cert_file: ''
   tls_key_file: ''
+  
+  # SRTP (Secure Real-time Transport Protocol)
   enable_srtp: false
-  min_password_length: 12
-  require_strong_passwords: true
+  
+  # Legacy settings (kept for backward compatibility)
+  max_failed_attempts: 5  # Deprecated - use rate_limit.max_attempts
+  ban_duration: 300  # Deprecated - use rate_limit.window_seconds
+  min_password_length: 12  # Deprecated - use password.min_length
+  require_strong_passwords: true  # Deprecated - use password settings
 provisioning:
   enabled: true
   url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
@@ -167,19 +202,42 @@ integrations:
     base_dn: DC=albl,DC=com
     user_search_base: CN=Users,DC=albl,DC=com
     bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com
-    # SECURITY WARNING: Password is hardcoded below for initial setup only
-    # For production, use environment variable: ${AD_BIND_PASSWORD}
-    # Or store in a secure secrets manager and never commit to version control
-    bind_password: Q1g0ng248!  # TODO: Replace with environment variable before production use
+    # SECURITY: Use environment variable for password in production
+    # Set AD_BIND_PASSWORD in .env file
+    # For testing/development, you can use a placeholder (change in production!)
+    bind_password: ''  # Set ${AD_BIND_PASSWORD} in .env for production
     use_ssl: true
     auto_provision: true  # Automatically create/update PBX extensions from AD
     deactivate_removed_users: true  # Disable extensions when users are removed from AD
-    # Group mapping for future implementation
-    # group_permissions:
-    #   CN=PBX_Admins,OU=Groups,DC=albl,DC=com:
-    #     - admin
-    #   CN=Sales,OU=Groups,DC=albl,DC=com:
-    #     - external_calling
+    
+    # Group-based permissions: Map AD security groups to PBX permissions
+    # When users are synced, their AD group membership determines their PBX permissions
+    # Supports both full DN and CN-only formats for flexible matching
+    group_permissions:
+      # Admin group - full system privileges
+      CN=PBX_Admins,OU=Groups,DC=albl,DC=com:
+        - admin
+        - manage_extensions
+        - view_cdr
+        - system_config
+      
+      # Sales team - external calling privileges
+      CN=Sales,OU=Groups,DC=albl,DC=com:
+        - external_calling
+        - international_calling
+        - call_transfer
+      
+      # Support team - call management features
+      CN=Support,OU=Groups,DC=albl,DC=com:
+        - call_recording
+        - call_queues
+        - call_monitoring
+      
+      # Executive group - VIP features
+      CN=Executives,OU=Groups,DC=albl,DC=com:
+        - vip_status
+        - priority_routing
+        - executive_conference
   zoom:
     enabled: false
     account_id: ''
