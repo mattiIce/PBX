@@ -387,33 +387,135 @@ Enable:
 systemctl enable --now pbx-ad-sync.timer
 ```
 
-## Future Enhancements (TODO)
+## Group-Based Permissions
 
-The following features are marked for future implementation:
+### Overview
 
-### Group-Based Permissions
+The AD integration now supports automatic permission assignment based on Active Directory security group membership. When users are synced from AD, their group memberships are evaluated and corresponding PBX permissions are automatically applied.
 
-Map AD groups to PBX permissions:
+### Configuration
+
+Add group permission mappings to your `config.yml`:
 
 ```yaml
 integrations:
   active_directory:
+    enabled: true
+    server: ldaps://192.168.1.22:636
+    base_dn: DC=albl,DC=com
+    # ... other settings ...
+    
+    # Map AD groups to PBX permissions
     group_permissions:
+      # Admin group - full privileges
       CN=PBX_Admins,OU=Groups,DC=albl,DC=com:
         - admin
         - manage_extensions
+        - view_cdr
+        - system_config
+      
+      # Sales team - external calling allowed
       CN=Sales,OU=Groups,DC=albl,DC=com:
         - external_calling
         - international_calling
+        - call_transfer
+      
+      # Support team - call management features
       CN=Support,OU=Groups,DC=albl,DC=com:
         - call_recording
         - call_queues
+        - call_monitoring
+        - call_barge
+      
+      # Executive team - priority features
+      CN=Executives,OU=Groups,DC=albl,DC=com:
+        - vip_status
+        - priority_routing
+        - personal_assistant
+        - executive_conference
 ```
 
-To implement:
-1. Add `group_permissions` parsing in `sync_users()`
-2. Check user's `memberOf` attribute
-3. Apply permissions to extension config
+### Supported Permission Types
+
+Common PBX permissions you can assign:
+- `admin` - Full system administration
+- `manage_extensions` - Create/modify extensions
+- `view_cdr` - View call detail records
+- `external_calling` - Make external calls
+- `international_calling` - Make international calls
+- `call_recording` - Record calls
+- `call_queues` - Join/manage call queues
+- `call_monitoring` - Monitor other calls
+- `call_barge` - Barge into calls
+- `vip_status` - VIP caller treatment
+- `priority_routing` - Priority call routing
+- `system_config` - Modify system settings
+
+### How It Works
+
+1. **User Sync**: When `sync_users()` runs, it retrieves each user's `memberOf` attribute from AD
+2. **Group Matching**: The system checks if the user is a member of any configured groups
+3. **Permission Application**: All permissions from matching groups are automatically applied to the extension
+4. **Multiple Groups**: If a user is in multiple groups, they receive the combined permissions from all groups
+5. **Live Updates**: Permissions are applied to both the database/config and the live extension registry
+
+### Usage Example
+
+Given this AD structure:
+- User: `jsmith` 
+- Groups: `CN=Sales,OU=Groups,DC=albl,DC=com`, `CN=Support,OU=Groups,DC=albl,DC=com`
+
+After sync, extension for `jsmith` will have:
+```yaml
+- external_calling: true
+- international_calling: true
+- call_transfer: true
+- call_recording: true
+- call_queues: true
+- call_monitoring: true
+- call_barge: true
+```
+
+### Verification
+
+Check that permissions were applied:
+
+```bash
+# View extension config with permissions
+python scripts/list_extensions_from_db.py --extension 5551234 --verbose
+
+# Or check config.yml directly
+grep -A 15 "number: '5551234'" config.yml
+```
+
+### Flexible Group Matching
+
+The system supports matching groups in two formats:
+1. **Full DN**: `CN=Sales,OU=Groups,DC=albl,DC=com`
+2. **CN only**: `Sales` (short form)
+
+Both formats will match successfully, making configuration easier.
+
+### Best Practices
+
+1. **Use descriptive group names** that clearly indicate their purpose
+2. **Apply principle of least privilege** - only grant necessary permissions
+3. **Document your permission mapping** in configuration comments
+4. **Test with a single user** before rolling out to all users
+5. **Review permissions regularly** as users change roles
+6. **Use AD groups that already exist** in your organization structure
+
+### Logging
+
+When syncing with group permissions enabled, you'll see:
+```
+2025-12-06 10:00:00 - PBX - INFO - Creating extension 5551234 for user jsmith
+2025-12-06 10:00:00 - PBX - INFO - Applied permissions to new extension 5551234: external_calling, international_calling, call_recording
+```
+
+## Future Enhancements
+
+The following features are planned for future implementation:
 
 ## API Reference
 

@@ -174,12 +174,35 @@ integrations:
     use_ssl: true
     auto_provision: true  # Automatically create/update PBX extensions from AD
     deactivate_removed_users: true  # Disable extensions when users are removed from AD
-    # Group mapping for future implementation
-    # group_permissions:
-    #   CN=PBX_Admins,OU=Groups,DC=albl,DC=com:
-    #     - admin
-    #   CN=Sales,OU=Groups,DC=albl,DC=com:
-    #     - external_calling
+    
+    # Group-based permissions: Map AD security groups to PBX permissions
+    # When users are synced, their AD group membership determines their PBX permissions
+    # Supports both full DN and CN-only formats for flexible matching
+    group_permissions:
+      # Admin group - full system privileges
+      CN=PBX_Admins,OU=Groups,DC=albl,DC=com:
+        - admin
+        - manage_extensions
+        - view_cdr
+        - system_config
+      
+      # Sales team - external calling privileges
+      CN=Sales,OU=Groups,DC=albl,DC=com:
+        - external_calling
+        - international_calling
+        - call_transfer
+      
+      # Support team - call management features
+      CN=Support,OU=Groups,DC=albl,DC=com:
+        - call_recording
+        - call_queues
+        - call_monitoring
+      
+      # Executive group - VIP features
+      CN=Executives,OU=Groups,DC=albl,DC=com:
+        - vip_status
+        - priority_routing
+        - executive_conference
   zoom:
     enabled: false
     account_id: ''

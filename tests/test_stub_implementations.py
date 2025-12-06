@@ -406,6 +406,73 @@ def test_database_backend():
     print("✓ Database backend works")
 
 
+def test_ad_group_permissions_mapping():
+    """Test Active Directory group-based permissions mapping"""
+    print("Testing AD group permissions mapping...")
+    
+    from pbx.integrations.active_directory import ActiveDirectoryIntegration
+    
+    # Test configuration with group permissions
+    ad_config = {
+        'integrations.active_directory.enabled': False,  # Disabled for unit test
+        'integrations.active_directory.server': 'ldap://test.local',
+        'integrations.active_directory.base_dn': 'DC=test,DC=local',
+        'integrations.active_directory.group_permissions': {
+            'CN=PBX_Admins,OU=Groups,DC=test,DC=local': ['admin', 'manage_extensions', 'view_cdr'],
+            'CN=Sales,OU=Groups,DC=test,DC=local': ['external_calling', 'international_calling'],
+            'CN=Support,OU=Groups,DC=test,DC=local': ['call_recording', 'call_queues'],
+            'CN=Executives,OU=Groups,DC=test,DC=local': ['vip_status', 'priority_routing'],
+        }
+    }
+    
+    ad = ActiveDirectoryIntegration(ad_config)
+    
+    # Test case 1: User in admin group
+    user_groups = ['CN=PBX_Admins,OU=Groups,DC=test,DC=local', 'CN=Domain Users,OU=Groups,DC=test,DC=local']
+    permissions = ad._map_groups_to_permissions(user_groups)
+    assert permissions.get('admin') == True, "Admin permission should be granted"
+    assert permissions.get('manage_extensions') == True, "Manage extensions permission should be granted"
+    assert permissions.get('view_cdr') == True, "View CDR permission should be granted"
+    assert 'external_calling' not in permissions, "External calling should not be granted"
+    
+    # Test case 2: User in multiple groups
+    user_groups = ['CN=Sales,OU=Groups,DC=test,DC=local', 'CN=Support,OU=Groups,DC=test,DC=local']
+    permissions = ad._map_groups_to_permissions(user_groups)
+    assert permissions.get('external_calling') == True, "External calling should be granted"
+    assert permissions.get('international_calling') == True, "International calling should be granted"
+    assert permissions.get('call_recording') == True, "Call recording should be granted"
+    assert permissions.get('call_queues') == True, "Call queues should be granted"
+    assert 'admin' not in permissions, "Admin permission should not be granted"
+    
+    # Test case 3: User with no matching groups
+    user_groups = ['CN=HR,OU=Groups,DC=test,DC=local', 'CN=Finance,OU=Groups,DC=test,DC=local']
+    permissions = ad._map_groups_to_permissions(user_groups)
+    assert len(permissions) == 0, "No permissions should be granted for non-configured groups"
+    
+    # Test case 4: User with CN-only group names (short format)
+    user_groups = ['Sales', 'Executives']  # Short format without full DN
+    permissions = ad._map_groups_to_permissions(user_groups)
+    assert permissions.get('external_calling') == True, "Should match by CN short name"
+    assert permissions.get('vip_status') == True, "Should match by CN short name"
+    
+    # Test case 5: Empty group list
+    user_groups = []
+    permissions = ad._map_groups_to_permissions(user_groups)
+    assert len(permissions) == 0, "No permissions for empty group list"
+    
+    # Test case 6: No group permissions configured
+    ad_no_perms = ActiveDirectoryIntegration({
+        'integrations.active_directory.enabled': False,
+        'integrations.active_directory.server': 'ldap://test.local',
+        'integrations.active_directory.base_dn': 'DC=test,DC=local'
+    })
+    user_groups = ['CN=Sales,OU=Groups,DC=test,DC=local']
+    permissions = ad_no_perms._map_groups_to_permissions(user_groups)
+    assert len(permissions) == 0, "No permissions when group_permissions not configured"
+    
+    print("✓ AD group permissions mapping works correctly")
+
+
 def run_all_tests():
     """Run all tests"""
     print("=" * 60)
@@ -421,6 +488,7 @@ def run_all_tests():
         test_integration_stubs,
         test_new_integration_implementations,
         test_database_backend,
+        test_ad_group_permissions_mapping,
     ]
     
     passed = 0
