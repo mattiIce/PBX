@@ -22,7 +22,7 @@ api:
   port: 8080
   enable_cors: true
 database:
-  type: sqlite  # Use sqlite by default (change to postgresql for production)
+  type: postgresql  # Use sqlite by default (change to postgresql for production)
   # PostgreSQL configuration (used when type: postgresql)
   # Environment variables are used with defaults - customize in .env file if needed
   # Defaults: DB_HOST=localhost, DB_PORT=5432, DB_NAME=pbx_system, DB_USER=pbx_user
