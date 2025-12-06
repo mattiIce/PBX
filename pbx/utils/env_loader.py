@@ -14,6 +14,20 @@ class EnvironmentLoader:
     # Pattern to match ${VAR_NAME} or $VAR_NAME in config values
     ENV_VAR_PATTERN = re.compile(r'\$\{([A-Z0-9_]+)\}|\$([A-Z0-9_]+)')
     
+    # Default values for common environment variables
+    # These are used when the environment variable is not set
+    DEFAULT_VALUES = {
+        'DB_HOST': 'localhost',
+        'DB_PORT': '5432',
+        'DB_NAME': 'pbx_system',
+        'DB_USER': 'pbx_user',
+        # DB_PASSWORD has no default - must be explicitly set for PostgreSQL
+        'SMTP_HOST': '',  # Empty default - set in .env if using email notifications
+        'SMTP_PORT': '587',
+        'SMTP_USERNAME': '',  # Empty default - set in .env if using email notifications
+        # SMTP_PASSWORD has no default - must be explicitly set if using email
+    }
+    
     def __init__(self):
         """Initialize environment loader"""
         self.logger = get_logger()
@@ -46,14 +60,21 @@ class EnvironmentLoader:
             env_value = os.environ.get(var_name)
             
             if env_value is None:
+                # Try to use provided default first
                 if default is not None:
                     env_value = str(default)
                     self.logger.warning(
-                        f"Environment variable {var_name} not found, using default value"
+                        f"Environment variable {var_name} not found, using provided default"
+                    )
+                # Fall back to class-level defaults
+                elif var_name in self.DEFAULT_VALUES:
+                    env_value = self.DEFAULT_VALUES[var_name]
+                    self.logger.info(
+                        f"Environment variable {var_name} not set, using default value"
                     )
                 else:
                     self.logger.error(
-                        f"Environment variable {var_name} not found and no default provided"
+                        f"Environment variable {var_name} not found and no default available"
                     )
                     # Return original value if env var not found
                     continue
