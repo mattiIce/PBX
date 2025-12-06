@@ -62,7 +62,7 @@ The system now includes **FIPS 140-2 compliant encryption** for organizations re
 #### FIPS-Approved Algorithms
 - **AES-256-GCM** (FIPS 197) - Symmetric encryption
 - **SHA-256** (FIPS 180-4) - Cryptographic hashing
-- **PBKDF2-HMAC-SHA256** (NIST SP 800-132) - Password-based key derivation
+- **PBKDF2-HMAC-SHA256** (NIST SP 800-132) - Password-based key derivation with 600,000 iterations (OWASP 2024 recommendation)
 - **TLS 1.2/1.3** with FIPS-approved cipher suites
 - **SRTP** with AES-GCM for encrypted media
 
@@ -116,12 +116,16 @@ for ext in pbx.extension_registry.get_all():
         pbx.extension_registry.hash_extension_password(ext.number, password)
 ```
 
+### Enhanced Security (2024 Update)
+
+The system now uses **600,000 iterations** for PBKDF2-HMAC-SHA256 key derivation, increased from 100,000. This aligns with OWASP 2024 recommendations and provides significantly enhanced protection against modern GPU-based password cracking attacks. While this increases authentication time from ~100ms to ~600ms per login, it substantially improves security without impacting user experience in typical PBX scenarios.
+
 ### Deployment Security Checklist
 
 #### Essential Security
 - [ ] **Enable FIPS mode** (`fips_mode: true` in config.yml)
 - [ ] Change all default passwords
-- [ ] Migrate passwords to FIPS-compliant hashed format
+- [ ] Migrate passwords to FIPS-compliant hashed format (uses 600,000 iterations automatically)
 - [ ] Configure firewall rules
 - [ ] Use strong, unique passwords for all extensions (min 12 characters)
 - [ ] Enable authentication requirement

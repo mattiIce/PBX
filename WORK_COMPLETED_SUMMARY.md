@@ -111,7 +111,7 @@ Implemented comprehensive, enterprise-grade security features with **FIPS 140-2 
   - PBKDF2-HMAC-SHA256 (password hashing)
   - AES-256-GCM (data encryption)
   - SHA-256 (checksums)
-- ✅ 100,000 iterations for key derivation (NIST recommended)
+- ✅ 600,000 iterations for key derivation (OWASP 2024 recommendation, enhanced from 100,000)
 
 #### Validation
 ```bash

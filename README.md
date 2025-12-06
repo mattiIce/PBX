@@ -51,7 +51,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **TLS/SIPS** - Encrypted SIP signaling
 - **SRTP** - Encrypted media streams
 - **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
-- **Password Security** - PBKDF2-HMAC-SHA256 hashing with 100,000 iterations
+- **Password Security** - PBKDF2-HMAC-SHA256 hashing with 600,000 iterations (OWASP 2024 recommendation)
 
 ## 📋 Requirements
 
