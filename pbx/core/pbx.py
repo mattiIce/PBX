@@ -1170,7 +1170,11 @@ class PBXCore:
                         
                         # Transfer the call using existing transfer_call method
                         if call_id:
-                            self.transfer_call(call_id, destination)
+                            success = self.transfer_call(call_id, destination)
+                            if not success:
+                                self.logger.warning(f"Failed to transfer call {call_id} to {destination}")
+                        else:
+                            self.logger.warning("Cannot transfer call: no call_id available")
                         session_active = False
                         
                     elif action == 'play':
@@ -1195,7 +1199,9 @@ class PBXCore:
                     destination = result.get('destination')
                     self.logger.info(f"Auto attendant timeout, transferring to {destination}")
                     if call_id:
-                        self.transfer_call(call_id, destination)
+                        success = self.transfer_call(call_id, destination)
+                        if not success:
+                            self.logger.warning(f"Failed to transfer call {call_id} to {destination} on timeout")
             
             # Clean up
             player.stop()

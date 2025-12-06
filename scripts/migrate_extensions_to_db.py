@@ -133,7 +133,10 @@ def main():
         if not args.dry_run:
             # Note: Passwords from config.yml are stored as-is during migration
             # The authentication system handles password verification
-            # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
+            # NOTE: For production, use FIPS-compliant hashing:
+            #   from pbx.utils.encryption import FIPSEncryption
+            #   encryption = FIPSEncryption(fips_mode=True)
+            #   password_hash, salt = encryption.hash_password(password)
             # Currently storing plain password; system supports both plain and hashed passwords
             password_hash = password
             

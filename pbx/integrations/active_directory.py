@@ -355,6 +355,8 @@ class ActiveDirectoryIntegration:
                     
                     # NOTE: Future enhancement - Map AD groups to PBX roles/permissions
                     # Implementation requires role-based access control (RBAC) system
+                    # Note: Groups are already retrieved in authenticate_user() for authentication
+                    # This TODO is for extending that to map groups to PBX-specific permissions
                     # Uncomment when RBAC is implemented:
                     # groups = [str(g) for g in entry.memberOf] if hasattr(entry, 'memberOf') else []
                     # Map groups to roles based on configuration
