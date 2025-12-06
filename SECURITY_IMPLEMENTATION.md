@@ -116,7 +116,7 @@ The system enforces strong password requirements:
 
 - **Never stored in plaintext**
 - **Unique random salt** for each password (32 bytes)
-- **100,000 iterations** for key derivation
+- **600,000 iterations** for key derivation (OWASP 2024 recommendation)
 - **Base64 encoding** for database storage
 - **Constant-time comparison** to prevent timing attacks
 
@@ -424,7 +424,7 @@ CREATE TABLE extensions (
 ### Benefits
 
 - ✓ **Rainbow table attacks prevented** (unique salts)
-- ✓ **Brute force attacks slowed** (100,000 iterations)
+- ✓ **Brute force attacks slowed** (600,000 iterations, enhanced from 100,000 for modern security)
 - ✓ **Password age tracking** (for rotation policies)
 - ✓ **Account lockout support** (automatic brute force protection)
 
