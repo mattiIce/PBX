@@ -53,6 +53,13 @@ For developers working on or extending the PBX:
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Testing procedures and guidelines
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - REST API reference for custom integrations
 
+## Troubleshooting
+
+Common issues and solutions:
+
+- **[FIXING_YAML_MERGE_CONFLICTS.md](FIXING_YAML_MERGE_CONFLICTS.md)** - How to resolve Git merge conflicts in config.yml
+- **[TROUBLESHOOTING_PROVISIONING.md](TROUBLESHOOTING_PROVISIONING.md)** - Phone provisioning troubleshooting
+
 ## Quick Reference
 
 ### Essential Files
