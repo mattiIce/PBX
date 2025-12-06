@@ -24,11 +24,14 @@ api:
 database:
   type: sqlite  # Use sqlite by default (change to postgresql for production)
   # PostgreSQL configuration (used when type: postgresql)
-  host: localhost  # Override with ${DB_HOST} environment variable
-  port: 5432  # Override with ${DB_PORT} environment variable
-  name: pbx_system  # Override with ${DB_NAME} environment variable
-  user: pbx_user  # Override with ${DB_USER} environment variable
-  password: ''  # REQUIRED in production: Set ${DB_PASSWORD} in .env file
+  # Environment variables are used with defaults - customize in .env file if needed
+  # Defaults: DB_HOST=localhost, DB_PORT=5432, DB_NAME=pbx_system, DB_USER=pbx_user
+  # DB_PASSWORD has no default and MUST be set in .env file for PostgreSQL
+  host: ${DB_HOST}  # Database host (default: localhost)
+  port: ${DB_PORT}  # Database port (default: 5432)
+  name: ${DB_NAME}  # Database name (default: pbx_system)
+  user: ${DB_USER}  # Database user (default: pbx_user)
+  password: ${DB_PASSWORD}  # Database password (REQUIRED: set in .env file for PostgreSQL)
   # SQLite configuration (used when type: sqlite)
   path: pbx.db  # SQLite database file path
 extensions:
@@ -84,11 +87,11 @@ voicemail:
   email_notifications: true
   no_answer_timeout: 30
   smtp:
-    host: 192.168.1.75
-    port: 587
+    host: ${SMTP_HOST}  # SMTP server - set in .env file (example: smtp.gmail.com)
+    port: ${SMTP_PORT}  # SMTP port (default: 587)
     use_tls: true
-    username: 'cmattinson'  # SECURITY: Use environment variable SMTP_USERNAME in production
-    password: 'G0N@vyBuyC@n3$'  # SECURITY: Use environment variable SMTP_PASSWORD in production
+    username: ${SMTP_USERNAME}  # SMTP username - set in .env file
+    password: ${SMTP_PASSWORD}  # SMTP password - set in .env file
   email:
     from_address: 'Voicemail@albl.com'
     from_name: ABCo Voicemail
