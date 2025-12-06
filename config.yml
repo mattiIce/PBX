@@ -56,6 +56,7 @@ dialplan:
   voicemail_pattern: ^\*[0-9]{3}$
   parking_pattern: ^7[0-9]$
   queue_pattern: ^8[0-9]{3}$
+  auto_attendant_pattern: ^0$
 features:
   call_recording: true
   call_transfer: true
@@ -66,6 +67,7 @@ features:
   call_queues: true
   presence: true
   music_on_hold: true
+  auto_attendant: true
   max_call_duration: 7200
 recording:
   auto_record: false
@@ -116,6 +118,26 @@ presence:
 music_on_hold:
   directory: moh
   default_class: default
+auto_attendant:
+  enabled: true
+  extension: '0'
+  timeout: 10
+  max_retries: 3
+  operator_extension: '1001'
+  audio_path: 'auto_attendant'
+  menu_options:
+    - digit: '1'
+      destination: '8001'
+      description: 'Sales Queue'
+    - digit: '2'
+      destination: '8002'
+      description: 'Support Queue'
+    - digit: '3'
+      destination: '1003'
+      description: 'Accounting'
+    - digit: '0'
+      destination: '1001'
+      description: 'Operator'
 logging:
   level: INFO
   file: logs/pbx.log

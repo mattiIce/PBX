@@ -272,6 +272,22 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
             # Cheerful ascending tones
             (600, 150), (750, 150), (900, 200),
         ],
+        'auto_attendant_welcome': [
+            # Welcoming ascending tones
+            (500, 250), (650, 250), (800, 250), (950, 350),
+        ],
+        'auto_attendant_menu': [
+            # Menu option tones - distinctive pattern
+            (700, 200), (0, 100), (800, 200), (0, 100), (700, 200), (0, 100), (900, 300),
+        ],
+        'timeout': [
+            # Warning tone for timeout
+            (400, 300), (0, 150), (400, 300),
+        ],
+        'transferring': [
+            # Success tone for transfer
+            (800, 150), (1000, 150), (1200, 200),
+        ],
     }
     
     sequence = tone_sequences.get(prompt_type, [(800, 300)])  # Default tone

@@ -98,6 +98,14 @@ class PBXCore:
         self.cdr_system = CDRSystem()
         self.moh_system = MusicOnHold()
         self.trunk_system = SIPTrunkSystem()
+        
+        # Initialize auto attendant if enabled
+        if self.config.get('features.auto_attendant', False):
+            from pbx.features.auto_attendant import AutoAttendant
+            self.auto_attendant = AutoAttendant(self.config, self)
+            self.logger.info(f"Auto Attendant initialized on extension {self.auto_attendant.get_extension()}")
+        else:
+            self.auto_attendant = None
 
         # Initialize phone provisioning if enabled
         if self.config.get('provisioning.enabled', False):
@@ -364,6 +372,10 @@ class PBXCore:
         from_ext = from_match.group(1)
         to_ext = to_match.group(1)
 
+        # Check if this is an auto attendant call (extension 0)
+        if self.auto_attendant and to_ext == self.auto_attendant.get_extension():
+            return self._handle_auto_attendant(from_ext, to_ext, call_id, message, from_addr)
+        
         # Check if this is a voicemail access call (*xxxx pattern)
         # Validate format: must be * followed by exactly 3 or 4 digits
         if to_ext.startswith('*') and len(to_ext) >= 4 and len(to_ext) <= 5 and to_ext[1:].isdigit():
@@ -944,6 +956,255 @@ class PBXCore:
 
         # End the call
         self.end_call(call_id)
+
+    def _handle_auto_attendant(self, from_ext, to_ext, call_id, message, from_addr):
+        """
+        Handle auto attendant calls (extension 0)
+        
+        Args:
+            from_ext: Calling extension
+            to_ext: Destination (auto attendant extension, typically '0')
+            call_id: Call ID
+            message: SIP INVITE message
+            from_addr: Caller address
+            
+        Returns:
+            True if call was handled
+        """
+        from pbx.sip.sdp import SDPSession, SDPBuilder
+        from pbx.sip.message import SIPMessageBuilder
+        from pbx.rtp.handler import RTPPlayer
+        
+        self.logger.info(f"Auto attendant call: {from_ext} -> {to_ext}")
+        
+        # Parse SDP from caller's INVITE
+        caller_sdp = None
+        if message.body:
+            caller_sdp_obj = SDPSession()
+            caller_sdp_obj.parse(message.body)
+            caller_sdp = caller_sdp_obj.get_audio_info()
+        
+        # Create call for auto attendant
+        call = self.call_manager.create_call(call_id, from_ext, to_ext)
+        call.start()
+        call.original_invite = message
+        call.caller_addr = from_addr
+        call.caller_rtp = caller_sdp
+        call.auto_attendant_active = True
+        
+        # Allocate RTP ports
+        rtp_ports = self.rtp_relay.allocate_relay(call_id)
+        if rtp_ports:
+            call.rtp_ports = rtp_ports
+        else:
+            self.logger.error(f"Failed to allocate RTP ports for auto attendant {call_id}")
+            return False
+        
+        # Answer the call
+        server_ip = self._get_server_ip()
+        
+        # Build SDP for answering
+        aa_sdp = SDPBuilder.build_audio_sdp(
+            server_ip,
+            call.rtp_ports[0],
+            session_id=call_id
+        )
+        
+        # Send 200 OK to answer the call
+        ok_response = SIPMessageBuilder.build_response(
+            200,
+            "OK",
+            call.original_invite,
+            body=aa_sdp
+        )
+        ok_response.set_header('Content-Type', 'application/sdp')
+        
+        # Build Contact header
+        sip_port = self.config.get('server.sip_port', 5060)
+        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        ok_response.set_header('Contact', contact_uri)
+        
+        # Send to caller
+        self.sip_server._send_message(ok_response.build(), call.caller_addr)
+        self.logger.info(f"Answered auto attendant call {call_id}")
+        
+        # Mark call as connected
+        call.connect()
+        
+        # Start auto attendant session
+        session = self.auto_attendant.start_session(call_id, from_ext)
+        call.aa_session = session
+        
+        # Start auto attendant interaction thread
+        aa_thread = threading.Thread(
+            target=self._auto_attendant_session,
+            args=(call_id, call, session)
+        )
+        aa_thread.daemon = True
+        aa_thread.start()
+        
+        return True
+    
+    def _auto_attendant_session(self, call_id, call, session):
+        """
+        Handle auto attendant session with menu and DTMF input
+        
+        Args:
+            call_id: Call identifier
+            call: Call object
+            session: Auto attendant session
+        """
+        from pbx.rtp.handler import RTPPlayer, RTPDTMFListener
+        from pbx.utils.audio import generate_voice_prompt
+        import time
+        import tempfile
+        import os
+        
+        try:
+            # Wait for RTP to stabilize
+            time.sleep(0.5)
+            
+            if not call.caller_rtp:
+                self.logger.warning(f"No caller RTP info for auto attendant {call_id}")
+                return
+            
+            # Create RTP player for audio prompts
+            player = RTPPlayer(
+                local_port=call.rtp_ports[0] + 1,
+                remote_host=call.caller_rtp['address'],
+                remote_port=call.caller_rtp['port'],
+                call_id=call_id
+            )
+            
+            if not player.start():
+                self.logger.error(f"Failed to start RTP player for auto attendant {call_id}")
+                return
+            
+            # Create DTMF listener
+            dtmf_listener = RTPDTMFListener(call.rtp_ports[0])
+            if not dtmf_listener.start():
+                self.logger.error(f"Failed to start DTMF listener for auto attendant {call_id}")
+                player.stop()
+                return
+            
+            # Play welcome greeting
+            action = session.get('session')
+            audio_file = session.get('file')
+            
+            if audio_file and os.path.exists(audio_file):
+                player.play_file(audio_file)
+            else:
+                # Use generated prompt
+                prompt_data = generate_voice_prompt('auto_attendant_welcome')
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                    temp_file.write(prompt_data)
+                    temp_file_path = temp_file.name
+                try:
+                    player.play_file(temp_file_path)
+                finally:
+                    try:
+                        os.unlink(temp_file_path)
+                    except:
+                        pass
+            
+            time.sleep(0.5)
+            
+            # Play main menu
+            menu_audio = self.auto_attendant._get_audio_file('main_menu')
+            if menu_audio and os.path.exists(menu_audio):
+                player.play_file(menu_audio)
+            else:
+                prompt_data = generate_voice_prompt('auto_attendant_menu')
+                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                    temp_file.write(prompt_data)
+                    temp_file_path = temp_file.name
+                try:
+                    player.play_file(temp_file_path)
+                finally:
+                    try:
+                        os.unlink(temp_file_path)
+                    except:
+                        pass
+            
+            # Main loop - wait for DTMF input
+            session_active = True
+            timeout = self.auto_attendant.timeout
+            start_time = time.time()
+            
+            while session_active and (time.time() - start_time) < timeout:
+                # Check for DTMF input
+                digit = dtmf_listener.get_digit(timeout=1.0)
+                
+                if digit:
+                    self.logger.info(f"Auto attendant received DTMF: {digit}")
+                    
+                    # Handle the input
+                    result = self.auto_attendant.handle_dtmf(session['session'], digit)
+                    action = result.get('action')
+                    
+                    if action == 'transfer':
+                        destination = result.get('destination')
+                        self.logger.info(f"Auto attendant transferring to {destination}")
+                        
+                        # Play transfer message
+                        transfer_audio = self.auto_attendant._get_audio_file('transferring')
+                        if transfer_audio and os.path.exists(transfer_audio):
+                            player.play_file(transfer_audio)
+                        else:
+                            prompt_data = generate_voice_prompt('transferring')
+                            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                temp_file.write(prompt_data)
+                                temp_file_path = temp_file.name
+                            try:
+                                player.play_file(temp_file_path)
+                            finally:
+                                try:
+                                    os.unlink(temp_file_path)
+                                except:
+                                    pass
+                        
+                        time.sleep(0.5)
+                        
+                        # Transfer the call
+                        # TODO: Implement call transfer to destination
+                        # For now, just end the session
+                        session_active = False
+                        
+                    elif action == 'play':
+                        # Play the requested audio
+                        audio_file = result.get('file')
+                        if audio_file and os.path.exists(audio_file):
+                            player.play_file(audio_file)
+                        
+                        # Reset timeout
+                        start_time = time.time()
+                    
+                    # Update session
+                    if 'session' in result:
+                        session['session'] = result['session']
+            
+            # Timeout - handle it
+            if time.time() - start_time >= timeout:
+                result = self.auto_attendant.handle_timeout(session['session'])
+                action = result.get('action')
+                
+                if action == 'transfer':
+                    destination = result.get('destination')
+                    self.logger.info(f"Auto attendant timeout, transferring to {destination}")
+                    # TODO: Implement transfer
+            
+            # Clean up
+            player.stop()
+            dtmf_listener.stop()
+            
+        except Exception as e:
+            self.logger.error(f"Error in auto attendant session: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+        finally:
+            # End the call
+            time.sleep(1)
+            self.end_call(call_id)
 
     def _handle_voicemail_access(self, from_ext, to_ext, call_id, message, from_addr):
         """
