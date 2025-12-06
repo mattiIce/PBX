@@ -14,6 +14,14 @@ cryptography>=41.0.0
 # - pydub (Audio manipulation)
 # - sounddevice (Audio I/O)
 
+# For voice prompt generation (optional):
+# System packages required: espeak, ffmpeg
+#   sudo apt-get install espeak ffmpeg
+# Python packages for cloud TTS (optional):
+# - gTTS (Google Text-to-Speech, requires internet)
+# - pyttsx3 (Offline TTS)
+# - pydub (Audio conversion)
+
 # For database backend:
 # - sqlalchemy (ORM)
 psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
