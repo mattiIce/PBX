@@ -92,13 +92,25 @@ python scripts/verify_database.py
 
 See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for detailed database setup.
 
-4. Configure the system:
+4. Set up environment variables:
+```bash
+# Interactive setup (recommended)
+python scripts/setup_env.py
+
+# Or copy and edit manually
+cp .env.example .env
+nano .env
+```
+
+See [ENV_SETUP_GUIDE.md](ENV_SETUP_GUIDE.md) for detailed instructions on configuring credentials.
+
+5. Configure the system:
 ```bash
 # Edit config.yml with your settings
 nano config.yml
 ```
 
-5. Start the PBX:
+6. Start the PBX:
 ```bash
 python main.py
 ```

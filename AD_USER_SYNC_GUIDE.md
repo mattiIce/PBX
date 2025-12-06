@@ -21,9 +21,49 @@ Ensure `ldap3` library is installed:
 pip install ldap3
 ```
 
-### 2. Configure Active Directory Integration
+### 2. Configure Active Directory Credentials
 
-Edit `config.yml` and configure the `integrations.active_directory` section:
+**IMPORTANT**: The system uses environment variables to securely store sensitive credentials.
+
+#### Option A: Interactive Setup (Recommended)
+
+Use the interactive setup script to configure your credentials:
+
+```bash
+python scripts/setup_env.py
+```
+
+This script will:
+- Guide you through setting up the `.env` file
+- Create the file in the correct location (project root directory)
+- Help you set the AD password and other credentials
+- Validate that required fields are set
+
+Choose "Quick setup" (option 2) to configure only the required AD password.
+
+📖 **For complete instructions, see [ENV_SETUP_GUIDE.md](ENV_SETUP_GUIDE.md)**
+
+#### Option B: Manual Setup
+
+Copy the example file and edit it:
+
+```bash
+cp .env.example .env
+nano .env  # or use your preferred editor
+```
+
+Set the AD password:
+
+```bash
+# Active Directory credentials
+AD_BIND_PASSWORD=YourActualPassword
+```
+
+**Note**: The `.env` file is located in the project root directory and is automatically ignored by Git.
+
+#### Verify config.yml settings
+
+The `config.yml` file is already configured to use the environment variable. Verify these settings:
 
 ```yaml
 integrations:
@@ -33,11 +73,13 @@ integrations:
     base_dn: DC=albl,DC=com  # Your domain's base DN
     user_search_base: CN=Users,DC=albl,DC=com  # Where to search for users
     bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com  # Service account DN
-    bind_password: YourPassword  # Service account password
+    bind_password: ${AD_BIND_PASSWORD}  # Loaded from .env file
     use_ssl: true  # Use SSL/TLS (recommended)
     auto_provision: true  # Enable automatic user provisioning
     deactivate_removed_users: true  # Disable extensions for removed users
 ```
+
+**How it works**: When the system starts, it reads the `.env` file and replaces `${AD_BIND_PASSWORD}` in the config with the actual password from the environment variable.
 
 ### 3. Security Considerations
 
@@ -589,7 +631,7 @@ integrations:
     
     # Service account credentials
     bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com
-    bind_password: Q1g0ng248!
+    bind_password: ${AD_BIND_PASSWORD}  # Set in .env file
     
     # Use SSL/TLS (recommended)
     use_ssl: true

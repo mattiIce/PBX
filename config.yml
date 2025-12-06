@@ -202,10 +202,9 @@ integrations:
     base_dn: DC=albl,DC=com
     user_search_base: CN=Users,DC=albl,DC=com
     bind_dn: CN=Administrator,CN=Users,DC=albl,DC=com
-    # SECURITY: Use environment variable for password in production
-    # Set AD_BIND_PASSWORD in .env file
-    # For testing/development, you can use a placeholder (change in production!)
-    bind_password: ''  # Set ${AD_BIND_PASSWORD} in .env for production
+    # SECURITY: Password is loaded from environment variable
+    # Set AD_BIND_PASSWORD in .env file (see .env.example for template)
+    bind_password: ${AD_BIND_PASSWORD}
     use_ssl: true
     auto_provision: true  # Automatically create/update PBX extensions from AD
     deactivate_removed_users: true  # Disable extensions when users are removed from AD
