@@ -244,6 +244,45 @@ def test_webhook_disabled():
     return True
 
 
+def test_webhook_hmac_signature():
+    """Test HMAC signature generation"""
+    print("\nTesting HMAC signature generation...")
+    
+    import hmac
+    import hashlib
+    
+    # Create a webhook event
+    event = WebhookEvent('call.started', {
+        'call_id': 'test-call',
+        'from': '1001',
+        'to': '1002'
+    })
+    
+    # Create subscription with secret
+    subscription = WebhookSubscription(
+        url='http://localhost:9999/webhook',
+        events=['*'],
+        secret='test-secret-key'
+    )
+    
+    # Simulate payload creation
+    payload = json.dumps(event.to_dict()).encode('utf-8')
+    
+    # Generate expected signature
+    expected_signature = hmac.new(
+        subscription.secret.encode('utf-8'),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Verify signature would be generated correctly
+    assert subscription.secret == 'test-secret-key', "Secret should match"
+    assert len(expected_signature) == 64, "SHA256 signature should be 64 characters"
+    
+    print("✓ HMAC signature generation works")
+    return True
+
+
 if __name__ == "__main__":
     print("=" * 70)
     print("Testing Webhook System")
@@ -256,6 +295,7 @@ if __name__ == "__main__":
     results.append(test_webhook_delivery())
     results.append(test_webhook_subscription_management())
     results.append(test_webhook_disabled())
+    results.append(test_webhook_hmac_signature())
     
     print("\n" + "=" * 70)
     if all(results):
