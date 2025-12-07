@@ -154,6 +154,10 @@ class PBXCore:
         else:
             self.paging_system = None
 
+        # Initialize webhook system
+        from pbx.features.webhooks import WebhookSystem
+        self.webhook_system = WebhookSystem(self.config)
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)
@@ -306,6 +310,16 @@ class PBXCore:
                         self.logger.error(f"  Contact URI: {contact}")
                         self.logger.error(f"  Traceback: {traceback.format_exc()}")
                 
+                # Trigger webhook event
+                from pbx.features.webhooks import WebhookEvent
+                self.webhook_system.trigger_event(WebhookEvent.EXTENSION_REGISTERED, {
+                    'extension': extension_number,
+                    'ip_address': addr[0],
+                    'port': addr[1],
+                    'user_agent': user_agent,
+                    'timestamp': datetime.now().isoformat()
+                })
+                
                 return True
             else:
                 self.logger.warning(f"Unknown extension {extension_number} attempted registration")
@@ -425,6 +439,15 @@ class PBXCore:
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
         call.start()
         call.original_invite = message  # Store original INVITE for later response
+        
+        # Trigger webhook event
+        from pbx.features.webhooks import WebhookEvent
+        self.webhook_system.trigger_event(WebhookEvent.CALL_STARTED, {
+            'call_id': call_id,
+            'from_extension': from_ext,
+            'to_extension': to_ext,
+            'timestamp': call.start_time.isoformat() if call.start_time else None
+        })
 
         # Allocate RTP relay
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
