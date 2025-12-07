@@ -26,6 +26,9 @@ cryptography>=41.0.0
 # - sqlalchemy (ORM)
 psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
 
+# For FIDO2/WebAuthn authentication
+fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
+
 # For web interface:
 # - flask or fastapi (Web framework)
 # - websockets (Real-time updates)

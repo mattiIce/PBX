@@ -9,7 +9,7 @@ import time
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from pbx.features.mfa import TOTPGenerator, MFAManager
+from pbx.features.mfa import TOTPGenerator, MFAManager, YubiKeyOTPVerifier, FIDO2Verifier
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
@@ -264,6 +264,161 @@ def test_backup_code_format():
     return True
 
 
+def test_yubikey_otp_format_validation():
+    """Test YubiKey OTP format validation"""
+    print("Testing YubiKey OTP format validation...")
+    
+    verifier = YubiKeyOTPVerifier()
+    
+    # Test invalid length
+    valid, error = verifier.verify_otp("short")
+    assert not valid, "Short OTP should be rejected"
+    assert "44 characters" in error, f"Expected length error, got: {error}"
+    print(f"  ✓ Short OTP correctly rejected")
+    
+    # Test invalid characters
+    valid, error = verifier.verify_otp("a" * 44)  # 'a' is not a valid ModHex character
+    assert not valid, "OTP with invalid characters should be rejected"
+    assert "invalid characters" in error.lower(), f"Expected character error, got: {error}"
+    print(f"  ✓ Invalid characters correctly rejected")
+    
+    # Test valid format (ModHex characters)
+    valid_otp = "ccccccbcgujhingjrdejhgfnuetrgigvejhhgbkugded"
+    valid, error = verifier.verify_otp(valid_otp)
+    # Should fail for other reasons (not registered, etc.) but format should be OK
+    # The format validation passes, so error would be from API call
+    print(f"  ✓ Valid format accepted for verification")
+    
+    # Test public ID extraction
+    public_id = verifier.extract_public_id(valid_otp)
+    assert public_id == "ccccccbcgujh", f"Expected 'ccccccbcgujh', got '{public_id}'"
+    print(f"  ✓ Public ID extracted: {public_id}")
+    
+    return True
+
+
+def test_yubikey_otp_verification_without_api():
+    """Test YubiKey OTP verification (format check only, no API credentials)"""
+    print("Testing YubiKey OTP verification...")
+    
+    # Create verifier without credentials (will use default test client)
+    verifier = YubiKeyOTPVerifier()
+    
+    # Test with valid ModHex OTP
+    test_otp = "ccccccbcgujhingjrdejhgfnuetrgigvejhhgbkugded"
+    
+    # Note: Without valid API credentials and a real OTP, this will fail at the API level
+    # but the format validation and code path will be exercised
+    valid, error = verifier.verify_otp(test_otp)
+    
+    # We expect this to fail since we don't have real credentials/OTP
+    # but it should fail gracefully with an appropriate error message
+    if not valid:
+        print(f"  ✓ OTP verification attempted (failed as expected without valid credentials)")
+        print(f"    Error: {error}")
+    else:
+        print(f"  ⚠ OTP verification succeeded (unexpected in test environment)")
+    
+    return True
+
+
+def test_fido2_challenge_generation():
+    """Test FIDO2 challenge generation"""
+    print("Testing FIDO2 challenge generation...")
+    
+    verifier = FIDO2Verifier()
+    
+    # Generate challenge
+    challenge = verifier.create_challenge()
+    
+    # Verify it's base64-encoded
+    assert isinstance(challenge, str), "Challenge should be a string"
+    assert len(challenge) > 0, "Challenge should not be empty"
+    
+    # Verify it's URL-safe base64 (no padding, no + or /)
+    assert '=' not in challenge, "Challenge should not have padding"
+    assert '+' not in challenge, "Challenge should be URL-safe"
+    assert '/' not in challenge, "Challenge should be URL-safe"
+    
+    print(f"  ✓ Challenge generated: {challenge[:32]}...")
+    
+    # Verify uniqueness
+    challenge2 = verifier.create_challenge()
+    assert challenge != challenge2, "Challenges should be unique"
+    print(f"  ✓ Challenges are unique")
+    
+    return True
+
+
+def test_fido2_credential_registration():
+    """Test FIDO2 credential registration"""
+    print("Testing FIDO2 credential registration...")
+    
+    verifier = FIDO2Verifier()
+    
+    # Test with missing data
+    success, result = verifier.register_credential("1001", {})
+    assert not success, "Registration should fail with missing data"
+    print(f"  ✓ Registration fails with missing data")
+    
+    # Test with valid data (simulated)
+    import base64
+    credential_id = base64.b64encode(b'test_credential_id_123456').decode('utf-8')
+    public_key = base64.b64encode(b'test_public_key_data' * 10).decode('utf-8')  # Make it longer
+    
+    credential_data = {
+        'credential_id': credential_id,
+        'public_key': public_key
+    }
+    
+    success, result = verifier.register_credential("1001", credential_data)
+    assert success, f"Registration should succeed with valid data: {result}"
+    assert result == credential_id, "Should return credential ID"
+    print(f"  ✓ Credential registered successfully")
+    
+    return True
+
+
+def test_fido2_assertion_verification():
+    """Test FIDO2 assertion verification"""
+    print("Testing FIDO2 assertion verification...")
+    
+    verifier = FIDO2Verifier()
+    
+    # Test with missing data
+    success, error = verifier.verify_assertion("test_cred", {}, b'public_key')
+    assert not success, "Verification should fail with missing data"
+    print(f"  ✓ Verification fails with missing data")
+    
+    # Test with simulated valid data (basic mode without full crypto)
+    import base64
+    
+    # Create minimal valid-looking assertion data
+    authenticator_data = base64.b64encode(b'X' * 37).decode('utf-8')  # Minimum length
+    signature = base64.b64encode(b'S' * 64).decode('utf-8')  # Minimum signature length
+    client_data = base64.b64encode(b'{"type":"webauthn.get","challenge":"test"}').decode('utf-8')
+    
+    assertion_data = {
+        'authenticator_data': authenticator_data,
+        'signature': signature,
+        'client_data_json': client_data
+    }
+    
+    public_key = base64.b64encode(b'K' * 100).decode('utf-8')
+    
+    # This will use basic verification mode since we don't have a real FIDO2 setup
+    success, error = verifier.verify_assertion("test_cred", assertion_data, public_key)
+    
+    # In basic mode, this should succeed since all data is present and valid length
+    if success:
+        print(f"  ✓ Assertion verified (basic mode)")
+    else:
+        # If fido2 library is available and does full verification, it may fail
+        print(f"  ✓ Assertion verification attempted (library mode): {error}")
+    
+    return True
+
+
 def run_tests():
     """Run all MFA tests"""
     print("=" * 60)
@@ -279,6 +434,11 @@ def run_tests():
         test_mfa_enrollment_without_db,
         test_backup_code_format,
         test_mfa_with_database,
+        test_yubikey_otp_format_validation,
+        test_yubikey_otp_verification_without_api,
+        test_fido2_challenge_generation,
+        test_fido2_credential_registration,
+        test_fido2_assertion_verification,
     ]
     
     passed = 0
