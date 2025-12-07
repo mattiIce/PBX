@@ -197,6 +197,17 @@ class PBXCore:
         else:
             self.mfa_manager = None
 
+        # Initialize enhanced threat detection if enabled
+        if self.config.get('security.threat_detection.enabled', True):
+            from pbx.utils.security import get_threat_detector
+            self.threat_detector = get_threat_detector(
+                database=self.database if hasattr(self, 'database') and self.database.enabled else None,
+                config=self.config
+            )
+            self.logger.info("Enhanced threat detection initialized")
+        else:
+            self.threat_detector = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)

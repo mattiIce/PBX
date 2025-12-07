@@ -167,6 +167,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_mfa_enroll_yubikey()
             elif path == '/api/mfa/enroll-fido2':
                 self._handle_mfa_enroll_fido2()
+            elif path == '/api/security/block-ip':
+                self._handle_block_ip()
+            elif path == '/api/security/unblock-ip':
+                self._handle_unblock_ip()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -324,6 +328,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_mfa_status(path)
             elif path.startswith('/api/mfa/methods/'):
                 self._handle_get_mfa_methods(path)
+            elif path == '/api/security/threat-summary':
+                self._handle_get_threat_summary()
+            elif path.startswith('/api/security/check-ip/'):
+                self._handle_check_ip(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -2328,6 +2336,90 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'extension': extension,
                 'mfa_enabled': enabled,
                 'mfa_required': self.pbx_core.mfa_manager.required
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_block_ip(self):
+        """Handle IP blocking"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            ip_address = data.get('ip_address')
+            reason = data.get('reason', 'Manual block')
+            duration = data.get('duration')  # Optional, in seconds
+            
+            if not ip_address:
+                self._send_json({'error': 'ip_address is required'}, 400)
+                return
+            
+            self.pbx_core.threat_detector.block_ip(ip_address, reason, duration)
+            
+            self._send_json({
+                'success': True,
+                'message': f'IP {ip_address} blocked successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_unblock_ip(self):
+        """Handle IP unblocking"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            ip_address = data.get('ip_address')
+            
+            if not ip_address:
+                self._send_json({'error': 'ip_address is required'}, 400)
+                return
+            
+            self.pbx_core.threat_detector.unblock_ip(ip_address)
+            
+            self._send_json({
+                'success': True,
+                'message': f'IP {ip_address} unblocked successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_threat_summary(self):
+        """Get threat detection summary"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            # Get hours parameter from query string
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            hours = int(params.get('hours', [24])[0])
+            
+            summary = self.pbx_core.threat_detector.get_threat_summary(hours)
+            
+            self._send_json(summary)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_check_ip(self, path: str):
+        """Check if IP is blocked"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            ip_address = path.split('/')[-1]
+            is_blocked, reason = self.pbx_core.threat_detector.is_ip_blocked(ip_address)
+            
+            self._send_json({
+                'ip_address': ip_address,
+                'is_blocked': is_blocked,
+                'reason': reason
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
