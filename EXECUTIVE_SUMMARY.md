@@ -780,7 +780,7 @@ docker run -d -p 5060:5060/udp -p 8080:8080 pbx-system
 - **IMPLEMENTATION_SUMMARY_DEC_2025.md** (14,218 bytes): December 2025 features (paging, webhooks)
 - **IMPLEMENTATION_SUMMARY_DEC_7_2025.md** (6,782 bytes): WebRTC, CRM, Hot-Desking
 - **STUB_AND_TODO_COMPLETION.md** (13,621 bytes): Completion report
-- **TODO.md** (10,977 bytes): Feature roadmap (69 planned features)
+- **TODO.md** (updated): Feature roadmap (79 features: 9 completed, 18 framework, 52 planned)
 - **DOCUMENTATION_INDEX.md** (5,575 bytes): Document navigation
 
 ### Documentation Quality
@@ -1266,6 +1266,17 @@ With **zero licensing costs**, **comprehensive documentation**, and **production
 ---
 
 ## Revision History
+
+### Version 1.3.1 (December 7, 2025)
+- Updated TODO.md with comprehensive roadmap activity status tracking:
+  - Marked 9 completed features (WebRTC, CRM, Hot-Desking, Presence, Calendar, etc.)
+  - Identified 18 framework features with existing implementations ready for enhancement
+  - Tracked 52 planned features for future development
+  - Added detailed implementation notes for all framework features
+  - Updated priority matrix to reflect completed work
+  - Added progress summary with accurate feature counts
+- Enhanced TODO.md documentation with status indicators and implementation paths
+- Updated TODO.md reference in documentation index to reflect current feature counts
 
 ### Version 1.3.0 (December 7, 2025)
 - Added three major new features to production-ready status:
