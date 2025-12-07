@@ -139,6 +139,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_configure_paging_device()
             elif path == '/api/webhooks':
                 self._handle_add_webhook()
+            elif path == '/api/webrtc/session':
+                self._handle_create_webrtc_session()
+            elif path == '/api/webrtc/offer':
+                self._handle_webrtc_offer()
+            elif path == '/api/webrtc/answer':
+                self._handle_webrtc_answer()
+            elif path == '/api/webrtc/ice-candidate':
+                self._handle_webrtc_ice_candidate()
+            elif path == '/api/webrtc/call':
+                self._handle_webrtc_call()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -276,6 +286,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_active_pages()
             elif path == '/api/webhooks':
                 self._handle_get_webhooks()
+            elif path == '/api/webrtc/sessions':
+                self._handle_get_webrtc_sessions()
+            elif path == '/api/webrtc/ice-servers':
+                self._handle_get_ice_servers()
+            elif path.startswith('/api/webrtc/session/'):
+                self._handle_get_webrtc_session(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -1772,6 +1788,178 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'Webhook subscription not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== WebRTC Handlers ==========
+    
+    def _handle_create_webrtc_session(self):
+        """Create a new WebRTC session"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            
+            if not extension:
+                self._send_json({'error': 'Extension is required'}, 400)
+                return
+            
+            # Verify extension exists
+            if not self.pbx_core.extension_registry.get_extension(extension):
+                self._send_json({'error': 'Extension not found'}, 404)
+                return
+            
+            session = self.pbx_core.webrtc_signaling.create_session(extension)
+            
+            self._send_json({
+                'success': True,
+                'session': session.to_dict(),
+                'ice_servers': self.pbx_core.webrtc_signaling.get_ice_servers_config()
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_offer(self):
+        """Handle WebRTC SDP offer"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            sdp = data.get('sdp')
+            
+            if not session_id or not sdp:
+                self._send_json({'error': 'session_id and sdp are required'}, 400)
+                return
+            
+            success = self.pbx_core.webrtc_signaling.handle_offer(session_id, sdp)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'Offer received'})
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_answer(self):
+        """Handle WebRTC SDP answer"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            sdp = data.get('sdp')
+            
+            if not session_id or not sdp:
+                self._send_json({'error': 'session_id and sdp are required'}, 400)
+                return
+            
+            success = self.pbx_core.webrtc_signaling.handle_answer(session_id, sdp)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'Answer received'})
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_ice_candidate(self):
+        """Handle WebRTC ICE candidate"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            candidate = data.get('candidate')
+            
+            if not session_id or not candidate:
+                self._send_json({'error': 'session_id and candidate are required'}, 400)
+                return
+            
+            success = self.pbx_core.webrtc_signaling.add_ice_candidate(session_id, candidate)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'ICE candidate added'})
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_call(self):
+        """Initiate a call from WebRTC client"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_gateway'):
+            self._send_json({'error': 'WebRTC gateway not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            target_extension = data.get('target_extension')
+            
+            if not session_id or not target_extension:
+                self._send_json({'error': 'session_id and target_extension are required'}, 400)
+                return
+            
+            call_id = self.pbx_core.webrtc_gateway.initiate_call(session_id, target_extension)
+            
+            if call_id:
+                self._send_json({
+                    'success': True,
+                    'call_id': call_id,
+                    'message': f'Call initiated to {target_extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to initiate call'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_webrtc_sessions(self):
+        """Get all WebRTC sessions"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            sessions = self.pbx_core.webrtc_signaling.get_sessions_info()
+            self._send_json(sessions)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_webrtc_session(self, path: str):
+        """Get specific WebRTC session"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            session_id = path.split('/')[-1]
+            session = self.pbx_core.webrtc_signaling.get_session(session_id)
+            
+            if session:
+                self._send_json(session.to_dict())
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_ice_servers(self):
+        """Get ICE servers configuration"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            config = self.pbx_core.webrtc_signaling.get_ice_servers_config()
+            self._send_json(config)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 

@@ -160,6 +160,16 @@ class PBXCore:
         from pbx.features.webhooks import WebhookSystem
         self.webhook_system = WebhookSystem(self.config)
 
+        # Initialize WebRTC if enabled
+        if self.config.get('features.webrtc.enabled', False):
+            from pbx.features.webrtc import WebRTCSignalingServer, WebRTCGateway
+            self.webrtc_signaling = WebRTCSignalingServer(self.config)
+            self.webrtc_gateway = WebRTCGateway(self)
+            self.logger.info("WebRTC browser calling initialized")
+        else:
+            self.webrtc_signaling = None
+            self.webrtc_gateway = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)
