@@ -177,6 +177,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_register_calendar_user()
             elif path == '/api/dnd/override':
                 self._handle_dnd_override()
+            elif path == '/api/skills/skill':
+                self._handle_add_skill()
+            elif path == '/api/skills/assign':
+                self._handle_assign_skill()
+            elif path == '/api/skills/queue-requirements':
+                self._handle_set_queue_requirements()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -247,6 +253,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension from path
                 extension = path.split('/')[-1]
                 self._handle_clear_dnd_override(extension)
+            elif path.startswith('/api/skills/assign/'):
+                # Extract agent_extension/skill_id from path
+                parts = path.split('/')
+                if len(parts) >= 5:
+                    agent_extension = parts[-2]
+                    skill_id = parts[-1]
+                    self._handle_remove_skill_from_agent(agent_extension, skill_id)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -350,6 +365,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_dnd_status(path)
             elif path.startswith('/api/dnd/rules/'):
                 self._handle_get_dnd_rules(path)
+            elif path == '/api/skills/all':
+                self._handle_get_all_skills()
+            elif path.startswith('/api/skills/agent/'):
+                self._handle_get_agent_skills(path)
+            elif path.startswith('/api/skills/queue/'):
+                self._handle_get_queue_requirements(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -2587,6 +2608,155 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({
                 'extension': extension,
                 'rules': rules
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_skill(self):
+        """Handle adding a new skill"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            skill_id = data.get('skill_id')
+            name = data.get('name')
+            description = data.get('description', '')
+            
+            if not skill_id or not name:
+                self._send_json({'error': 'skill_id and name are required'}, 400)
+                return
+            
+            success = self.pbx_core.skills_router.add_skill(skill_id, name, description)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'skill_id': skill_id,
+                    'message': 'Skill added successfully'
+                })
+            else:
+                self._send_json({'error': 'Skill already exists'}, 409)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_assign_skill(self):
+        """Handle assigning skill to agent"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            agent_extension = data.get('agent_extension')
+            skill_id = data.get('skill_id')
+            proficiency = data.get('proficiency', 5)
+            
+            if not agent_extension or not skill_id:
+                self._send_json({'error': 'agent_extension and skill_id are required'}, 400)
+                return
+            
+            success = self.pbx_core.skills_router.assign_skill_to_agent(agent_extension, skill_id, proficiency)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Skill assigned to agent {agent_extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to assign skill'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_remove_skill_from_agent(self, agent_extension: str, skill_id: str):
+        """Handle removing skill from agent"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.skills_router.remove_skill_from_agent(agent_extension, skill_id)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Skill removed from agent {agent_extension}'
+                })
+            else:
+                self._send_json({'error': 'Skill not found for agent'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_set_queue_requirements(self):
+        """Handle setting queue skill requirements"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            queue_number = data.get('queue_number')
+            requirements = data.get('requirements', [])
+            
+            if not queue_number:
+                self._send_json({'error': 'queue_number is required'}, 400)
+                return
+            
+            success = self.pbx_core.skills_router.set_queue_requirements(queue_number, requirements)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Requirements set for queue {queue_number}'
+                })
+            else:
+                self._send_json({'error': 'Failed to set requirements'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_all_skills(self):
+        """Get all skills"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            skills = self.pbx_core.skills_router.get_all_skills()
+            self._send_json({'skills': skills})
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_agent_skills(self, path: str):
+        """Get agent skills"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            agent_extension = path.split('/')[-1]
+            skills = self.pbx_core.skills_router.get_agent_skills(agent_extension)
+            
+            self._send_json({
+                'agent_extension': agent_extension,
+                'skills': skills
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_queue_requirements(self, path: str):
+        """Get queue skill requirements"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            queue_number = path.split('/')[-1]
+            requirements = self.pbx_core.skills_router.get_queue_requirements(queue_number)
+            
+            self._send_json({
+                'queue_number': queue_number,
+                'requirements': requirements
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)

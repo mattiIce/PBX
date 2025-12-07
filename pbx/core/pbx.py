@@ -226,6 +226,17 @@ class PBXCore:
         else:
             self.dnd_scheduler = None
 
+        # Initialize skills-based routing if enabled
+        if self.config.get('features.skills_routing.enabled', False):
+            from pbx.features.skills_routing import get_skills_router
+            self.skills_router = get_skills_router(
+                database=self.database if hasattr(self, 'database') and self.database.enabled else None,
+                config=self.config
+            )
+            self.logger.info("Skills-Based Routing initialized")
+        else:
+            self.skills_router = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)
