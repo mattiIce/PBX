@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PBX Admin Panel</title>
     <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,6 +19,7 @@
 
         <nav class="tabs">
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-button" data-tab="analytics">Analytics</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
             <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
@@ -86,6 +88,95 @@
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Refresh Status</button>
                 <button class="btn btn-success" onclick="showTab('extensions')">➕ Add Extension</button>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <h2>Call Analytics & Statistics</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <label>Time Period: 
+                    <select id="analytics-period" onchange="loadAnalytics()">
+                        <option value="1">Last 24 Hours</option>
+                        <option value="7" selected>Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                    </select>
+                </label>
+                <button class="btn btn-primary" onclick="loadAnalytics()">🔄 Refresh Analytics</button>
+            </div>
+
+            <!-- Overview Stats -->
+            <div class="stats-grid" id="analytics-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="analytics-total-calls">-</div>
+                    <div class="stat-label">Total Calls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="analytics-answered-calls">-</div>
+                    <div class="stat-label">Answered Calls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="analytics-answer-rate">-</div>
+                    <div class="stat-label">Answer Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="analytics-avg-duration">-</div>
+                    <div class="stat-label">Avg Call Duration</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3>Daily Call Trends</h3>
+                    <canvas id="daily-trends-chart"></canvas>
+                </div>
+                
+                <div class="chart-box">
+                    <h3>Hourly Call Distribution</h3>
+                    <canvas id="hourly-distribution-chart"></canvas>
+                </div>
+                
+                <div class="chart-box">
+                    <h3>Call Disposition Breakdown</h3>
+                    <canvas id="disposition-chart"></canvas>
+                </div>
+                
+                <div class="chart-box">
+                    <h3>Call Quality Metrics</h3>
+                    <canvas id="quality-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Callers Table -->
+            <div class="config-section">
+                <h3>Top Callers</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Total Calls</th>
+                                <th>Total Duration (min)</th>
+                                <th>Avg Duration (sec)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-callers-table">
+                            <tr>
+                                <td colspan="4" class="loading">Loading top callers...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Peak Hours -->
+            <div class="config-section">
+                <h3>Peak Call Hours</h3>
+                <div id="peak-hours-display" class="info-box">
+                    Loading peak hours...
+                </div>
             </div>
         </div>
 

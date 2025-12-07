@@ -279,6 +279,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_extensions()
             elif path == '/api/calls':
                 self._handle_get_calls()
+            elif path == '/api/statistics':
+                self._handle_get_statistics()
             elif path == '/api/config':
                 self._handle_get_config()
             elif path == '/api/provisioning/devices':
@@ -397,6 +399,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 <li>GET /api/status - System status</li>
                 <li>GET /api/extensions - List extensions</li>
                 <li>GET /api/calls - List active calls</li>
+                <li>GET /api/statistics?days=7 - Get dashboard statistics and analytics</li>
                 <li>GET /api/provisioning/devices - List provisioned devices</li>
                 <li>GET /api/provisioning/vendors - List supported vendors</li>
                 <li>POST /api/provisioning/devices - Register a device</li>
@@ -445,6 +448,31 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(data)
         else:
             self._send_json({'error': 'PBX not initialized'}, 500)
+
+    def _handle_get_statistics(self):
+        """Get comprehensive statistics for dashboard"""
+        if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                days = int(params.get('days', [7])[0])
+                
+                # Get dashboard statistics
+                stats = self.pbx_core.statistics_engine.get_dashboard_statistics(days)
+                
+                # Add call quality metrics
+                stats['call_quality'] = self.pbx_core.statistics_engine.get_call_quality_metrics()
+                
+                # Add real-time metrics
+                stats['real_time'] = self.pbx_core.statistics_engine.get_real_time_metrics(self.pbx_core)
+                
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting statistics: {e}")
+                self._send_json({'error': f'Error getting statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Statistics engine not initialized'}, 500)
 
     def _handle_get_provisioning_devices(self):
         """Get all provisioned devices"""
