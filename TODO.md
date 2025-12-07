@@ -502,11 +502,11 @@ Features with foundational implementations that can be extended:
 4. ~~Voicemail Transcription~~ - DONE (December 7, 2025)
 
 ### Short-Term (1-3 Months)
-1. Mobile Apps (iOS/Android)
-2. STIR/SHAKEN Support
-3. Opus Codec Support
-4. Call Quality Monitoring (QoS)
-5. Enhanced Dashboard UI (leverage existing API)
+1. Enhanced Dashboard UI (leverage existing API)
+2. Call Quality Monitoring (QoS)
+3. STIR/SHAKEN Support
+4. Opus Codec Support
+5. Mobile Apps (iOS/Android)
 
 ### Medium-Term (3-6 Months)
 1. Emergency Services (E911) Suite
