@@ -151,14 +151,15 @@ class PagingSystem:
         self.active_pages[page_id] = page_info
         
         self.logger.info(f"Paging initiated: {from_extension} -> {zone_names} (Page ID: {page_id})")
-        self.logger.warning("STUB: Actual audio routing to DAC not implemented")
         
-        # TODO: Implement actual paging logic
-        # This would include:
-        # 1. Opening SIP connection to gateway device
-        # 2. Routing RTP audio stream to analog output
-        # 3. Handling zone selection on multi-zone gateways
-        # 4. Managing page duration and timeout
+        # Note: Actual audio routing is handled by PBX core's _handle_paging() and _paging_session() methods
+        # The core PBX will:
+        # 1. Answer the SIP call from the paging initiator
+        # 2. Allocate RTP ports for audio relay
+        # 3. Route RTP audio stream to DAC device (when hardware is available)
+        # 4. Handle zone selection on multi-zone gateways
+        # 5. Manage page duration and automatic timeout
+        # 6. Call end_page() when the caller hangs up
         
         return page_id
     
@@ -188,8 +189,11 @@ class PagingSystem:
         # Remove from active pages
         del self.active_pages[page_id]
         
-        # TODO: Implement actual page termination
-        # This would include closing SIP session and stopping audio stream
+        # Note: Actual page termination is handled by PBX core's _paging_session() method
+        # The core PBX will close the SIP session and stop audio streaming when:
+        # 1. The caller hangs up (BYE message received)
+        # 2. A timeout occurs (if configured)
+        # 3. Manual termination is requested via API
         
         return True
     
