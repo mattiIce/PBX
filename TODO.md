@@ -16,8 +16,8 @@ This document tracks all features from the Executive Summary that are marked as 
 
 ### Overall Status
 - **Total Features Tracked**: 79 features
-- **Completed** ✅: 11 features (14%)
-- **Framework** ⚠️: 16 features (20%)
+- **Completed** ✅: 12 features (15%)
+- **Framework** ⚠️: 15 features (19%)
 - **Planned**: 52 features (66%)
 
 ### Recently Completed (December 2025)
@@ -28,6 +28,7 @@ This document tracks all features from the Executive Summary that are marked as 
 5. **Calendar Integration** - Outlook calendar sync for availability
 6. **Multi-Factor Authentication** - TOTP, YubiKey, FIDO2 support with backup codes
 7. **Enhanced Threat Detection** - IP blocking, pattern analysis, anomaly detection
+8. **DND Scheduling** - Auto-DND based on calendar and time rules
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
@@ -350,11 +351,11 @@ Features with foundational implementations that can be extended:
   - Integration: Microsoft Graph API
   - Impact: Respect user availability during calls
 
-- [⚠️] **Do Not Disturb Scheduling** - Auto-DND based on calendar
-  - Status: Framework exists (presence system + calendar integration)
-  - Current: Manual DND status, calendar availability checking
-  - Needs: Automatic DND based on calendar meetings/events
-  - Impact: Intelligent call handling
+- [x] **Do Not Disturb Scheduling** - Auto-DND based on calendar
+  - Status: ✅ COMPLETED - Full implementation in pbx/features/dnd_scheduling.py
+  - Features: Calendar-based auto-DND, time-based rules, manual override, priority system
+  - API Endpoints: /api/dnd/* (rule management, calendar registration, status)
+  - Impact: Intelligent call handling with automatic presence management
 
 - [ ] **Team Messaging** - Built-in chat platform
   - Requires: Messaging server, client UI
