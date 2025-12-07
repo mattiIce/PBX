@@ -26,6 +26,7 @@ class EnvironmentLoader:
         'SMTP_PORT': '587',
         'SMTP_USERNAME': '',  # Empty default - set in .env if using email notifications
         # SMTP_PASSWORD has no default - must be explicitly set if using email
+        'TRANSCRIPTION_API_KEY': '',  # Empty default - set in .env if using voicemail transcription
     }
     
     def __init__(self):
