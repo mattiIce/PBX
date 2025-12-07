@@ -49,6 +49,9 @@ class PBXCore:
             console=log_config.get('console', True)
         )
         self.logger = get_logger()
+        
+        # Track system start time for uptime calculation
+        self.start_time = datetime.now()
 
         # Initialize database backend
         self.database = DatabaseBackend(self.config)
@@ -100,6 +103,11 @@ class PBXCore:
         self.cdr_system = CDRSystem()
         self.moh_system = MusicOnHold()
         self.trunk_system = SIPTrunkSystem()
+        
+        # Initialize statistics engine for analytics
+        from pbx.features.statistics import StatisticsEngine
+        self.statistics_engine = StatisticsEngine(self.cdr_system)
+        self.logger.info("Statistics and analytics engine initialized")
         
         # Initialize auto attendant if enabled
         if self.config.get('features.auto_attendant', False):

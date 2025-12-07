@@ -47,6 +47,9 @@ function showTab(tabName) {
         case 'dashboard':
             loadDashboard();
             break;
+        case 'analytics':
+            loadAnalytics();
+            break;
         case 'extensions':
             loadExtensions();
             break;
@@ -1386,4 +1389,280 @@ async function reloadTemplates() {
         console.error('Error reloading templates:', error);
         showNotification('Error reloading templates: ' + error.message, 'error');
     }
+}
+
+// ============================================================================
+// Analytics and Statistics Functions
+// ============================================================================
+let analyticsCharts = {};
+
+async function loadAnalytics() {
+    const days = document.getElementById('analytics-period')?.value || 7;
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/statistics?days=${days}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update overview stats
+        updateAnalyticsOverview(data.overview);
+        
+        // Render charts
+        renderDailyTrendsChart(data.daily_trends);
+        renderHourlyDistributionChart(data.hourly_distribution);
+        renderDispositionChart(data.call_disposition);
+        renderQualityChart(data.call_quality);
+        
+        // Update top callers table
+        updateTopCallersTable(data.top_callers);
+        
+        // Update peak hours display
+        updatePeakHours(data.peak_hours);
+        
+        showNotification('Analytics refreshed successfully', 'success');
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        showNotification('Failed to load analytics: ' + error.message, 'error');
+    }
+}
+
+function updateAnalyticsOverview(overview) {
+    document.getElementById('analytics-total-calls').textContent = overview.total_calls || 0;
+    document.getElementById('analytics-answered-calls').textContent = overview.answered_calls || 0;
+    document.getElementById('analytics-answer-rate').textContent = (overview.answer_rate || 0) + '%';
+    document.getElementById('analytics-avg-duration').textContent = (overview.avg_call_duration || 0).toFixed(1) + 's';
+}
+
+function renderDailyTrendsChart(trends) {
+    const ctx = document.getElementById('daily-trends-chart');
+    if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    if (analyticsCharts.dailyTrends) {
+        analyticsCharts.dailyTrends.destroy();
+    }
+    
+    const labels = trends.map(t => t.date);
+    const totalData = trends.map(t => t.total_calls);
+    const answeredData = trends.map(t => t.answered);
+    const missedData = trends.map(t => t.missed);
+    
+    analyticsCharts.dailyTrends = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Total Calls',
+                    data: totalData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Answered',
+                    data: answeredData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Missed',
+                    data: missedData,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function renderHourlyDistributionChart(distribution) {
+    const ctx = document.getElementById('hourly-distribution-chart');
+    if (!ctx) return;
+    
+    if (analyticsCharts.hourlyDistribution) {
+        analyticsCharts.hourlyDistribution.destroy();
+    }
+    
+    const labels = distribution.map(d => `${d.hour}:00`);
+    const data = distribution.map(d => d.calls);
+    
+    analyticsCharts.hourlyDistribution = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Calls by Hour',
+                data: data,
+                backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                borderColor: '#667eea',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function renderDispositionChart(dispositions) {
+    const ctx = document.getElementById('disposition-chart');
+    if (!ctx) return;
+    
+    if (analyticsCharts.disposition) {
+        analyticsCharts.disposition.destroy();
+    }
+    
+    const labels = dispositions.map(d => d.disposition);
+    const data = dispositions.map(d => d.count);
+    const colors = {
+        'answered': '#10b981',
+        'no_answer': '#f59e0b',
+        'busy': '#ef4444',
+        'failed': '#6c757d',
+        'cancelled': '#3b82f6'
+    };
+    
+    const backgroundColors = labels.map(label => colors[label] || '#667eea');
+    
+    analyticsCharts.disposition = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.map(l => l.replace('_', ' ').toUpperCase()),
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+}
+
+function renderQualityChart(quality) {
+    const ctx = document.getElementById('quality-chart');
+    if (!ctx) return;
+    
+    if (analyticsCharts.quality) {
+        analyticsCharts.quality.destroy();
+    }
+    
+    const qualityDist = quality.quality_distribution || {};
+    
+    analyticsCharts.quality = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['MOS Score', 'Jitter (ms)', 'Packet Loss (%)', 'Latency (ms)'],
+            datasets: [{
+                label: 'Quality Metrics',
+                data: [
+                    quality.average_mos || 0,
+                    quality.average_jitter || 0,
+                    quality.average_packet_loss || 0,
+                    quality.average_latency || 0
+                ],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.6)',
+                    'rgba(59, 130, 246, 0.6)',
+                    'rgba(239, 68, 68, 0.6)',
+                    'rgba(245, 158, 11, 0.6)'
+                ],
+                borderColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#ef4444',
+                    '#f59e0b'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function updateTopCallersTable(topCallers) {
+    const tbody = document.getElementById('top-callers-table');
+    if (!tbody) return;
+    
+    if (!topCallers || topCallers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data">No call data available</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = topCallers.map(caller => `
+        <tr>
+            <td><strong>${caller.extension}</strong></td>
+            <td>${caller.calls}</td>
+            <td>${(caller.total_duration / 60).toFixed(1)}</td>
+            <td>${caller.avg_duration.toFixed(1)}</td>
+        </tr>
+    `).join('');
+}
+
+function updatePeakHours(peakHours) {
+    const display = document.getElementById('peak-hours-display');
+    if (!display) return;
+    
+    if (!peakHours || peakHours.length === 0) {
+        display.innerHTML = '<p>No peak hours data available</p>';
+        return;
+    }
+    
+    const html = '<ul>' + peakHours.map((peak, index) => 
+        `<li><strong>#${index + 1}:</strong> ${peak.hour} with ${peak.calls} calls</li>`
+    ).join('') + '</ul>';
+    
+    display.innerHTML = html;
 }
