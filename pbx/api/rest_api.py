@@ -155,6 +155,34 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_hot_desk_login()
             elif path == '/api/hot-desk/logout':
                 self._handle_hot_desk_logout()
+            elif path == '/api/mfa/enroll':
+                self._handle_mfa_enroll()
+            elif path == '/api/mfa/verify-enrollment':
+                self._handle_mfa_verify_enrollment()
+            elif path == '/api/mfa/verify':
+                self._handle_mfa_verify()
+            elif path == '/api/mfa/disable':
+                self._handle_mfa_disable()
+            elif path == '/api/mfa/enroll-yubikey':
+                self._handle_mfa_enroll_yubikey()
+            elif path == '/api/mfa/enroll-fido2':
+                self._handle_mfa_enroll_fido2()
+            elif path == '/api/security/block-ip':
+                self._handle_block_ip()
+            elif path == '/api/security/unblock-ip':
+                self._handle_unblock_ip()
+            elif path == '/api/dnd/rule':
+                self._handle_add_dnd_rule()
+            elif path == '/api/dnd/register-calendar':
+                self._handle_register_calendar_user()
+            elif path == '/api/dnd/override':
+                self._handle_dnd_override()
+            elif path == '/api/skills/skill':
+                self._handle_add_skill()
+            elif path == '/api/skills/assign':
+                self._handle_assign_skill()
+            elif path == '/api/skills/queue-requirements':
+                self._handle_set_queue_requirements()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -217,6 +245,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension from path
                 extension = path.split('/')[-1]
                 self._handle_delete_paging_zone(extension)
+            elif path.startswith('/api/dnd/rule/'):
+                # Extract rule ID from path
+                rule_id = path.split('/')[-1]
+                self._handle_delete_dnd_rule(rule_id)
+            elif path.startswith('/api/dnd/override/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_clear_dnd_override(extension)
+            elif path.startswith('/api/skills/assign/'):
+                # Extract agent_extension/skill_id from path
+                parts = path.split('/')
+                if len(parts) >= 5:
+                    agent_extension = parts[-2]
+                    skill_id = parts[-1]
+                    self._handle_remove_skill_from_agent(agent_extension, skill_id)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -308,6 +353,24 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_hot_desk_session(path)
             elif path.startswith('/api/hot-desk/extension/'):
                 self._handle_get_hot_desk_extension(path)
+            elif path.startswith('/api/mfa/status/'):
+                self._handle_get_mfa_status(path)
+            elif path.startswith('/api/mfa/methods/'):
+                self._handle_get_mfa_methods(path)
+            elif path == '/api/security/threat-summary':
+                self._handle_get_threat_summary()
+            elif path.startswith('/api/security/check-ip/'):
+                self._handle_check_ip(path)
+            elif path.startswith('/api/dnd/status/'):
+                self._handle_get_dnd_status(path)
+            elif path.startswith('/api/dnd/rules/'):
+                self._handle_get_dnd_rules(path)
+            elif path == '/api/skills/all':
+                self._handle_get_all_skills()
+            elif path.startswith('/api/skills/agent/'):
+                self._handle_get_agent_skills(path)
+            elif path.startswith('/api/skills/queue/'):
+                self._handle_get_queue_requirements(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -2114,6 +2177,587 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'device_id or extension is required'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_enroll(self):
+        """Handle MFA enrollment"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            
+            if not extension_number:
+                self._send_json({'error': 'extension is required'}, 400)
+                return
+            
+            success, provisioning_uri, backup_codes = self.pbx_core.mfa_manager.enroll_user(extension_number)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'provisioning_uri': provisioning_uri,
+                    'backup_codes': backup_codes,
+                    'message': 'MFA enrollment initiated. Scan QR code and verify with first code.'
+                })
+            else:
+                self._send_json({'error': 'MFA enrollment failed'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_verify_enrollment(self):
+        """Handle MFA enrollment verification"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            code = data.get('code')
+            
+            if not extension_number or not code:
+                self._send_json({'error': 'extension and code are required'}, 400)
+                return
+            
+            success = self.pbx_core.mfa_manager.verify_enrollment(extension_number, code)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'MFA successfully activated'
+                })
+            else:
+                self._send_json({'error': 'Invalid code'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_verify(self):
+        """Handle MFA code verification"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            code = data.get('code')
+            
+            if not extension_number or not code:
+                self._send_json({'error': 'extension and code are required'}, 400)
+                return
+            
+            success = self.pbx_core.mfa_manager.verify_code(extension_number, code)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'MFA verification successful'
+                })
+            else:
+                self._send_json({'error': 'Invalid code'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_disable(self):
+        """Handle MFA disable"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            
+            if not extension_number:
+                self._send_json({'error': 'extension is required'}, 400)
+                return
+            
+            success = self.pbx_core.mfa_manager.disable_for_user(extension_number)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'MFA disabled successfully'
+                })
+            else:
+                self._send_json({'error': 'Failed to disable MFA'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_enroll_yubikey(self):
+        """Handle YubiKey enrollment"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            otp = data.get('otp')
+            device_name = data.get('device_name', 'YubiKey')
+            
+            if not extension_number or not otp:
+                self._send_json({'error': 'extension and otp are required'}, 400)
+                return
+            
+            success, error = self.pbx_core.mfa_manager.enroll_yubikey(extension_number, otp, device_name)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'YubiKey enrolled successfully'
+                })
+            else:
+                self._send_json({'error': error or 'YubiKey enrollment failed'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_enroll_fido2(self):
+        """Handle FIDO2/WebAuthn credential enrollment"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            credential_data = data.get('credential_data')
+            device_name = data.get('device_name', 'Security Key')
+            
+            if not extension_number or not credential_data:
+                self._send_json({'error': 'extension and credential_data are required'}, 400)
+                return
+            
+            success, error = self.pbx_core.mfa_manager.enroll_fido2(extension_number, credential_data, device_name)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'FIDO2 credential enrolled successfully'
+                })
+            else:
+                self._send_json({'error': error or 'FIDO2 enrollment failed'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_mfa_methods(self, path: str):
+        """Get enrolled MFA methods for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            methods = self.pbx_core.mfa_manager.get_enrolled_methods(extension)
+            
+            self._send_json({
+                'extension': extension,
+                'methods': methods
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_mfa_status(self, path: str):
+        """Get MFA status for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            enabled = self.pbx_core.mfa_manager.is_enabled_for_user(extension)
+            
+            self._send_json({
+                'extension': extension,
+                'mfa_enabled': enabled,
+                'mfa_required': self.pbx_core.mfa_manager.required
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_block_ip(self):
+        """Handle IP blocking"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            ip_address = data.get('ip_address')
+            reason = data.get('reason', 'Manual block')
+            duration = data.get('duration')  # Optional, in seconds
+            
+            if not ip_address:
+                self._send_json({'error': 'ip_address is required'}, 400)
+                return
+            
+            self.pbx_core.threat_detector.block_ip(ip_address, reason, duration)
+            
+            self._send_json({
+                'success': True,
+                'message': f'IP {ip_address} blocked successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_unblock_ip(self):
+        """Handle IP unblocking"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            ip_address = data.get('ip_address')
+            
+            if not ip_address:
+                self._send_json({'error': 'ip_address is required'}, 400)
+                return
+            
+            self.pbx_core.threat_detector.unblock_ip(ip_address)
+            
+            self._send_json({
+                'success': True,
+                'message': f'IP {ip_address} unblocked successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_threat_summary(self):
+        """Get threat detection summary"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            # Get hours parameter from query string
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            hours = int(params.get('hours', [24])[0])
+            
+            summary = self.pbx_core.threat_detector.get_threat_summary(hours)
+            
+            self._send_json(summary)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_check_ip(self, path: str):
+        """Check if IP is blocked"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
+            self._send_json({'error': 'Threat detection not available'}, 500)
+            return
+        
+        try:
+            ip_address = path.split('/')[-1]
+            is_blocked, reason = self.pbx_core.threat_detector.is_ip_blocked(ip_address)
+            
+            self._send_json({
+                'ip_address': ip_address,
+                'is_blocked': is_blocked,
+                'reason': reason
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_dnd_rule(self):
+        """Handle adding DND rule"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            rule_type = data.get('rule_type')  # 'calendar' or 'time_based'
+            config = data.get('config', {})
+            
+            if not extension or not rule_type:
+                self._send_json({'error': 'extension and rule_type are required'}, 400)
+                return
+            
+            rule_id = self.pbx_core.dnd_scheduler.add_rule(extension, rule_type, config)
+            
+            self._send_json({
+                'success': True,
+                'rule_id': rule_id,
+                'message': 'DND rule added successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_dnd_rule(self, rule_id: str):
+        """Handle deleting DND rule"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.dnd_scheduler.remove_rule(rule_id)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'DND rule deleted successfully'
+                })
+            else:
+                self._send_json({'error': 'Rule not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_register_calendar_user(self):
+        """Handle registering user for calendar-based DND"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            email = data.get('email')
+            
+            if not extension or not email:
+                self._send_json({'error': 'extension and email are required'}, 400)
+                return
+            
+            self.pbx_core.dnd_scheduler.register_calendar_user(extension, email)
+            
+            self._send_json({
+                'success': True,
+                'message': f'Calendar monitoring registered for {extension}'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_dnd_override(self):
+        """Handle manual DND override"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            status = data.get('status')  # e.g., 'do_not_disturb', 'available'
+            duration_minutes = data.get('duration_minutes')  # Optional
+            
+            if not extension or not status:
+                self._send_json({'error': 'extension and status are required'}, 400)
+                return
+            
+            # Convert status string to PresenceStatus enum
+            from pbx.features.presence import PresenceStatus
+            try:
+                status_enum = PresenceStatus(status)
+            except ValueError:
+                self._send_json({'error': f'Invalid status: {status}'}, 400)
+                return
+            
+            self.pbx_core.dnd_scheduler.set_manual_override(extension, status_enum, duration_minutes)
+            
+            self._send_json({
+                'success': True,
+                'message': f'Manual override set for {extension}'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_clear_dnd_override(self, extension: str):
+        """Handle clearing DND override"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            self.pbx_core.dnd_scheduler.clear_manual_override(extension)
+            
+            self._send_json({
+                'success': True,
+                'message': f'Override cleared for {extension}'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_dnd_status(self, path: str):
+        """Get DND status for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            status = self.pbx_core.dnd_scheduler.get_status(extension)
+            
+            self._send_json(status)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_dnd_rules(self, path: str):
+        """Get DND rules for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            rules = self.pbx_core.dnd_scheduler.get_rules(extension)
+            
+            self._send_json({
+                'extension': extension,
+                'rules': rules
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_skill(self):
+        """Handle adding a new skill"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            skill_id = data.get('skill_id')
+            name = data.get('name')
+            description = data.get('description', '')
+            
+            if not skill_id or not name:
+                self._send_json({'error': 'skill_id and name are required'}, 400)
+                return
+            
+            success = self.pbx_core.skills_router.add_skill(skill_id, name, description)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'skill_id': skill_id,
+                    'message': 'Skill added successfully'
+                })
+            else:
+                self._send_json({'error': 'Skill already exists'}, 409)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_assign_skill(self):
+        """Handle assigning skill to agent"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            agent_extension = data.get('agent_extension')
+            skill_id = data.get('skill_id')
+            proficiency = data.get('proficiency', 5)
+            
+            if not agent_extension or not skill_id:
+                self._send_json({'error': 'agent_extension and skill_id are required'}, 400)
+                return
+            
+            success = self.pbx_core.skills_router.assign_skill_to_agent(agent_extension, skill_id, proficiency)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Skill assigned to agent {agent_extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to assign skill'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_remove_skill_from_agent(self, agent_extension: str, skill_id: str):
+        """Handle removing skill from agent"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.skills_router.remove_skill_from_agent(agent_extension, skill_id)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Skill removed from agent {agent_extension}'
+                })
+            else:
+                self._send_json({'error': 'Skill not found for agent'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_set_queue_requirements(self):
+        """Handle setting queue skill requirements"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            queue_number = data.get('queue_number')
+            requirements = data.get('requirements', [])
+            
+            if not queue_number:
+                self._send_json({'error': 'queue_number is required'}, 400)
+                return
+            
+            success = self.pbx_core.skills_router.set_queue_requirements(queue_number, requirements)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Requirements set for queue {queue_number}'
+                })
+            else:
+                self._send_json({'error': 'Failed to set requirements'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_all_skills(self):
+        """Get all skills"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            skills = self.pbx_core.skills_router.get_all_skills()
+            self._send_json({'skills': skills})
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_agent_skills(self, path: str):
+        """Get agent skills"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            agent_extension = path.split('/')[-1]
+            skills = self.pbx_core.skills_router.get_agent_skills(agent_extension)
+            
+            self._send_json({
+                'agent_extension': agent_extension,
+                'skills': skills
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_queue_requirements(self, path: str):
+        """Get queue skill requirements"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
+            self._send_json({'error': 'Skills routing not available'}, 500)
+            return
+        
+        try:
+            queue_number = path.split('/')[-1]
+            requirements = self.pbx_core.skills_router.get_queue_requirements(queue_number)
+            
+            self._send_json({
+                'queue_number': queue_number,
+                'requirements': requirements
+            })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     

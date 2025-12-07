@@ -441,3 +441,460 @@ def get_security_auditor(database=None, config: dict = None) -> SecurityAuditor:
 def get_password_manager(config: dict = None) -> SecurePasswordManager:
     """Get password manager instance"""
     return SecurePasswordManager(config)
+
+
+class ThreatDetector:
+    """
+    Enhanced threat detection system
+    Provides advanced pattern detection, IP blocking, and anomaly detection
+    """
+    
+    def __init__(self, database=None, config: dict = None):
+        """
+        Initialize threat detector
+        
+        Args:
+            database: Database backend for persistent storage
+            config: Optional configuration
+        """
+        self.logger = get_logger()
+        self.database = database
+        self.config = config or {}
+        
+        # Threat detection configuration
+        # Support both nested dict and dot notation
+        self.enabled = self._get_config('security.threat_detection.enabled', True)
+        self.ip_block_duration = self._get_config('security.threat_detection.ip_block_duration', 3600)  # 1 hour
+        self.failed_login_threshold = self._get_config('security.threat_detection.failed_login_threshold', 10)
+        self.suspicious_pattern_threshold = self._get_config('security.threat_detection.suspicious_pattern_threshold', 5)
+        
+        # In-memory storage for threat tracking
+        self.blocked_ips = {}  # {ip: block_until_timestamp}
+        self.failed_attempts = {}  # {ip: [(timestamp, reason), ...]}
+        self.suspicious_patterns = {}  # {ip: {pattern: count}}
+        
+        # Initialize database schema if available
+        if self.database and self.database.enabled:
+            self._initialize_schema()
+    
+    def _get_config(self, key: str, default=None):
+        """
+        Get config value supporting both dot notation and nested dicts
+        
+        Args:
+            key: Config key (e.g., 'security.threat_detection.enabled')
+            default: Default value if not found
+            
+        Returns:
+            Config value or default
+        """
+        # Try dot notation first (Config object)
+        if hasattr(self.config, 'get') and '.' in key:
+            value = self.config.get(key, None)
+            if value is not None:
+                return value
+        
+        # Try nested dict navigation
+        keys = key.split('.')
+        value = self.config
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
+            else:
+                return default
+        
+        return value if value is not None else default
+    
+    def _initialize_schema(self):
+        """Initialize threat detection database tables"""
+        # Blocked IPs table
+        blocked_ips_table = """
+        CREATE TABLE IF NOT EXISTS security_blocked_ips (
+            id SERIAL PRIMARY KEY,
+            ip_address VARCHAR(45) NOT NULL,
+            reason TEXT,
+            blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            blocked_until TIMESTAMP NOT NULL,
+            unblocked_at TIMESTAMP,
+            auto_unblocked BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.database.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS security_blocked_ips (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_address VARCHAR(45) NOT NULL,
+            reason TEXT,
+            blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            blocked_until TIMESTAMP NOT NULL,
+            unblocked_at TIMESTAMP,
+            auto_unblocked BOOLEAN DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        # Threat events table
+        threat_events_table = """
+        CREATE TABLE IF NOT EXISTS security_threat_events (
+            id SERIAL PRIMARY KEY,
+            ip_address VARCHAR(45) NOT NULL,
+            event_type VARCHAR(50) NOT NULL,
+            severity VARCHAR(20) NOT NULL,
+            details TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.database.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS security_threat_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_address VARCHAR(45) NOT NULL,
+            event_type VARCHAR(50) NOT NULL,
+            severity VARCHAR(20) NOT NULL,
+            details TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        try:
+            self.database.execute(blocked_ips_table)
+            self.database.execute(threat_events_table)
+            self.logger.info("Threat detection database schema initialized")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize threat detection schema: {e}")
+    
+    def is_ip_blocked(self, ip_address: str) -> Tuple[bool, Optional[str]]:
+        """
+        Check if IP address is blocked
+        
+        Args:
+            ip_address: IP address to check
+            
+        Returns:
+            Tuple of (is_blocked, reason)
+        """
+        if not self.enabled:
+            return False, None
+        
+        now = time.time()
+        
+        # Check in-memory cache
+        if ip_address in self.blocked_ips:
+            block_until = self.blocked_ips[ip_address]['until']
+            if now < block_until:
+                return True, self.blocked_ips[ip_address].get('reason', 'IP blocked')
+            else:
+                # Block expired
+                del self.blocked_ips[ip_address]
+                self._auto_unblock_ip(ip_address)
+        
+        # Check database for persistent blocks
+        if self.database and self.database.enabled:
+            query = """
+            SELECT reason, blocked_until 
+            FROM security_blocked_ips 
+            WHERE ip_address = %s AND blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
+            ORDER BY blocked_at DESC LIMIT 1
+            """ if self.database.db_type == 'postgresql' else """
+            SELECT reason, blocked_until 
+            FROM security_blocked_ips 
+            WHERE ip_address = ? AND blocked_until > datetime('now') AND unblocked_at IS NULL
+            ORDER BY blocked_at DESC LIMIT 1
+            """
+            result = self.database.fetch_one(query, (ip_address,))
+            
+            if result:
+                return True, result.get('reason', 'IP blocked')
+        
+        return False, None
+    
+    def block_ip(self, ip_address: str, reason: str, duration: int = None):
+        """
+        Block an IP address
+        
+        Args:
+            ip_address: IP address to block
+            reason: Reason for blocking
+            duration: Block duration in seconds (uses default if not provided)
+        """
+        if not self.enabled:
+            return
+        
+        if duration is None:
+            duration = self.ip_block_duration
+        
+        now = time.time()
+        block_until = now + duration
+        
+        # Add to in-memory cache
+        self.blocked_ips[ip_address] = {
+            'until': block_until,
+            'reason': reason
+        }
+        
+        # Store in database
+        if self.database and self.database.enabled:
+            from datetime import datetime as dt, timedelta
+            blocked_until_dt = dt.now() + timedelta(seconds=duration)
+            
+            insert_query = """
+            INSERT INTO security_blocked_ips (ip_address, reason, blocked_until)
+            VALUES (%s, %s, %s)
+            """ if self.database.db_type == 'postgresql' else """
+            INSERT INTO security_blocked_ips (ip_address, reason, blocked_until)
+            VALUES (?, ?, ?)
+            """
+            self.database.execute(insert_query, (ip_address, reason, blocked_until_dt))
+        
+        self.logger.warning(f"IP {ip_address} blocked: {reason} (duration: {duration}s)")
+        self._log_threat_event(ip_address, 'ip_blocked', 'high', reason)
+    
+    def unblock_ip(self, ip_address: str):
+        """
+        Manually unblock an IP address
+        
+        Args:
+            ip_address: IP address to unblock
+        """
+        # Remove from cache
+        if ip_address in self.blocked_ips:
+            del self.blocked_ips[ip_address]
+        
+        # Update database
+        if self.database and self.database.enabled:
+            update_query = """
+            UPDATE security_blocked_ips 
+            SET unblocked_at = CURRENT_TIMESTAMP 
+            WHERE ip_address = %s AND unblocked_at IS NULL
+            """ if self.database.db_type == 'postgresql' else """
+            UPDATE security_blocked_ips 
+            SET unblocked_at = datetime('now')
+            WHERE ip_address = ? AND unblocked_at IS NULL
+            """
+            self.database.execute(update_query, (ip_address,))
+        
+        self.logger.info(f"IP {ip_address} manually unblocked")
+    
+    def _auto_unblock_ip(self, ip_address: str):
+        """Auto-unblock IP when duration expires"""
+        if self.database and self.database.enabled:
+            update_query = """
+            UPDATE security_blocked_ips 
+            SET unblocked_at = CURRENT_TIMESTAMP, auto_unblocked = %s
+            WHERE ip_address = %s AND unblocked_at IS NULL
+            """ if self.database.db_type == 'postgresql' else """
+            UPDATE security_blocked_ips 
+            SET unblocked_at = datetime('now'), auto_unblocked = ?
+            WHERE ip_address = ? AND unblocked_at IS NULL
+            """
+            self.database.execute(update_query, (True, ip_address))
+    
+    def record_failed_attempt(self, ip_address: str, reason: str):
+        """
+        Record failed authentication attempt
+        
+        Args:
+            ip_address: IP address
+            reason: Reason for failure
+        """
+        if not self.enabled:
+            return
+        
+        now = time.time()
+        
+        # Initialize tracking for IP
+        if ip_address not in self.failed_attempts:
+            self.failed_attempts[ip_address] = []
+        
+        # Add attempt
+        self.failed_attempts[ip_address].append((now, reason))
+        
+        # Clean old attempts (older than 1 hour)
+        cutoff = now - 3600
+        self.failed_attempts[ip_address] = [
+            (t, r) for t, r in self.failed_attempts[ip_address] if t > cutoff
+        ]
+        
+        # Check if threshold exceeded
+        if len(self.failed_attempts[ip_address]) >= self.failed_login_threshold:
+            self.block_ip(ip_address, f"Excessive failed login attempts ({len(self.failed_attempts[ip_address])})")
+            self.failed_attempts[ip_address] = []  # Reset counter
+        
+        # Log threat event
+        self._log_threat_event(ip_address, 'failed_auth', 'medium', reason)
+    
+    def detect_suspicious_pattern(self, ip_address: str, pattern: str) -> bool:
+        """
+        Detect suspicious patterns in behavior
+        
+        Args:
+            ip_address: IP address
+            pattern: Pattern identifier (e.g., 'rapid_requests', 'scanner_behavior', 'sql_injection')
+            
+        Returns:
+            True if pattern is considered threatening
+        """
+        if not self.enabled:
+            return False
+        
+        # Initialize tracking for IP
+        if ip_address not in self.suspicious_patterns:
+            self.suspicious_patterns[ip_address] = {}
+        
+        # Increment pattern count
+        if pattern not in self.suspicious_patterns[ip_address]:
+            self.suspicious_patterns[ip_address][pattern] = 0
+        
+        self.suspicious_patterns[ip_address][pattern] += 1
+        count = self.suspicious_patterns[ip_address][pattern]
+        
+        # Check if threshold exceeded
+        if count >= self.suspicious_pattern_threshold:
+            self.block_ip(ip_address, f"Suspicious pattern detected: {pattern} (count: {count})")
+            self.suspicious_patterns[ip_address][pattern] = 0  # Reset
+            return True
+        
+        # Log threat event
+        self._log_threat_event(ip_address, 'suspicious_pattern', 'low', f"{pattern} (count: {count})")
+        
+        return False
+    
+    def analyze_request_pattern(self, ip_address: str, user_agent: str = None) -> Dict[str, any]:
+        """
+        Analyze request patterns for anomalies
+        
+        Args:
+            ip_address: IP address
+            user_agent: User agent string
+            
+        Returns:
+            Dictionary with analysis results
+        """
+        analysis = {
+            'is_blocked': False,
+            'is_suspicious': False,
+            'threats': [],
+            'score': 0  # 0-100, higher is more threatening
+        }
+        
+        if not self.enabled:
+            return analysis
+        
+        # Check if blocked
+        is_blocked, reason = self.is_ip_blocked(ip_address)
+        if is_blocked:
+            analysis['is_blocked'] = True
+            analysis['threats'].append(f"IP blocked: {reason}")
+            analysis['score'] = 100
+            return analysis
+        
+        # Check for scanner patterns in user agent
+        if user_agent:
+            scanner_keywords = ['nmap', 'nikto', 'sqlmap', 'masscan', 'zap', 'burp', 'w3af', 'metasploit']
+            user_agent_lower = user_agent.lower()
+            
+            for keyword in scanner_keywords:
+                if keyword in user_agent_lower:
+                    analysis['is_suspicious'] = True
+                    analysis['threats'].append(f"Scanner detected in user agent: {keyword}")
+                    analysis['score'] += 30
+                    self.detect_suspicious_pattern(ip_address, f'scanner_{keyword}')
+        
+        # Check failed attempt history
+        if ip_address in self.failed_attempts:
+            recent_failures = len(self.failed_attempts[ip_address])
+            if recent_failures > 3:
+                analysis['is_suspicious'] = True
+                analysis['threats'].append(f"Recent failed attempts: {recent_failures}")
+                analysis['score'] += min(recent_failures * 5, 50)
+        
+        return analysis
+    
+    def _log_threat_event(self, ip_address: str, event_type: str, severity: str, details: str):
+        """Log threat event to database"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            insert_query = """
+            INSERT INTO security_threat_events (ip_address, event_type, severity, details)
+            VALUES (%s, %s, %s, %s)
+            """ if self.database.db_type == 'postgresql' else """
+            INSERT INTO security_threat_events (ip_address, event_type, severity, details)
+            VALUES (?, ?, ?, ?)
+            """
+            self.database.execute(insert_query, (ip_address, event_type, severity, details))
+        except Exception as e:
+            self.logger.error(f"Failed to log threat event: {e}")
+    
+    def get_threat_summary(self, hours: int = 24) -> Dict:
+        """
+        Get summary of recent threats
+        
+        Args:
+            hours: Number of hours to look back
+            
+        Returns:
+            Dictionary with threat statistics
+        """
+        summary = {
+            'total_events': 0,
+            'blocked_ips': 0,
+            'suspicious_patterns': 0,
+            'failed_auths': 0,
+            'severity_counts': {'low': 0, 'medium': 0, 'high': 0}
+        }
+        
+        if not self.database or not self.database.enabled:
+            # Return in-memory stats
+            summary['blocked_ips'] = len(self.blocked_ips)
+            return summary
+        
+        try:
+            # Validate hours parameter to prevent SQL injection
+            if not isinstance(hours, (int, float)) or hours < 0 or hours > 8760:  # Max 1 year
+                hours = 24  # Default to 24 hours if invalid
+            
+            # Count events by type
+            if self.database.db_type == 'postgresql':
+                query = """
+                SELECT event_type, severity, COUNT(*) as count
+                FROM security_threat_events
+                WHERE timestamp > (CURRENT_TIMESTAMP - INTERVAL '%s hours')
+                GROUP BY event_type, severity
+                """
+                results = self.database.fetch_all(query, (hours,))
+            else:
+                # SQLite: build the interval string manually (validated hours parameter)
+                query = f"""
+                SELECT event_type, severity, COUNT(*) as count
+                FROM security_threat_events
+                WHERE timestamp > datetime('now', '-{int(hours)} hours')
+                GROUP BY event_type, severity
+                """
+                results = self.database.fetch_all(query)
+            
+            for row in results:
+                event_type = row['event_type']
+                severity = row['severity']
+                count = row['count']
+                
+                summary['total_events'] += count
+                summary['severity_counts'][severity] = summary['severity_counts'].get(severity, 0) + count
+                
+                if event_type == 'ip_blocked':
+                    summary['blocked_ips'] += count
+                elif event_type == 'suspicious_pattern':
+                    summary['suspicious_patterns'] += count
+                elif event_type == 'failed_auth':
+                    summary['failed_auths'] += count
+            
+            return summary
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get threat summary: {e}")
+            return summary
+
+
+def get_threat_detector(database=None, config: dict = None) -> ThreatDetector:
+    """Get threat detector instance"""
+    return ThreatDetector(database, config)
