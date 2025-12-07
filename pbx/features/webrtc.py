@@ -424,9 +424,10 @@ class WebRTCGateway:
             # Transform for SIP compatibility
             for media in sdp.media:
                 # Convert DTLS-SRTP to RTP/AVP (standard SIP)
-                if 'DTLS' in media.get('protocol', ''):
+                original_protocol = media.get('protocol', '')
+                if 'DTLS' in original_protocol:
                     media['protocol'] = 'RTP/AVP'
-                    self.logger.debug(f"Converted protocol from {media.get('protocol')} to RTP/AVP")
+                    self.logger.debug(f"Converted protocol from {original_protocol} to RTP/AVP")
                 
                 # Filter out WebRTC-specific attributes that SIP doesn't understand
                 webrtc_attrs = ['ice-ufrag', 'ice-pwd', 'ice-options', 'fingerprint', 
@@ -493,7 +494,7 @@ class WebRTCGateway:
                 ice_pwd = secrets.token_hex(12)
             if not fingerprint:
                 # Generate a basic fingerprint (in production, this would be from actual cert)
-                fingerprint = "sha-256 " + ":".join([
+                fingerprint = "fingerprint:sha-256 " + ":".join([
                     hashlib.sha256(secrets.token_bytes(32)).hexdigest()[i:i+2].upper() 
                     for i in range(0, 64, 2)
                 ])
