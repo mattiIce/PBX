@@ -186,6 +186,17 @@ class PBXCore:
         else:
             self.hot_desking = None
 
+        # Initialize MFA if enabled
+        if self.config.get('security.mfa.enabled', False):
+            from pbx.features.mfa import MFAManager
+            self.mfa_manager = MFAManager(
+                database=self.database if hasattr(self, 'database') and self.database.enabled else None,
+                config=self.config
+            )
+            self.logger.info("Multi-Factor Authentication (MFA) initialized")
+        else:
+            self.mfa_manager = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)

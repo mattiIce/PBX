@@ -155,6 +155,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_hot_desk_login()
             elif path == '/api/hot-desk/logout':
                 self._handle_hot_desk_logout()
+            elif path == '/api/mfa/enroll':
+                self._handle_mfa_enroll()
+            elif path == '/api/mfa/verify-enrollment':
+                self._handle_mfa_verify_enrollment()
+            elif path == '/api/mfa/verify':
+                self._handle_mfa_verify()
+            elif path == '/api/mfa/disable':
+                self._handle_mfa_disable()
+            elif path == '/api/mfa/enroll-yubikey':
+                self._handle_mfa_enroll_yubikey()
+            elif path == '/api/mfa/enroll-fido2':
+                self._handle_mfa_enroll_fido2()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -308,6 +320,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_hot_desk_session(path)
             elif path.startswith('/api/hot-desk/extension/'):
                 self._handle_get_hot_desk_extension(path)
+            elif path.startswith('/api/mfa/status/'):
+                self._handle_get_mfa_status(path)
+            elif path.startswith('/api/mfa/methods/'):
+                self._handle_get_mfa_methods(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -2114,6 +2130,205 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'device_id or extension is required'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_enroll(self):
+        """Handle MFA enrollment"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            
+            if not extension_number:
+                self._send_json({'error': 'extension is required'}, 400)
+                return
+            
+            success, provisioning_uri, backup_codes = self.pbx_core.mfa_manager.enroll_user(extension_number)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'provisioning_uri': provisioning_uri,
+                    'backup_codes': backup_codes,
+                    'message': 'MFA enrollment initiated. Scan QR code and verify with first code.'
+                })
+            else:
+                self._send_json({'error': 'MFA enrollment failed'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_verify_enrollment(self):
+        """Handle MFA enrollment verification"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            code = data.get('code')
+            
+            if not extension_number or not code:
+                self._send_json({'error': 'extension and code are required'}, 400)
+                return
+            
+            success = self.pbx_core.mfa_manager.verify_enrollment(extension_number, code)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'MFA successfully activated'
+                })
+            else:
+                self._send_json({'error': 'Invalid code'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_verify(self):
+        """Handle MFA code verification"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            code = data.get('code')
+            
+            if not extension_number or not code:
+                self._send_json({'error': 'extension and code are required'}, 400)
+                return
+            
+            success = self.pbx_core.mfa_manager.verify_code(extension_number, code)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'MFA verification successful'
+                })
+            else:
+                self._send_json({'error': 'Invalid code'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_disable(self):
+        """Handle MFA disable"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            
+            if not extension_number:
+                self._send_json({'error': 'extension is required'}, 400)
+                return
+            
+            success = self.pbx_core.mfa_manager.disable_for_user(extension_number)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'MFA disabled successfully'
+                })
+            else:
+                self._send_json({'error': 'Failed to disable MFA'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_enroll_yubikey(self):
+        """Handle YubiKey enrollment"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            otp = data.get('otp')
+            device_name = data.get('device_name', 'YubiKey')
+            
+            if not extension_number or not otp:
+                self._send_json({'error': 'extension and otp are required'}, 400)
+                return
+            
+            success, error = self.pbx_core.mfa_manager.enroll_yubikey(extension_number, otp, device_name)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'YubiKey enrolled successfully'
+                })
+            else:
+                self._send_json({'error': error or 'YubiKey enrollment failed'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_mfa_enroll_fido2(self):
+        """Handle FIDO2/WebAuthn credential enrollment"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension_number = data.get('extension')
+            credential_data = data.get('credential_data')
+            device_name = data.get('device_name', 'Security Key')
+            
+            if not extension_number or not credential_data:
+                self._send_json({'error': 'extension and credential_data are required'}, 400)
+                return
+            
+            success, error = self.pbx_core.mfa_manager.enroll_fido2(extension_number, credential_data, device_name)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'FIDO2 credential enrolled successfully'
+                })
+            else:
+                self._send_json({'error': error or 'FIDO2 enrollment failed'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_mfa_methods(self, path: str):
+        """Get enrolled MFA methods for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            methods = self.pbx_core.mfa_manager.get_enrolled_methods(extension)
+            
+            self._send_json({
+                'extension': extension,
+                'methods': methods
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_mfa_status(self, path: str):
+        """Get MFA status for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
+            self._send_json({'error': 'MFA not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            enabled = self.pbx_core.mfa_manager.is_enabled_for_user(extension)
+            
+            self._send_json({
+                'extension': extension,
+                'mfa_enabled': enabled,
+                'mfa_required': self.pbx_core.mfa_manager.required
+            })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     
