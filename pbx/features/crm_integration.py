@@ -375,8 +375,12 @@ class CRMIntegration:
     
     def _normalize_phone_number(self, phone_number: str) -> str:
         """Normalize phone number for lookup"""
-        # Remove common separators
-        normalized = phone_number.replace('-', '').replace(' ', '').replace('(', '').replace(')', '').replace('+', '')
+        import re
+        # Remove all non-digit characters except the leading + which we'll remove separately
+        normalized = re.sub(r'[^\d+]', '', phone_number)
+        # Remove leading + if present
+        if normalized.startswith('+'):
+            normalized = normalized[1:]
         return normalized
     
     def _get_from_cache(self, phone_number: str) -> Optional[CallerInfo]:

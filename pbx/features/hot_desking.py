@@ -137,6 +137,7 @@ class HotDeskingSystem:
             for device_id in sessions_to_logout:
                 session = self.sessions.get(device_id)
                 if session:
+                    inactive_time = (now - session.last_activity).total_seconds()
                     self.logger.info(f"Auto-logout: {session.extension} from {device_id} (inactive for {inactive_time:.0f}s)")
                     self._logout_internal(device_id)
     
