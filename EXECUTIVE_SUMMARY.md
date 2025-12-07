@@ -1250,7 +1250,7 @@ With **zero licensing costs**, **comprehensive documentation**, and **production
 
 ### Version 1.1.0 (December 7, 2025)
 - Added comprehensive "Advanced & Emerging Features (Roadmap)" section
-- Documented 100+ modern VoIP/VoSIP features aligned with 2024-2025 industry standards
+- Documented 100+ modern VoIP features aligned with 2024-2025 industry standards
 - Added detailed roadmap for AI-powered features, WebRTC, STIR/SHAKEN, E911, and more
 - Enhanced competitive analysis with modern feature comparisons
 - Expanded long-term vision with specific feature development estimates
