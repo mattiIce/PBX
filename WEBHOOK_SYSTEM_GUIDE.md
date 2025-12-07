@@ -244,6 +244,7 @@ This allows the receiving system to verify that the webhook request actually cam
 from flask import Flask, request, jsonify
 import hmac
 import hashlib
+import os
 
 app = Flask(__name__)
 
@@ -266,7 +267,9 @@ def handle_pbx_webhook():
         expected_sig = parts[1]
         
         # Compute signature using your shared secret
-        secret = 'your-webhook-secret'  # Must match PBX config
+        # SECURITY WARNING: Never hardcode secrets in production!
+        # Store in environment variables or secure secret management system
+        secret = os.environ.get('WEBHOOK_SECRET', 'your-webhook-secret')  # Must match PBX config
         computed_sig = hmac.new(
             secret.encode('utf-8'),
             request.data,
