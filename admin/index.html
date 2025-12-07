@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PBX Admin Panel</title>
     <link rel="stylesheet" href="css/admin.css">
-    <!-- Load Chart.js with fallback CDNs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" 
-            onerror="loadChartJsFallback()"></script>
+    <!-- Define fallback function before loading Chart.js -->
     <script>
         // Fallback function to load Chart.js from alternative CDNs
         function loadChartJsFallback() {
@@ -43,6 +41,9 @@
             tryNextFallback();
         }
     </script>
+    <!-- Load Chart.js with fallback on error -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" 
+            onerror="loadChartJsFallback()"></script>
 </head>
 <body>
     <div class="container">
