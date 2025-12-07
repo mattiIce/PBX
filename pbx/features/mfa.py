@@ -14,6 +14,7 @@ import struct
 import time
 import secrets
 import json
+import random
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -232,8 +233,6 @@ class YubiKeyOTPVerifier:
         Returns:
             Tuple of (is_valid, error_message)
         """
-        import random
-        
         try:
             # Generate random nonce for replay protection
             nonce = base64.b64encode(secrets.token_bytes(16)).decode('utf-8')
@@ -464,7 +463,7 @@ class FIDO2Verifier:
                     try:
                         # Try to decode as base64 first
                         client_data_json = base64.b64decode(client_data_json)
-                    except:
+                    except Exception:
                         # If that fails, assume it's already a JSON string
                         client_data_json = client_data_json.encode('utf-8')
                 if isinstance(public_key, str):
@@ -482,8 +481,8 @@ class FIDO2Verifier:
                     # Parse client data
                     try:
                         client_data = json_lib.loads(client_data_json)
-                    except:
-                        return False, "Invalid client_data_json format"
+                    except (json_lib.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
+                        return False, f"Invalid client_data_json format: {str(e)}"
                     
                     # Verify challenge if provided
                     if challenge:
@@ -511,9 +510,9 @@ class FIDO2Verifier:
                     # Parse public key as COSE
                     try:
                         cose_key = CoseKey.parse(public_key)
-                    except:
-                        # If parsing fails, try to use the key as-is
-                        return False, "Invalid public key format"
+                    except Exception as e:
+                        # If parsing fails, return error
+                        return False, f"Invalid public key format: {str(e)}"
                     
                     # Verify signature
                     # The signed data is: authenticator_data || hash(client_data_json)
