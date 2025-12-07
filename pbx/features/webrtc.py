@@ -412,45 +412,136 @@ class WebRTCGateway:
         Returns:
             SIP-compatible SDP
         """
-        # This is a simplified conversion
-        # In production, would need proper SDP parsing and transformation
-        # - Convert DTLS-SRTP to SRTP or RTP
-        # - Handle codec negotiation
-        # - Adjust media attributes
+        from pbx.sip.sdp import SDPSession
         
-        # For now, pass through with minimal changes
-        # TODO: Implement full SDP transformation
         self.logger.debug("Converting WebRTC SDP to SIP SDP")
-        return webrtc_sdp
+        
+        try:
+            # Parse WebRTC SDP
+            sdp = SDPSession()
+            sdp.parse(webrtc_sdp)
+            
+            # Transform for SIP compatibility
+            for media in sdp.media:
+                # Convert DTLS-SRTP to RTP/AVP (standard SIP)
+                if 'DTLS' in media.get('protocol', ''):
+                    media['protocol'] = 'RTP/AVP'
+                    self.logger.debug(f"Converted protocol from {media.get('protocol')} to RTP/AVP")
+                
+                # Filter out WebRTC-specific attributes that SIP doesn't understand
+                webrtc_attrs = ['ice-ufrag', 'ice-pwd', 'ice-options', 'fingerprint', 
+                               'setup', 'mid', 'extmap', 'msid', 'ssrc', 'rtcp-mux']
+                
+                original_attrs = media.get('attributes', [])
+                filtered_attrs = []
+                
+                for attr in original_attrs:
+                    # Keep attribute if it's not WebRTC-specific
+                    attr_name = attr.split(':')[0] if ':' in attr else attr
+                    if attr_name not in webrtc_attrs:
+                        filtered_attrs.append(attr)
+                    else:
+                        self.logger.debug(f"Filtered WebRTC attribute: {attr_name}")
+                
+                media['attributes'] = filtered_attrs
+                
+                # Ensure we have basic RTP attributes
+                has_sendrecv = any('sendrecv' in attr or 'sendonly' in attr or 
+                                  'recvonly' in attr for attr in filtered_attrs)
+                if not has_sendrecv:
+                    filtered_attrs.append('sendrecv')
+            
+            # Build and return transformed SDP
+            result = sdp.build()
+            self.logger.debug("WebRTC to SIP SDP conversion complete")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error converting WebRTC to SIP SDP: {e}")
+            # Fallback: return original SDP
+            return webrtc_sdp
     
-    def sip_to_webrtc_sdp(self, sip_sdp: str) -> str:
+    def sip_to_webrtc_sdp(self, sip_sdp: str, ice_ufrag: str = None, ice_pwd: str = None, 
+                          fingerprint: str = None) -> str:
         """
         Convert SIP SDP to WebRTC-compatible SDP
         
         Args:
             sip_sdp: SIP SDP
+            ice_ufrag: ICE username fragment (generated if not provided)
+            ice_pwd: ICE password (generated if not provided)
+            fingerprint: DTLS fingerprint (generated if not provided)
             
         Returns:
             WebRTC-compatible SDP
         """
-        # This is a simplified conversion
-        # In production, would need proper SDP parsing and transformation
-        # - Add DTLS-SRTP support
-        # - Handle codec negotiation
-        # - Add WebRTC-specific attributes
+        from pbx.sip.sdp import SDPSession
+        import hashlib
+        import secrets
         
-        # For now, pass through with minimal changes
-        # TODO: Implement full SDP transformation
         self.logger.debug("Converting SIP SDP to WebRTC SDP")
-        return sip_sdp
+        
+        try:
+            # Parse SIP SDP
+            sdp = SDPSession()
+            sdp.parse(sip_sdp)
+            
+            # Generate WebRTC-required values if not provided
+            if not ice_ufrag:
+                ice_ufrag = secrets.token_hex(4)
+            if not ice_pwd:
+                ice_pwd = secrets.token_hex(12)
+            if not fingerprint:
+                # Generate a basic fingerprint (in production, this would be from actual cert)
+                fingerprint = "sha-256 " + ":".join([
+                    hashlib.sha256(secrets.token_bytes(32)).hexdigest()[i:i+2].upper() 
+                    for i in range(0, 64, 2)
+                ])
+            
+            # Transform for WebRTC compatibility
+            for media_idx, media in enumerate(sdp.media):
+                # Convert RTP/AVP to RTP/SAVPF (secure audio/video profile with feedback)
+                if media.get('protocol') == 'RTP/AVP':
+                    media['protocol'] = 'RTP/SAVPF'
+                    self.logger.debug(f"Converted protocol to RTP/SAVPF for WebRTC")
+                
+                # Get existing attributes
+                attrs = media.get('attributes', [])
+                
+                # Add WebRTC-required attributes
+                webrtc_attrs = [
+                    f'ice-ufrag:{ice_ufrag}',
+                    f'ice-pwd:{ice_pwd}',
+                    'ice-options:trickle',
+                    fingerprint,
+                    'setup:actpass',  # Active/passive for DTLS
+                    f'mid:{media_idx}',  # Media ID
+                    'rtcp-mux',  # Multiplex RTP and RTCP on same port
+                ]
+                
+                # Add WebRTC attributes at the beginning
+                media['attributes'] = webrtc_attrs + attrs
+                
+                self.logger.debug(f"Added WebRTC attributes to media {media_idx}")
+            
+            # Build and return transformed SDP
+            result = sdp.build()
+            self.logger.debug("SIP to WebRTC SDP conversion complete")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error converting SIP to WebRTC SDP: {e}")
+            # Fallback: return original SDP
+            return sip_sdp
     
-    def initiate_call(self, session_id: str, target_extension: str) -> Optional[str]:
+    def initiate_call(self, session_id: str, target_extension: str, webrtc_signaling=None) -> Optional[str]:
         """
         Initiate a call from WebRTC client to extension
         
         Args:
             session_id: WebRTC session ID
             target_extension: Target extension number
+            webrtc_signaling: WebRTCSignalingServer instance (optional)
             
         Returns:
             Call ID if successful, None otherwise
@@ -459,25 +550,81 @@ class WebRTCGateway:
             self.logger.error("PBX core not available for call initiation")
             return None
         
-        # TODO: Implement call initiation through PBX core
-        # This would:
-        # 1. Get WebRTC session
-        # 2. Create SIP call to target extension
-        # 3. Bridge WebRTC and SIP media
-        # 4. Return call ID
-        
         self.logger.info(f"Initiating call from WebRTC session {session_id} to {target_extension}")
-        call_id = str(uuid.uuid4())
         
-        return call_id
+        try:
+            # 1. Get WebRTC session
+            session = None
+            if webrtc_signaling:
+                session = webrtc_signaling.get_session(session_id)
+            
+            if not session:
+                self.logger.error(f"WebRTC session {session_id} not found")
+                return None
+            
+            # Get source extension from session
+            from_extension = session.extension
+            
+            # Verify target extension exists
+            if not self.pbx_core.extension_registry.get_extension(target_extension):
+                self.logger.error(f"Target extension {target_extension} not found")
+                return None
+            
+            # 2. Create SIP call through CallManager
+            call_id = str(uuid.uuid4())
+            call = self.pbx_core.call_manager.create_call(
+                call_id=call_id,
+                from_extension=from_extension,
+                to_extension=target_extension
+            )
+            
+            # Start the call
+            call.start()
+            
+            # 3. Bridge WebRTC and SIP media
+            # Get WebRTC SDP from session
+            if session.local_sdp:
+                # Convert WebRTC SDP to SIP-compatible SDP
+                sip_sdp = self.webrtc_to_sip_sdp(session.local_sdp)
+                
+                # Parse SDP to get RTP info
+                from pbx.sip.sdp import SDPSession
+                sdp = SDPSession()
+                sdp.parse(sip_sdp)
+                audio_info = sdp.get_audio_info()
+                
+                if audio_info:
+                    # Store RTP endpoint info in call
+                    call.caller_rtp = {
+                        'address': audio_info.get('address'),
+                        'port': audio_info.get('port'),
+                        'formats': audio_info.get('formats', [])
+                    }
+                    self.logger.debug(f"WebRTC RTP endpoint: {call.caller_rtp}")
+            
+            # 4. Associate call ID with WebRTC session
+            if webrtc_signaling:
+                webrtc_signaling.set_session_call_id(session_id, call_id)
+            
+            self.logger.info(f"Call {call_id} initiated from WebRTC session {session_id} to {target_extension}")
+            return call_id
+            
+        except Exception as e:
+            self.logger.error(f"Error initiating call from WebRTC: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+            return None
     
-    def receive_call(self, session_id: str, call_id: str) -> bool:
+    def receive_call(self, session_id: str, call_id: str, caller_sdp: str = None, 
+                    webrtc_signaling=None) -> bool:
         """
         Route incoming call to WebRTC client
         
         Args:
             session_id: WebRTC session ID
             call_id: Incoming call ID
+            caller_sdp: SDP from caller (optional)
+            webrtc_signaling: WebRTCSignalingServer instance (optional)
             
         Returns:
             True if call was routed successfully
@@ -486,12 +633,116 @@ class WebRTCGateway:
             self.logger.error("PBX core not available for call routing")
             return False
         
-        # TODO: Implement incoming call routing
-        # This would:
-        # 1. Get WebRTC session
-        # 2. Notify client of incoming call
-        # 3. Bridge WebRTC and SIP media when answered
-        
         self.logger.info(f"Routing incoming call {call_id} to WebRTC session {session_id}")
         
-        return True
+        try:
+            # 1. Get WebRTC session
+            session = None
+            if webrtc_signaling:
+                session = webrtc_signaling.get_session(session_id)
+            
+            if not session:
+                self.logger.error(f"WebRTC session {session_id} not found")
+                return False
+            
+            # Get the call from CallManager
+            call = self.pbx_core.call_manager.get_call(call_id)
+            if not call:
+                self.logger.error(f"Call {call_id} not found")
+                return False
+            
+            # 2. Prepare WebRTC-compatible SDP for client notification
+            if caller_sdp:
+                # Convert SIP SDP to WebRTC-compatible SDP
+                webrtc_sdp = self.sip_to_webrtc_sdp(caller_sdp)
+                
+                # Store the remote SDP in session
+                session.remote_sdp = webrtc_sdp
+                session.state = 'ringing'
+                session.update_activity()
+                
+                self.logger.debug(f"Converted SIP SDP to WebRTC SDP for session {session_id}")
+            
+            # 3. Associate call with session for media bridging when answered
+            if webrtc_signaling:
+                webrtc_signaling.set_session_call_id(session_id, call_id)
+                # Store additional metadata for call routing
+                webrtc_signaling.set_session_metadata(session_id, 'incoming_call', True)
+                webrtc_signaling.set_session_metadata(session_id, 'caller_extension', 
+                                                     call.from_extension)
+            
+            # Update call state
+            call.ring()
+            
+            self.logger.info(f"Incoming call {call_id} routed to WebRTC session {session_id}")
+            self.logger.info(f"Client should be notified via signaling channel to accept/reject call")
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error routing incoming call to WebRTC: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+            return False
+    
+    def answer_call(self, session_id: str, webrtc_signaling=None) -> bool:
+        """
+        Handle WebRTC client answering an incoming call
+        
+        Args:
+            session_id: WebRTC session ID
+            webrtc_signaling: WebRTCSignalingServer instance (optional)
+            
+        Returns:
+            True if call was answered successfully
+        """
+        if not self.pbx_core:
+            self.logger.error("PBX core not available")
+            return False
+        
+        try:
+            # Get WebRTC session
+            session = None
+            if webrtc_signaling:
+                session = webrtc_signaling.get_session(session_id)
+            
+            if not session or not session.call_id:
+                self.logger.error(f"No call associated with session {session_id}")
+                return False
+            
+            # Get the call
+            call = self.pbx_core.call_manager.get_call(session.call_id)
+            if not call:
+                self.logger.error(f"Call {session.call_id} not found")
+                return False
+            
+            # Bridge WebRTC and SIP media
+            if session.local_sdp:
+                # Parse WebRTC SDP to get RTP endpoint
+                from pbx.sip.sdp import SDPSession
+                sdp = SDPSession()
+                sdp.parse(session.local_sdp)
+                audio_info = sdp.get_audio_info()
+                
+                if audio_info:
+                    # Store WebRTC RTP endpoint in call
+                    call.callee_rtp = {
+                        'address': audio_info.get('address'),
+                        'port': audio_info.get('port'),
+                        'formats': audio_info.get('formats', [])
+                    }
+                    self.logger.debug(f"WebRTC answered RTP endpoint: {call.callee_rtp}")
+            
+            # Connect the call
+            call.connect()
+            session.state = 'connected'
+            session.update_activity()
+            
+            self.logger.info(f"WebRTC session {session_id} answered call {session.call_id}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error answering call from WebRTC: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+            return False

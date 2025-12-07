@@ -248,6 +248,212 @@ def test_webrtc_gateway():
     return True
 
 
+def test_sdp_transformations():
+    """Test SDP transformations between WebRTC and SIP"""
+    print("\nTesting SDP transformations...")
+    
+    gateway = WebRTCGateway()
+    
+    # Sample WebRTC SDP with DTLS-SRTP
+    webrtc_sdp = """v=0
+o=- 123456789 2 IN IP4 192.168.1.100
+s=WebRTC Call
+c=IN IP4 192.168.1.100
+t=0 0
+m=audio 54321 UDP/TLS/RTP/SAVPF 111 0 8
+a=rtpmap:111 opus/48000/2
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=ice-ufrag:abcd1234
+a=ice-pwd:abcdef1234567890abcdef12
+a=ice-options:trickle
+a=fingerprint:sha-256 AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99
+a=setup:actpass
+a=mid:0
+a=rtcp-mux
+a=sendrecv
+"""
+    
+    # Test WebRTC to SIP conversion
+    sip_sdp = gateway.webrtc_to_sip_sdp(webrtc_sdp)
+    assert 'RTP/AVP' in sip_sdp or 'RTP/SAVPF' in sip_sdp, "Should have RTP protocol"
+    assert 'ice-ufrag' not in sip_sdp, "Should remove WebRTC-specific ICE attributes"
+    assert 'fingerprint' not in sip_sdp, "Should remove DTLS fingerprint"
+    
+    # Sample SIP SDP
+    sip_sdp = """v=0
+o=pbx 987654321 0 IN IP4 192.168.1.10
+s=PBX Call
+c=IN IP4 192.168.1.10
+t=0 0
+m=audio 10000 RTP/AVP 0 8 101
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-16
+a=sendrecv
+"""
+    
+    # Test SIP to WebRTC conversion
+    webrtc_sdp = gateway.sip_to_webrtc_sdp(sip_sdp)
+    assert 'RTP/SAVPF' in webrtc_sdp, "Should convert to RTP/SAVPF"
+    assert 'ice-ufrag' in webrtc_sdp, "Should add ICE username fragment"
+    assert 'ice-pwd' in webrtc_sdp, "Should add ICE password"
+    assert 'sha-256' in webrtc_sdp, "Should add DTLS fingerprint (sha-256)"
+    assert 'setup:actpass' in webrtc_sdp, "Should add DTLS setup attribute"
+    assert 'rtcp-mux' in webrtc_sdp, "Should add RTCP multiplexing"
+    
+    print("✓ SDP transformations work correctly")
+    return True
+
+
+def test_call_initiation():
+    """Test call initiation through WebRTC gateway"""
+    print("\nTesting call initiation...")
+    
+    # Create mock PBX core with necessary components
+    class MockExtension:
+        def __init__(self, number):
+            self.number = number
+    
+    class MockExtensionRegistry:
+        def get_extension(self, number):
+            if number in ['1001', '1002']:
+                return MockExtension(number)
+            return None
+    
+    class MockCallManager:
+        def __init__(self):
+            self.calls = {}
+        
+        def create_call(self, call_id, from_extension, to_extension):
+            from pbx.core.call import Call
+            call = Call(call_id, from_extension, to_extension)
+            self.calls[call_id] = call
+            return call
+        
+        def get_call(self, call_id):
+            return self.calls.get(call_id)
+    
+    class MockPBXCore:
+        def __init__(self):
+            self.extension_registry = MockExtensionRegistry()
+            self.call_manager = MockCallManager()
+    
+    class MockConfig:
+        def get(self, key, default=None):
+            return {'features.webrtc.enabled': True}.get(key, default)
+    
+    # Create WebRTC signaling server and gateway
+    config = MockConfig()
+    signaling = WebRTCSignalingServer(config)
+    
+    pbx_core = MockPBXCore()
+    gateway = WebRTCGateway(pbx_core)
+    
+    # Create WebRTC session
+    session = signaling.create_session('1001')
+    
+    # Set SDP for session
+    test_sdp = """v=0
+o=- 123 0 IN IP4 192.168.1.100
+s=-
+c=IN IP4 192.168.1.100
+t=0 0
+m=audio 50000 RTP/AVP 0
+a=rtpmap:0 PCMU/8000
+a=sendrecv
+"""
+    signaling.handle_offer(session.session_id, test_sdp)
+    
+    # Initiate call
+    call_id = gateway.initiate_call(session.session_id, '1002', signaling)
+    
+    assert call_id is not None, "Should return call ID"
+    assert session.call_id == call_id, "Session should have call ID"
+    
+    # Verify call was created
+    call = pbx_core.call_manager.get_call(call_id)
+    assert call is not None, "Call should be created in CallManager"
+    assert call.from_extension == '1001', "Call should have correct source"
+    assert call.to_extension == '1002', "Call should have correct destination"
+    
+    signaling.stop()
+    
+    print("✓ Call initiation works")
+    return True
+
+
+def test_incoming_call_routing():
+    """Test incoming call routing to WebRTC client"""
+    print("\nTesting incoming call routing...")
+    
+    # Create mock PBX core
+    class MockCallManager:
+        def __init__(self):
+            self.calls = {}
+        
+        def create_call(self, call_id, from_extension, to_extension):
+            from pbx.core.call import Call
+            call = Call(call_id, from_extension, to_extension)
+            self.calls[call_id] = call
+            return call
+        
+        def get_call(self, call_id):
+            return self.calls.get(call_id)
+    
+    class MockPBXCore:
+        def __init__(self):
+            self.call_manager = MockCallManager()
+    
+    class MockConfig:
+        def get(self, key, default=None):
+            return {'features.webrtc.enabled': True}.get(key, default)
+    
+    # Create WebRTC signaling server and gateway
+    config = MockConfig()
+    signaling = WebRTCSignalingServer(config)
+    
+    pbx_core = MockPBXCore()
+    gateway = WebRTCGateway(pbx_core)
+    
+    # Create WebRTC session
+    session = signaling.create_session('1002')
+    
+    # Create incoming call
+    call_id = 'incoming-call-123'
+    call = pbx_core.call_manager.create_call(call_id, '1001', '1002')
+    
+    # Caller SDP
+    caller_sdp = """v=0
+o=pbx 456 0 IN IP4 192.168.1.10
+s=-
+c=IN IP4 192.168.1.10
+t=0 0
+m=audio 20000 RTP/AVP 0 8
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=sendrecv
+"""
+    
+    # Route call to WebRTC client
+    success = gateway.receive_call(session.session_id, call_id, caller_sdp, signaling)
+    
+    assert success == True, "Should route call successfully"
+    assert session.call_id == call_id, "Session should have call ID"
+    assert session.remote_sdp is not None, "Session should have remote SDP"
+    assert 'RTP/SAVPF' in session.remote_sdp, "SDP should be converted to WebRTC format"
+    
+    # Verify metadata
+    is_incoming = signaling.get_session_metadata(session.session_id, 'incoming_call')
+    assert is_incoming == True, "Should mark as incoming call"
+    
+    signaling.stop()
+    
+    print("✓ Incoming call routing works")
+    return True
+
+
 def test_webrtc_disabled():
     """Test WebRTC when disabled"""
     print("\nTesting WebRTC when disabled...")
@@ -288,6 +494,9 @@ if __name__ == "__main__":
     results.append(test_webrtc_ice_candidates())
     results.append(test_webrtc_ice_servers_config())
     results.append(test_webrtc_gateway())
+    results.append(test_sdp_transformations())
+    results.append(test_call_initiation())
+    results.append(test_incoming_call_routing())
     results.append(test_webrtc_disabled())
     
     print("\n" + "=" * 70)
