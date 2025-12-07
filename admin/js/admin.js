@@ -1399,6 +1399,13 @@ let analyticsCharts = {};
 async function loadAnalytics() {
     const days = document.getElementById('analytics-period')?.value || 7;
     
+    // Check if Chart.js is loaded before attempting to load analytics
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library not loaded - cannot render analytics');
+        showNotification('Failed to load analytics: Chart library not available. Please check your internet connection and reload the page.', 'error');
+        return;
+    }
+    
     try {
         const response = await fetch(`${API_BASE}/api/statistics?days=${days}`);
         if (!response.ok) {
@@ -1439,6 +1446,13 @@ function updateAnalyticsOverview(overview) {
 function renderDailyTrendsChart(trends) {
     const ctx = document.getElementById('daily-trends-chart');
     if (!ctx) return;
+    
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library not loaded');
+        ctx.parentElement.innerHTML = '<p class="error-message">Failed to load chart library. Please check your internet connection.</p>';
+        return;
+    }
     
     // Destroy existing chart if it exists
     if (analyticsCharts.dailyTrends) {
@@ -1499,6 +1513,13 @@ function renderHourlyDistributionChart(distribution) {
     const ctx = document.getElementById('hourly-distribution-chart');
     if (!ctx) return;
     
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library not loaded');
+        ctx.parentElement.innerHTML = '<p class="error-message">Failed to load chart library. Please check your internet connection.</p>';
+        return;
+    }
+    
     if (analyticsCharts.hourlyDistribution) {
         analyticsCharts.hourlyDistribution.destroy();
     }
@@ -1538,6 +1559,13 @@ function renderHourlyDistributionChart(distribution) {
 function renderDispositionChart(dispositions) {
     const ctx = document.getElementById('disposition-chart');
     if (!ctx) return;
+    
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library not loaded');
+        ctx.parentElement.innerHTML = '<p class="error-message">Failed to load chart library. Please check your internet connection.</p>';
+        return;
+    }
     
     if (analyticsCharts.disposition) {
         analyticsCharts.disposition.destroy();
@@ -1581,6 +1609,13 @@ function renderDispositionChart(dispositions) {
 function renderQualityChart(quality) {
     const ctx = document.getElementById('quality-chart');
     if (!ctx) return;
+    
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library not loaded');
+        ctx.parentElement.innerHTML = '<p class="error-message">Failed to load chart library. Please check your internet connection.</p>';
+        return;
+    }
     
     if (analyticsCharts.quality) {
         analyticsCharts.quality.destroy();
