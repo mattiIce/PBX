@@ -128,12 +128,11 @@ class TestVoicemailTranscription(unittest.TestCase):
             }
         })
         
-        # Mock OpenAI response
-        import openai
+        # Mock OpenAI response using sys.modules
         mock_response = {
             'text': 'This is a test voicemail transcription.'
         }
-        openai.Audio.transcribe = Mock(return_value=mock_response)
+        sys.modules['openai'].Audio.transcribe = Mock(return_value=mock_response)
         
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
@@ -156,10 +155,9 @@ class TestVoicemailTranscription(unittest.TestCase):
             }
         })
         
-        # Mock OpenAI response with empty text
-        import openai
+        # Mock OpenAI response with empty text using sys.modules
         mock_response = {'text': ''}
-        openai.Audio.transcribe = Mock(return_value=mock_response)
+        sys.modules['openai'].Audio.transcribe = Mock(return_value=mock_response)
         
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
@@ -180,9 +178,8 @@ class TestVoicemailTranscription(unittest.TestCase):
             }
         })
         
-        # Mock OpenAI API error
-        import openai
-        openai.Audio.transcribe = Mock(side_effect=Exception('API rate limit exceeded'))
+        # Mock OpenAI API error using sys.modules
+        sys.modules['openai'].Audio.transcribe = Mock(side_effect=Exception('API rate limit exceeded'))
         
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
@@ -208,7 +205,8 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertIn('Unsupported transcription provider', result['error'])
 
     @patch('pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE', True)
-    def test_transcription_google_success(self):
+    @patch('pbx.features.voicemail_transcription.speech')
+    def test_transcription_google_success(self, mock_speech):
         """Test successful Google Cloud Speech-to-Text transcription"""
         config = Mock()
         config.get = Mock(return_value={
@@ -220,9 +218,13 @@ class TestVoicemailTranscription(unittest.TestCase):
         })
         
         # Mock Google Speech client
-        from google.cloud import speech
         mock_client = MagicMock()
-        speech.SpeechClient = Mock(return_value=mock_client)
+        mock_speech.SpeechClient.return_value = mock_client
+        
+        # Mock configuration classes
+        mock_speech.RecognitionAudio = MagicMock()
+        mock_speech.RecognitionConfig = MagicMock()
+        mock_speech.RecognitionConfig.AudioEncoding = MagicMock()
         
         # Mock recognition response
         mock_alternative = MagicMock()
@@ -235,7 +237,7 @@ class TestVoicemailTranscription(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.results = [mock_result]
         
-        mock_client.recognize = Mock(return_value=mock_response)
+        mock_client.recognize.return_value = mock_response
         
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
@@ -247,7 +249,8 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertIsNone(result['error'])
 
     @patch('pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE', True)
-    def test_transcription_google_no_results(self):
+    @patch('pbx.features.voicemail_transcription.speech')
+    def test_transcription_google_no_results(self, mock_speech):
         """Test Google transcription with no results"""
         config = Mock()
         config.get = Mock(return_value={
@@ -259,15 +262,19 @@ class TestVoicemailTranscription(unittest.TestCase):
         })
         
         # Mock Google Speech client
-        from google.cloud import speech
         mock_client = MagicMock()
-        speech.SpeechClient = Mock(return_value=mock_client)
+        mock_speech.SpeechClient.return_value = mock_client
+        
+        # Mock configuration classes
+        mock_speech.RecognitionAudio = MagicMock()
+        mock_speech.RecognitionConfig = MagicMock()
+        mock_speech.RecognitionConfig.AudioEncoding = MagicMock()
         
         # Mock empty response
         mock_response = MagicMock()
         mock_response.results = []
         
-        mock_client.recognize = Mock(return_value=mock_response)
+        mock_client.recognize.return_value = mock_response
         
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
