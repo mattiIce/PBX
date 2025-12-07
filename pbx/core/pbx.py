@@ -208,6 +208,24 @@ class PBXCore:
         else:
             self.threat_detector = None
 
+        # Initialize DND scheduler if enabled
+        if self.config.get('features.dnd_scheduling.enabled', False):
+            from pbx.features.dnd_scheduling import get_dnd_scheduler
+            
+            # Get Outlook integration if available
+            outlook = None
+            if hasattr(self, 'integrations') and 'outlook' in self.integrations:
+                outlook = self.integrations['outlook']
+            
+            self.dnd_scheduler = get_dnd_scheduler(
+                presence_system=self.presence_system if hasattr(self, 'presence_system') else None,
+                outlook_integration=outlook,
+                config=self.config
+            )
+            self.logger.info("DND Scheduler initialized")
+        else:
+            self.dnd_scheduler = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)
@@ -249,6 +267,10 @@ class PBXCore:
         if not self.api_server.start():
             self.logger.warning("Failed to start API server (non-critical)")
 
+        # Start DND scheduler
+        if self.dnd_scheduler:
+            self.dnd_scheduler.start()
+
         # Register SIP trunks
         self.trunk_system.register_all()
 
@@ -260,6 +282,10 @@ class PBXCore:
         """Stop PBX system"""
         self.logger.info("Stopping PBX system...")
         self.running = False
+
+        # Stop DND scheduler
+        if self.dnd_scheduler:
+            self.dnd_scheduler.stop()
 
         # Stop API server
         self.api_server.stop()

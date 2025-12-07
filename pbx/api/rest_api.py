@@ -171,6 +171,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_block_ip()
             elif path == '/api/security/unblock-ip':
                 self._handle_unblock_ip()
+            elif path == '/api/dnd/rule':
+                self._handle_add_dnd_rule()
+            elif path == '/api/dnd/register-calendar':
+                self._handle_register_calendar_user()
+            elif path == '/api/dnd/override':
+                self._handle_dnd_override()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -233,6 +239,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension from path
                 extension = path.split('/')[-1]
                 self._handle_delete_paging_zone(extension)
+            elif path.startswith('/api/dnd/rule/'):
+                # Extract rule ID from path
+                rule_id = path.split('/')[-1]
+                self._handle_delete_dnd_rule(rule_id)
+            elif path.startswith('/api/dnd/override/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_clear_dnd_override(extension)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -332,6 +346,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_threat_summary()
             elif path.startswith('/api/security/check-ip/'):
                 self._handle_check_ip(path)
+            elif path.startswith('/api/dnd/status/'):
+                self._handle_get_dnd_status(path)
+            elif path.startswith('/api/dnd/rules/'):
+                self._handle_get_dnd_rules(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -2420,6 +2438,155 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'ip_address': ip_address,
                 'is_blocked': is_blocked,
                 'reason': reason
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_dnd_rule(self):
+        """Handle adding DND rule"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            rule_type = data.get('rule_type')  # 'calendar' or 'time_based'
+            config = data.get('config', {})
+            
+            if not extension or not rule_type:
+                self._send_json({'error': 'extension and rule_type are required'}, 400)
+                return
+            
+            rule_id = self.pbx_core.dnd_scheduler.add_rule(extension, rule_type, config)
+            
+            self._send_json({
+                'success': True,
+                'rule_id': rule_id,
+                'message': 'DND rule added successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_dnd_rule(self, rule_id: str):
+        """Handle deleting DND rule"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.dnd_scheduler.remove_rule(rule_id)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': 'DND rule deleted successfully'
+                })
+            else:
+                self._send_json({'error': 'Rule not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_register_calendar_user(self):
+        """Handle registering user for calendar-based DND"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            email = data.get('email')
+            
+            if not extension or not email:
+                self._send_json({'error': 'extension and email are required'}, 400)
+                return
+            
+            self.pbx_core.dnd_scheduler.register_calendar_user(extension, email)
+            
+            self._send_json({
+                'success': True,
+                'message': f'Calendar monitoring registered for {extension}'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_dnd_override(self):
+        """Handle manual DND override"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            status = data.get('status')  # e.g., 'do_not_disturb', 'available'
+            duration_minutes = data.get('duration_minutes')  # Optional
+            
+            if not extension or not status:
+                self._send_json({'error': 'extension and status are required'}, 400)
+                return
+            
+            # Convert status string to PresenceStatus enum
+            from pbx.features.presence import PresenceStatus
+            try:
+                status_enum = PresenceStatus(status)
+            except ValueError:
+                self._send_json({'error': f'Invalid status: {status}'}, 400)
+                return
+            
+            self.pbx_core.dnd_scheduler.set_manual_override(extension, status_enum, duration_minutes)
+            
+            self._send_json({
+                'success': True,
+                'message': f'Manual override set for {extension}'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_clear_dnd_override(self, extension: str):
+        """Handle clearing DND override"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            self.pbx_core.dnd_scheduler.clear_manual_override(extension)
+            
+            self._send_json({
+                'success': True,
+                'message': f'Override cleared for {extension}'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_dnd_status(self, path: str):
+        """Get DND status for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            status = self.pbx_core.dnd_scheduler.get_status(extension)
+            
+            self._send_json(status)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_dnd_rules(self, path: str):
+        """Get DND rules for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
+            self._send_json({'error': 'DND Scheduler not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            rules = self.pbx_core.dnd_scheduler.get_rules(extension)
+            
+            self._send_json({
+                'extension': extension,
+                'rules': rules
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
