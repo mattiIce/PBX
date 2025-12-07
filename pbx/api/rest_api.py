@@ -151,6 +151,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_call()
             elif path == '/api/crm/screen-pop':
                 self._handle_trigger_screen_pop()
+            elif path == '/api/hot-desk/login':
+                self._handle_hot_desk_login()
+            elif path == '/api/hot-desk/logout':
+                self._handle_hot_desk_logout()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -298,6 +302,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_crm_lookup()
             elif path == '/api/crm/providers':
                 self._handle_get_crm_providers()
+            elif path == '/api/hot-desk/sessions':
+                self._handle_get_hot_desk_sessions()
+            elif path.startswith('/api/hot-desk/session/'):
+                self._handle_get_hot_desk_session(path)
+            elif path.startswith('/api/hot-desk/extension/'):
+                self._handle_get_hot_desk_extension(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -2039,6 +2049,127 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({
                 'success': True,
                 'message': 'Screen pop triggered'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== Hot-Desking Handlers ==========
+    
+    def _handle_hot_desk_login(self):
+        """Handle hot-desk login"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            device_id = data.get('device_id')
+            ip_address = data.get('ip_address', self.client_address[0])
+            pin = data.get('pin')
+            
+            if not all([extension, device_id]):
+                self._send_json({'error': 'extension and device_id are required'}, 400)
+                return
+            
+            success = self.pbx_core.hot_desking.login(extension, device_id, ip_address, pin)
+            
+            if success:
+                profile = self.pbx_core.hot_desking.get_extension_profile(extension)
+                self._send_json({
+                    'success': True,
+                    'message': f'Extension {extension} logged in',
+                    'profile': profile
+                })
+            else:
+                self._send_json({'error': 'Login failed'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_hot_desk_logout(self):
+        """Handle hot-desk logout"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            device_id = data.get('device_id')
+            extension = data.get('extension')  # Optional: logout specific extension
+            
+            if device_id:
+                success = self.pbx_core.hot_desking.logout(device_id)
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Logged out from device {device_id}'
+                    })
+                else:
+                    self._send_json({'error': 'No active session for device'}, 404)
+            elif extension:
+                count = self.pbx_core.hot_desking.logout_extension(extension)
+                self._send_json({
+                    'success': True,
+                    'message': f'Extension {extension} logged out from {count} device(s)'
+                })
+            else:
+                self._send_json({'error': 'device_id or extension is required'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_hot_desk_sessions(self):
+        """Get all hot-desk sessions"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            sessions = self.pbx_core.hot_desking.get_active_sessions()
+            self._send_json({
+                'count': len(sessions),
+                'sessions': sessions
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_hot_desk_session(self, path: str):
+        """Get specific hot-desk session by device"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            device_id = path.split('/')[-1]
+            session = self.pbx_core.hot_desking.get_session(device_id)
+            
+            if session:
+                self._send_json(session.to_dict())
+            else:
+                self._send_json({'error': 'No session found for device'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_hot_desk_extension(self, path: str):
+        """Get hot-desk information for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            devices = self.pbx_core.hot_desking.get_extension_devices(extension)
+            sessions = []
+            
+            for device_id in devices:
+                session = self.pbx_core.hot_desking.get_session(device_id)
+                if session:
+                    sessions.append(session.to_dict())
+            
+            self._send_json({
+                'extension': extension,
+                'logged_in': len(sessions) > 0,
+                'device_count': len(devices),
+                'sessions': sessions
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)

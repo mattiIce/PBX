@@ -178,6 +178,14 @@ class PBXCore:
         else:
             self.crm_integration = None
 
+        # Initialize hot-desking if enabled
+        if self.config.get('features.hot_desking.enabled', False):
+            from pbx.features.hot_desking import HotDeskingSystem
+            self.hot_desking = HotDeskingSystem(self.config, self)
+            self.logger.info("Hot-desking system initialized")
+        else:
+            self.hot_desking = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)

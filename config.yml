@@ -149,6 +149,13 @@ features:
       #   url: https://your-crm.com/api/lookup
       #   api_key: your-api-key-here
       #   timeout: 5
+  
+  # Hot-Desking - Log in from any phone, retain settings
+  hot_desking:
+    enabled: true
+    require_pin: true                  # Require voicemail PIN for login
+    allow_concurrent_logins: false     # Allow same extension on multiple devices
+    auto_logout_timeout: 28800         # Auto-logout after inactivity (8 hours)
 recording:
   auto_record: false
   storage_path: recordings
