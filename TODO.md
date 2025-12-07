@@ -16,9 +16,9 @@ This document tracks all features from the Executive Summary that are marked as 
 
 ### Overall Status
 - **Total Features Tracked**: 79 features
-- **Completed** ✅: 13 features (16%)
+- **Completed** ✅: 14 features (18%)
 - **Framework** ⚠️: 14 features (18%)
-- **Planned**: 52 features (66%)
+- **Planned**: 51 features (64%)
 
 ### Recently Completed (December 2025)
 1. **WebRTC Browser Calling** - Full browser-based calling with WebRTC signaling
@@ -30,6 +30,7 @@ This document tracks all features from the Executive Summary that are marked as 
 7. **Enhanced Threat Detection** - IP blocking, pattern analysis, anomaly detection
 8. **DND Scheduling** - Auto-DND based on calendar and time rules
 9. **Skills-Based Routing** - Intelligent agent selection based on skill profiles
+10. **Voicemail Transcription** - Speech-to-text conversion with OpenAI/Google support
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
@@ -255,9 +256,14 @@ Features with foundational implementations that can be extended:
   - Needs: Modern web UI for voicemail management
   - Impact: Better voicemail management
 
-- [ ] **Voicemail Transcription** - Text version of voicemail messages
-  - Requires: Speech-to-text API
-  - Impact: Quick voicemail review
+- [x] **Voicemail Transcription** - Text version of voicemail messages
+  - Status: ✅ COMPLETED - Full implementation in pbx/features/voicemail_transcription.py
+  - Features: OpenAI Whisper and Google Cloud Speech-to-Text support
+  - Database: Transcription storage with confidence scores and metadata
+  - API Endpoints: Included in voicemail message data
+  - Email Integration: Transcriptions in voicemail-to-email notifications
+  - Documentation: VOICEMAIL_TRANSCRIPTION_GUIDE.md
+  - Impact: Quick voicemail review with speech-to-text conversion
 
 - [ ] **Mobile Number Portability** - Use business number on mobile
   - Requires: Mobile client, SIP registration
@@ -494,7 +500,7 @@ Features with foundational implementations that can be extended:
 1. ~~Multi-Factor Authentication (enhance existing framework)~~ - DONE (December 7, 2025)
 2. ~~Enhanced Threat Detection (build on rate limiting)~~ - DONE (December 7, 2025)
 3. ~~Skills-Based Routing~~ - DONE (December 7, 2025)
-4. Voicemail Transcription
+4. ~~Voicemail Transcription~~ - DONE (December 7, 2025)
 5. WebRTC Video Conferencing (extend existing audio implementation)
 
 ### Short-Term (1-3 Months)
