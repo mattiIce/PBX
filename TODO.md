@@ -47,7 +47,6 @@ Features with foundational implementations that can be extended:
 2. **Multi-Factor Authentication** - Security enhancement
 3. **STIR/SHAKEN** - Regulatory requirement
 4. **E911 Support** - Safety and compliance
-5. **WebRTC Video** - Extend browser calling to video
 
 ---
 
@@ -501,7 +500,6 @@ Features with foundational implementations that can be extended:
 2. ~~Enhanced Threat Detection (build on rate limiting)~~ - DONE (December 7, 2025)
 3. ~~Skills-Based Routing~~ - DONE (December 7, 2025)
 4. ~~Voicemail Transcription~~ - DONE (December 7, 2025)
-5. WebRTC Video Conferencing (extend existing audio implementation)
 
 ### Short-Term (1-3 Months)
 1. Mobile Apps (iOS/Android)
