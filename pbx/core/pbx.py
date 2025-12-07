@@ -160,6 +160,32 @@ class PBXCore:
         from pbx.features.webhooks import WebhookSystem
         self.webhook_system = WebhookSystem(self.config)
 
+        # Initialize WebRTC if enabled
+        if self.config.get('features.webrtc.enabled', False):
+            from pbx.features.webrtc import WebRTCSignalingServer, WebRTCGateway
+            self.webrtc_signaling = WebRTCSignalingServer(self.config)
+            self.webrtc_gateway = WebRTCGateway(self)
+            self.logger.info("WebRTC browser calling initialized")
+        else:
+            self.webrtc_signaling = None
+            self.webrtc_gateway = None
+
+        # Initialize CRM integration if enabled
+        if self.config.get('features.crm_integration.enabled', False):
+            from pbx.features.crm_integration import CRMIntegration
+            self.crm_integration = CRMIntegration(self.config, self)
+            self.logger.info("CRM integration and screen pop initialized")
+        else:
+            self.crm_integration = None
+
+        # Initialize hot-desking if enabled
+        if self.config.get('features.hot_desking.enabled', False):
+            from pbx.features.hot_desking import HotDeskingSystem
+            self.hot_desking = HotDeskingSystem(self.config, self)
+            self.logger.info("Hot-desking system initialized")
+        else:
+            self.hot_desking = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)

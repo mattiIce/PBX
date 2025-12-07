@@ -139,6 +139,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_configure_paging_device()
             elif path == '/api/webhooks':
                 self._handle_add_webhook()
+            elif path == '/api/webrtc/session':
+                self._handle_create_webrtc_session()
+            elif path == '/api/webrtc/offer':
+                self._handle_webrtc_offer()
+            elif path == '/api/webrtc/answer':
+                self._handle_webrtc_answer()
+            elif path == '/api/webrtc/ice-candidate':
+                self._handle_webrtc_ice_candidate()
+            elif path == '/api/webrtc/call':
+                self._handle_webrtc_call()
+            elif path == '/api/crm/screen-pop':
+                self._handle_trigger_screen_pop()
+            elif path == '/api/hot-desk/login':
+                self._handle_hot_desk_login()
+            elif path == '/api/hot-desk/logout':
+                self._handle_hot_desk_logout()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -276,6 +292,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_active_pages()
             elif path == '/api/webhooks':
                 self._handle_get_webhooks()
+            elif path == '/api/webrtc/sessions':
+                self._handle_get_webrtc_sessions()
+            elif path == '/api/webrtc/ice-servers':
+                self._handle_get_ice_servers()
+            elif path.startswith('/api/webrtc/session/'):
+                self._handle_get_webrtc_session(path)
+            elif path.startswith('/api/crm/lookup'):
+                self._handle_crm_lookup()
+            elif path == '/api/crm/providers':
+                self._handle_get_crm_providers()
+            elif path == '/api/hot-desk/sessions':
+                self._handle_get_hot_desk_sessions()
+            elif path.startswith('/api/hot-desk/session/'):
+                self._handle_get_hot_desk_session(path)
+            elif path.startswith('/api/hot-desk/extension/'):
+                self._handle_get_hot_desk_extension(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -1772,6 +1804,373 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'Webhook subscription not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== WebRTC Handlers ==========
+    
+    def _handle_create_webrtc_session(self):
+        """Create a new WebRTC session"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            
+            if not extension:
+                self._send_json({'error': 'Extension is required'}, 400)
+                return
+            
+            # Verify extension exists
+            if not self.pbx_core.extension_registry.get_extension(extension):
+                self._send_json({'error': 'Extension not found'}, 404)
+                return
+            
+            session = self.pbx_core.webrtc_signaling.create_session(extension)
+            
+            self._send_json({
+                'success': True,
+                'session': session.to_dict(),
+                'ice_servers': self.pbx_core.webrtc_signaling.get_ice_servers_config()
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_offer(self):
+        """Handle WebRTC SDP offer"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            sdp = data.get('sdp')
+            
+            if not session_id or not sdp:
+                self._send_json({'error': 'session_id and sdp are required'}, 400)
+                return
+            
+            success = self.pbx_core.webrtc_signaling.handle_offer(session_id, sdp)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'Offer received'})
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_answer(self):
+        """Handle WebRTC SDP answer"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            sdp = data.get('sdp')
+            
+            if not session_id or not sdp:
+                self._send_json({'error': 'session_id and sdp are required'}, 400)
+                return
+            
+            success = self.pbx_core.webrtc_signaling.handle_answer(session_id, sdp)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'Answer received'})
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_ice_candidate(self):
+        """Handle WebRTC ICE candidate"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            candidate = data.get('candidate')
+            
+            if not session_id or not candidate:
+                self._send_json({'error': 'session_id and candidate are required'}, 400)
+                return
+            
+            success = self.pbx_core.webrtc_signaling.add_ice_candidate(session_id, candidate)
+            
+            if success:
+                self._send_json({'success': True, 'message': 'ICE candidate added'})
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_call(self):
+        """Initiate a call from WebRTC client"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_gateway'):
+            self._send_json({'error': 'WebRTC gateway not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            target_extension = data.get('target_extension')
+            
+            if not session_id or not target_extension:
+                self._send_json({'error': 'session_id and target_extension are required'}, 400)
+                return
+            
+            call_id = self.pbx_core.webrtc_gateway.initiate_call(session_id, target_extension)
+            
+            if call_id:
+                self._send_json({
+                    'success': True,
+                    'call_id': call_id,
+                    'message': f'Call initiated to {target_extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to initiate call'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_webrtc_sessions(self):
+        """Get all WebRTC sessions"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            sessions = self.pbx_core.webrtc_signaling.get_sessions_info()
+            self._send_json(sessions)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_webrtc_session(self, path: str):
+        """Get specific WebRTC session"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            session_id = path.split('/')[-1]
+            session = self.pbx_core.webrtc_signaling.get_session(session_id)
+            
+            if session:
+                self._send_json(session.to_dict())
+            else:
+                self._send_json({'error': 'Session not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_ice_servers(self):
+        """Get ICE servers configuration"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
+            self._send_json({'error': 'WebRTC not available'}, 500)
+            return
+        
+        try:
+            config = self.pbx_core.webrtc_signaling.get_ice_servers_config()
+            self._send_json(config)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== CRM Integration Handlers ==========
+    
+    def _handle_crm_lookup(self):
+        """Look up caller information"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
+            self._send_json({'error': 'CRM integration not available'}, 500)
+            return
+        
+        try:
+            # Get phone number from query string
+            parsed_url = urlparse(self.path)
+            query_params = parse_qs(parsed_url.query)
+            phone_number = query_params.get('phone', [None])[0]
+            
+            if not phone_number:
+                self._send_json({'error': 'phone parameter is required'}, 400)
+                return
+            
+            # Look up caller info
+            caller_info = self.pbx_core.crm_integration.lookup_caller(phone_number)
+            
+            if caller_info:
+                self._send_json({
+                    'found': True,
+                    'caller_info': caller_info.to_dict()
+                })
+            else:
+                self._send_json({
+                    'found': False,
+                    'message': 'Caller not found'
+                })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_crm_providers(self):
+        """Get CRM provider status"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
+            self._send_json({'error': 'CRM integration not available'}, 500)
+            return
+        
+        try:
+            providers = self.pbx_core.crm_integration.get_provider_status()
+            self._send_json({
+                'enabled': self.pbx_core.crm_integration.enabled,
+                'providers': providers
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_trigger_screen_pop(self):
+        """Trigger screen pop for a call"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
+            self._send_json({'error': 'CRM integration not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            phone_number = data.get('phone_number')
+            call_id = data.get('call_id')
+            extension = data.get('extension')
+            
+            if not all([phone_number, call_id, extension]):
+                self._send_json({'error': 'phone_number, call_id, and extension are required'}, 400)
+                return
+            
+            self.pbx_core.crm_integration.trigger_screen_pop(phone_number, call_id, extension)
+            
+            self._send_json({
+                'success': True,
+                'message': 'Screen pop triggered'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== Hot-Desking Handlers ==========
+    
+    def _handle_hot_desk_login(self):
+        """Handle hot-desk login"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            extension = data.get('extension')
+            device_id = data.get('device_id')
+            ip_address = data.get('ip_address', self.client_address[0])
+            pin = data.get('pin')
+            
+            if not all([extension, device_id]):
+                self._send_json({'error': 'extension and device_id are required'}, 400)
+                return
+            
+            success = self.pbx_core.hot_desking.login(extension, device_id, ip_address, pin)
+            
+            if success:
+                profile = self.pbx_core.hot_desking.get_extension_profile(extension)
+                self._send_json({
+                    'success': True,
+                    'message': f'Extension {extension} logged in',
+                    'profile': profile
+                })
+            else:
+                self._send_json({'error': 'Login failed'}, 401)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_hot_desk_logout(self):
+        """Handle hot-desk logout"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            device_id = data.get('device_id')
+            extension = data.get('extension')  # Optional: logout specific extension
+            
+            if device_id:
+                success = self.pbx_core.hot_desking.logout(device_id)
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Logged out from device {device_id}'
+                    })
+                else:
+                    self._send_json({'error': 'No active session for device'}, 404)
+            elif extension:
+                count = self.pbx_core.hot_desking.logout_extension(extension)
+                self._send_json({
+                    'success': True,
+                    'message': f'Extension {extension} logged out from {count} device(s)'
+                })
+            else:
+                self._send_json({'error': 'device_id or extension is required'}, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_hot_desk_sessions(self):
+        """Get all hot-desk sessions"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            sessions = self.pbx_core.hot_desking.get_active_sessions()
+            self._send_json({
+                'count': len(sessions),
+                'sessions': sessions
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_hot_desk_session(self, path: str):
+        """Get specific hot-desk session by device"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            device_id = path.split('/')[-1]
+            session = self.pbx_core.hot_desking.get_session(device_id)
+            
+            if session:
+                self._send_json(session.to_dict())
+            else:
+                self._send_json({'error': 'No session found for device'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_hot_desk_extension(self, path: str):
+        """Get hot-desk information for extension"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
+            self._send_json({'error': 'Hot-desking not available'}, 500)
+            return
+        
+        try:
+            extension = path.split('/')[-1]
+            devices = self.pbx_core.hot_desking.get_extension_devices(extension)
+            sessions = []
+            
+            for device_id in devices:
+                session = self.pbx_core.hot_desking.get_session(device_id)
+                if session:
+                    sessions.append(session.to_dict())
+            
+            self._send_json({
+                'extension': extension,
+                'logged_in': len(sessions) > 0,
+                'device_count': len(devices),
+                'sessions': sessions
+            })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 

@@ -75,6 +75,87 @@ features:
   music_on_hold: true
   auto_attendant: true
   max_call_duration: 7200
+  
+  # Webhook System - Event-driven integrations
+  webhooks:
+    enabled: true
+    max_retries: 3          # Number of retry attempts
+    retry_delay: 5          # Seconds between retries
+    timeout: 10             # HTTP request timeout in seconds
+    worker_threads: 2       # Number of delivery worker threads
+    
+    # Webhook subscriptions
+    # Example subscriptions (add your own endpoints):
+    subscriptions: []
+      # - url: "https://your-server.com/webhooks/pbx"
+      #   events: ["*"]       # All events (wildcard)
+      #   enabled: true
+      #   secret: "your-webhook-secret"  # Optional - for HMAC signature
+      #   headers:            # Optional custom headers
+      #     Authorization: "Bearer your-token"
+      # 
+      # - url: "https://crm.company.com/api/call-events"
+      #   events:
+      #     - "call.started"
+      #     - "call.ended"
+      #   enabled: true
+      # 
+      # - url: "https://analytics.company.com/webhooks"
+      #   events:
+      #     - "voicemail.new"
+      #     - "queue.call_answered"
+      #   enabled: true
+  
+  # WebRTC Browser Calling - No-download browser-based calling
+  webrtc:
+    enabled: true
+    session_timeout: 300      # Session timeout in seconds (5 minutes)
+    ice_transport_policy: all # ICE transport policy: 'all' or 'relay'
+    
+    # STUN servers for NAT traversal
+    stun_servers:
+      - stun:stun.l.google.com:19302
+      - stun:stun1.l.google.com:19302
+    
+    # TURN servers for relay (optional)
+    # Uncomment and configure if you need TURN relay support
+    turn_servers: []
+      # - url: turn:your-turn-server.com:3478
+      #   username: your-turn-username
+      #   credential: your-turn-password
+  
+  # CRM Integration and Screen Pop - Auto-display customer info on calls
+  crm_integration:
+    enabled: true
+    cache_enabled: true       # Cache lookup results
+    cache_timeout: 3600       # Cache timeout in seconds (1 hour)
+    
+    # Lookup providers (tried in order)
+    providers:
+      # Phone Book lookup
+      - type: phone_book
+        enabled: true
+        name: PhoneBook
+      
+      # Active Directory lookup
+      - type: active_directory
+        enabled: true
+        name: ActiveDirectory
+      
+      # External CRM API lookup (example)
+      # - type: external_crm
+      #   enabled: true
+      #   name: SalesforceCRM
+      #   url: https://your-crm.com/api/lookup
+      #   api_key: your-api-key-here
+      #   timeout: 5
+  
+  # Hot-Desking - Log in from any phone, retain settings
+  hot_desking:
+    enabled: true
+    require_pin: true                  # Require voicemail PIN for login
+    allow_concurrent_logins: false     # Allow same extension on multiple devices
+    auto_logout_timeout: 28800         # Auto-logout after inactivity (8 hours)
 recording:
   auto_record: false
   storage_path: recordings
