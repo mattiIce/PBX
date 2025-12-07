@@ -151,7 +151,9 @@ class VoicemailTranscriptionService:
 
         if not self.api_key:
             error_msg = "OpenAI API key not configured"
-            self.logger.error(error_msg)
+            # Only log as error if transcription was explicitly requested
+            # Otherwise it's expected when the feature is disabled
+            self.logger.warning(error_msg)
             return {
                 'success': False,
                 'text': None,

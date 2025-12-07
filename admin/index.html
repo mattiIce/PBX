@@ -5,7 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PBX Admin Panel</title>
     <link rel="stylesheet" href="css/admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Define fallback function before loading Chart.js -->
+    <script>
+        // Fallback function to load Chart.js from alternative CDNs
+        function loadChartJsFallback() {
+            console.warn('Primary Chart.js CDN failed, trying fallback...');
+            const fallbacks = [
+                'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
+                'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js'
+            ];
+            
+            let currentIndex = 0;
+            
+            function tryNextFallback() {
+                if (currentIndex >= fallbacks.length) {
+                    console.error('All Chart.js CDN fallbacks failed');
+                    window.chartJsLoadFailed = true;
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = fallbacks[currentIndex];
+                script.onerror = function() {
+                    console.warn(`Fallback ${currentIndex + 1} failed, trying next...`);
+                    currentIndex++;
+                    tryNextFallback();
+                };
+                script.onload = function() {
+                    console.log(`Chart.js loaded successfully from fallback ${currentIndex + 1}`);
+                    window.chartJsLoadFailed = false;
+                };
+                document.head.appendChild(script);
+            }
+            
+            tryNextFallback();
+        }
+    </script>
+    <!-- Load Chart.js with fallback on error -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" 
+            onerror="loadChartJsFallback()"></script>
 </head>
 <body>
     <div class="container">

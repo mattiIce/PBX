@@ -63,7 +63,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # self.send_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
         
         # Content-Security-Policy: Restrict resource loading
-        csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+        # Allow Chart.js from trusted CDNs for analytics visualization
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:;"
+        )
         self.send_header('Content-Security-Policy', csp)
         
         # Referrer-Policy: Control referrer information

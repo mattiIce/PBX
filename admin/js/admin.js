@@ -567,6 +567,9 @@ function showNotification(message, type = 'info') {
         case 'error':
             notification.style.background = '#ef4444';
             break;
+        case 'warning':
+            notification.style.background = '#f59e0b';
+            break;
         default:
             notification.style.background = '#667eea';
     }
@@ -1402,10 +1405,21 @@ let analyticsCharts = {};
  * @returns {boolean} - True if Chart.js is available, false otherwise
  */
 function isChartJsAvailable(ctx = null) {
+    // Check if Chart.js is loaded, accounting for potential delay from fallback CDNs
     if (typeof Chart === 'undefined') {
-        console.error('Chart.js library not loaded');
-        if (ctx && ctx.parentElement) {
-            ctx.parentElement.innerHTML = '<p class="error-message">Failed to load chart library. Please check your internet connection.</p>';
+        // Check if we know loading failed completely
+        if (window.chartJsLoadFailed) {
+            console.warn('Chart.js library failed to load from all CDN sources');
+            if (ctx && ctx.parentElement) {
+                const msg = document.createElement('p');
+                msg.style.padding = '20px';
+                msg.style.textAlign = 'center';
+                msg.style.color = '#666';
+                msg.style.fontSize = '14px';
+                msg.innerHTML = '📊 Chart visualization unavailable in offline mode<br><small>Data is still available in tables below</small>';
+                ctx.parentElement.innerHTML = '';
+                ctx.parentElement.appendChild(msg);
+            }
         }
         return false;
     }
@@ -1415,10 +1429,23 @@ function isChartJsAvailable(ctx = null) {
 async function loadAnalytics() {
     const days = document.getElementById('analytics-period')?.value || 7;
     
-    // Check if Chart.js is loaded before attempting to load analytics
-    if (!isChartJsAvailable()) {
-        showNotification('Failed to load analytics: Chart library not available. Please check your internet connection and reload the page.', 'error');
-        return;
+    // Check if Chart.js is loaded
+    const chartJsAvailable = isChartJsAvailable();
+    
+    // Show warning if Chart.js is not available, but continue to load data
+    if (!chartJsAvailable) {
+        showNotification('Chart library not available - displaying data in tables only. Charts require internet connection.', 'warning');
+        // Hide chart containers
+        const chartContainers = document.querySelectorAll('.chart-box');
+        chartContainers.forEach(container => {
+            container.style.display = 'none';
+        });
+    } else {
+        // Show chart containers if they were hidden
+        const chartContainers = document.querySelectorAll('.chart-box');
+        chartContainers.forEach(container => {
+            container.style.display = '';
+        });
     }
     
     try {
@@ -1429,22 +1456,28 @@ async function loadAnalytics() {
         
         const data = await response.json();
         
-        // Update overview stats
+        // Update overview stats (always available)
         updateAnalyticsOverview(data.overview);
         
-        // Render charts
-        renderDailyTrendsChart(data.daily_trends);
-        renderHourlyDistributionChart(data.hourly_distribution);
-        renderDispositionChart(data.call_disposition);
-        renderQualityChart(data.call_quality);
+        // Render charts only if Chart.js is available
+        if (chartJsAvailable) {
+            renderDailyTrendsChart(data.daily_trends);
+            renderHourlyDistributionChart(data.hourly_distribution);
+            renderDispositionChart(data.call_disposition);
+            renderQualityChart(data.call_quality);
+        }
         
-        // Update top callers table
+        // Update top callers table (always available)
         updateTopCallersTable(data.top_callers);
         
-        // Update peak hours display
+        // Update peak hours display (always available)
         updatePeakHours(data.peak_hours);
         
-        showNotification('Analytics refreshed successfully', 'success');
+        if (chartJsAvailable) {
+            showNotification('Analytics refreshed successfully', 'success');
+        } else {
+            showNotification('Analytics data loaded (charts unavailable - offline mode)', 'info');
+        }
     } catch (error) {
         console.error('Error loading analytics:', error);
         showNotification('Failed to load analytics: ' + error.message, 'error');
