@@ -12,6 +12,12 @@ try:
 except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
+try:
+    from pbx.features.voicemail_transcription import VoicemailTranscriptionService
+    TRANSCRIPTION_AVAILABLE = True
+except ImportError:
+    TRANSCRIPTION_AVAILABLE = False
+
 
 # Constants
 GREETING_FILENAME = "greeting.wav"
@@ -20,7 +26,7 @@ GREETING_FILENAME = "greeting.wav"
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
 
-    def __init__(self, extension_number, storage_path="voicemail", config=None, email_notifier=None, database=None):
+    def __init__(self, extension_number, storage_path="voicemail", config=None, email_notifier=None, database=None, transcription_service=None):
         """
         Initialize voicemail box
 
@@ -30,6 +36,7 @@ class VoicemailBox:
             config: Config object
             email_notifier: EmailNotifier object
             database: DatabaseBackend object (optional)
+            transcription_service: VoicemailTranscriptionService object (optional)
         """
         self.extension_number = extension_number
         self.storage_path = os.path.join(storage_path, extension_number)
@@ -38,6 +45,7 @@ class VoicemailBox:
         self.config = config
         self.email_notifier = email_notifier
         self.database = database
+        self.transcription_service = transcription_service
         self.pin = None  # Voicemail PIN
         self.greeting_path = os.path.join(self.storage_path, GREETING_FILENAME)  # Custom greeting file
 
@@ -136,20 +144,83 @@ class VoicemailBox:
             self.logger.warning(f"Database not available - voicemail metadata NOT saved to database")
             self.logger.warning(f"  Message ID: {message_id} stored as file only")
 
+        # Transcribe voicemail if enabled
+        transcription_result = None
+        if self.transcription_service:
+            self.logger.info(f"Transcribing voicemail {message_id}...")
+            transcription_result = self.transcription_service.transcribe(file_path)
+            
+            if transcription_result['success']:
+                self.logger.info(f"✓ Voicemail transcribed successfully")
+                self.logger.info(f"  Confidence: {transcription_result['confidence']:.2%}")
+                self.logger.debug(f"  Text: {transcription_result['text'][:100]}...")
+                
+                # Add transcription to message
+                message['transcription'] = transcription_result['text']
+                message['transcription_confidence'] = transcription_result['confidence']
+                message['transcription_language'] = transcription_result['language']
+                message['transcription_provider'] = transcription_result['provider']
+                message['transcribed_at'] = transcription_result['timestamp']
+                
+                # Update database with transcription
+                if self.database and self.database.enabled:
+                    try:
+                        placeholder = self._get_db_placeholder()
+                        query = f"""
+                        UPDATE voicemail_messages 
+                        SET transcription_text = {placeholder},
+                            transcription_confidence = {placeholder},
+                            transcription_language = {placeholder},
+                            transcription_provider = {placeholder},
+                            transcribed_at = {placeholder}
+                        WHERE message_id = {placeholder}
+                        """
+                        self.database.execute(query, (
+                            transcription_result['text'],
+                            transcription_result['confidence'],
+                            transcription_result['language'],
+                            transcription_result['provider'],
+                            transcription_result['timestamp'],
+                            message_id
+                        ))
+                        self.logger.info(f"✓ Transcription saved to database")
+                    except Exception as e:
+                        self.logger.error(f"✗ Error saving transcription to database: {e}")
+            else:
+                self.logger.warning(f"✗ Voicemail transcription failed: {transcription_result['error']}")
+
         # Send email notification if enabled
+        transcription_text = transcription_result['text'] if transcription_result and transcription_result['success'] else None
         if self.email_notifier and self.config:
             extension_config = self.config.get_extension(self.extension_number)
             if extension_config:
                 email_address = extension_config.get('email')
                 if email_address:
-                    self.email_notifier.send_voicemail_notification(
-                        to_email=email_address,
-                        extension_number=self.extension_number,
-                        caller_id=caller_id,
-                        timestamp=timestamp,
-                        audio_file_path=file_path,
-                        duration=duration
-                    )
+                    # Check if email notifier supports transcription parameter
+                    import inspect
+                    sig = inspect.signature(self.email_notifier.send_voicemail_notification)
+                    
+                    if 'transcription' in sig.parameters:
+                        # Email notifier supports transcription
+                        self.email_notifier.send_voicemail_notification(
+                            to_email=email_address,
+                            extension_number=self.extension_number,
+                            caller_id=caller_id,
+                            timestamp=timestamp,
+                            audio_file_path=file_path,
+                            duration=duration,
+                            transcription=transcription_text
+                        )
+                    else:
+                        # Older email notifier without transcription support
+                        self.email_notifier.send_voicemail_notification(
+                            to_email=email_address,
+                            extension_number=self.extension_number,
+                            caller_id=caller_id,
+                            timestamp=timestamp,
+                            audio_file_path=file_path,
+                            duration=duration
+                        )
 
         return message_id
 
@@ -248,7 +319,9 @@ class VoicemailBox:
                 placeholder = self._get_db_placeholder()
                 # Build query safely - placeholder is only '%s' or '?' from internal method
                 query = """
-                SELECT message_id, caller_id, file_path, duration, listened, created_at
+                SELECT message_id, caller_id, file_path, duration, listened, created_at,
+                       transcription_text, transcription_confidence, transcription_language,
+                       transcription_provider, transcribed_at
                 FROM voicemail_messages
                 WHERE extension_number = {}
                 ORDER BY created_at DESC
@@ -289,6 +362,15 @@ class VoicemailBox:
                         'listened': bool(row['listened']),
                         'duration': row['duration']
                     }
+                    
+                    # Add transcription data if available
+                    if row.get('transcription_text'):
+                        message['transcription'] = row['transcription_text']
+                        message['transcription_confidence'] = row.get('transcription_confidence')
+                        message['transcription_language'] = row.get('transcription_language')
+                        message['transcription_provider'] = row.get('transcription_provider')
+                        message['transcribed_at'] = row.get('transcribed_at')
+                    
                     self.messages.append(message)
                     self.logger.debug(f"  Loaded message: {row['message_id']} from {row['caller_id']}")
                 

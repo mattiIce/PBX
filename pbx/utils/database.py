@@ -365,7 +365,12 @@ class DatabaseBackend:
             file_path VARCHAR(255),
             duration INTEGER,
             listened BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            transcription_text TEXT,
+            transcription_confidence FLOAT,
+            transcription_language VARCHAR(10),
+            transcription_provider VARCHAR(20),
+            transcribed_at TIMESTAMP
         )
         """ if self.db_type == 'postgresql' else """
         CREATE TABLE IF NOT EXISTS voicemail_messages (
@@ -376,7 +381,12 @@ class DatabaseBackend:
             file_path VARCHAR(255),
             duration INTEGER,
             listened BOOLEAN DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            transcription_text TEXT,
+            transcription_confidence FLOAT,
+            transcription_language VARCHAR(10),
+            transcription_provider VARCHAR(20),
+            transcribed_at TIMESTAMP
         )
         """
 
@@ -506,12 +516,59 @@ class DatabaseBackend:
             # or user may lack permissions on pre-existing tables
             self._execute_with_context(index_sql, "index creation", critical=False)
 
+        # Perform schema migrations for existing tables
+        self._migrate_schema()
+
         if success:
             self.logger.info("Database tables created successfully")
         else:
             self.logger.error("Failed to create some database tables")
 
         return success
+
+    def _migrate_schema(self):
+        """
+        Migrate database schema to add new columns
+        Safe migrations that handle existing columns gracefully
+        """
+        self.logger.info("Checking for schema migrations...")
+        
+        # Migration: Add transcription columns to voicemail_messages
+        transcription_columns = [
+            ("transcription_text", "TEXT"),
+            ("transcription_confidence", "FLOAT" if self.db_type == 'postgresql' else "REAL"),
+            ("transcription_language", "VARCHAR(10)"),
+            ("transcription_provider", "VARCHAR(20)"),
+            ("transcribed_at", "TIMESTAMP")
+        ]
+        
+        for column_name, column_type in transcription_columns:
+            # Check if column exists
+            check_query = """
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='voicemail_messages' AND column_name=%s
+            """ if self.db_type == 'postgresql' else """
+            SELECT name FROM pragma_table_info('voicemail_messages') WHERE name=?
+            """
+            
+            try:
+                cursor = self.connection.cursor()
+                cursor.execute(check_query, (column_name,))
+                exists = cursor.fetchone() is not None
+                cursor.close()
+                
+                if not exists:
+                    # Add column
+                    alter_query = f"ALTER TABLE voicemail_messages ADD COLUMN {column_name} {column_type}"
+                    self.logger.info(f"Adding column: {column_name}")
+                    self._execute_with_context(alter_query, f"add column {column_name}", critical=False)
+                else:
+                    self.logger.debug(f"Column {column_name} already exists")
+            except Exception as e:
+                self.logger.debug(f"Column check/add for {column_name}: {e}")
+        
+        self.logger.info("Schema migration check complete")
 
 
 class VIPCallerDB:

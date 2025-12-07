@@ -302,7 +302,7 @@ PBX/
 | Softphone Support | ✅ Complete | SIP client compatibility |
 | Mobile Push Notifications | ⏳ Planned | Call/voicemail alerts on mobile |
 | Visual Voicemail | ⏳ Planned | Enhanced voicemail interface |
-| Voicemail Transcription | ⏳ Planned | Text version of voicemail messages |
+| Voicemail Transcription | ✅ Complete | Speech-to-text with OpenAI/Google support |
 | Click-to-Dial | ⚠️ Framework | Web/app-based dialing |
 | Mobile Number Portability | ⏳ Planned | Use business number on mobile |
 
@@ -1272,6 +1272,20 @@ With **zero licensing costs**, **comprehensive documentation**, and **production
 ---
 
 ## Revision History
+
+### Version 1.3.2 (December 7, 2025)
+- Added **Voicemail Transcription** feature to production-ready status:
+  - Speech-to-text conversion using OpenAI Whisper or Google Cloud Speech-to-Text
+  - Automatic transcription of voicemail messages
+  - Database storage with confidence scores and metadata
+  - Integration with voicemail-to-email notifications
+  - Comprehensive documentation: VOICEMAIL_TRANSCRIPTION_GUIDE.md
+  - Full test coverage (10 tests, all passing)
+- Updated feature counts:
+  - Completed features: 13 → 14 features
+  - Planned features: 52 → 51 features
+- Updated TODO.md with voicemail transcription completion status
+- Added voicemail transcription to recently completed features list
 
 ### Version 1.3.1 (December 7, 2025)
 - Updated TODO.md with comprehensive roadmap activity status tracking:
