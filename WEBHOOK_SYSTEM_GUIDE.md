@@ -255,8 +255,15 @@ def handle_pbx_webhook():
     # Verify HMAC signature (if webhook has a secret configured)
     signature_header = request.headers.get('X-Webhook-Signature')
     if signature_header:
-        # Extract signature from header (format: "sha256=abc123...")
-        expected_sig = signature_header.split('=')[1]
+        # Validate header format (should be "sha256=abc123...")
+        if not signature_header.startswith('sha256='):
+            return jsonify({'error': 'Invalid signature format'}), 401
+        
+        # Extract signature from header
+        parts = signature_header.split('=', 1)
+        if len(parts) != 2:
+            return jsonify({'error': 'Invalid signature format'}), 401
+        expected_sig = parts[1]
         
         # Compute signature using your shared secret
         secret = 'your-webhook-secret'  # Must match PBX config
@@ -266,7 +273,7 @@ def handle_pbx_webhook():
             hashlib.sha256
         ).hexdigest()
         
-        # Verify signatures match
+        # Verify signatures match using constant-time comparison
         if not hmac.compare_digest(expected_sig, computed_sig):
             return jsonify({'error': 'Invalid signature'}), 401
     

@@ -6,6 +6,8 @@ import sys
 import os
 import time
 import json
+import hmac
+import hashlib
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 
@@ -247,9 +249,6 @@ def test_webhook_disabled():
 def test_webhook_hmac_signature():
     """Test HMAC signature generation"""
     print("\nTesting HMAC signature generation...")
-    
-    import hmac
-    import hashlib
     
     # Create a webhook event
     event = WebhookEvent('call.started', {
