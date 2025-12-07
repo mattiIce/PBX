@@ -2,8 +2,6 @@
 Voicemail transcription service using speech-to-text APIs
 """
 import os
-import json
-import tempfile
 from datetime import datetime
 from pbx.utils.logger import get_logger
 

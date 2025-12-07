@@ -196,8 +196,12 @@ class VoicemailBox:
             if extension_config:
                 email_address = extension_config.get('email')
                 if email_address:
-                    # Check if email notifier supports transcription
-                    try:
+                    # Check if email notifier supports transcription parameter
+                    import inspect
+                    sig = inspect.signature(self.email_notifier.send_voicemail_notification)
+                    
+                    if 'transcription' in sig.parameters:
+                        # Email notifier supports transcription
                         self.email_notifier.send_voicemail_notification(
                             to_email=email_address,
                             extension_number=self.extension_number,
@@ -207,8 +211,8 @@ class VoicemailBox:
                             duration=duration,
                             transcription=transcription_text
                         )
-                    except TypeError:
-                        # Fallback for older email notifier without transcription support
+                    else:
+                        # Older email notifier without transcription support
                         self.email_notifier.send_voicemail_notification(
                             to_email=email_address,
                             extension_number=self.extension_number,

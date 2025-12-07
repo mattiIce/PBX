@@ -8,7 +8,7 @@ import tempfile
 import wave
 import struct
 from datetime import datetime
-from unittest.mock import Mock, patch, MagicMock, create_autospec
+from unittest.mock import Mock, patch, MagicMock
 
 # Mock the optional dependencies before importing the module
 sys.modules['openai'] = MagicMock()
@@ -39,7 +39,7 @@ class TestVoicemailTranscription(unittest.TestCase):
 
     def _create_test_wav(self, filepath, duration=1.0, sample_rate=8000):
         """
-        Create a test WAV file with a simple sine wave
+        Create a test WAV file with a simple varying amplitude wave
         
         Args:
             filepath: Path to save WAV file
@@ -47,9 +47,8 @@ class TestVoicemailTranscription(unittest.TestCase):
             sample_rate: Sample rate in Hz
         """
         num_samples = int(duration * sample_rate)
-        frequency = 440.0  # A4 note
         
-        # Generate sine wave samples
+        # Generate samples with varying amplitude
         samples = []
         for i in range(num_samples):
             value = int(32767.0 * 0.5 * (1 + (i % 100) / 100))  # Simple varying amplitude
