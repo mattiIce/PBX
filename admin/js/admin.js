@@ -567,6 +567,9 @@ function showNotification(message, type = 'info') {
         case 'error':
             notification.style.background = '#ef4444';
             break;
+        case 'warning':
+            notification.style.background = '#f59e0b';
+            break;
         default:
             notification.style.background = '#667eea';
     }
@@ -1405,14 +1408,14 @@ function isChartJsAvailable(ctx = null) {
     // Check if Chart.js is loaded, accounting for potential delay from fallback CDNs
     if (typeof Chart === 'undefined') {
         // Check if we know loading failed completely
-        if (window.chartJsLoadFailed === true) {
+        if (window.chartJsLoadFailed) {
             console.warn('Chart.js library failed to load from all CDN sources');
             if (ctx && ctx.parentElement) {
                 const msg = document.createElement('p');
-                msg.className = 'info-message';
                 msg.style.padding = '20px';
                 msg.style.textAlign = 'center';
                 msg.style.color = '#666';
+                msg.style.fontSize = '14px';
                 msg.innerHTML = '📊 Chart visualization unavailable in offline mode<br><small>Data is still available in tables below</small>';
                 ctx.parentElement.innerHTML = '';
                 ctx.parentElement.appendChild(msg);
