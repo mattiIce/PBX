@@ -111,7 +111,8 @@ class StatisticsEngine:
                         dt = datetime.fromisoformat(start_time)
                         hour = dt.hour
                         hourly_counts[hour] += 1
-                    except:
+                    except (ValueError, TypeError) as e:
+                        self.logger.debug(f"Error parsing timestamp: {e}")
                         pass
         
         # Convert to sorted list
@@ -186,7 +187,8 @@ class StatisticsEngine:
                         dt = datetime.fromisoformat(start_time)
                         hour = dt.hour
                         hourly_counts[hour] += 1
-                    except:
+                    except (ValueError, TypeError) as e:
+                        self.logger.debug(f"Error parsing timestamp: {e}")
                         pass
         
         # Get top 3 peak hours

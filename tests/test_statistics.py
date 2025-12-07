@@ -5,6 +5,7 @@ import unittest
 import tempfile
 import os
 import json
+import shutil
 from datetime import datetime, timedelta
 from pbx.features.cdr import CDRSystem, CDRRecord, CallDisposition
 from pbx.features.statistics import StatisticsEngine
@@ -33,7 +34,6 @@ class TestStatisticsEngine(unittest.TestCase):
     
     def tearDown(self):
         """Clean up test fixtures"""
-        import shutil
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
     
@@ -206,7 +206,6 @@ class TestStatisticsEngine(unittest.TestCase):
             self.assertEqual(len(stats['daily_trends']), 7)
             
         finally:
-            import shutil
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
 
@@ -221,7 +220,6 @@ class TestCDRSystem(unittest.TestCase):
     
     def tearDown(self):
         """Clean up test fixtures"""
-        import shutil
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
     
