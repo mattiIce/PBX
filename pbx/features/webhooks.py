@@ -6,6 +6,7 @@ import json
 import threading
 import queue
 import time
+import traceback
 from datetime import datetime
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
@@ -289,8 +290,7 @@ class WebhookSystem:
             
             except Exception as e:
                 self.logger.error(f"Unexpected error delivering webhook: {e}")
-                import traceback
-                traceback.print_exc()
+                self.logger.debug("Webhook delivery error details", exc_info=True)
                 break
     
     def trigger_event(self, event_type: str, data: Dict):

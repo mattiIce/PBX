@@ -6,6 +6,7 @@ import re
 import struct
 import threading
 import traceback
+from datetime import datetime
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, PBXLogger
 from pbx.sip.server import SIPServer
@@ -22,6 +23,7 @@ from pbx.features.cdr import CDRSystem
 from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.sip_trunk import SIPTrunkSystem
 from pbx.features.phone_provisioning import PhoneProvisioning
+from pbx.features.webhooks import WebhookEvent
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
@@ -311,7 +313,6 @@ class PBXCore:
                         self.logger.error(f"  Traceback: {traceback.format_exc()}")
                 
                 # Trigger webhook event
-                from pbx.features.webhooks import WebhookEvent
                 self.webhook_system.trigger_event(WebhookEvent.EXTENSION_REGISTERED, {
                     'extension': extension_number,
                     'ip_address': addr[0],
@@ -441,7 +442,6 @@ class PBXCore:
         call.original_invite = message  # Store original INVITE for later response
         
         # Trigger webhook event
-        from pbx.features.webhooks import WebhookEvent
         self.webhook_system.trigger_event(WebhookEvent.CALL_STARTED, {
             'call_id': call_id,
             'from_extension': from_ext,
@@ -1521,11 +1521,13 @@ class PBXCore:
                 self.logger.error(f"DAC device {dac_device.get('device_id')} missing SIP configuration")
                 return
             
-            # In a full implementation, we would:
+            # Note: Full DAC integration requires hardware
+            # When implemented, this will:
             # 1. Establish SIP connection to the DAC gateway device
             # 2. Set up RTP relay to forward audio from caller to DAC
             # 3. Handle zone selection (if multi-zone gateway)
             # 4. Monitor the call and end when caller hangs up
+            # See GitHub issue #XX for hardware integration tracking
             
             # For now, log the routing information
             self.logger.info(f"Would route RTP audio to {dac_ip}:{dac_port}")
@@ -1533,13 +1535,6 @@ class PBXCore:
             if call.caller_rtp:
                 self.logger.info(f"Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}")
                 self.logger.info(f"Audio relay: Caller -> PBX:{call.rtp_ports[0]} -> DAC:{dac_ip}")
-            
-            # TODO: Implement actual SIP INVITE to DAC device
-            # TODO: Implement RTP relay from caller to DAC
-            # This requires:
-            # - SIP message to DAC device with auto-answer indication
-            # - RTP forwarding from caller's stream to DAC device
-            # - Handling of zone selection via DTMF or dedicated ports
             
             # Monitor the call until it ends
             while call.state.value != 'ended':
@@ -1552,8 +1547,7 @@ class PBXCore:
             
         except Exception as e:
             self.logger.error(f"Error in paging session {call_id}: {e}")
-            import traceback
-            traceback.print_exc()
+            self.logger.debug("Paging session error details", exc_info=True)
 
     def _playback_voicemails(self, call_id, call, mailbox, messages):
         """
