@@ -75,6 +75,36 @@ features:
   music_on_hold: true
   auto_attendant: true
   max_call_duration: 7200
+  
+  # Webhook System - Event-driven integrations
+  webhooks:
+    enabled: true
+    max_retries: 3          # Number of retry attempts
+    retry_delay: 5          # Seconds between retries
+    timeout: 10             # HTTP request timeout in seconds
+    worker_threads: 2       # Number of delivery worker threads
+    
+    # Webhook subscriptions
+    # Example subscriptions (add your own endpoints):
+    subscriptions: []
+      # - url: "https://your-server.com/webhooks/pbx"
+      #   events: ["*"]       # All events (wildcard)
+      #   enabled: true
+      #   secret: "your-webhook-secret"  # Optional - for HMAC signature
+      #   headers:            # Optional custom headers
+      #     Authorization: "Bearer your-token"
+      # 
+      # - url: "https://crm.company.com/api/call-events"
+      #   events:
+      #     - "call.started"
+      #     - "call.ended"
+      #   enabled: true
+      # 
+      # - url: "https://analytics.company.com/webhooks"
+      #   events:
+      #     - "voicemail.new"
+      #     - "queue.call_answered"
+      #   enabled: true
 recording:
   auto_record: false
   storage_path: recordings
