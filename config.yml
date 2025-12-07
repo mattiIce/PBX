@@ -123,6 +123,32 @@ features:
       # - url: turn:your-turn-server.com:3478
       #   username: your-turn-username
       #   credential: your-turn-password
+  
+  # CRM Integration and Screen Pop - Auto-display customer info on calls
+  crm_integration:
+    enabled: true
+    cache_enabled: true       # Cache lookup results
+    cache_timeout: 3600       # Cache timeout in seconds (1 hour)
+    
+    # Lookup providers (tried in order)
+    providers:
+      # Phone Book lookup
+      - type: phone_book
+        enabled: true
+        name: PhoneBook
+      
+      # Active Directory lookup
+      - type: active_directory
+        enabled: true
+        name: ActiveDirectory
+      
+      # External CRM API lookup (example)
+      # - type: external_crm
+      #   enabled: true
+      #   name: SalesforceCRM
+      #   url: https://your-crm.com/api/lookup
+      #   api_key: your-api-key-here
+      #   timeout: 5
 recording:
   auto_record: false
   storage_path: recordings

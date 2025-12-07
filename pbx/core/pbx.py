@@ -170,6 +170,14 @@ class PBXCore:
             self.webrtc_signaling = None
             self.webrtc_gateway = None
 
+        # Initialize CRM integration if enabled
+        if self.config.get('features.crm_integration.enabled', False):
+            from pbx.features.crm_integration import CRMIntegration
+            self.crm_integration = CRMIntegration(self.config, self)
+            self.logger.info("CRM integration and screen pop initialized")
+        else:
+            self.crm_integration = None
+
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
         api_port = self.config.get('api.port', 8080)

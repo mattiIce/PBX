@@ -149,6 +149,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_ice_candidate()
             elif path == '/api/webrtc/call':
                 self._handle_webrtc_call()
+            elif path == '/api/crm/screen-pop':
+                self._handle_trigger_screen_pop()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -292,6 +294,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_ice_servers()
             elif path.startswith('/api/webrtc/session/'):
                 self._handle_get_webrtc_session(path)
+            elif path.startswith('/api/crm/lookup'):
+                self._handle_crm_lookup()
+            elif path == '/api/crm/providers':
+                self._handle_get_crm_providers()
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -1960,6 +1966,80 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             config = self.pbx_core.webrtc_signaling.get_ice_servers_config()
             self._send_json(config)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== CRM Integration Handlers ==========
+    
+    def _handle_crm_lookup(self):
+        """Look up caller information"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
+            self._send_json({'error': 'CRM integration not available'}, 500)
+            return
+        
+        try:
+            # Get phone number from query string
+            parsed_url = urlparse(self.path)
+            query_params = parse_qs(parsed_url.query)
+            phone_number = query_params.get('phone', [None])[0]
+            
+            if not phone_number:
+                self._send_json({'error': 'phone parameter is required'}, 400)
+                return
+            
+            # Look up caller info
+            caller_info = self.pbx_core.crm_integration.lookup_caller(phone_number)
+            
+            if caller_info:
+                self._send_json({
+                    'found': True,
+                    'caller_info': caller_info.to_dict()
+                })
+            else:
+                self._send_json({
+                    'found': False,
+                    'message': 'Caller not found'
+                })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_crm_providers(self):
+        """Get CRM provider status"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
+            self._send_json({'error': 'CRM integration not available'}, 500)
+            return
+        
+        try:
+            providers = self.pbx_core.crm_integration.get_provider_status()
+            self._send_json({
+                'enabled': self.pbx_core.crm_integration.enabled,
+                'providers': providers
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_trigger_screen_pop(self):
+        """Trigger screen pop for a call"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
+            self._send_json({'error': 'CRM integration not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            phone_number = data.get('phone_number')
+            call_id = data.get('call_id')
+            extension = data.get('extension')
+            
+            if not all([phone_number, call_id, extension]):
+                self._send_json({'error': 'phone_number, call_id, and extension are required'}, 400)
+                return
+            
+            self.pbx_core.crm_integration.trigger_screen_pop(phone_number, call_id, extension)
+            
+            self._send_json({
+                'success': True,
+                'message': 'Screen pop triggered'
+            })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
