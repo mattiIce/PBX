@@ -16,9 +16,9 @@ This document tracks all features from the Executive Summary that are marked as 
 
 ### Overall Status
 - **Total Features Tracked**: 79 features
-- **Completed** ✅: 10 features (13%)
-- **Framework** ⚠️: 17 features (22%)
-- **Planned**: 52 features (65%)
+- **Completed** ✅: 11 features (14%)
+- **Framework** ⚠️: 16 features (20%)
+- **Planned**: 52 features (66%)
 
 ### Recently Completed (December 2025)
 1. **WebRTC Browser Calling** - Full browser-based calling with WebRTC signaling
@@ -27,6 +27,7 @@ This document tracks all features from the Executive Summary that are marked as 
 4. **Presence Integration** - Real-time availability with Teams sync
 5. **Calendar Integration** - Outlook calendar sync for availability
 6. **Multi-Factor Authentication** - TOTP, YubiKey, FIDO2 support with backup codes
+7. **Enhanced Threat Detection** - IP blocking, pattern analysis, anomaly detection
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
@@ -394,11 +395,12 @@ Features with foundational implementations that can be extended:
   - Impact: Enterprise-grade authentication security
   - Documentation: MFA_GUIDE.md
 
-- [⚠️] **Real-Time Threat Detection** - Intrusion detection and prevention
-  - Status: Framework exists (rate limiting, audit logging in security.py)
-  - Current: Login attempt tracking, brute force protection
-  - Needs: Advanced pattern detection, IP blocking, anomaly detection
-  - Impact: Proactive security
+- [x] **Real-Time Threat Detection** - Intrusion detection and prevention
+  - Status: ✅ COMPLETED - Full implementation in pbx/utils/security.py (ThreatDetector class)
+  - Features: IP blocking (manual/automatic), failed login tracking, suspicious pattern detection
+  - Database: Blocked IPs persistence, threat event logging
+  - API Endpoints: /api/security/* (block/unblock IP, threat summary, check IP status)
+  - Impact: Proactive security with automatic threat response
 
 - [⚠️] **GDPR Compliance Features** - Data privacy and protection
   - Status: Framework exists (audit logging, data encryption)
@@ -474,7 +476,7 @@ Features with foundational implementations that can be extended:
 
 ### Immediate (Next Sprint)
 1. ~~Multi-Factor Authentication (enhance existing framework)~~ - DONE (December 7, 2025)
-2. Enhanced Threat Detection (build on rate limiting)
+2. ~~Enhanced Threat Detection (build on rate limiting)~~ - DONE (December 7, 2025)
 3. Skills-Based Routing
 4. Voicemail Transcription
 5. WebRTC Video Conferencing (extend existing audio implementation)

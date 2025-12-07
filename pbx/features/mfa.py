@@ -507,12 +507,14 @@ class MFAManager:
             # Derive encryption key from extension number
             key, salt = self.encryption.derive_key(extension_number)
             nonce_tag_data = self.encryption.encrypt_data(secret_bytes, key)
-            # Store all components (nonce, tag, encrypted_data) as a combined encrypted blob
+            # encrypt_data returns tuple: (encrypted_data, nonce, tag)
+            # Store all components as a combined encrypted blob in format: nonce|tag|encrypted_data
             import base64
+            encrypted_data, nonce, tag = nonce_tag_data  # Explicit unpacking for clarity
             secret_encrypted = base64.b64encode(
-                nonce_tag_data[1].encode('utf-8') + b'|' + 
-                nonce_tag_data[2].encode('utf-8') + b'|' + 
-                nonce_tag_data[0].encode('utf-8')
+                nonce.encode('utf-8') + b'|' + 
+                tag.encode('utf-8') + b'|' + 
+                encrypted_data.encode('utf-8')
             ).decode('utf-8')
             salt = base64.b64encode(salt).decode('utf-8')
             
@@ -1123,6 +1125,8 @@ class MFAManager:
         codes = []
         for _ in range(count):
             # Generate 8-character alphanumeric code
+            # Excludes potentially confusing characters: 0 (zero), O (letter O), I (letter I), 1 (one)
+            # This prevents user confusion when manually entering codes
             code = ''.join(secrets.choice('ABCDEFGHJKLMNPQRSTUVWXYZ23456789') for _ in range(8))
             # Format as XXXX-XXXX for readability
             formatted = f"{code[:4]}-{code[4:]}"

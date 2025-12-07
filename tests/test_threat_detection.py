@@ -69,8 +69,8 @@ def test_auto_unblock():
     
     test_ip = "192.168.1.101"
     
-    # Block IP for 2 seconds
-    detector.block_ip(test_ip, "Test auto-unblock", duration=2)
+    # Block IP for 1.5 seconds
+    detector.block_ip(test_ip, "Test auto-unblock", duration=1.5)
     
     # IP should be blocked
     is_blocked, reason = detector.is_ip_blocked(test_ip)
@@ -78,7 +78,7 @@ def test_auto_unblock():
     print("  ✓ IP blocked with short duration")
     
     # Wait for block to expire
-    time.sleep(3)
+    time.sleep(2)
     
     # IP should be auto-unblocked
     is_blocked, reason = detector.is_ip_blocked(test_ip)

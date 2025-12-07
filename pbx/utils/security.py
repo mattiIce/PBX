@@ -850,6 +850,10 @@ class ThreatDetector:
             return summary
         
         try:
+            # Validate hours parameter to prevent SQL injection
+            if not isinstance(hours, (int, float)) or hours < 0 or hours > 8760:  # Max 1 year
+                hours = 24  # Default to 24 hours if invalid
+            
             # Count events by type
             if self.database.db_type == 'postgresql':
                 query = """
@@ -860,11 +864,11 @@ class ThreatDetector:
                 """
                 results = self.database.fetch_all(query, (hours,))
             else:
-                # SQLite: build the interval string manually
+                # SQLite: build the interval string manually (validated hours parameter)
                 query = f"""
                 SELECT event_type, severity, COUNT(*) as count
                 FROM security_threat_events
-                WHERE timestamp > datetime('now', '-{hours} hours')
+                WHERE timestamp > datetime('now', '-{int(hours)} hours')
                 GROUP BY event_type, severity
                 """
                 results = self.database.fetch_all(query)
