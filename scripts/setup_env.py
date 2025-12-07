@@ -132,6 +132,16 @@ ENV_VARS = {
             'sensitive': True
         },
     },
+    'Voicemail Transcription (Optional)': {
+        'TRANSCRIPTION_API_KEY': {
+            'description': 'API key for voicemail transcription service (OpenAI or Google)',
+            'default': '',
+            'required': False,
+            'example': 'sk-proj-...',
+            'sensitive': True,
+            'help': 'Only needed if voicemail_transcription.enabled is true in config.yml. Get OpenAI key from https://platform.openai.com/api-keys'
+        },
+    },
 }
 
 
