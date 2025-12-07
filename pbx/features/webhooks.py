@@ -7,6 +7,8 @@ import threading
 import queue
 import time
 import traceback
+import hmac
+import hashlib
 from datetime import datetime
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
@@ -252,14 +254,14 @@ class WebhookSystem:
                     **subscription.headers
                 }
                 
-                # TODO: Add HMAC signature if secret is provided
-                # if subscription.secret:
-                #     signature = hmac.new(
-                #         subscription.secret.encode('utf-8'),
-                #         payload,
-                #         hashlib.sha256
-                #     ).hexdigest()
-                #     headers['X-Webhook-Signature'] = f'sha256={signature}'
+                # Add HMAC signature if secret is provided
+                if subscription.secret:
+                    signature = hmac.new(
+                        subscription.secret.encode('utf-8'),
+                        payload,
+                        hashlib.sha256
+                    ).hexdigest()
+                    headers['X-Webhook-Signature'] = f'sha256={signature}'
                 
                 # Create request
                 request = Request(

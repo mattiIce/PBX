@@ -29,7 +29,8 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Phone Provisioning** - Auto-configuration for multiple IP phone brands (Zultys, Yealink, Polycom, Cisco, Grandstream) with customizable templates
 - **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
 - **Phone Book System** - Centralized directory with AD sync, pushed to IP phones in multiple formats (Yealink, Cisco XML)
-- **Paging System (Stub)** - Framework for overhead paging via digital-to-analog converters
+- **Paging System** - Full overhead paging support with SIP/RTP integration (hardware-ready)
+- **Webhook System** - Event-driven integrations with HMAC signature support for real-time notifications
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTP API for integration and management
 - **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
@@ -419,13 +420,23 @@ For issues and questions, please open a GitHub issue.
   - See [PHONE_BOOK_GUIDE.md](PHONE_BOOK_GUIDE.md) for setup guide
 
 ### Paging System
-- [x] **Paging System (Stub)** - ⚠️ STUB IMPLEMENTATION
-  - Framework for overhead paging
+- [x] **Paging System** - ✅ COMPLETED (Software)
+  - Full SIP/RTP integration with PBX core
   - Zone-based paging configuration
   - Digital-to-analog converter device management
   - All-call and zone-specific paging
-  - Requires hardware integration for full functionality
+  - Production-ready software (hardware deployment ready)
   - See [PAGING_SYSTEM_GUIDE.md](PAGING_SYSTEM_GUIDE.md) for implementation guide
+
+### Webhook System
+- [x] **Event-Driven Integrations** - ✅ COMPLETED
+  - Real-time HTTP POST notifications for PBX events
+  - 15+ event types (calls, voicemail, extensions, queues, conferences)
+  - HMAC-SHA256 signature support for security
+  - Configurable subscriptions with custom headers
+  - Retry logic with exponential backoff
+  - Asynchronous delivery with worker threads
+  - See [WEBHOOK_SYSTEM_GUIDE.md](WEBHOOK_SYSTEM_GUIDE.md) for setup guide
 
 ### Future Enhancements
 - [ ] WebRTC support for browser-based calls
@@ -437,7 +448,8 @@ For issues and questions, please open a GitHub issue.
 - [ ] Full SIP Direct Routing to Teams
 - [ ] CRM integrations (Salesforce, HubSpot)
 - [ ] Professional voice recordings for auto attendant (TTS or voice actor)
-- [ ] Complete paging system hardware integration
+
+See [TODO.md](TODO.md) for a comprehensive list of 69 planned features organized by priority.
 
 ---
 

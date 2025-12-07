@@ -174,11 +174,15 @@ X-Webhook-ID: call.started-1701964800000
 [Any custom headers from subscription]
 ```
 
-### Future: HMAC Signature (Planned)
+### HMAC Signature (Security Feature)
+
+When a webhook subscription includes a `secret`, the system will generate an HMAC-SHA256 signature of the request body and include it in the header:
 
 ```
 X-Webhook-Signature: sha256=abc123...
 ```
+
+This allows the receiving system to verify that the webhook request actually came from the PBX system and hasn't been tampered with.
 
 ## Event Examples
 
@@ -240,6 +244,7 @@ X-Webhook-Signature: sha256=abc123...
 from flask import Flask, request, jsonify
 import hmac
 import hashlib
+import os
 
 app = Flask(__name__)
 
@@ -248,10 +253,32 @@ def handle_pbx_webhook():
     # Get webhook data
     webhook_data = request.get_json()
     
-    # Optional: Verify HMAC signature
-    # signature = request.headers.get('X-Webhook-Signature')
-    # if not verify_signature(request.data, signature):
-    #     return jsonify({'error': 'Invalid signature'}), 401
+    # Verify HMAC signature (if webhook has a secret configured)
+    signature_header = request.headers.get('X-Webhook-Signature')
+    if signature_header:
+        # Validate header format (should be "sha256=abc123...")
+        if not signature_header.startswith('sha256='):
+            return jsonify({'error': 'Invalid signature format'}), 401
+        
+        # Extract signature from header
+        parts = signature_header.split('=', 1)
+        if len(parts) != 2:
+            return jsonify({'error': 'Invalid signature format'}), 401
+        expected_sig = parts[1]
+        
+        # Compute signature using your shared secret
+        # SECURITY WARNING: Never hardcode secrets in production!
+        # Store in environment variables or secure secret management system
+        secret = os.environ.get('WEBHOOK_SECRET', 'your-webhook-secret')  # Must match PBX config
+        computed_sig = hmac.new(
+            secret.encode('utf-8'),
+            request.data,
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Verify signatures match using constant-time comparison
+        if not hmac.compare_digest(expected_sig, computed_sig):
+            return jsonify({'error': 'Invalid signature'}), 401
     
     event_type = webhook_data['event_type']
     event_data = webhook_data['data']
@@ -347,9 +374,10 @@ app.listen(5000, () => console.log('Webhook receiver listening on port 5000'));
 
 ### Security
 1. **Use HTTPS** - Always use HTTPS for webhook URLs
-2. **Verify Signatures** - Implement HMAC signature verification (when available)
-3. **IP Whitelisting** - Restrict webhook sources by IP
-4. **Authentication** - Use custom headers for authentication
+2. **Configure Secrets** - Add a `secret` to your webhook subscription for HMAC signature verification
+3. **Verify Signatures** - Always verify the `X-Webhook-Signature` header using HMAC-SHA256
+4. **IP Whitelisting** - Restrict webhook sources by IP
+5. **Authentication** - Use custom headers for additional authentication
 
 ### Reliability
 1. **Idempotency** - Handle duplicate events gracefully using `event_id`
@@ -412,7 +440,7 @@ Webhook activity is logged in the main PBX log:
 
 ## Future Enhancements
 
-- [ ] HMAC signature verification for security
+- [x] HMAC signature verification for security (✅ Complete)
 - [ ] Batch delivery mode for high-volume scenarios
 - [ ] Event replay functionality
 - [ ] Webhook delivery dashboard in admin panel
