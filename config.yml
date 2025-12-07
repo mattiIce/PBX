@@ -76,6 +76,13 @@ features:
   auto_attendant: true
   max_call_duration: 7200
   
+  # Voicemail Transcription - Speech-to-text for voicemails
+  voicemail_transcription:
+    enabled: false              # Enable voicemail transcription
+    provider: openai            # Provider: 'openai' or 'google'
+    api_key: ${TRANSCRIPTION_API_KEY}  # API key for transcription service
+    # For Google Cloud Speech-to-Text, set GOOGLE_APPLICATION_CREDENTIALS environment variable
+  
   # Webhook System - Event-driven integrations
   webhooks:
     enabled: true
