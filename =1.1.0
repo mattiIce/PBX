@@ -1,8 +1,0 @@
-Defaulting to user installation because normal site-packages is not writeable
-Collecting fido2
-  Downloading fido2-2.0.0-py3-none-any.whl.metadata (7.1 kB)
-Requirement already satisfied: cryptography!=35,<48,>=2.6 in /usr/lib/python3/dist-packages (from fido2) (41.0.7)
-Downloading fido2-2.0.0-py3-none-any.whl (224 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 224.8/224.8 kB 16.4 MB/s eta 0:00:00
-Installing collected packages: fido2
-Successfully installed fido2-2.0.0

@@ -234,7 +234,7 @@ PBX/
 |---------|--------|---------------|
 | STIR/SHAKEN Support | ⏳ Planned | Caller ID authentication and anti-spoofing |
 | End-to-End Encryption (AES-256) | ✅ Complete | FIPS 140-2 compliant encryption |
-| Multi-Factor Authentication | ⚠️ Framework | Enhanced security for admin access |
+| Multi-Factor Authentication | ✅ Complete | Enhanced security with TOTP, YubiKey, FIDO2/WebAuthn |
 | Real-Time Threat Detection | ⚠️ Framework | Intrusion detection and prevention |
 | HIPAA Compliance Tools | ⏳ Planned | Healthcare industry compliance |
 | GDPR Compliance Features | ⚠️ Framework | Data privacy and protection |
@@ -407,6 +407,12 @@ System startup output:
 - ✅ Common password blocking
 - ✅ Sequential/repeated character detection
 - ✅ Constant-time comparison (prevents timing attacks)
+- ✅ Multi-Factor Authentication (MFA) with TOTP, YubiKey OTP, and FIDO2/WebAuthn
+  - ✅ RFC 6238 TOTP implementation (Google Authenticator, Microsoft Authenticator, Authy)
+  - ✅ YubiCloud API integration for YubiKey hardware tokens
+  - ✅ FIDO2/WebAuthn support for hardware security keys
+  - ✅ Backup codes with secure storage
+  - ✅ Per-user MFA enrollment and management
 
 #### Brute Force Protection
 - ✅ Configurable rate limiting (default: 5 attempts in 5 minutes)
