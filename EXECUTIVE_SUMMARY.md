@@ -123,8 +123,9 @@ The Aluminum Blanking PBX System is a **comprehensive, enterprise-grade Private 
 ### Technology Stack
 - **Language**: Python 3.7+
 - **Protocols**: SIP (RFC 3261), RTP (RFC 3550), HTTP/REST
+- **Communication**: VoIP (Voice over IP) and VoSIP (Voice over Secure IP)
 - **Database**: PostgreSQL (production), SQLite (development)
-- **Encryption**: FIPS 140-2 compliant cryptography
+- **Encryption**: FIPS 140-2 compliant cryptography (AES-256-GCM for VoSIP)
 - **Codecs**: G.711 (PCMU/PCMA), G.729
 - **Configuration**: YAML with environment variable support
 
@@ -1250,11 +1251,14 @@ With **zero licensing costs**, **comprehensive documentation**, and **production
 
 ### Version 1.1.0 (December 7, 2025)
 - Added comprehensive "Advanced & Emerging Features (Roadmap)" section
-- Documented 100+ modern VoIP features aligned with 2024-2025 industry standards
+- Documented 100+ modern VoIP/VoSIP features aligned with 2024-2025 industry standards
+  - VoIP = Voice over IP
+  - VoSIP = Voice over Secure IP
 - Added detailed roadmap for AI-powered features, WebRTC, STIR/SHAKEN, E911, and more
 - Enhanced competitive analysis with modern feature comparisons
 - Expanded long-term vision with specific feature development estimates
 - Added feature roadmap summary with priority recommendations
+- Clarified VoIP/VoSIP terminology in Technology Stack section
 
 ### Version 1.0 (December 6, 2025)
 - Initial executive summary document
