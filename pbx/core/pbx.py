@@ -6,6 +6,7 @@ import re
 import struct
 import threading
 import traceback
+from datetime import datetime
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, PBXLogger
 from pbx.sip.server import SIPServer
@@ -22,6 +23,7 @@ from pbx.features.cdr import CDRSystem
 from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.sip_trunk import SIPTrunkSystem
 from pbx.features.phone_provisioning import PhoneProvisioning
+from pbx.features.webhooks import WebhookEvent
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
@@ -153,6 +155,10 @@ class PBXCore:
             self.logger.info("Paging system initialized")
         else:
             self.paging_system = None
+
+        # Initialize webhook system
+        from pbx.features.webhooks import WebhookSystem
+        self.webhook_system = WebhookSystem(self.config)
 
         # Initialize API server
         api_host = self.config.get('api.host', '0.0.0.0')
@@ -306,6 +312,15 @@ class PBXCore:
                         self.logger.error(f"  Contact URI: {contact}")
                         self.logger.error(f"  Traceback: {traceback.format_exc()}")
                 
+                # Trigger webhook event
+                self.webhook_system.trigger_event(WebhookEvent.EXTENSION_REGISTERED, {
+                    'extension': extension_number,
+                    'ip_address': addr[0],
+                    'port': addr[1],
+                    'user_agent': user_agent,
+                    'timestamp': datetime.now().isoformat()
+                })
+                
                 return True
             else:
                 self.logger.warning(f"Unknown extension {extension_number} attempted registration")
@@ -396,6 +411,10 @@ class PBXCore:
         # Validate format: must be * followed by exactly 3 or 4 digits
         if to_ext.startswith('*') and len(to_ext) >= 4 and len(to_ext) <= 5 and to_ext[1:].isdigit():
             return self._handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
+        
+        # Check if this is a paging call (7xx pattern or all-call)
+        if self.paging_system and self.paging_system.is_paging_extension(to_ext):
+            return self._handle_paging(from_ext, to_ext, call_id, message, from_addr)
 
         # Check if destination extension is registered
         if not self.extension_registry.is_registered(to_ext):
@@ -421,6 +440,14 @@ class PBXCore:
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
         call.start()
         call.original_invite = message  # Store original INVITE for later response
+        
+        # Trigger webhook event
+        self.webhook_system.trigger_event(WebhookEvent.CALL_STARTED, {
+            'call_id': call_id,
+            'from_extension': from_ext,
+            'to_extension': to_ext,
+            'timestamp': call.start_time.isoformat() if call.start_time else None
+        })
 
         # Allocate RTP relay
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
@@ -1338,6 +1365,189 @@ class PBXCore:
         playback_thread.start()
 
         return True
+
+    def _handle_paging(self, from_ext, to_ext, call_id, message, from_addr):
+        """
+        Handle paging system calls (7xx pattern or all-call)
+        
+        Args:
+            from_ext: Calling extension
+            to_ext: Paging extension (e.g., 700, 701, 702)
+            call_id: Call ID
+            message: SIP INVITE message
+            from_addr: Caller address
+            
+        Returns:
+            True if call was handled
+        """
+        from pbx.sip.sdp import SDPSession, SDPBuilder
+        from pbx.sip.message import SIPMessageBuilder
+        
+        self.logger.info(f"Paging call: {from_ext} -> {to_ext}")
+        
+        # Initiate the page through the paging system
+        page_id = self.paging_system.initiate_page(from_ext, to_ext)
+        if not page_id:
+            self.logger.error(f"Failed to initiate page from {from_ext} to {to_ext}")
+            return False
+        
+        # Get zone information
+        page_info = self.paging_system.get_page_info(page_id)
+        if not page_info:
+            self.logger.error(f"Failed to get page info for {page_id}")
+            return False
+        
+        # Parse SDP from caller's INVITE
+        caller_sdp = None
+        if message.body:
+            caller_sdp_obj = SDPSession()
+            caller_sdp_obj.parse(message.body)
+            caller_sdp = caller_sdp_obj.get_audio_info()
+            
+            if caller_sdp:
+                self.logger.info(f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
+        
+        # Create call for paging
+        call = self.call_manager.create_call(call_id, from_ext, to_ext)
+        call.start()
+        call.original_invite = message
+        call.caller_addr = from_addr
+        call.caller_rtp = caller_sdp
+        call.paging_active = True
+        call.page_id = page_id
+        call.paging_zones = page_info.get('zone_names', 'Unknown')
+        
+        # Allocate RTP ports
+        rtp_ports = self.rtp_relay.allocate_relay(call_id)
+        if rtp_ports:
+            call.rtp_ports = rtp_ports
+        else:
+            self.logger.error(f"Failed to allocate RTP ports for paging {call_id}")
+            self.paging_system.end_page(page_id)
+            return False
+        
+        # Get configured paging gateway device
+        zones = page_info.get('zones', [])
+        if not zones:
+            self.logger.error(f"No zones configured for paging extension {to_ext}")
+            self.paging_system.end_page(page_id)
+            return False
+        
+        # For now, use the first zone's DAC device
+        zone = zones[0]
+        dac_device_id = zone.get('dac_device')
+        
+        if not dac_device_id:
+            self.logger.warning(f"No DAC device configured for zone {zone.get('name')}")
+            # Continue anyway - this allows testing without hardware
+        
+        # Find the DAC device configuration
+        dac_device = None
+        for device in self.paging_system.get_dac_devices():
+            if device.get('device_id') == dac_device_id:
+                dac_device = device
+                break
+        
+        # Answer the call immediately (auto-answer for paging)
+        server_ip = self._get_server_ip()
+        
+        # Build SDP for answering
+        paging_sdp = SDPBuilder.build_audio_sdp(
+            server_ip,
+            call.rtp_ports[0],
+            session_id=call_id
+        )
+        
+        # Send 200 OK to answer the call
+        ok_response = SIPMessageBuilder.build_response(
+            200,
+            "OK",
+            call.original_invite,
+            body=paging_sdp
+        )
+        ok_response.set_header('Content-Type', 'application/sdp')
+        
+        # Build Contact header
+        sip_port = self.config.get('server.sip_port', 5060)
+        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        ok_response.set_header('Contact', contact_uri)
+        
+        # Send to caller
+        self.sip_server._send_message(ok_response.build(), call.caller_addr)
+        self.logger.info(f"Answered paging call {call_id} - Paging {page_info.get('zone_names')}")
+        
+        # Mark call as connected
+        call.connect()
+        
+        # If we have a DAC device configured, route audio to it
+        if dac_device:
+            # Start paging session thread to handle audio routing
+            paging_thread = threading.Thread(
+                target=self._paging_session,
+                args=(call_id, call, dac_device, page_info)
+            )
+            paging_thread.daemon = True
+            paging_thread.start()
+        else:
+            # No hardware - just maintain the call for testing
+            self.logger.warning(f"Paging call {call_id} connected but no DAC device available")
+            self.logger.info(f"Audio from {from_ext} would be routed to {page_info.get('zone_names')}")
+        
+        return True
+    
+    def _paging_session(self, call_id, call, dac_device, page_info):
+        """
+        Handle paging session with audio routing to DAC device
+        
+        Args:
+            call_id: Call identifier
+            call: Call object
+            dac_device: DAC device configuration
+            page_info: Paging information dictionary
+        """
+        import time
+        
+        try:
+            self.logger.info(f"Paging session started for {call_id}")
+            self.logger.info(f"DAC device: {dac_device.get('device_id')} ({dac_device.get('device_type')})")
+            self.logger.info(f"Paging zones: {page_info.get('zone_names')}")
+            
+            # Get DAC device SIP information
+            dac_sip_uri = dac_device.get('sip_uri')
+            dac_ip = dac_device.get('ip_address')
+            dac_port = dac_device.get('port', 5060)
+            
+            if not dac_sip_uri or not dac_ip:
+                self.logger.error(f"DAC device {dac_device.get('device_id')} missing SIP configuration")
+                return
+            
+            # Note: Full DAC integration requires hardware
+            # When implemented, this will:
+            # 1. Establish SIP connection to the DAC gateway device
+            # 2. Set up RTP relay to forward audio from caller to DAC
+            # 3. Handle zone selection (if multi-zone gateway)
+            # 4. Monitor the call and end when caller hangs up
+            # See GitHub issue #XX for hardware integration tracking
+            
+            # For now, log the routing information
+            self.logger.info(f"Would route RTP audio to {dac_ip}:{dac_port}")
+            
+            if call.caller_rtp:
+                self.logger.info(f"Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}")
+                self.logger.info(f"Audio relay: Caller -> PBX:{call.rtp_ports[0]} -> DAC:{dac_ip}")
+            
+            # Monitor the call until it ends
+            while call.state.value != 'ended':
+                time.sleep(1)
+            
+            self.logger.info(f"Paging session ended for {call_id}")
+            
+            # End the page
+            self.paging_system.end_page(call.page_id)
+            
+        except Exception as e:
+            self.logger.error(f"Error in paging session {call_id}: {e}")
+            self.logger.debug("Paging session error details", exc_info=True)
 
     def _playback_voicemails(self, call_id, call, mailbox, messages):
         """

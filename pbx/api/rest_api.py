@@ -137,6 +137,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_paging_zone()
             elif path == '/api/paging/devices':
                 self._handle_configure_paging_device()
+            elif path == '/api/webhooks':
+                self._handle_add_webhook()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -272,6 +274,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_paging_devices()
             elif path == '/api/paging/active':
                 self._handle_get_active_pages()
+            elif path == '/api/webhooks':
+                self._handle_get_webhooks()
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
@@ -1701,6 +1705,73 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'Failed to configure DAC device'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_webhooks(self):
+        """Get all webhook subscriptions"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webhook_system'):
+            self._send_json({'error': 'Webhook system not available'}, 500)
+            return
+        
+        try:
+            subscriptions = self.pbx_core.webhook_system.get_subscriptions()
+            self._send_json(subscriptions)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_webhook(self):
+        """Add a webhook subscription"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webhook_system'):
+            self._send_json({'error': 'Webhook system not available'}, 500)
+            return
+        
+        try:
+            data = self._get_body()
+            url = data.get('url')
+            events = data.get('events', ['*'])
+            secret = data.get('secret')
+            headers = data.get('headers')
+            
+            if not url:
+                self._send_json({'error': 'URL is required'}, 400)
+                return
+            
+            subscription = self.pbx_core.webhook_system.add_subscription(
+                url=url,
+                events=events,
+                secret=secret,
+                headers=headers
+            )
+            
+            self._send_json({
+                'success': True,
+                'message': f'Webhook subscription added: {url}',
+                'subscription': {
+                    'url': subscription.url,
+                    'events': subscription.events,
+                    'enabled': subscription.enabled
+                }
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_webhook(self, url: str):
+        """Delete a webhook subscription"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'webhook_system'):
+            self._send_json({'error': 'Webhook system not available'}, 500)
+            return
+        
+        try:
+            success = self.pbx_core.webhook_system.remove_subscription(url)
+            
+            if success:
+                self._send_json({
+                    'success': True,
+                    'message': f'Webhook subscription deleted: {url}'
+                })
+            else:
+                self._send_json({'error': 'Webhook subscription not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
