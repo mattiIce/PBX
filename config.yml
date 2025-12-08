@@ -34,28 +34,6 @@ database:
   password: ${DB_PASSWORD}  # Database password (REQUIRED: set in .env file for PostgreSQL)
   # SQLite configuration (used when type: sqlite)
   path: pbx.db  # SQLite database file path
-extensions:
-  - number: '1001'
-    name: Codi Mattinson
-    password: 'password1001'  # SECURITY: Change to strong password in production
-    allow_external: true
-    email: 'cmattinson@albl.com'
-    voicemail_pin: '1234'  # SECURITY: Change in production
-  - number: '1002'
-    name: Bill Sautter
-    password: 'password1002'  # SECURITY: Change to strong password in production
-    allow_external: true
-    email: 'bsautter@albl.com'
-  - number: '1003'
-    name: Lisa Dingman
-    password: 'password1003'  # SECURITY: Change to strong password in production
-    allow_external: false
-    email: 'ldingman@albl.com'
-  - number: '1004'
-    name: Customer Service
-    password: 'password1004'  # SECURITY: Change to strong password in production
-    allow_external: true
-    email: 'support@albl.com'
 dialplan:
   internal_pattern: ^1[0-9]{3}$
   conference_pattern: ^2[0-9]{3}$
