@@ -198,6 +198,31 @@ class SIPServer:
 
         if self.pbx_core:
             call_id = message.get_header('Call-ID')
+            call = self.pbx_core.call_manager.get_call(call_id)
+            
+            # Forward BYE to the other party in the call if present
+            if call:
+                # Determine which party sent BYE and forward to the other
+                other_party_addr = None
+                
+                if call.caller_addr and call.caller_addr == addr:
+                    # Caller sent BYE, forward to callee
+                    other_party_addr = call.callee_addr
+                    self.logger.debug(f"BYE from caller, forwarding to callee at {other_party_addr}")
+                elif call.callee_addr and call.callee_addr == addr:
+                    # Callee sent BYE, forward to caller
+                    other_party_addr = call.caller_addr
+                    self.logger.debug(f"BYE from callee, forwarding to caller at {other_party_addr}")
+                
+                # Forward BYE to the other party if they exist
+                if other_party_addr:
+                    try:
+                        self._send_message(message.build(), other_party_addr)
+                        self.logger.info(f"Forwarded BYE to other party at {other_party_addr}")
+                    except Exception as e:
+                        self.logger.error(f"Failed to forward BYE to other party: {e}")
+            
+            # End the call internally
             self.pbx_core.end_call(call_id)
 
         self._send_response(200, "OK", message, addr)

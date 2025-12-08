@@ -13,7 +13,7 @@ dialplan:
   internal_pattern: ^1[0-9]{3}$
   parking_pattern: ^7[0-9]$
   queue_pattern: ^8[0-9]{3}$
-  voicemail_pattern: ^\*[0-9]{3}$
+  voicemail_pattern: ^\*[0-9]{3,4}$
 extensions:
 - allow_external: true
   email: cmattinson@albl.com
