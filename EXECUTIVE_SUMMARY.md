@@ -330,7 +330,23 @@ Connect to PSAP with location information
 Monitor for PSAP callback
 ```
 
-**Location Database Structure** (Framework in config_comcast_sip.yml)
+**Location Database Structure**
+
+*Current Framework (config_comcast_sip.yml):*
+```yaml
+e911:
+  enabled: true
+  provider: "comcast"
+  locations:
+    - extension_range: "1000-1099"
+      address: "123 Main St"
+      suite: "Suite 100"
+      city: "Your City"
+      state: "CA"
+      zip: "12345"
+```
+
+*Enhanced Structure (Planned for Ray Baum's Act compliance):*
 ```yaml
 e911:
   enabled: true
@@ -339,8 +355,8 @@ e911:
     - extension_range: "1000-1099"
       address: "123 Main St"
       suite: "Suite 100"
-      floor: "1st Floor"
-      room: "Reception Area"
+      floor: "1st Floor"        # Ray Baum's Act requirement
+      room: "Reception Area"    # Ray Baum's Act requirement
       city: "Your City"
       state: "CA"
       zip: "12345"
@@ -485,16 +501,20 @@ e911:
 
 #### Cost Analysis
 
+*Note: Cost estimates as of December 2025. Pricing and requirements subject to change.*
+
 **Implementation Costs**
 - E911 Service Provider: $1-3 per user/month (optional)
 - Development Time: 40-50 hours for full implementation
 - Testing & Validation: 10-15 hours
 - Training & Documentation: 5 hours
+- **Total One-Time**: Approximately $3,000-$5,000 (internal labor) or provider setup fees
 
 **Annual Operating Costs** (50 Users)
 - Dedicated E911 Service: $600-$1,800/year (optional)
 - SIP Trunk E911 (Comcast): Included in service
 - Compliance Testing: Minimal (staff time only)
+- **Total Annual**: $0-$1,800 depending on provider choice
 
 **ROI & Business Value**
 - Legal Compliance: Avoid fines ($5,000-$20,000 per violation)
@@ -589,10 +609,11 @@ e911:
 
 The PBX system has a solid E911 framework in place with location database structure and emergency routing configured. The immediate focus should be on completing Ray Baum's Act compliance by implementing dispatchable location header injection and audit logging. For organizations with multiple sites or remote workers, integration with a dedicated E911 service provider (RedSky, West, or Bandwidth) is strongly recommended to ensure full compliance and optimal emergency response capabilities.
 
-**Estimated Development Time**: 40-50 hours for full implementation
-**Priority**: 🚨 HIGH - Safety and compliance critical
-**Dependencies**: SIP trunk provider coordination, E911 service provider selection (optional)
-**Risk Level**: Low - Framework exists, clear implementation path
+**Development Estimate**: 40-50 hours (core compliance) + 30-40 hours (advanced features)  
+**Priority**: 🚨 HIGH - Safety and compliance critical  
+**Dependencies**: SIP trunk provider coordination, E911 service provider selection (optional)  
+**Risk Level**: Low - Framework exists, clear implementation path  
+**Investment**: $3,000-$5,000 one-time + $0-$1,800/year (based on December 2025 estimates)
 
 ### Advanced Analytics & Reporting
 | Feature | Status | Business Value |
