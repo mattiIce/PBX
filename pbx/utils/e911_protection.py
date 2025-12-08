@@ -22,8 +22,8 @@ class E911Protection:
     # Patterns that match E911/emergency numbers
     E911_PATTERNS = [
         r'^911$',           # Standard 911
-        r'^[0-9]*911$',     # Enhanced 911 with prefix
-        r'^\*911$',         # Any special prefix
+        r'^[0-9]*911$',     # Enhanced 911 with numeric prefix
+        r'^\*911$',         # Asterisk prefix (e.g., *911)
     ]
     
     def __init__(self, config=None):
