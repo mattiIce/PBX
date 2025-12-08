@@ -647,6 +647,7 @@ class VoicemailIVR:
     STATE_MESSAGE_MENU = 'message_menu'
     STATE_OPTIONS_MENU = 'options_menu'
     STATE_RECORDING_GREETING = 'recording_greeting'
+    STATE_GREETING_REVIEW = 'greeting_review'
     STATE_GOODBYE = 'goodbye'
 
     def __init__(self, voicemail_system: VoicemailSystem, extension_number: str):
@@ -669,6 +670,7 @@ class VoicemailIVR:
         self.current_message_index = 0
         self.current_messages = []
         self.entered_pin = ''  # Collect PIN digits from user
+        self.recorded_greeting_data = None  # Temporary storage for recorded greeting
         
         self.logger.info(f"Voicemail IVR initialized for extension {extension_number}")
 
@@ -698,6 +700,8 @@ class VoicemailIVR:
             return self._handle_options_menu(digit)
         elif self.state == self.STATE_RECORDING_GREETING:
             return self._handle_recording_greeting(digit)
+        elif self.state == self.STATE_GREETING_REVIEW:
+            return self._handle_greeting_review(digit)
         else:
             return {'action': 'unknown_state', 'prompt': 'goodbye'}
 
@@ -919,11 +923,13 @@ class VoicemailIVR:
     def _handle_recording_greeting(self, digit: str) -> dict:
         """Handle recording greeting state"""
         if digit == '#':
-            # Finish recording
+            # Finish recording - transition to review state
+            self.state = self.STATE_GREETING_REVIEW
             return {
                 'action': 'stop_recording',
                 'save_as': 'greeting',
-                'message': 'Greeting recorded. Press 1 to listen, 2 to re-record, * to save and return to main menu'
+                'prompt': 'greeting_review_menu',
+                'message': 'Greeting recorded. Press 1 to listen, 2 to re-record, 3 to delete and use default, * to save and return to main menu'
             }
         
         # During recording, other digits are ignored
@@ -932,14 +938,77 @@ class VoicemailIVR:
             'prompt': 'continue'
         }
 
+    def _handle_greeting_review(self, digit: str) -> dict:
+        """Handle greeting review state after recording"""
+        if digit == '1':
+            # Play back the recorded greeting
+            return {
+                'action': 'play_greeting',
+                'prompt': 'greeting_playback',
+                'message': 'Playing your greeting...'
+            }
+        
+        elif digit == '2':
+            # Re-record the greeting
+            self.recorded_greeting_data = None  # Clear previous recording
+            self.state = self.STATE_RECORDING_GREETING
+            return {
+                'action': 'start_recording',
+                'recording_type': 'greeting',
+                'prompt': 'record_greeting',
+                'message': 'Record your greeting after the tone. Press # when finished.'
+            }
+        
+        elif digit == '3':
+            # Delete greeting and use default
+            self.recorded_greeting_data = None
+            if self.mailbox.has_custom_greeting():
+                self.mailbox.delete_greeting()
+            self.state = self.STATE_MAIN_MENU
+            unread_count = len(self.mailbox.get_messages(unread_only=True))
+            return {
+                'action': 'play_prompt',
+                'prompt': 'greeting_deleted',
+                'message': f'Custom greeting deleted, using default. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+            }
+        
+        elif digit == '*':
+            # Save the greeting and return to main menu
+            if self.recorded_greeting_data:
+                self.mailbox.save_greeting(self.recorded_greeting_data)
+                self.recorded_greeting_data = None
+            self.state = self.STATE_MAIN_MENU
+            unread_count = len(self.mailbox.get_messages(unread_only=True))
+            return {
+                'action': 'play_prompt',
+                'prompt': 'greeting_saved',
+                'message': f'Greeting saved. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+            }
+        
+        return {
+            'action': 'play_prompt',
+            'prompt': 'invalid_option',
+            'message': 'Invalid option. Press 1 to listen, 2 to re-record, 3 to delete, * to save.'
+        }
+
     def save_recorded_greeting(self, audio_data):
         """
-        Save the recorded greeting
+        Save the recorded greeting temporarily for review
 
         Args:
             audio_data: Audio data bytes
 
         Returns:
-            True if greeting was saved successfully
+            True if greeting was stored successfully
         """
-        return self.mailbox.save_greeting(audio_data)
+        self.recorded_greeting_data = audio_data
+        return True
+    
+    def get_recorded_greeting(self):
+        """
+        Get the temporarily stored greeting for playback
+
+        Returns:
+            bytes: Audio data or None
+        """
+        return self.recorded_greeting_data

@@ -2013,6 +2013,127 @@ class PBXCore:
                                         time.sleep(1)
                                         ivr_active = False
                                     
+                                    elif action['action'] == 'start_recording':
+                                        # Start recording greeting
+                                        if call.state.value == 'ended':
+                                            self.logger.info(f"Call {call_id} ended, cannot start recording")
+                                            break
+                                        
+                                        self.logger.info(f"Starting greeting recording for extension {call.voicemail_extension}")
+                                        
+                                        # Play beep tone
+                                        beep_prompt = get_prompt_audio('beep')
+                                        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                            temp_file.write(beep_prompt)
+                                            beep_file = temp_file.name
+                                        
+                                        try:
+                                            player.play_file(beep_file)
+                                        finally:
+                                            try:
+                                                os.unlink(beep_file)
+                                            except OSError:
+                                                pass
+                                        
+                                        time.sleep(0.2)
+                                        
+                                        # Start recording
+                                        recorder.recorded_data = []  # Clear previous recording
+                                        recording_start_time = time.time()
+                                        max_recording_time = 120  # 2 minutes max
+                                        
+                                        # Wait for # to stop recording or timeout
+                                        recording = True
+                                        while recording and ivr_active:
+                                            if call.state.value == 'ended':
+                                                self.logger.info(f"Call {call_id} ended during recording")
+                                                recording = False
+                                                break
+                                            
+                                            # Check for timeout
+                                            if time.time() - recording_start_time > max_recording_time:
+                                                self.logger.info(f"Recording timed out after {max_recording_time}s")
+                                                recording = False
+                                                break
+                                            
+                                            time.sleep(0.1)
+                                            
+                                            # Check for DTMF # to stop recording
+                                            if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                                                recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
+                                                if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
+                                                    digit = dtmf_detector.detect(recent_audio)
+                                                    if digit == '#':
+                                                        self.logger.info(f"Recording stopped by user (#)")
+                                                        recording = False
+                                                        # Process through IVR to transition state
+                                                        action = voicemail_ivr.handle_dtmf('#')
+                                                        # Save recorded audio
+                                                        if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                                                            greeting_audio = b''.join(recorder.recorded_data)
+                                                            voicemail_ivr.save_recorded_greeting(greeting_audio)
+                                                            self.logger.info(f"Saved recorded greeting ({len(greeting_audio)} bytes)")
+                                                        # Handle the returned action (should be greeting review menu)
+                                                        if action['action'] == 'play_prompt':
+                                                            prompt_type = action.get('prompt', 'greeting_review_menu')
+                                                            prompt_audio = get_prompt_audio(prompt_type)
+                                                            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                                                temp_file.write(prompt_audio)
+                                                                prompt_file = temp_file.name
+                                                            try:
+                                                                player.play_file(prompt_file)
+                                                            finally:
+                                                                try:
+                                                                    os.unlink(prompt_file)
+                                                                except OSError:
+                                                                    pass
+                                                        # Clear recorder after saving
+                                                        recorder.recorded_data = []
+                                                        break
+                                    
+                                    elif action['action'] == 'play_greeting':
+                                        # Play back the recorded greeting for review
+                                        if call.state.value == 'ended':
+                                            self.logger.info(f"Call {call_id} ended, cannot play greeting")
+                                            break
+                                        
+                                        greeting_data = voicemail_ivr.get_recorded_greeting()
+                                        if greeting_data:
+                                            self.logger.info(f"Playing recorded greeting for review ({len(greeting_data)} bytes)")
+                                            
+                                            # Build WAV file from recorded audio
+                                            greeting_wav = self._build_wav_file(greeting_data)
+                                            
+                                            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                                temp_file.write(greeting_wav)
+                                                greeting_file = temp_file.name
+                                            
+                                            try:
+                                                player.play_file(greeting_file)
+                                            finally:
+                                                try:
+                                                    os.unlink(greeting_file)
+                                                except OSError:
+                                                    pass
+                                            
+                                            time.sleep(0.5)
+                                            
+                                            # Play review menu again
+                                            review_prompt = get_prompt_audio('greeting_review_menu')
+                                            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                                temp_file.write(review_prompt)
+                                                prompt_file = temp_file.name
+                                            
+                                            try:
+                                                player.play_file(prompt_file)
+                                            finally:
+                                                try:
+                                                    os.unlink(prompt_file)
+                                                except OSError:
+                                                    pass
+                                        else:
+                                            self.logger.warning(f"No recorded greeting data available for playback")
+                                    
                                     # Clear audio buffer after processing DTMF
                                     # Note: Directly modifying internal state - consider adding clear() method to RTPRecorder
                                     if hasattr(recorder, 'recorded_data'):
