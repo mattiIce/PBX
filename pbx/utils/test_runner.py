@@ -123,10 +123,11 @@ def run_all_tests(tests_dir="tests", log_failures=True):
                     # If test returned None/False, check output for success indicators
                     if not test_passed and test_stdout:
                         # Check for common success patterns in output
+                        import re
                         output_lower = test_stdout.lower()
                         if ('0 failed' in output_lower or 
                             'all tests passed' in output_lower or
-                            'all.*tests passed' in output_lower):
+                            re.search(r'all.*tests passed', output_lower)):
                             # Also check that there's no explicit failure indicator
                             if 'failed' not in output_lower or '0 failed' in output_lower:
                                 test_passed = True

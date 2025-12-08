@@ -5997,3 +5997,160 @@ Test Run Started: 2025-12-08 18:23:41
 Test Run Completed: 2025-12-08 18:25:26
 Summary: 42 passed, 4 failed, 0 skipped
 ================================================================================
+
+================================================================================
+Test Run Started: 2025-12-08 18:28:21
+================================================================================
+
+[2025-12-08 18:28:22] FAILED: test_greeting_recording.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Greeting Recording Tests
+    ============================================================
+    
+    Testing greeting storage...
+    ✓ Greeting storage works
+    Testing greeting deletion...
+    ✓ Greeting deletion works
+    Testing IVR options menu...
+    ✓ IVR options menu works
+    Testing IVR greeting recording...
+    ✓ IVR greeting recording works
+    Testing IVR save recorded greeting...
+    ✗ test_ivr_save_recorded_greeting failed: Mailbox should have custom greeting
+    Testing main menu to options navigation...
+    ✓ Main menu to options navigation works
+    Testing greeting persistence...
+    ✓ Greeting persistence works
+    
+    ============================================================
+    Results: 6 passed, 1 failed
+    ============================================================
+
+[2025-12-08 18:29:23] FAILED: test_voicemail_database.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Database Tests
+    ============================================================
+    
+    Testing database configuration...
+    ✗ test_database_configuration failed: 
+    Testing database backend initialization...
+    ✓ Database backend initializes correctly
+    Testing voicemail database integration...
+    ✓ Voicemail database integration works correctly
+    Testing voicemail system without database...
+    ✓ Voicemail system works without database
+    
+    ============================================================
+    Results: 3 passed, 1 failed
+    ============================================================
+
+  Test Errors:
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 204, in run_all_tests
+        test()
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 28, in test_database_configuration
+        assert config.get('database.port') == 5432
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    AssertionError
+
+[2025-12-08 18:29:23] FAILED: test_voicemail_email.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Email Tests
+    ============================================================
+    
+    Testing email notifier configuration...
+    ✗ test_email_notifier_config failed: 
+    Testing email notifier initialization...
+    ✗ test_email_notifier_initialization failed: 
+    Testing voicemail system with email integration...
+    ✓ Voicemail system integrates with email correctly
+    Testing extension email configuration...
+    ✓ Extensions have email addresses configured
+    Testing no-answer timeout configuration...
+    ✓ No-answer timeout configured correctly
+    
+    ============================================================
+    Results: 3 passed, 2 failed
+    ============================================================
+
+[2025-12-08 18:29:28] FAILED: test_voicemail_transcription.py
+  Return value: False (expected True)
+
+  Test Errors:
+    test_transcription_file_not_found (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_file_not_found)
+    Test transcription with non-existent file ... ok
+    test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results ... ERROR
+    test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription ... ERROR
+    test_transcription_result_structure (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_result_structure)
+    Test that transcription result has correct structure ... ok
+    test_transcription_service_disabled (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_service_disabled)
+    Test transcription service when disabled ... ok
+    test_transcription_unsupported_provider (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_unsupported_provider)
+    Test transcription with unsupported provider ... ok
+    
+    ======================================================================
+    ERROR: test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ======================================================================
+    ERROR: test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ----------------------------------------------------------------------
+    Ran 6 tests in 0.014s
+    
+    FAILED (errors=2)
+
+================================================================================
+Test Run Completed: 2025-12-08 18:30:05
+Summary: 42 passed, 4 failed, 0 skipped
+================================================================================

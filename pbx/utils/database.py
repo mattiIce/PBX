@@ -911,6 +911,28 @@ class ExtensionDB:
         """
         self.db = db
         self.logger = get_logger()
+    
+    def _hash_voicemail_pin(self, pin: str) -> tuple:
+        """
+        Hash a voicemail PIN using FIPS-compliant encryption
+        
+        Args:
+            pin: Voicemail PIN to hash
+            
+        Returns:
+            tuple: (pin_hash, pin_salt) or (None, None) if hashing fails
+        """
+        if not pin:
+            return None, None
+            
+        try:
+            from pbx.utils.encryption import get_encryption
+            enc = get_encryption()
+            pin_hash, pin_salt = enc.hash_password(pin)
+            return pin_hash, pin_salt
+        except Exception as e:
+            self.logger.error(f"Failed to hash voicemail PIN: {e}")
+            return None, None
 
     def add(self, number: str, name: str, password_hash: str, email: str = None, 
             allow_external: bool = True, voicemail_pin: str = None, 
@@ -932,15 +954,12 @@ class ExtensionDB:
             bool: True if successful
         """
         # Hash the voicemail PIN if provided
-        voicemail_pin_hash = None
-        voicemail_pin_salt = None
-        if voicemail_pin:
-            try:
-                from pbx.utils.encryption import get_encryption
-                enc = get_encryption()
-                voicemail_pin_hash, voicemail_pin_salt = enc.hash_password(voicemail_pin)
-            except Exception as e:
-                self.logger.error(f"Failed to hash voicemail PIN: {e}")
+        voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(voicemail_pin)
+        
+        # If PIN was provided but hashing failed, return False
+        if voicemail_pin and not voicemail_pin_hash:
+            self.logger.error(f"Cannot add extension {number}: voicemail PIN hashing failed")
+            return False
                 
         query = """
         INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username)
@@ -1037,16 +1056,17 @@ class ExtensionDB:
         
         if voicemail_pin is not None:
             # Hash the voicemail PIN before storing
-            try:
-                from pbx.utils.encryption import get_encryption
-                enc = get_encryption()
-                voicemail_pin_hash, voicemail_pin_salt = enc.hash_password(voicemail_pin)
-                updates.append("voicemail_pin_hash = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_hash = ?")
-                params.append(voicemail_pin_hash)
-                updates.append("voicemail_pin_salt = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_salt = ?")
-                params.append(voicemail_pin_salt)
-            except Exception as e:
-                self.logger.error(f"Failed to hash voicemail PIN: {e}")
+            voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(voicemail_pin)
+            
+            # If PIN was provided but hashing failed, return False
+            if voicemail_pin and not voicemail_pin_hash:
+                self.logger.error(f"Cannot update extension {number}: voicemail PIN hashing failed")
+                return False
+                
+            updates.append("voicemail_pin_hash = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_hash = ?")
+            params.append(voicemail_pin_hash)
+            updates.append("voicemail_pin_salt = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_salt = ?")
+            params.append(voicemail_pin_salt)
         
         if ad_synced is not None:
             updates.append("ad_synced = %s" if self.db.db_type == 'postgresql' else "ad_synced = ?")
