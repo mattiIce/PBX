@@ -4,15 +4,16 @@ After=network.target
 
 [Service]
 Type=oneshot
-# Update this path to match your PBX installation directory
+# IMPORTANT: Update these paths to match your PBX installation directory
+# Common locations: /opt/pbx, /usr/local/pbx, /home/pbx/PBX
 WorkingDirectory=/opt/pbx
-# Update this path to match your PBX installation directory
 ExecStart=/opt/pbx/run_startup_tests.sh
-# Run as the user who owns the PBX files (update as needed)
+# IMPORTANT: Update this to the user who owns the PBX files
+# Common users: pbx, root, your-username
 User=pbx
 StandardOutput=journal
 StandardError=journal
-# Don't fail the boot if tests fail
+# Don't fail the boot if tests fail (exit codes 0 and 1 are both success)
 SuccessExitStatus=0 1
 
 [Install]

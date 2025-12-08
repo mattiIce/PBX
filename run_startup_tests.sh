@@ -13,6 +13,9 @@
 #   4. Push changes to remote repository (if git credentials are configured)
 #
 
+# Exit on error for setup checks, but allow test runner to complete
+set -e
+
 echo "========================================================================"
 echo "PBX System - Startup Test Runner"
 echo "========================================================================"
@@ -34,6 +37,9 @@ if [ ! -f "run_tests.py" ]; then
     echo "❌ Error: run_tests.py not found in $SCRIPT_DIR"
     exit 1
 fi
+
+# Disable exit on error for test execution (tests may fail, which is expected)
+set +e
 
 # Run the tests
 echo "Running PBX system tests..."

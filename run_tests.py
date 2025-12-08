@@ -21,7 +21,7 @@ def run_test_file(test_file):
     """
     try:
         result = subprocess.run(
-            [sys.executable, test_file],
+            [sys.executable, str(test_file)],
             capture_output=True,
             text=True,
             timeout=60,
@@ -162,7 +162,7 @@ def commit_log_file():
             except subprocess.TimeoutExpired:
                 print(f"⚠ Warning: Push timed out after 30 seconds")
             except subprocess.CalledProcessError as e:
-                error_msg = e.stderr.decode() if e.stderr else str(e)
+                error_msg = e.stderr.decode() if (e.stderr and hasattr(e.stderr, 'decode')) else str(e)
                 print(f"⚠ Warning: Could not push to remote")
                 if "Authentication failed" in error_msg or "Invalid username" in error_msg:
                     print(f"  → Git credentials not configured. To enable automatic push:")
