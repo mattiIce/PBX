@@ -772,3 +772,223 @@ class RTPPlayer:
             import traceback
             traceback.print_exc()
             return False
+
+
+class RTPDTMFListener:
+    """
+    RTP DTMF Listener - Receives RTP audio and detects DTMF tones
+    Used for interactive voice response (IVR) and auto attendant systems
+    """
+
+    def __init__(self, local_port, call_id=None):
+        """
+        Initialize RTP DTMF listener
+
+        Args:
+            local_port: Local UDP port to receive RTP packets
+            call_id: Optional call identifier for logging
+        """
+        self.local_port = local_port
+        self.call_id = call_id or "unknown"
+        self.logger = get_logger()
+        self.socket = None
+        self.running = False
+        self.detected_digits = []
+        self.lock = threading.Lock()
+        self.audio_buffer = []
+        self.sample_rate = 8000  # Standard for telephony
+        
+        # DTMF detection frame sizes (based on DTMFDetector default of 205 samples per frame)
+        # We need ~2x frame size for reliable detection with overlap
+        self.dtmf_frame_size = 205  # Samples per DTMF detection frame
+        self.dtmf_buffer_size = 410  # Buffer size for detection (2x frame size)
+        self.dtmf_slide_size = 205   # Sliding window size
+        
+        # Initialize DTMF detector
+        from pbx.utils.dtmf import DTMFDetector
+        self.dtmf_detector = DTMFDetector(sample_rate=self.sample_rate)
+
+    def start(self):
+        """Start RTP DTMF listener"""
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
+            # This is intentional for VoIP systems which need to handle multi-homed servers
+            self.socket.bind(('0.0.0.0', self.local_port))
+            self.socket.settimeout(0.1)  # 100ms timeout for recv
+            self.running = True
+
+            self.logger.info(f"RTP DTMF listener started on port {self.local_port} for call {self.call_id}")
+
+            # Start listening thread
+            listen_thread = threading.Thread(target=self._listen_loop)
+            listen_thread.daemon = True
+            listen_thread.start()
+
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to start RTP DTMF listener: {e}")
+            return False
+
+    def stop(self):
+        """Stop RTP DTMF listener"""
+        self.running = False
+        if self.socket:
+            try:
+                self.socket.close()
+            except (OSError, socket.error) as e:
+                self.logger.debug(f"Error closing socket: {e}")
+            self.socket = None
+        self.logger.info(f"RTP DTMF listener stopped for call {self.call_id}")
+
+    def _listen_loop(self):
+        """Listen for RTP packets and detect DTMF tones"""
+        import time
+        
+        while self.running:
+            try:
+                data, addr = self.socket.recvfrom(2048)
+
+                # Extract audio payload from RTP packet
+                if len(data) >= 12:
+                    # Parse RTP header
+                    header = struct.unpack('!BBHII', data[:12])
+                    payload_type = header[1] & 0x7F
+                    payload = data[12:]
+
+                    # Convert audio payload to samples for DTMF detection
+                    # Assuming G.711 μ-law (payload type 0) or A-law (payload type 8)
+                    if payload_type in [0, 8]:
+                        # Convert G.711 to linear PCM samples
+                        samples = self._decode_g711(payload, payload_type)
+                        
+                        with self.lock:
+                            self.audio_buffer.extend(samples)
+                            
+                            # Process buffer when we have enough samples
+                            if len(self.audio_buffer) >= self.dtmf_buffer_size:
+                                # Try to detect DTMF tone
+                                digit = self.dtmf_detector.detect_tone(self.audio_buffer[:self.dtmf_buffer_size])
+                                
+                                if digit:
+                                    # Check if this is a new digit (not a repeat)
+                                    if not self.detected_digits or self.detected_digits[-1] != digit:
+                                        self.detected_digits.append(digit)
+                                        self.logger.info(f"DTMF digit detected: {digit}")
+                                
+                                # Keep a sliding window of audio
+                                self.audio_buffer = self.audio_buffer[self.dtmf_slide_size:]
+
+            except socket.timeout:
+                # Timeout is normal, just continue
+                continue
+            except Exception as e:
+                if self.running:
+                    self.logger.error(f"Error in RTP DTMF listen loop: {e}")
+
+    def _decode_g711(self, payload, payload_type):
+        """
+        Decode G.711 audio to linear PCM samples
+
+        Args:
+            payload: G.711 encoded audio bytes
+            payload_type: 0 for μ-law, 8 for A-law
+
+        Returns:
+            list: Linear PCM samples normalized to [-1.0, 1.0]
+        """
+        samples = []
+        
+        for byte in payload:
+            if payload_type == 0:  # μ-law
+                # Simplified μ-law decode
+                sample = self._ulaw_to_linear(byte)
+            else:  # A-law (payload_type == 8)
+                # Simplified A-law decode
+                sample = self._alaw_to_linear(byte)
+            
+            # Normalize to [-1.0, 1.0]
+            samples.append(sample / 32768.0)
+        
+        return samples
+
+    def _ulaw_to_linear(self, ulaw_byte):
+        """
+        Convert μ-law byte to linear PCM sample
+
+        Args:
+            ulaw_byte: μ-law encoded byte
+
+        Returns:
+            int: Linear PCM sample (-32768 to 32767)
+        """
+        # μ-law decompression algorithm (ITU-T G.711)
+        ulaw_byte = ~ulaw_byte & 0xFF
+        sign = (ulaw_byte & 0x80) >> 7
+        exponent = (ulaw_byte & 0x70) >> 4
+        mantissa = ulaw_byte & 0x0F
+        
+        # Calculate linear value
+        # 0x84 (132) is the bias value added to mantissa in μ-law encoding
+        linear = ((mantissa << 3) + 0x84) << exponent
+        
+        if sign:
+            return -linear
+        else:
+            return linear
+
+    def _alaw_to_linear(self, alaw_byte):
+        """
+        Convert A-law byte to linear PCM sample
+
+        Args:
+            alaw_byte: A-law encoded byte
+
+        Returns:
+            int: Linear PCM sample (-32768 to 32767)
+        """
+        # A-law decompression algorithm (ITU-T G.711)
+        alaw_byte ^= 0x55  # XOR with 0x55 per A-law spec
+        sign = (alaw_byte & 0x80) >> 7
+        exponent = (alaw_byte & 0x70) >> 4
+        mantissa = alaw_byte & 0x0F
+        
+        if exponent == 0:
+            linear = (mantissa << 4) + 8
+        else:
+            # 0x108 (264) is the bias for non-zero exponents in A-law encoding
+            linear = ((mantissa << 4) + 0x108) << (exponent - 1)
+        
+        if sign:
+            return -linear
+        else:
+            return linear
+
+    def get_digit(self, timeout=1.0):
+        """
+        Get the next detected DTMF digit
+
+        Args:
+            timeout: Maximum time to wait for a digit (seconds)
+
+        Returns:
+            str: Detected digit ('0'-'9', '*', '#', 'A'-'D') or None
+        """
+        import time
+        start_time = time.time()
+        
+        while (time.time() - start_time) < timeout:
+            with self.lock:
+                if self.detected_digits:
+                    return self.detected_digits.pop(0)
+            
+            # Small delay to avoid busy waiting
+            time.sleep(0.05)
+        
+        return None
+
+    def clear_digits(self):
+        """Clear all detected digits from the buffer"""
+        with self.lock:
+            self.detected_digits.clear()
