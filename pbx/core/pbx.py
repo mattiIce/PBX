@@ -1457,8 +1457,17 @@ class PBXCore:
 
         self.logger.info(f"Voicemail access: {from_ext} -> {target_ext}")
 
-        # Verify the target extension exists
-        if not self.config.get_extension(target_ext):
+        # Verify the target extension exists (check both database and config)
+        extension_exists = False
+        
+        # Check extension registry first (includes both database and config extensions)
+        if self.extension_registry.get(target_ext):
+            extension_exists = True
+        # Fallback to config check for backwards compatibility
+        elif self.config.get_extension(target_ext):
+            extension_exists = True
+        
+        if not extension_exists:
             self.logger.warning(f"Voicemail access to non-existent extension {target_ext}")
             return False
 
