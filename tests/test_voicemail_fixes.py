@@ -39,10 +39,12 @@ def test_api_serves_audio_by_default():
         audio_data = b'\x7F' * 1600  # 0.2 seconds
         
         # Build minimal WAV file
+        # WAV format constants
+        MULAW_FORMAT = 7  # G.711 μ-law audio format
         sample_rate = 8000
         bits_per_sample = 8
         num_channels = 1
-        audio_format = 7  # μ-law
+        audio_format = MULAW_FORMAT
         
         data_size = len(audio_data)
         file_size = 4 + 26 + 8 + data_size
@@ -107,15 +109,22 @@ def test_voicemail_access_checks_registry():
         # The pattern should match
         import re
         dialplan = pbx.config.get('dialplan', {})
-        voicemail_pattern = dialplan.get('voicemail_pattern', '^\\*[0-9]{3}$')
+        # Default pattern supports 3-4 digit extensions
+        voicemail_pattern = dialplan.get('voicemail_pattern', '^\\*[0-9]{3,4}$')
         
-        # Check if pattern matches (should match *1001, *1002, etc.)
-        if len(test_ext) == 4:  # Standard extension like 1001
+        # Check if pattern matches (should match *100, *1001, etc.)
+        # Pattern typically supports 3-4 digit extensions as per config
+        if len(test_ext) >= 3 and len(test_ext) <= 4 and test_ext.isdigit():
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
-            assert pattern_matches, f"Voicemail pattern should match {voicemail_ext}"
-            print(f"✓ Voicemail pattern matches {voicemail_ext}")
+            assert pattern_matches, f"Voicemail pattern '{voicemail_pattern}' should match {voicemail_ext}"
+            print(f"✓ Voicemail pattern '{voicemail_pattern}' matches {voicemail_ext}")
         else:
-            print(f"⚠ Extension {test_ext} is non-standard length, pattern check skipped")
+            print(f"⚠ Extension {test_ext} is non-standard length, pattern check informational only")
+            pattern_matches = re.match(voicemail_pattern, voicemail_ext)
+            if pattern_matches:
+                print(f"  Pattern '{voicemail_pattern}' matches {voicemail_ext}")
+            else:
+                print(f"  Pattern '{voicemail_pattern}' does not match {voicemail_ext}")
         
     except Exception as e:
         print(f"Note: Could not fully test voicemail access - {e}")

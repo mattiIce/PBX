@@ -1334,7 +1334,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     return
 
                 # Check if request is for metadata only (via query parameter)
-                query_params = parse_qs(urlparse(path).query)
+                # Use self.path to get the full request URL with query string
+                query_params = parse_qs(urlparse(self.path).query)
                 if query_params.get('metadata', [False])[0] in ['true', '1', True]:
                     # Return message metadata as JSON
                     self._send_json({
