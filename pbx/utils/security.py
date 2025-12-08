@@ -476,6 +476,7 @@ class ThreatDetector:
         # Initialize database schema if available
         if self.database and self.database.enabled:
             self._initialize_schema()
+            self._load_blocked_ips_from_database()
     
     def _get_config(self, key: str, default=None):
         """
@@ -561,6 +562,47 @@ class ThreatDetector:
             self.logger.info("Threat detection database schema initialized")
         except Exception as e:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
+    
+    def _load_blocked_ips_from_database(self):
+        """Load active blocked IPs from database into memory"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            query = """
+            SELECT ip_address, reason, blocked_until 
+            FROM security_blocked_ips 
+            WHERE blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
+            """ if self.database.db_type == 'postgresql' else """
+            SELECT ip_address, reason, blocked_until 
+            FROM security_blocked_ips 
+            WHERE blocked_until > datetime('now') AND unblocked_at IS NULL
+            """
+            results = self.database.fetch_all(query)
+            
+            if results:
+                for row in results:
+                    ip_address = row['ip_address']
+                    reason = row.get('reason', 'IP blocked')
+                    blocked_until = row['blocked_until']
+                    
+                    # Convert timestamp string to unix time
+                    if isinstance(blocked_until, str):
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(blocked_until.replace('Z', '+00:00'))
+                        blocked_until_ts = dt.timestamp()
+                    else:
+                        blocked_until_ts = blocked_until
+                    
+                    # Add to in-memory cache
+                    self.blocked_ips[ip_address] = {
+                        'until': blocked_until_ts,
+                        'reason': reason
+                    }
+                
+                self.logger.info(f"Loaded {len(results)} blocked IPs from database")
+        except Exception as e:
+            self.logger.error(f"Failed to load blocked IPs from database: {e}")
     
     def is_ip_blocked(self, ip_address: str) -> Tuple[bool, Optional[str]]:
         """

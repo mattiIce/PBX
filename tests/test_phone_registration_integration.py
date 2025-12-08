@@ -79,6 +79,14 @@ def test_registration_storage():
     pbx.database = db
     pbx.registered_phones_db = RegisteredPhonesDB(db)
     
+    # Add a test extension to the in-memory database
+    from pbx.features.extensions import Extension
+    test_ext = Extension("1001", "Test User", {
+        'password': 'testpass',
+        'email': 'test@test.com'
+    })
+    pbx.extensions["1001"] = test_ext
+    
     # Simulate a SIP REGISTER
     from_header = '"Test Phone" <sip:1001@192.168.1.100>'
     addr = ('192.168.1.100', 5060)

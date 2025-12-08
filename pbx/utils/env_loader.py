@@ -89,6 +89,27 @@ class EnvironmentLoader:
             # Track loaded vars (without exposing values)
             self.loaded_vars[var_name] = '***'
         
+        # Try to convert to appropriate type (int, float, bool)
+        # Only if the entire string is a substitution (e.g., "${DB_PORT}" not "prefix_${DB_PORT}")
+        if result and value.strip() in [f'${{{m[0]}}}' for m in matches if m[0]] + [f'${m[1]}' for m in matches if m[1]]:
+            # Try integer conversion
+            try:
+                return int(result)
+            except ValueError:
+                pass
+            
+            # Try float conversion
+            try:
+                return float(result)
+            except ValueError:
+                pass
+            
+            # Try boolean conversion
+            if result.lower() in ('true', 'yes', '1'):
+                return True
+            if result.lower() in ('false', 'no', '0'):
+                return False
+        
         return result
     
     def resolve_config(self, config: dict) -> dict:

@@ -19,6 +19,7 @@ except ImportError:
     VOSK_AVAILABLE = False
 
 # Optional: Google Cloud Speech (kept for backward compatibility)
+speech = None  # Initialize to None for testing
 try:
     from google.cloud import speech
     GOOGLE_SPEECH_AVAILABLE = True

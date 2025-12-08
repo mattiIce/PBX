@@ -181,6 +181,14 @@ def test_config_generation():
     provisioning = PhoneProvisioning(config)
     extension_registry = ExtensionRegistry(config)
     
+    # Add a test extension to the registry
+    from pbx.features.extensions import Extension
+    test_ext = Extension("1001", "Test User", {
+        'password': 'password1001',
+        'email': 'test@test.com'
+    })
+    extension_registry.extensions["1001"] = test_ext
+    
     # Register a device for extension 1001
     device = provisioning.register_device(
         "00:15:65:12:34:56",
