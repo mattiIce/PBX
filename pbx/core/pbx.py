@@ -5,6 +5,7 @@ Central coordinator for all PBX functionality
 import re
 import struct
 import threading
+import time
 import traceback
 from datetime import datetime
 from pbx.utils.config import Config
@@ -1064,7 +1065,6 @@ class PBXCore:
             call: Call object
             recorder: RTPRecorder instance
         """
-        import time
         from pbx.utils.dtmf import DTMFDetector
         
         try:
@@ -1091,15 +1091,16 @@ class PBXCore:
                         if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
                             # Convert bytes to audio samples for DTMF detection
                             # G.711 μ-law is 8-bit samples, one byte per sample
-                            import struct
+                            # Use struct.unpack for efficient batch conversion
                             samples = []
-                            for byte in recent_audio:
+                            # Process in chunks for efficiency
+                            chunk_size = min(len(recent_audio), 8192)  # Process up to 8KB at once
+                            for i in range(0, len(recent_audio), chunk_size):
+                                chunk = recent_audio[i:i+chunk_size]
+                                # Unpack bytes and convert to float samples
+                                unpacked = struct.unpack(f'{len(chunk)}B', chunk)
                                 # Convert unsigned byte to signed float (-1.0 to 1.0)
-                                if isinstance(byte, int):
-                                    sample = (byte - 128) / 128.0
-                                else:
-                                    sample = (struct.unpack('B', byte)[0] - 128) / 128.0
-                                samples.append(sample)
+                                samples.extend([(b - 128) / 128.0 for b in unpacked])
                             
                             # Detect DTMF
                             digit = dtmf_detector.detect_tone(samples)
@@ -1114,7 +1115,6 @@ class PBXCore:
             
         except Exception as e:
             self.logger.error(f"Error in voicemail DTMF monitoring: {e}")
-            import traceback
             self.logger.error(traceback.format_exc())
 
     def _complete_voicemail_recording(self, call_id):
