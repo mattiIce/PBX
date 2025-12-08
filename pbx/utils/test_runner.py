@@ -17,7 +17,8 @@ def run_all_tests(tests_dir="tests"):
         tests_dir: Path to the tests directory
         
     Returns:
-        Tuple of (total_passed, total_failed, test_results)
+        Tuple of (total_passed, total_failed, total_skipped, test_results)
+        where test_results is a list of (test_file, success, error_msg) tuples
     """
     # Get absolute path to tests directory
     if not os.path.isabs(tests_dir):
