@@ -70,13 +70,14 @@ class DTMFDetector:
         magnitude = math.sqrt(q1 * q1 + q2 * q2 - q1 * q2 * coeff)
         return magnitude
 
-    def detect_tone(self, samples: List[float], threshold: float = 0.01) -> Optional[str]:
+    def detect_tone(self, samples: List[float], threshold: float = 0.3) -> Optional[str]:
         """
         Detect DTMF tone from audio samples
 
         Args:
             samples: Audio samples (should be samples_per_frame length)
-            threshold: Detection threshold (relative to average magnitude)
+            threshold: Detection threshold (relative magnitude, 0.0-1.0). 
+                      Default 0.3 provides good balance between sensitivity and false positives.
 
         Returns:
             str: Detected digit ('0'-'9', '*', '#', 'A'-'D') or None
@@ -84,8 +85,12 @@ class DTMFDetector:
         if len(samples) < self.samples_per_frame:
             return None
 
+        # Check if signal has sufficient energy (reject silence/very weak signals)
+        max_val = max(abs(s) for s in samples)
+        if max_val < 0.01:  # Reject very weak signals before normalization
+            return None
+
         # Normalize samples
-        max_val = max(abs(s) for s in samples) or 1.0
         normalized = [s / max_val for s in samples[:self.samples_per_frame]]
 
         # Detect low and high frequency components
@@ -100,12 +105,24 @@ class DTMFDetector:
         high_mag = high_magnitudes[high_freq]
 
         # Check if both frequencies are strong enough
+        # Also verify they are significantly stronger than other frequencies (noise rejection)
         if low_mag > threshold and high_mag > threshold:
-            # Find matching digit
-            for digit, (low, high) in DTMF_FREQUENCIES.items():
-                if low == low_freq and high == high_freq:
-                    self.logger.debug(f"Detected DTMF tone: {digit} (L:{low_freq}Hz={low_mag:.3f}, H:{high_freq}Hz={high_mag:.3f})")
-                    return digit
+            # Additional validation: check that detected frequencies are dominant
+            # Require detected frequencies to be at least 2x stronger than the average of other frequencies
+            other_low_mags = [m for f, m in low_magnitudes.items() if f != low_freq]
+            other_high_mags = [m for f, m in high_magnitudes.items() if f != high_freq]
+            
+            avg_other_low = sum(other_low_mags) / len(other_low_mags) if other_low_mags else 0
+            avg_other_high = sum(other_high_mags) / len(other_high_mags) if other_high_mags else 0
+            
+            # Require the detected frequencies to be significantly stronger than noise
+            # Use 2.0 ratio for better noise rejection
+            if low_mag > avg_other_low * 2.0 and high_mag > avg_other_high * 2.0:
+                # Find matching digit
+                for digit, (low, high) in DTMF_FREQUENCIES.items():
+                    if low == low_freq and high == high_freq:
+                        self.logger.debug(f"Detected DTMF tone: {digit} (L:{low_freq}Hz={low_mag:.3f}, H:{high_freq}Hz={high_mag:.3f})")
+                        return digit
 
         return None
 
