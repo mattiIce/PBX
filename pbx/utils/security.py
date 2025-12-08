@@ -563,21 +563,28 @@ class ThreatDetector:
         except Exception as e:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
     
+    def _get_active_blocks_query(self):
+        """Get SQL query for active blocked IPs based on database type"""
+        if self.database.db_type == 'postgresql':
+            return """
+            SELECT ip_address, reason, blocked_until 
+            FROM security_blocked_ips 
+            WHERE blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
+            """
+        else:  # SQLite
+            return """
+            SELECT ip_address, reason, blocked_until 
+            FROM security_blocked_ips 
+            WHERE blocked_until > datetime('now') AND unblocked_at IS NULL
+            """
+    
     def _load_blocked_ips_from_database(self):
         """Load active blocked IPs from database into memory"""
         if not self.database or not self.database.enabled:
             return
         
         try:
-            query = """
-            SELECT ip_address, reason, blocked_until 
-            FROM security_blocked_ips 
-            WHERE blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
-            """ if self.database.db_type == 'postgresql' else """
-            SELECT ip_address, reason, blocked_until 
-            FROM security_blocked_ips 
-            WHERE blocked_until > datetime('now') AND unblocked_at IS NULL
-            """
+            query = self._get_active_blocks_query()
             results = self.database.fetch_all(query)
             
             if results:
@@ -588,7 +595,6 @@ class ThreatDetector:
                     
                     # Convert timestamp string to unix time
                     if isinstance(blocked_until, str):
-                        from datetime import datetime
                         dt = datetime.fromisoformat(blocked_until.replace('Z', '+00:00'))
                         blocked_until_ts = dt.timestamp()
                     else:

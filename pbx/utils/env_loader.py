@@ -91,26 +91,62 @@ class EnvironmentLoader:
         
         # Try to convert to appropriate type (int, float, bool)
         # Only if the entire string is a substitution (e.g., "${DB_PORT}" not "prefix_${DB_PORT}")
-        if result and value.strip() in [f'${{{m[0]}}}' for m in matches if m[0]] + [f'${m[1]}' for m in matches if m[1]]:
-            # Try integer conversion
-            try:
-                return int(result)
-            except ValueError:
-                pass
-            
-            # Try float conversion
-            try:
-                return float(result)
-            except ValueError:
-                pass
-            
-            # Try boolean conversion
-            if result.lower() in ('true', 'yes', '1'):
-                return True
-            if result.lower() in ('false', 'no', '0'):
-                return False
+        if result and self._is_complete_substitution(value, matches):
+            return self._try_type_conversion(result)
         
         return result
+    
+    def _is_complete_substitution(self, value: str, matches: list) -> bool:
+        """
+        Check if the value is a complete environment variable substitution
+        (e.g., "${DB_PORT}") rather than a partial substitution (e.g., "prefix_${DB_PORT}")
+        
+        Args:
+            value: Original value string
+            matches: List of regex matches
+            
+        Returns:
+            True if value is a complete substitution
+        """
+        # Build list of possible complete substitution patterns
+        complete_patterns = []
+        for match in matches:
+            if match[0]:  # ${VAR} format
+                complete_patterns.append(f'${{{match[0]}}}')
+            if match[1]:  # $VAR format
+                complete_patterns.append(f'${match[1]}')
+        
+        return value.strip() in complete_patterns
+    
+    def _try_type_conversion(self, value: str):
+        """
+        Try to convert string value to appropriate type (int, float, bool)
+        
+        Args:
+            value: String value to convert
+            
+        Returns:
+            Converted value or original string if conversion fails
+        """
+        # Try integer conversion
+        try:
+            return int(value)
+        except ValueError:
+            pass
+        
+        # Try float conversion
+        try:
+            return float(value)
+        except ValueError:
+            pass
+        
+        # Try boolean conversion
+        if value.lower() in ('true', 'yes', '1'):
+            return True
+        if value.lower() in ('false', 'no', '0'):
+            return False
+        
+        return value
     
     def resolve_config(self, config: dict) -> dict:
         """
