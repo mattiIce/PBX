@@ -284,7 +284,7 @@ features:
 
 **Setup Process**:
 1. Install Vosk: `pip install vosk`
-2. Download model (40 MB): `wget https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip`
+2. Download model (40 MB): Visit https://alphacephei.com/vosk/models for latest models (as of Dec 2025: vosk-model-small-en-us-0.15)
 3. Extract to `models/` directory
 4. Enable in config.yml
 5. Restart PBX - transcription works immediately!
@@ -537,7 +537,7 @@ The PBX system prioritizes **free, open-source, offline** AI technologies to mai
 | **Voice Biometrics** | $0 | $2-5/user/month | $1,200-3,000 |
 | **Total Annual** | **$0** | **$22,600-70,800** | **$22,600-70,800** |
 
-**One-Time Costs (Hardware)**:
+**One-Time Costs (Hardware)** *(approximate December 2025 prices)*:
 - Additional RAM for AI models: $200-400
 - Faster CPU (optional): $0-500 (use existing server)
 - **Total**: $200-900 one-time investment
@@ -646,10 +646,10 @@ The PBX system prioritizes **free, open-source, offline** AI technologies to mai
 - Download models, configure, and use
 - Complete documentation provided for each feature
 
-**Estimated Total Development for All Planned Features**: 370-480 hours  
-**Timeline**: 12-18 months for complete AI suite  
-**Investment**: $0 for software + $200-900 for hardware upgrades  
-**Annual Savings**: $22,600-70,800 vs. cloud alternatives
+**Estimated Total Development for All Planned Features**: 370-480 hours (assumes 1 experienced Python developer)  
+**Timeline**: 12-18 months for complete AI suite (part-time development)  
+**Investment**: $0 for software + $200-900 for hardware upgrades (approximate 2025 prices)  
+**Annual Savings**: $22,600-70,800 vs. cloud alternatives (based on December 2025 cloud pricing)
 
 ### Advanced Security & Compliance Features
 | Feature | Status | Business Value |
