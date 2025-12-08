@@ -1914,6 +1914,11 @@ class PBXCore:
                 
                 time.sleep(0.5)
                 
+                # Check if call was terminated early (e.g., immediate BYE after answering)
+                if call.state.value == 'ended':
+                    self.logger.info(f"Voicemail IVR for {call.voicemail_extension} - call ended before IVR could start")
+                    return
+                
                 self.logger.info(f"Voicemail IVR started for {call.voicemail_extension}, waiting for PIN")
                 
                 # Main IVR loop - listen for DTMF input
