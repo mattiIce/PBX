@@ -18,6 +18,10 @@ from pbx.features.voicemail import VoicemailSystem, VoicemailIVR
 from pbx.core.call import Call, CallState
 from pbx.utils.config import Config
 
+# Test constants
+TEST_AUDIO_DATA = b'test audio data'
+TEST_MESSAGE_DURATION = 10
+
 
 def test_ivr_handles_early_call_termination():
     """
@@ -65,10 +69,8 @@ def test_ivr_handles_early_call_termination():
     call.end()
     
     # 4. The IVR session code should check call.state before playing audio
-    # This is validated by the code in pbx.py that checks:
-    #    if call.state.value == 'ended':
-    #        self.logger.info(f"Call {call_id} ended, skipping prompt playback")
-    #        break
+    # and exit the loop immediately if the call has ended, preventing
+    # audio playback after call termination
     
     assert call.state == CallState.ENDED, "Call should be ended"
     
@@ -86,7 +88,7 @@ def test_ivr_handles_call_termination_during_message_playback():
     
     # Set up mailbox with a message
     mailbox = vm_system.get_mailbox('1001')
-    mailbox.save_message('1002', b'test audio data', duration=10)
+    mailbox.save_message('1002', TEST_AUDIO_DATA, duration=TEST_MESSAGE_DURATION)
     
     # Create IVR instance in main menu
     ivr = VoicemailIVR(vm_system, '1001')
