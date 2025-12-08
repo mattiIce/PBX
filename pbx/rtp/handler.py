@@ -798,6 +798,12 @@ class RTPDTMFListener:
         self.audio_buffer = []
         self.sample_rate = 8000  # Standard for telephony
         
+        # DTMF detection frame sizes (based on DTMFDetector default of 205 samples per frame)
+        # We need ~2x frame size for reliable detection with overlap
+        self.dtmf_frame_size = 205  # Samples per DTMF detection frame
+        self.dtmf_buffer_size = 410  # Buffer size for detection (2x frame size)
+        self.dtmf_slide_size = 205   # Sliding window size
+        
         # Initialize DTMF detector
         from pbx.utils.dtmf import DTMFDetector
         self.dtmf_detector = DTMFDetector(sample_rate=self.sample_rate)
@@ -859,10 +865,9 @@ class RTPDTMFListener:
                             self.audio_buffer.extend(samples)
                             
                             # Process buffer when we have enough samples
-                            # DTMF detector needs about 205 samples per frame
-                            if len(self.audio_buffer) >= 410:  # ~50ms at 8kHz
+                            if len(self.audio_buffer) >= self.dtmf_buffer_size:
                                 # Try to detect DTMF tone
-                                digit = self.dtmf_detector.detect_tone(self.audio_buffer[:410])
+                                digit = self.dtmf_detector.detect_tone(self.audio_buffer[:self.dtmf_buffer_size])
                                 
                                 if digit:
                                     # Check if this is a new digit (not a repeat)
@@ -871,7 +876,7 @@ class RTPDTMFListener:
                                         self.logger.info(f"DTMF digit detected: {digit}")
                                 
                                 # Keep a sliding window of audio
-                                self.audio_buffer = self.audio_buffer[205:]
+                                self.audio_buffer = self.audio_buffer[self.dtmf_slide_size:]
 
             except socket.timeout:
                 # Timeout is normal, just continue
@@ -916,13 +921,14 @@ class RTPDTMFListener:
         Returns:
             int: Linear PCM sample (-32768 to 32767)
         """
-        # μ-law decompression table (simplified)
+        # μ-law decompression algorithm (ITU-T G.711)
         ulaw_byte = ~ulaw_byte & 0xFF
         sign = (ulaw_byte & 0x80) >> 7
         exponent = (ulaw_byte & 0x70) >> 4
         mantissa = ulaw_byte & 0x0F
         
         # Calculate linear value
+        # 0x84 (132) is the bias value added to mantissa in μ-law encoding
         linear = ((mantissa << 3) + 0x84) << exponent
         
         if sign:
@@ -940,7 +946,7 @@ class RTPDTMFListener:
         Returns:
             int: Linear PCM sample (-32768 to 32767)
         """
-        # A-law decompression (simplified)
+        # A-law decompression algorithm (ITU-T G.711)
         alaw_byte ^= 0x55  # XOR with 0x55 per A-law spec
         sign = (alaw_byte & 0x80) >> 7
         exponent = (alaw_byte & 0x70) >> 4
@@ -949,6 +955,7 @@ class RTPDTMFListener:
         if exponent == 0:
             linear = (mantissa << 4) + 8
         else:
+            # 0x108 (264) is the bias for non-zero exponents in A-law encoding
             linear = ((mantissa << 4) + 0x108) << (exponent - 1)
         
         if sign:
