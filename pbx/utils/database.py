@@ -419,6 +419,35 @@ class DatabaseBackend:
         )
         """
 
+        # Provisioned devices table - stores phone provisioning configuration
+        provisioned_devices_table = """
+        CREATE TABLE IF NOT EXISTS provisioned_devices (
+            id SERIAL PRIMARY KEY,
+            mac_address VARCHAR(20) UNIQUE NOT NULL,
+            extension_number VARCHAR(20) NOT NULL,
+            vendor VARCHAR(50) NOT NULL,
+            model VARCHAR(50) NOT NULL,
+            static_ip VARCHAR(50),
+            config_url VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_provisioned TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS provisioned_devices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mac_address VARCHAR(20) UNIQUE NOT NULL,
+            extension_number VARCHAR(20) NOT NULL,
+            vendor VARCHAR(50) NOT NULL,
+            model VARCHAR(50) NOT NULL,
+            static_ip VARCHAR(50),
+            config_url VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_provisioned TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+
         # Extensions table - stores user extensions/phone numbers
         extensions_table = """
         CREATE TABLE IF NOT EXISTS extensions (
@@ -488,7 +517,7 @@ class DatabaseBackend:
         # Execute table creation
         success = True
         for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table, 
-                         extensions_table, security_audit_table]:
+                         provisioned_devices_table, extensions_table, security_audit_table]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
@@ -503,6 +532,9 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_vm_listened ON voicemail_messages(listened)",
             "CREATE INDEX IF NOT EXISTS idx_phones_mac ON registered_phones(mac_address)",
             "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension_number)",
+            "CREATE INDEX IF NOT EXISTS idx_provisioned_mac ON provisioned_devices(mac_address)",
+            "CREATE INDEX IF NOT EXISTS idx_provisioned_extension ON provisioned_devices(extension_number)",
+            "CREATE INDEX IF NOT EXISTS idx_provisioned_vendor ON provisioned_devices(vendor)",
             "CREATE INDEX IF NOT EXISTS idx_ext_number ON extensions(number)",
             "CREATE INDEX IF NOT EXISTS idx_ext_email ON extensions(email)",
             "CREATE INDEX IF NOT EXISTS idx_ext_ad_synced ON extensions(ad_synced)",
@@ -1057,3 +1089,194 @@ class ExtensionDB:
         ORDER BY number
         """
         return self.db.fetch_all(query, (search_pattern, search_pattern, search_pattern))
+
+
+class ProvisionedDevicesDB:
+    """Provisioned devices database operations"""
+
+    def __init__(self, db: DatabaseBackend):
+        """
+        Initialize provisioned devices database
+        
+        Args:
+            db: Database backend instance
+        """
+        self.db = db
+        self.logger = get_logger()
+
+    def add_device(self, mac_address: str, extension_number: str, vendor: str, 
+                   model: str, static_ip: str = None, config_url: str = None) -> bool:
+        """
+        Add or update a provisioned device
+        
+        Args:
+            mac_address: MAC address (normalized format)
+            extension_number: Extension number
+            vendor: Phone vendor
+            model: Phone model
+            static_ip: Static IP address (optional)
+            config_url: Configuration URL (optional)
+            
+        Returns:
+            bool: True if successful
+        """
+        # Check if device already exists
+        existing = self.get_device(mac_address)
+        
+        if existing:
+            # Update existing device
+            query = """
+            UPDATE provisioned_devices 
+            SET extension_number = %s, vendor = %s, model = %s, static_ip = %s,
+                config_url = %s, updated_at = %s
+            WHERE mac_address = %s
+            """ if self.db.db_type == 'postgresql' else """
+            UPDATE provisioned_devices 
+            SET extension_number = ?, vendor = ?, model = ?, static_ip = ?,
+                config_url = ?, updated_at = ?
+            WHERE mac_address = ?
+            """
+            params = (extension_number, vendor, model, static_ip, config_url, 
+                     datetime.now(), mac_address)
+        else:
+            # Insert new device
+            query = """
+            INSERT INTO provisioned_devices 
+            (mac_address, extension_number, vendor, model, static_ip, config_url, 
+             created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """ if self.db.db_type == 'postgresql' else """
+            INSERT INTO provisioned_devices 
+            (mac_address, extension_number, vendor, model, static_ip, config_url, 
+             created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """
+            now = datetime.now()
+            params = (mac_address, extension_number, vendor, model, static_ip, 
+                     config_url, now, now)
+        
+        return self.db.execute(query, params)
+
+    def get_device(self, mac_address: str) -> Optional[Dict]:
+        """
+        Get provisioned device by MAC address
+        
+        Args:
+            mac_address: MAC address (normalized format)
+            
+        Returns:
+            dict: Device data or None
+        """
+        query = """
+        SELECT * FROM provisioned_devices WHERE mac_address = %s
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM provisioned_devices WHERE mac_address = ?
+        """
+        return self.db.fetch_one(query, (mac_address,))
+
+    def get_device_by_extension(self, extension_number: str) -> Optional[Dict]:
+        """
+        Get provisioned device by extension number
+        
+        Args:
+            extension_number: Extension number
+            
+        Returns:
+            dict: Device data or None
+        """
+        query = """
+        SELECT * FROM provisioned_devices WHERE extension_number = %s
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM provisioned_devices WHERE extension_number = ?
+        """
+        return self.db.fetch_one(query, (extension_number,))
+
+    def get_device_by_ip(self, static_ip: str) -> Optional[Dict]:
+        """
+        Get provisioned device by static IP address
+        
+        Args:
+            static_ip: Static IP address
+            
+        Returns:
+            dict: Device data or None
+        """
+        query = """
+        SELECT * FROM provisioned_devices WHERE static_ip = %s
+        """ if self.db.db_type == 'postgresql' else """
+        SELECT * FROM provisioned_devices WHERE static_ip = ?
+        """
+        return self.db.fetch_one(query, (static_ip,))
+
+    def list_all(self) -> List[Dict]:
+        """
+        List all provisioned devices
+        
+        Returns:
+            list: List of all provisioned devices
+        """
+        query = """
+        SELECT * FROM provisioned_devices 
+        ORDER BY extension_number
+        """
+        return self.db.fetch_all(query)
+
+    def remove_device(self, mac_address: str) -> bool:
+        """
+        Remove a provisioned device
+        
+        Args:
+            mac_address: MAC address
+            
+        Returns:
+            bool: True if successful
+        """
+        query = """
+        DELETE FROM provisioned_devices WHERE mac_address = %s
+        """ if self.db.db_type == 'postgresql' else """
+        DELETE FROM provisioned_devices WHERE mac_address = ?
+        """
+        return self.db.execute(query, (mac_address,))
+
+    def mark_provisioned(self, mac_address: str) -> bool:
+        """
+        Mark device as provisioned (update last_provisioned timestamp)
+        
+        Args:
+            mac_address: MAC address
+            
+        Returns:
+            bool: True if successful
+        """
+        query = """
+        UPDATE provisioned_devices 
+        SET last_provisioned = %s
+        WHERE mac_address = %s
+        """ if self.db.db_type == 'postgresql' else """
+        UPDATE provisioned_devices 
+        SET last_provisioned = ?
+        WHERE mac_address = ?
+        """
+        return self.db.execute(query, (datetime.now(), mac_address))
+
+    def set_static_ip(self, mac_address: str, static_ip: str) -> bool:
+        """
+        Set or update static IP for a device
+        
+        Args:
+            mac_address: MAC address
+            static_ip: Static IP address
+            
+        Returns:
+            bool: True if successful
+        """
+        query = """
+        UPDATE provisioned_devices 
+        SET static_ip = %s, updated_at = %s
+        WHERE mac_address = %s
+        """ if self.db.db_type == 'postgresql' else """
+        UPDATE provisioned_devices 
+        SET static_ip = ?, updated_at = ?
+        WHERE mac_address = ?
+        """
+        return self.db.execute(query, (static_ip, datetime.now(), mac_address))

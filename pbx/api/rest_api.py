@@ -121,6 +121,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/provisioning/reload-templates':
                 self._handle_reload_templates()
+            elif path.startswith('/api/provisioning/devices/') and '/static-ip' in path:
+                # /api/provisioning/devices/{mac}/static-ip
+                parts = path.split('/')
+                if len(parts) >= 5:
+                    mac = parts[4]
+                    self._handle_set_static_ip(mac)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/extensions':
                 self._handle_add_extension()
             elif path == '/api/phones/reboot':
@@ -936,6 +944,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'success': True, 'message': 'Device unregistered'})
             else:
                 self._send_json({'error': 'Device not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_set_static_ip(self, mac):
+        """Set static IP for a device"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+            self._send_json({'error': 'Phone provisioning not enabled'}, 500)
+            return
+
+        try:
+            body = self._get_body()
+            static_ip = body.get('static_ip')
+
+            if not static_ip:
+                self._send_json({'error': 'Missing static_ip field'}, 400)
+                return
+
+            success, message = self.pbx_core.phone_provisioning.set_static_ip(mac, static_ip)
+            if success:
+                self._send_json({'success': True, 'message': message})
+            else:
+                self._send_json({'error': message}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
