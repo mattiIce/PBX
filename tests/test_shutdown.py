@@ -190,7 +190,11 @@ def test_signal_handling_simulation():
     print("✓ Signal handling test passed")
 
 
+def run_all_tests():
+    """Run all tests in this module"""
+    test_pbx_shutdown()    test_signal_handling_simulation()    print("\n✅ All shutdown tests passed!")    return True
+
+
 if __name__ == "__main__":
-    test_pbx_shutdown()
-    test_signal_handling_simulation()
-    print("\n✅ All shutdown tests passed!")
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

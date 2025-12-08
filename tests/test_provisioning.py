@@ -335,30 +335,10 @@ def test_mac_placeholder_detection():
     print("✓ MAC placeholder detection works")
 
 
+def run_all_tests():
+    """Run all tests in this module"""
+    print("=" * 60)    print("Running Phone Provisioning Tests")    print("=" * 60)        try:        test_device_mac_normalization()        test_phone_template()        test_provisioning_device_registration()        test_supported_vendors_and_models()        test_builtin_templates()        test_config_generation()        test_unregistered_device_error_message()        test_similar_mac_detection()        test_mac_placeholder_detection()                print("=" * 60)        print("All tests passed!")        print("=" * 60)    except AssertionError as e:        print(f"\n✗ Test failed: {e}")        return False    except Exception as e:        print(f"\n✗ Unexpected error: {e}")        import traceback        traceback.print_exc()        return False
+
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Running Phone Provisioning Tests")
-    print("=" * 60)
-    
-    try:
-        test_device_mac_normalization()
-        test_phone_template()
-        test_provisioning_device_registration()
-        test_supported_vendors_and_models()
-        test_builtin_templates()
-        test_config_generation()
-        test_unregistered_device_error_message()
-        test_similar_mac_detection()
-        test_mac_placeholder_detection()
-        
-        print("=" * 60)
-        print("All tests passed!")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

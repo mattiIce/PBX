@@ -149,13 +149,11 @@ def test_ulaw_wav_still_works():
             os.remove(temp_path)
 
 
-if __name__ == '__main__':
-    print("Testing PCM to G.711 μ-law conversion...")
-    print("-" * 60)
-    test_pcm16_to_ulaw_conversion()
-    print()
-    test_pcm_wav_to_ulaw_with_rtp()
-    print()
-    test_ulaw_wav_still_works()
-    print("-" * 60)
-    print("All tests passed! ✓")
+def run_all_tests():
+    """Run all tests in this module"""
+    print("Testing PCM to G.711 μ-law conversion...")    print("-" * 60)    test_pcm16_to_ulaw_conversion()    print()    test_pcm_wav_to_ulaw_with_rtp()    print()    test_ulaw_wav_still_works()    print("-" * 60)    print("All tests passed! ✓")    return True
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

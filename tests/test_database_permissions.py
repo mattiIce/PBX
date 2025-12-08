@@ -131,7 +131,8 @@ def test_critical_vs_non_critical_errors():
             os.unlink(temp_db.name)
 
 
-if __name__ == '__main__':
+def run_all_tests():
+    """Run all tests in this module"""
     print("=" * 70)
     print("Running Database Permission Tests")
     print("=" * 70)
@@ -161,4 +162,9 @@ if __name__ == '__main__':
     print(f"Results: {passed} passed, {failed} failed")
     print("=" * 70)
     
-    sys.exit(0 if failed == 0 else 1)
+    return failed == 0
+
+
+if __name__ == '__main__':
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

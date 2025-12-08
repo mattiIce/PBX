@@ -182,35 +182,11 @@ def test_voicemail_without_database():
         shutil.rmtree(temp_dir)
 
 
-if __name__ == '__main__':
-    print("=" * 60)
-    print("Running Voicemail Database Tests")
-    print("=" * 60)
-    print()
-    
-    tests = [
-        test_database_configuration,
-        test_database_backend_initialization,
-        test_voicemail_database_integration,
-        test_voicemail_without_database,
-    ]
-    
-    passed = 0
-    failed = 0
-    
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-            traceback.print_exc()
-            failed += 1
-    
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-    
-    sys.exit(0 if failed == 0 else 1)
+def run_all_tests():
+    """Run all tests in this module"""
+    print("=" * 60)    print("Running Voicemail Database Tests")    print("=" * 60)    print()        tests = [        test_database_configuration,        test_database_backend_initialization,        test_voicemail_database_integration,        test_voicemail_without_database,    ]        passed = 0    failed = 0        for test in tests:        try:            test()            passed += 1        except Exception as e:            print(f"✗ {test.__name__} failed: {e}")            import traceback            traceback.print_exc()            failed += 1        print()    print("=" * 60)    print(f"Results: {passed} passed, {failed} failed")    print("=" * 60)        return failed == 0
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

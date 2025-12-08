@@ -262,7 +262,7 @@ def test_no_mac_in_sip_registration():
     print("✓ Phone registration without MAC works correctly")
 
 
-def run_tests():
+def run_all_tests():
     """Run all tests"""
     print("=" * 60)
     print("Phone MAC-to-IP Correlation Tests")
@@ -305,5 +305,5 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    success = run_tests()
+    success = run_all_tests()
     sys.exit(0 if success else 1)

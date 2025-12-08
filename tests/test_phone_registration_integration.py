@@ -164,24 +164,10 @@ def test_ip_based_tracking():
     print("✓ IP-based tracking works")
 
 
+def run_all_tests():
+    """Run all tests in this module"""
+    print("=" * 60)    print("Running Phone Registration Integration Tests")    print("=" * 60)        try:        test_mac_extraction()        test_registration_storage()        test_ip_based_tracking()                print("=" * 60)        print("Results: 3 passed, 0 failed")        print("=" * 60)    except AssertionError as e:        print(f"\n✗ Test failed: {e}")        return False    except Exception as e:        print(f"\n✗ Unexpected error: {e}")        import traceback        traceback.print_exc()        return False
+
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Running Phone Registration Integration Tests")
-    print("=" * 60)
-    
-    try:
-        test_mac_extraction()
-        test_registration_storage()
-        test_ip_based_tracking()
-        
-        print("=" * 60)
-        print("Results: 3 passed, 0 failed")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

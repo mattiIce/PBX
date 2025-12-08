@@ -396,30 +396,10 @@ def test_update_phone_extension_without_mac():
     print("✓ Phone extension update validation works")
 
 
+def run_all_tests():
+    """Run all tests in this module"""
+    print("=" * 60)    print("Running Registered Phones Tests")    print("=" * 60)        try:        test_phone_registration()        test_phone_registration_without_mac()        test_phone_update_registration()        test_list_phones_by_extension()        test_list_all_phones()        test_mac_preservation_on_reregistration()        test_ip_preservation_on_reregistration()        test_update_phone_extension()        test_update_phone_extension_without_mac()                print("=" * 60)        print("Results: 9 passed, 0 failed")        print("=" * 60)    except AssertionError as e:        print(f"\n✗ Test failed: {e}")        return False    except Exception as e:        print(f"\n✗ Unexpected error: {e}")        import traceback        traceback.print_exc()        return False
+
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Running Registered Phones Tests")
-    print("=" * 60)
-    
-    try:
-        test_phone_registration()
-        test_phone_registration_without_mac()
-        test_phone_update_registration()
-        test_list_phones_by_extension()
-        test_list_all_phones()
-        test_mac_preservation_on_reregistration()
-        test_ip_preservation_on_reregistration()
-        test_update_phone_extension()
-        test_update_phone_extension_without_mac()
-        
-        print("=" * 60)
-        print("Results: 9 passed, 0 failed")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

@@ -208,26 +208,10 @@ def test_paging_system_disabled():
     print("✓ Paging system disabled test passed")
 
 
-if __name__ == '__main__':
-    print("\nRunning Phone Book and Paging Tests")
-    print("=" * 60)
-    
-    try:
-        test_phone_book_basic()
-        test_phone_book_export()
-        test_paging_system_basic()
-        test_paging_system_devices()
-        test_phone_book_disabled()
-        test_paging_system_disabled()
-        
-        print("\n" + "=" * 60)
-        print("All tests passed! ✓")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n✗ Error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+def run_all_tests():
+    """Run all tests in this module"""
+    print("\nRunning Phone Book and Paging Tests")    print("=" * 60)        try:        test_phone_book_basic()        test_phone_book_export()        test_paging_system_basic()        test_paging_system_devices()        test_phone_book_disabled()        test_paging_system_disabled()                print("\n" + "=" * 60)        print("All tests passed! ✓")        print("=" * 60)    except AssertionError as e:        print(f"\n✗ Test failed: {e}")        return False    except Exception as e:        print(f"\n✗ Error: {e}")        import traceback        traceback.print_exc()        return False
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

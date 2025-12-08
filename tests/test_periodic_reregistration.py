@@ -171,34 +171,10 @@ def test_multiple_phones_reregistering():
     print("✓ Multiple phones re-registering works correctly")
 
 
+def run_all_tests():
+    """Run all tests in this module"""
+    print("=" * 60)    print("Periodic Re-registration Test")    print("=" * 60)    print()    print("This test simulates the real-world scenario where phones")    print("re-register every X seconds (e.g., 60s) and may not always")    print("send MAC address in every REGISTER message.")    print()        try:        test_periodic_reregistration_preserves_data()        print()        test_multiple_phones_reregistering()                print()        print("=" * 60)        print("✓ All tests PASSED")        print("=" * 60)        print()        print("The system now correctly preserves MAC/IP/extension")        print("information when devices re-register periodically!")            except AssertionError as e:        print(f"\n✗ Test failed: {e}")        return False    except Exception as e:        print(f"\n✗ Unexpected error: {e}")        import traceback        traceback.print_exc()        return False
+
 if __name__ == "__main__":
-    print("=" * 60)
-    print("Periodic Re-registration Test")
-    print("=" * 60)
-    print()
-    print("This test simulates the real-world scenario where phones")
-    print("re-register every X seconds (e.g., 60s) and may not always")
-    print("send MAC address in every REGISTER message.")
-    print()
-    
-    try:
-        test_periodic_reregistration_preserves_data()
-        print()
-        test_multiple_phones_reregistering()
-        
-        print()
-        print("=" * 60)
-        print("✓ All tests PASSED")
-        print("=" * 60)
-        print()
-        print("The system now correctly preserves MAC/IP/extension")
-        print("information when devices re-register periodically!")
-        
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

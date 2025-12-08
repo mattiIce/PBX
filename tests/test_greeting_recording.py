@@ -204,41 +204,11 @@ def test_greeting_persistence():
         print("✓ Greeting persistence works")
 
 
-if __name__ == '__main__':
-    print("=" * 60)
-    print("Running Voicemail Greeting Recording Tests")
-    print("=" * 60)
-    print()
-    
-    tests = [
-        test_greeting_storage,
-        test_greeting_deletion,
-        test_ivr_options_menu,
-        test_ivr_greeting_recording,
-        test_ivr_save_recorded_greeting,
-        test_main_menu_to_options,
-        test_greeting_persistence,
-    ]
-    
-    passed = 0
-    failed = 0
-    
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} error: {e}")
-            import traceback
-            traceback.print_exc()
-            failed += 1
-    
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-    
-    sys.exit(0 if failed == 0 else 1)
+def run_all_tests():
+    """Run all tests in this module"""
+    print("=" * 60)    print("Running Voicemail Greeting Recording Tests")    print("=" * 60)    print()        tests = [        test_greeting_storage,        test_greeting_deletion,        test_ivr_options_menu,        test_ivr_greeting_recording,        test_ivr_save_recorded_greeting,        test_main_menu_to_options,        test_greeting_persistence,    ]        passed = 0    failed = 0        for test in tests:        try:            test()            passed += 1        except AssertionError as e:            print(f"✗ {test.__name__} failed: {e}")            failed += 1        except Exception as e:            print(f"✗ {test.__name__} error: {e}")            import traceback            traceback.print_exc()            failed += 1        print()    print("=" * 60)    print(f"Results: {passed} passed, {failed} failed")    print("=" * 60)        return failed == 0
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)
