@@ -396,8 +396,12 @@ class PBXCore:
                             user_agent=user_agent,
                             contact_uri=contact
                         )
-                        if mac_address:
-                            self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address}, mac={mac_address}")
+                        # Get the actual stored MAC address (might be preserved from previous registration)
+                        stored_phone = self.registered_phones_db.get_by_ip(ip_address, extension_number)
+                        stored_mac = stored_phone.get('mac_address') if stored_phone else mac_address
+                        
+                        if stored_mac:
+                            self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address}, mac={stored_mac}")
                         else:
                             self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address} (no MAC)")
                     except Exception as e:
