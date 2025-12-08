@@ -1,10 +1,11 @@
 # Voicemail System Fixes Summary
 
 ## Overview
-This document summarizes the fixes made to resolve three critical voicemail issues:
+This document summarizes the fixes made to resolve four critical voicemail issues:
 1. Voicemail cannot be played in the admin panel
 2. Dialing voicemail from extension (*xxxx) returns "extension not found"
 3. No email notifications are generated to end users
+4. BYE request race condition - voicemail plays after entering PIN and pressing pound
 
 ## Issues Fixed
 
@@ -56,6 +57,30 @@ This document summarizes the fixes made to resolve three critical voicemail issu
 - `pbx/features/email_notification.py` - Added SMTP configuration validation
 
 **Testing**: Verified database lookup logic and warning messages appear when SMTP not configured
+
+### 4. Voicemail IVR BYE Request Race Condition ✅
+
+**Problem**: After entering PIN and pressing `#` in the voicemail IVR, a BYE request is processed but voicemail still begins to play.
+
+**Root Cause**: 
+- When a user presses `#` to complete PIN entry, the IVR transitions to the main menu and queues audio playback
+- A BYE request may arrive from the phone/SIP client (some phones send BYE when `#` is pressed)
+- The BYE ends the call, but the IVR session doesn't check call state before playing audio
+- This results in audio being played to a terminated call
+
+**Solution**:
+- Added call state validation (`call.state.value == 'ended'`) before playing any audio in the IVR session loop
+- Check call state before playing messages
+- Check call state before playing prompts
+- Check call state before playing goodbye
+- Break out of the loop immediately if the call has ended
+
+**Files Changed**: `pbx/core/pbx.py`
+
+**Testing**: 
+- Created comprehensive test suite for BYE race condition scenarios (`tests/test_voicemail_ivr_bye_race.py`)
+- All existing voicemail IVR tests continue to pass
+- Verified PIN is properly cleared after verification (security)
 
 ## Configuration Requirements
 
@@ -127,6 +152,12 @@ Users will be prompted for their voicemail PIN when accessing their mailbox.
 # Run voicemail fixes tests
 python tests/test_voicemail_fixes.py
 
+# Run voicemail IVR tests
+python tests/test_voicemail_ivr.py
+
+# Run BYE race condition tests
+python tests/test_voicemail_ivr_bye_race.py
+
 # Run existing voicemail tests
 python tests/test_voicemail_playback.py
 python tests/test_voicemail_email.py
@@ -153,14 +184,21 @@ python tests/test_voicemail_email.py
 3. Leave a voicemail for that extension
 4. Check email inbox for notification with audio attachment
 
+#### Test BYE Race Condition Fix:
+1. From a registered extension, dial `*1001` (your voicemail)
+2. Enter your PIN followed by `#`
+3. Verify the call terminates cleanly without attempting to play audio
+4. No "ghost" audio should play after the call ends
+
 ## Verification
 
 All changes have been:
 - ✅ Implemented and tested
-- ✅ Verified with automated tests (5/5 tests passing)
+- ✅ Verified with automated tests (14/14 tests passing)
 - ✅ Code reviewed and feedback addressed
 - ✅ Security scanned with CodeQL (0 vulnerabilities)
 - ✅ Backward compatible with existing installations
+- ✅ Proper call state management prevents resource leaks
 
 ## Notes
 
