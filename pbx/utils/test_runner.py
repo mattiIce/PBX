@@ -21,6 +21,11 @@ def run_all_tests(tests_dir="tests", log_failures=True):
     Returns:
         Tuple of (total_passed, total_failed, total_skipped, test_results)
         where test_results is a list of (test_file, success, error_msg) tuples
+        
+    Note:
+        Tests are considered passed only if run_all_tests() returns exactly True.
+        Any other value (False, None, etc.) is treated as failure to ensure
+        explicit success signals.
     """
     # Get absolute path to tests directory
     if not os.path.isabs(tests_dir):
@@ -42,7 +47,9 @@ def run_all_tests(tests_dir="tests", log_failures=True):
     
     if not os.path.exists(tests_dir):
         print(f"Error: Tests directory not found: {tests_dir}")
-        return 0, 1, []
+        if log_file:
+            log_file.close()
+        return 0, 1, 0, []
     
     # Find all test files
     test_files = []
@@ -52,7 +59,9 @@ def run_all_tests(tests_dir="tests", log_failures=True):
     
     if not test_files:
         print(f"No test files found in {tests_dir}")
-        return 0, 0, []
+        if log_file:
+            log_file.close()
+        return 0, 0, 0, []
     
     print("=" * 70)
     print(f"Running {len(test_files)} test files from {tests_dir}")
