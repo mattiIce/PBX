@@ -26,6 +26,10 @@ cryptography>=41.0.0
 # - sqlalchemy (ORM)
 psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
 
+# For enterprise integrations (Teams, Outlook, Zoom):
+requests>=2.31.0  # HTTP library
+msal>=1.24.0  # Microsoft Authentication Library
+
 # For FIDO2/WebAuthn authentication
 fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
 

@@ -911,6 +911,28 @@ class ExtensionDB:
         """
         self.db = db
         self.logger = get_logger()
+    
+    def _hash_voicemail_pin(self, pin: str) -> tuple:
+        """
+        Hash a voicemail PIN using FIPS-compliant encryption
+        
+        Args:
+            pin: Voicemail PIN to hash
+            
+        Returns:
+            tuple: (pin_hash, pin_salt) or (None, None) if hashing fails
+        """
+        if not pin:
+            return None, None
+            
+        try:
+            from pbx.utils.encryption import get_encryption
+            enc = get_encryption()
+            pin_hash, pin_salt = enc.hash_password(pin)
+            return pin_hash, pin_salt
+        except Exception as e:
+            self.logger.error(f"Failed to hash voicemail PIN: {e}")
+            return None, None
 
     def add(self, number: str, name: str, password_hash: str, email: str = None, 
             allow_external: bool = True, voicemail_pin: str = None, 
@@ -924,22 +946,30 @@ class ExtensionDB:
             password_hash: Hashed password
             email: Email address (optional)
             allow_external: Allow external calls
-            voicemail_pin: Voicemail PIN (optional)
+            voicemail_pin: Voicemail PIN (optional) - will be stored as hash/salt
             ad_synced: Whether synced from Active Directory
             ad_username: Active Directory username (optional)
             
         Returns:
             bool: True if successful
         """
+        # Hash the voicemail PIN if provided
+        voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(voicemail_pin)
+        
+        # If PIN was provided but hashing failed, return False
+        if voicemail_pin and not voicemail_pin_hash:
+            self.logger.error(f"Cannot add extension {number}: voicemail PIN hashing failed")
+            return False
+                
         query = """
-        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """ if self.db.db_type == 'postgresql' else """
-        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         
-        return self.db.execute(query, (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username))
+        return self.db.execute(query, (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username))
 
     def get(self, number: str) -> Optional[Dict]:
         """
@@ -1025,8 +1055,18 @@ class ExtensionDB:
             params.append(allow_external)
         
         if voicemail_pin is not None:
-            updates.append("voicemail_pin = %s" if self.db.db_type == 'postgresql' else "voicemail_pin = ?")
-            params.append(voicemail_pin)
+            # Hash the voicemail PIN before storing
+            voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(voicemail_pin)
+            
+            # If PIN was provided but hashing failed, return False
+            if voicemail_pin and not voicemail_pin_hash:
+                self.logger.error(f"Cannot update extension {number}: voicemail PIN hashing failed")
+                return False
+                
+            updates.append("voicemail_pin_hash = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_hash = ?")
+            params.append(voicemail_pin_hash)
+            updates.append("voicemail_pin_salt = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_salt = ?")
+            params.append(voicemail_pin_salt)
         
         if ad_synced is not None:
             updates.append("ad_synced = %s" if self.db.db_type == 'postgresql' else "ad_synced = ?")

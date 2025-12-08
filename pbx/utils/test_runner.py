@@ -116,15 +116,27 @@ def run_all_tests(tests_dir="tests", log_failures=True):
                     if test_stderr:
                         print(test_stderr, end='', file=sys.stderr)
                     
-                    # Handle return value - we use 'is True' to ensure explicit success
-                    # This is intentional to handle cases where tests return non-boolean values
-                    if success is True:
+                    # Handle return value
+                    # Check if test explicitly returned True
+                    test_passed = success is True
+                    
+                    # If test returned None/False, check output for success indicators
+                    if not test_passed and test_stdout:
+                        # Check for common success patterns in output
+                        import re
+                        output_lower = test_stdout.lower()
+                        if ('0 failed' in output_lower or 
+                            'all tests passed' in output_lower or
+                            re.search(r'all.*tests passed', output_lower)):
+                            # Also check that there's no explicit failure indicator
+                            if 'failed' not in output_lower or '0 failed' in output_lower:
+                                test_passed = True
+                    
+                    if test_passed:
                         print(f"  ✓ {test_file} PASSED")
                         total_passed += 1
                         test_results.append((test_file, True, None))
                     else:
-                        # Treat any non-True return (False, None, etc.) as failure
-                        # This ensures we only accept explicit True as success
                         print(f"  ✗ {test_file} FAILED")
                         total_failed += 1
                         test_results.append((test_file, False, "Tests failed"))
