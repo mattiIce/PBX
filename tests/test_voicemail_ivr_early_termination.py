@@ -194,7 +194,17 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 60)    print("Running Voicemail IVR Early Termination Tests")    print("=" * 60)    print()        # Run tests    unittest.main(verbosity=2)    return True
+    print("=" * 60)
+    print("Running Voicemail IVR Early Termination Tests")
+    print("=" * 60)
+    print()
+    
+    # Run tests
+    loader = unittest.TestLoader()
+    suite = loader.loadTestsFromModule(sys.modules[__name__])
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+    return result.wasSuccessful()
 
 
 if __name__ == "__main__":

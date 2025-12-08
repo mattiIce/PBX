@@ -192,7 +192,10 @@ def test_signal_handling_simulation():
 
 def run_all_tests():
     """Run all tests in this module"""
-    test_pbx_shutdown()    test_signal_handling_simulation()    print("\n✅ All shutdown tests passed!")    return True
+    test_pbx_shutdown()
+    test_signal_handling_simulation()
+    print("\n✅ All shutdown tests passed!")
+    return True
 
 
 if __name__ == "__main__":

@@ -272,7 +272,43 @@ def test_voicemail_ivr_exit():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 60)    print("Running Voicemail IVR Tests")    print("=" * 60)    print()        tests = [        test_voice_prompt_generation,        test_voicemail_ivr_initialization,        test_voicemail_ivr_welcome_state,        test_voicemail_ivr_pin_entry,        test_voicemail_ivr_invalid_pin,        test_voicemail_ivr_main_menu,        test_voicemail_ivr_message_menu,        test_voicemail_ivr_delete_message,        test_voicemail_ivr_no_messages,        test_voicemail_ivr_exit,    ]        passed = 0    failed = 0        for test in tests:        try:            test()            passed += 1        except Exception as e:            print(f"✗ {test.__name__} failed: {e}")            import traceback            traceback.print_exc()            failed += 1        print()    print("=" * 60)    print(f"Results: {passed} passed, {failed} failed")    print("=" * 60)        return failed == 0
+    print("=" * 60)
+    print("Running Voicemail IVR Tests")
+    print("=" * 60)
+    print()
+    
+    tests = [
+        test_voice_prompt_generation,
+        test_voicemail_ivr_initialization,
+        test_voicemail_ivr_welcome_state,
+        test_voicemail_ivr_pin_entry,
+        test_voicemail_ivr_invalid_pin,
+        test_voicemail_ivr_main_menu,
+        test_voicemail_ivr_message_menu,
+        test_voicemail_ivr_delete_message,
+        test_voicemail_ivr_no_messages,
+        test_voicemail_ivr_exit,
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
+        try:
+            test()
+            passed += 1
+        except Exception as e:
+            print(f"✗ {test.__name__} failed: {e}")
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    
+    print()
+    print("=" * 60)
+    print(f"Results: {passed} passed, {failed} failed")
+    print("=" * 60)
+    
+    return failed == 0
 
 
 if __name__ == "__main__":

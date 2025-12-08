@@ -4,6 +4,7 @@ Tests for Statistics and Analytics System
 import unittest
 import tempfile
 import os
+import sys
 import json
 import shutil
 from datetime import datetime, timedelta
