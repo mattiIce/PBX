@@ -4,6 +4,7 @@ Tracks call quality metrics including jitter, packet loss, latency, and MOS scor
 """
 import time
 import threading
+from collections import deque
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from pbx.utils.logger import get_logger
@@ -30,8 +31,9 @@ class QoSMetrics:
         self.packets_out_of_order = 0
         
         # Timing statistics (in milliseconds)
-        self.jitter_samples = []  # Recent jitter measurements
-        self.latency_samples = []  # Recent latency measurements
+        # Use deque for efficient O(1) operations instead of list
+        self.jitter_samples = deque(maxlen=100)  # Recent jitter measurements
+        self.latency_samples = deque(maxlen=100)  # Recent latency measurements
         self.max_jitter = 0.0
         self.max_latency = 0.0
         self.avg_jitter = 0.0
@@ -96,10 +98,8 @@ class QoSMetrics:
                 # Jitter is the absolute difference
                 jitter = abs(arrival_delta - timestamp_delta)
                 
-                # Store jitter sample (keep last 100 samples)
+                # Store jitter sample (deque automatically maintains maxlen=100)
                 self.jitter_samples.append(jitter)
-                if len(self.jitter_samples) > 100:
-                    self.jitter_samples.pop(0)
                 
                 # Update max jitter
                 if jitter > self.max_jitter:
@@ -130,9 +130,8 @@ class QoSMetrics:
             latency_ms: Round-trip latency in milliseconds
         """
         with self.lock:
+            # Deque automatically maintains maxlen=100
             self.latency_samples.append(latency_ms)
-            if len(self.latency_samples) > 100:
-                self.latency_samples.pop(0)
             
             if latency_ms > self.max_latency:
                 self.max_latency = latency_ms

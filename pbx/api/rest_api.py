@@ -524,13 +524,24 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
+                
+                # Validate limit parameter
                 limit = int(params.get('limit', [50])[0])
+                if limit < 1:
+                    self._send_json({'error': 'limit must be at least 1'}, 400)
+                    return
+                if limit > 1000:
+                    self._send_json({'error': 'limit cannot exceed 1000'}, 400)
+                    return
                 
                 alerts = self.pbx_core.qos_monitor.get_alerts(limit)
                 self._send_json({
                     'count': len(alerts),
                     'alerts': alerts
                 })
+            except ValueError as e:
+                self.logger.error(f"Invalid parameter for QoS alerts: {e}")
+                self._send_json({'error': 'Invalid limit parameter, must be an integer'}, 400)
             except Exception as e:
                 self.logger.error(f"Error getting QoS alerts: {e}")
                 self._send_json({'error': f'Error getting QoS alerts: {str(e)}'}, 500)
@@ -544,16 +555,32 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
+                
+                # Validate limit parameter
                 limit = int(params.get('limit', [100])[0])
+                if limit < 1:
+                    self._send_json({'error': 'limit must be at least 1'}, 400)
+                    return
+                if limit > 10000:
+                    self._send_json({'error': 'limit cannot exceed 10000'}, 400)
+                    return
+                
+                # Validate min_mos parameter
                 min_mos = params.get('min_mos', [None])[0]
                 if min_mos:
                     min_mos = float(min_mos)
+                    if min_mos < 1.0 or min_mos > 5.0:
+                        self._send_json({'error': 'min_mos must be between 1.0 and 5.0'}, 400)
+                        return
                 
                 history = self.pbx_core.qos_monitor.get_historical_metrics(limit, min_mos)
                 self._send_json({
                     'count': len(history),
                     'metrics': history
                 })
+            except ValueError as e:
+                self.logger.error(f"Invalid parameter for QoS history: {e}")
+                self._send_json({'error': 'Invalid parameters, check limit (integer) and min_mos (float)'}, 400)
             except Exception as e:
                 self.logger.error(f"Error getting QoS history: {e}")
                 self._send_json({'error': f'Error getting QoS history: {str(e)}'}, 500)
@@ -2909,15 +2936,38 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
             thresholds = {}
             
-            # Validate and convert threshold values
+            # Validate and convert threshold values with range checking
             if 'mos_min' in data:
-                thresholds['mos_min'] = float(data['mos_min'])
+                mos_min = float(data['mos_min'])
+                if mos_min < 1.0 or mos_min > 5.0:
+                    self._send_json({'error': 'mos_min must be between 1.0 and 5.0'}, 400)
+                    return
+                thresholds['mos_min'] = mos_min
+            
             if 'packet_loss_max' in data:
-                thresholds['packet_loss_max'] = float(data['packet_loss_max'])
+                packet_loss_max = float(data['packet_loss_max'])
+                if packet_loss_max < 0.0 or packet_loss_max > 100.0:
+                    self._send_json({'error': 'packet_loss_max must be between 0.0 and 100.0'}, 400)
+                    return
+                thresholds['packet_loss_max'] = packet_loss_max
+            
             if 'jitter_max' in data:
-                thresholds['jitter_max'] = float(data['jitter_max'])
+                jitter_max = float(data['jitter_max'])
+                if jitter_max < 0.0 or jitter_max > 1000.0:
+                    self._send_json({'error': 'jitter_max must be between 0.0 and 1000.0 ms'}, 400)
+                    return
+                thresholds['jitter_max'] = jitter_max
+            
             if 'latency_max' in data:
-                thresholds['latency_max'] = float(data['latency_max'])
+                latency_max = float(data['latency_max'])
+                if latency_max < 0.0 or latency_max > 5000.0:
+                    self._send_json({'error': 'latency_max must be between 0.0 and 5000.0 ms'}, 400)
+                    return
+                thresholds['latency_max'] = latency_max
+            
+            if not thresholds:
+                self._send_json({'error': 'No valid threshold parameters provided'}, 400)
+                return
             
             self.pbx_core.qos_monitor.update_alert_thresholds(thresholds)
             
@@ -2926,6 +2976,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'message': 'QoS thresholds updated',
                 'thresholds': self.pbx_core.qos_monitor.alert_thresholds
             })
+        except ValueError as e:
+            self.logger.error(f"Invalid threshold value: {e}")
+            self._send_json({'error': 'Invalid threshold values, must be valid numbers'}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     
