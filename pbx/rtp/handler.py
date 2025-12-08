@@ -813,6 +813,8 @@ class RTPDTMFListener:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
+            # This is intentional for VoIP systems which need to handle multi-homed servers
             self.socket.bind(('0.0.0.0', self.local_port))
             self.socket.settimeout(0.1)  # 100ms timeout for recv
             self.running = True
