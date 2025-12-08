@@ -128,7 +128,23 @@ def test_call_transfer_message_building():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 70)    print("Testing New PBX Features")    print("=" * 70)        results = []    results.append(test_wav_file_playback())    results.append(test_call_transfer_message_building())        print("\n" + "=" * 70)    if all(results):        print("✅ All feature tests passed!")        return True    else:        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")        return False
+    print("=" * 70)
+    print("Testing New PBX Features")
+    print("=" * 70)
+    
+    results = []
+    results.append(test_wav_file_playback())
+    results.append(test_call_transfer_message_building())
+    
+    print("\n" + "=" * 70)
+    if all(results):
+        print("✅ All feature tests passed!")
+        return True
+    else:
+        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
+        return False
+
+
 
 if __name__ == "__main__":
     success = run_all_tests()

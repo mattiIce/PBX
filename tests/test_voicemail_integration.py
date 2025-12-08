@@ -168,7 +168,36 @@ def test_multiple_voicemails():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 60)    print("Running Voicemail Integration Tests")    print("=" * 60)    print()        tests = [        test_complete_voicemail_flow,        test_multiple_voicemails,    ]        passed = 0    failed = 0        for test in tests:        try:            test()            passed += 1        except Exception as e:            print(f"✗ {test.__name__} failed: {e}")            import traceback            traceback.print_exc()            failed += 1        print()    print("=" * 60)    print(f"Results: {passed} passed, {failed} failed")    print("=" * 60)        return failed == 0
+    print("=" * 60)
+    print("Running Voicemail Integration Tests")
+    print("=" * 60)
+    print()
+    
+    tests = [
+        test_complete_voicemail_flow,
+        test_multiple_voicemails,
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
+        try:
+            test()
+            passed += 1
+        except Exception as e:
+            print(f"✗ {test.__name__} failed: {e}")
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    
+    print()
+    print("=" * 60)
+    print(f"Results: {passed} passed, {failed} failed")
+    print("=" * 60)
+    
+    return failed == 0
+
 
 
 if __name__ == "__main__":

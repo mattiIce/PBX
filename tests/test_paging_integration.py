@@ -316,7 +316,28 @@ def test_paging_disabled():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 70)    print("Testing Paging System Integration")    print("=" * 70)        results = []    results.append(test_paging_system_initialization())    results.append(test_paging_extension_detection())    results.append(test_zone_management())    results.append(test_page_initiation())    results.append(test_all_call_paging())    results.append(test_dac_device_configuration())    results.append(test_paging_disabled())        print("\n" + "=" * 70)    if all(results):        print(f"✅ All paging tests passed! ({len(results)}/{len(results)})")        return True    else:        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")        return False
+    print("=" * 70)
+    print("Testing Paging System Integration")
+    print("=" * 70)
+    
+    results = []
+    results.append(test_paging_system_initialization())
+    results.append(test_paging_extension_detection())
+    results.append(test_zone_management())
+    results.append(test_page_initiation())
+    results.append(test_all_call_paging())
+    results.append(test_dac_device_configuration())
+    results.append(test_paging_disabled())
+    
+    print("\n" + "=" * 70)
+    if all(results):
+        print(f"✅ All paging tests passed! ({len(results)}/{len(results)})")
+        return True
+    else:
+        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
+        return False
+
+
 
 if __name__ == "__main__":
     success = run_all_tests()

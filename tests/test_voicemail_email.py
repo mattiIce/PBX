@@ -127,7 +127,37 @@ def test_no_answer_timeout_config():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 60)    print("Running Voicemail Email Tests")    print("=" * 60)    print()        tests = [        test_email_notifier_config,        test_email_notifier_initialization,        test_voicemail_with_email,        test_extension_email_configuration,        test_no_answer_timeout_config,    ]        passed = 0    failed = 0        for test in tests:        try:            test()            passed += 1        except Exception as e:            print(f"✗ {test.__name__} failed: {e}")            failed += 1        print()    print("=" * 60)    print(f"Results: {passed} passed, {failed} failed")    print("=" * 60)        return failed == 0
+    print("=" * 60)
+    print("Running Voicemail Email Tests")
+    print("=" * 60)
+    print()
+    
+    tests = [
+        test_email_notifier_config,
+        test_email_notifier_initialization,
+        test_voicemail_with_email,
+        test_extension_email_configuration,
+        test_no_answer_timeout_config,
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
+        try:
+            test()
+            passed += 1
+        except Exception as e:
+            print(f"✗ {test.__name__} failed: {e}")
+            failed += 1
+    
+    print()
+    print("=" * 60)
+    print(f"Results: {passed} passed, {failed} failed")
+    print("=" * 60)
+    
+    return failed == 0
+
 
 
 if __name__ == "__main__":

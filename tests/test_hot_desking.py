@@ -440,7 +440,30 @@ def test_hot_desk_profile_retrieval():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("=" * 70)    print("Testing Hot-Desking Feature")    print("=" * 70)        results = []    results.append(test_hot_desk_session_creation())    results.append(test_hot_desking_initialization())    results.append(test_hot_desk_login_logout())    results.append(test_hot_desk_invalid_pin())    results.append(test_hot_desk_concurrent_logins())    results.append(test_hot_desk_allow_concurrent())    results.append(test_hot_desk_extension_logout())    results.append(test_hot_desk_session_activity())    results.append(test_hot_desk_profile_retrieval())        print("\n" + "=" * 70)    if all(results):        print(f"✅ All hot-desking tests passed! ({len(results)}/{len(results)})")        return True    else:        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")        return False
+    print("=" * 70)
+    print("Testing Hot-Desking Feature")
+    print("=" * 70)
+    
+    results = []
+    results.append(test_hot_desk_session_creation())
+    results.append(test_hot_desking_initialization())
+    results.append(test_hot_desk_login_logout())
+    results.append(test_hot_desk_invalid_pin())
+    results.append(test_hot_desk_concurrent_logins())
+    results.append(test_hot_desk_allow_concurrent())
+    results.append(test_hot_desk_extension_logout())
+    results.append(test_hot_desk_session_activity())
+    results.append(test_hot_desk_profile_retrieval())
+    
+    print("\n" + "=" * 70)
+    if all(results):
+        print(f"✅ All hot-desking tests passed! ({len(results)}/{len(results)})")
+        return True
+    else:
+        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
+        return False
+
+
 
 if __name__ == "__main__":
     success = run_all_tests()
