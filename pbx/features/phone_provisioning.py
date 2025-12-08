@@ -116,19 +116,32 @@ class ProvisioningDevice:
 class PhoneProvisioning:
     """Phone provisioning management"""
 
-    def __init__(self, config):
+    def __init__(self, config, database=None):
         """
         Initialize phone provisioning
 
         Args:
             config: Config object
+            database: Optional DatabaseBackend instance for persistent storage
         """
         self.config = config
         self.logger = get_logger()
-        self.devices = {}  # MAC address -> ProvisioningDevice
+        self.devices = {}  # MAC address -> ProvisioningDevice (in-memory cache)
         self.templates = {}  # (vendor, model) -> PhoneTemplate
         self.provision_requests = []  # Track provisioning requests for troubleshooting
         self.max_request_history = 100  # Keep last 100 requests
+        self.database = database
+        self.devices_db = None
+        
+        # Initialize database access if available
+        if database and database.enabled:
+            from pbx.utils.database import ProvisionedDevicesDB
+            self.devices_db = ProvisionedDevicesDB(database)
+            self.logger.info("Phone provisioning will use database for persistent storage")
+            # Load devices from database into memory
+            self._load_devices_from_database()
+        else:
+            self.logger.info("Phone provisioning will use in-memory storage only")
 
         # Initialize built-in templates
         self._load_builtin_templates()
@@ -140,6 +153,33 @@ class PhoneProvisioning:
         self.logger.info(f"Provisioning URL format: {self.config.get('provisioning.url_format', 'Not configured')}")
         self.logger.info(f"Server external IP: {self.config.get('server.external_ip', 'Not configured')}")
         self.logger.info(f"API port: {self.config.get('api.port', 'Not configured')}")
+
+    def _load_devices_from_database(self):
+        """Load provisioned devices from database into memory"""
+        if not self.devices_db:
+            return
+        
+        try:
+            db_devices = self.devices_db.list_all()
+            for db_device in db_devices:
+                device = ProvisioningDevice(
+                    mac_address=db_device['mac_address'],
+                    extension_number=db_device['extension_number'],
+                    vendor=db_device['vendor'],
+                    model=db_device['model'],
+                    config_url=db_device.get('config_url')
+                )
+                # Restore timestamps if available
+                if db_device.get('created_at'):
+                    device.created_at = db_device['created_at']
+                if db_device.get('last_provisioned'):
+                    device.last_provisioned = db_device['last_provisioned']
+                
+                self.devices[device.mac_address] = device
+            
+            self.logger.info(f"Loaded {len(db_devices)} provisioned devices from database")
+        except Exception as e:
+            self.logger.error(f"Error loading devices from database: {e}")
 
     def _load_builtin_templates(self):
         """Load built-in phone templates"""
@@ -497,7 +537,23 @@ P30 = 13   # GMT-8
         device.config_url = config_url
         self.devices[device.mac_address] = device
 
-        self.logger.info(f"Registered device {mac_address} for extension {extension_number}")
+        # Save to database if available
+        if self.devices_db:
+            try:
+                self.devices_db.add_device(
+                    mac_address=device.mac_address,
+                    extension_number=extension_number,
+                    vendor=vendor,
+                    model=model,
+                    config_url=config_url
+                )
+                self.logger.info(f"Registered device {mac_address} for extension {extension_number} (saved to database)")
+            except Exception as e:
+                self.logger.error(f"Failed to save device to database: {e}")
+                self.logger.info(f"Registered device {mac_address} for extension {extension_number} (in-memory only)")
+        else:
+            self.logger.info(f"Registered device {mac_address} for extension {extension_number} (in-memory only)")
+        
         return device
 
     def unregister_device(self, mac_address):
@@ -512,9 +568,21 @@ P30 = 13   # GMT-8
         """
         normalized_mac = normalize_mac_address(mac_address)
 
-        if normalized_mac in self.devices:
+        found = normalized_mac in self.devices
+        if found:
             del self.devices[normalized_mac]
-            self.logger.info(f"Unregistered device {mac_address}")
+            
+            # Remove from database if available
+            if self.devices_db:
+                try:
+                    self.devices_db.remove_device(normalized_mac)
+                    self.logger.info(f"Unregistered device {mac_address} (removed from database)")
+                except Exception as e:
+                    self.logger.error(f"Failed to remove device from database: {e}")
+                    self.logger.info(f"Unregistered device {mac_address} (removed from memory only)")
+            else:
+                self.logger.info(f"Unregistered device {mac_address} (removed from memory)")
+            
             return True
         return False
 
@@ -648,6 +716,13 @@ P30 = 13   # GMT-8
 
         # Mark device as provisioned
         device.mark_provisioned()
+        
+        # Update last_provisioned timestamp in database
+        if self.devices_db:
+            try:
+                self.devices_db.mark_provisioned(device.mac_address)
+            except Exception as e:
+                self.logger.debug(f"Failed to update last_provisioned in database: {e}")
 
         self.logger.info(f"✓ Successfully generated config for device {mac_address}")
         self.logger.info(f"  Config size: {len(config_content)} bytes, Content-Type: {content_type}")
@@ -935,6 +1010,61 @@ P30 = 13   # GMT-8
         except Exception as e:
             self.logger.error(f"Failed to update template: {e}")
             return False, f"Failed to update template: {e}"
+    
+    def set_static_ip(self, mac_address, static_ip):
+        """
+        Set static IP address for a device
+        
+        Args:
+            mac_address: Device MAC address
+            static_ip: Static IP address
+            
+        Returns:
+            tuple: (success, message)
+        """
+        normalized_mac = normalize_mac_address(mac_address)
+        
+        # Check if device exists
+        device = self.get_device(mac_address)
+        if not device:
+            return False, f"Device {mac_address} not found"
+        
+        # Save to database if available
+        if self.devices_db:
+            try:
+                success = self.devices_db.set_static_ip(normalized_mac, static_ip)
+                if success:
+                    self.logger.info(f"Set static IP {static_ip} for device {mac_address}")
+                    return True, f"Static IP {static_ip} set for device {mac_address}"
+                else:
+                    return False, "Failed to update static IP in database"
+            except Exception as e:
+                self.logger.error(f"Failed to set static IP: {e}")
+                return False, f"Failed to set static IP: {e}"
+        else:
+            return False, "Database not available - static IP mapping requires database"
+    
+    def get_static_ip(self, mac_address):
+        """
+        Get static IP address for a device
+        
+        Args:
+            mac_address: Device MAC address
+            
+        Returns:
+            Static IP address or None
+        """
+        normalized_mac = normalize_mac_address(mac_address)
+        
+        if self.devices_db:
+            try:
+                device = self.devices_db.get_device(normalized_mac)
+                if device:
+                    return device.get('static_ip')
+            except Exception as e:
+                self.logger.error(f"Failed to get static IP: {e}")
+        
+        return None
     
     def reload_templates(self):
         """

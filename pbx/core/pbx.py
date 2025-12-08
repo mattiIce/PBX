@@ -120,7 +120,10 @@ class PBXCore:
 
         # Initialize phone provisioning if enabled
         if self.config.get('provisioning.enabled', False):
-            self.phone_provisioning = PhoneProvisioning(self.config)
+            self.phone_provisioning = PhoneProvisioning(
+                self.config,
+                database=self.database if self.database.enabled else None
+            )
             self._load_provisioning_devices()
         else:
             self.phone_provisioning = None
