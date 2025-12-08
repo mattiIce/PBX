@@ -5,7 +5,9 @@ Main entry point for PBX system
 import sys
 import signal
 import time
+import traceback
 from pbx.core.pbx import PBXCore
+from pbx.utils.test_runner import run_all_tests
 
 # Global running flag
 running = True
@@ -29,7 +31,6 @@ def run_tests_before_start():
     print()
     
     try:
-        from pbx.utils.test_runner import run_all_tests
         passed, failed, _ = run_all_tests()
         
         print()
@@ -42,7 +43,6 @@ def run_tests_before_start():
         return failed == 0
     except Exception as e:
         print(f"Error running tests: {e}")
-        import traceback
         traceback.print_exc()
         return False
 

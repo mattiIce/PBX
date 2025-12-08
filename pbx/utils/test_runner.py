@@ -6,6 +6,7 @@ Discovers and runs all test files in the tests directory
 import sys
 import os
 import importlib.util
+import traceback
 
 
 def run_all_tests(tests_dir="tests"):
@@ -44,6 +45,7 @@ def run_all_tests(tests_dir="tests"):
     
     total_passed = 0
     total_failed = 0
+    total_skipped = 0
     test_results = []
     
     for test_file in test_files:
@@ -71,21 +73,23 @@ def run_all_tests(tests_dir="tests"):
             if hasattr(module, 'run_all_tests'):
                 success = module.run_all_tests()
                 
-                if success:
+                # Handle return value - should be boolean True for success
+                if success is True:
                     print(f"  ✓ {test_file} PASSED")
                     total_passed += 1
                     test_results.append((test_file, True, None))
                 else:
+                    # Treat any non-True return (False, None, etc.) as failure
                     print(f"  ✗ {test_file} FAILED")
                     total_failed += 1
                     test_results.append((test_file, False, "Tests failed"))
             else:
                 print(f"  ⚠ {test_file} has no run_all_tests() function (skipped)")
+                total_skipped += 1
                 test_results.append((test_file, None, "No run_all_tests function"))
                 
         except Exception as e:
             print(f"  ✗ Error running {test_file}: {e}")
-            import traceback
             traceback.print_exc()
             total_failed += 1
             test_results.append((test_file, False, str(e)))
@@ -99,7 +103,7 @@ def run_all_tests(tests_dir="tests"):
     print(f"Total test files: {len(test_files)}")
     print(f"Passed: {total_passed}")
     print(f"Failed: {total_failed}")
-    print(f"Skipped: {len(test_files) - total_passed - total_failed}")
+    print(f"Skipped: {total_skipped}")
     print("=" * 70)
     
     return total_passed, total_failed, test_results
