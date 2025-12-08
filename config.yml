@@ -56,14 +56,14 @@ features:
   
   # Voicemail Transcription - Speech-to-text for voicemails
   voicemail_transcription:
-    enabled: false              # Enable voicemail transcription
+    enabled: true              # Enable voicemail transcription
     provider: vosk              # Provider: 'vosk' (FREE, offline) or 'google'
     vosk_model_path: models/vosk-model-small-en-us-0.15  # Path to Vosk model (download from https://alphacephei.com/vosk/models)
     # For Google Cloud Speech-to-Text, set GOOGLE_APPLICATION_CREDENTIALS environment variable
   
   # Webhook System - Event-driven integrations
   webhooks:
-    enabled: true
+    enabled: false
     max_retries: 3          # Number of retry attempts
     retry_delay: 5          # Seconds between retries
     timeout: 10             # HTTP request timeout in seconds
