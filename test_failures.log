@@ -3252,3 +3252,2016 @@ Test Run Started: 2025-12-08 17:57:25
 Test Run Completed: 2025-12-08 17:59:10
 Summary: 33 passed, 13 failed, 0 skipped
 ================================================================================
+
+================================================================================
+Test Run Started: 2025-12-08 18:11:17
+================================================================================
+
+[2025-12-08 18:11:18] FAILED: test_extension_db_registration.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Extension Database Registration Tests
+    ============================================================
+    Testing database-based extension registration...
+    
+    ✗ Test failed: Failed to add extension to database
+
+  Test Errors:
+    2025-12-08 18:11:18 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:11:18 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:11:18 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:11:18 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:11:18 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:11:18 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:11:18 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:11:18 - PBX - INFO - Creating database tables...
+    2025-12-08 18:11:18 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:11:18 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:11:18 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:11:18 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:11:18 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:11:18 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
+    2025-12-08 18:11:18 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
+    2025-12-08 18:11:18 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
+    2025-12-08 18:11:18 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
+    2025-12-08 18:11:18 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:11:18 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:11:18 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:11:18 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:11:18 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:11:18 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:11:18 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:11:18 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:11:18 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:11:18 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:11:18 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:11:18 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:11:18 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:11:18 - PBX - INFO - Menu options: 4
+    2025-12-08 18:11:18 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:11:18 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:11:18 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:11:18 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:11:18 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:11:18 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:11:18 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:11:18 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:11:18 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:11:18 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:11:18 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:11:18 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:11:18 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:11:18 - PBX - INFO - API port: 8080
+    2025-12-08 18:11:18 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:11:18 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:11:18 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:11:18 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:11:18 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:11:18 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:11:18 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:11:18 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:11:18 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:11:18 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:11:18 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:11:18 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:11:18 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:11:18 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:11:18 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:11:18 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:11:18 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:11:18 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:11:18 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:11:18 - PBX - ERROR - Error during query execution: table extensions has no column named voicemail_pin
+    2025-12-08 18:11:18 - PBX - ERROR -   Query: 
+            INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+    2025-12-08 18:11:18 - PBX - ERROR -   Parameters: ('9999', 'Test Database Extension', 'test@example.com', 'test_hash_123', True, None, False, None)
+    2025-12-08 18:11:18 - PBX - ERROR -   Database type: sqlite
+    2025-12-08 18:11:18 - PBX - ERROR -   Traceback: Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/pbx/utils/database.py", line 157, in _execute_with_context
+        cursor.execute(query, params)
+    sqlite3.OperationalError: table extensions has no column named voicemail_pin
+    
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_extension_db_registration.py", line 203, in run_all_tests
+        test_database_extension_registration()
+      File "/home/runner/work/PBX/PBX/tests/test_extension_db_registration.py", line 46, in test_database_extension_registration
+        assert success, "Failed to add extension to database"
+               ^^^^^^^
+    AssertionError: Failed to add extension to database
+
+[2025-12-08 18:11:19] FAILED: test_greeting_recording.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Greeting Recording Tests
+    ============================================================
+    
+    Testing greeting storage...
+    ✓ Greeting storage works
+    Testing greeting deletion...
+    ✓ Greeting deletion works
+    Testing IVR options menu...
+    ✓ IVR options menu works
+    Testing IVR greeting recording...
+    ✓ IVR greeting recording works
+    Testing IVR save recorded greeting...
+    ✗ test_ivr_save_recorded_greeting failed: Mailbox should have custom greeting
+    Testing main menu to options navigation...
+    ✓ Main menu to options navigation works
+    Testing greeting persistence...
+    ✓ Greeting persistence works
+    
+    ============================================================
+    Results: 6 passed, 1 failed
+    ============================================================
+
+[2025-12-08 18:11:59] FAILED: test_json_serialization.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running JSON Serialization Tests
+    ============================================================
+    Testing DateTimeEncoder...
+      Serialized JSON: {"id": 1, "name": "Test", "created_at": "2025-12-05T14:30:00", "updated_at": "2025-12-05T15:45:30"}
+    ✓ DateTimeEncoder works correctly
+    Testing registered phones JSON serialization...
+      Serialized 2 phones successfully
+    ✓ Registered phones JSON serialization works correctly
+    Testing registered phones from database with JSON encoder...
+    ✓ Database registered phones can be serialized to JSON
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:12:04] FAILED: test_pbx_boot_clear.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running PBX Boot Preserve Integration Test
+    ============================================================
+    Testing PBX preserves phones on boot...
+      Registered 2 phones
+      Phones preserved on boot: 2 phones remaining
+    ✓ PBX preserves registered phones on boot
+    ============================================================
+    Results: 1 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:12:04] FAILED: test_phone_book_paging.py
+  Return value: None (expected True)
+
+  Test Output:
+    
+    Running Phone Book and Paging Tests
+    ============================================================
+    Testing phone book basic operations...
+    ✓ Phone book basic operations passed
+    Testing phone book export formats...
+    ✓ Phone book export formats passed
+    Testing paging system basic operations...
+    ✓ Paging system basic operations passed
+    Testing paging system DAC device configuration...
+    ✓ Paging system DAC device configuration passed
+    Testing phone book when disabled...
+    ✓ Phone book disabled test passed
+    Testing paging system when disabled...
+    ✓ Paging system disabled test passed
+    
+    ============================================================
+    All tests passed! ✓
+    ============================================================
+
+[2025-12-08 18:12:04] FAILED: test_phone_registration_integration.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Phone Registration Integration Tests
+    ============================================================
+    Testing MAC address extraction from SIP headers...
+      ✓ Extracted MAC from Contact: 001565123456
+      ✓ Extracted MAC from User-Agent: 001565aabbcc
+      ✓ Correctly handled no MAC: None
+      ✓ Extracted MAC with hyphens: 001565112233
+    ✓ MAC address extraction works
+    Testing phone registration storage...
+      ✓ Phone stored in database with all details
+        Extension: 1001
+        IP: 192.168.1.100
+        MAC: 001565123456
+        User-Agent: Yealink SIP-T46S 66.85.0.5 00:15:65:12:34:56
+      ✓ Re-registration updates existing record
+    ✓ Phone registration storage works
+    Testing IP-based tracking (no MAC)...
+      ✓ Phone tracked by IP: 192.168.1.101
+      ✓ MAC correctly stored as None
+    ✓ IP-based tracking works
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+  Test Errors:
+    2025-12-08 18:12:04 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:12:04 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:12:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:12:04 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:12:04 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:12:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:12:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:12:04 - PBX - INFO - Creating database tables...
+    2025-12-08 18:12:04 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:12:04 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:12:04 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:12:04 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:12:04 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:12:04 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:12:04 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:12:04 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:12:04 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:12:04 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:12:04 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:12:04 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:12:04 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:12:04 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:12:04 - PBX - INFO - Menu options: 4
+    2025-12-08 18:12:04 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:12:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:12:04 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:12:04 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:12:04 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:12:04 - PBX - INFO - API port: 8080
+    2025-12-08 18:12:04 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:12:04 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:12:04 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:12:04 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:12:04 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:12:04 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:12:04 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:12:04 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:12:04 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:12:04 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:12:04 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:12:04 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:12:04 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:12:04 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:12:04 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:12:04 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:12:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:12:04 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:12:04 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:12:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:12:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:12:04 - PBX - INFO - Creating database tables...
+    2025-12-08 18:12:04 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:12:04 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:12:04 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:12:04 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:12:04 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:12:04 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:12:04 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:12:04 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:12:04 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:12:04 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:12:04 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:12:04 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:12:04 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:12:04 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:12:04 - PBX - INFO - Menu options: 4
+    2025-12-08 18:12:04 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:12:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:12:04 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:12:04 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:12:04 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:12:04 - PBX - INFO - API port: 8080
+    2025-12-08 18:12:04 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:12:04 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:12:04 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:12:04 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:12:04 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:12:04 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:12:04 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:12:04 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:12:04 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:12:04 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:12:04 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:12:04 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:12:04 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:12:04 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:12:04 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:12:04 - PBX - INFO - Database disconnected
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:12:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:12:04 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:12:04 - PBX - INFO -   Database file: :memory:
+    2025-12-08 18:12:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:12:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+    2025-12-08 18:12:04 - PBX - INFO - Creating database tables...
+    2025-12-08 18:12:04 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:12:04 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:12:04 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:12:04 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:12:04 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:12:04 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+    2025-12-08 18:12:04 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:12:04 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:12:04 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:12:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:12:04 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:12:04 - PBX - INFO -   Database file: :memory:
+    2025-12-08 18:12:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:12:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+    2025-12-08 18:12:04 - PBX - INFO - Creating database tables...
+    2025-12-08 18:12:04 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:12:04 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:12:04 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:12:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:12:04 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:12:04 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:12:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:12:04 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:12:04 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:12:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:12:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:12:04 - PBX - INFO - Creating database tables...
+    2025-12-08 18:12:04 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:12:04 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:12:04 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:12:04 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:12:04 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:12:04 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:12:04 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:12:04 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:12:04 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:12:04 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:12:04 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:12:04 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:12:04 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:12:04 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:12:04 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:12:04 - PBX - INFO - Menu options: 4
+    2025-12-08 18:12:04 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:12:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:12:04 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:12:04 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:12:04 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:12:04 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:12:04 - PBX - INFO - API port: 8080
+    2025-12-08 18:12:04 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:12:04 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:12:04 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:12:04 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:12:04 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:12:04 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:12:04 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:12:04 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:12:04 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:12:04 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:12:04 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:12:04 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:12:04 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:12:04 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:12:04 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:12:04 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:12:04 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:12:04 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+    2025-12-08 18:12:04 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+    2025-12-08 18:12:04 - PBX - INFO - Stored phone registration: ext=1002, ip=192.168.1.101 (no MAC)
+
+[2025-12-08 18:12:04] FAILED: test_provisioning.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Phone Provisioning Tests
+    ============================================================
+    Testing MAC address normalization...
+    ✓ MAC address normalization works
+    Testing phone template...
+    ✓ Phone template works
+    Testing device registration...
+    ✓ Device registration works
+    Testing supported vendors and models...
+    ✓ Supported vendors and models work
+    Testing built-in templates...
+    ✓ Built-in templates exist
+    Testing configuration generation...
+    ✓ Configuration generation works
+    Testing unregistered device error messages...
+    ✓ Unregistered device error messages work
+    Testing similar MAC detection...
+    ✓ Similar MAC detection works
+    Testing MAC placeholder detection...
+    ✓ MAC placeholder detection works
+    ============================================================
+    All tests passed!
+    ============================================================
+
+[2025-12-08 18:12:04] FAILED: test_provisioning_persistence.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Provisioning Persistence Tests
+    ============================================================
+    Testing provisioning persistence...
+      Registered 2 devices in first instance
+      Devices persisted correctly: 2 devices loaded
+    ✓ Provisioning persistence works
+    Testing static IP assignment...
+      Set static IP: Static IP 192.168.1.100 set for device 00:15:65:12:34:56
+      Static IP verified: 192.168.1.100
+    ✓ Static IP assignment works
+    Testing device unregister removes from database...
+    ✓ Device unregister removes from database
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:12:05] FAILED: test_registered_phones.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Registered Phones Tests
+    ============================================================
+    Testing phone registration...
+    ✓ Phone registration with MAC works
+    Testing phone registration without MAC (IP-based)...
+    ✓ Phone registration without MAC (IP-based) works
+    Testing phone registration update...
+    ✓ Phone registration update works
+    Testing listing phones by extension...
+    ✓ Listing phones by extension works
+    Testing listing all phones...
+    ✓ Listing all phones works
+    Testing MAC preservation on re-registration...
+    ✓ MAC preservation on re-registration works
+    Testing IP preservation on re-registration...
+    ✓ IP preservation on re-registration works
+    Testing phone extension update (reprovisioning)...
+    ✓ Phone extension update (reprovisioning) works
+    Testing phone extension update validation...
+    ✓ Phone extension update validation works
+    ============================================================
+    Results: 9 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:12:20] FAILED: test_voicemail_database.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Database Tests
+    ============================================================
+    
+    Testing database configuration...
+    ✗ test_database_configuration failed: 
+    Testing database backend initialization...
+    ✓ Database backend initializes correctly
+    Testing voicemail database integration...
+    ✓ Voicemail database integration works correctly
+    Testing voicemail system without database...
+    ✓ Voicemail system works without database
+    
+    ============================================================
+    Results: 3 passed, 1 failed
+    ============================================================
+
+  Test Errors:
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 204, in run_all_tests
+        test()
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 28, in test_database_configuration
+        assert config.get('database.port') == 5432
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    AssertionError
+
+[2025-12-08 18:12:20] FAILED: test_voicemail_email.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Email Tests
+    ============================================================
+    
+    Testing email notifier configuration...
+    ✗ test_email_notifier_config failed: 
+    Testing email notifier initialization...
+    ✗ test_email_notifier_initialization failed: 
+    Testing voicemail system with email integration...
+    ✓ Voicemail system integrates with email correctly
+    Testing extension email configuration...
+    ✓ Extensions have email addresses configured
+    Testing no-answer timeout configuration...
+    ✓ No-answer timeout configured correctly
+    
+    ============================================================
+    Results: 3 passed, 2 failed
+    ============================================================
+
+[2025-12-08 18:12:25] FAILED: test_voicemail_transcription.py
+  Return value: False (expected True)
+
+  Test Errors:
+    test_transcription_file_not_found (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_file_not_found)
+    Test transcription with non-existent file ... ok
+    test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results ... ERROR
+    test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription ... ERROR
+    test_transcription_result_structure (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_result_structure)
+    Test that transcription result has correct structure ... ok
+    test_transcription_service_disabled (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_service_disabled)
+    Test transcription service when disabled ... ok
+    test_transcription_unsupported_provider (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_unsupported_provider)
+    Test transcription with unsupported provider ... ok
+    
+    ======================================================================
+    ERROR: test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ======================================================================
+    ERROR: test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ----------------------------------------------------------------------
+    Ran 6 tests in 0.043s
+    
+    FAILED (errors=2)
+
+================================================================================
+Test Run Completed: 2025-12-08 18:13:02
+Summary: 34 passed, 12 failed, 0 skipped
+================================================================================
+
+================================================================================
+Test Run Started: 2025-12-08 18:14:32
+================================================================================
+
+[2025-12-08 18:14:33] FAILED: test_extension_db_registration.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Extension Database Registration Tests
+    ============================================================
+    Testing database-based extension registration...
+    
+    ✗ Test failed: Failed to add extension to database
+
+  Test Errors:
+    2025-12-08 18:14:33 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:14:33 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:14:33 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:14:33 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:14:33 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:14:33 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:14:33 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:14:33 - PBX - INFO - Creating database tables...
+    2025-12-08 18:14:33 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:14:33 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:14:33 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:14:33 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:14:33 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:14:33 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
+    2025-12-08 18:14:33 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
+    2025-12-08 18:14:33 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
+    2025-12-08 18:14:33 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
+    2025-12-08 18:14:33 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:14:33 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:14:33 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:14:33 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:14:33 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:14:33 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:14:33 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:14:33 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:14:33 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:14:33 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:14:33 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:14:33 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:14:33 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:14:33 - PBX - INFO - Menu options: 4
+    2025-12-08 18:14:33 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:14:33 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:14:33 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:14:33 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:14:33 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:14:33 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:14:33 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:14:33 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:14:33 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:14:33 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:14:33 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:14:33 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:14:33 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:14:33 - PBX - INFO - API port: 8080
+    2025-12-08 18:14:33 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:14:33 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:14:33 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:14:33 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:14:33 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:14:33 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:14:33 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:14:33 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:14:33 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:14:33 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:14:33 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:14:33 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:14:33 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:14:33 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:14:33 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:14:33 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:14:33 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:14:33 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:14:33 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:14:33 - PBX - ERROR - Error during query execution: table extensions has no column named voicemail_pin
+    2025-12-08 18:14:33 - PBX - ERROR -   Query: 
+            INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+    2025-12-08 18:14:33 - PBX - ERROR -   Parameters: ('9999', 'Test Database Extension', 'test@example.com', 'test_hash_123', True, None, False, None)
+    2025-12-08 18:14:33 - PBX - ERROR -   Database type: sqlite
+    2025-12-08 18:14:33 - PBX - ERROR -   Traceback: Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/pbx/utils/database.py", line 157, in _execute_with_context
+        cursor.execute(query, params)
+    sqlite3.OperationalError: table extensions has no column named voicemail_pin
+    
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_extension_db_registration.py", line 203, in run_all_tests
+        test_database_extension_registration()
+      File "/home/runner/work/PBX/PBX/tests/test_extension_db_registration.py", line 46, in test_database_extension_registration
+        assert success, "Failed to add extension to database"
+               ^^^^^^^
+    AssertionError: Failed to add extension to database
+
+[2025-12-08 18:14:34] FAILED: test_greeting_recording.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Greeting Recording Tests
+    ============================================================
+    
+    Testing greeting storage...
+    ✓ Greeting storage works
+    Testing greeting deletion...
+    ✓ Greeting deletion works
+    Testing IVR options menu...
+    ✓ IVR options menu works
+    Testing IVR greeting recording...
+    ✓ IVR greeting recording works
+    Testing IVR save recorded greeting...
+    ✗ test_ivr_save_recorded_greeting failed: Mailbox should have custom greeting
+    Testing main menu to options navigation...
+    ✓ Main menu to options navigation works
+    Testing greeting persistence...
+    ✓ Greeting persistence works
+    
+    ============================================================
+    Results: 6 passed, 1 failed
+    ============================================================
+
+[2025-12-08 18:15:14] FAILED: test_json_serialization.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running JSON Serialization Tests
+    ============================================================
+    Testing DateTimeEncoder...
+      Serialized JSON: {"id": 1, "name": "Test", "created_at": "2025-12-05T14:30:00", "updated_at": "2025-12-05T15:45:30"}
+    ✓ DateTimeEncoder works correctly
+    Testing registered phones JSON serialization...
+      Serialized 2 phones successfully
+    ✓ Registered phones JSON serialization works correctly
+    Testing registered phones from database with JSON encoder...
+    ✓ Database registered phones can be serialized to JSON
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:15:19] FAILED: test_pbx_boot_clear.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running PBX Boot Preserve Integration Test
+    ============================================================
+    Testing PBX preserves phones on boot...
+      Registered 2 phones
+      Phones preserved on boot: 2 phones remaining
+    ✓ PBX preserves registered phones on boot
+    ============================================================
+    Results: 1 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:15:19] FAILED: test_phone_book_paging.py
+  Return value: None (expected True)
+
+  Test Output:
+    
+    Running Phone Book and Paging Tests
+    ============================================================
+    Testing phone book basic operations...
+    ✓ Phone book basic operations passed
+    Testing phone book export formats...
+    ✓ Phone book export formats passed
+    Testing paging system basic operations...
+    ✓ Paging system basic operations passed
+    Testing paging system DAC device configuration...
+    ✓ Paging system DAC device configuration passed
+    Testing phone book when disabled...
+    ✓ Phone book disabled test passed
+    Testing paging system when disabled...
+    ✓ Paging system disabled test passed
+    
+    ============================================================
+    All tests passed! ✓
+    ============================================================
+
+[2025-12-08 18:15:19] FAILED: test_phone_registration_integration.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Phone Registration Integration Tests
+    ============================================================
+    Testing MAC address extraction from SIP headers...
+      ✓ Extracted MAC from Contact: 001565123456
+      ✓ Extracted MAC from User-Agent: 001565aabbcc
+      ✓ Correctly handled no MAC: None
+      ✓ Extracted MAC with hyphens: 001565112233
+    ✓ MAC address extraction works
+    Testing phone registration storage...
+      ✓ Phone stored in database with all details
+        Extension: 1001
+        IP: 192.168.1.100
+        MAC: 001565123456
+        User-Agent: Yealink SIP-T46S 66.85.0.5 00:15:65:12:34:56
+      ✓ Re-registration updates existing record
+    ✓ Phone registration storage works
+    Testing IP-based tracking (no MAC)...
+      ✓ Phone tracked by IP: 192.168.1.101
+      ✓ MAC correctly stored as None
+    ✓ IP-based tracking works
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+  Test Errors:
+    2025-12-08 18:15:19 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:15:19 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:15:19 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:15:19 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:15:19 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:15:19 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:15:19 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:15:19 - PBX - INFO - Creating database tables...
+    2025-12-08 18:15:19 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:15:19 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:15:19 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:15:19 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:15:19 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:15:19 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:15:19 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:15:19 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:15:19 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:15:19 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:15:19 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:15:19 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:15:19 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:15:19 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:15:19 - PBX - INFO - Menu options: 4
+    2025-12-08 18:15:19 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:15:19 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:15:19 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:15:19 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:15:19 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:15:19 - PBX - INFO - API port: 8080
+    2025-12-08 18:15:19 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:15:19 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:15:19 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:15:19 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:15:19 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:15:19 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:15:19 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:15:19 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:15:19 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:15:19 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:15:19 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:15:19 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:15:19 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:15:19 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:15:19 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:15:19 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:15:19 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:15:19 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:15:19 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:15:19 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:15:19 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:15:19 - PBX - INFO - Creating database tables...
+    2025-12-08 18:15:19 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:15:19 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:15:19 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:15:19 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:15:19 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:15:19 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:15:19 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:15:19 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:15:19 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:15:19 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:15:19 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:15:19 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:15:19 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:15:19 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:15:19 - PBX - INFO - Menu options: 4
+    2025-12-08 18:15:19 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:15:19 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:15:19 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:15:19 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:15:19 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:15:19 - PBX - INFO - API port: 8080
+    2025-12-08 18:15:19 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:15:19 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:15:19 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:15:19 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:15:19 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:15:19 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:15:19 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:15:19 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:15:19 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:15:19 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:15:19 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:15:19 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:15:19 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:15:19 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:15:19 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:15:19 - PBX - INFO - Database disconnected
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:15:19 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:15:19 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:15:19 - PBX - INFO -   Database file: :memory:
+    2025-12-08 18:15:19 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:15:19 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+    2025-12-08 18:15:19 - PBX - INFO - Creating database tables...
+    2025-12-08 18:15:19 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:15:19 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:15:19 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:15:19 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:15:19 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:15:19 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+    2025-12-08 18:15:19 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:15:19 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:15:19 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:15:19 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:15:19 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:15:19 - PBX - INFO -   Database file: :memory:
+    2025-12-08 18:15:19 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:15:19 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+    2025-12-08 18:15:19 - PBX - INFO - Creating database tables...
+    2025-12-08 18:15:19 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:15:19 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:15:19 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:15:19 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:15:19 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:15:19 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:15:19 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:15:19 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:15:19 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:15:19 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:15:19 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:15:19 - PBX - INFO - Creating database tables...
+    2025-12-08 18:15:19 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:15:19 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:15:19 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:15:19 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:15:19 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:15:19 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:15:19 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:15:19 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:15:19 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:15:19 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:15:19 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:15:19 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:15:19 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:15:19 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:15:19 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:15:19 - PBX - INFO - Menu options: 4
+    2025-12-08 18:15:19 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:15:19 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:15:19 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:15:19 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:15:19 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:15:19 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:15:19 - PBX - INFO - API port: 8080
+    2025-12-08 18:15:19 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:15:19 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:15:19 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:15:19 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:15:19 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:15:19 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:15:19 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:15:19 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:15:19 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:15:19 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:15:19 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:15:19 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:15:19 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:15:19 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:15:19 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:15:19 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:15:19 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:15:19 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+    2025-12-08 18:15:19 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+    2025-12-08 18:15:19 - PBX - INFO - Stored phone registration: ext=1002, ip=192.168.1.101 (no MAC)
+
+[2025-12-08 18:15:19] FAILED: test_provisioning.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Phone Provisioning Tests
+    ============================================================
+    Testing MAC address normalization...
+    ✓ MAC address normalization works
+    Testing phone template...
+    ✓ Phone template works
+    Testing device registration...
+    ✓ Device registration works
+    Testing supported vendors and models...
+    ✓ Supported vendors and models work
+    Testing built-in templates...
+    ✓ Built-in templates exist
+    Testing configuration generation...
+    ✓ Configuration generation works
+    Testing unregistered device error messages...
+    ✓ Unregistered device error messages work
+    Testing similar MAC detection...
+    ✓ Similar MAC detection works
+    Testing MAC placeholder detection...
+    ✓ MAC placeholder detection works
+    ============================================================
+    All tests passed!
+    ============================================================
+
+[2025-12-08 18:15:19] FAILED: test_provisioning_persistence.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Provisioning Persistence Tests
+    ============================================================
+    Testing provisioning persistence...
+      Registered 2 devices in first instance
+      Devices persisted correctly: 2 devices loaded
+    ✓ Provisioning persistence works
+    Testing static IP assignment...
+      Set static IP: Static IP 192.168.1.100 set for device 00:15:65:12:34:56
+      Static IP verified: 192.168.1.100
+    ✓ Static IP assignment works
+    Testing device unregister removes from database...
+    ✓ Device unregister removes from database
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:15:20] FAILED: test_registered_phones.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Registered Phones Tests
+    ============================================================
+    Testing phone registration...
+    ✓ Phone registration with MAC works
+    Testing phone registration without MAC (IP-based)...
+    ✓ Phone registration without MAC (IP-based) works
+    Testing phone registration update...
+    ✓ Phone registration update works
+    Testing listing phones by extension...
+    ✓ Listing phones by extension works
+    Testing listing all phones...
+    ✓ Listing all phones works
+    Testing MAC preservation on re-registration...
+    ✓ MAC preservation on re-registration works
+    Testing IP preservation on re-registration...
+    ✓ IP preservation on re-registration works
+    Testing phone extension update (reprovisioning)...
+    ✓ Phone extension update (reprovisioning) works
+    Testing phone extension update validation...
+    ✓ Phone extension update validation works
+    ============================================================
+    Results: 9 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:15:35] FAILED: test_voicemail_database.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Database Tests
+    ============================================================
+    
+    Testing database configuration...
+    ✗ test_database_configuration failed: 
+    Testing database backend initialization...
+    ✓ Database backend initializes correctly
+    Testing voicemail database integration...
+    ✓ Voicemail database integration works correctly
+    Testing voicemail system without database...
+    ✓ Voicemail system works without database
+    
+    ============================================================
+    Results: 3 passed, 1 failed
+    ============================================================
+
+  Test Errors:
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 204, in run_all_tests
+        test()
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 28, in test_database_configuration
+        assert config.get('database.port') == 5432
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    AssertionError
+
+[2025-12-08 18:15:35] FAILED: test_voicemail_email.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Email Tests
+    ============================================================
+    
+    Testing email notifier configuration...
+    ✗ test_email_notifier_config failed: 
+    Testing email notifier initialization...
+    ✗ test_email_notifier_initialization failed: 
+    Testing voicemail system with email integration...
+    ✓ Voicemail system integrates with email correctly
+    Testing extension email configuration...
+    ✓ Extensions have email addresses configured
+    Testing no-answer timeout configuration...
+    ✓ No-answer timeout configured correctly
+    
+    ============================================================
+    Results: 3 passed, 2 failed
+    ============================================================
+
+[2025-12-08 18:15:40] FAILED: test_voicemail_transcription.py
+  Return value: False (expected True)
+
+  Test Errors:
+    test_transcription_file_not_found (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_file_not_found)
+    Test transcription with non-existent file ... ok
+    test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results ... ERROR
+    test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription ... ERROR
+    test_transcription_result_structure (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_result_structure)
+    Test that transcription result has correct structure ... ok
+    test_transcription_service_disabled (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_service_disabled)
+    Test transcription service when disabled ... ok
+    test_transcription_unsupported_provider (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_unsupported_provider)
+    Test transcription with unsupported provider ... ok
+    
+    ======================================================================
+    ERROR: test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ======================================================================
+    ERROR: test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ----------------------------------------------------------------------
+    Ran 6 tests in 0.015s
+    
+    FAILED (errors=2)
+
+================================================================================
+Test Run Completed: 2025-12-08 18:16:17
+Summary: 34 passed, 12 failed, 0 skipped
+================================================================================
+
+================================================================================
+Test Run Started: 2025-12-08 18:16:25
+================================================================================
+
+[2025-12-08 18:16:26] FAILED: test_extension_db_registration.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Extension Database Registration Tests
+    ============================================================
+    Testing database-based extension registration...
+    
+    ✗ Test failed: Failed to add extension to database
+
+  Test Errors:
+    2025-12-08 18:16:26 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:16:26 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:16:26 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:16:26 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:16:26 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:16:26 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:16:26 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:16:26 - PBX - INFO - Creating database tables...
+    2025-12-08 18:16:26 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:16:26 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:16:26 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:16:26 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:16:26 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:16:26 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
+    2025-12-08 18:16:26 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
+    2025-12-08 18:16:26 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
+    2025-12-08 18:16:26 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
+    2025-12-08 18:16:26 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:16:26 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:16:26 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:16:26 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:16:26 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:16:26 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:16:26 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:16:26 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:16:26 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:16:26 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:16:26 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:16:26 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:16:26 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:16:26 - PBX - INFO - Menu options: 4
+    2025-12-08 18:16:26 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:16:26 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:16:26 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:16:26 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:16:26 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:16:26 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:16:26 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:16:26 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:16:26 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:16:26 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:16:26 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:16:26 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:16:26 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:16:26 - PBX - INFO - API port: 8080
+    2025-12-08 18:16:26 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:16:26 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:16:26 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:16:26 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:16:26 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:16:26 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:16:26 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:16:26 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:16:26 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:16:26 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:16:26 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:16:26 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:16:26 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:16:26 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:16:26 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:16:26 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:16:26 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:16:26 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:16:26 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:16:26 - PBX - ERROR - Error during query execution: table extensions has no column named voicemail_pin
+    2025-12-08 18:16:26 - PBX - ERROR -   Query: 
+            INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin, ad_synced, ad_username)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            
+    2025-12-08 18:16:26 - PBX - ERROR -   Parameters: ('9999', 'Test Database Extension', 'test@example.com', 'test_hash_123', True, None, False, None)
+    2025-12-08 18:16:26 - PBX - ERROR -   Database type: sqlite
+    2025-12-08 18:16:26 - PBX - ERROR -   Traceback: Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/pbx/utils/database.py", line 157, in _execute_with_context
+        cursor.execute(query, params)
+    sqlite3.OperationalError: table extensions has no column named voicemail_pin
+    
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_extension_db_registration.py", line 203, in run_all_tests
+        test_database_extension_registration()
+      File "/home/runner/work/PBX/PBX/tests/test_extension_db_registration.py", line 46, in test_database_extension_registration
+        assert success, "Failed to add extension to database"
+               ^^^^^^^
+    AssertionError: Failed to add extension to database
+
+[2025-12-08 18:16:27] FAILED: test_greeting_recording.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Greeting Recording Tests
+    ============================================================
+    
+    Testing greeting storage...
+    ✓ Greeting storage works
+    Testing greeting deletion...
+    ✓ Greeting deletion works
+    Testing IVR options menu...
+    ✓ IVR options menu works
+    Testing IVR greeting recording...
+    ✓ IVR greeting recording works
+    Testing IVR save recorded greeting...
+    ✗ test_ivr_save_recorded_greeting failed: Mailbox should have custom greeting
+    Testing main menu to options navigation...
+    ✓ Main menu to options navigation works
+    Testing greeting persistence...
+    ✓ Greeting persistence works
+    
+    ============================================================
+    Results: 6 passed, 1 failed
+    ============================================================
+
+[2025-12-08 18:17:07] FAILED: test_json_serialization.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running JSON Serialization Tests
+    ============================================================
+    Testing DateTimeEncoder...
+      Serialized JSON: {"id": 1, "name": "Test", "created_at": "2025-12-05T14:30:00", "updated_at": "2025-12-05T15:45:30"}
+    ✓ DateTimeEncoder works correctly
+    Testing registered phones JSON serialization...
+      Serialized 2 phones successfully
+    ✓ Registered phones JSON serialization works correctly
+    Testing registered phones from database with JSON encoder...
+    ✓ Database registered phones can be serialized to JSON
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:17:12] FAILED: test_pbx_boot_clear.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running PBX Boot Preserve Integration Test
+    ============================================================
+    Testing PBX preserves phones on boot...
+      Registered 2 phones
+      Phones preserved on boot: 2 phones remaining
+    ✓ PBX preserves registered phones on boot
+    ============================================================
+    Results: 1 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:17:12] FAILED: test_phone_book_paging.py
+  Return value: None (expected True)
+
+  Test Output:
+    
+    Running Phone Book and Paging Tests
+    ============================================================
+    Testing phone book basic operations...
+    ✓ Phone book basic operations passed
+    Testing phone book export formats...
+    ✓ Phone book export formats passed
+    Testing paging system basic operations...
+    ✓ Paging system basic operations passed
+    Testing paging system DAC device configuration...
+    ✓ Paging system DAC device configuration passed
+    Testing phone book when disabled...
+    ✓ Phone book disabled test passed
+    Testing paging system when disabled...
+    ✓ Paging system disabled test passed
+    
+    ============================================================
+    All tests passed! ✓
+    ============================================================
+
+[2025-12-08 18:17:12] FAILED: test_phone_registration_integration.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Phone Registration Integration Tests
+    ============================================================
+    Testing MAC address extraction from SIP headers...
+      ✓ Extracted MAC from Contact: 001565123456
+      ✓ Extracted MAC from User-Agent: 001565aabbcc
+      ✓ Correctly handled no MAC: None
+      ✓ Extracted MAC with hyphens: 001565112233
+    ✓ MAC address extraction works
+    Testing phone registration storage...
+      ✓ Phone stored in database with all details
+        Extension: 1001
+        IP: 192.168.1.100
+        MAC: 001565123456
+        User-Agent: Yealink SIP-T46S 66.85.0.5 00:15:65:12:34:56
+      ✓ Re-registration updates existing record
+    ✓ Phone registration storage works
+    Testing IP-based tracking (no MAC)...
+      ✓ Phone tracked by IP: 192.168.1.101
+      ✓ MAC correctly stored as None
+    ✓ IP-based tracking works
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+  Test Errors:
+    2025-12-08 18:17:12 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:17:12 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:17:12 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:17:12 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:17:12 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:17:12 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:17:12 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:17:12 - PBX - INFO - Creating database tables...
+    2025-12-08 18:17:12 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:17:12 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:17:12 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:17:12 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:17:12 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:17:12 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:17:12 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:17:12 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:17:12 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:17:12 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:17:12 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:17:12 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:17:12 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:17:12 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:17:12 - PBX - INFO - Menu options: 4
+    2025-12-08 18:17:12 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:17:12 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:17:12 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:17:12 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:17:12 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:17:12 - PBX - INFO - API port: 8080
+    2025-12-08 18:17:12 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:17:12 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:17:12 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:17:12 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:17:12 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:17:12 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:17:12 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:17:12 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:17:12 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:17:12 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:17:12 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:17:12 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:17:12 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:17:12 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:17:12 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:17:12 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:17:12 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:17:12 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:17:12 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:17:12 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:17:12 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:17:12 - PBX - INFO - Creating database tables...
+    2025-12-08 18:17:12 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:17:12 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:17:12 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:17:12 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:17:12 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:17:12 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:17:12 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:17:12 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:17:12 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:17:12 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:17:12 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:17:12 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:17:12 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:17:12 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:17:12 - PBX - INFO - Menu options: 4
+    2025-12-08 18:17:12 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:17:12 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:17:12 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:17:12 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:17:12 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:17:12 - PBX - INFO - API port: 8080
+    2025-12-08 18:17:12 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:17:12 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:17:12 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:17:12 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:17:12 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:17:12 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:17:12 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:17:12 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:17:12 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:17:12 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:17:12 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:17:12 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:17:12 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:17:12 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:17:12 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:17:12 - PBX - INFO - Database disconnected
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:17:12 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:17:12 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:17:12 - PBX - INFO -   Database file: :memory:
+    2025-12-08 18:17:12 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:17:12 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+    2025-12-08 18:17:12 - PBX - INFO - Creating database tables...
+    2025-12-08 18:17:12 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:17:12 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:17:12 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:17:12 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:17:12 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:17:12 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+    2025-12-08 18:17:12 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:17:12 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+    2025-12-08 18:17:12 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:17:12 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:17:12 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:17:12 - PBX - INFO -   Database file: :memory:
+    2025-12-08 18:17:12 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:17:12 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+    2025-12-08 18:17:12 - PBX - INFO - Creating database tables...
+    2025-12-08 18:17:12 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:17:12 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:17:12 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_NAME not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable DB_USER not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+    2025-12-08 18:17:12 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+    2025-12-08 18:17:12 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+    2025-12-08 18:17:12 - PBX - INFO - Database backend: sqlite
+    2025-12-08 18:17:12 - PBX - INFO - Initiating database connection (type: sqlite)...
+    2025-12-08 18:17:12 - PBX - INFO - Connecting to SQLite database...
+    2025-12-08 18:17:12 - PBX - INFO -   Database file: pbx.db
+    2025-12-08 18:17:12 - PBX - INFO - ✓ Successfully connected to SQLite database
+    2025-12-08 18:17:12 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+    2025-12-08 18:17:12 - PBX - INFO - Creating database tables...
+    2025-12-08 18:17:12 - PBX - INFO - Checking for schema migrations...
+    2025-12-08 18:17:12 - PBX - INFO - Schema migration check complete
+    2025-12-08 18:17:12 - PBX - INFO - Database tables created successfully
+    2025-12-08 18:17:12 - PBX - INFO - Database backend initialized successfully (sqlite)
+    2025-12-08 18:17:12 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+    2025-12-08 18:17:12 - PBX - INFO - No extensions found in database, loading from config.yml
+    2025-12-08 18:17:12 - PBX - INFO - Loading 4 extensions from config.yml
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+    2025-12-08 18:17:12 - PBX - INFO - Loaded extension 1004 (Customer Service)
+    2025-12-08 18:17:12 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+    2025-12-08 18:17:12 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+    2025-12-08 18:17:12 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+    2025-12-08 18:17:12 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+    2025-12-08 18:17:12 - PBX - INFO - Started daily reminder thread
+    2025-12-08 18:17:12 - PBX - INFO - Statistics and analytics engine initialized
+    2025-12-08 18:17:12 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:17:12 - PBX - INFO - Menu options: 4
+    2025-12-08 18:17:12 - PBX - INFO - Auto Attendant initialized on extension 0
+    2025-12-08 18:17:12 - PBX - INFO - Phone provisioning will use database for persistent storage
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 0 provisioned devices from database
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 6 built-in phone templates
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for grandstream gxp2170
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for zultys zip33g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for cisco spa504g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for yealink t46s
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for zultys zip37g
+    2025-12-08 18:17:12 - PBX - INFO - Loaded custom template for polycom vvx450
+    2025-12-08 18:17:12 - PBX - INFO - Phone provisioning initialized
+    2025-12-08 18:17:12 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+    2025-12-08 18:17:12 - PBX - INFO - Server external IP: 192.168.1.14
+    2025-12-08 18:17:12 - PBX - INFO - API port: 8080
+    2025-12-08 18:17:12 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+    2025-12-08 18:17:12 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+    2025-12-08 18:17:12 - PBX - INFO - Webhook system enabled
+    2025-12-08 18:17:12 - PBX - INFO - Loaded 0 webhook subscriptions
+    2025-12-08 18:17:12 - PBX - INFO - Started 2 webhook delivery workers
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC signaling server enabled
+    2025-12-08 18:17:12 - PBX - INFO - Started WebRTC session cleanup thread
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC to SIP gateway initialized
+    2025-12-08 18:17:12 - PBX - INFO - WebRTC browser calling initialized
+    2025-12-08 18:17:12 - PBX - INFO - Loaded CRM provider: PhoneBook
+    2025-12-08 18:17:12 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+    2025-12-08 18:17:12 - PBX - INFO - CRM integration enabled
+    2025-12-08 18:17:12 - PBX - INFO - CRM integration and screen pop initialized
+    2025-12-08 18:17:12 - PBX - INFO - Hot-desking system enabled
+    2025-12-08 18:17:12 - PBX - INFO - Started hot-desking auto-logout thread
+    2025-12-08 18:17:12 - PBX - INFO - Hot-desking system initialized
+    2025-12-08 18:17:12 - PBX - INFO - Threat detection database schema initialized
+    2025-12-08 18:17:12 - PBX - INFO - Enhanced threat detection initialized
+    2025-12-08 18:17:12 - PBX - INFO - PBX Core initialized with all features
+    2025-12-08 18:17:12 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+    2025-12-08 18:17:12 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+    2025-12-08 18:17:12 - PBX - INFO - Stored phone registration: ext=1002, ip=192.168.1.101 (no MAC)
+
+[2025-12-08 18:17:12] FAILED: test_provisioning.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Phone Provisioning Tests
+    ============================================================
+    Testing MAC address normalization...
+    ✓ MAC address normalization works
+    Testing phone template...
+    ✓ Phone template works
+    Testing device registration...
+    ✓ Device registration works
+    Testing supported vendors and models...
+    ✓ Supported vendors and models work
+    Testing built-in templates...
+    ✓ Built-in templates exist
+    Testing configuration generation...
+    ✓ Configuration generation works
+    Testing unregistered device error messages...
+    ✓ Unregistered device error messages work
+    Testing similar MAC detection...
+    ✓ Similar MAC detection works
+    Testing MAC placeholder detection...
+    ✓ MAC placeholder detection works
+    ============================================================
+    All tests passed!
+    ============================================================
+
+[2025-12-08 18:17:12] FAILED: test_provisioning_persistence.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Provisioning Persistence Tests
+    ============================================================
+    Testing provisioning persistence...
+      Registered 2 devices in first instance
+      Devices persisted correctly: 2 devices loaded
+    ✓ Provisioning persistence works
+    Testing static IP assignment...
+      Set static IP: Static IP 192.168.1.100 set for device 00:15:65:12:34:56
+      Static IP verified: 192.168.1.100
+    ✓ Static IP assignment works
+    Testing device unregister removes from database...
+    ✓ Device unregister removes from database
+    ============================================================
+    Results: 3 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:17:13] FAILED: test_registered_phones.py
+  Return value: None (expected True)
+
+  Test Output:
+    ============================================================
+    Running Registered Phones Tests
+    ============================================================
+    Testing phone registration...
+    ✓ Phone registration with MAC works
+    Testing phone registration without MAC (IP-based)...
+    ✓ Phone registration without MAC (IP-based) works
+    Testing phone registration update...
+    ✓ Phone registration update works
+    Testing listing phones by extension...
+    ✓ Listing phones by extension works
+    Testing listing all phones...
+    ✓ Listing all phones works
+    Testing MAC preservation on re-registration...
+    ✓ MAC preservation on re-registration works
+    Testing IP preservation on re-registration...
+    ✓ IP preservation on re-registration works
+    Testing phone extension update (reprovisioning)...
+    ✓ Phone extension update (reprovisioning) works
+    Testing phone extension update validation...
+    ✓ Phone extension update validation works
+    ============================================================
+    Results: 9 passed, 0 failed
+    ============================================================
+
+[2025-12-08 18:17:28] FAILED: test_voicemail_database.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Database Tests
+    ============================================================
+    
+    Testing database configuration...
+    ✗ test_database_configuration failed: 
+    Testing database backend initialization...
+    ✓ Database backend initializes correctly
+    Testing voicemail database integration...
+    ✓ Voicemail database integration works correctly
+    Testing voicemail system without database...
+    ✓ Voicemail system works without database
+    
+    ============================================================
+    Results: 3 passed, 1 failed
+    ============================================================
+
+  Test Errors:
+    Traceback (most recent call last):
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 204, in run_all_tests
+        test()
+      File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 28, in test_database_configuration
+        assert config.get('database.port') == 5432
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    AssertionError
+
+[2025-12-08 18:17:28] FAILED: test_voicemail_email.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Voicemail Email Tests
+    ============================================================
+    
+    Testing email notifier configuration...
+    ✗ test_email_notifier_config failed: 
+    Testing email notifier initialization...
+    ✗ test_email_notifier_initialization failed: 
+    Testing voicemail system with email integration...
+    ✓ Voicemail system integrates with email correctly
+    Testing extension email configuration...
+    ✓ Extensions have email addresses configured
+    Testing no-answer timeout configuration...
+    ✓ No-answer timeout configured correctly
+    
+    ============================================================
+    Results: 3 passed, 2 failed
+    ============================================================
+
+[2025-12-08 18:17:33] FAILED: test_voicemail_transcription.py
+  Return value: False (expected True)
+
+  Test Errors:
+    test_transcription_file_not_found (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_file_not_found)
+    Test transcription with non-existent file ... ok
+    test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results ... ERROR
+    test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription ... ERROR
+    test_transcription_result_structure (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_result_structure)
+    Test that transcription result has correct structure ... ok
+    test_transcription_service_disabled (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_service_disabled)
+    Test transcription service when disabled ... ok
+    test_transcription_unsupported_provider (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_unsupported_provider)
+    Test transcription with unsupported provider ... ok
+    
+    ======================================================================
+    ERROR: test_transcription_google_no_results (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_no_results)
+    Test Google transcription with no results
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ======================================================================
+    ERROR: test_transcription_google_success (test_voicemail_transcription.TestVoicemailTranscription.test_transcription_google_success)
+    Test successful Google Cloud Speech-to-Text transcription
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/usr/lib/python3.12/unittest/mock.py", line 1387, in patched
+        with self.decoration_helper(patched,
+      File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+        return next(self.gen)
+               ^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1369, in decoration_helper
+        arg = exit_stack.enter_context(patching)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/contextlib.py", line 526, in enter_context
+        result = _enter(cm)
+                 ^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1458, in __enter__
+        original, local = self.get_original()
+                          ^^^^^^^^^^^^^^^^^^^
+      File "/usr/lib/python3.12/unittest/mock.py", line 1431, in get_original
+        raise AttributeError(
+    AttributeError: <module 'pbx.features.voicemail_transcription' from '/home/runner/work/PBX/PBX/pbx/features/voicemail_transcription.py'> does not have the attribute 'speech'
+    
+    ----------------------------------------------------------------------
+    Ran 6 tests in 0.015s
+    
+    FAILED (errors=2)
+
+================================================================================
+Test Run Completed: 2025-12-08 18:18:10
+Summary: 34 passed, 12 failed, 0 skipped
+================================================================================
