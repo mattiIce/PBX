@@ -128,7 +128,7 @@ def test_static_ip_assignment():
         provisioning = PhoneProvisioning(config, database=db)
         
         # Register a device
-        device = provisioning.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
+        provisioning.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
         
         # Set static IP
         success, message = provisioning.set_static_ip("00:15:65:12:34:56", "192.168.1.100")
@@ -183,7 +183,7 @@ def test_device_unregister_removes_from_db():
         
         # Create provisioning instance and register device
         provisioning1 = PhoneProvisioning(config, database=db1)
-        device = provisioning1.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
+        provisioning1.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
         
         # Verify device exists in memory
         assert len(provisioning1.devices) == 1, "Device not registered"
