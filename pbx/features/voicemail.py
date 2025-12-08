@@ -975,14 +975,37 @@ class VoicemailIVR:
         elif digit == '*':
             # Save the greeting and return to main menu
             if self.recorded_greeting_data:
-                self.mailbox.save_greeting(self.recorded_greeting_data)
-                self.recorded_greeting_data = None
+                try:
+                    success = self.mailbox.save_greeting(self.recorded_greeting_data)
+                    if success:
+                        self.recorded_greeting_data = None  # Clear only on successful save
+                        self.state = self.STATE_MAIN_MENU
+                        unread_count = len(self.mailbox.get_messages(unread_only=True))
+                        return {
+                            'action': 'play_prompt',
+                            'prompt': 'greeting_saved',
+                            'message': f'Greeting saved. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+                        }
+                    else:
+                        self.logger.error(f"Failed to save greeting for extension {self.extension_number}")
+                        return {
+                            'action': 'play_prompt',
+                            'prompt': 'error',
+                            'message': 'Error saving greeting. Press 2 to try again or 3 to cancel.'
+                        }
+                except Exception as e:
+                    self.logger.error(f"Error saving greeting: {e}")
+                    return {
+                        'action': 'play_prompt',
+                        'prompt': 'error',
+                        'message': 'Error saving greeting. Press 2 to try again or 3 to cancel.'
+                    }
             self.state = self.STATE_MAIN_MENU
             unread_count = len(self.mailbox.get_messages(unread_only=True))
             return {
                 'action': 'play_prompt',
-                'prompt': 'greeting_saved',
-                'message': f'Greeting saved. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
+                'prompt': 'main_menu',
+                'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
             }
         
         return {

@@ -2073,8 +2073,9 @@ class PBXCore:
                                                             greeting_audio = b''.join(recorder.recorded_data)
                                                             voicemail_ivr.save_recorded_greeting(greeting_audio)
                                                             self.logger.info(f"Saved recorded greeting ({len(greeting_audio)} bytes)")
-                                                        # Handle the returned action (should be greeting review menu)
-                                                        if action['action'] == 'play_prompt':
+                                                        # Handle the returned action
+                                                        if action.get('action') == 'play_prompt':
+                                                            # Play greeting review menu prompt
                                                             prompt_type = action.get('prompt', 'greeting_review_menu')
                                                             prompt_audio = get_prompt_audio(prompt_type)
                                                             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
@@ -2087,6 +2088,12 @@ class PBXCore:
                                                                     os.unlink(prompt_file)
                                                                 except OSError:
                                                                     pass
+                                                        elif action.get('action') == 'stop_recording':
+                                                            # Also valid, just log it
+                                                            self.logger.info(f"IVR returned stop_recording action, continuing")
+                                                        else:
+                                                            # Unexpected action type
+                                                            self.logger.warning(f"Unexpected action from IVR after #: {action.get('action')}")
                                                         # Clear recorder after saving
                                                         recorder.recorded_data = []
                                                         break
