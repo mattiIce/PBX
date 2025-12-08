@@ -7,6 +7,10 @@ import json
 from datetime import datetime
 from pbx.utils.logger import get_logger
 
+# Constants for Vosk transcription
+VOSK_FRAME_SIZE = 4000  # Number of frames to read per chunk
+VOSK_DEFAULT_CONFIDENCE = 0.95  # Default confidence when Vosk doesn't provide one
+
 # Import Vosk (free, offline speech recognition)
 try:
     from vosk import Model, KaldiRecognizer
@@ -147,6 +151,28 @@ class VoicemailTranscriptionService:
                 'error': str(e)
             }
 
+    def _create_error_response(self, error_msg, language, provider=None):
+        """
+        Helper method to create error response structure
+        
+        Args:
+            error_msg: Error message string
+            language: Language code
+            provider: Provider name (optional)
+            
+        Returns:
+            Dictionary with error response structure
+        """
+        return {
+            'success': False,
+            'text': None,
+            'confidence': 0.0,
+            'language': language,
+            'provider': provider or self.provider,
+            'timestamp': datetime.now(),
+            'error': error_msg
+        }
+
     def _transcribe_vosk(self, audio_file_path, language='en-US'):
         """
         Transcribe using Vosk (offline, free speech recognition)
@@ -161,29 +187,13 @@ class VoicemailTranscriptionService:
         if not VOSK_AVAILABLE:
             error_msg = "Vosk library not installed. Install with: pip install vosk"
             self.logger.error(error_msg)
-            return {
-                'success': False,
-                'text': None,
-                'confidence': 0.0,
-                'language': language,
-                'provider': 'vosk',
-                'timestamp': datetime.now(),
-                'error': error_msg
-            }
+            return self._create_error_response(error_msg, language, 'vosk')
 
         if not self.vosk_model:
             error_msg = f"Vosk model not loaded. Check model path: {self.vosk_model_path}"
             self.logger.error(error_msg)
             self.logger.info("Download models from: https://alphacephei.com/vosk/models")
-            return {
-                'success': False,
-                'text': None,
-                'confidence': 0.0,
-                'language': language,
-                'provider': 'vosk',
-                'timestamp': datetime.now(),
-                'error': error_msg
-            }
+            return self._create_error_response(error_msg, language, 'vosk')
 
         try:
             # Open WAV file
@@ -194,23 +204,15 @@ class VoicemailTranscriptionService:
                 wf.close()
                 error_msg = "Audio must be mono channel"
                 self.logger.error(error_msg)
-                return {
-                    'success': False,
-                    'text': None,
-                    'confidence': 0.0,
-                    'language': language,
-                    'provider': 'vosk',
-                    'timestamp': datetime.now(),
-                    'error': error_msg
-                }
+                return self._create_error_response(error_msg, language, 'vosk')
             
-            # Vosk works best with 16kHz, 8kHz is also acceptable
+            # Check sample rate - Vosk works best with 8kHz or 16kHz
             sample_rate = wf.getframerate()
             if sample_rate not in [8000, 16000, 32000, 44100, 48000]:
                 wf.close()
                 error_msg = f"Unsupported sample rate: {sample_rate}. Use 8000, 16000, 32000, 44100, or 48000 Hz"
-                self.logger.warning(error_msg)
-                # Continue anyway, might still work
+                self.logger.error(error_msg)
+                return self._create_error_response(error_msg, language, 'vosk')
             
             # Create recognizer
             rec = KaldiRecognizer(self.vosk_model, sample_rate)
@@ -221,7 +223,7 @@ class VoicemailTranscriptionService:
             results = []
             
             while True:
-                data = wf.readframes(4000)
+                data = wf.readframes(VOSK_FRAME_SIZE)
                 if len(data) == 0:
                     break
                 if rec.AcceptWaveform(data):
@@ -246,7 +248,7 @@ class VoicemailTranscriptionService:
                 return {
                     'success': True,
                     'text': text,
-                    'confidence': 0.95,  # Vosk doesn't provide confidence, use default high value
+                    'confidence': VOSK_DEFAULT_CONFIDENCE,  # Vosk doesn't provide confidence
                     'language': language,
                     'provider': 'vosk',
                     'timestamp': datetime.now(),
@@ -254,27 +256,11 @@ class VoicemailTranscriptionService:
                 }
             else:
                 self.logger.warning("Transcription returned empty text")
-                return {
-                    'success': False,
-                    'text': None,
-                    'confidence': 0.0,
-                    'language': language,
-                    'provider': 'vosk',
-                    'timestamp': datetime.now(),
-                    'error': 'Transcription returned empty text'
-                }
+                return self._create_error_response('Transcription returned empty text', language, 'vosk')
 
         except Exception as e:
             self.logger.error(f"Vosk transcription error: {e}")
-            return {
-                'success': False,
-                'text': None,
-                'confidence': 0.0,
-                'language': language,
-                'provider': 'vosk',
-                'timestamp': datetime.now(),
-                'error': str(e)
-            }
+            return self._create_error_response(str(e), language, 'vosk')
 
     def _transcribe_google(self, audio_file_path, language='en-US'):
         """
