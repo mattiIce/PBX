@@ -83,7 +83,7 @@ def test_registered_phone_lookup_methods():
     registered_phones_db = RegisteredPhonesDB(db)
     
     # Register a test phone
-    success = _ = registered_phones_db.register_phone(
+    success, _ = registered_phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565123456",
@@ -244,7 +244,7 @@ def test_no_mac_in_sip_registration():
     registered_phones_db = RegisteredPhonesDB(db)
     
     # Phone registers WITHOUT MAC
-    success = _ = registered_phones_db.register_phone(
+    success, _ = registered_phones_db.register_phone(
         extension_number="1003",
         ip_address="192.168.1.102",
         mac_address=None,  # No MAC provided
