@@ -1068,7 +1068,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                                 contact_uri=None  # Not available during provisioning request
                             )
                             if success:
-                                logger.info(f"  Stored IP-MAC mapping: {request_info['ip']} → {stored_mac or normalized_mac} (ext {device.extension_number})")
+                                # stored_mac should equal normalized_mac since we're providing it
+                                logger.info(f"  Stored IP-MAC mapping: {request_info['ip']} → {stored_mac} (ext {device.extension_number})")
                     except Exception as e:
                         # Don't fail provisioning if database storage fails
                         logger.warning(f"  Could not store IP-MAC mapping in database: {e}")
