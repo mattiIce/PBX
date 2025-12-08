@@ -1,7 +1,7 @@
 ======================================================================
 PBX System Test Failures Log
 ======================================================================
-Generated: 2025-12-08 18:49:53
+Generated: 2025-12-08 18:53:03
 Total Tests: 46
 Passed: 33
 Failed: 13
@@ -39,18 +39,18 @@ Results: 3 passed, 2 failed
 
 
 === STDERR ===
-2025-12-08 18:48:06 - PBX - INFO - Zoom integration enabled
-2025-12-08 18:48:06 - PBX - INFO - Routing call from +15551234567 to +15559876543 via Zoom Phone
-2025-12-08 18:48:06 - PBX - INFO - Zoom Phone SIP URI: +15559876543@pbx.zoom.us
-2025-12-08 18:48:06 - PBX - WARNING - Zoom Phone SIP trunking requires:
+2025-12-08 18:51:16 - PBX - INFO - Zoom integration enabled
+2025-12-08 18:51:16 - PBX - INFO - Routing call from +15551234567 to +15559876543 via Zoom Phone
+2025-12-08 18:51:16 - PBX - INFO - Zoom Phone SIP URI: +15559876543@pbx.zoom.us
+2025-12-08 18:51:16 - PBX - WARNING - Zoom Phone SIP trunking requires:
 1. Zoom Phone license and account
 2. Configure SIP trunk credentials in Zoom admin portal
 3. Add trunk configuration to config.yml
 4. Configure outbound routing rules
 5. Test connectivity to pbx.zoom.us
-2025-12-08 18:48:06 - PBX - INFO - Routing call from +15551234567 to +15559876543 via Zoom Phone
-2025-12-08 18:48:06 - PBX - INFO - Zoom Phone SIP URI: +15559876543@pbx.zoom.us
-2025-12-08 18:48:06 - PBX - WARNING - No Zoom Phone SIP trunk found. Configure a trunk in config.yml:
+2025-12-08 18:51:16 - PBX - INFO - Routing call from +15551234567 to +15559876543 via Zoom Phone
+2025-12-08 18:51:16 - PBX - INFO - Zoom Phone SIP URI: +15559876543@pbx.zoom.us
+2025-12-08 18:51:16 - PBX - WARNING - No Zoom Phone SIP trunk found. Configure a trunk in config.yml:
 sip_trunks:
   - id: zoom_phone
     name: Zoom Phone Trunk
@@ -58,21 +58,21 @@ sip_trunks:
     port: 5060
     username: your_zoom_sip_username
     password: your_zoom_sip_password
-2025-12-08 18:48:06 - PBX - INFO - Routing call from +15551234567 to +15559876543 via Zoom Phone
-2025-12-08 18:48:06 - PBX - INFO - Zoom Phone SIP URI: +15559876543@pbx.zoom.us
-2025-12-08 18:48:06 - PBX - INFO - Using SIP trunk 'Zoom Phone Trunk' for Zoom Phone call
-2025-12-08 18:48:06 - PBX - INFO - Initiating SIP call to +15559876543@pbx.zoom.us via trunk Zoom Phone Trunk
-2025-12-08 18:48:06 - PBX - INFO - Call routed to Zoom Phone: +15551234567 -> +15559876543
-2025-12-08 18:48:06 - PBX - ERROR - Teams integration requires 'msal' library. Install with: pip install msal
-2025-12-08 18:48:06 - PBX - WARNING - Teams integration is not enabled
-2025-12-08 18:48:06 - PBX - WARNING - Teams integration is not enabled
-2025-12-08 18:48:06 - PBX - WARNING - Teams integration is not enabled
-2025-12-08 18:48:06 - PBX - ERROR - Outlook integration requires 'msal' library. Install with: pip install msal
-2025-12-08 18:48:06 - PBX - WARNING - Outlook integration is not enabled
-2025-12-08 18:48:06 - PBX - WARNING - Outlook integration is not enabled
-2025-12-08 18:48:06 - PBX - WARNING - Zoom integration is not enabled
-2025-12-08 18:48:06 - PBX - WARNING - Teams integration is not enabled
-2025-12-08 18:48:06 - PBX - WARNING - Outlook integration is not enabled
+2025-12-08 18:51:16 - PBX - INFO - Routing call from +15551234567 to +15559876543 via Zoom Phone
+2025-12-08 18:51:16 - PBX - INFO - Zoom Phone SIP URI: +15559876543@pbx.zoom.us
+2025-12-08 18:51:16 - PBX - INFO - Using SIP trunk 'Zoom Phone Trunk' for Zoom Phone call
+2025-12-08 18:51:16 - PBX - INFO - Initiating SIP call to +15559876543@pbx.zoom.us via trunk Zoom Phone Trunk
+2025-12-08 18:51:16 - PBX - INFO - Call routed to Zoom Phone: +15551234567 -> +15559876543
+2025-12-08 18:51:16 - PBX - ERROR - Teams integration requires 'msal' library. Install with: pip install msal
+2025-12-08 18:51:16 - PBX - WARNING - Teams integration is not enabled
+2025-12-08 18:51:16 - PBX - WARNING - Teams integration is not enabled
+2025-12-08 18:51:16 - PBX - WARNING - Teams integration is not enabled
+2025-12-08 18:51:16 - PBX - ERROR - Outlook integration requires 'msal' library. Install with: pip install msal
+2025-12-08 18:51:16 - PBX - WARNING - Outlook integration is not enabled
+2025-12-08 18:51:16 - PBX - WARNING - Outlook integration is not enabled
+2025-12-08 18:51:16 - PBX - WARNING - Zoom integration is not enabled
+2025-12-08 18:51:16 - PBX - WARNING - Teams integration is not enabled
+2025-12-08 18:51:16 - PBX - WARNING - Outlook integration is not enabled
 
 
 ----------------------------------------------------------------------
@@ -105,132 +105,132 @@ Results: 6 passed, 1 failed
 
 
 === STDERR ===
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Saved custom greeting for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Saved custom greeting for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Deleted custom greeting for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Voicemail IVR initialized for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Voicemail IVR initialized for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Voicemail IVR initialized for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Voicemail IVR initialized for extension 1001
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:07 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:48:07 - PBX - INFO - Saved custom greeting for extension 1001
-2025-12-08 18:48:07 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:07 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:07 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:07 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:07 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:07 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Saved custom greeting for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Saved custom greeting for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Deleted custom greeting for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Voicemail IVR initialized for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Voicemail IVR initialized for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Voicemail IVR initialized for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Voicemail IVR initialized for extension 1001
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:17 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:51:17 - PBX - INFO - Saved custom greeting for extension 1001
+2025-12-08 18:51:17 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:51:17 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:51:17 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:51:17 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:51:17 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:51:17 - PBX - WARNING - Database not available - loading voicemails from file system only
 
 
 ----------------------------------------------------------------------
@@ -255,26 +255,26 @@ Results: 3 passed, 0 failed
 
 
 === STDERR ===
-2025-12-08 18:48:47 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:47 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:47 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:47 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:47 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:47 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:47 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:47 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:47 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:47 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:47 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:47 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:47 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:47 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:47 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:47 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:47 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:47 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:47 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:47 - PBX - INFO - Database tables created successfully
+2025-12-08 18:51:57 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:51:57 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:51:57 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:51:57 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:51:57 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:51:57 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:51:57 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:51:57 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:51:57 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:51:57 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:51:57 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:51:57 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:51:57 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:51:57 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:51:57 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:51:57 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:51:57 - PBX - INFO - Creating database tables...
+2025-12-08 18:51:57 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:51:57 - PBX - INFO - Schema migration check complete
+2025-12-08 18:51:57 - PBX - INFO - Database tables created successfully
 
 
 ----------------------------------------------------------------------
@@ -321,23 +321,23 @@ All tests passed! ✓
 
 
 === STDERR ===
-2025-12-08 18:48:53 - PBX - INFO - Phone book feature enabled
-2025-12-08 18:48:53 - PBX - INFO - Phone book feature enabled
-2025-12-08 18:48:53 - PBX - INFO - Paging system enabled (STUB IMPLEMENTATION)
-2025-12-08 18:48:53 - PBX - INFO - Paging prefix: 7
-2025-12-08 18:48:53 - PBX - INFO - All-call extension: 700
-2025-12-08 18:48:53 - PBX - INFO - Configured zones: 0
-2025-12-08 18:48:53 - PBX - WARNING - NOTE: This is a stub implementation. Full paging requires hardware integration.
-2025-12-08 18:48:53 - PBX - INFO - Added paging zone: 701 - Zone 1 - Office
-2025-12-08 18:48:53 - PBX - INFO - Removed paging zone: 701 - Zone 1 - Office
-2025-12-08 18:48:53 - PBX - INFO - Paging system enabled (STUB IMPLEMENTATION)
-2025-12-08 18:48:53 - PBX - INFO - Paging prefix: 7
-2025-12-08 18:48:53 - PBX - INFO - All-call extension: 700
-2025-12-08 18:48:53 - PBX - INFO - Configured zones: 0
-2025-12-08 18:48:53 - PBX - WARNING - NOTE: This is a stub implementation. Full paging requires hardware integration.
-2025-12-08 18:48:53 - PBX - INFO - Configured DAC device: paging-gateway-1 (cisco_vg224)
-2025-12-08 18:48:53 - PBX - INFO - Phone book feature disabled
-2025-12-08 18:48:53 - PBX - INFO - Paging system disabled
+2025-12-08 18:52:03 - PBX - INFO - Phone book feature enabled
+2025-12-08 18:52:03 - PBX - INFO - Phone book feature enabled
+2025-12-08 18:52:03 - PBX - INFO - Paging system enabled (STUB IMPLEMENTATION)
+2025-12-08 18:52:03 - PBX - INFO - Paging prefix: 7
+2025-12-08 18:52:03 - PBX - INFO - All-call extension: 700
+2025-12-08 18:52:03 - PBX - INFO - Configured zones: 0
+2025-12-08 18:52:03 - PBX - WARNING - NOTE: This is a stub implementation. Full paging requires hardware integration.
+2025-12-08 18:52:03 - PBX - INFO - Added paging zone: 701 - Zone 1 - Office
+2025-12-08 18:52:03 - PBX - INFO - Removed paging zone: 701 - Zone 1 - Office
+2025-12-08 18:52:03 - PBX - INFO - Paging system enabled (STUB IMPLEMENTATION)
+2025-12-08 18:52:03 - PBX - INFO - Paging prefix: 7
+2025-12-08 18:52:03 - PBX - INFO - All-call extension: 700
+2025-12-08 18:52:03 - PBX - INFO - Configured zones: 0
+2025-12-08 18:52:03 - PBX - WARNING - NOTE: This is a stub implementation. Full paging requires hardware integration.
+2025-12-08 18:52:03 - PBX - INFO - Configured DAC device: paging-gateway-1 (cisco_vg224)
+2025-12-08 18:52:03 - PBX - INFO - Phone book feature disabled
+2025-12-08 18:52:03 - PBX - INFO - Paging system disabled
 
 
 ----------------------------------------------------------------------
@@ -372,270 +372,270 @@ Results: 3 passed, 0 failed
 
 
 === STDERR ===
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
-2025-12-08 18:48:53 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:53 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:53 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:53 - PBX - INFO -   Database file: pbx.db
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:53 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
-2025-12-08 18:48:53 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:53 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:53 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:53 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:53 - PBX - INFO - Database backend initialized successfully (sqlite)
-2025-12-08 18:48:53 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
-2025-12-08 18:48:53 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
-2025-12-08 18:48:53 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
-2025-12-08 18:48:53 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
-2025-12-08 18:48:53 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
-2025-12-08 18:48:53 - PBX - INFO - No extensions found in database, loading from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loading 4 extensions from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1004 (Customer Service)
-2025-12-08 18:48:53 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:53 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:53 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:53 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:53 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:53 - PBX - INFO - Statistics and analytics engine initialized
-2025-12-08 18:48:53 - PBX - INFO - Auto Attendant initialized on extension 0
-2025-12-08 18:48:53 - PBX - INFO - Menu options: 4
-2025-12-08 18:48:53 - PBX - INFO - Auto Attendant initialized on extension 0
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:53 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
-2025-12-08 18:48:53 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
-2025-12-08 18:48:53 - PBX - INFO - Webhook system enabled
-2025-12-08 18:48:53 - PBX - INFO - Loaded 0 webhook subscriptions
-2025-12-08 18:48:53 - PBX - INFO - Started 2 webhook delivery workers
-2025-12-08 18:48:53 - PBX - INFO - WebRTC signaling server enabled
-2025-12-08 18:48:53 - PBX - INFO - Started WebRTC session cleanup thread
-2025-12-08 18:48:53 - PBX - INFO - WebRTC to SIP gateway initialized
-2025-12-08 18:48:53 - PBX - INFO - WebRTC browser calling initialized
-2025-12-08 18:48:53 - PBX - INFO - Loaded CRM provider: PhoneBook
-2025-12-08 18:48:53 - PBX - INFO - Loaded CRM provider: ActiveDirectory
-2025-12-08 18:48:53 - PBX - INFO - CRM integration enabled
-2025-12-08 18:48:53 - PBX - INFO - CRM integration and screen pop initialized
-2025-12-08 18:48:53 - PBX - INFO - Hot-desking system enabled
-2025-12-08 18:48:53 - PBX - INFO - Started hot-desking auto-logout thread
-2025-12-08 18:48:53 - PBX - INFO - Hot-desking system initialized
-2025-12-08 18:48:53 - PBX - INFO - Threat detection database schema initialized
-2025-12-08 18:48:53 - PBX - INFO - Enhanced threat detection initialized
-2025-12-08 18:48:53 - PBX - INFO - PBX Core initialized with all features
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
-2025-12-08 18:48:53 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:53 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:53 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:53 - PBX - INFO -   Database file: pbx.db
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:53 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
-2025-12-08 18:48:53 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:53 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:53 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:53 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:53 - PBX - INFO - Database backend initialized successfully (sqlite)
-2025-12-08 18:48:53 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
-2025-12-08 18:48:53 - PBX - INFO - No extensions found in database, loading from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loading 4 extensions from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1004 (Customer Service)
-2025-12-08 18:48:53 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:53 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:53 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:53 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:53 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:53 - PBX - INFO - Statistics and analytics engine initialized
-2025-12-08 18:48:53 - PBX - INFO - Auto Attendant initialized on extension 0
-2025-12-08 18:48:53 - PBX - INFO - Menu options: 4
-2025-12-08 18:48:53 - PBX - INFO - Auto Attendant initialized on extension 0
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:53 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
-2025-12-08 18:48:53 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
-2025-12-08 18:48:53 - PBX - INFO - Webhook system enabled
-2025-12-08 18:48:53 - PBX - INFO - Loaded 0 webhook subscriptions
-2025-12-08 18:48:53 - PBX - INFO - Started 2 webhook delivery workers
-2025-12-08 18:48:53 - PBX - INFO - WebRTC signaling server enabled
-2025-12-08 18:48:53 - PBX - INFO - Started WebRTC session cleanup thread
-2025-12-08 18:48:53 - PBX - INFO - WebRTC to SIP gateway initialized
-2025-12-08 18:48:53 - PBX - INFO - WebRTC browser calling initialized
-2025-12-08 18:48:53 - PBX - INFO - Loaded CRM provider: PhoneBook
-2025-12-08 18:48:53 - PBX - INFO - Loaded CRM provider: ActiveDirectory
-2025-12-08 18:48:53 - PBX - INFO - CRM integration enabled
-2025-12-08 18:48:53 - PBX - INFO - CRM integration and screen pop initialized
-2025-12-08 18:48:53 - PBX - INFO - Hot-desking system enabled
-2025-12-08 18:48:53 - PBX - INFO - Started hot-desking auto-logout thread
-2025-12-08 18:48:53 - PBX - INFO - Hot-desking system initialized
-2025-12-08 18:48:53 - PBX - INFO - Threat detection database schema initialized
-2025-12-08 18:48:53 - PBX - INFO - Enhanced threat detection initialized
-2025-12-08 18:48:53 - PBX - INFO - PBX Core initialized with all features
-2025-12-08 18:48:53 - PBX - INFO - Database disconnected
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:53 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:53 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:53 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:53 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:53 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:53 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:53 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:53 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:53 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
-2025-12-08 18:48:53 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
-2025-12-08 18:48:53 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
-2025-12-08 18:48:53 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
-2025-12-08 18:48:53 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
-2025-12-08 18:48:53 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:53 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:53 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:53 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:53 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:53 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:53 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:53 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:53 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
-2025-12-08 18:48:53 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:53 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:53 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:53 - PBX - INFO -   Database file: pbx.db
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:53 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
-2025-12-08 18:48:53 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:53 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:53 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:53 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:53 - PBX - INFO - Database backend initialized successfully (sqlite)
-2025-12-08 18:48:53 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
-2025-12-08 18:48:53 - PBX - INFO - No extensions found in database, loading from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loading 4 extensions from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1004 (Customer Service)
-2025-12-08 18:48:53 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:48:53 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:48:53 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:48:53 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:48:53 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:48:53 - PBX - INFO - Statistics and analytics engine initialized
-2025-12-08 18:48:53 - PBX - INFO - Auto Attendant initialized on extension 0
-2025-12-08 18:48:53 - PBX - INFO - Menu options: 4
-2025-12-08 18:48:53 - PBX - INFO - Auto Attendant initialized on extension 0
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:53 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
-2025-12-08 18:48:53 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
-2025-12-08 18:48:53 - PBX - INFO - Webhook system enabled
-2025-12-08 18:48:53 - PBX - INFO - Loaded 0 webhook subscriptions
-2025-12-08 18:48:53 - PBX - INFO - Started 2 webhook delivery workers
-2025-12-08 18:48:53 - PBX - INFO - WebRTC signaling server enabled
-2025-12-08 18:48:53 - PBX - INFO - Started WebRTC session cleanup thread
-2025-12-08 18:48:53 - PBX - INFO - WebRTC to SIP gateway initialized
-2025-12-08 18:48:53 - PBX - INFO - WebRTC browser calling initialized
-2025-12-08 18:48:53 - PBX - INFO - Loaded CRM provider: PhoneBook
-2025-12-08 18:48:53 - PBX - INFO - Loaded CRM provider: ActiveDirectory
-2025-12-08 18:48:53 - PBX - INFO - CRM integration enabled
-2025-12-08 18:48:53 - PBX - INFO - CRM integration and screen pop initialized
-2025-12-08 18:48:53 - PBX - INFO - Hot-desking system enabled
-2025-12-08 18:48:53 - PBX - INFO - Started hot-desking auto-logout thread
-2025-12-08 18:48:53 - PBX - INFO - Hot-desking system initialized
-2025-12-08 18:48:53 - PBX - INFO - Threat detection database schema initialized
-2025-12-08 18:48:53 - PBX - INFO - Enhanced threat detection initialized
-2025-12-08 18:48:53 - PBX - INFO - PBX Core initialized with all features
-2025-12-08 18:48:53 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
-2025-12-08 18:48:53 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
-2025-12-08 18:48:53 - PBX - INFO - Stored phone registration: ext=1002, ip=192.168.1.101 (no MAC)
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+2025-12-08 18:52:03 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:03 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:03 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:03 - PBX - INFO -   Database file: pbx.db
+2025-12-08 18:52:03 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:03 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+2025-12-08 18:52:03 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:03 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:03 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:03 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:03 - PBX - INFO - Database backend initialized successfully (sqlite)
+2025-12-08 18:52:03 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+2025-12-08 18:52:03 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
+2025-12-08 18:52:03 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
+2025-12-08 18:52:03 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
+2025-12-08 18:52:03 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
+2025-12-08 18:52:03 - PBX - INFO - No extensions found in database, loading from config.yml
+2025-12-08 18:52:03 - PBX - INFO - Loading 4 extensions from config.yml
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1004 (Customer Service)
+2025-12-08 18:52:03 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:03 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:03 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:03 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:03 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:03 - PBX - INFO - Statistics and analytics engine initialized
+2025-12-08 18:52:03 - PBX - INFO - Auto Attendant initialized on extension 0
+2025-12-08 18:52:03 - PBX - INFO - Menu options: 4
+2025-12-08 18:52:03 - PBX - INFO - Auto Attendant initialized on extension 0
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:03 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:03 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:03 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:03 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:03 - PBX - INFO - API port: 8080
+2025-12-08 18:52:03 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+2025-12-08 18:52:03 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+2025-12-08 18:52:03 - PBX - INFO - Webhook system enabled
+2025-12-08 18:52:03 - PBX - INFO - Loaded 0 webhook subscriptions
+2025-12-08 18:52:03 - PBX - INFO - Started 2 webhook delivery workers
+2025-12-08 18:52:03 - PBX - INFO - WebRTC signaling server enabled
+2025-12-08 18:52:03 - PBX - INFO - Started WebRTC session cleanup thread
+2025-12-08 18:52:03 - PBX - INFO - WebRTC to SIP gateway initialized
+2025-12-08 18:52:03 - PBX - INFO - WebRTC browser calling initialized
+2025-12-08 18:52:03 - PBX - INFO - Loaded CRM provider: PhoneBook
+2025-12-08 18:52:03 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+2025-12-08 18:52:03 - PBX - INFO - CRM integration enabled
+2025-12-08 18:52:03 - PBX - INFO - CRM integration and screen pop initialized
+2025-12-08 18:52:03 - PBX - INFO - Hot-desking system enabled
+2025-12-08 18:52:03 - PBX - INFO - Started hot-desking auto-logout thread
+2025-12-08 18:52:03 - PBX - INFO - Hot-desking system initialized
+2025-12-08 18:52:03 - PBX - INFO - Threat detection database schema initialized
+2025-12-08 18:52:03 - PBX - INFO - Enhanced threat detection initialized
+2025-12-08 18:52:03 - PBX - INFO - PBX Core initialized with all features
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+2025-12-08 18:52:03 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:03 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:03 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:03 - PBX - INFO -   Database file: pbx.db
+2025-12-08 18:52:03 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:03 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+2025-12-08 18:52:03 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:03 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:03 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:03 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:03 - PBX - INFO - Database backend initialized successfully (sqlite)
+2025-12-08 18:52:03 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+2025-12-08 18:52:03 - PBX - INFO - No extensions found in database, loading from config.yml
+2025-12-08 18:52:03 - PBX - INFO - Loading 4 extensions from config.yml
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1004 (Customer Service)
+2025-12-08 18:52:03 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:03 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:03 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:03 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:03 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:03 - PBX - INFO - Statistics and analytics engine initialized
+2025-12-08 18:52:03 - PBX - INFO - Auto Attendant initialized on extension 0
+2025-12-08 18:52:03 - PBX - INFO - Menu options: 4
+2025-12-08 18:52:03 - PBX - INFO - Auto Attendant initialized on extension 0
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:03 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:03 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:03 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:03 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:03 - PBX - INFO - API port: 8080
+2025-12-08 18:52:03 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+2025-12-08 18:52:03 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+2025-12-08 18:52:03 - PBX - INFO - Webhook system enabled
+2025-12-08 18:52:03 - PBX - INFO - Loaded 0 webhook subscriptions
+2025-12-08 18:52:03 - PBX - INFO - Started 2 webhook delivery workers
+2025-12-08 18:52:03 - PBX - INFO - WebRTC signaling server enabled
+2025-12-08 18:52:03 - PBX - INFO - Started WebRTC session cleanup thread
+2025-12-08 18:52:03 - PBX - INFO - WebRTC to SIP gateway initialized
+2025-12-08 18:52:03 - PBX - INFO - WebRTC browser calling initialized
+2025-12-08 18:52:03 - PBX - INFO - Loaded CRM provider: PhoneBook
+2025-12-08 18:52:03 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+2025-12-08 18:52:03 - PBX - INFO - CRM integration enabled
+2025-12-08 18:52:03 - PBX - INFO - CRM integration and screen pop initialized
+2025-12-08 18:52:03 - PBX - INFO - Hot-desking system enabled
+2025-12-08 18:52:03 - PBX - INFO - Started hot-desking auto-logout thread
+2025-12-08 18:52:03 - PBX - INFO - Hot-desking system initialized
+2025-12-08 18:52:03 - PBX - INFO - Threat detection database schema initialized
+2025-12-08 18:52:03 - PBX - INFO - Enhanced threat detection initialized
+2025-12-08 18:52:03 - PBX - INFO - PBX Core initialized with all features
+2025-12-08 18:52:03 - PBX - INFO - Database disconnected
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:03 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:03 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:03 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:03 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:03 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:03 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:03 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:03 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:03 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:03 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+2025-12-08 18:52:03 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+2025-12-08 18:52:03 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+2025-12-08 18:52:03 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+2025-12-08 18:52:03 - PBX - INFO - Extension 1001 registered from ('192.168.1.100', 5060)
+2025-12-08 18:52:03 - PBX - INFO - Stored phone registration: ext=1001, ip=192.168.1.100, mac=001565123456
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:03 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:03 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:03 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:03 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:03 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:03 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:03 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:03 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:03 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary
+2025-12-08 18:52:03 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:03 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:03 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:03 - PBX - INFO -   Database file: pbx.db
+2025-12-08 18:52:03 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:03 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/pbx.db
+2025-12-08 18:52:03 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:03 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:03 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:03 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:03 - PBX - INFO - Database backend initialized successfully (sqlite)
+2025-12-08 18:52:03 - PBX - INFO - Extensions, voicemail metadata, and phone registrations will be stored in database
+2025-12-08 18:52:03 - PBX - INFO - No extensions found in database, loading from config.yml
+2025-12-08 18:52:03 - PBX - INFO - Loading 4 extensions from config.yml
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+2025-12-08 18:52:03 - PBX - INFO - Loaded extension 1004 (Customer Service)
+2025-12-08 18:52:03 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:03 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:03 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:03 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:03 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:03 - PBX - INFO - Statistics and analytics engine initialized
+2025-12-08 18:52:03 - PBX - INFO - Auto Attendant initialized on extension 0
+2025-12-08 18:52:03 - PBX - INFO - Menu options: 4
+2025-12-08 18:52:03 - PBX - INFO - Auto Attendant initialized on extension 0
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:03 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:03 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:03 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:03 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:03 - PBX - INFO - API port: 8080
+2025-12-08 18:52:03 - PBX - ERROR - Active Directory integration requires 'ldap3' library. Install with: pip install ldap3
+2025-12-08 18:52:03 - PBX - WARNING - Active Directory integration enabled in config but failed to initialize
+2025-12-08 18:52:03 - PBX - INFO - Webhook system enabled
+2025-12-08 18:52:03 - PBX - INFO - Loaded 0 webhook subscriptions
+2025-12-08 18:52:03 - PBX - INFO - Started 2 webhook delivery workers
+2025-12-08 18:52:03 - PBX - INFO - WebRTC signaling server enabled
+2025-12-08 18:52:03 - PBX - INFO - Started WebRTC session cleanup thread
+2025-12-08 18:52:03 - PBX - INFO - WebRTC to SIP gateway initialized
+2025-12-08 18:52:03 - PBX - INFO - WebRTC browser calling initialized
+2025-12-08 18:52:03 - PBX - INFO - Loaded CRM provider: PhoneBook
+2025-12-08 18:52:03 - PBX - INFO - Loaded CRM provider: ActiveDirectory
+2025-12-08 18:52:03 - PBX - INFO - CRM integration enabled
+2025-12-08 18:52:03 - PBX - INFO - CRM integration and screen pop initialized
+2025-12-08 18:52:03 - PBX - INFO - Hot-desking system enabled
+2025-12-08 18:52:03 - PBX - INFO - Started hot-desking auto-logout thread
+2025-12-08 18:52:03 - PBX - INFO - Hot-desking system initialized
+2025-12-08 18:52:03 - PBX - INFO - Threat detection database schema initialized
+2025-12-08 18:52:03 - PBX - INFO - Enhanced threat detection initialized
+2025-12-08 18:52:03 - PBX - INFO - PBX Core initialized with all features
+2025-12-08 18:52:03 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+2025-12-08 18:52:03 - PBX - INFO - Extension 1002 registered from ('192.168.1.101', 5060)
+2025-12-08 18:52:03 - PBX - INFO - Stored phone registration: ext=1002, ip=192.168.1.101 (no MAC)
 
 
 ----------------------------------------------------------------------
@@ -670,195 +670,195 @@ All tests passed!
 
 
 === STDERR ===
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use in-memory storage only
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (in-memory only)
-2025-12-08 18:48:53 - PBX - INFO - Unregistered device 00:15:65:12:34:56 (removed from memory)
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use in-memory storage only
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use in-memory storage only
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use in-memory storage only
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
-2025-12-08 18:48:53 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
-2025-12-08 18:48:53 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
-2025-12-08 18:48:53 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
-2025-12-08 18:48:53 - PBX - INFO - Loading 4 extensions from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1004 (Customer Service)
-2025-12-08 18:48:53 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (in-memory only)
-2025-12-08 18:48:53 - PBX - INFO - Provisioning request received for MAC: 00:15:65:12:34:56
-2025-12-08 18:48:53 - PBX - INFO -   Found device: vendor=zultys, model=zip33g, extension=1001
-2025-12-08 18:48:53 - PBX - INFO -   Extension found: 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO -   Server config: SIP=192.168.1.14:5060
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully generated config for device 00:15:65:12:34:56
-2025-12-08 18:48:53 - PBX - INFO -   Config size: 2332 bytes, Content-Type: text/plain
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use in-memory storage only
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - INFO - Loading 4 extensions from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1004 (Customer Service)
-2025-12-08 18:48:53 - PBX - INFO - Registered device 00:0B:EA:85:ED:68 for extension 1001 (in-memory only)
-2025-12-08 18:48:53 - PBX - INFO - Provisioning request received for MAC: 00:0B:EA:85:F5:54
-2025-12-08 18:48:53 - PBX - WARNING - Device 00:0B:EA:85:F5:54 not registered in provisioning system
-2025-12-08 18:48:53 - PBX - WARNING -   Normalized MAC: 000bea85f554
-2025-12-08 18:48:53 - PBX - WARNING -   Registered devices: ['000bea85ed68']
-2025-12-08 18:48:53 - PBX - WARNING -   → Device needs to be registered first
-2025-12-08 18:48:53 - PBX - WARNING -   → Register via API: POST /api/provisioning/devices
-2025-12-08 18:48:53 - PBX - WARNING -   → Example:
-2025-12-08 18:48:53 - PBX - WARNING -      curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \
-2025-12-08 18:48:53 - PBX - WARNING -        -H 'Content-Type: application/json' \
-2025-12-08 18:48:53 - PBX - WARNING -        -d '{"mac_address":"00:0B:EA:85:F5:54","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}'
-2025-12-08 18:48:53 - PBX - WARNING -   → Available vendors: yealink, polycom, cisco, grandstream, zultys
-2025-12-08 18:48:53 - PBX - WARNING -   → Similar MACs found (same vendor): ['000bea85ed68']
-2025-12-08 18:48:53 - PBX - WARNING -      This might be a typo in the MAC address
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning will use in-memory storage only
-2025-12-08 18:48:53 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for grandstream gxp2170
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip33g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for cisco spa504g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for yealink t46s
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for zultys zip37g
-2025-12-08 18:48:53 - PBX - INFO - Loaded custom template for polycom vvx450
-2025-12-08 18:48:53 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:53 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
-2025-12-08 18:48:53 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:53 - PBX - INFO - API port: 8080
-2025-12-08 18:48:53 - PBX - INFO - Loading 4 extensions from config.yml
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
-2025-12-08 18:48:53 - PBX - INFO - Loaded extension 1004 (Customer Service)
-2025-12-08 18:48:53 - PBX - INFO - Registered device 00:0B:EA:85:ED:68 for extension 1001 (in-memory only)
-2025-12-08 18:48:53 - PBX - INFO - Registered device 00:0B:EA:85:F5:54 for extension 1002 (in-memory only)
-2025-12-08 18:48:53 - PBX - INFO - Provisioning request received for MAC: 00:0B:EA:85:ED:69
-2025-12-08 18:48:53 - PBX - WARNING - Device 00:0B:EA:85:ED:69 not registered in provisioning system
-2025-12-08 18:48:53 - PBX - WARNING -   Normalized MAC: 000bea85ed69
-2025-12-08 18:48:53 - PBX - WARNING -   Registered devices: ['000bea85ed68', '000bea85f554']
-2025-12-08 18:48:53 - PBX - WARNING -   → Device needs to be registered first
-2025-12-08 18:48:53 - PBX - WARNING -   → Register via API: POST /api/provisioning/devices
-2025-12-08 18:48:53 - PBX - WARNING -   → Example:
-2025-12-08 18:48:53 - PBX - WARNING -      curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \
-2025-12-08 18:48:53 - PBX - WARNING -        -H 'Content-Type: application/json' \
-2025-12-08 18:48:53 - PBX - WARNING -        -d '{"mac_address":"00:0B:EA:85:ED:69","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}'
-2025-12-08 18:48:53 - PBX - WARNING -   → Available vendors: yealink, polycom, cisco, grandstream, zultys
-2025-12-08 18:48:53 - PBX - WARNING -   → Similar MACs found (same vendor): ['000bea85ed68', '000bea85f554']
-2025-12-08 18:48:53 - PBX - WARNING -      This might be a typo in the MAC address
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning will use in-memory storage only
+2025-12-08 18:52:03 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:03 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:03 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:03 - PBX - INFO - API port: 8080
+2025-12-08 18:52:03 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (in-memory only)
+2025-12-08 18:52:03 - PBX - INFO - Unregistered device 00:15:65:12:34:56 (removed from memory)
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning will use in-memory storage only
+2025-12-08 18:52:03 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:03 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:03 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:03 - PBX - INFO - API port: 8080
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:03 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning will use in-memory storage only
+2025-12-08 18:52:03 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:03 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:03 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:03 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:03 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:03 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use in-memory storage only
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - FIPS 140-2 compliant encryption ENABLED
+2025-12-08 18:52:04 - PBX - INFO -   ✓ Using PBKDF2-HMAC-SHA256 for password hashing
+2025-12-08 18:52:04 - PBX - INFO -   ✓ Using AES-256-GCM for data encryption
+2025-12-08 18:52:04 - PBX - INFO -   ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)
+2025-12-08 18:52:04 - PBX - INFO - Loading 4 extensions from config.yml
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1004 (Customer Service)
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (in-memory only)
+2025-12-08 18:52:04 - PBX - INFO - Provisioning request received for MAC: 00:15:65:12:34:56
+2025-12-08 18:52:04 - PBX - INFO -   Found device: vendor=zultys, model=zip33g, extension=1001
+2025-12-08 18:52:04 - PBX - INFO -   Extension found: 1001 (Codi Mattinson)
+2025-12-08 18:52:04 - PBX - INFO -   Server config: SIP=192.168.1.14:5060
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully generated config for device 00:15:65:12:34:56
+2025-12-08 18:52:04 - PBX - INFO -   Config size: 2332 bytes, Content-Type: text/plain
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use in-memory storage only
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Loading 4 extensions from config.yml
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1004 (Customer Service)
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:0B:EA:85:ED:68 for extension 1001 (in-memory only)
+2025-12-08 18:52:04 - PBX - INFO - Provisioning request received for MAC: 00:0B:EA:85:F5:54
+2025-12-08 18:52:04 - PBX - WARNING - Device 00:0B:EA:85:F5:54 not registered in provisioning system
+2025-12-08 18:52:04 - PBX - WARNING -   Normalized MAC: 000bea85f554
+2025-12-08 18:52:04 - PBX - WARNING -   Registered devices: ['000bea85ed68']
+2025-12-08 18:52:04 - PBX - WARNING -   → Device needs to be registered first
+2025-12-08 18:52:04 - PBX - WARNING -   → Register via API: POST /api/provisioning/devices
+2025-12-08 18:52:04 - PBX - WARNING -   → Example:
+2025-12-08 18:52:04 - PBX - WARNING -      curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \
+2025-12-08 18:52:04 - PBX - WARNING -        -H 'Content-Type: application/json' \
+2025-12-08 18:52:04 - PBX - WARNING -        -d '{"mac_address":"00:0B:EA:85:F5:54","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}'
+2025-12-08 18:52:04 - PBX - WARNING -   → Available vendors: yealink, polycom, cisco, grandstream, zultys
+2025-12-08 18:52:04 - PBX - WARNING -   → Similar MACs found (same vendor): ['000bea85ed68']
+2025-12-08 18:52:04 - PBX - WARNING -      This might be a typo in the MAC address
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use in-memory storage only
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for grandstream gxp2170
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for zultys zip33g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for cisco spa504g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for yealink t46s
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for zultys zip37g
+2025-12-08 18:52:04 - PBX - INFO - Loaded custom template for polycom vvx450
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Loading 4 extensions from config.yml
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1001 (Codi Mattinson)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1002 (Bill Sautter)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1003 (Lisa Dingman)
+2025-12-08 18:52:04 - PBX - INFO - Loaded extension 1004 (Customer Service)
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:0B:EA:85:ED:68 for extension 1001 (in-memory only)
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:0B:EA:85:F5:54 for extension 1002 (in-memory only)
+2025-12-08 18:52:04 - PBX - INFO - Provisioning request received for MAC: 00:0B:EA:85:ED:69
+2025-12-08 18:52:04 - PBX - WARNING - Device 00:0B:EA:85:ED:69 not registered in provisioning system
+2025-12-08 18:52:04 - PBX - WARNING -   Normalized MAC: 000bea85ed69
+2025-12-08 18:52:04 - PBX - WARNING -   Registered devices: ['000bea85ed68', '000bea85f554']
+2025-12-08 18:52:04 - PBX - WARNING -   → Device needs to be registered first
+2025-12-08 18:52:04 - PBX - WARNING -   → Register via API: POST /api/provisioning/devices
+2025-12-08 18:52:04 - PBX - WARNING -   → Example:
+2025-12-08 18:52:04 - PBX - WARNING -      curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \
+2025-12-08 18:52:04 - PBX - WARNING -        -H 'Content-Type: application/json' \
+2025-12-08 18:52:04 - PBX - WARNING -        -d '{"mac_address":"00:0B:EA:85:ED:69","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}'
+2025-12-08 18:52:04 - PBX - WARNING -   → Available vendors: yealink, polycom, cisco, grandstream, zultys
+2025-12-08 18:52:04 - PBX - WARNING -   → Similar MACs found (same vendor): ['000bea85ed68', '000bea85f554']
+2025-12-08 18:52:04 - PBX - WARNING -      This might be a typo in the MAC address
 
 
 ----------------------------------------------------------------------
@@ -885,124 +885,124 @@ Results: 3 passed, 0 failed
 
 
 === STDERR ===
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:53 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:53 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:53 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:53 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:53 - PBX - INFO -   Database file: /tmp/tmpbeio7sle/test.db
-2025-12-08 18:48:53 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:53 - PBX - INFO -   Database path: /tmp/tmpbeio7sle/test.db
-2025-12-08 18:48:53 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:54 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:54 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:54 - PBX - INFO - Provisioning URL format: Not configured
-2025-12-08 18:48:54 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:54 - PBX - INFO - API port: 8080
-2025-12-08 18:48:54 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (saved to database)
-2025-12-08 18:48:54 - PBX - INFO - Registered device 00:15:65:12:34:57 for extension 1002 (saved to database)
-2025-12-08 18:48:54 - PBX - INFO - Database disconnected
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: /tmp/tmpbeio7sle/test.db
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /tmp/tmpbeio7sle/test.db
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:54 - PBX - INFO - Loaded 2 provisioned devices from database
-2025-12-08 18:48:54 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:54 - PBX - INFO - Provisioning URL format: Not configured
-2025-12-08 18:48:54 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:54 - PBX - INFO - API port: 8080
-2025-12-08 18:48:54 - PBX - INFO - Database disconnected
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: /tmp/tmpd8em6jw9/test.db
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /tmp/tmpd8em6jw9/test.db
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:54 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:54 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:54 - PBX - INFO - Provisioning URL format: Not configured
-2025-12-08 18:48:54 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:54 - PBX - INFO - API port: 8080
-2025-12-08 18:48:54 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (saved to database)
-2025-12-08 18:48:54 - PBX - INFO - Set static IP 192.168.1.100 for device 00:15:65:12:34:56
-2025-12-08 18:48:54 - PBX - INFO - Database disconnected
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: /tmp/tmpf975tx4m/test.db
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /tmp/tmpf975tx4m/test.db
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:54 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:54 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:54 - PBX - INFO - Provisioning URL format: Not configured
-2025-12-08 18:48:54 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:54 - PBX - INFO - API port: 8080
-2025-12-08 18:48:54 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (saved to database)
-2025-12-08 18:48:54 - PBX - INFO - Unregistered device 00:15:65:12:34:56 (removed from database)
-2025-12-08 18:48:54 - PBX - INFO - Database disconnected
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: /tmp/tmpf975tx4m/test.db
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /tmp/tmpf975tx4m/test.db
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning will use database for persistent storage
-2025-12-08 18:48:54 - PBX - INFO - Loaded 0 provisioned devices from database
-2025-12-08 18:48:54 - PBX - INFO - Loaded 6 built-in phone templates
-2025-12-08 18:48:54 - PBX - INFO - Phone provisioning initialized
-2025-12-08 18:48:54 - PBX - INFO - Provisioning URL format: Not configured
-2025-12-08 18:48:54 - PBX - INFO - Server external IP: 192.168.1.14
-2025-12-08 18:48:54 - PBX - INFO - API port: 8080
-2025-12-08 18:48:54 - PBX - INFO - Database disconnected
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: /tmp/tmpvfjve_jn/test.db
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /tmp/tmpvfjve_jn/test.db
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:04 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: Not configured
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (saved to database)
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:15:65:12:34:57 for extension 1002 (saved to database)
+2025-12-08 18:52:04 - PBX - INFO - Database disconnected
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: /tmp/tmpvfjve_jn/test.db
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /tmp/tmpvfjve_jn/test.db
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:04 - PBX - INFO - Loaded 2 provisioned devices from database
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: Not configured
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Database disconnected
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: /tmp/tmpc5lbansl/test.db
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /tmp/tmpc5lbansl/test.db
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:04 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: Not configured
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (saved to database)
+2025-12-08 18:52:04 - PBX - INFO - Set static IP 192.168.1.100 for device 00:15:65:12:34:56
+2025-12-08 18:52:04 - PBX - INFO - Database disconnected
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: /tmp/tmpdedt5ljb/test.db
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /tmp/tmpdedt5ljb/test.db
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:04 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: Not configured
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Registered device 00:15:65:12:34:56 for extension 1001 (saved to database)
+2025-12-08 18:52:04 - PBX - INFO - Unregistered device 00:15:65:12:34:56 (removed from database)
+2025-12-08 18:52:04 - PBX - INFO - Database disconnected
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: /tmp/tmpdedt5ljb/test.db
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /tmp/tmpdedt5ljb/test.db
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning will use database for persistent storage
+2025-12-08 18:52:04 - PBX - INFO - Loaded 0 provisioned devices from database
+2025-12-08 18:52:04 - PBX - INFO - Loaded 6 built-in phone templates
+2025-12-08 18:52:04 - PBX - INFO - Phone provisioning initialized
+2025-12-08 18:52:04 - PBX - INFO - Provisioning URL format: Not configured
+2025-12-08 18:52:04 - PBX - INFO - Server external IP: 192.168.1.14
+2025-12-08 18:52:04 - PBX - INFO - API port: 8080
+2025-12-08 18:52:04 - PBX - INFO - Database disconnected
 
 
 ----------------------------------------------------------------------
@@ -1037,189 +1037,189 @@ Results: 9 passed, 0 failed
 
 
 === STDERR ===
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - INFO - Updated phone 001565AABBCC to extension 1002
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:48:54 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:48:54 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:48:54 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:48:54 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:48:54 - PBX - INFO -   Database file: :memory:
-2025-12-08 18:48:54 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:48:54 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
-2025-12-08 18:48:54 - PBX - INFO - Creating database tables...
-2025-12-08 18:48:54 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:48:54 - PBX - INFO - Schema migration check complete
-2025-12-08 18:48:54 - PBX - INFO - Database tables created successfully
-2025-12-08 18:48:54 - PBX - ERROR - Cannot update phone extension: MAC address is required
-2025-12-08 18:48:54 - PBX - ERROR - Cannot update phone extension: MAC address is required
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - INFO - Updated phone 001565AABBCC to extension 1002
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:04 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:04 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:04 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:04 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:04 - PBX - INFO -   Database file: :memory:
+2025-12-08 18:52:04 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:04 - PBX - INFO -   Database path: /home/runner/work/PBX/PBX/:memory:
+2025-12-08 18:52:04 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:04 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:04 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:04 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:04 - PBX - ERROR - Cannot update phone extension: MAC address is required
+2025-12-08 18:52:04 - PBX - ERROR - Cannot update phone extension: MAC address is required
 
 
 ----------------------------------------------------------------------
@@ -1257,16 +1257,16 @@ Results: 3 passed, 1 failed
 
 
 === STDERR ===
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
 Traceback (most recent call last):
   File "/home/runner/work/PBX/PBX/tests/test_voicemail_database.py", line 204, in run_all_tests
     test()
@@ -1274,98 +1274,98 @@ Traceback (most recent call last):
     assert config.get('database.port') == 5432
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AssertionError
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:49:10 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:49:10 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:49:10 - PBX - INFO -   Database file: /tmp/tmp72jmp7cy.db
-2025-12-08 18:49:10 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:49:10 - PBX - INFO -   Database path: /tmp/tmp72jmp7cy.db
-2025-12-08 18:49:10 - PBX - INFO - Creating database tables...
-2025-12-08 18:49:10 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:49:10 - PBX - INFO - Schema migration check complete
-2025-12-08 18:49:10 - PBX - INFO - Database tables created successfully
-2025-12-08 18:49:10 - PBX - INFO - Database disconnected
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Database backend: sqlite
-2025-12-08 18:49:10 - PBX - INFO - Initiating database connection (type: sqlite)...
-2025-12-08 18:49:10 - PBX - INFO - Connecting to SQLite database...
-2025-12-08 18:49:10 - PBX - INFO -   Database file: /tmp/tmp0l1lsojx.db
-2025-12-08 18:49:10 - PBX - INFO - ✓ Successfully connected to SQLite database
-2025-12-08 18:49:10 - PBX - INFO -   Database path: /tmp/tmp0l1lsojx.db
-2025-12-08 18:49:10 - PBX - INFO - Creating database tables...
-2025-12-08 18:49:10 - PBX - INFO - Checking for schema migrations...
-2025-12-08 18:49:10 - PBX - INFO - Schema migration check complete
-2025-12-08 18:49:10 - PBX - INFO - Database tables created successfully
-2025-12-08 18:49:10 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:49:10 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:49:10 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:49:10 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:49:10 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:49:10 - PBX - INFO - Loading voicemail messages from database for extension 1001...
-2025-12-08 18:49:10 - PBX - INFO - ✓ Successfully loaded 0 voicemail message(s) from sqlite database
-2025-12-08 18:49:10 - PBX - INFO - Voicemail saved to file system for extension 1001
-2025-12-08 18:49:10 - PBX - INFO -   Message ID: 1002_20251208_184910
-2025-12-08 18:49:10 - PBX - INFO -   Caller ID: 1002
-2025-12-08 18:49:10 - PBX - INFO -   File path: /tmp/tmpa8ci242m/1001/1002_20251208_184910.wav
-2025-12-08 18:49:10 - PBX - INFO -   Duration: 30s
-2025-12-08 18:49:10 - PBX - INFO - Saving voicemail metadata to database...
-2025-12-08 18:49:10 - PBX - INFO - ✓ Voicemail metadata successfully saved to sqlite database
-2025-12-08 18:49:10 - PBX - INFO -   Extension: 1001
-2025-12-08 18:49:10 - PBX - INFO -   Message ID: 1002_20251208_184910
-2025-12-08 18:49:10 - PBX - INFO -   Caller: 1002
-2025-12-08 18:49:10 - PBX - WARNING - Cannot send email notification - SMTP not properly configured (host: , from: Voicemail@albl.com)
-2025-12-08 18:49:10 - PBX - INFO - Marked voicemail 1002_20251208_184910 as listened
-2025-12-08 18:49:10 - PBX - INFO - Updating voicemail listened status in database...
-2025-12-08 18:49:10 - PBX - INFO - ✓ Successfully updated voicemail 1002_20251208_184910 as listened in sqlite database
-2025-12-08 18:49:10 - PBX - INFO - Deleting voicemail 1002_20251208_184910...
-2025-12-08 18:49:10 - PBX - INFO -   ✓ Deleted audio file: /tmp/tmpa8ci242m/1001/1002_20251208_184910.wav
-2025-12-08 18:49:10 - PBX - INFO - Deleting voicemail from database...
-2025-12-08 18:49:10 - PBX - INFO -   ✓ Successfully deleted voicemail 1002_20251208_184910 from sqlite database
-2025-12-08 18:49:10 - PBX - INFO - ✓ Voicemail 1002_20251208_184910 deleted successfully
-2025-12-08 18:49:10 - PBX - INFO - Database disconnected
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:49:10 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:49:10 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:49:10 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:49:10 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:49:10 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:49:10 - PBX - INFO - Voicemail saved to file system for extension 1001
-2025-12-08 18:49:10 - PBX - INFO -   Message ID: 1002_20251208_184910
-2025-12-08 18:49:10 - PBX - INFO -   Caller ID: 1002
-2025-12-08 18:49:10 - PBX - INFO -   File path: /tmp/tmpgwxg2_ux/1001/1002_20251208_184910.wav
-2025-12-08 18:49:10 - PBX - INFO -   Duration: 30s
-2025-12-08 18:49:10 - PBX - WARNING - Database not available - voicemail metadata NOT saved to database
-2025-12-08 18:49:10 - PBX - WARNING -   Message ID: 1002_20251208_184910 stored as file only
-2025-12-08 18:49:10 - PBX - WARNING - Cannot send email notification - SMTP not properly configured (host: , from: Voicemail@albl.com)
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:20 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:20 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:20 - PBX - INFO -   Database file: /tmp/tmptzfznpzb.db
+2025-12-08 18:52:20 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:20 - PBX - INFO -   Database path: /tmp/tmptzfznpzb.db
+2025-12-08 18:52:20 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:20 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:20 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:20 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:20 - PBX - INFO - Database disconnected
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Database backend: sqlite
+2025-12-08 18:52:20 - PBX - INFO - Initiating database connection (type: sqlite)...
+2025-12-08 18:52:20 - PBX - INFO - Connecting to SQLite database...
+2025-12-08 18:52:20 - PBX - INFO -   Database file: /tmp/tmptbyd4zg7.db
+2025-12-08 18:52:20 - PBX - INFO - ✓ Successfully connected to SQLite database
+2025-12-08 18:52:20 - PBX - INFO -   Database path: /tmp/tmptbyd4zg7.db
+2025-12-08 18:52:20 - PBX - INFO - Creating database tables...
+2025-12-08 18:52:20 - PBX - INFO - Checking for schema migrations...
+2025-12-08 18:52:20 - PBX - INFO - Schema migration check complete
+2025-12-08 18:52:20 - PBX - INFO - Database tables created successfully
+2025-12-08 18:52:20 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:20 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:20 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:20 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:20 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:20 - PBX - INFO - Loading voicemail messages from database for extension 1001...
+2025-12-08 18:52:20 - PBX - INFO - ✓ Successfully loaded 0 voicemail message(s) from sqlite database
+2025-12-08 18:52:20 - PBX - INFO - Voicemail saved to file system for extension 1001
+2025-12-08 18:52:20 - PBX - INFO -   Message ID: 1002_20251208_185220
+2025-12-08 18:52:20 - PBX - INFO -   Caller ID: 1002
+2025-12-08 18:52:20 - PBX - INFO -   File path: /tmp/tmpu3b6c47n/1001/1002_20251208_185220.wav
+2025-12-08 18:52:20 - PBX - INFO -   Duration: 30s
+2025-12-08 18:52:20 - PBX - INFO - Saving voicemail metadata to database...
+2025-12-08 18:52:20 - PBX - INFO - ✓ Voicemail metadata successfully saved to sqlite database
+2025-12-08 18:52:20 - PBX - INFO -   Extension: 1001
+2025-12-08 18:52:20 - PBX - INFO -   Message ID: 1002_20251208_185220
+2025-12-08 18:52:20 - PBX - INFO -   Caller: 1002
+2025-12-08 18:52:20 - PBX - WARNING - Cannot send email notification - SMTP not properly configured (host: , from: Voicemail@albl.com)
+2025-12-08 18:52:20 - PBX - INFO - Marked voicemail 1002_20251208_185220 as listened
+2025-12-08 18:52:20 - PBX - INFO - Updating voicemail listened status in database...
+2025-12-08 18:52:20 - PBX - INFO - ✓ Successfully updated voicemail 1002_20251208_185220 as listened in sqlite database
+2025-12-08 18:52:20 - PBX - INFO - Deleting voicemail 1002_20251208_185220...
+2025-12-08 18:52:20 - PBX - INFO -   ✓ Deleted audio file: /tmp/tmpu3b6c47n/1001/1002_20251208_185220.wav
+2025-12-08 18:52:20 - PBX - INFO - Deleting voicemail from database...
+2025-12-08 18:52:20 - PBX - INFO -   ✓ Successfully deleted voicemail 1002_20251208_185220 from sqlite database
+2025-12-08 18:52:20 - PBX - INFO - ✓ Voicemail 1002_20251208_185220 deleted successfully
+2025-12-08 18:52:20 - PBX - INFO - Database disconnected
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:20 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:20 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:20 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:20 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:20 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:52:20 - PBX - INFO - Voicemail saved to file system for extension 1001
+2025-12-08 18:52:20 - PBX - INFO -   Message ID: 1002_20251208_185220
+2025-12-08 18:52:20 - PBX - INFO -   Caller ID: 1002
+2025-12-08 18:52:20 - PBX - INFO -   File path: /tmp/tmp9jhh5rxi/1001/1002_20251208_185220.wav
+2025-12-08 18:52:20 - PBX - INFO -   Duration: 30s
+2025-12-08 18:52:20 - PBX - WARNING - Database not available - voicemail metadata NOT saved to database
+2025-12-08 18:52:20 - PBX - WARNING -   Message ID: 1002_20251208_185220 stored as file only
+2025-12-08 18:52:20 - PBX - WARNING - Cannot send email notification - SMTP not properly configured (host: , from: Voicemail@albl.com)
 
 
 ----------------------------------------------------------------------
@@ -1394,75 +1394,75 @@ Results: 3 passed, 2 failed
 
 
 === STDERR ===
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:49:10 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:49:10 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:49:10 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:49:10 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
-2025-12-08 18:49:10 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
-2025-12-08 18:49:10 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
-2025-12-08 18:49:10 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
-2025-12-08 18:49:10 - PBX - INFO - Started daily reminder thread
-2025-12-08 18:49:10 - PBX - WARNING - Database not available - loading voicemails from file system only
-2025-12-08 18:49:10 - PBX - INFO - Voicemail saved to file system for extension 1001
-2025-12-08 18:49:10 - PBX - INFO -   Message ID: 1002_20251208_184910
-2025-12-08 18:49:10 - PBX - INFO -   Caller ID: 1002
-2025-12-08 18:49:10 - PBX - INFO -   File path: /tmp/tmp3nu3__fw/1001/1002_20251208_184910.wav
-2025-12-08 18:49:10 - PBX - INFO -   Duration: 30s
-2025-12-08 18:49:10 - PBX - WARNING - Database not available - voicemail metadata NOT saved to database
-2025-12-08 18:49:10 - PBX - WARNING -   Message ID: 1002_20251208_184910 stored as file only
-2025-12-08 18:49:10 - PBX - WARNING - Cannot send email notification - SMTP not properly configured (host: , from: Voicemail@albl.com)
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_NAME not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable DB_USER not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
-2025-12-08 18:49:10 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
-2025-12-08 18:49:10 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:20 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:20 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:20 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:20 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - WARNING - Email notifications enabled but SMTP host or from_address not configured!
+2025-12-08 18:52:20 - PBX - WARNING - Please configure SMTP settings in .env file or config.yml
+2025-12-08 18:52:20 - PBX - WARNING -   Required: voicemail.smtp.host, voicemail.email.from_address
+2025-12-08 18:52:20 - PBX - WARNING -   Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)
+2025-12-08 18:52:20 - PBX - INFO - Started daily reminder thread
+2025-12-08 18:52:20 - PBX - WARNING - Database not available - loading voicemails from file system only
+2025-12-08 18:52:20 - PBX - INFO - Voicemail saved to file system for extension 1001
+2025-12-08 18:52:20 - PBX - INFO -   Message ID: 1002_20251208_185220
+2025-12-08 18:52:20 - PBX - INFO -   Caller ID: 1002
+2025-12-08 18:52:20 - PBX - INFO -   File path: /tmp/tmpbx7euzic/1001/1002_20251208_185220.wav
+2025-12-08 18:52:20 - PBX - INFO -   Duration: 30s
+2025-12-08 18:52:20 - PBX - WARNING - Database not available - voicemail metadata NOT saved to database
+2025-12-08 18:52:20 - PBX - WARNING -   Message ID: 1002_20251208_185220 stored as file only
+2025-12-08 18:52:20 - PBX - WARNING - Cannot send email notification - SMTP not properly configured (host: , from: Voicemail@albl.com)
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_NAME not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable DB_USER not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable DB_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_HOST not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_PORT not set, using default value
+2025-12-08 18:52:20 - PBX - INFO - Environment variable SMTP_USERNAME not set, using default value
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable SMTP_PASSWORD not found and no default available
+2025-12-08 18:52:20 - PBX - ERROR - Environment variable AD_BIND_PASSWORD not found and no default available
 
 
 ----------------------------------------------------------------------
