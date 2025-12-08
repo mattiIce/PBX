@@ -73,13 +73,15 @@ def run_all_tests(tests_dir="tests"):
             if hasattr(module, 'run_all_tests'):
                 success = module.run_all_tests()
                 
-                # Handle return value - should be boolean True for success
+                # Handle return value - we use 'is True' to ensure explicit success
+                # This is intentional to handle cases where tests return non-boolean values
                 if success is True:
                     print(f"  ✓ {test_file} PASSED")
                     total_passed += 1
                     test_results.append((test_file, True, None))
                 else:
                     # Treat any non-True return (False, None, etc.) as failure
+                    # This ensures we only accept explicit True as success
                     print(f"  ✗ {test_file} FAILED")
                     total_failed += 1
                     test_results.append((test_file, False, "Tests failed"))
@@ -106,9 +108,9 @@ def run_all_tests(tests_dir="tests"):
     print(f"Skipped: {total_skipped}")
     print("=" * 70)
     
-    return total_passed, total_failed, test_results
+    return total_passed, total_failed, total_skipped, test_results
 
 
 if __name__ == "__main__":
-    passed, failed, _ = run_all_tests()
+    passed, failed, skipped, test_results = run_all_tests()
     sys.exit(0 if failed == 0 else 1)

@@ -31,7 +31,7 @@ def run_tests_before_start():
     print()
     
     try:
-        passed, failed, _ = run_all_tests()
+        passed, failed, skipped, test_results = run_all_tests()
         
         print()
         if failed > 0:
