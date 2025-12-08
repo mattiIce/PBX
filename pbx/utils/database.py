@@ -676,7 +676,7 @@ class RegisteredPhonesDB:
 
     def register_phone(self, extension_number: str, ip_address: str, 
                       mac_address: str = None, user_agent: str = None, 
-                      contact_uri: str = None) -> bool:
+                      contact_uri: str = None) -> tuple[bool, Optional[str]]:
         """
         Register or update a phone registration
         
@@ -688,7 +688,7 @@ class RegisteredPhonesDB:
             contact_uri: Contact URI from SIP message
             
         Returns:
-            bool: True if successful
+            tuple[bool, Optional[str]]: Success status and the actual MAC address stored (or None)
         """
         # First check if this phone is already registered (by MAC or IP)
         existing = None
@@ -718,7 +718,8 @@ class RegisteredPhonesDB:
             """
             params = (updated_mac, updated_ip, updated_user_agent, updated_contact_uri, 
                      datetime.now(), existing['id'])
-            return self.db.execute(query, params)
+            success = self.db.execute(query, params)
+            return (success, updated_mac)
         else:
             # Insert new registration
             query = """
@@ -735,7 +736,8 @@ class RegisteredPhonesDB:
             now = datetime.now()
             params = (mac_address, extension_number, ip_address, user_agent, 
                      contact_uri, now, now)
-            return self.db.execute(query, params)
+            success = self.db.execute(query, params)
+            return (success, mac_address)
 
     def get_by_mac(self, mac_address: str, extension_number: str = None) -> Optional[Dict]:
         """

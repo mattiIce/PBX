@@ -1060,14 +1060,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                             normalized_mac = normalize_mac_address(mac)
                             
                             # Store the mapping in the database
-                            self.pbx_core.registered_phones_db.register_phone(
+                            success, stored_mac = self.pbx_core.registered_phones_db.register_phone(
                                 extension_number=device.extension_number,
                                 ip_address=request_info['ip'],
                                 mac_address=normalized_mac,
                                 user_agent=request_info.get('user_agent', 'Unknown'),
                                 contact_uri=None  # Not available during provisioning request
                             )
-                            logger.info(f"  Stored IP-MAC mapping: {request_info['ip']} → {normalized_mac} (ext {device.extension_number})")
+                            if success:
+                                # stored_mac should equal normalized_mac since we're providing it
+                                logger.info(f"  Stored IP-MAC mapping: {request_info['ip']} → {stored_mac} (ext {device.extension_number})")
                     except Exception as e:
                         # Don't fail provisioning if database storage fails
                         logger.warning(f"  Could not store IP-MAC mapping in database: {e}")

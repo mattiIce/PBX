@@ -32,7 +32,7 @@ def test_phone_registration():
     phones_db = RegisteredPhonesDB(db)
     
     # Register a phone with MAC address
-    success = phones_db.register_phone(
+    success, _ = phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565123456",
@@ -75,7 +75,7 @@ def test_phone_registration_without_mac():
     phones_db = RegisteredPhonesDB(db)
     
     # Register a phone without MAC address
-    success = phones_db.register_phone(
+    success, _ = phones_db.register_phone(
         extension_number="1002",
         ip_address="192.168.1.101",
         mac_address=None,  # No MAC available
@@ -112,7 +112,7 @@ def test_phone_update_registration():
     phones_db = RegisteredPhonesDB(db)
     
     # Initial registration
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1003",
         ip_address="192.168.1.102",
         mac_address="001565123457",
@@ -120,7 +120,7 @@ def test_phone_update_registration():
     )
     
     # Re-register with updated info (simulating phone reboot/re-registration)
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1003",
         ip_address="192.168.1.102",
         mac_address="001565123457",
@@ -153,7 +153,7 @@ def test_list_phones_by_extension():
     phones_db = RegisteredPhonesDB(db)
     
     # Register multiple phones for same extension (different IPs, like desk and softphone)
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1004",
         ip_address="192.168.1.103",
         mac_address="001565123458"
@@ -185,9 +185,9 @@ def test_list_all_phones():
     phones_db = RegisteredPhonesDB(db)
     
     # Register multiple phones
-    phones_db.register_phone("1001", "192.168.1.100", "001565123456")
-    phones_db.register_phone("1002", "192.168.1.101", "001565123457")
-    phones_db.register_phone("1003", "192.168.1.102", None)  # No MAC
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565123456")
+    _ = phones_db.register_phone("1002", "192.168.1.101", "001565123457")
+    _ = phones_db.register_phone("1003", "192.168.1.102", None)  # No MAC
     
     # List all
     all_phones = phones_db.list_all()
@@ -219,7 +219,7 @@ def test_mac_preservation_on_reregistration():
     phones_db = RegisteredPhonesDB(db)
     
     # Scenario 1: Initial registration WITH MAC, re-register WITHOUT MAC
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1005",
         ip_address="192.168.1.105",
         mac_address="001565123459",
@@ -228,7 +228,7 @@ def test_mac_preservation_on_reregistration():
     )
     
     # Re-register without MAC (common when phone doesn't send it)
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1005",
         ip_address="192.168.1.105",
         mac_address=None,  # Phone doesn't send MAC this time
@@ -242,7 +242,7 @@ def test_mac_preservation_on_reregistration():
     assert phone['mac_address'] == "001565123459", "MAC should be preserved, not replaced with None"
     
     # Scenario 2: Re-register with different MAC should update
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1005",
         ip_address="192.168.1.105",
         mac_address="001565999999",  # Different MAC
@@ -276,7 +276,7 @@ def test_ip_preservation_on_reregistration():
     phones_db = RegisteredPhonesDB(db)
     
     # Initial registration with both MAC and IP
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1006",
         ip_address="192.168.1.106",
         mac_address="00156512345A",
@@ -315,7 +315,7 @@ def test_update_phone_extension():
     phones_db = RegisteredPhonesDB(db)
     
     # Scenario: Phone is initially provisioned to extension 1001
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565AABBCC",
