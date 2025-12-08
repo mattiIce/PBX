@@ -31,6 +31,7 @@ Learn about specific features:
 - **[FEATURES.md](FEATURES.md)** - Complete list of all PBX features with descriptions
 - **[CALL_FLOW.md](CALL_FLOW.md)** - How phone-to-phone calls work through the system
 - **[VOICEMAIL_EMAIL_GUIDE.md](VOICEMAIL_EMAIL_GUIDE.md)** - Voicemail-to-email configuration and usage
+- **[VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md)** - Recording and managing custom voicemail greetings via IVR
 - **[PHONE_PROVISIONING.md](PHONE_PROVISIONING.md)** - Auto-configuration for IP phones
 - **[PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md)** - Automatic tracking of registered phones by MAC/IP address
 
