@@ -1333,17 +1333,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Message not found'}, 404)
                     return
 
-                # Check if request is for audio download
-                if 'download' in path or path.endswith('/audio'):
-                    # Serve audio file
-                    if os.path.exists(message['file_path']):
-                        self._set_headers(content_type='audio/wav')
-                        with open(message['file_path'], 'rb') as f:
-                            self.wfile.write(f.read())
-                    else:
-                        self._send_json({'error': 'Audio file not found'}, 404)
-                else:
-                    # Return message details
+                # Check if request is for metadata only (via query parameter)
+                # Use self.path to get the full request URL with query string
+                query_params = parse_qs(urlparse(self.path).query)
+                if query_params.get('metadata', [False])[0] in ['true', '1', True]:
+                    # Return message metadata as JSON
                     self._send_json({
                         'id': message['id'],
                         'caller_id': message['caller_id'],
@@ -1352,6 +1346,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         'duration': message['duration'],
                         'file_path': message['file_path']
                     })
+                else:
+                    # Default: Serve audio file for playback in admin panel
+                    if os.path.exists(message['file_path']):
+                        self._set_headers(content_type='audio/wav')
+                        with open(message['file_path'], 'rb') as f:
+                            self.wfile.write(f.read())
+                    else:
+                        self._send_json({'error': 'Audio file not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 

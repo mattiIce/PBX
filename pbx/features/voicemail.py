@@ -192,10 +192,31 @@ class VoicemailBox:
         # Send email notification if enabled
         transcription_text = transcription_result['text'] if transcription_result and transcription_result['success'] else None
         if self.email_notifier and self.config:
-            extension_config = self.config.get_extension(self.extension_number)
-            if extension_config:
-                email_address = extension_config.get('email')
-                if email_address:
+            # Get extension configuration - check database first, then config file
+            extension_config = None
+            email_address = None
+            
+            # Try database first if available
+            if self.database and self.database.enabled:
+                try:
+                    from pbx.utils.database import ExtensionDB
+                    ext_db = ExtensionDB(self.database)
+                    db_extension = ext_db.get(self.extension_number)
+                    if db_extension:
+                        extension_config = db_extension
+                        email_address = db_extension.get('email')
+                        self.logger.debug(f"Found email address from database for extension {self.extension_number}")
+                except Exception as e:
+                    self.logger.error(f"Error getting extension from database: {e}")
+            
+            # Fallback to config file if not found in database
+            if not extension_config:
+                extension_config = self.config.get_extension(self.extension_number)
+                if extension_config:
+                    email_address = extension_config.get('email')
+                    self.logger.debug(f"Found email address from config for extension {self.extension_number}")
+            
+            if extension_config and email_address:
                     # Check if email notifier supports transcription parameter
                     import inspect
                     sig = inspect.signature(self.email_notifier.send_voicemail_notification)

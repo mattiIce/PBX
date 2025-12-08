@@ -48,11 +48,18 @@ class EmailNotifier:
             self.reminder_time = config.get('voicemail.reminders.time', '09:00')
             self.reminders_unread_only = config.get('voicemail.reminders.unread_only', True)
 
+            # Validate required SMTP settings
+            if not self.smtp_host or not self.from_address:
+                self.logger.warning("Email notifications enabled but SMTP host or from_address not configured!")
+                self.logger.warning("Please configure SMTP settings in .env file or config.yml")
+                self.logger.warning("  Required: voicemail.smtp.host, voicemail.email.from_address")
+                self.logger.warning("  Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)")
+            else:
+                self.logger.info(f"Email notifications enabled - SMTP: {self.smtp_host}:{self.smtp_port}, From: {self.from_address}")
+
             # Start reminder thread if enabled
             if self.reminders_enabled:
                 self._start_reminder_thread()
-
-            self.logger.info("Email notifications enabled")
         else:
             self.logger.info("Email notifications disabled")
 
@@ -76,8 +83,15 @@ class EmailNotifier:
             return False
 
         if not to_email:
-            self.logger.warning(f"No email address for extension {extension_number}")
+            self.logger.warning(f"No email address configured for extension {extension_number} - cannot send notification")
             return False
+
+        # Validate SMTP configuration before attempting to send
+        if not self.smtp_host or not self.from_address:
+            self.logger.warning(f"Cannot send email notification - SMTP not properly configured (host: {self.smtp_host}, from: {self.from_address})")
+            return False
+
+        self.logger.info(f"Attempting to send voicemail notification to {to_email} for extension {extension_number}")
 
         try:
             # Create message
