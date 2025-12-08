@@ -85,7 +85,7 @@ def test_registration_storage():
         'password': 'testpass',
         'email': 'test@test.com'
     })
-    pbx.extensions["1001"] = test_ext
+    pbx.extension_registry.extensions["1001"] = test_ext
     
     # Simulate a SIP REGISTER
     from_header = '"Test Phone" <sip:1001@192.168.1.100>'
