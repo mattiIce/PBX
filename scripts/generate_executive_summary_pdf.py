@@ -74,9 +74,9 @@ def generate_pdf():
             print(f"   stderr: {e.stderr}")
         return 1
     except FileNotFoundError:
-        print("❌ Error: pandoc not found. Please install pandoc:")
-        print("   Ubuntu/Debian: sudo apt-get install pandoc texlive-latex-base texlive-fonts-recommended")
-        print("   macOS: brew install pandoc basictex")
+        print("❌ Error: pandoc or wkhtmltopdf not found. Please install:")
+        print("   Ubuntu/Debian: sudo apt-get install pandoc wkhtmltopdf")
+        print("   macOS: brew install pandoc && brew install --cask wkhtmltopdf")
         return 1
 
 
