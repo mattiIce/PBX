@@ -1949,6 +1949,10 @@ class PBXCore:
                                     
                                     # Process IVR action
                                     if action['action'] == 'play_message':
+                                        # Check if call is still active before playing
+                                        if call.state.value == 'ended':
+                                            self.logger.info(f"Call {call_id} ended, skipping message playback")
+                                            break
                                         # Play the voicemail message
                                         file_path = action.get('file_path')
                                         if file_path and os.path.exists(file_path):
@@ -1958,6 +1962,10 @@ class PBXCore:
                                         time.sleep(0.5)
                                     
                                     elif action['action'] == 'play_prompt':
+                                        # Check if call is still active before playing
+                                        if call.state.value == 'ended':
+                                            self.logger.info(f"Call {call_id} ended, skipping prompt playback")
+                                            break
                                         # Play a prompt
                                         prompt_type = action.get('prompt', 'main_menu')
                                         # Try to load from voicemail_prompts/ directory, fallback to tone generation
@@ -1978,6 +1986,11 @@ class PBXCore:
                                         time.sleep(0.3)
                                     
                                     elif action['action'] == 'hangup':
+                                        # Check if call is still active before playing goodbye
+                                        if call.state.value == 'ended':
+                                            self.logger.info(f"Call {call_id} already ended, skipping goodbye prompt")
+                                            ivr_active = False
+                                            break
                                         # Play goodbye and end call
                                         # Try to load from voicemail_prompts/ directory, fallback to tone generation
                                         goodbye_prompt = get_prompt_audio('goodbye')
