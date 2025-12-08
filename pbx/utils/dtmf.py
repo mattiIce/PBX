@@ -90,8 +90,8 @@ class DTMFDetector:
         if max_val < 0.01:  # Reject very weak signals before normalization
             return None
 
-        # Normalize samples
-        normalized = [s / max_val for s in samples[:self.samples_per_frame]]
+        # Normalize samples (max_val guaranteed to be >= 0.01 from check above)
+        normalized = [s / (max_val or 1.0) for s in samples[:self.samples_per_frame]]
 
         # Detect low and high frequency components
         low_magnitudes = {freq: self.goertzel(normalized, freq) for freq in DTMF_LOW_FREQS}

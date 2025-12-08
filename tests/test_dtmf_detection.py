@@ -172,7 +172,8 @@ class TestDTMFGenerator(unittest.TestCase):
         samples = self.generator.generate_sequence("123", tone_ms=100, gap_ms=50)
         
         # Should generate samples for 3 tones + 3 gaps
-        # (100ms tone + 50ms gap) * 3 = 450ms * 3 = 1200ms at 8000Hz = 9600 samples
+        # 3 * (100ms tone + 50ms gap) = 3 * 150ms = 450ms total
+        # At 8000Hz: 450ms * 8 samples/ms = 3600 samples
         expected_samples = 3 * (800 + 400)  # 3 * (100ms tone + 50ms gap)
         self.assertAlmostEqual(len(samples), expected_samples, delta=50)
 
