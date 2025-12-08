@@ -142,3 +142,39 @@ Test Run Started: 2025-12-08 17:26:49
 Test Run Completed: 2025-12-08 17:26:59
 Summary: 6 passed, 1 failed, 39 skipped
 ================================================================================
+
+================================================================================
+Test Run Started: 2025-12-08 17:34:13
+================================================================================
+
+[2025-12-08 17:34:14] FAILED: test_enterprise_integrations.py
+  Return value: False (expected True)
+
+  Test Output:
+    ============================================================
+    Running Enterprise Integration Tests
+    ============================================================
+    
+    Testing Zoom Phone routing...
+    ✓ Zoom Phone routing works
+    
+    Testing Teams Direct Routing...
+    ✗ test_teams_direct_routing failed: Should successfully route with configured trunk
+    
+    Testing Outlook meeting reminder...
+    ✗ test_outlook_meeting_reminder failed: Should successfully schedule reminder with PBX core
+    
+    Testing Active Directory sync...
+    ✓ Active Directory integration structure validated
+    
+    Testing error handling...
+    ✓ Error handling works correctly
+    
+    ============================================================
+    Results: 3 passed, 2 failed
+    ============================================================
+
+================================================================================
+Test Run Completed: 2025-12-08 17:34:23
+Summary: 6 passed, 1 failed, 39 skipped
+================================================================================
