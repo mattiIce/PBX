@@ -83,7 +83,7 @@ def test_registered_phone_lookup_methods():
     registered_phones_db = RegisteredPhonesDB(db)
     
     # Register a test phone
-    success = registered_phones_db.register_phone(
+    success = _ = registered_phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565123456",
@@ -143,7 +143,7 @@ def test_correlation_scenario_mac_to_ip():
     )
     
     # Scenario: Phone registers via SIP (provides IP, may provide MAC)
-    registered_phones_db.register_phone(
+    _ = registered_phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565123456",  # Some phones provide MAC in SIP headers
@@ -197,7 +197,7 @@ def test_correlation_scenario_ip_to_mac():
     )
     
     # Scenario: Phone registers via SIP (provides IP, but NO MAC)
-    registered_phones_db.register_phone(
+    _ = registered_phones_db.register_phone(
         extension_number="1002",
         ip_address="192.168.1.101",
         mac_address=None,  # Phone didn't provide MAC in SIP
@@ -244,7 +244,7 @@ def test_no_mac_in_sip_registration():
     registered_phones_db = RegisteredPhonesDB(db)
     
     # Phone registers WITHOUT MAC
-    success = registered_phones_db.register_phone(
+    success = _ = registered_phones_db.register_phone(
         extension_number="1003",
         ip_address="192.168.1.102",
         mac_address=None,  # No MAC provided

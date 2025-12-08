@@ -102,8 +102,8 @@ def test_registered_phones_db_with_encoder():
     phones_db = RegisteredPhonesDB(db)
     
     # Register phones
-    phones_db.register_phone("1001", "192.168.1.100", "001565123456", "Yealink SIP-T46S")
-    phones_db.register_phone("1002", "192.168.1.101", "001565123457", "Cisco SPA504G")
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565123456", "Yealink SIP-T46S")
+    _ = phones_db.register_phone("1002", "192.168.1.101", "001565123457", "Cisco SPA504G")
     
     # Get all phones
     phones = phones_db.list_all()

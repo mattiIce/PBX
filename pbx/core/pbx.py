@@ -389,16 +389,13 @@ class PBXCore:
                     mac_address = self._extract_mac_address(contact, user_agent)
                     
                     try:
-                        self.registered_phones_db.register_phone(
+                        success, stored_mac = self.registered_phones_db.register_phone(
                             extension_number=extension_number,
                             ip_address=ip_address,
                             mac_address=mac_address,
                             user_agent=user_agent,
                             contact_uri=contact
                         )
-                        # Get the actual stored MAC address (might be preserved from previous registration)
-                        stored_phone = self.registered_phones_db.get_by_ip(ip_address, extension_number)
-                        stored_mac = stored_phone.get('mac_address') if stored_phone else mac_address
                         
                         if stored_mac:
                             self.logger.info(f"Stored phone registration: ext={extension_number}, ip={ip_address}, mac={stored_mac}")

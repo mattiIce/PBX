@@ -49,7 +49,7 @@ def test_periodic_reregistration_preserves_data():
     
     # Simulate initial registration at time T=0
     print("  T=0s: Initial registration WITH MAC")
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565123456",
@@ -67,7 +67,7 @@ def test_periodic_reregistration_preserves_data():
     
     # Simulate re-registration at T=60s (phone doesn't send MAC this time)
     print("  T=60s: Re-registration WITHOUT MAC")
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address=None,  # Phone doesn't include MAC in this REGISTER
@@ -85,7 +85,7 @@ def test_periodic_reregistration_preserves_data():
     
     # Simulate re-registration at T=120s (phone sends MAC again)
     print("  T=120s: Re-registration WITH MAC")
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001565123456",
@@ -101,7 +101,7 @@ def test_periodic_reregistration_preserves_data():
     
     # Simulate re-registration at T=180s (no MAC again)
     print("  T=180s: Re-registration WITHOUT MAC")
-    phones_db.register_phone(
+    _ = phones_db.register_phone(
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address=None,
@@ -144,17 +144,17 @@ def test_multiple_phones_reregistering():
     
     # Register three phones initially
     print("  Initial registrations:")
-    phones_db.register_phone("1001", "192.168.1.100", "001565111111", "Yealink T46S")
-    phones_db.register_phone("1002", "192.168.1.101", "001565222222", "Polycom VVX")
-    phones_db.register_phone("1003", "192.168.1.102", "001565333333", "Cisco SPA")
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565111111", "Yealink T46S")
+    _ = phones_db.register_phone("1002", "192.168.1.101", "001565222222", "Polycom VVX")
+    _ = phones_db.register_phone("1003", "192.168.1.102", "001565333333", "Cisco SPA")
     print("    ✓ Registered 3 phones with MACs")
     
     # Phone 1 re-registers with MAC
-    phones_db.register_phone("1001", "192.168.1.100", "001565111111", "Yealink T46S")
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565111111", "Yealink T46S")
     # Phone 2 re-registers without MAC
-    phones_db.register_phone("1002", "192.168.1.101", None, "Polycom VVX")
+    _ = phones_db.register_phone("1002", "192.168.1.101", None, "Polycom VVX")
     # Phone 3 re-registers without MAC
-    phones_db.register_phone("1003", "192.168.1.102", None, "Cisco SPA")
+    _ = phones_db.register_phone("1003", "192.168.1.102", None, "Cisco SPA")
     
     print("  Re-registrations (mixed MAC availability):")
     

@@ -30,9 +30,9 @@ def test_clear_all_phones():
     phones_db = RegisteredPhonesDB(db)
     
     # Register multiple phones
-    phones_db.register_phone("1001", "192.168.1.100", "001565123456")
-    phones_db.register_phone("1002", "192.168.1.101", "001565123457")
-    phones_db.register_phone("1003", "192.168.1.102", None)
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565123456")
+    _ = phones_db.register_phone("1002", "192.168.1.101", "001565123457")
+    _ = phones_db.register_phone("1003", "192.168.1.102", None)
     
     # Verify phones were registered
     all_phones = phones_db.list_all()
@@ -95,8 +95,8 @@ def test_register_after_clear():
     phones_db = RegisteredPhonesDB(db)
     
     # Register phones
-    phones_db.register_phone("1001", "192.168.1.100", "001565123456")
-    phones_db.register_phone("1002", "192.168.1.101", "001565123457")
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565123456")
+    _ = phones_db.register_phone("1002", "192.168.1.101", "001565123457")
     
     # Clear all
     phones_db.clear_all()
@@ -105,7 +105,7 @@ def test_register_after_clear():
     assert len(phones_db.list_all()) == 0, "Phones not cleared"
     
     # Register new phones
-    success = phones_db.register_phone("1003", "192.168.1.102", "001565123458")
+    success, _ = phones_db.register_phone("1003", "192.168.1.102", "001565123458")
     assert success, "Failed to register phone after clear"
     
     # Verify new phone is registered
