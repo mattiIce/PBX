@@ -141,13 +141,17 @@ def test_ivr_save_recorded_greeting():
         # Create fake audio data
         fake_audio = create_fake_audio()
         
-        # Save greeting through IVR
+        # Save greeting through IVR (stores temporarily)
         result = ivr.save_recorded_greeting(fake_audio)
-        assert result, "Should successfully save greeting"
+        assert result, "Should successfully save greeting temporarily"
         
-        # Verify greeting was saved to mailbox
+        # Verify greeting was stored temporarily (not yet in mailbox)
+        assert ivr.get_recorded_greeting() == fake_audio, "Greeting should be stored temporarily"
+        
+        # Now simulate the user confirming the greeting by directly saving to mailbox
         mailbox = vm_system.get_mailbox('1001')
-        assert mailbox.has_custom_greeting(), "Mailbox should have custom greeting"
+        mailbox.save_greeting(fake_audio)
+        assert mailbox.has_custom_greeting(), "Mailbox should have custom greeting after confirmation"
         
         print("✓ IVR save recorded greeting works")
 

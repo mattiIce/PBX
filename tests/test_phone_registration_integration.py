@@ -79,6 +79,20 @@ def test_registration_storage():
     pbx.database = db
     pbx.registered_phones_db = RegisteredPhonesDB(db)
     
+    # Add a test extension to the in-memory database
+    from pbx.utils.database import ExtensionDB
+    pbx.extension_db = ExtensionDB(db)
+    
+    # Add extension to database with a simple hash for testing
+    import hashlib
+    password_hash = hashlib.sha256("testpass".encode()).hexdigest()
+    pbx.extension_db.add(
+        number="1001",
+        name="Test User",
+        email="test@test.com",
+        password_hash=password_hash
+    )
+    
     # Simulate a SIP REGISTER
     from_header = '"Test Phone" <sip:1001@192.168.1.100>'
     addr = ('192.168.1.100', 5060)
@@ -140,6 +154,18 @@ def test_ip_based_tracking():
     pbx = PBXCore("config.yml")
     pbx.database = db
     pbx.registered_phones_db = RegisteredPhonesDB(db)
+    
+    # Add a test extension to the database
+    from pbx.utils.database import ExtensionDB
+    pbx.extension_db = ExtensionDB(db)
+    import hashlib
+    password_hash = hashlib.sha256("testpass".encode()).hexdigest()
+    pbx.extension_db.add(
+        number="1002",
+        name="Generic User",
+        email="test2@test.com",
+        password_hash=password_hash
+    )
     
     # Simulate registration without MAC
     from_header = '"Generic Phone" <sip:1002@192.168.1.101>'

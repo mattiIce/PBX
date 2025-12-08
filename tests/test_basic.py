@@ -141,14 +141,10 @@ def test_config():
     sip_port = config.get('server.sip_port')
     assert sip_port == 5060, f"Expected port 5060, got {sip_port}"
 
-    # Test extensions
+    # Note: Extensions are now stored in the database, not in config.yml
+    # So we no longer check for extensions in config
     extensions = config.get_extensions()
-    assert len(extensions) > 0, "Expected at least one extension"
-
-    # Test getting specific extension
-    ext = config.get_extension("1001")
-    assert ext is not None, "Extension 1001 not found"
-    assert 'name' in ext, "Extension 1001 should have a name field"
+    assert isinstance(extensions, list), "Extensions should be a list (empty if using database)"
 
     print("✓ Configuration works")
 
