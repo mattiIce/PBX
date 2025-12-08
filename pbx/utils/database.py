@@ -676,7 +676,7 @@ class RegisteredPhonesDB:
 
     def register_phone(self, extension_number: str, ip_address: str, 
                       mac_address: str = None, user_agent: str = None, 
-                      contact_uri: str = None) -> tuple:
+                      contact_uri: str = None) -> tuple[bool, Optional[str]]:
         """
         Register or update a phone registration
         
@@ -688,7 +688,7 @@ class RegisteredPhonesDB:
             contact_uri: Contact URI from SIP message
             
         Returns:
-            tuple: (success: bool, stored_mac: str or None) - Success status and the actual MAC address stored
+            tuple[bool, Optional[str]]: Success status and the actual MAC address stored (or None)
         """
         # First check if this phone is already registered (by MAC or IP)
         existing = None
