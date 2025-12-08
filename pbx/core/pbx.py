@@ -535,6 +535,9 @@ class PBXCore:
         call.start()
         call.original_invite = message  # Store original INVITE for later response
         
+        # Start CDR record for analytics
+        self.cdr_system.start_record(call_id, from_ext, to_ext)
+        
         # Trigger webhook event
         self.webhook_system.trigger_event(WebhookEvent.CALL_STARTED, {
             'call_id': call_id,
@@ -684,6 +687,9 @@ class PBXCore:
 
         # Mark call as connected
         call.connect()
+        
+        # Mark CDR as answered for analytics
+        self.cdr_system.mark_answered(call_id)
 
         # Send 200 OK back to caller with PBX's RTP endpoint
         server_ip = self._get_server_ip()
@@ -759,6 +765,9 @@ class PBXCore:
 
             self.call_manager.end_call(call_id)
             self.rtp_relay.release_relay(call_id)
+            
+            # End CDR record for analytics
+            self.cdr_system.end_record(call_id, hangup_cause='normal_clearing')
 
     def transfer_call(self, call_id, new_destination):
         """
@@ -1200,6 +1209,9 @@ class PBXCore:
         call.caller_rtp = caller_sdp
         call.auto_attendant_active = True
         
+        # Start CDR record for analytics
+        self.cdr_system.start_record(call_id, from_ext, to_ext)
+        
         # Allocate RTP ports
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
         if rtp_ports:
@@ -1468,6 +1480,9 @@ class PBXCore:
         call.caller_rtp = caller_sdp
         call.voicemail_access = True
         call.voicemail_extension = target_ext
+        
+        # Start CDR record for analytics
+        self.cdr_system.start_record(call_id, from_ext, f"*{target_ext}")
 
         # Allocate RTP ports
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
@@ -1580,6 +1595,9 @@ class PBXCore:
         call.paging_active = True
         call.page_id = page_id
         call.paging_zones = page_info.get('zone_names', 'Unknown')
+        
+        # Start CDR record for analytics
+        self.cdr_system.start_record(call_id, from_ext, to_ext)
         
         # Allocate RTP ports
         rtp_ports = self.rtp_relay.allocate_relay(call_id)

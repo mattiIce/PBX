@@ -29,9 +29,11 @@ psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
 # For FIDO2/WebAuthn authentication
 fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
 
-# For voicemail transcription (optional):
-# - openai (OpenAI Whisper API)
-# - google-cloud-speech (Google Cloud Speech-to-Text)
+# Voicemail transcription (FREE, offline speech recognition)
+vosk>=0.3.45
+
+# Alternative cloud-based transcription provider (optional):
+# - google-cloud-speech (Google Cloud Speech-to-Text - requires paid API key)
 
 # For web interface:
 # - flask or fastapi (Web framework)

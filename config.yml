@@ -79,8 +79,8 @@ features:
   # Voicemail Transcription - Speech-to-text for voicemails
   voicemail_transcription:
     enabled: false              # Enable voicemail transcription
-    provider: openai            # Provider: 'openai' or 'google'
-    api_key: ${TRANSCRIPTION_API_KEY}  # API key for transcription service
+    provider: vosk              # Provider: 'vosk' (FREE, offline) or 'google'
+    vosk_model_path: models/vosk-model-small-en-us-0.15  # Path to Vosk model (download from https://alphacephei.com/vosk/models)
     # For Google Cloud Speech-to-Text, set GOOGLE_APPLICATION_CREDENTIALS environment variable
   
   # Webhook System - Event-driven integrations
