@@ -57,6 +57,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **SRTP** - Encrypted media streams
 - **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
 - **Password Security** - PBKDF2-HMAC-SHA256 hashing with 600,000 iterations (OWASP 2024 recommendation)
+- **E911 Protection** - Automatic blocking of emergency calls during testing to prevent accidental 911 calls (see [E911_PROTECTION_GUIDE.md](E911_PROTECTION_GUIDE.md))
 
 ## 📋 Requirements
 
@@ -313,6 +314,18 @@ python examples/simple_client.py
 This will:
 1. Register extension 1001 with the PBX
 2. Make a test call to extension 1002
+
+Run test suites to verify functionality:
+
+```bash
+# Basic tests
+python tests/test_basic.py
+
+# E911 protection tests
+python tests/test_e911_protection.py
+```
+
+**Important:** The E911 protection system automatically prevents emergency calls during testing. See [E911_PROTECTION_GUIDE.md](E911_PROTECTION_GUIDE.md) for details.
 
 ## 🔐 Security
 

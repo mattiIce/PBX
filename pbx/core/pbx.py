@@ -103,7 +103,7 @@ class PBXCore:
         self.parking_system = CallParkingSystem()
         self.cdr_system = CDRSystem()
         self.moh_system = MusicOnHold()
-        self.trunk_system = SIPTrunkSystem()
+        self.trunk_system = SIPTrunkSystem(config=self.config)
         
         # Initialize statistics engine for analytics
         from pbx.features.statistics import StatisticsEngine
