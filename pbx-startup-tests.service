@@ -1,0 +1,19 @@
+[Unit]
+Description=PBX System Startup Tests
+After=network.target
+
+[Service]
+Type=oneshot
+# Update this path to match your PBX installation directory
+WorkingDirectory=/opt/pbx
+# Update this path to match your PBX installation directory
+ExecStart=/opt/pbx/run_startup_tests.sh
+# Run as the user who owns the PBX files (update as needed)
+User=pbx
+StandardOutput=journal
+StandardError=journal
+# Don't fail the boot if tests fail
+SuccessExitStatus=0 1
+
+[Install]
+WantedBy=multi-user.target

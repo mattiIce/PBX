@@ -123,7 +123,7 @@ def write_failures_log(total, passed, failed, failures):
 
 
 def commit_log_file():
-    """Commit the test failures log file to git"""
+    """Commit and push the test failures log file to git"""
     try:
         # Check if git is available and we're in a repo
         subprocess.run(['git', 'status'], capture_output=True, check=True, cwd=str(LOG_FILE.parent))
@@ -148,6 +148,31 @@ def commit_log_file():
                 capture_output=True
             )
             print(f"✓ Log file committed to git")
+            
+            # Push to remote repository
+            try:
+                result = subprocess.run(
+                    ['git', 'push'],
+                    cwd=str(LOG_FILE.parent),
+                    check=True,
+                    capture_output=True,
+                    timeout=30
+                )
+                print(f"✓ Log file pushed to remote repository")
+            except subprocess.TimeoutExpired:
+                print(f"⚠ Warning: Push timed out after 30 seconds")
+            except subprocess.CalledProcessError as e:
+                error_msg = e.stderr.decode() if e.stderr else str(e)
+                print(f"⚠ Warning: Could not push to remote")
+                if "Authentication failed" in error_msg or "Invalid username" in error_msg:
+                    print(f"  → Git credentials not configured. To enable automatic push:")
+                    print(f"     1. Generate a Personal Access Token (PAT) on GitHub")
+                    print(f"     2. Configure git credentials:")
+                    print(f"        git config credential.helper store")
+                    print(f"        git push (enter username and PAT when prompted)")
+                    print(f"  → Or configure SSH keys for authentication")
+                else:
+                    print(f"  → Error: {error_msg}")
         else:
             print(f"ℹ No changes to commit")
             
