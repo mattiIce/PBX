@@ -11,8 +11,8 @@ Usage:
 
 import subprocess
 import sys
-import os
 from pathlib import Path
+from datetime import datetime
 
 
 def generate_pdf():
@@ -48,12 +48,12 @@ def generate_pdf():
         "-V", "margin-bottom=1in",
         "--metadata", "title=Executive Summary: Aluminum Blanking PBX System",
         "--metadata", "author=Aluminum Blanking",
-        "--metadata", "date=December 8, 2025",
+        "--metadata", "date=" + datetime.now().strftime("%B %d, %Y"),
     ]
     
     try:
         # Run pandoc
-        result = subprocess.run(
+        subprocess.run(
             pandoc_cmd,
             check=True,
             capture_output=True,
