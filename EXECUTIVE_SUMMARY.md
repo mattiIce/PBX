@@ -271,14 +271,349 @@ PBX/
 | Codec Negotiation | ✅ Complete | Automatic best codec selection |
 
 ### Emergency Services & E911
-| Feature | Status | Business Value |
-|---------|--------|---------------|
-| Nomadic E911 Support | ⏳ Planned | Location-based emergency routing |
-| Automatic Location Updates | ⏳ Planned | Dynamic address management for remote workers |
-| Kari's Law Compliance | ⏳ Planned | Direct 911 dialing without prefix |
-| Ray Baum's Act Compliance | ⏳ Planned | Dispatchable location information |
-| Multi-Site E911 | ⏳ Planned | Per-location emergency routing |
-| Emergency Notification | ⚠️ Framework | Paging system supports emergency override |
+
+**Overview**: E911 (Enhanced 911) is a critical life-safety feature that ensures emergency calls are properly routed to the correct Public Safety Answering Point (PSAP) with accurate location information. Modern VoIP systems must comply with federal regulations and provide reliable emergency services.
+
+#### Current Implementation Status
+
+| Feature | Status | Implementation Details |
+|---------|--------|----------------------|
+| Emergency Call Routing | ⚠️ Framework | Outbound route configured for 911 calls with highest priority |
+| Location Database | ⚠️ Framework | Location-to-extension mapping in config (see config_comcast_sip.yml) |
+| Kari's Law Compliance | ⚠️ Framework | Direct 911 dialing without prefix configured in dialplan |
+| Ray Baum's Act Compliance | ⏳ Planned | Dispatchable location information transmission |
+| Multi-Site E911 | ⚠️ Framework | Extension range to location mapping configured |
+| Nomadic E911 Support | ⏳ Planned | Dynamic location updates for remote/mobile workers |
+| Automatic Location Updates | ⏳ Planned | API for real-time location management |
+| Emergency Notification | ⚠️ Framework | Paging system supports emergency override broadcasts |
+| PSAP Callback Support | ⏳ Planned | Routing callback calls from 911 dispatchers |
+| E911 Audit Logging | ⏳ Planned | Compliance logging of all emergency calls |
+
+#### Federal Compliance Requirements
+
+**Kari's Law (Effective: February 16, 2020)**
+- **Requirement**: Multi-line telephone systems (MLTS) must allow users to dial 911 directly without any prefix (no "9" required)
+- **Current Status**: ⚠️ Framework - Dialplan configured to route 911 directly
+- **Implementation**: Emergency route pattern `^911$` configured with priority 1 in outbound routes
+- **Business Impact**: Legal compliance, improved emergency response time, user safety
+
+**Ray Baum's Act (Effective: January 6, 2021)**
+- **Requirement**: MLTS must provide "dispatchable location" information with 911 calls
+- **Dispatchable Location**: Street address, floor, room number, and other specific location details
+- **Current Status**: ⏳ Planned - Location database framework exists, transmission pending
+- **Implementation Needed**: 
+  - SIP header injection (P-Asserted-Identity, Geolocation headers)
+  - Integration with E911 service provider (e.g., RedSky, West, Bandwidth)
+  - Real-time location data transmission
+- **Business Impact**: Legal compliance, faster emergency response, reduced liability
+
+#### Technical Architecture
+
+**Emergency Call Flow**
+```
+Extension dials 911
+    ↓
+PBX identifies emergency call
+    ↓
+Retrieve caller location from database
+    ↓
+Route to SIP trunk (highest priority)
+    ↓
+Inject location headers (P-Asserted-Identity, Geolocation)
+    ↓
+Notify security/reception of emergency call
+    ↓
+Log emergency call details
+    ↓
+Connect to PSAP with location information
+    ↓
+Monitor for PSAP callback
+```
+
+**Location Database Structure**
+
+*Current Framework (config_comcast_sip.yml):*
+```yaml
+e911:
+  enabled: true
+  provider: "comcast"
+  locations:
+    - extension_range: "1000-1099"
+      address: "123 Main St"
+      suite: "Suite 100"
+      city: "Your City"
+      state: "CA"
+      zip: "12345"
+```
+
+*Enhanced Structure (Planned for Ray Baum's Act compliance):*
+```yaml
+e911:
+  enabled: true
+  provider: "comcast"  # or "redsky", "west", "bandwidth"
+  locations:
+    - extension_range: "1000-1099"
+      address: "123 Main St"
+      suite: "Suite 100"
+      floor: "1st Floor"        # Ray Baum's Act requirement
+      room: "Reception Area"    # Ray Baum's Act requirement
+      city: "Your City"
+      state: "CA"
+      zip: "12345"
+      notes: "Main building, east wing"
+      
+    - extension_range: "1100-1199"
+      address: "456 Oak Ave"
+      suite: "Building B"
+      floor: "2nd Floor"
+      city: "Your City"
+      state: "CA"
+      zip: "12345"
+      notes: "Warehouse location"
+```
+
+#### E911 Service Provider Integration
+
+**Supported Integration Models**
+
+1. **SIP Trunk Provider E911** (Current Framework)
+   - Status: ⚠️ Framework configured in config_comcast_sip.yml
+   - Providers: Comcast VoiceEdge, AT&T, Verizon
+   - Method: Provider manages E911 database centrally
+   - Pros: Simple setup, provider handles PSAP routing
+   - Cons: Limited flexibility, manual location updates
+   - Configuration: Location database maintained in provider portal
+
+2. **Dedicated E911 Service** (Planned)
+   - Status: ⏳ Planned
+   - Providers: RedSky E911 Manager, West Safety Services, Bandwidth 911 Access
+   - Method: Third-party service maintains E911 database and routing
+   - Pros: Advanced features, dynamic location updates, compliance tools
+   - Cons: Additional monthly cost ($1-3/user/month)
+   - Features: Web portal, API access, automatic updates, compliance reporting
+
+3. **Direct PSAP Routing** (Advanced - Planned)
+   - Status: ⏳ Planned
+   - Method: Direct routing to local PSAP via SIP
+   - Pros: Lowest latency, no intermediaries
+   - Cons: Complex setup, requires PSAP agreements
+   - Use Case: Large enterprises, government facilities
+
+#### Key E911 Features
+
+**Multi-Site Support** (Framework)
+- **Current Status**: ⚠️ Framework - Extension range to location mapping configured
+- **Capability**: Map different extension ranges to different physical locations
+- **Use Case**: Multiple office buildings, branch offices, remote sites
+- **Configuration**: Extension range patterns mapped to street addresses
+- **Business Value**: Accurate emergency routing for distributed organizations
+
+**Nomadic E911** (Planned)
+- **Current Status**: ⏳ Planned
+- **Capability**: Track and route based on current user location, not extension location
+- **Use Case**: Hot-desking, remote workers, mobile employees
+- **Method**: 
+  - User login updates current location
+  - IP-based location detection
+  - Manual location selection via phone/web interface
+  - GPS integration for mobile softphones
+- **Business Value**: Accurate emergency services for flexible work environments
+
+**Emergency Notification System** (Framework)
+- **Current Status**: ⚠️ Framework - Integrated with paging system
+- **Capability**: Automatic notification when 911 call is placed
+- **Recipients**: Security team, reception, management, facilities
+- **Methods**: 
+  - Overhead paging announcement: "Emergency call from extension 1001"
+  - Email notification to security team
+  - SMS alerts to on-call staff
+  - Dashboard alert in admin panel
+  - Integration with physical security systems
+- **Configuration**: Webhook-based notification to multiple channels
+- **Business Value**: Faster internal response, security awareness, compliance documentation
+
+**PSAP Callback Handling** (Planned)
+- **Current Status**: ⏳ Planned
+- **Capability**: Automatically route callbacks from 911 dispatchers
+- **Method**: 
+  - Track outbound 911 calls with caller information
+  - Identify inbound calls from PSAP numbers
+  - Priority routing to original caller or security team
+  - Bypass normal call routing rules
+- **Timeout**: Maintain callback route for 60 minutes after 911 call
+- **Business Value**: Ensure emergency responders can reach caller
+
+**E911 Testing & Verification** (Planned)
+- **Current Status**: ⏳ Planned
+- **Capability**: Test emergency call routing without alerting PSAP
+- **Method**: 
+  - Test mode routes to 933 (non-emergency test line)
+  - Verify location data transmission
+  - Validate caller ID presentation
+  - Check notification system functionality
+- **Frequency**: Quarterly testing recommended
+- **Documentation**: Automated test result logging for compliance
+- **Business Value**: Compliance verification, system validation, reduced liability
+
+#### Implementation Requirements
+
+**Phase 1: Core Compliance (Current Framework)**
+- ✅ Direct 911 dialing without prefix (Kari's Law)
+- ✅ Emergency route priority configuration
+- ✅ Location database structure
+- ⏳ Dispatchable location SIP header injection (Ray Baum's Act)
+- ⏳ E911 call logging and audit trail
+
+**Phase 2: Enhanced Features**
+- ⏳ Dedicated E911 service provider integration (RedSky/West/Bandwidth)
+- ⏳ Real-time location updates via API
+- ⏳ PSAP callback routing
+- ⏳ Emergency notification webhooks
+- ⏳ Compliance reporting dashboard
+
+**Phase 3: Advanced Capabilities**
+- ⏳ Nomadic E911 with dynamic location tracking
+- ⏳ IP-based automatic location detection
+- ⏳ Mobile softphone GPS integration
+- ⏳ Integration with physical security systems (badge readers, cameras)
+- ⏳ Automated location verification and updates
+
+#### Integration Points
+
+**SIP Trunk Providers**
+- **Comcast VoiceEdge**: Framework configured (see config_comcast_sip.yml)
+- **AT&T**: Compatible with existing architecture
+- **Verizon**: Compatible with existing architecture
+- **Bandwidth**: Compatible with existing architecture
+
+**E911 Service Providers**
+- **RedSky E911 Manager**: API integration planned
+- **West Safety Services**: API integration planned
+- **Bandwidth 911 Access**: API integration planned
+- **911 Enable**: API integration planned
+
+**Notification Systems**
+- **Paging System**: Framework integrated for emergency override
+- **Webhook System**: ✅ Complete - Event-driven notifications
+- **Email Notifications**: ✅ Complete - Alert delivery system
+- **SMS Integration**: ⏳ Planned via Twilio/Bandwidth
+- **Physical Security**: ⏳ Planned integration
+
+#### Cost Analysis
+
+*Note: Cost estimates as of December 2025. Pricing and requirements subject to change.*
+
+**Implementation Costs**
+- E911 Service Provider: $1-3 per user/month (optional)
+- Development Time: 40-50 hours for full implementation
+- Testing & Validation: 10-15 hours
+- Training & Documentation: 5 hours
+- **Total One-Time**: Approximately $3,000-$5,000 (internal labor) or provider setup fees
+
+**Annual Operating Costs** (50 Users)
+- Dedicated E911 Service: $600-$1,800/year (optional)
+- SIP Trunk E911 (Comcast): Included in service
+- Compliance Testing: Minimal (staff time only)
+- **Total Annual**: $0-$1,800 depending on provider choice
+
+**ROI & Business Value**
+- Legal Compliance: Avoid fines ($5,000-$20,000 per violation)
+- Liability Protection: Reduce organizational risk
+- Faster Emergency Response: Potentially life-saving
+- Insurance Benefits: May reduce liability insurance premiums
+- Peace of Mind: Employee safety assurance
+
+#### Compliance & Regulatory Considerations
+
+**Federal Requirements**
+- ✅ Kari's Law: Direct 911 dialing
+- ⏳ Ray Baum's Act: Dispatchable location
+- ⏳ FCC regulations: E911 call completion
+
+**State-Specific Requirements**
+- Some states require additional E911 capabilities
+- Varies by location - consult state regulations
+- Additional location granularity may be required
+
+**Industry Standards**
+- NENA (National Emergency Number Association) i3 standard
+- IETF RFC 6442: Location Conveyance in SIP
+- IETF RFC 5491: GEOPRIV PIDF-LO Usage Clarification
+
+#### Testing & Validation Procedures
+
+**Pre-Deployment Testing**
+1. Verify 911 route configuration
+2. Test location database accuracy
+3. Validate caller ID presentation
+4. Confirm notification system operation
+5. Test with non-emergency lines (933)
+
+**Ongoing Testing** (Quarterly Recommended)
+1. Place test call to 933 (non-emergency test line)
+2. Verify location information accuracy
+3. Test PSAP callback routing
+4. Review audit logs for compliance
+5. Update location database as needed
+
+**Documentation Requirements**
+- Maintain accurate location database
+- Log all emergency call tests
+- Document location update procedures
+- Train staff on E911 system operation
+- Review compliance quarterly
+
+#### Recommended Action Plan
+
+**Immediate (0-30 Days)**
+1. ✅ Review current framework in config_comcast_sip.yml
+2. ⏳ Complete location database for all extensions
+3. ⏳ Implement Ray Baum's Act compliance (location header injection)
+4. ⏳ Configure emergency call audit logging
+5. ⏳ Test 911 routing with non-emergency test line
+
+**Short-Term (1-3 Months)**
+1. ⏳ Integrate dedicated E911 service provider (optional but recommended)
+2. ⏳ Implement PSAP callback routing
+3. ⏳ Configure emergency notification webhooks
+4. ⏳ Create compliance reporting dashboard
+5. ⏳ Train staff on E911 system and procedures
+
+**Medium-Term (3-6 Months)**
+1. ⏳ Implement nomadic E911 for hot-desking users
+2. ⏳ Add IP-based automatic location detection
+3. ⏳ Integrate with physical security systems
+4. ⏳ Deploy automated location verification
+5. ⏳ Establish quarterly testing procedures
+
+**Long-Term (6-12 Months)**
+1. ⏳ Mobile softphone GPS integration
+2. ⏳ Advanced analytics and reporting
+3. ⏳ Integration with emergency response systems
+4. ⏳ Multi-site coordination features
+5. ⏳ Continuous compliance monitoring
+
+#### Business Value Summary
+
+| Benefit | Value | Impact |
+|---------|-------|--------|
+| **Legal Compliance** | Required | Avoid regulatory fines and penalties |
+| **Life Safety** | Critical | Faster emergency response, potentially life-saving |
+| **Liability Protection** | High | Reduce organizational legal risk |
+| **Employee Confidence** | High | Peace of mind for workforce |
+| **Insurance Benefits** | Medium | Potential premium reductions |
+| **Competitive Advantage** | Medium | Demonstrates commitment to safety |
+| **Regulatory Readiness** | High | Future-proof for evolving regulations |
+
+#### Conclusion
+
+The PBX system has a solid E911 framework in place with location database structure and emergency routing configured. The immediate focus should be on completing Ray Baum's Act compliance by implementing dispatchable location header injection and audit logging. For organizations with multiple sites or remote workers, integration with a dedicated E911 service provider (RedSky, West, or Bandwidth) is strongly recommended to ensure full compliance and optimal emergency response capabilities.
+
+**Development Estimate**: 40-50 hours (core compliance) + 30-40 hours (advanced features)  
+**Priority**: 🚨 HIGH - Safety and compliance critical  
+**Dependencies**: SIP trunk provider coordination, E911 service provider selection (optional)  
+**Risk Level**: Low - Framework exists, clear implementation path  
+**Investment**: $3,000-$5,000 one-time + $0-$1,800/year (based on December 2025 estimates)
 
 ### Advanced Analytics & Reporting
 | Feature | Status | Business Value |
