@@ -208,5 +208,14 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertIsInstance(result['timestamp'], datetime)
 
 
+def run_all_tests():
+    """Run all tests in this module"""
+    loader = unittest.TestLoader()
+    suite = loader.loadTestsFromModule(sys.modules[__name__])
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+    return result.wasSuccessful()
+
+
 if __name__ == '__main__':
     unittest.main()

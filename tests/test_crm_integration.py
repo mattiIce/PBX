@@ -363,7 +363,8 @@ def test_provider_status():
     return True
 
 
-if __name__ == "__main__":
+def run_all_tests():
+    """Run all tests in this module"""
     print("=" * 70)
     print("Testing CRM Integration and Screen Pop Support")
     print("=" * 70)
@@ -382,7 +383,12 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     if all(results):
         print(f"✅ All CRM integration tests passed! ({len(results)}/{len(results)})")
-        sys.exit(0)
+        return True
     else:
         print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
-        sys.exit(1)
+        return False
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

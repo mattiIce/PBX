@@ -178,7 +178,8 @@ def test_email_notification_checks_database():
         shutil.rmtree(temp_dir)
 
 
-if __name__ == '__main__':
+def run_all_tests():
+    """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Fixes Tests")
     print("=" * 60)
@@ -209,4 +210,10 @@ if __name__ == '__main__':
     print(f"Results: {passed} passed, {failed} failed")
     print("=" * 60)
     
-    sys.exit(0 if failed == 0 else 1)
+    return failed == 0
+
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

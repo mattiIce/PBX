@@ -4,6 +4,7 @@ Tests for Statistics and Analytics System
 import unittest
 import tempfile
 import os
+import sys
 import json
 import shutil
 from datetime import datetime, timedelta
@@ -254,6 +255,15 @@ class TestCDRSystem(unittest.TestCase):
         self.assertEqual(stats['total_calls'], 1)
         self.assertEqual(stats['answered_calls'], 1)
         self.assertEqual(stats['answer_rate'], 100.0)
+
+
+def run_all_tests():
+    """Run all tests in this module"""
+    loader = unittest.TestLoader()
+    suite = loader.loadTestsFromModule(sys.modules[__name__])
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+    return result.wasSuccessful()
 
 
 if __name__ == '__main__':

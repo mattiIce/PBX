@@ -419,7 +419,7 @@ def test_fido2_assertion_verification():
     return True
 
 
-def run_tests():
+def run_all_tests():
     """Run all MFA tests"""
     print("=" * 60)
     print("MFA Feature Tests")
@@ -466,5 +466,5 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    success = run_tests()
+    success = run_all_tests()
     sys.exit(0 if success else 1)

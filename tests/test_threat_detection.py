@@ -270,7 +270,7 @@ def test_with_database():
         raise e
 
 
-def run_tests():
+def run_all_tests():
     """Run all threat detection tests"""
     print("=" * 60)
     print("Enhanced Threat Detection Tests")
@@ -312,5 +312,5 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    success = run_tests()
+    success = run_all_tests()
     sys.exit(0 if success else 1)

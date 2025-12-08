@@ -270,7 +270,8 @@ def test_voicemail_ivr_exit():
     print("✓ VoicemailIVR exit works")
 
 
-if __name__ == '__main__':
+def run_all_tests():
+    """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail IVR Tests")
     print("=" * 60)
@@ -307,4 +308,9 @@ if __name__ == '__main__':
     print(f"Results: {passed} passed, {failed} failed")
     print("=" * 60)
     
-    sys.exit(0 if failed == 0 else 1)
+    return failed == 0
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

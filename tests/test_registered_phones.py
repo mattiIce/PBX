@@ -396,7 +396,8 @@ def test_update_phone_extension_without_mac():
     print("✓ Phone extension update validation works")
 
 
-if __name__ == "__main__":
+def run_all_tests():
+    """Run all tests in this module"""
     print("=" * 60)
     print("Running Registered Phones Tests")
     print("=" * 60)
@@ -417,9 +418,15 @@ if __name__ == "__main__":
         print("=" * 60)
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}")
-        sys.exit(1)
+        return False
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
         traceback.print_exc()
-        sys.exit(1)
+        return False
+
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)
