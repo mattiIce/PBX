@@ -59,7 +59,7 @@ extensions:
 dialplan:
   internal_pattern: ^1[0-9]{3}$
   conference_pattern: ^2[0-9]{3}$
-  voicemail_pattern: ^\*[0-9]{3}$
+  voicemail_pattern: ^\*[0-9]{3,4}$
   parking_pattern: ^7[0-9]$
   queue_pattern: ^8[0-9]{3}$
   auto_attendant_pattern: ^0$
