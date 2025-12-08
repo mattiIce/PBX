@@ -33,6 +33,8 @@ wheels/
 # Logs
 *.log
 logs/
+# Exception: allow test failure log to be committed for troubleshooting
+!test_failures.log
 
 # PBX runtime directories
 recordings/

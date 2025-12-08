@@ -7,14 +7,16 @@ import sys
 import os
 import importlib.util
 import traceback
+from datetime import datetime
 
 
-def run_all_tests(tests_dir="tests"):
+def run_all_tests(tests_dir="tests", log_failures=True):
     """
     Run all test files in the tests directory
     
     Args:
         tests_dir: Path to the tests directory
+        log_failures: Whether to log failures to test_failures.log
         
     Returns:
         Tuple of (total_passed, total_failed, total_skipped, test_results)
@@ -24,6 +26,19 @@ def run_all_tests(tests_dir="tests"):
     if not os.path.isabs(tests_dir):
         tests_dir = os.path.join(os.path.dirname(__file__), '..', '..', tests_dir)
     tests_dir = os.path.abspath(tests_dir)
+    
+    # Set up failure log file
+    log_file = None
+    if log_failures:
+        log_path = os.path.join(os.path.dirname(tests_dir), 'test_failures.log')
+        try:
+            log_file = open(log_path, 'a')
+            log_file.write("\n" + "=" * 80 + "\n")
+            log_file.write(f"Test Run Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            log_file.write("=" * 80 + "\n\n")
+        except Exception as e:
+            print(f"Warning: Could not open log file {log_path}: {e}")
+            log_file = None
     
     if not os.path.exists(tests_dir):
         print(f"Error: Tests directory not found: {tests_dir}")
@@ -72,7 +87,25 @@ def run_all_tests(tests_dir="tests"):
             
             # Run the test if it has a run_all_tests function
             if hasattr(module, 'run_all_tests'):
-                success = module.run_all_tests()
+                # Capture output for logging purposes
+                import io
+                from contextlib import redirect_stdout, redirect_stderr
+                
+                stdout_capture = io.StringIO()
+                stderr_capture = io.StringIO()
+                
+                with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+                    success = module.run_all_tests()
+                
+                # Get captured output
+                test_stdout = stdout_capture.getvalue()
+                test_stderr = stderr_capture.getvalue()
+                
+                # Print the output so user can see it
+                if test_stdout:
+                    print(test_stdout, end='')
+                if test_stderr:
+                    print(test_stderr, end='', file=sys.stderr)
                 
                 # Handle return value - we use 'is True' to ensure explicit success
                 # This is intentional to handle cases where tests return non-boolean values
@@ -86,6 +119,20 @@ def run_all_tests(tests_dir="tests"):
                     print(f"  ✗ {test_file} FAILED")
                     total_failed += 1
                     test_results.append((test_file, False, "Tests failed"))
+                    
+                    # Log failure with captured output
+                    if log_file:
+                        log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FAILED: {test_file}\n")
+                        log_file.write(f"  Return value: {success} (expected True)\n")
+                        if test_stdout:
+                            log_file.write(f"\n  Test Output:\n")
+                            for line in test_stdout.splitlines():
+                                log_file.write(f"    {line}\n")
+                        if test_stderr:
+                            log_file.write(f"\n  Test Errors:\n")
+                            for line in test_stderr.splitlines():
+                                log_file.write(f"    {line}\n")
+                        log_file.write("\n")
             else:
                 print(f"  ⚠ {test_file} has no run_all_tests() function (skipped)")
                 total_skipped += 1
@@ -93,9 +140,18 @@ def run_all_tests(tests_dir="tests"):
                 
         except Exception as e:
             print(f"  ✗ Error running {test_file}: {e}")
+            error_trace = traceback.format_exc()
             traceback.print_exc()
             total_failed += 1
             test_results.append((test_file, False, str(e)))
+            
+            # Log failure with full traceback
+            if log_file:
+                log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: {test_file}\n")
+                log_file.write(f"  Exception: {e}\n")
+                log_file.write(f"  Traceback:\n")
+                log_file.write(error_trace)
+                log_file.write("\n")
         
         print()
     
@@ -108,6 +164,18 @@ def run_all_tests(tests_dir="tests"):
     print(f"Failed: {total_failed}")
     print(f"Skipped: {total_skipped}")
     print("=" * 70)
+    
+    # Close log file and print summary
+    if log_file:
+        log_file.write("=" * 80 + "\n")
+        log_file.write(f"Test Run Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        log_file.write(f"Summary: {total_passed} passed, {total_failed} failed, {total_skipped} skipped\n")
+        log_file.write("=" * 80 + "\n")
+        log_file.close()
+        
+        if total_failed > 0:
+            log_path = os.path.join(os.path.dirname(tests_dir), 'test_failures.log')
+            print(f"\n⚠ Test failures have been logged to: {log_path}")
     
     return total_passed, total_failed, total_skipped, test_results
 
