@@ -1037,6 +1037,14 @@ class PBXCore:
                 voicemail_timer.start()
                 call.voicemail_timer = voicemail_timer
 
+                # Start DTMF monitoring thread to detect # key press
+                dtmf_monitor_thread = threading.Thread(
+                    target=self._monitor_voicemail_dtmf,
+                    args=(call_id, call, recorder)
+                )
+                dtmf_monitor_thread.daemon = True
+                dtmf_monitor_thread.start()
+
                 self.logger.info(f"Started voicemail recording for call {call_id}, max duration: {max_duration}s")
             else:
                 self.logger.error(f"Failed to start voicemail recorder for call {call_id}")
@@ -1045,6 +1053,69 @@ class PBXCore:
             self.logger.error(f"Cannot route call {call_id} to voicemail - missing required information")
             # Fallback to ending the call
             self.end_call(call_id)
+
+    def _monitor_voicemail_dtmf(self, call_id, call, recorder):
+        """
+        Monitor for DTMF # key press during voicemail recording
+        When # is detected, complete the voicemail recording early
+
+        Args:
+            call_id: Call identifier
+            call: Call object
+            recorder: RTPRecorder instance
+        """
+        import time
+        from pbx.utils.dtmf import DTMFDetector
+        
+        try:
+            # Create DTMF detector
+            dtmf_detector = DTMFDetector(sample_rate=8000)
+            
+            # Constants for DTMF detection
+            DTMF_DETECTION_PACKETS = 40  # 40 packets * 20ms = 0.8s of audio
+            MIN_AUDIO_BYTES_FOR_DTMF = 1600  # Minimum audio data needed for reliable DTMF detection
+            
+            self.logger.info(f"Started DTMF monitoring for voicemail recording on call {call_id}")
+            
+            # Monitor for # key press
+            while recorder.running and call.state.value != 'ended':
+                time.sleep(0.1)
+                
+                # Check for recorded audio (DTMF tones from caller)
+                if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                    # Get recent audio data
+                    if len(recorder.recorded_data) > 0:
+                        # Collect last portion of audio for DTMF detection
+                        recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
+                        
+                        if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
+                            # Convert bytes to audio samples for DTMF detection
+                            # G.711 μ-law is 8-bit samples, one byte per sample
+                            import struct
+                            samples = []
+                            for byte in recent_audio:
+                                # Convert unsigned byte to signed float (-1.0 to 1.0)
+                                if isinstance(byte, int):
+                                    sample = (byte - 128) / 128.0
+                                else:
+                                    sample = (struct.unpack('B', byte)[0] - 128) / 128.0
+                                samples.append(sample)
+                            
+                            # Detect DTMF
+                            digit = dtmf_detector.detect_tone(samples)
+                            
+                            if digit == '#':
+                                self.logger.info(f"Detected # key press during voicemail recording on call {call_id}")
+                                # Complete the voicemail recording
+                                self._complete_voicemail_recording(call_id)
+                                return
+            
+            self.logger.debug(f"DTMF monitoring ended for voicemail recording on call {call_id}")
+            
+        except Exception as e:
+            self.logger.error(f"Error in voicemail DTMF monitoring: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
 
     def _complete_voicemail_recording(self, call_id):
         """
