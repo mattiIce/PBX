@@ -1847,6 +1847,7 @@ class PBXCore:
         from pbx.rtp.handler import RTPPlayer, RTPRecorder
         from pbx.utils.audio import get_prompt_audio
         from pbx.utils.dtmf import DTMFDetector
+        from pbx.core.call import CallState
         import tempfile
         import os
         
@@ -1915,7 +1916,7 @@ class PBXCore:
                 time.sleep(0.5)
                 
                 # Check if call was terminated early (e.g., immediate BYE after answering)
-                if call.state.value == 'ended':
+                if call.state == CallState.ENDED:
                     self.logger.info(f"Voicemail IVR for {call.voicemail_extension} - call ended before IVR could start")
                     return
                 
@@ -1933,7 +1934,7 @@ class PBXCore:
                 
                 while ivr_active:
                     # Check if call is still active
-                    if call.state.value == 'ended':
+                    if call.state == CallState.ENDED:
                         break
                     
                     # Collect audio for DTMF detection

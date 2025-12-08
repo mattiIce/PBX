@@ -116,13 +116,16 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
                     for call in log_calls
                 )
                 
-                # If call ended before loop started, we should see the early termination message
+                # Assert the call ended as expected
+                self.assertEqual(call.state, CallState.ENDED, 
+                               "Call should be in ENDED state after test")
+                
+                # We should see the early termination message
                 # and NOT see the "IVR started" message
-                if call.state == CallState.ENDED:
-                    self.assertTrue(ended_before_start, 
-                                  "Should log that call ended before IVR started")
-                    self.assertFalse(ivr_started, 
-                                   "Should NOT log 'IVR started' if call ended early")
+                self.assertTrue(ended_before_start, 
+                              "Should log that call ended before IVR started")
+                self.assertFalse(ivr_started, 
+                               "Should NOT log 'IVR started' if call ended early")
                 
     def test_ivr_session_ended_message_only_after_loop(self):
         """
