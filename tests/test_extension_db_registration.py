@@ -85,14 +85,14 @@ def test_config_extension_still_works():
     pbx = PBXCore("config.yml")
     
     # Check if any extensions were loaded from database
-    if len(pbx.extensions) == 0:
+    if len(pbx.extension_registry.extensions) == 0:
         print("  ⚠ No extensions loaded from database, skipping test")
         print("✓ Config-based extension registration still works (skipped - no extensions)")
         return
     
     # Get the first available extension from the loaded extensions
-    test_ext_number = list(pbx.extensions.keys())[0]
-    test_ext_name = pbx.extensions[test_ext_number].name
+    test_ext_number = list(pbx.extension_registry.extensions.keys())[0]
+    test_ext_name = pbx.extension_registry.extensions[test_ext_number].name
     print(f"  Using test extension: {test_ext_number} ({test_ext_name})")
     
     # Try to register this existing database extension
