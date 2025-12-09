@@ -1,0 +1,49 @@
+{
+  "voicemails": [
+    {
+      "extension": "1001",
+      "caller_id": "5551234567",
+      "timestamp": "2024-01-15T14:30:00",
+      "audio_file": "msg001.wav",
+      "duration": 45,
+      "listened": false
+    },
+    {
+      "extension": "1001",
+      "caller_id": "5559876543",
+      "timestamp": "2024-01-15T15:00:00",
+      "audio_file": "msg002.wav",
+      "duration": 30,
+      "listened": false
+    },
+    {
+      "extension": "1002",
+      "caller_id": "5551112222",
+      "timestamp": "2024-01-16T09:15:00",
+      "audio_file": "msg003.wav",
+      "duration": 60,
+      "listened": true
+    },
+    {
+      "extension": "1002",
+      "caller_id": "5553334444",
+      "timestamp": "2024-01-16T10:30:00",
+      "audio_file": "msg004.wav",
+      "duration": 90,
+      "listened": false
+    },
+    {
+      "extension": "1003",
+      "caller_id": "5555556666",
+      "timestamp": "2024-01-17T11:00:00",
+      "audio_file": "msg005.wav",
+      "duration": 120,
+      "listened": false
+    }
+  ],
+  "pins": {
+    "1001": "1234",
+    "1002": "5678",
+    "1003": "9999"
+  }
+}

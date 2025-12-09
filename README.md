@@ -414,6 +414,14 @@ For issues and questions, please open a GitHub issue.
   - See [PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md) for phone tracking details
   - See [CLEAR_REGISTERED_PHONES.md](CLEAR_REGISTERED_PHONES.md) for clearing phone registration data
 
+### Legacy System Migration
+- [x] **AT&T Merlin Legend Import** - ✅ COMPLETED
+  - Import voicemail messages, PINs, and custom greetings
+  - Supports CSV, JSON, and directory-based formats
+  - Flexible metadata parsing from filenames
+  - Batch import with dry-run preview
+  - See [MERLIN_IMPORT_GUIDE.md](MERLIN_IMPORT_GUIDE.md) for migration guide
+
 ### Phone Provisioning
 - [x] **Auto-Configuration for IP Phones** - ✅ COMPLETED
   - Supports Zultys, Yealink, Polycom, Cisco, Grandstream
