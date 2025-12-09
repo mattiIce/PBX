@@ -72,8 +72,21 @@ When the workaround is triggered, you'll see these log messages:
 ## Affected Phone Models
 
 This issue has been observed with:
-- Zultys ZIP phones (ZIP33G, ZIP37G)
+- **Zultys ZIP33G** - PCAP capture and phone configuration available in `provisioning_templates/` directory
+- Zultys ZIP37G
 - Possibly other models (to be documented as discovered)
+
+## Diagnostic Files
+
+For detailed analysis of the spurious BYE behavior:
+
+- **Zultys ZIP33G**: PCAP capture and configuration files showing the false BYE during voicemail access are available in the `provisioning_templates/` directory
+
+These files can help:
+- Identify the exact SIP message sequence
+- Analyze timing between 200 OK and spurious BYE
+- Determine if specific phone settings trigger the behavior
+- Develop firmware-specific workarounds if needed
 
 ## Phone Configuration Export
 
@@ -81,7 +94,7 @@ If you experience this issue with your phone model, you can help by exporting an
 
 1. Access your phone's web interface
 2. Export the configuration file
-3. Add it to the `provisioning_templates/` directory
+3. Add it to the `provisioning_templates/` directory (along with PCAP if available)
 4. Document the phone model and firmware version
 
 This will help identify configuration settings that may trigger this behavior.
