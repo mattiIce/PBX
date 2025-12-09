@@ -79,6 +79,8 @@ When you register a device via the admin console:
 
 All templates support these placeholders:
 
+### Basic Configuration Placeholders
+
 | Placeholder | Description | Example Value |
 |-------------|-------------|---------------|
 | `{{EXTENSION_NUMBER}}` | Extension number | `1001` |
@@ -88,10 +90,39 @@ All templates support these placeholders:
 | `{{SIP_PORT}}` | SIP server port | `5060` |
 | `{{SERVER_NAME}}` | PBX server name | `Aluminum Blanking Phone System` |
 
+### LDAP/LDAPS Phone Book Placeholders
+
+**NEW:** Configure phones to directly access LDAP directory for contact lookups
+
+| Placeholder | Description | Example Value |
+|-------------|-------------|---------------|
+| `{{LDAP_ENABLE}}` | Enable LDAP (0=disabled, 1=enabled) | `1` |
+| `{{LDAP_SERVER}}` | LDAP server address | `ldaps://192.168.1.22` |
+| `{{LDAP_PORT}}` | LDAP port (636=LDAPS, 389=LDAP) | `636` |
+| `{{LDAP_BASE}}` | Base DN for directory searches | `DC=company,DC=com` |
+| `{{LDAP_USER}}` | Bind DN for authentication | `CN=phonebook,CN=Users,DC=company,DC=com` |
+| `{{LDAP_PASSWORD}}` | Bind password | `phonebook_pass` |
+| `{{LDAP_VERSION}}` | LDAP protocol version | `3` |
+| `{{LDAP_TLS_MODE}}` | Enable SSL/TLS (0=plain, 1=SSL) | `1` |
+| `{{LDAP_NAME_FILTER}}` | Search filter for names | `(|(cn=%)(sn=%))` |
+| `{{LDAP_NUMBER_FILTER}}` | Search filter for numbers | `(|(telephoneNumber=%)(mobile=%))` |
+| `{{LDAP_NAME_ATTR}}` | LDAP attribute for name | `cn` |
+| `{{LDAP_NUMBER_ATTR}}` | LDAP attribute for number | `telephoneNumber` |
+| `{{LDAP_DISPLAY_NAME}}` | Display name on phone | `Company Directory` |
+
+### Remote Phone Book Placeholders
+
+| Placeholder | Description | Example Value |
+|-------------|-------------|---------------|
+| `{{REMOTE_PHONEBOOK_URL}}` | URL to fetch XML phone book | `http://192.168.1.14:8080/api/phone-book/export/xml` |
+| `{{REMOTE_PHONEBOOK_REFRESH}}` | Refresh interval in minutes | `60` |
+
 **Important:** 
 - Extension name automatically syncs from Active Directory (if enabled)
 - Placeholders are replaced EVERY TIME a phone requests configuration
 - Always use `{{PLACEHOLDER}}` format (double curly braces)
+- LDAP placeholders are configured in `config.yml` under `provisioning.ldap_phonebook`
+- See [LDAPS_PHONEBOOK_GUIDE.md](LDAPS_PHONEBOOK_GUIDE.md) for LDAP configuration details
 
 ## Viewing Templates
 

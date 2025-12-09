@@ -267,7 +267,7 @@ provisioning:
   # This configures phones to directly access LDAP directory for lookups
   # Supported on: Zultys ZIP 33G, ZIP 37G, Yealink phones, and other LDAP-capable devices
   ldap_phonebook:
-    enable: 0  # Set to 1 to enable LDAP phonebook on phones
+    enable: 1  # Set to 1 to enable LDAP phonebook on phones
     server: ldaps://192.168.1.22  # LDAP server address (use ldaps:// for secure connection)
     port: 636  # 636 for LDAPS (SSL), 389 for plain LDAP
     base: DC=albl,DC=com  # Base DN for directory searches
