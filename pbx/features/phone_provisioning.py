@@ -731,6 +731,98 @@ P30 = 13   # GMT-8
         """
         return list(self.devices.values())
 
+    def _build_ldap_phonebook_config(self):
+        """
+        Build LDAP phonebook configuration from AD credentials or explicit config
+        
+        This method prioritizes using Active Directory credentials from .env file
+        (AD_SERVER, AD_BIND_DN, AD_BIND_PASSWORD) if AD integration is enabled.
+        Falls back to explicit ldap_phonebook config if AD is disabled.
+        
+        Returns:
+            dict: LDAP phonebook configuration
+        """
+        # Check if explicit ldap_phonebook config exists
+        explicit_config = self.config.get('provisioning.ldap_phonebook', {})
+        
+        # Check if AD integration is enabled
+        ad_enabled = self.config.get('integrations.active_directory.enabled', False)
+        
+        if ad_enabled:
+            # Use AD credentials from .env (via config)
+            ad_server = self.config.get('integrations.active_directory.server', '')
+            ad_bind_dn = self.config.get('integrations.active_directory.bind_dn', '')
+            ad_bind_password = self.config.get('integrations.active_directory.bind_password', '')
+            ad_base_dn = self.config.get('integrations.active_directory.base_dn', '')
+            
+            # Only use AD credentials if they are configured
+            if ad_server and ad_bind_dn and ad_bind_password:
+                self.logger.info("Using AD credentials from .env for LDAP phonebook")
+                
+                # Parse server URL to extract host and port
+                server_url = ad_server
+                port = 636  # Default LDAPS port
+                tls_mode = 1  # Enable TLS by default
+                
+                # Extract port from URL if specified (e.g., ldaps://server:636)
+                if ':' in server_url:
+                    parts = server_url.rsplit(':', 1)
+                    if parts[1].replace('/', '').isdigit():
+                        port = int(parts[1].replace('/', ''))
+                        server_url = parts[0]
+                
+                # Determine TLS mode based on protocol
+                if server_url.startswith('ldaps://'):
+                    server_url = server_url.replace('ldaps://', '')
+                    tls_mode = 1
+                elif server_url.startswith('ldap://'):
+                    server_url = server_url.replace('ldap://', '')
+                    tls_mode = 0
+                    port = 389  # Default LDAP port
+                
+                # Build config from AD credentials with sensible defaults
+                # Override with explicit config if provided
+                ldap_config = {
+                    'enable': explicit_config.get('enable', 1),  # Enable by default
+                    'server': server_url,
+                    'port': explicit_config.get('port', port),
+                    'base': explicit_config.get('base', ad_base_dn),
+                    'user': ad_bind_dn,
+                    'password': ad_bind_password,
+                    'version': explicit_config.get('version', 3),
+                    'tls_mode': explicit_config.get('tls_mode', tls_mode),
+                    'name_filter': explicit_config.get('name_filter', '(|(cn=%)(sn=%))'),
+                    'number_filter': explicit_config.get('number_filter', '(|(telephoneNumber=%)(mobile=%))'),
+                    'name_attr': explicit_config.get('name_attr', 'cn'),
+                    'number_attr': explicit_config.get('number_attr', 'telephoneNumber'),
+                    'display_name': explicit_config.get('display_name', 'Company Directory')
+                }
+                
+                return ldap_config
+        
+        # Fall back to explicit ldap_phonebook config
+        if explicit_config:
+            self.logger.info("Using explicit ldap_phonebook configuration")
+            return explicit_config
+        
+        # Return empty config if neither AD nor explicit config is available
+        self.logger.debug("No LDAP phonebook configuration available")
+        return {
+            'enable': 0,
+            'server': '',
+            'port': 636,
+            'base': '',
+            'user': '',
+            'password': '',
+            'version': 3,
+            'tls_mode': 1,
+            'name_filter': '(|(cn=%)(sn=%))',
+            'number_filter': '(|(telephoneNumber=%)(mobile=%))',
+            'name_attr': 'cn',
+            'number_attr': 'telephoneNumber',
+            'display_name': 'Directory'
+        }
+
     def generate_config(self, mac_address, extension_registry, request_info=None):
         """
         Generate configuration for a device
@@ -824,6 +916,10 @@ P30 = 13   # GMT-8
             'sip_port': self.config.get('server.sip_port', 5060),
             'server_name': self.config.get('server.server_name', 'PBX')
         }
+        
+        # Add LDAP phonebook configuration
+        server_config['ldap_phonebook'] = self._build_ldap_phonebook_config()
+        server_config['remote_phonebook'] = self.config.get('provisioning.remote_phonebook', {})
 
         self.logger.info(f"  Server config: SIP={server_config['sip_host']}:{server_config['sip_port']}")
         
