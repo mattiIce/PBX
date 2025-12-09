@@ -690,7 +690,35 @@ class RegisteredPhonesDB:
         Returns:
             tuple[bool, Optional[str]]: Success status and the actual MAC address stored (or None)
         """
-        # First check if this phone is already registered (by MAC or IP)
+        # First, check if this MAC or IP is registered to a DIFFERENT extension
+        # This handles reprovisioning: when a phone is moved from one extension to another
+        old_registrations = []
+        if mac_address:
+            # Check if this MAC is registered to a different extension
+            old_by_mac = self.get_by_mac(mac_address)
+            if old_by_mac and old_by_mac['extension_number'] != extension_number:
+                old_registrations.append(old_by_mac)
+                self.logger.info(f"Phone MAC {mac_address} was registered to extension {old_by_mac['extension_number']}, will update to {extension_number}")
+        
+        # Check if this IP is registered to a different extension
+        old_by_ip = self.get_by_ip(ip_address)
+        if old_by_ip and old_by_ip['extension_number'] != extension_number:
+            # Only add if it's not already in the list (avoid duplicates if MAC and IP point to same record)
+            if not any(r['id'] == old_by_ip['id'] for r in old_registrations):
+                old_registrations.append(old_by_ip)
+                self.logger.info(f"Phone IP {ip_address} was registered to extension {old_by_ip['extension_number']}, will update to {extension_number}")
+        
+        # Delete old registrations to different extensions
+        for old_reg in old_registrations:
+            delete_query = """
+            DELETE FROM registered_phones WHERE id = %s
+            """ if self.db.db_type == 'postgresql' else """
+            DELETE FROM registered_phones WHERE id = ?
+            """
+            self.db.execute(delete_query, (old_reg['id'],))
+            self.logger.info(f"Removed old registration: ext={old_reg['extension_number']}, ip={old_reg.get('ip_address')}, mac={old_reg.get('mac_address')}")
+        
+        # Now check if this phone is already registered to THIS extension (by MAC or IP)
         existing = None
         if mac_address:
             existing = self.get_by_mac(mac_address, extension_number)
