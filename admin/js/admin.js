@@ -62,6 +62,9 @@ function showTab(tabName) {
         case 'provisioning':
             loadProvisioning();
             break;
+        case 'auto-attendant':
+            loadAutoAttendantConfig();
+            break;
         case 'voicemail':
             loadVoicemailTab();
             break;

@@ -11,6 +11,9 @@ import threading
 import os
 import mimetypes
 import traceback
+import zipfile
+import tempfile
+import shutil
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
@@ -38,6 +41,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for PBX API"""
 
     pbx_core = None  # Set by PBXAPIServer
+    logger = get_logger()  # Initialize logger for handler
 
     def _set_headers(self, status=200, content_type='application/json'):
         """Set response headers with security enhancements"""
@@ -202,6 +206,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_clear_qos_alerts()
             elif path == '/api/qos/thresholds':
                 self._handle_update_qos_thresholds()
+            elif path == '/api/auto-attendant/menu-options':
+                self._handle_add_auto_attendant_menu_option()
+            elif path.startswith('/api/voicemail-boxes/') and path.endswith('/export'):
+                self._handle_export_voicemail_box(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -237,6 +245,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_config_section()
             elif path.startswith('/api/voicemail/'):
                 self._handle_update_voicemail(path)
+            elif path == '/api/auto-attendant/config':
+                self._handle_update_auto_attendant_config()
+            elif path.startswith('/api/auto-attendant/menu-options/'):
+                self._handle_update_auto_attendant_menu_option(path)
+            elif path.startswith('/api/voicemail-boxes/') and path.endswith('/greeting'):
+                self._handle_upload_voicemail_greeting(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -283,6 +297,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._handle_remove_skill_from_agent(agent_extension, skill_id)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
+            elif path.startswith('/api/auto-attendant/menu-options/'):
+                # Extract digit from path
+                digit = path.split('/')[-1]
+                self._handle_delete_auto_attendant_menu_option(digit)
+            elif path.startswith('/api/voicemail-boxes/') and path.endswith('/clear'):
+                self._handle_clear_voicemail_box(path)
+            elif path.startswith('/api/voicemail-boxes/') and path.endswith('/greeting'):
+                self._handle_delete_voicemail_greeting(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -410,6 +432,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_queue_requirements(path)
             elif path.startswith('/api/voicemail/'):
                 self._handle_get_voicemail(path)
+            elif path == '/api/auto-attendant/config':
+                self._handle_get_auto_attendant_config()
+            elif path == '/api/auto-attendant/menu-options':
+                self._handle_get_auto_attendant_menu_options()
+            elif path == '/api/voicemail-boxes':
+                self._handle_get_voicemail_boxes()
+            elif path.startswith('/api/voicemail-boxes/') and path.endswith('/greeting'):
+                self._handle_get_voicemail_greeting(path)
+            elif path.startswith('/api/voicemail-boxes/'):
+                self._handle_get_voicemail_box_details(path)
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -3336,6 +3368,428 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'device_count': len(devices),
                 'sessions': sessions
             })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== Auto Attendant Management Handlers ==========
+    
+    def _handle_get_auto_attendant_config(self):
+        """Get auto attendant configuration"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
+            self._send_json({'error': 'Auto attendant not available'}, 500)
+            return
+        
+        try:
+            aa = self.pbx_core.auto_attendant
+            config = {
+                'enabled': aa.enabled,
+                'extension': aa.extension,
+                'timeout': aa.timeout,
+                'max_retries': aa.max_retries,
+                'audio_path': aa.audio_path
+            }
+            self._send_json(config)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_auto_attendant_config(self):
+        """Update auto attendant configuration"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
+            self._send_json({'error': 'Auto attendant not available'}, 500)
+            return
+        
+        try:
+            data = self._get_body()
+            aa = self.pbx_core.auto_attendant
+            
+            # Update configuration
+            if 'enabled' in data:
+                aa.enabled = bool(data['enabled'])
+            if 'extension' in data:
+                aa.extension = str(data['extension'])
+            if 'timeout' in data:
+                aa.timeout = int(data['timeout'])
+            if 'max_retries' in data:
+                aa.max_retries = int(data['max_retries'])
+            
+            self._send_json({
+                'success': True,
+                'message': 'Auto attendant configuration updated successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_auto_attendant_menu_options(self):
+        """Get auto attendant menu options"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
+            self._send_json({'error': 'Auto attendant not available'}, 500)
+            return
+        
+        try:
+            aa = self.pbx_core.auto_attendant
+            options = []
+            for digit, option in aa.menu_options.items():
+                options.append({
+                    'digit': digit,
+                    'destination': option['destination'],
+                    'description': option['description']
+                })
+            self._send_json({'menu_options': options})
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_add_auto_attendant_menu_option(self):
+        """Add auto attendant menu option"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
+            self._send_json({'error': 'Auto attendant not available'}, 500)
+            return
+        
+        try:
+            data = self._get_body()
+            digit = str(data.get('digit'))
+            destination = data.get('destination')
+            description = data.get('description', '')
+            
+            if not digit or not destination:
+                self._send_json({'error': 'digit and destination are required'}, 400)
+                return
+            
+            aa = self.pbx_core.auto_attendant
+            aa.menu_options[digit] = {
+                'destination': destination,
+                'description': description
+            }
+            
+            self._send_json({
+                'success': True,
+                'message': f'Menu option {digit} added successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_auto_attendant_menu_option(self, path: str):
+        """Update auto attendant menu option"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
+            self._send_json({'error': 'Auto attendant not available'}, 500)
+            return
+        
+        try:
+            digit = path.split('/')[-1]
+            data = self._get_body()
+            
+            aa = self.pbx_core.auto_attendant
+            if digit not in aa.menu_options:
+                self._send_json({'error': f'Menu option {digit} not found'}, 404)
+                return
+            
+            if 'destination' in data:
+                aa.menu_options[digit]['destination'] = data['destination']
+            if 'description' in data:
+                aa.menu_options[digit]['description'] = data['description']
+            
+            self._send_json({
+                'success': True,
+                'message': f'Menu option {digit} updated successfully'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_auto_attendant_menu_option(self, digit: str):
+        """Delete auto attendant menu option"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
+            self._send_json({'error': 'Auto attendant not available'}, 500)
+            return
+        
+        try:
+            aa = self.pbx_core.auto_attendant
+            if digit in aa.menu_options:
+                del aa.menu_options[digit]
+                self._send_json({
+                    'success': True,
+                    'message': f'Menu option {digit} deleted successfully'
+                })
+            else:
+                self._send_json({'error': f'Menu option {digit} not found'}, 404)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    # ========== Voicemail Box Management Handlers ==========
+    
+    def _handle_get_voicemail_boxes(self):
+        """Get list of all voicemail boxes"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            vm_system = self.pbx_core.voicemail_system
+            boxes = []
+            
+            for extension, mailbox in vm_system.mailboxes.items():
+                messages = mailbox.get_messages(unread_only=False)
+                unread_count = len(mailbox.get_messages(unread_only=True))
+                
+                boxes.append({
+                    'extension': extension,
+                    'total_messages': len(messages),
+                    'unread_messages': unread_count,
+                    'has_custom_greeting': mailbox.has_custom_greeting(),
+                    'storage_path': mailbox.storage_path
+                })
+            
+            self._send_json({'voicemail_boxes': boxes})
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_voicemail_box_details(self, path: str):
+        """Get details of a specific voicemail box"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            # Extract extension from path, handling /export suffix
+            parts = path.split('/')
+            extension = parts[3] if len(parts) > 3 else None
+            
+            if not extension:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            vm_system = self.pbx_core.voicemail_system
+            mailbox = vm_system.get_mailbox(extension)
+            messages = mailbox.get_messages(unread_only=False)
+            
+            details = {
+                'extension': extension,
+                'total_messages': len(messages),
+                'unread_messages': len(mailbox.get_messages(unread_only=True)),
+                'has_custom_greeting': mailbox.has_custom_greeting(),
+                'storage_path': mailbox.storage_path,
+                'messages': []
+            }
+            
+            for msg in messages:
+                details['messages'].append({
+                    'id': msg['id'],
+                    'caller_id': msg['caller_id'],
+                    'timestamp': msg['timestamp'].isoformat() if hasattr(msg['timestamp'], 'isoformat') else str(msg['timestamp']),
+                    'listened': msg['listened'],
+                    'duration': msg.get('duration'),
+                    'file_path': msg['file_path']
+                })
+            
+            self._send_json(details)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_export_voicemail_box(self, path: str):
+        """Export all voicemails from a mailbox as a ZIP file"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            # Extract extension from path: /api/voicemail-boxes/{extension}/export
+            parts = path.split('/')
+            extension = parts[3] if len(parts) > 3 else None
+            
+            if not extension:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            vm_system = self.pbx_core.voicemail_system
+            mailbox = vm_system.get_mailbox(extension)
+            messages = mailbox.get_messages(unread_only=False)
+            
+            if not messages:
+                self._send_json({'error': 'No messages to export'}, 404)
+                return
+            
+            # Create temporary directory for ZIP creation
+            temp_dir = tempfile.mkdtemp()
+            zip_filename = f"voicemail_{extension}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+            zip_path = os.path.join(temp_dir, zip_filename)
+            
+            try:
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    # Add a manifest file with message details
+                    manifest_lines = ['Voicemail Export Manifest\n']
+                    manifest_lines.append(f'Extension: {extension}\n')
+                    manifest_lines.append(f'Export Date: {datetime.now().isoformat()}\n')
+                    manifest_lines.append(f'Total Messages: {len(messages)}\n\n')
+                    manifest_lines.append('Message Details:\n')
+                    manifest_lines.append('-' * 80 + '\n')
+                    
+                    for msg in messages:
+                        # Add audio file to ZIP
+                        if os.path.exists(msg['file_path']):
+                            arcname = os.path.basename(msg['file_path'])
+                            zipf.write(msg['file_path'], arcname)
+                            
+                            # Add to manifest
+                            manifest_lines.append(f"\nFile: {arcname}\n")
+                            manifest_lines.append(f"Caller ID: {msg['caller_id']}\n")
+                            manifest_lines.append(f"Timestamp: {msg['timestamp']}\n")
+                            manifest_lines.append(f"Duration: {msg.get('duration', 'Unknown')}s\n")
+                            manifest_lines.append(f"Status: {'Read' if msg['listened'] else 'Unread'}\n")
+                    
+                    # Add manifest to ZIP
+                    zipf.writestr('MANIFEST.txt', ''.join(manifest_lines))
+                
+                # Read ZIP file content
+                with open(zip_path, 'rb') as f:
+                    zip_content = f.read()
+                
+                # Send ZIP file as response
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/zip')
+                self.send_header('Content-Disposition', f'attachment; filename="{zip_filename}"')
+                self.send_header('Content-Length', str(len(zip_content)))
+                self.end_headers()
+                self.wfile.write(zip_content)
+                
+            finally:
+                # Clean up temporary directory
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                
+        except Exception as e:
+            self.logger.error(f"Error exporting voicemail box: {e}")
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_clear_voicemail_box(self, path: str):
+        """Clear all messages from a voicemail box"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            # Extract extension from path: /api/voicemail-boxes/{extension}/clear
+            parts = path.split('/')
+            extension = parts[3] if len(parts) > 3 else None
+            
+            if not extension:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            vm_system = self.pbx_core.voicemail_system
+            mailbox = vm_system.get_mailbox(extension)
+            messages = mailbox.get_messages(unread_only=False)
+            
+            deleted_count = 0
+            for msg in messages[:]:  # Create a copy to iterate over
+                if mailbox.delete_message(msg['id']):
+                    deleted_count += 1
+            
+            self._send_json({
+                'success': True,
+                'message': f'Cleared {deleted_count} voicemail message(s) from extension {extension}',
+                'deleted_count': deleted_count
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_voicemail_greeting(self, path: str):
+        """Get custom voicemail greeting"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            # Extract extension from path
+            parts = path.split('/')
+            extension = parts[3] if len(parts) > 3 else None
+            
+            if not extension:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            vm_system = self.pbx_core.voicemail_system
+            mailbox = vm_system.get_mailbox(extension)
+            greeting_path = mailbox.get_greeting_path()
+            
+            if not greeting_path or not os.path.exists(greeting_path):
+                self._send_json({'error': 'No custom greeting found'}, 404)
+                return
+            
+            # Serve greeting file
+            with open(greeting_path, 'rb') as f:
+                greeting_data = f.read()
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'audio/wav')
+            self.send_header('Content-Disposition', f'attachment; filename="greeting_{extension}.wav"')
+            self.send_header('Content-Length', str(len(greeting_data)))
+            self.end_headers()
+            self.wfile.write(greeting_data)
+            
+        except Exception as e:
+            self.logger.error(f"Error getting voicemail greeting: {e}")
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_upload_voicemail_greeting(self, path: str):
+        """Upload/update custom voicemail greeting"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            # Extract extension from path
+            parts = path.split('/')
+            extension = parts[3] if len(parts) > 3 else None
+            
+            if not extension:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            # Get audio data from request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                self._send_json({'error': 'No audio data provided'}, 400)
+                return
+            
+            audio_data = self.rfile.read(content_length)
+            
+            vm_system = self.pbx_core.voicemail_system
+            mailbox = vm_system.get_mailbox(extension)
+            
+            if mailbox.save_greeting(audio_data):
+                self._send_json({
+                    'success': True,
+                    'message': f'Custom greeting uploaded for extension {extension}'
+                })
+            else:
+                self._send_json({'error': 'Failed to save greeting'}, 500)
+                
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_delete_voicemail_greeting(self, path: str):
+        """Delete custom voicemail greeting"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
+            self._send_json({'error': 'Voicemail system not available'}, 500)
+            return
+        
+        try:
+            # Extract extension from path
+            parts = path.split('/')
+            extension = parts[3] if len(parts) > 3 else None
+            
+            if not extension:
+                self._send_json({'error': 'Invalid path'}, 400)
+                return
+            
+            vm_system = self.pbx_core.voicemail_system
+            mailbox = vm_system.get_mailbox(extension)
+            
+            if mailbox.delete_greeting():
+                self._send_json({
+                    'success': True,
+                    'message': f'Custom greeting deleted for extension {extension}'
+                })
+            else:
+                self._send_json({'error': 'No custom greeting found'}, 404)
+                
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
