@@ -125,7 +125,7 @@ Must read:
 Must read:
 1. SUMMARY.md
 2. API_DOCUMENTATION.md
-3. STUB_AND_TODO_ANALYSIS.md (for remaining work)
+3. TODO.md (for remaining work)
 4. IMPLEMENTATION_GUIDE.md
 5. TESTING_GUIDE.md
 
