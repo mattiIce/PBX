@@ -17,23 +17,26 @@ The original issue occurred when phones using G.729 codec dialed into voicemail:
 
 ## DTMF Transport Methods
 
-### 1. In-Band (In-Audio)
+### 1. In-Band (In-Audio) - ✅ Implemented
 - DTMF tones embedded in audio RTP stream
 - Detected using Goertzel algorithm
 - **Pros**: Universal compatibility
 - **Cons**: Affected by codec compression (especially G.729), audio quality issues
+- **Status**: Fully implemented with fallback support
 
-### 2. RFC 2833 (RTP Events)
-- DTMF sent as separate RTP events
-- Uses payload type 101
-- **Pros**: Not affected by audio codec
+### 2. RFC 2833 (RTP Events) - ✅ Implemented
+- DTMF sent as separate RTP events in RTP stream
+- Uses payload type 101 (telephone-event)
+- **Pros**: Most reliable RTP method, not affected by audio codec, industry standard
 - **Cons**: Requires both endpoints to support RFC 2833
+- **Status**: Fully implemented (see RFC2833_IMPLEMENTATION_GUIDE.md)
 
-### 3. SIP INFO Messages (Implemented)
+### 3. SIP INFO Messages - ✅ Implemented
 - DTMF sent as SIP INFO requests with body
-- Out-of-band signaling
-- **Pros**: Most reliable, works with any audio codec
-- **Cons**: Requires SIP server support (now implemented)
+- Out-of-band SIP signaling
+- **Pros**: Reliable signaling method, works with any audio codec
+- **Cons**: Requires SIP server support
+- **Status**: Fully implemented with priority queue system
 
 ## Implementation Details
 
@@ -137,41 +140,52 @@ When phones fetch configuration via auto-provisioning, they will automatically b
 
 ### ✅ Full Implementation Complete
 
-The IVR session loops now support both SIP INFO and in-band DTMF detection:
+The IVR session loops now support all three DTMF methods with priority system:
 
 **Voicemail IVR** (`pbx/core/pbx.py` - `_voicemail_ivr_session()`):
-- Checks SIP INFO queue first (priority 1)
-- Falls back to in-band audio detection (priority 2)
+- **Priority 1**: Checks SIP INFO / RFC 2833 queue (dtmf_info_queue)
+- **Priority 2**: Falls back to in-band audio detection
 - Supports DTMF during:
   - PIN entry
   - Menu navigation
   - Greeting recording (# to stop)
 
 **Auto-Attendant** (`pbx/core/pbx.py` - `_auto_attendant_session()`):
-- Checks SIP INFO queue first
-- Falls back to in-band listener
+- **Priority 1**: Checks SIP INFO / RFC 2833 queue
+- **Priority 2**: Falls back to in-band listener
 - Supports menu navigation and transfers
 
 **Implementation Pattern**:
 ```python
-# Priority 1: Check SIP INFO queue
+# Priority 1: Check SIP INFO / RFC 2833 queue (unified)
 if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue:
     digit = call.dtmf_info_queue.pop(0)
-    self.logger.info(f"Detected DTMF from SIP INFO: {digit}")
+    self.logger.info(f"Detected DTMF from out-of-band signaling: {digit}")
 else:
-    # Priority 2: In-band detection
+    # Priority 2: In-band detection (fallback)
     digit = dtmf_detector.detect(recent_audio)
     if digit:
         self.logger.info(f"Detected DTMF from in-band audio: {digit}")
 ```
 
+**Note**: Both SIP INFO and RFC 2833 use the same `dtmf_info_queue`, ensuring seamless integration and preventing duplicates.
+
 ### 🔄 Future Enhancements
 
 1. **G.729 Codec Support**: Add G.729 transcoding or native support for voicemail
-2. **RFC 2833 Support**: Implement RTP event packet parsing as third DTMF method
-3. **DTMF Buffer Management**: Add buffer size limits and timeout handling
-4. **Testing**: Comprehensive testing with various phone models
-5. **Performance Optimization**: Consider async queue processing
+2. **DTMF Buffer Management**: Add buffer size limits and timeout handling
+3. **Testing**: Comprehensive testing with various phone models
+4. **Performance Optimization**: Consider async queue processing
+5. **16kHz RFC 2833**: Add wideband support for HD voice codecs
+
+### ✅ Recently Completed Enhancements
+
+1. **RFC 2833 Support**: ✅ COMPLETED (December 9, 2024)
+   - Full RTP event packet parsing with payload type 101
+   - RFC2833Receiver for incoming events
+   - RFC2833Sender for outgoing events
+   - Integration with voicemail and auto-attendant
+   - See `RFC2833_IMPLEMENTATION_GUIDE.md` for details
 
 ## Testing
 

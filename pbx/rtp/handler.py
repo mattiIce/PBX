@@ -317,15 +317,17 @@ class RTPRecorder:
     """
     RTP recorder for voicemail recording
     Records incoming RTP audio stream
+    Automatically filters out RFC 2833 telephone-event packets (payload type 101)
     """
 
-    def __init__(self, local_port, call_id):
+    def __init__(self, local_port, call_id, rfc2833_handler=None):
         """
         Initialize RTP recorder
 
         Args:
             local_port: Local port to bind to
             call_id: Call identifier for logging
+            rfc2833_handler: Optional RFC 2833 receiver for DTMF event handling
         """
         self.local_port = local_port
         self.call_id = call_id
@@ -335,6 +337,7 @@ class RTPRecorder:
         self.recorded_data = []
         self.lock = threading.Lock()
         self.remote_endpoint = None  # Will be learned from first packet
+        self.rfc2833_handler = rfc2833_handler  # Optional RFC 2833 receiver
 
     def start(self):
         """Start RTP recorder"""
@@ -385,11 +388,20 @@ class RTPRecorder:
                     payload_type = header[1] & 0x7F
                     payload = data[12:]
 
-                    # Store the audio payload
+                    # Filter out RFC 2833 telephone-event packets (payload type 101)
+                    # These are DTMF signaling packets, not audio
+                    if payload_type == 101:
+                        self.logger.debug(f"Received RFC 2833 telephone-event packet (filtered from recording)")
+                        # If we have an RFC 2833 handler, delegate event processing
+                        if self.rfc2833_handler:
+                            self.rfc2833_handler.handle_rtp_packet(data, addr)
+                        continue
+
+                    # Store only audio payloads (not telephone-events)
                     with self.lock:
                         self.recorded_data.append(payload)
 
-                    self.logger.debug(f"Recorded {len(payload)} bytes from call {self.call_id}")
+                    self.logger.debug(f"Recorded {len(payload)} bytes (PT {payload_type}) from call {self.call_id}")
 
             except socket.timeout:
                 # Timeout is normal, just continue
