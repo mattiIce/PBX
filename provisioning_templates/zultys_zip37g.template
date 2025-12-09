@@ -58,7 +58,7 @@ phone_setting.call_return_number = {{EXTENSION_NUMBER}}
 phone_setting.call_return_server = {{SIP_SERVER}}
 
 # Auto Provision Settings (Note: URL typically set via phone UI, not config file)
-auto_provision.dhcp_option.list_user_users = %NULL%
+auto_provision.dhcp_option.list_user_options = %NULL%
 auto_provision.dhcp_option.option60_value = 66
 
 # ============================================================================
