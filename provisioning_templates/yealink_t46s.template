@@ -21,6 +21,11 @@ account.1.codec.2.payload_type = PCMA
 account.1.codec.3.enable = 1
 account.1.codec.3.payload_type = G729
 
+# DTMF Settings
+account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay  
+account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
+
 # Network
 network.internet_port.type = 0
 network.internet_port.dhcp = 1

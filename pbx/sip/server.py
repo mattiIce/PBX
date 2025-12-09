@@ -6,6 +6,9 @@ import threading
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 from pbx.utils.logger import get_logger
 
+# Valid DTMF digits for SIP INFO validation
+VALID_DTMF_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'A', 'B', 'C', 'D']
+
 
 class SIPServer:
     """SIP server for handling registration and calls"""
@@ -129,6 +132,8 @@ class SIPServer:
             self._handle_notify(message, addr)
         elif method == 'REFER':
             self._handle_refer(message, addr)
+        elif method == 'INFO':
+            self._handle_info(message, addr)
         else:
             self.logger.warning(f"Unhandled SIP method: {method}")
             self._send_response(405, "Method Not Allowed", message, addr)
@@ -236,7 +241,7 @@ class SIPServer:
         """Handle OPTIONS request"""
         self.logger.debug(f"OPTIONS request from {addr}")
         response = SIPMessageBuilder.build_response(200, "OK", message)
-        response.set_header('Allow', 'INVITE, ACK, BYE, CANCEL, OPTIONS, REGISTER, SUBSCRIBE, NOTIFY')
+        response.set_header('Allow', 'INVITE, ACK, BYE, CANCEL, OPTIONS, REGISTER, SUBSCRIBE, NOTIFY, INFO, REFER')
         self._send_message(response.build(), addr)
 
     def _handle_subscribe(self, message, addr):
@@ -281,6 +286,55 @@ class SIPServer:
 
         # In a full implementation, would initiate new call to refer-to destination
         # and send NOTIFY messages about transfer progress
+
+    def _handle_info(self, message, addr):
+        """
+        Handle INFO request (typically used for DTMF signaling)
+        
+        SIP INFO can carry DTMF digits in the message body with Content-Type:
+        - application/dtmf-relay (RFC 2833 style)
+        - application/dtmf (simple format)
+        """
+        self.logger.debug(f"INFO request from {addr}")
+        
+        # Get call context
+        call_id = message.get_header('Call-ID')
+        content_type = message.get_header('Content-Type')
+        
+        # Extract DTMF digit from message body
+        dtmf_digit = None
+        if message.body and content_type:
+            content_type_lower = content_type.lower()
+            
+            # Only process DTMF-related content types (handle charset and other parameters)
+            if content_type_lower.startswith('application/dtmf-relay') or content_type_lower.startswith('application/dtmf'):
+                # Parse DTMF from body
+                # Format can be:
+                # Signal=1
+                # Signal=1\nDuration=160
+                body_lines = message.body.strip().split('\n')
+                for line in body_lines:
+                    if line.startswith('Signal='):
+                        parts = line.split('=', 1)
+                        if len(parts) == 2:
+                            digit = parts[1].strip()
+                            # Validate DTMF digit using constant
+                            if digit in VALID_DTMF_DIGITS:
+                                dtmf_digit = digit
+                                break
+                            else:
+                                self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
+                        break
+                
+                if dtmf_digit:
+                    self.logger.info(f"Received DTMF via SIP INFO: {dtmf_digit} for call {call_id}")
+                    
+                    # Deliver DTMF to PBX core for processing
+                    if self.pbx_core and call_id:
+                        self.pbx_core.handle_dtmf_info(call_id, dtmf_digit)
+        
+        # Always respond with 200 OK to INFO requests
+        self._send_response(200, "OK", message, addr)
 
     def _handle_response(self, message, addr):
         """Handle SIP response"""
