@@ -33,20 +33,36 @@ class SIPMessage:
         """
         lines = raw_message.split('\r\n')
 
+        # Validate that we have at least one line
+        if not lines or len(lines) == 0:
+            return
+
         # Parse first line (request or response)
         first_line = lines[0]
         if first_line.startswith('SIP/'):
             # Response
             parts = first_line.split(' ', 2)
-            self.version = parts[0]
-            self.status_code = int(parts[1])
-            self.status_text = parts[2] if len(parts) > 2 else ""
+            if len(parts) >= 2:
+                self.version = parts[0]
+                try:
+                    self.status_code = int(parts[1])
+                except ValueError:
+                    # Invalid status code, skip parsing
+                    return
+                self.status_text = parts[2] if len(parts) > 2 else ""
+            else:
+                # Malformed response line
+                return
         else:
             # Request
             parts = first_line.split(' ')
-            self.method = parts[0]
-            self.uri = parts[1]
-            self.version = parts[2] if len(parts) > 2 else "SIP/2.0"
+            if len(parts) >= 2:
+                self.method = parts[0]
+                self.uri = parts[1]
+                self.version = parts[2] if len(parts) > 2 else "SIP/2.0"
+            else:
+                # Malformed request line
+                return
 
         # Parse headers
         body_start = None
