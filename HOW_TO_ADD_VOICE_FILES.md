@@ -82,7 +82,7 @@ python3 scripts/generate_espeak_voices.py --company "Aluminum Blanking Company"
 ```bash
 sudo apt-get install festival festvox-us-slt-hts
 cd /home/runner/work/PBX/PBX
-python3 scripts/generate_natural_voices.py --engine festival --company "Aluminum Blanking Company"
+python3 scripts/generate_espeak_voices.py --engine festival --company "Aluminum Blanking Company"
 ```
 
 #### 2. Verify Files Were Generated

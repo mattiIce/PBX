@@ -3651,8 +3651,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 output_file = os.path.join(audio_path, f'{filename}.wav')
                 
                 try:
-                    # Create TTS
-                    tts = gTTS(text=text, lang='en', slow=False)
+                    # Create TTS with optimal settings for American English
+                    # tld='com' uses google.com which provides US English accent
+                    # lang='en' specifies English language
+                    # slow=False provides natural speaking speed for professional sound
+                    tts = gTTS(text=text, tld='com', lang='en', slow=False)
                     
                     # Save to temporary MP3 file
                     with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_mp3:

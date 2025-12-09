@@ -23,22 +23,26 @@ from pydub import AudioSegment
 from pbx.utils.logger import get_logger, PBXLogger
 
 
-def text_to_wav_telephony(text, output_file, language='en', slow=False):
+def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False):
     """
     Convert text to WAV file in telephony format (8000 Hz, 16-bit, mono)
     
     Args:
         text: Text to convert to speech
         output_file: Output WAV file path
-        language: Language code (default 'en')
-        slow: Whether to use slow speech rate
+        language: Language code (default 'en' for English)
+        tld: Top-level domain (default 'com' for US English accent)
+        slow: Whether to use slow speech rate (default False for natural speed)
     
     Returns:
         bool: True if successful
     """
     try:
-        # Create TTS
-        tts = gTTS(text=text, lang=language, slow=slow)
+        # Create TTS with optimal settings for American English
+        # tld='com' uses google.com which provides US English accent
+        # lang='en' specifies English language
+        # slow=False provides natural speaking speed for professional sound
+        tts = gTTS(text=text, tld=tld, lang=language, slow=slow)
         
         # Save to temporary MP3 file
         with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_mp3:

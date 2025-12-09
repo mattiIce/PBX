@@ -36,7 +36,7 @@ If no internet or gTTS fails:
 
 ```bash
 sudo apt-get install festival festvox-us-slt-hts ffmpeg
-python3 scripts/generate_natural_voices.py --engine festival
+python3 scripts/generate_espeak_voices.py --engine festival
 ```
 
 ### Option C: eSpeak (Basic Quality, Offline)
@@ -100,7 +100,7 @@ auto_attendant:
 **Solutions:**
 1. Check internet: `ping google.com`
 2. Check firewall allows HTTPS to Google
-3. Try Festival instead: `python3 scripts/generate_natural_voices.py --engine festival`
+3. Try Festival instead: `python3 scripts/generate_espeak_voices.py --engine festival`
 
 ### "No module named 'gtts'"
 
