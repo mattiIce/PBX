@@ -148,9 +148,6 @@ async function uploadCustomGreeting() {
         }
         
         try {
-            const formData = new FormData();
-            formData.append('greeting', file);
-            
             const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/greeting`, {
                 method: 'PUT',
                 body: await file.arrayBuffer()

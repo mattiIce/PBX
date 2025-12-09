@@ -11,6 +11,9 @@ import threading
 import os
 import mimetypes
 import traceback
+import zipfile
+import tempfile
+import shutil
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
@@ -3602,12 +3605,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if not messages:
                 self._send_json({'error': 'No messages to export'}, 404)
                 return
-            
-            # Create ZIP file
-            import zipfile
-            import tempfile
-            import shutil
-            from datetime import datetime
             
             # Create temporary directory for ZIP creation
             temp_dir = tempfile.mkdtemp()
