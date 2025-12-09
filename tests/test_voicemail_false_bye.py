@@ -12,7 +12,7 @@ immediately after receiving a 200 OK for voicemail access calls.
 import sys
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -111,7 +111,7 @@ def test_bye_after_2_seconds_honored():
     call.start()
     
     # Set answer time to 3 seconds ago
-    call.answer_time = datetime.fromtimestamp(time.time() - 3.0)
+    call.answer_time = datetime.now() - timedelta(seconds=3)
     call.state = CallState.CONNECTED
     call.caller_addr = ('192.168.1.102', 5060)
     

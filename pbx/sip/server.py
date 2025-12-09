@@ -3,6 +3,8 @@ SIP Server implementation
 """
 import socket
 import threading
+import time
+from datetime import datetime
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 from pbx.utils.logger import get_logger
 
@@ -207,7 +209,6 @@ class SIPServer:
 
     def _handle_bye(self, message, addr):
         """Handle BYE request"""
-        import time
         call_id = message.get_header('Call-ID')
         self.logger.info(f"")
         self.logger.info(f">>> BYE REQUEST RECEIVED <<<")
@@ -231,7 +232,7 @@ class SIPServer:
                     if not hasattr(call, 'first_bye_ignored'):
                         # Calculate time since call was answered
                         if call.answer_time:
-                            time_since_answer = (time.time() - call.answer_time.timestamp())
+                            time_since_answer = (datetime.now() - call.answer_time).total_seconds()
                             if time_since_answer < 2.0:
                                 # This is a spurious BYE from phone firmware - ignore it
                                 self.logger.warning(f"  ⚠ IGNORING spurious BYE for voicemail access (received {time_since_answer:.2f}s after answer)")
