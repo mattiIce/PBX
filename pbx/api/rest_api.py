@@ -1855,37 +1855,80 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     
     def _handle_export_phone_book_xml(self):
         """Export phone book as XML (Yealink format)"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
-            self._send_json({'error': 'Phone book feature not enabled'}, 500)
-            return
-        
-        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
-            self._send_json({'error': 'Phone book feature not enabled'}, 500)
-            return
-        
         try:
-            xml_content = self.pbx_core.phone_book.export_xml()
+            # Try to use phone book feature if available
+            if (self.pbx_core and hasattr(self.pbx_core, 'phone_book') and 
+                self.pbx_core.phone_book and self.pbx_core.phone_book.enabled):
+                xml_content = self.pbx_core.phone_book.export_xml()
+            else:
+                # Fallback: Generate from extension registry
+                xml_content = self._generate_xml_from_extensions()
+            
             self._set_headers(content_type='application/xml')
             self.wfile.write(xml_content.encode())
         except Exception as e:
+            self.logger.error(f"Error exporting phone book XML: {e}")
             self._send_json({'error': str(e)}, 500)
+    
+    def _generate_xml_from_extensions(self):
+        """Generate phone book XML from extension registry (fallback)"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'extension_registry'):
+            return '<?xml version="1.0" encoding="UTF-8"?><YealinkIPPhoneDirectory><Title>Directory</Title></YealinkIPPhoneDirectory>'
+        
+        extensions = self.pbx_core.extension_registry.get_all()
+        
+        xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+        xml_lines.append('<YealinkIPPhoneDirectory>')
+        xml_lines.append('  <Title>Company Directory</Title>')
+        
+        for ext in sorted(extensions, key=lambda x: x.name):
+            xml_lines.append('  <DirectoryEntry>')
+            name = ext.name.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            xml_lines.append(f'    <Name>{name}</Name>')
+            xml_lines.append(f'    <Telephone>{ext.number}</Telephone>')
+            xml_lines.append('  </DirectoryEntry>')
+        
+        xml_lines.append('</YealinkIPPhoneDirectory>')
+        return '\n'.join(xml_lines)
     
     def _handle_export_phone_book_cisco_xml(self):
         """Export phone book as Cisco XML format"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
-            self._send_json({'error': 'Phone book feature not enabled'}, 500)
-            return
-        
-        if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
-            self._send_json({'error': 'Phone book feature not enabled'}, 500)
-            return
-        
         try:
-            xml_content = self.pbx_core.phone_book.export_cisco_xml()
+            # Try to use phone book feature if available
+            if (self.pbx_core and hasattr(self.pbx_core, 'phone_book') and 
+                self.pbx_core.phone_book and self.pbx_core.phone_book.enabled):
+                xml_content = self.pbx_core.phone_book.export_cisco_xml()
+            else:
+                # Fallback: Generate from extension registry
+                xml_content = self._generate_cisco_xml_from_extensions()
+            
             self._set_headers(content_type='application/xml')
             self.wfile.write(xml_content.encode())
         except Exception as e:
+            self.logger.error(f"Error exporting Cisco phone book XML: {e}")
             self._send_json({'error': str(e)}, 500)
+    
+    def _generate_cisco_xml_from_extensions(self):
+        """Generate Cisco phone book XML from extension registry (fallback)"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'extension_registry'):
+            return '<?xml version="1.0" encoding="UTF-8"?><CiscoIPPhoneDirectory><Title>Directory</Title></CiscoIPPhoneDirectory>'
+        
+        extensions = self.pbx_core.extension_registry.get_all()
+        
+        xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+        xml_lines.append('<CiscoIPPhoneDirectory>')
+        xml_lines.append('  <Title>Company Directory</Title>')
+        xml_lines.append('  <Prompt>Select a contact</Prompt>')
+        
+        for ext in sorted(extensions, key=lambda x: x.name):
+            xml_lines.append('  <DirectoryEntry>')
+            name = ext.name.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            xml_lines.append(f'    <Name>{name}</Name>')
+            xml_lines.append(f'    <Telephone>{ext.number}</Telephone>')
+            xml_lines.append('  </DirectoryEntry>')
+        
+        xml_lines.append('</CiscoIPPhoneDirectory>')
+        return '\n'.join(xml_lines)
     
     def _handle_export_phone_book_json(self):
         """Export phone book as JSON"""

@@ -4,6 +4,17 @@
 
 This guide explains how to configure LDAPS (LDAP over SSL) phone book access for IP phones, specifically Zultys ZIP 33G and ZIP 37G models. This feature allows phones to directly query your LDAP/Active Directory server for contact lookups.
 
+## 🎉 What's New: Automatic AD Integration
+
+**Configuration is now simplified!** If you have Active Directory integration enabled, the PBX automatically uses your AD credentials (from `.env` file) for phone LDAP provisioning. No need to configure separate LDAP phone book credentials!
+
+### Quick Start for AD Users:
+1. Enable AD integration in `config.yml`
+2. Set AD credentials in `.env` file (AD_SERVER, AD_BIND_DN, AD_BIND_PASSWORD)
+3. That's it! Phone provisioning will automatically include LDAP directory access
+
+See **Method 2: Manual Configuration** below for details.
+
 ## Supported Methods
 
 Two phone book access methods are supported, and both can be used simultaneously for redundancy:
@@ -61,65 +72,98 @@ Two phone book access methods are supported, and both can be used simultaneously
    - Update `config.yml` with the provided settings
    - Restart the PBX server
 
-### Method 2: Manual Configuration
+### Method 2: Manual Configuration (Simplified)
 
-Edit `config.yml`:
+**NEW: Automatic AD Integration** 🎉
 
+If you have Active Directory integration enabled, LDAP phone book configuration is now **automatic**! The system will use your existing AD credentials from `.env` (AD_SERVER, AD_BIND_DN, AD_BIND_PASSWORD) for phone provisioning.
+
+#### For Users with AD Integration Enabled:
+
+1. **Enable AD integration** in `config.yml` (if not already enabled):
+```yaml
+integrations:
+  active_directory:
+    enabled: true
+    server: ldaps://your-ad-server.com:636
+    base_dn: DC=company,DC=com
+    bind_dn: CN=Administrator,CN=Users,DC=company,DC=com
+    bind_password: ${AD_BIND_PASSWORD}  # From .env file
+    use_ssl: true
+```
+
+2. **Set credentials in `.env` file**:
+```bash
+# Active Directory credentials (used for both AD sync AND phone provisioning)
+AD_SERVER=ldaps://your-ad-server.com:636
+AD_BIND_DN=CN=Administrator,CN=Users,DC=company,DC=com
+AD_BIND_PASSWORD=YourActualPassword
+```
+
+3. **Optional: Customize phone book settings** in `config.yml`:
 ```yaml
 provisioning:
   enabled: true
-  # ... existing provisioning settings ...
-  
-  # LDAP/LDAPS Phone Book Configuration
   ldap_phonebook:
-    enable: 1  # Set to 1 to enable
-    server: ldaps://192.168.1.22  # LDAP server address
-    port: 636  # 636 for LDAPS (SSL), 389 for plain LDAP
-    base: DC=albl,DC=com  # Base DN for directory searches
-    user: CN=phonebook,CN=Users,DC=albl,DC=com  # Bind DN
+    enable: 1  # Enable LDAP phonebook on phones
+    # Optional overrides (only if needed):
+    # name_filter: (|(cn=%)(sn=%))
+    # number_filter: (|(telephoneNumber=%)(mobile=%))
+    display_name: Company Directory
+```
+
+That's it! The system will automatically use your AD credentials for phone LDAP configuration.
+
+#### For Users WITHOUT AD Integration:
+
+If you're not using AD integration, you can still configure LDAP phone book manually:
+
+Edit `config.yml`:
+```yaml
+provisioning:
+  enabled: true
+  ldap_phonebook:
+    enable: 1
+    server: ldaps://192.168.1.22
+    port: 636
+    base: DC=company,DC=com
+    user: CN=phonebook,CN=Users,DC=company,DC=com
     password: ${LDAP_PHONEBOOK_PASSWORD}  # Set in .env file
-    version: 3  # LDAP protocol version
-    tls_mode: 1  # 1 for LDAPS/TLS, 0 for plain LDAP
-    name_filter: (|(cn=%)(sn=%))  # Search filter for names
-    number_filter: (|(telephoneNumber=%)(mobile=%))  # Search filter for numbers
-    name_attr: cn  # LDAP attribute for contact name
-    number_attr: telephoneNumber  # LDAP attribute for phone number
-    display_name: Company Directory  # Display name on phone
-  
-  # Remote Phone Book URL (Fallback)
-  remote_phonebook:
-    url: http://192.168.1.14:8080/api/phone-book/export/xml
-    refresh_interval: 60  # Refresh interval in minutes
+    version: 3
+    tls_mode: 1
+    name_filter: (|(cn=%)(sn=%))
+    number_filter: (|(telephoneNumber=%)(mobile=%))
+    name_attr: cn
+    number_attr: telephoneNumber
+    display_name: Company Directory
 ```
 
 Add to `.env` file:
 ```bash
-# LDAP Phone Book credentials
+# LDAP Phone Book credentials (only needed if AD integration is disabled)
 LDAP_PHONEBOOK_PASSWORD=YourSecurePassword
 ```
 
 ## LDAP Server Setup
 
-### Option 1: Using Active Directory
+### Option 1: Using Active Directory (Recommended)
 
-If you're already using Active Directory integration, you can use the same server:
+If you're using Active Directory integration, the PBX will automatically use your AD credentials:
 
-1. **Create a dedicated read-only account** (recommended):
-   ```
-   Username: phonebook
-   Password: SecurePassword123!
-   DN: CN=phonebook,CN=Users,DC=company,DC=com
-   ```
+1. **Configure AD integration** (see `.env.example` and `config.yml`)
+   - The system will automatically pull AD_SERVER, AD_BIND_DN, and AD_BIND_PASSWORD
+   - No separate phone book account configuration needed!
 
-2. **Grant read permissions** on the directory
-   - No write permissions needed
-   - Read access to user objects
-   - Read access to contact attributes
+2. **Security Recommendation** (Optional):
+   - For enhanced security, consider using a dedicated read-only account for phone provisioning
+   - This is especially important since credentials are stored in phone config files
+   - Example: Create `CN=phonebook,CN=Users,DC=company,DC=com` with read-only permissions
+   - Configure this account in `integrations.active_directory.bind_dn` in `config.yml`
 
-3. **Configure SSL/TLS** (recommended):
-   - Use `ldaps://` protocol
+3. **SSL/TLS** (Highly Recommended):
+   - Always use `ldaps://` protocol for secure connections
    - Port 636 for LDAPS
-   - Ensure valid SSL certificates
+   - Ensure valid SSL certificates are configured on your AD server
 
 ### Option 2: Using OpenLDAP
 

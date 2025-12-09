@@ -54,6 +54,11 @@ features:
   auto_attendant: true
   max_call_duration: 7200
   
+  # Phone Book - Centralized directory for IP phones
+  phone_book:
+    enabled: true              # Enable phone book feature (required for remote phone book URL)
+    auto_sync_from_ad: true    # Automatically sync from Active Directory
+  
   # Voicemail Transcription - Speech-to-text for voicemails
   voicemail_transcription:
     enabled: true              # Enable voicemail transcription
@@ -266,15 +271,21 @@ provisioning:
   # LDAP/LDAPS Phone Book Configuration for IP Phones
   # This configures phones to directly access LDAP directory for lookups
   # Supported on: Zultys ZIP 33G, ZIP 37G, Yealink phones, and other LDAP-capable devices
+  # 
+  # NOTE: If AD integration is enabled, the system will automatically use AD credentials
+  # from .env (AD_SERVER, AD_BIND_DN, AD_BIND_PASSWORD) for phone provisioning.
+  # The settings below are optional overrides or used when AD integration is disabled.
   ldap_phonebook:
-    enable: 1  # Set to 1 to enable LDAP phonebook on phones
-    server: ldaps://192.168.1.22  # LDAP server address (use ldaps:// for secure connection)
-    port: 636  # 636 for LDAPS (SSL), 389 for plain LDAP
-    base: DC=albl,DC=com  # Base DN for directory searches
-    user: CN=phonebook,CN=Users,DC=albl,DC=com  # Bind DN for phone authentication
-    password: ${LDAP_PHONEBOOK_PASSWORD}  # Bind password (set in .env file)
-    version: 3  # LDAP protocol version (usually 3)
-    tls_mode: 1  # 1 for LDAPS/TLS, 0 for plain LDAP
+    enable: 1  # Set to 1 to enable LDAP phonebook on phones (default: 1 if AD is enabled)
+    # Optional overrides (uncomment to override AD settings):
+    # server: ldaps://192.168.1.22  # Override AD server
+    # port: 636  # Override port (636 for LDAPS, 389 for plain LDAP)
+    # base: DC=albl,DC=com  # Override base DN
+    # user: CN=phonebook,CN=Users,DC=albl,DC=com  # Override bind DN
+    # password: ${LDAP_PHONEBOOK_PASSWORD}  # Override password (for non-AD LDAP)
+    # version: 3  # LDAP protocol version (usually 3)
+    # tls_mode: 1  # 1 for LDAPS/TLS, 0 for plain LDAP
+    # Search filters and attribute mappings:
     name_filter: (|(cn=%)(sn=%))  # Search filter for names (% is user input)
     number_filter: (|(telephoneNumber=%)(mobile=%))  # Search filter for numbers
     name_attr: cn  # LDAP attribute for contact name
