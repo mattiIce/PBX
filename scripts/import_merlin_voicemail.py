@@ -77,18 +77,18 @@ def parse_csv_metadata(csv_path):
             timestamp_str = row.get('timestamp', '')
             try:
                 timestamp = datetime.fromisoformat(timestamp_str.replace(' ', 'T'))
-            except:
+            except (ValueError, AttributeError):
                 try:
                     # Try alternative formats
                     for fmt in ['%Y-%m-%d %H:%M:%S', '%m/%d/%Y %H:%M:%S', '%Y%m%d_%H%M%S']:
                         try:
                             timestamp = datetime.strptime(timestamp_str, fmt)
                             break
-                        except:
+                        except ValueError:
                             continue
                     else:
                         timestamp = datetime.now()
-                except:
+                except (ValueError, TypeError):
                     timestamp = datetime.now()
             
             # Parse listened status
@@ -97,7 +97,7 @@ def parse_csv_metadata(csv_path):
             # Parse duration
             try:
                 duration = int(row.get('duration', 0))
-            except:
+            except (ValueError, TypeError):
                 duration = None
             
             message = {
@@ -150,7 +150,7 @@ def parse_json_metadata(json_path):
         timestamp_str = msg.get('timestamp', '')
         try:
             timestamp = datetime.fromisoformat(timestamp_str)
-        except:
+        except (ValueError, AttributeError, TypeError):
             timestamp = datetime.now()
         
         message = {
@@ -211,7 +211,7 @@ def parse_filename_metadata(audio_dir):
                 
                 try:
                     timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
-                except:
+                except (ValueError, TypeError):
                     timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime)
                 
                 message = {
@@ -321,7 +321,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
         try:
             with open(audio_path, 'rb') as f:
                 audio_data = f.read()
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             print(f"  ✗ Error reading audio file: {e}")
             errors += 1
             continue
@@ -350,7 +350,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
             
             print(f"  ✓ Imported successfully (ID: {saved_id})")
             imported += 1
-        except Exception as e:
+        except (IOError, OSError, ValueError, RuntimeError) as e:
             print(f"  ✗ Import failed: {e}")
             logger.error(f"Error importing voicemail: {e}", exc_info=True)
             errors += 1
@@ -398,7 +398,7 @@ def import_voicemail_pins(pins, config, database, dry_run=False):
             else:
                 print(f"  ✗ Invalid PIN format (must be 4 digits)")
                 errors += 1
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             print(f"  ✗ Failed to set PIN: {e}")
             logger.error(f"Error setting PIN: {e}", exc_info=True)
             errors += 1
@@ -448,7 +448,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
         try:
             with open(greeting_file, 'rb') as f:
                 audio_data = f.read()
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
             print(f"  ✗ Error reading greeting file: {e}")
             errors += 1
             continue
@@ -464,7 +464,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
             else:
                 print(f"  ✗ Failed to save greeting")
                 errors += 1
-        except Exception as e:
+        except (IOError, OSError, ValueError, RuntimeError) as e:
             print(f"  ✗ Import failed: {e}")
             logger.error(f"Error importing greeting: {e}", exc_info=True)
             errors += 1
