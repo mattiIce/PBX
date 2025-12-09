@@ -742,6 +742,8 @@ P30 = 13   # GMT-8
         Returns:
             dict: LDAP phonebook configuration
         """
+        from urllib.parse import urlparse
+        
         # Check if explicit ldap_phonebook config exists
         explicit_config = self.config.get('provisioning.ldap_phonebook', {})
         
@@ -755,30 +757,42 @@ P30 = 13   # GMT-8
             ad_bind_password = self.config.get('integrations.active_directory.bind_password', '')
             ad_base_dn = self.config.get('integrations.active_directory.base_dn', '')
             
-            # Only use AD credentials if they are configured
+            # Validate AD credentials
             if ad_server and ad_bind_dn and ad_bind_password:
+                # Validate LDAP DN format (basic check)
+                if not ad_bind_dn.upper().startswith(('CN=', 'OU=', 'DC=')):
+                    self.logger.warning(f"AD bind DN may be invalid: {ad_bind_dn}")
+                
                 self.logger.info("Using AD credentials from .env for LDAP phonebook")
                 
-                # Parse server URL to extract host and port
-                server_url = ad_server
-                port = 636  # Default LDAPS port
-                tls_mode = 1  # Enable TLS by default
-                
-                # Extract port from URL if specified (e.g., ldaps://server:636)
-                if ':' in server_url:
-                    parts = server_url.rsplit(':', 1)
-                    if parts[1].replace('/', '').isdigit():
-                        port = int(parts[1].replace('/', ''))
-                        server_url = parts[0]
-                
-                # Determine TLS mode based on protocol
-                if server_url.startswith('ldaps://'):
-                    server_url = server_url.replace('ldaps://', '')
+                # Parse server URL properly using urllib
+                try:
+                    parsed = urlparse(ad_server)
+                    
+                    # Extract hostname and port
+                    server_url = parsed.hostname or parsed.netloc.split(':')[0] if parsed.netloc else ad_server
+                    port = parsed.port
+                    scheme = parsed.scheme.lower()
+                    
+                    # Determine TLS mode and default port based on scheme
+                    if scheme == 'ldaps':
+                        tls_mode = 1
+                        port = port or 636  # Default LDAPS port
+                    elif scheme == 'ldap':
+                        tls_mode = 0
+                        port = port or 389  # Default LDAP port
+                    else:
+                        # No scheme provided, assume LDAPS
+                        self.logger.warning(f"No scheme in AD server URL, assuming LDAPS: {ad_server}")
+                        tls_mode = 1
+                        port = port or 636
+                        
+                except Exception as e:
+                    self.logger.error(f"Error parsing AD server URL '{ad_server}': {e}")
+                    # Fall back to simple parsing
+                    server_url = ad_server.replace('ldaps://', '').replace('ldap://', '').split(':')[0]
+                    port = 636
                     tls_mode = 1
-                elif server_url.startswith('ldap://'):
-                    server_url = server_url.replace('ldap://', '')
-                    tls_mode = 0
-                    port = 389  # Default LDAP port
                 
                 # Build config from AD credentials with sensible defaults
                 # Override with explicit config if provided

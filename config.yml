@@ -54,6 +54,11 @@ features:
   auto_attendant: true
   max_call_duration: 7200
   
+  # Phone Book - Centralized directory for IP phones
+  phone_book:
+    enabled: true              # Enable phone book feature (required for remote phone book URL)
+    auto_sync_from_ad: true    # Automatically sync from Active Directory
+  
   # Voicemail Transcription - Speech-to-text for voicemails
   voicemail_transcription:
     enabled: true              # Enable voicemail transcription
