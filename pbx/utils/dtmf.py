@@ -126,6 +126,44 @@ class DTMFDetector:
 
         return None
 
+    def detect(self, audio_bytes: bytes, threshold: float = 0.3) -> Optional[str]:
+        """
+        Detect DTMF tone from raw audio bytes (PCM 16-bit signed little-endian)
+        
+        This is a convenience wrapper that converts raw audio bytes to samples
+        and calls detect_tone(). Useful for processing RTP audio packets.
+        
+        Args:
+            audio_bytes: Raw audio data (PCM 16-bit signed little-endian)
+            threshold: Detection threshold (0.0-1.0)
+        
+        Returns:
+            str: Detected digit ('0'-'9', '*', '#', 'A'-'D') or None
+        """
+        import struct
+        
+        # Convert bytes to samples (16-bit signed PCM)
+        # Each sample is 2 bytes (little-endian signed short)
+        num_samples = len(audio_bytes) // 2
+        
+        if num_samples < self.samples_per_frame:
+            return None
+        
+        # Unpack bytes to signed 16-bit integers, then normalize to [-1.0, 1.0]
+        try:
+            samples = []
+            for i in range(0, len(audio_bytes) - 1, 2):
+                # Read 2 bytes as signed 16-bit little-endian
+                sample_int = struct.unpack('<h', audio_bytes[i:i+2])[0]
+                # Normalize to [-1.0, 1.0]
+                samples.append(sample_int / 32768.0)
+            
+            # Use existing detect_tone method with noise rejection
+            return self.detect_tone(samples, threshold)
+        except struct.error:
+            # Invalid audio data
+            return None
+
     def detect_sequence(self, samples: List[float], max_digits: int = 10) -> str:
         """
         Detect sequence of DTMF tones from longer audio sample
