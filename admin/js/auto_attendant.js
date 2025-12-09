@@ -17,9 +17,51 @@ async function loadAutoAttendantConfig() {
         
         // Load menu options
         await loadAutoAttendantMenuOptions();
+        
+        // Load prompts
+        await loadAutoAttendantPrompts();
     } catch (error) {
         console.error('Error loading auto attendant config:', error);
         showNotification('Failed to load auto attendant configuration', 'error');
+    }
+}
+
+async function loadAutoAttendantPrompts() {
+    try {
+        const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`);
+        if (!response.ok) {
+            console.warn('Failed to load prompts, using defaults');
+            return;
+        }
+        
+        const data = await response.json();
+        const prompts = data.prompts || {};
+        const companyName = data.company_name || '';
+        
+        // Set company name
+        const companyNameField = document.getElementById('aa-company-name');
+        if (companyNameField) {
+            companyNameField.value = companyName;
+        }
+        
+        // Set prompt texts
+        if (prompts.welcome) {
+            document.getElementById('aa-prompt-welcome').value = prompts.welcome;
+        }
+        if (prompts.main_menu) {
+            document.getElementById('aa-prompt-main-menu').value = prompts.main_menu;
+        }
+        if (prompts.invalid) {
+            document.getElementById('aa-prompt-invalid').value = prompts.invalid;
+        }
+        if (prompts.timeout) {
+            document.getElementById('aa-prompt-timeout').value = prompts.timeout;
+        }
+        if (prompts.transferring) {
+            document.getElementById('aa-prompt-transferring').value = prompts.transferring;
+        }
+    } catch (error) {
+        console.error('Error loading prompts:', error);
     }
 }
 
@@ -238,6 +280,74 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error updating menu option:', error);
                 showNotification('Failed to update menu option', 'error');
+            }
+        });
+    }
+});
+
+// Initialize prompts form
+document.addEventListener('DOMContentLoaded', function() {
+    const promptsForm = document.getElementById('auto-attendant-prompts-form');
+    if (promptsForm) {
+        promptsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const statusDiv = document.getElementById('voice-generation-status');
+            const statusMessage = document.getElementById('voice-generation-message');
+            
+            // Show status
+            if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusMessage.textContent = '⏳ Saving prompts and regenerating voices using gTTS...';
+            }
+            
+            const promptsData = {
+                company_name: document.getElementById('aa-company-name').value,
+                prompts: {
+                    welcome: document.getElementById('aa-prompt-welcome').value,
+                    main_menu: document.getElementById('aa-prompt-main-menu').value,
+                    invalid: document.getElementById('aa-prompt-invalid').value,
+                    timeout: document.getElementById('aa-prompt-timeout').value,
+                    transferring: document.getElementById('aa-prompt-transferring').value
+                }
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(promptsData)
+                });
+                
+                if (response.ok) {
+                    showNotification('Prompts saved and voices regenerated successfully!', 'success');
+                    if (statusDiv) {
+                        statusMessage.textContent = '✅ Voice prompts regenerated successfully using gTTS!';
+                        setTimeout(() => {
+                            statusDiv.style.display = 'none';
+                        }, 3000);
+                    }
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to save prompts', 'error');
+                    if (statusDiv) {
+                        statusMessage.textContent = '❌ Failed to regenerate voices';
+                        setTimeout(() => {
+                            statusDiv.style.display = 'none';
+                        }, 3000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving prompts:', error);
+                showNotification('Failed to save prompts', 'error');
+                if (statusDiv) {
+                    statusMessage.textContent = '❌ Error: ' + error.message;
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                    }, 3000);
+                }
             }
         });
     }
