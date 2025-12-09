@@ -31,9 +31,19 @@ async function loadVoicemailForExtension() {
             document.getElementById('vm-total-messages').textContent = data.total_messages || 0;
             document.getElementById('vm-unread-messages').textContent = data.unread_messages || 0;
             document.getElementById('vm-has-greeting').textContent = data.has_custom_greeting ? 'Yes' : 'No';
+        } else {
+            console.error('Failed to load mailbox details:', response.status, response.statusText);
+            // Still show the overview section with default values
+            document.getElementById('vm-total-messages').textContent = '0';
+            document.getElementById('vm-unread-messages').textContent = '0';
+            document.getElementById('vm-has-greeting').textContent = 'Unknown';
         }
     } catch (error) {
         console.error('Error loading mailbox details:', error);
+        // Still show the overview section with default values
+        document.getElementById('vm-total-messages').textContent = '0';
+        document.getElementById('vm-unread-messages').textContent = '0';
+        document.getElementById('vm-has-greeting').textContent = 'Unknown';
     }
 }
 

@@ -3584,16 +3584,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             # Update configuration
             config = self.pbx_core.config if self.pbx_core else Config()
-            aa_config = config.get('auto_attendant', {})
             
+            # Ensure auto_attendant section exists
+            if 'auto_attendant' not in config.config:
+                config.config['auto_attendant'] = {}
+            
+            # Update prompts
             if prompts:
-                aa_config['prompts'] = prompts
+                config.config['auto_attendant']['prompts'] = prompts
             
+            # Update company name
             if company_name:
-                config.data['company_name'] = company_name
+                config.config['company_name'] = company_name
             
             # Save configuration
-            config.save()
+            success = config.save()
+            if not success:
+                raise Exception("Failed to save configuration file")
             
             # Trigger voice regeneration
             self._regenerate_voice_prompts(prompts, company_name)

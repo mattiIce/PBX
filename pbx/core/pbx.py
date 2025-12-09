@@ -1912,7 +1912,9 @@ class PBXCore:
                     prompt_file = temp_file.name
                 
                 try:
+                    self.logger.debug(f"Playing PIN entry prompt for voicemail IVR {call_id}, call state: {call.state}")
                     player.play_file(prompt_file)
+                    self.logger.debug(f"Finished playing PIN entry prompt for {call_id}, call state: {call.state}")
                 finally:
                     try:
                         os.unlink(prompt_file)
@@ -1920,18 +1922,27 @@ class PBXCore:
                         pass
                 
                 time.sleep(0.5)
+                self.logger.debug(f"After sleep, checking call state for {call_id}: {call.state}")
                 
                 # Check if call was terminated early (e.g., immediate BYE after answering)
+                # Log the actual call state for debugging
+                self.logger.debug(f"Voicemail IVR check: call_id={call_id}, state={call.state}, state.value={call.state.value if hasattr(call.state, 'value') else 'N/A'}")
+                
                 if call.state == CallState.ENDED:
-                    self.logger.info(f"Voicemail IVR for {call.voicemail_extension} - call ended before IVR could start")
+                    self.logger.info(f"Voicemail IVR for {call.voicemail_extension} - call ended before IVR could start (state was {call.state})")
                     return
                 
-                self.logger.info(f"Voicemail IVR started for {call.voicemail_extension}, waiting for PIN")
+                self.logger.info(f"Voicemail IVR started for {call.voicemail_extension}, waiting for PIN (call state: {call.state})")
                 
                 # Main IVR loop - listen for DTMF input
                 ivr_active = True
                 last_audio_check = time.time()
                 audio_buffer = []
+                
+                # DTMF debouncing: track last detected digit and time to prevent duplicates
+                last_detected_digit = None
+                last_detection_time = 0
+                DTMF_DEBOUNCE_SECONDS = 0.5  # Ignore same digit within 500ms
                 
                 # Constants for DTMF detection
                 # ~0.5s of audio at 160 bytes per 20ms RTP packet
@@ -1941,6 +1952,7 @@ class PBXCore:
                 while ivr_active:
                     # Check if call is still active
                     if call.state == CallState.ENDED:
+                        self.logger.debug(f"Voicemail IVR loop: call {call_id} ended, exiting")
                         break
                     
                     # Collect audio for DTMF detection
@@ -1954,10 +1966,23 @@ class PBXCore:
                             recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
                             
                             if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:  # Need sufficient audio for DTMF
-                                # Detect DTMF in audio
-                                digit = dtmf_detector.detect(recent_audio)
+                                try:
+                                    # Detect DTMF in audio with error handling
+                                    digit = dtmf_detector.detect(recent_audio)
+                                except Exception as e:
+                                    self.logger.error(f"Error detecting DTMF: {e}")
+                                    digit = None
                                 
                                 if digit:
+                                    # Debounce: ignore duplicate detections of same digit within debounce period
+                                    current_time = time.time()
+                                    if digit == last_detected_digit and (current_time - last_detection_time) < DTMF_DEBOUNCE_SECONDS:
+                                        # Same digit detected too soon, likely echo or lingering tone
+                                        continue
+                                    
+                                    # Update debounce tracking
+                                    last_detected_digit = digit
+                                    last_detection_time = current_time
                                     self.logger.info(f"Detected DTMF digit: {digit} in voicemail IVR")
                                     
                                     # Handle DTMF input through IVR
@@ -2074,7 +2099,12 @@ class PBXCore:
                                             if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
                                                 recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
                                                 if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
-                                                    digit = dtmf_detector.detect(recent_audio)
+                                                    try:
+                                                        digit = dtmf_detector.detect(recent_audio)
+                                                    except Exception as e:
+                                                        self.logger.error(f"Error detecting DTMF during recording: {e}")
+                                                        digit = None
+                                                    
                                                     if digit == '#':
                                                         self.logger.info(f"Recording stopped by user (#)")
                                                         recording = False
