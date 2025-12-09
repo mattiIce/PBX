@@ -35,6 +35,12 @@ Learn about specific features:
 - **[PHONE_PROVISIONING.md](PHONE_PROVISIONING.md)** - Auto-configuration for IP phones
 - **[PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md)** - Automatic tracking of registered phones by MAC/IP address
 
+## Migration & Import
+
+Migrate from legacy phone systems:
+
+- **[MERLIN_IMPORT_GUIDE.md](MERLIN_IMPORT_GUIDE.md)** - Import voicemail data from AT&T Merlin Legend systems
+
 ## Integration Guides
 
 Connect the PBX with external services:
