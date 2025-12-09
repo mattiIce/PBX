@@ -258,42 +258,50 @@ class TestSIPInfoDTMF(unittest.TestCase):
 
 
 class TestSIPInfoIntegration(unittest.TestCase):
-    """Integration tests for SIP INFO with IVR systems"""
+    """Integration tests for SIP INFO queue operations with IVR systems"""
     
-    def test_voicemail_ivr_sip_info_priority(self):
-        """Test that voicemail IVR checks SIP INFO queue before in-band detection"""
-        # This test validates the priority logic documented in the guide:
-        # Priority 1: Check SIP INFO queue
-        # Priority 2: Fall back to in-band detection
+    def test_voicemail_ivr_queue_operations(self):
+        """Test SIP INFO queue creation and FIFO operations for voicemail IVR
         
+        Note: This test validates the queue data structure used by the priority system.
+        The actual priority logic (checking SIP INFO before in-band detection) is 
+        implemented in pbx/core/pbx.py lines 2013-2016 and cannot be easily unit tested
+        without full IVR session setup.
+        """
         call = Call('test-vm-priority', '1001', '*1001')
         call.dtmf_info_queue = ['5']
         
-        # Verify queue has data
+        # Verify queue has data (simulating Priority 1 check in IVR)
         self.assertTrue(hasattr(call, 'dtmf_info_queue'))
         self.assertTrue(call.dtmf_info_queue)
         
-        # Pop digit (simulating IVR loop behavior)
+        # Pop digit in FIFO order (simulating IVR loop behavior)
         digit = call.dtmf_info_queue.pop(0)
         self.assertEqual(digit, '5')
         
-        # Verify queue is now empty
+        # Verify queue is now empty (would trigger Priority 2: in-band detection)
         self.assertEqual(len(call.dtmf_info_queue), 0)
     
-    def test_auto_attendant_sip_info_priority(self):
-        """Test that auto attendant checks SIP INFO queue before in-band detection"""
+    def test_auto_attendant_queue_operations(self):
+        """Test SIP INFO queue creation and FIFO operations for auto attendant
+        
+        Note: This test validates the queue data structure used by the priority system.
+        The actual priority logic (checking SIP INFO before in-band detection) is
+        implemented in pbx/core/pbx.py lines 1411-1419 and cannot be easily unit tested
+        without full auto attendant session setup.
+        """
         call = Call('test-aa-priority', '1001', '0')
         call.dtmf_info_queue = ['3']
         
-        # Verify queue has data
+        # Verify queue has data (simulating Priority 1 check in auto attendant)
         self.assertTrue(hasattr(call, 'dtmf_info_queue'))
         self.assertTrue(call.dtmf_info_queue)
         
-        # Pop digit (simulating auto attendant loop behavior)
+        # Pop digit in FIFO order (simulating auto attendant loop behavior)
         digit = call.dtmf_info_queue.pop(0)
         self.assertEqual(digit, '3')
         
-        # Verify queue is now empty
+        # Verify queue is now empty (would trigger Priority 2: in-band detection)
         self.assertEqual(len(call.dtmf_info_queue), 0)
 
 
