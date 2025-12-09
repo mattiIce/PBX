@@ -5,7 +5,7 @@ Test for phone reprovisioning bug fix
 Tests that when a phone (IP/MAC) is reprovisioned to a different extension,
 the old extension-IP-MAC mapping is properly removed from the registered_phones table.
 
-Bug: If a IP/MAC has been reprovisioned to a different extension, the old extension,
+Bug: If an IP/MAC has been reprovisioned to a different extension, the old extension,
 IP and MAC mapping persists in the table, causing duplicate entries.
 """
 import sys
