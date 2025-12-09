@@ -222,11 +222,17 @@ ldapsearch -H ldaps://192.168.1.22:636 \
 
 ## LDAP Search Filters
 
-### Name Filter
+### Name Filter (Default - Updated)
 ```
-(|(cn=%)(sn=%))
+(&(|(cn=%)(sn=%))(telephoneNumber=*))
 ```
-This searches for contacts where common name (cn) OR surname (sn) matches the user's input.
+This searches for contacts where:
+- Common name (cn) OR surname (sn) matches the user's input
+- **AND the user has a telephoneNumber attribute set**
+
+This ensures that only users with phone numbers appear in the phone book, preventing empty entries.
+
+**Previous default:** `(|(cn=%)(sn=%))` - This showed all users, even those without phone numbers.
 
 ### Number Filter
 ```
@@ -245,8 +251,11 @@ name_filter: (&(cn=%)(mail=*))
 # Search by display name
 name_filter: (displayName=%)
 
-# Combined search
-name_filter: (|(cn=%)(displayName=%)(mail=%))
+# Combined search that requires telephoneNumber
+name_filter: (&(|(cn=%)(displayName=%)(mail=%))(telephoneNumber=*))
+
+# Show all users (not recommended - may show users without phone numbers)
+name_filter: (|(cn=%)(sn=%))
 ```
 
 ## Security Considerations
@@ -292,14 +301,20 @@ LDAP_PHONEBOOK_PASSWORD=SecureRandomPassword123!
 
 ### No Directory Results
 
-**Issue**: Directory search returns no results
+**Issue**: Directory search returns no results or phone book is empty
 
 **Solutions**:
-1. Verify Base DN is correct
-2. Check LDAP bind credentials
-3. Test search filter with `ldapsearch`
-4. Ensure user objects have required attributes (cn, telephoneNumber)
-5. Check LDAP user has read permissions
+1. **Ensure users have telephoneNumber attribute set** - The default filter now requires this
+   ```powershell
+   # Check if users have telephoneNumber in AD
+   Get-ADUser -Filter * -Properties telephoneNumber | Where-Object {$_.telephoneNumber}
+   ```
+2. Verify Base DN is correct
+3. Check LDAP bind credentials
+4. Test search filter with `ldapsearch`
+5. Ensure user objects have required attributes (cn, telephoneNumber)
+6. Check LDAP user has read permissions
+7. If you want to show users without phone numbers, change the name_filter in config.yml to: `(|(cn=%)(sn=%))`
 
 ### Phone Shows "Authentication Failed"
 

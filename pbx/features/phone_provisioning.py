@@ -805,7 +805,8 @@ P30 = 13   # GMT-8
                     'password': ad_bind_password,
                     'version': explicit_config.get('version', 3),
                     'tls_mode': explicit_config.get('tls_mode', tls_mode),
-                    'name_filter': explicit_config.get('name_filter', '(|(cn=%)(sn=%))'),
+                    # Filter to only show users with telephoneNumber - ensures phone book shows entries with phone numbers
+                    'name_filter': explicit_config.get('name_filter', '(&(|(cn=%)(sn=%))(telephoneNumber=*))'),
                     'number_filter': explicit_config.get('number_filter', '(|(telephoneNumber=%)(mobile=%))'),
                     'name_attr': explicit_config.get('name_attr', 'cn'),
                     'number_attr': explicit_config.get('number_attr', 'telephoneNumber'),
@@ -830,7 +831,8 @@ P30 = 13   # GMT-8
             'password': '',
             'version': 3,
             'tls_mode': 1,
-            'name_filter': '(|(cn=%)(sn=%))',
+            # Filter to only show users with telephoneNumber - ensures phone book shows entries with phone numbers
+            'name_filter': '(&(|(cn=%)(sn=%))(telephoneNumber=*))',
             'number_filter': '(|(telephoneNumber=%)(mobile=%))',
             'name_attr': 'cn',
             'number_attr': 'telephoneNumber',
