@@ -61,6 +61,7 @@
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
             <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
+            <button class="tab-button" data-tab="auto-attendant">Auto Attendant</button>
             <button class="tab-button" data-tab="voicemail">Voicemail</button>
             <button class="tab-button" data-tab="calls">Active Calls</button>
             <button class="tab-button" data-tab="config">Configuration</button>
@@ -479,6 +480,85 @@
             </div>
         </div>
 
+        <!-- Auto Attendant Tab -->
+        <div id="auto-attendant" class="tab-content">
+            <div class="section-header">
+                <h2>Auto Attendant Configuration</h2>
+                <button class="btn btn-primary" onclick="loadAutoAttendantConfig()">🔄 Refresh</button>
+            </div>
+
+            <div class="config-section">
+                <h3>📞 General Settings</h3>
+                <form id="auto-attendant-config-form">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="aa-enabled">
+                            Enable Auto Attendant
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Extension Number:</label>
+                        <input type="text" id="aa-extension" placeholder="0" pattern="[0-9]+" maxlength="4">
+                        <small>Extension number for auto attendant (e.g., 0 for main line)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Timeout (seconds):</label>
+                        <input type="number" id="aa-timeout" min="5" max="60" value="10">
+                        <small>How long to wait for DTMF input before repeating menu</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Retries:</label>
+                        <input type="number" id="aa-max-retries" min="1" max="10" value="3">
+                        <small>Maximum number of invalid attempts before transferring to operator</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Settings</button>
+                </form>
+            </div>
+
+            <div class="config-section">
+                <div class="section-header">
+                    <h3>🎯 Menu Options</h3>
+                    <button class="btn btn-success" onclick="showAddMenuOptionModal()">➕ Add Menu Option</button>
+                </div>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p>Configure what happens when callers press digits on their phone.</p>
+                    <p><strong>Example:</strong> Press 1 for Sales (ext 1001), Press 2 for Support (ext 1002)</p>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Digit</th>
+                                <th>Destination</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aa-menu-options-table-body">
+                            <tr>
+                                <td colspan="4" class="loading">Loading menu options...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>🎵 Audio Prompts</h3>
+                <div class="info-box">
+                    <p><strong>Location:</strong> <code>auto_attendant/</code> directory</p>
+                    <p>Required audio files:</p>
+                    <ul>
+                        <li><code>welcome.wav</code> - Initial greeting when call is answered</li>
+                        <li><code>main_menu.wav</code> - Menu options announcement</li>
+                        <li><code>invalid.wav</code> - Played when invalid digit is pressed</li>
+                        <li><code>timeout.wav</code> - Played when no input is received</li>
+                    </ul>
+                    <p>💡 Use the <code>scripts/generate_espeak_voices.py</code> script to generate professional voice prompts.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Voicemail Tab -->
         <div id="voicemail" class="tab-content">
             <div class="section-header">
@@ -489,6 +569,28 @@
                         <option value="">Select Extension</option>
                     </select>
                     <button class="btn btn-primary" onclick="loadVoicemailForExtension()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div id="voicemail-box-overview" class="config-section" style="display: none;">
+                <h3>Mailbox Overview</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="stat-card">
+                        <div class="stat-value" id="vm-total-messages">-</div>
+                        <div class="stat-label">Total Messages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="vm-unread-messages">-</div>
+                        <div class="stat-label">Unread Messages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="vm-has-greeting">-</div>
+                        <div class="stat-label">Custom Greeting</div>
+                    </div>
+                </div>
+                <div class="action-buttons" style="margin-top: 15px;">
+                    <button class="btn btn-success" onclick="exportVoicemailBox()">📦 Export All Voicemails</button>
+                    <button class="btn btn-warning" onclick="clearVoicemailBox()">🗑️ Clear All Messages</button>
                 </div>
             </div>
 
@@ -1010,6 +1112,67 @@
         </div>
     </div>
 
+    <!-- Add Menu Option Modal -->
+    <div id="add-menu-option-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Menu Option</h3>
+                <span class="close" onclick="closeAddMenuOptionModal()">&times;</span>
+            </div>
+            <form id="add-menu-option-form">
+                <div class="form-group">
+                    <label>Digit (0-9, *, #):</label>
+                    <input type="text" id="new-menu-digit" required pattern="[0-9*#]" maxlength="1" placeholder="1">
+                    <small>Which digit callers will press</small>
+                </div>
+                <div class="form-group">
+                    <label>Destination Extension:</label>
+                    <input type="text" id="new-menu-destination" required placeholder="1001">
+                    <small>Extension, queue, or feature code to transfer to</small>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="new-menu-description" required placeholder="Sales Department">
+                    <small>Human-readable description of this menu option</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddMenuOptionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Menu Option</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Menu Option Modal -->
+    <div id="edit-menu-option-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Menu Option</h3>
+                <span class="close" onclick="closeEditMenuOptionModal()">&times;</span>
+            </div>
+            <form id="edit-menu-option-form">
+                <input type="hidden" id="edit-menu-digit">
+                <div class="form-group">
+                    <label>Digit: <span id="edit-menu-digit-display"></span></label>
+                </div>
+                <div class="form-group">
+                    <label>Destination Extension:</label>
+                    <input type="text" id="edit-menu-destination" required placeholder="1001">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="edit-menu-description" required placeholder="Sales Department">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditMenuOptionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Menu Option</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/admin.js"></script>
+    <script src="js/auto_attendant.js"></script>
+    <script src="js/voicemail_enhanced.js"></script>
 </body>
 </html>
