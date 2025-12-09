@@ -197,6 +197,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_assign_skill()
             elif path == '/api/skills/queue-requirements':
                 self._handle_set_queue_requirements()
+            elif path == '/api/qos/clear-alerts':
+                self._handle_clear_qos_alerts()
+            elif path == '/api/qos/thresholds':
+                self._handle_update_qos_thresholds()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -295,6 +299,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_calls()
             elif path == '/api/statistics':
                 self._handle_get_statistics()
+            elif path == '/api/qos/metrics':
+                self._handle_get_qos_metrics()
+            elif path == '/api/qos/alerts':
+                self._handle_get_qos_alerts()
+            elif path == '/api/qos/history':
+                self._handle_get_qos_history()
+            elif path == '/api/qos/statistics':
+                self._handle_get_qos_statistics()
+            elif path.startswith('/api/qos/call/'):
+                self._handle_get_qos_call_metrics(path)
             elif path == '/api/config':
                 self._handle_get_config()
             elif path == '/api/provisioning/devices':
@@ -463,6 +477,31 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'PBX not initialized'}, 500)
 
+    def _validate_limit_parameter(self, params: dict, default: int, max_value: int) -> Optional[int]:
+        """
+        Helper method to validate limit query parameters
+        
+        Args:
+            params: Parsed query parameters
+            default: Default value if not provided
+            max_value: Maximum allowed value
+            
+        Returns:
+            Validated limit value or None if invalid (error response will be sent)
+        """
+        try:
+            limit = int(params.get('limit', [default])[0])
+            if limit < 1:
+                self._send_json({'error': 'limit must be at least 1'}, 400)
+                return None
+            if limit > max_value:
+                self._send_json({'error': f'limit cannot exceed {max_value}'}, 400)
+                return None
+            return limit
+        except ValueError:
+            self._send_json({'error': 'Invalid limit parameter, must be an integer'}, 400)
+            return None
+
     def _handle_get_statistics(self):
         """Get comprehensive statistics for dashboard"""
         if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
@@ -487,6 +526,120 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Error getting statistics: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'Statistics engine not initialized'}, 500)
+
+    def _handle_get_qos_metrics(self):
+        """Get QoS metrics for all active calls"""
+        if self.pbx_core and hasattr(self.pbx_core, 'qos_monitor'):
+            try:
+                metrics = self.pbx_core.qos_monitor.get_all_active_metrics()
+                self._send_json({
+                    'active_calls': len(metrics),
+                    'metrics': metrics
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting QoS metrics: {e}")
+                self._send_json({'error': f'Error getting QoS metrics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'QoS monitoring not enabled'}, 500)
+
+    def _handle_get_qos_alerts(self):
+        """Get QoS quality alerts"""
+        if self.pbx_core and hasattr(self.pbx_core, 'qos_monitor'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                
+                # Validate limit parameter
+                limit = int(params.get('limit', [50])[0])
+                if limit < 1:
+                    self._send_json({'error': 'limit must be at least 1'}, 400)
+                    return
+                if limit > 1000:
+                    self._send_json({'error': 'limit cannot exceed 1000'}, 400)
+                    return
+                
+                alerts = self.pbx_core.qos_monitor.get_alerts(limit)
+                self._send_json({
+                    'count': len(alerts),
+                    'alerts': alerts
+                })
+            except ValueError as e:
+                self.logger.error(f"Invalid parameter for QoS alerts: {e}")
+                self._send_json({'error': 'Invalid limit parameter, must be an integer'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error getting QoS alerts: {e}")
+                self._send_json({'error': f'Error getting QoS alerts: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'QoS monitoring not enabled'}, 500)
+
+    def _handle_get_qos_history(self):
+        """Get historical QoS metrics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'qos_monitor'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                
+                # Validate limit parameter
+                limit = int(params.get('limit', [100])[0])
+                if limit < 1:
+                    self._send_json({'error': 'limit must be at least 1'}, 400)
+                    return
+                if limit > 10000:
+                    self._send_json({'error': 'limit cannot exceed 10000'}, 400)
+                    return
+                
+                # Validate min_mos parameter
+                min_mos = params.get('min_mos', [None])[0]
+                if min_mos:
+                    min_mos = float(min_mos)
+                    if min_mos < 1.0 or min_mos > 5.0:
+                        self._send_json({'error': 'min_mos must be between 1.0 and 5.0'}, 400)
+                        return
+                
+                history = self.pbx_core.qos_monitor.get_historical_metrics(limit, min_mos)
+                self._send_json({
+                    'count': len(history),
+                    'metrics': history
+                })
+            except ValueError as e:
+                self.logger.error(f"Invalid parameter for QoS history: {e}")
+                self._send_json({'error': 'Invalid parameters, check limit (integer) and min_mos (float)'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error getting QoS history: {e}")
+                self._send_json({'error': f'Error getting QoS history: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'QoS monitoring not enabled'}, 500)
+
+    def _handle_get_qos_statistics(self):
+        """Get overall QoS statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'qos_monitor'):
+            try:
+                stats = self.pbx_core.qos_monitor.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting QoS statistics: {e}")
+                self._send_json({'error': f'Error getting QoS statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'QoS monitoring not enabled'}, 500)
+
+    def _handle_get_qos_call_metrics(self, path):
+        """Get QoS metrics for a specific call"""
+        if self.pbx_core and hasattr(self.pbx_core, 'qos_monitor'):
+            try:
+                # Extract call_id from path: /api/qos/call/{call_id}
+                call_id = path.split('/')[-1]
+                metrics = self.pbx_core.qos_monitor.get_metrics(call_id)
+                if metrics:
+                    self._send_json(metrics)
+                else:
+                    self._send_json({'error': f'No QoS metrics found for call {call_id}'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting call QoS metrics: {e}")
+                self._send_json({'error': f'Error getting call QoS metrics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'QoS monitoring not enabled'}, 500)
 
     def _handle_get_provisioning_devices(self):
         """Get all provisioned devices"""
@@ -2780,6 +2933,77 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'Failed to set requirements'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_clear_qos_alerts(self):
+        """Handle clearing QoS alerts"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'qos_monitor'):
+            self._send_json({'error': 'QoS monitoring not available'}, 500)
+            return
+        
+        try:
+            count = self.pbx_core.qos_monitor.clear_alerts()
+            self._send_json({
+                'success': True,
+                'message': f'Cleared {count} alerts'
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_qos_thresholds(self):
+        """Handle updating QoS alert thresholds"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'qos_monitor'):
+            self._send_json({'error': 'QoS monitoring not available'}, 500)
+            return
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            thresholds = {}
+            
+            # Validate and convert threshold values with range checking
+            if 'mos_min' in data:
+                mos_min = float(data['mos_min'])
+                if mos_min < 1.0 or mos_min > 5.0:
+                    self._send_json({'error': 'mos_min must be between 1.0 and 5.0'}, 400)
+                    return
+                thresholds['mos_min'] = mos_min
+            
+            if 'packet_loss_max' in data:
+                packet_loss_max = float(data['packet_loss_max'])
+                if packet_loss_max < 0.0 or packet_loss_max > 100.0:
+                    self._send_json({'error': 'packet_loss_max must be between 0.0 and 100.0'}, 400)
+                    return
+                thresholds['packet_loss_max'] = packet_loss_max
+            
+            if 'jitter_max' in data:
+                jitter_max = float(data['jitter_max'])
+                if jitter_max < 0.0 or jitter_max > 1000.0:
+                    self._send_json({'error': 'jitter_max must be between 0.0 and 1000.0 ms'}, 400)
+                    return
+                thresholds['jitter_max'] = jitter_max
+            
+            if 'latency_max' in data:
+                latency_max = float(data['latency_max'])
+                if latency_max < 0.0 or latency_max > 5000.0:
+                    self._send_json({'error': 'latency_max must be between 0.0 and 5000.0 ms'}, 400)
+                    return
+                thresholds['latency_max'] = latency_max
+            
+            if not thresholds:
+                self._send_json({'error': 'No valid threshold parameters provided'}, 400)
+                return
+            
+            self.pbx_core.qos_monitor.update_alert_thresholds(thresholds)
+            
+            self._send_json({
+                'success': True,
+                'message': 'QoS thresholds updated',
+                'thresholds': self.pbx_core.qos_monitor.alert_thresholds
+            })
+        except ValueError as e:
+            self.logger.error(f"Invalid threshold value: {e}")
+            self._send_json({'error': 'Invalid threshold values, must be valid numbers'}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
     

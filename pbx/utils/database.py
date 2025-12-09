@@ -884,6 +884,50 @@ class RegisteredPhonesDB:
         
         return success
 
+    def cleanup_incomplete_registrations(self) -> tuple[bool, int]:
+        """
+        Remove phone registrations that are missing MAC address, IP address, or extension number.
+        Only phones with all three fields (MAC, IP, and Extension) should be retained.
+        This is called at startup to ensure data integrity.
+        
+        Returns:
+            tuple[bool, int]: Success status and count of removed registrations
+        """
+        try:
+            # First, count how many incomplete registrations exist
+            count_query = """
+            SELECT COUNT(*) as count FROM registered_phones 
+            WHERE mac_address IS NULL OR mac_address = '' 
+               OR ip_address IS NULL OR ip_address = ''
+               OR extension_number IS NULL OR extension_number = ''
+            """
+            result = self.db.fetch_one(count_query)
+            count = result['count'] if result else 0
+            
+            if count == 0:
+                self.logger.info("No incomplete phone registrations found")
+                return (True, 0)
+            
+            # Delete incomplete registrations
+            delete_query = """
+            DELETE FROM registered_phones 
+            WHERE mac_address IS NULL OR mac_address = '' 
+               OR ip_address IS NULL OR ip_address = ''
+               OR extension_number IS NULL OR extension_number = ''
+            """
+            success = self.db.execute(delete_query)
+            
+            if success:
+                self.logger.info(f"Cleaned up {count} incomplete phone registration(s) from database")
+                self.logger.info("Only phones with MAC, IP, and Extension are retained")
+            else:
+                self.logger.error("Failed to cleanup incomplete phone registrations")
+            
+            return (success, count)
+        except Exception as e:
+            self.logger.error(f"Error cleaning up incomplete phone registrations: {e}")
+            return (False, 0)
+
     def clear_all(self) -> bool:
         """
         Clear all phone registrations from the table.

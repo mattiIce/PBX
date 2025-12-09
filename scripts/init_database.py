@@ -85,8 +85,8 @@ def add_sample_data():
         cur = conn.cursor()
         
         # Insert sample VIP callers
+        # Note: Extension 1001 removed as it was a false/test entry
         vip_data = [
-            ('+15551234567', 'John Smith', 'ABC Corp', 1, 'Important customer', '1001', True),
             ('+15559876543', 'Jane Doe', 'XYZ Inc', 2, 'VVIP - Board member', '1000', True),
             ('+15555555555', 'Bob Johnson', 'Tech Ltd', 1, 'Regular VIP', '1002', False),
         ]

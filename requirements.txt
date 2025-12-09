@@ -33,6 +33,9 @@ msal>=1.24.0  # Microsoft Authentication Library
 # For FIDO2/WebAuthn authentication
 fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
 
+# Opus codec support (Modern, high-quality, low-latency audio codec)
+opuslib>=3.0.0  # Python bindings for Opus codec (requires libopus system library)
+
 # Voicemail transcription (FREE, offline speech recognition)
 vosk>=0.3.45
 
