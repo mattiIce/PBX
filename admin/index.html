@@ -57,6 +57,7 @@
 
         <nav class="tabs">
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-button" data-tab="webrtc-phone">📞 Phone</button>
             <button class="tab-button" data-tab="analytics">Analytics</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
@@ -127,6 +128,109 @@
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Refresh Status</button>
                 <button class="btn btn-success" onclick="showTab('extensions')">➕ Add Extension</button>
+            </div>
+        </div>
+
+        <!-- WebRTC Phone Tab -->
+        <div id="webrtc-phone" class="tab-content">
+            <h2>📞 WebRTC Browser Phone</h2>
+            <div class="info-box" style="margin-bottom: 20px;">
+                <p>🎯 <strong>Make calls directly from your browser without a physical phone!</strong></p>
+                <p>This WebRTC-based phone allows you to make calls to any extension from your computer.</p>
+                <p>⚠️ <strong>Note:</strong> Please allow microphone access when prompted.</p>
+            </div>
+
+            <div class="config-section" style="max-width: 600px; margin: 0 auto;">
+                <div class="webrtc-phone-widget">
+                    <div class="phone-display">
+                        <div class="phone-status-container">
+                            <div id="webrtc-status" class="webrtc-status info">Ready to call</div>
+                        </div>
+                        
+                        <div class="phone-input-group" style="margin: 20px 0;">
+                            <label for="webrtc-target-ext" style="display: block; margin-bottom: 8px; font-weight: bold;">
+                                Call Extension:
+                            </label>
+                            <input 
+                                type="text" 
+                                id="webrtc-target-ext" 
+                                value="1001" 
+                                pattern="[0-9]{4}" 
+                                maxlength="4"
+                                style="width: 100%; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 8px;"
+                                placeholder="1001"
+                            >
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Extension 1001 is the operator
+                            </small>
+                        </div>
+
+                        <div class="phone-controls" style="display: flex; flex-direction: column; gap: 10px;">
+                            <button 
+                                id="webrtc-call-btn" 
+                                class="btn btn-success" 
+                                style="padding: 15px; font-size: 18px; width: 100%;"
+                            >
+                                📞 Call Extension
+                            </button>
+                            
+                            <button 
+                                id="webrtc-hangup-btn" 
+                                class="btn btn-danger" 
+                                style="padding: 15px; font-size: 18px; width: 100%;" 
+                                disabled
+                            >
+                                📴 Hang Up
+                            </button>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button 
+                                    id="webrtc-mute-btn" 
+                                    class="btn btn-secondary" 
+                                    style="flex: 1; padding: 12px;" 
+                                    disabled
+                                >
+                                    🔇 Mute
+                                </button>
+                                
+                                <div style="flex: 2; display: flex; align-items: center; gap: 10px; padding: 0 10px; background: #f5f5f5; border-radius: 4px;">
+                                    <label for="webrtc-volume" style="white-space: nowrap;">🔊 Volume:</label>
+                                    <input 
+                                        type="range" 
+                                        id="webrtc-volume" 
+                                        min="0" 
+                                        max="100" 
+                                        value="80" 
+                                        style="flex: 1;"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden audio element for remote audio -->
+                    <audio id="webrtc-remote-audio" autoplay style="display: none;"></audio>
+                </div>
+
+                <div class="info-box" style="margin-top: 30px;">
+                    <h3>📋 Instructions</h3>
+                    <ol>
+                        <li>Enter the extension number you want to call (default is 1001 - Operator)</li>
+                        <li>Click "📞 Call Extension" to start the call</li>
+                        <li>Allow microphone access when your browser prompts you</li>
+                        <li>Wait for the call to connect</li>
+                        <li>Use the controls to mute/unmute or adjust volume</li>
+                        <li>Click "📴 Hang Up" when you're done</li>
+                    </ol>
+                    
+                    <h3 style="margin-top: 20px;">🔧 Troubleshooting</h3>
+                    <ul>
+                        <li><strong>No audio:</strong> Check your microphone permissions in browser settings</li>
+                        <li><strong>Can't connect:</strong> Ensure WebRTC is enabled in Configuration tab</li>
+                        <li><strong>Call not ringing:</strong> Verify the target extension exists and is registered</li>
+                        <li><strong>Echo or feedback:</strong> Use headphones to prevent audio feedback</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -1202,5 +1306,6 @@
     <script src="js/admin.js"></script>
     <script src="js/auto_attendant.js"></script>
     <script src="js/voicemail_enhanced.js"></script>
+    <script src="js/webrtc_phone.js"></script>
 </body>
 </html>
