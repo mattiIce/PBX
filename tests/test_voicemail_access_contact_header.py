@@ -33,6 +33,8 @@ def test_voicemail_access_contact_header_code_review():
     
     # Get the method content (simplified check)
     method_end = content.find('\n    def ', start_idx + 1)
+    if method_end == -1:
+        method_end = len(content)
     method_content = content[start_idx:method_end]
     
     # Find where target_ext is defined (removing asterisk)
@@ -54,7 +56,8 @@ def test_voicemail_access_contact_header_code_review():
     assert 'target_ext' in contact_line, \
         f"Contact header should use target_ext (without asterisk), found: {contact_line}"
     
-    assert '{to_ext}' not in contact_line, \
+    # Check that to_ext is not used in the f-string interpolation
+    assert 'to_ext}' not in contact_line and 'to_ext @' not in contact_line, \
         f"Contact header should NOT use to_ext (with asterisk), found: {contact_line}"
     
     print(f"  ✓ Contact header code is correct: uses target_ext")
@@ -97,7 +100,8 @@ def test_contact_header_pattern_consistency():
             if 'contact_uri' in line.lower() and 'sip:' in line:
                 has_contact = True
                 # Verify it uses extension variable (not the prefixed version)
-                if '*' in line or 'to_ext}' in line:
+                # Check if to_ext is used in the SIP URI context
+                if 'to_ext}' in line and 'sip:{to_ext}' in line:
                     print(f"  ⚠ Warning: {method_name} may have asterisk in Contact")
                 else:
                     print(f"  ✓ {method_name} Contact header looks good")
