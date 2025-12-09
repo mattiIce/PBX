@@ -34,7 +34,7 @@ class SIPMessage:
         lines = raw_message.split('\r\n')
 
         # Validate that we have at least one line
-        if not lines or len(lines) == 0:
+        if not lines:
             return
 
         # Parse first line (request or response)
