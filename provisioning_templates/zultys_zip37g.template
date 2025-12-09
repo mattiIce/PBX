@@ -76,7 +76,8 @@ voice_mail.subscribe.1.mwi = 1
 # ============================================================================
 # Account Features
 # ============================================================================
-# Call Logging
+# Call Logging (enabled for better user experience)
+# Note: Changed from disabled (0) to enabled (1) for comprehensive call history
 account.1.missed_calllog = 1
 account.1.dialed_calllog = 1
 account.1.answered_calllog = 1
@@ -116,9 +117,10 @@ account.1.dnd.enable = 0
 # - In-band: DTMF tones in audio stream (not recommended for VoIP)
 #   Affected by codec compression, unreliable with G.729
 #
-# Note: Based on PCAP analysis of ZIP33G, Zultys phones currently use SIP INFO
-# for DTMF and also advertise RFC2833 support. This configuration
-# explicitly sets RFC2833 as the primary method for better reliability.
+# Note: Based on PCAP analysis (ZIP33G and ZIP37G share same firmware base),
+# Zultys phones currently use SIP INFO for DTMF and also advertise RFC2833
+# support. This configuration explicitly sets RFC2833 as the primary method
+# for better reliability.
 
 # DTMF method: RFC2833 (out-of-band RTP events)
 # Values: RFC2833, SIP-INFO, In-band

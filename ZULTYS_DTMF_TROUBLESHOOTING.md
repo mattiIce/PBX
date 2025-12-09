@@ -253,10 +253,18 @@ grep "IGNORING spurious BYE" logs/pbx.log
 ```
 
 **Adjust Timeout if Needed:**
-The default 2-second window may be too short. Edit `pbx/sip/server.py`:
+The default 2-second window may be too short. To adjust:
+
+1. Edit `pbx/sip/server.py`
+2. Locate the `_handle_bye()` method
+3. Find the line: `if time_since_answer < 2.0:`
+4. Change to: `if time_since_answer < 5.0:  # 5 second window`
+5. Restart the PBX service
+
 ```python
-# Find: if time_since_answer < 2.0:
-# Change to: if time_since_answer < 5.0:  # 5 second window
+# In pbx/sip/server.py, method _handle_bye()
+# Around line 450-500 (search for "spurious BYE")
+if time_since_answer < 2.0:  # Change this value
 ```
 
 ### Issue: Delayed DTMF Response

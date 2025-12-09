@@ -75,7 +75,8 @@ voice_mail.subscribe.1.mwi = 1
 # ============================================================================
 # Account Features
 # ============================================================================
-# Call Logging
+# Call Logging (enabled for better user experience)
+# Note: Changed from disabled (0) to enabled (1) for comprehensive call history
 account.1.missed_calllog = 1
 account.1.dialed_calllog = 1
 account.1.answered_calllog = 1
