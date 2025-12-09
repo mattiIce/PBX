@@ -207,6 +207,7 @@ class SIPServer:
 
     def _handle_bye(self, message, addr):
         """Handle BYE request"""
+        import time
         call_id = message.get_header('Call-ID')
         self.logger.info(f"")
         self.logger.info(f">>> BYE REQUEST RECEIVED <<<")
@@ -222,6 +223,27 @@ class SIPServer:
                 self.logger.info(f"  Call State: {call.state}")
                 if hasattr(call, 'voicemail_extension'):
                     self.logger.info(f"  Voicemail Extension: {call.voicemail_extension}")
+                
+                # WORKAROUND: Some phone firmwares send a spurious BYE immediately after 200 OK
+                # during voicemail access. Ignore the first BYE if it comes within 2 seconds of call answer.
+                if hasattr(call, 'voicemail_access') and call.voicemail_access:
+                    # Check if this is the first BYE
+                    if not hasattr(call, 'first_bye_ignored'):
+                        # Calculate time since call was answered
+                        if call.answer_time:
+                            time_since_answer = (time.time() - call.answer_time.timestamp())
+                            if time_since_answer < 2.0:
+                                # This is a spurious BYE from phone firmware - ignore it
+                                self.logger.warning(f"  ⚠ IGNORING spurious BYE for voicemail access (received {time_since_answer:.2f}s after answer)")
+                                self.logger.warning(f"  ⚠ This is a known issue with some phone firmwares")
+                                self.logger.info(f"  ✓ Call remains active for voicemail IVR session")
+                                call.first_bye_ignored = True
+                                # Still send 200 OK to acknowledge the BYE, but don't end the call
+                                self._send_response(200, "OK", message, addr)
+                                self.logger.info(f"  ✓ Sent 200 OK response to {addr} (but call continues)")
+                                self.logger.info(f"")
+                                return
+                
                 # Determine which party sent BYE and forward to the other
                 other_party_addr = None
                 
