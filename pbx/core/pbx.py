@@ -2340,6 +2340,14 @@ class PBXCore:
             # Reload extensions after sync
             self.extension_registry.reload()
             
+            # Automatically sync phone book from AD if enabled
+            phone_book_synced = 0
+            if hasattr(self, 'phone_book') and self.phone_book and self.phone_book.enabled:
+                if self.phone_book.auto_sync_from_ad:
+                    self.logger.info("Auto-syncing phone book from Active Directory after AD user sync")
+                    phone_book_synced = self.phone_book.sync_from_ad(self.ad_integration, self.extension_registry)
+                    self.logger.info(f"Phone book synced {phone_book_synced} entries from Active Directory")
+            
             # Automatically trigger phone reboots for updated extensions
             rebooted_count = 0
             if extensions_to_reboot and hasattr(self, 'phone_provisioning') and self.phone_provisioning:
@@ -2358,6 +2366,7 @@ class PBXCore:
                 'success': True,
                 'synced_count': synced_count,
                 'rebooted_count': rebooted_count,
+                'phone_book_synced': phone_book_synced,
                 'error': None
             }
         except Exception as e:
@@ -2368,5 +2377,6 @@ class PBXCore:
                 'success': False,
                 'error': str(e),
                 'synced_count': 0,
-                'rebooted_count': 0
+                'rebooted_count': 0,
+                'phone_book_synced': 0
             }
