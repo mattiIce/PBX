@@ -333,7 +333,7 @@ If you have issues:
 2. Review `VOICE_PROMPTS_GUIDE.md` for general voice prompt help
 3. Check logs: `logs/pbx.log`
 4. Test network: `ping google.com`
-5. Try fallback to Festival: `python3 scripts/generate_natural_voices.py --engine festival`
+5. Try fallback to Festival: `python3 scripts/generate_espeak_voices.py --engine festival`
 
 ---
 

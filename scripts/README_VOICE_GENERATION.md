@@ -1,23 +1,24 @@
 # Voice Prompt Generation Scripts
 
-This directory contains scripts to generate voice prompts for the PBX system.
+This directory contains scripts to generate voice prompts for the PBX system using **gTTS (Google Text-to-Speech)**.
 
-## Recommended Script (Works Offline!)
+## Primary Script: `generate_espeak_voices.py` ⭐ RECOMMENDED
 
-### `generate_espeak_voices.py` ⭐ RECOMMENDED
-
-Generates **REAL VOICE** prompts using eSpeak (offline TTS).
+Generates **PROFESSIONAL-QUALITY VOICE** prompts using gTTS (Google Text-to-Speech).
 
 **Advantages:**
-- ✅ Works completely offline (no internet required)
-- ✅ Generates actual voice speech (not tones)
-- ✅ Free and open source
-- ✅ No API keys needed
-- ✅ Clear and intelligible voice
-- ✅ Already installed on most Linux systems
+- ✅ Natural, human-like American English voice
+- ✅ Professional quality suitable for production
+- ✅ Free to use (no API key required)
+- ✅ Simple setup
+- ✅ Automatic generation from text prompts
+- ✅ Optimized for US English accent
 
 **Usage:**
 ```bash
+# Install dependencies
+pip install gTTS pydub
+
 # Generate all prompts with default company name
 python3 scripts/generate_espeak_voices.py
 
@@ -33,67 +34,40 @@ python3 scripts/generate_espeak_voices.py --vm-only
 
 **Requirements:**
 ```bash
-sudo apt-get install espeak ffmpeg
+pip install gTTS pydub
 ```
 
-**Voice Quality:** Robotic but clear. Suitable for testing and basic production use.
+**Voice Quality:** Natural and professional-sounding American English voice. **This is the ONLY supported voice generation method.**
 
 ---
 
-## Alternative Scripts (For Reference)
+## Alternative Script: `generate_tts_prompts.py`
 
-### `generate_tts_prompts.py`
-
-Generates prompts using Google Cloud TTS (requires internet).
-
-**Advantages:**
-- High quality natural voices
-- Multiple languages and accents
-
-**Disadvantages:**
-- ❌ Requires internet connection
-- ❌ May have API limits
+Same functionality as `generate_espeak_voices.py`, provided for compatibility. Both scripts use gTTS.
 
 **Usage:**
 ```bash
 pip install gTTS pydub
-python3 scripts/generate_tts_prompts.py
-```
-
-### `generate_offline_tts.py`
-
-Generates prompts using pyttsx3 (offline).
-
-**Advantages:**
-- Works offline
-- Python-based
-
-**Disadvantages:**
-- ❌ May have compatibility issues
-- ❌ More complex setup
-
-**Usage:**
-```bash
-pip install pyttsx3
-sudo apt-get install espeak ffmpeg
-python3 scripts/generate_offline_tts.py
+python3 scripts/generate_tts_prompts.py --company "Your Company"
 ```
 
 ---
 
-## Which Script Should I Use?
+## Admin Panel Integration 🎛️
 
-**For most users:** Use `generate_espeak_voices.py` ⭐
+**NEW!** You can now configure voice prompts directly from the Admin Panel:
 
-It's the simplest, most reliable, and works completely offline.
-
-**For production with budget:** Consider professional voice actor or cloud TTS:
-- Google Cloud TTS ($4 per 1M characters)
-- Amazon Polly ($4 per 1M characters)
-- Azure TTS ($4 per 1M characters)
-- Professional voice actor ($50-$500)
-
-See [VOICE_PROMPTS_GUIDE.md](../VOICE_PROMPTS_GUIDE.md) for detailed instructions.
+1. Navigate to **Auto Attendant** tab
+2. Scroll to **Voice Prompts Configuration** section
+3. Edit the prompt texts:
+   - Company Name
+   - Welcome Greeting
+   - Main Menu
+   - Invalid Option
+   - Timeout
+   - Transferring
+4. Click **Save & Regenerate Voices**
+5. Voices will be automatically regenerated using gTTS with US English accent
 
 ---
 
@@ -111,14 +85,33 @@ All files are in telephony format:
 
 ---
 
+## Voice Configuration
+
+The system uses optimized gTTS settings for the most American English human-like sound:
+- **Language:** English (`lang='en'`)
+- **TLD:** google.com (`tld='com'`) - Provides US English accent
+- **Speed:** Natural speaking rate (`slow=False`)
+
+These settings provide the most natural and professional-sounding voice for business use.
+
+---
+
 ## Customizing Voice Prompts
 
-### Option 1: Edit and Regenerate (Quick)
+### Option 1: Use Admin Panel (Recommended) 🎛️
+
+The easiest way to customize prompts:
+1. Open Admin Panel → Auto Attendant tab
+2. Modify the text in Voice Prompts Configuration section
+3. Click "Save & Regenerate Voices"
+4. Voices are automatically regenerated with your custom text
+
+### Option 2: Edit Script and Regenerate
 
 Edit the script to change the text, then regenerate:
 
 ```python
-# In generate_espeak_voices.py, find:
+# In generate_espeak_voices.py or generate_tts_prompts.py, find:
 prompts = {
     'welcome.wav': {
         'text': f'Thank you for calling {company_name}.',
@@ -130,10 +123,10 @@ prompts = {
 
 Then run:
 ```bash
-python3 scripts/generate_espeak_voices.py
+python3 scripts/generate_espeak_voices.py --company "Your Company"
 ```
 
-### Option 2: Replace Files (Best Quality)
+### Option 3: Replace Files (Best Quality)
 
 Record your own professional prompts and save them as:
 - `auto_attendant/welcome.wav`
@@ -146,21 +139,52 @@ Make sure they're in the correct format (8000 Hz, 16-bit, mono).
 
 ## Troubleshooting
 
-### "espeak: command not found"
+### "No module named 'gtts'"
 ```bash
-sudo apt-get install espeak
+pip install gTTS pydub
 ```
 
-### "ffmpeg: command not found"
+### "Failed to connect" or Network Error
+- Check internet connection (gTTS requires internet)
+- Verify firewall allows HTTPS to translate.google.com
+- Try again after a few minutes
+
+### "No module named 'pydub'"
 ```bash
-sudo apt-get install ffmpeg
+pip install pydub
 ```
 
-### "Failed to connect" (gTTS)
-- Check internet connection
-- Try espeak script instead (works offline)
+### Voice sounds choppy
+- Regenerate the prompts
+- Check internet connection quality during generation
 
-### Voice quality too robotic
-- Use cloud TTS (Google, Amazon, Azure)
-- Hire professional voice actor
-- See VOICE_PROMPTS_GUIDE.md for instructions
+### Want different accent
+gTTS supports multiple accents:
+- US English: `tld='com'` (default)
+- British English: `tld='co.uk'`
+- Australian English: `tld='com.au'`
+- Canadian English: `tld='ca'`
+
+Edit the script and change the `tld` parameter to your preferred accent.
+
+---
+
+## Why gTTS Only?
+
+**gTTS is the only supported voice generation method because:**
+1. ✅ **Best Quality:** Natural, human-like voice
+2. ✅ **Free:** No API keys or costs
+3. ✅ **Simple:** Easy to install and use
+4. ✅ **Reliable:** Backed by Google's TTS infrastructure
+5. ✅ **Professional:** Suitable for production business use
+6. ✅ **Maintained:** Active development and support
+
+Other TTS methods (espeak, pyttsx3, festival) produce robotic voices unsuitable for professional business use and have been removed.
+
+---
+
+## Additional Resources
+
+- [SETUP_GTTS_VOICES.md](../SETUP_GTTS_VOICES.md) - Detailed setup guide
+- [HOW_TO_ADD_VOICE_FILES.md](../HOW_TO_ADD_VOICE_FILES.md) - Voice file management
+- [ADMIN_PANEL_AUTO_ATTENDANT.md](../ADMIN_PANEL_AUTO_ATTENDANT.md) - Admin panel guide

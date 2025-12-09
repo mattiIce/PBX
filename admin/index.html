@@ -544,17 +544,45 @@
             </div>
 
             <div class="config-section">
-                <h3>🎵 Audio Prompts</h3>
+                <h3>🎵 Voice Prompts Configuration</h3>
                 <div class="info-box">
-                    <p><strong>Location:</strong> <code>auto_attendant/</code> directory</p>
-                    <p>Required audio files:</p>
-                    <ul>
-                        <li><code>welcome.wav</code> - Initial greeting when call is answered</li>
-                        <li><code>main_menu.wav</code> - Menu options announcement</li>
-                        <li><code>invalid.wav</code> - Played when invalid digit is pressed</li>
-                        <li><code>timeout.wav</code> - Played when no input is received</li>
-                    </ul>
-                    <p>💡 Use the <code>scripts/generate_espeak_voices.py</code> script to generate professional voice prompts.</p>
+                    <p><strong>🎤 Voice Generation:</strong> Voice prompts are automatically generated using gTTS (Google Text-to-Speech) when you save changes.</p>
+                    <p><strong>📁 Location:</strong> <code>auto_attendant/</code> directory</p>
+                </div>
+                <form id="auto-attendant-prompts-form">
+                    <div class="form-group">
+                        <label>Company Name:</label>
+                        <input type="text" id="aa-company-name" placeholder="Your Company" maxlength="100">
+                        <small>Used in the welcome greeting</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Welcome Greeting Text:</label>
+                        <textarea id="aa-prompt-welcome" rows="2" placeholder="Thank you for calling {company_name}."></textarea>
+                        <small>Use {company_name} placeholder for company name</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Main Menu Text:</label>
+                        <textarea id="aa-prompt-main-menu" rows="3" placeholder="For Sales, press 1. For Support, press 2. For Accounting, press 3. Or press 0 to speak with an operator."></textarea>
+                        <small>Describe your menu options to callers</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Invalid Option Text:</label>
+                        <textarea id="aa-prompt-invalid" rows="2" placeholder="That is not a valid option. Please try again."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Timeout Text:</label>
+                        <textarea id="aa-prompt-timeout" rows="2" placeholder="We did not receive your selection. Please try again."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Transferring Text:</label>
+                        <textarea id="aa-prompt-transferring" rows="2" placeholder="Please hold while we transfer your call."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save & Regenerate Voices</button>
+                </form>
+                <div id="voice-generation-status" style="margin-top: 15px; display: none;">
+                    <div class="info-box">
+                        <p id="voice-generation-message">⏳ Generating voices using gTTS...</p>
+                    </div>
                 </div>
             </div>
         </div>

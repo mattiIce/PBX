@@ -17,6 +17,7 @@ import shutil
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
+from pbx.utils.tts import text_to_wav_telephony, is_tts_available, get_tts_requirements
 from pbx.features.phone_provisioning import normalize_mac_address
 
 # Admin directory path
@@ -247,6 +248,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_voicemail(path)
             elif path == '/api/auto-attendant/config':
                 self._handle_update_auto_attendant_config()
+            elif path == '/api/auto-attendant/prompts':
+                self._handle_update_auto_attendant_prompts()
             elif path.startswith('/api/auto-attendant/menu-options/'):
                 self._handle_update_auto_attendant_menu_option(path)
             elif path.startswith('/api/voicemail-boxes/') and path.endswith('/greeting'):
@@ -436,6 +439,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_auto_attendant_config()
             elif path == '/api/auto-attendant/menu-options':
                 self._handle_get_auto_attendant_menu_options()
+            elif path == '/api/auto-attendant/prompts':
+                self._handle_get_auto_attendant_prompts()
             elif path == '/api/voicemail-boxes':
                 self._handle_get_voicemail_boxes()
             elif path.startswith('/api/voicemail-boxes/') and path.endswith('/greeting'):
@@ -3403,14 +3408,29 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             aa = self.pbx_core.auto_attendant
             
             # Update configuration
+            config_changed = False
             if 'enabled' in data:
                 aa.enabled = bool(data['enabled'])
+                config_changed = True
             if 'extension' in data:
                 aa.extension = str(data['extension'])
+                config_changed = True
             if 'timeout' in data:
                 aa.timeout = int(data['timeout'])
+                config_changed = True
             if 'max_retries' in data:
                 aa.max_retries = int(data['max_retries'])
+                config_changed = True
+            
+            # Check if prompts configuration was updated
+            prompts_updated = 'prompts' in data
+            
+            # Trigger voice regeneration if prompts or menu options changed
+            if prompts_updated or config_changed:
+                try:
+                    self._regenerate_voice_prompts(data.get('prompts', {}))
+                except Exception as e:
+                    self.logger.warning(f"Failed to regenerate voice prompts: {e}")
             
             self._send_json({
                 'success': True,
@@ -3460,6 +3480,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'description': description
             }
             
+            # Trigger voice regeneration after menu option addition
+            try:
+                self._regenerate_voice_prompts({})
+            except Exception as e:
+                self.logger.warning(f"Failed to regenerate voice prompts: {e}")
+            
             self._send_json({
                 'success': True,
                 'message': f'Menu option {digit} added successfully'
@@ -3487,6 +3513,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if 'description' in data:
                 aa.menu_options[digit]['description'] = data['description']
             
+            # Trigger voice regeneration after menu option update
+            try:
+                self._regenerate_voice_prompts({})
+            except Exception as e:
+                self.logger.warning(f"Failed to regenerate voice prompts: {e}")
+            
             self._send_json({
                 'success': True,
                 'message': f'Menu option {digit} updated successfully'
@@ -3504,6 +3536,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             aa = self.pbx_core.auto_attendant
             if digit in aa.menu_options:
                 del aa.menu_options[digit]
+                # Trigger voice regeneration after menu option deletion
+                try:
+                    self._regenerate_voice_prompts({})
+                except Exception as e:
+                    self.logger.warning(f"Failed to regenerate voice prompts: {e}")
+                
                 self._send_json({
                     'success': True,
                     'message': f'Menu option {digit} deleted successfully'
@@ -3512,6 +3550,119 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Menu option {digit} not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_auto_attendant_prompts(self):
+        """Get auto attendant prompt texts"""
+        try:
+            # Return current prompt configuration
+            config = self.pbx_core.config if self.pbx_core else Config()
+            aa_config = config.get('auto_attendant', {})
+            
+            prompts = aa_config.get('prompts', {
+                'welcome': 'Thank you for calling {company_name}.',
+                'main_menu': 'For Sales, press 1. For Support, press 2. For Accounting, press 3. Or press 0 to speak with an operator.',
+                'invalid': 'That is not a valid option. Please try again.',
+                'timeout': 'We did not receive your selection. Please try again.',
+                'transferring': 'Please hold while we transfer your call.'
+            })
+            
+            company_name = config.get('company_name', 'your company')
+            
+            self._send_json({
+                'prompts': prompts,
+                'company_name': company_name
+            })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_update_auto_attendant_prompts(self):
+        """Update auto attendant prompt texts and regenerate voices"""
+        try:
+            data = self._get_body()
+            prompts = data.get('prompts', {})
+            company_name = data.get('company_name')
+            
+            # Update configuration
+            config = self.pbx_core.config if self.pbx_core else Config()
+            aa_config = config.get('auto_attendant', {})
+            
+            if prompts:
+                aa_config['prompts'] = prompts
+            
+            if company_name:
+                config.data['company_name'] = company_name
+            
+            # Save configuration
+            config.save()
+            
+            # Trigger voice regeneration
+            self._regenerate_voice_prompts(prompts, company_name)
+            
+            self._send_json({
+                'success': True,
+                'message': 'Prompts updated and voices regenerated successfully'
+            })
+        except Exception as e:
+            self.logger.error(f"Error updating prompts: {e}")
+            self._send_json({'error': str(e)}, 500)
+    
+    def _regenerate_voice_prompts(self, custom_prompts=None, company_name=None):
+        """
+        Regenerate voice prompts using gTTS
+        
+        Args:
+            custom_prompts: Optional dict of custom prompt texts
+            company_name: Optional company name override
+        """
+        try:
+            # Check if TTS is available
+            if not is_tts_available():
+                raise ImportError(
+                    f"TTS dependencies not available. Install with: {get_tts_requirements()}"
+                )
+            
+            # Get configuration
+            config = self.pbx_core.config if self.pbx_core else Config()
+            aa_config = config.get('auto_attendant', {})
+            
+            if not company_name:
+                company_name = config.get('company_name', 'your company')
+            
+            # Get prompt texts
+            default_prompts = {
+                'welcome': f'Thank you for calling {company_name}.',
+                'main_menu': 'For Sales, press 1. For Support, press 2. For Accounting, press 3. Or press 0 to speak with an operator.',
+                'invalid': 'That is not a valid option. Please try again.',
+                'timeout': 'We did not receive your selection. Please try again.',
+                'transferring': 'Please hold while we transfer your call.'
+            }
+            
+            # Merge custom prompts
+            prompts = {**default_prompts}
+            if custom_prompts:
+                prompts.update(custom_prompts)
+            
+            # Get output directory
+            audio_path = aa_config.get('audio_path', 'auto_attendant')
+            if not os.path.exists(audio_path):
+                os.makedirs(audio_path)
+            
+            # Generate each prompt using shared TTS utility
+            self.logger.info("Regenerating voice prompts using gTTS...")
+            for filename, text in prompts.items():
+                output_file = os.path.join(audio_path, f'{filename}.wav')
+                
+                try:
+                    # Use shared utility function for TTS generation
+                    if text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False):
+                        self.logger.info(f"Generated {filename}.wav using gTTS")
+                except Exception as e:
+                    self.logger.error(f"Failed to generate {filename}.wav: {e}")
+            
+            self.logger.info("Voice prompt regeneration complete")
+        except Exception as e:
+            self.logger.error(f"Error regenerating voice prompts: {e}")
+            raise
     
     # ========== Voicemail Box Management Handlers ==========
     

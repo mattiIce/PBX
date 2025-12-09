@@ -23,7 +23,7 @@ python3 scripts/generate_tts_prompts.py --company "Your Company Name"
 
 ```bash
 sudo apt-get install festival festvox-us-slt-hts
-python3 scripts/generate_natural_voices.py --engine festival
+python3 scripts/generate_espeak_voices.py --engine festival
 ```
 
 **Result:** Better than eSpeak, works offline
