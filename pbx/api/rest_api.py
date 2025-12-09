@@ -17,6 +17,7 @@ import shutil
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
+from pbx.utils.tts import text_to_wav_telephony, is_tts_available, get_tts_requirements
 from pbx.features.phone_provisioning import normalize_mac_address
 
 # Admin directory path
@@ -3613,12 +3614,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             custom_prompts: Optional dict of custom prompt texts
             company_name: Optional company name override
         """
-        import sys
-        import tempfile
-        from gtts import gTTS
-        from pydub import AudioSegment
-        
         try:
+            # Check if TTS is available
+            if not is_tts_available():
+                raise ImportError(
+                    f"TTS dependencies not available. Install with: {get_tts_requirements()}"
+                )
+            
             # Get configuration
             config = self.pbx_core.config if self.pbx_core else Config()
             aa_config = config.get('auto_attendant', {})
@@ -3645,36 +3647,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if not os.path.exists(audio_path):
                 os.makedirs(audio_path)
             
-            # Generate each prompt using gTTS
+            # Generate each prompt using shared TTS utility
             self.logger.info("Regenerating voice prompts using gTTS...")
             for filename, text in prompts.items():
                 output_file = os.path.join(audio_path, f'{filename}.wav')
                 
                 try:
-                    # Create TTS with optimal settings for American English
-                    # tld='com' uses google.com which provides US English accent
-                    # lang='en' specifies English language
-                    # slow=False provides natural speaking speed for professional sound
-                    tts = gTTS(text=text, tld='com', lang='en', slow=False)
-                    
-                    # Save to temporary MP3 file
-                    with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_mp3:
-                        temp_mp3_path = temp_mp3.name
-                        tts.save(temp_mp3_path)
-                    
-                    # Convert to telephony format WAV (8000 Hz, mono, 16-bit)
-                    audio = AudioSegment.from_mp3(temp_mp3_path)
-                    audio = audio.set_channels(1)  # Mono
-                    audio = audio.set_frame_rate(8000)  # 8000 Hz
-                    audio = audio.set_sample_width(2)  # 16-bit
-                    
-                    # Export as WAV
-                    audio.export(output_file, format='wav')
-                    
-                    # Clean up temp file
-                    os.unlink(temp_mp3_path)
-                    
-                    self.logger.info(f"Generated {filename}.wav using gTTS")
+                    # Use shared utility function for TTS generation
+                    if text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False):
+                        self.logger.info(f"Generated {filename}.wav using gTTS")
                 except Exception as e:
                     self.logger.error(f"Failed to generate {filename}.wav: {e}")
             

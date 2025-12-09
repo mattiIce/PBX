@@ -12,58 +12,31 @@ Note: Requires internet connection to use Google TTS API (free, no API key neede
 """
 import os
 import sys
-from gtts import gTTS
-from pydub import AudioSegment
-import tempfile
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pbx.utils.logger import get_logger, PBXLogger
+# Try to import dependencies with helpful error messages
+try:
+    from pbx.utils.logger import get_logger, PBXLogger
+    from pbx.utils.tts import text_to_wav_telephony, is_tts_available, get_tts_requirements
+except ImportError as e:
+    print(f"Error: Could not import PBX utilities: {e}")
+    print("Make sure you're running this script from the PBX directory")
+    sys.exit(1)
 
-
-def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False):
-    """
-    Convert text to WAV file in telephony format (8000 Hz, 16-bit, mono)
-    
-    Args:
-        text: Text to convert to speech
-        output_file: Output WAV file path
-        language: Language code (default 'en' for English)
-        tld: Top-level domain (default 'com' for US English accent)
-        slow: Whether to use slow speech rate (default False for natural speed)
-    
-    Returns:
-        bool: True if successful
-    """
-    try:
-        # Create TTS with optimal settings for American English
-        # tld='com' uses google.com which provides US English accent
-        # lang='en' specifies English language
-        # slow=False provides natural speaking speed for professional sound
-        tts = gTTS(text=text, tld=tld, lang=language, slow=slow)
-        
-        # Save to temporary MP3 file
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_mp3:
-            temp_mp3_path = temp_mp3.name
-            tts.save(temp_mp3_path)
-        
-        # Convert to telephony format WAV (8000 Hz, mono, 16-bit)
-        audio = AudioSegment.from_mp3(temp_mp3_path)
-        audio = audio.set_channels(1)  # Mono
-        audio = audio.set_frame_rate(8000)  # 8000 Hz
-        audio = audio.set_sample_width(2)  # 16-bit
-        
-        # Export as WAV
-        audio.export(output_file, format='wav')
-        
-        # Clean up temp file
-        os.unlink(temp_mp3_path)
-        
-        return True
-    except Exception as e:
-        print(f"Error generating TTS: {e}")
-        return False
+# Check if TTS dependencies are available
+if not is_tts_available():
+    print("=" * 70)
+    print("ERROR: TTS dependencies not installed!")
+    print("=" * 70)
+    print("")
+    print(f"Please install required packages:")
+    print(f"  {get_tts_requirements()}")
+    print("")
+    print("After installation, run this script again.")
+    print("=" * 70)
+    sys.exit(1)
 
 
 def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your company"):
