@@ -300,7 +300,9 @@ let webrtcPhone = null;
 
 function initWebRTCPhone() {
     const apiUrl = window.location.origin;
-    const adminExtension = 'admin'; // Admin user's extension
+    // Use a WebRTC-only extension for admin browser phone
+    // This creates a virtual extension that doesn't need a physical phone
+    const adminExtension = 'webrtc-admin'; 
     
     webrtcPhone = new WebRTCPhone(apiUrl, adminExtension);
     console.log('WebRTC Phone initialized');
