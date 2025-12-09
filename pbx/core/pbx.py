@@ -803,7 +803,9 @@ class PBXCore:
         """
         call = self.call_manager.get_call(call_id)
         if not call:
-            self.logger.warning(f"Received DTMF INFO for unknown call {call_id}")
+            # Silently ignore DTMF for calls that have already ended
+            # This is common when phones buffer DTMF and send it after BYE
+            self.logger.debug(f"Received DTMF INFO for ended/unknown call {call_id} - ignoring")
             return
         
         # Create DTMF queue if it doesn't exist
