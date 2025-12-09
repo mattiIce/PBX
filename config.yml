@@ -286,7 +286,8 @@ provisioning:
     # version: 3  # LDAP protocol version (usually 3)
     # tls_mode: 1  # 1 for LDAPS/TLS, 0 for plain LDAP
     # Search filters and attribute mappings:
-    name_filter: (|(cn=%)(sn=%))  # Search filter for names (% is user input)
+    # Filter ensures only users with telephoneNumber are shown in phone book
+    name_filter: (&(|(cn=%)(sn=%))(telephoneNumber=*))  # Search filter for names (% is user input)
     number_filter: (|(telephoneNumber=%)(mobile=%))  # Search filter for numbers
     name_attr: cn  # LDAP attribute for contact name
     number_attr: telephoneNumber  # LDAP attribute for phone number
