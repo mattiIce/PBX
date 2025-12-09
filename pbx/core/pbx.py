@@ -1613,7 +1613,7 @@ class PBXCore:
 
         # Build Contact header
         sip_port = self.config.get('server.sip_port', 5060)
-        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        contact_uri = f"<sip:{target_ext}@{server_ip}:{sip_port}>"
         ok_response.set_header('Contact', contact_uri)
         self.logger.info(f"[VM Access] Contact header: {contact_uri}")
 
