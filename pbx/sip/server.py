@@ -207,14 +207,21 @@ class SIPServer:
 
     def _handle_bye(self, message, addr):
         """Handle BYE request"""
-        self.logger.info(f"BYE request from {addr}")
-
+        call_id = message.get_header('Call-ID')
+        self.logger.info(f"")
+        self.logger.info(f">>> BYE REQUEST RECEIVED <<<")
+        self.logger.info(f"  Call ID: {call_id}")
+        self.logger.info(f"  From: {addr}")
+        
         if self.pbx_core:
-            call_id = message.get_header('Call-ID')
             call = self.pbx_core.call_manager.get_call(call_id)
             
             # Forward BYE to the other party in the call if present
             if call:
+                self.logger.info(f"  Call Type: {'Voicemail Access' if hasattr(call, 'voicemail_access') and call.voicemail_access else 'Regular Call'}")
+                self.logger.info(f"  Call State: {call.state}")
+                if hasattr(call, 'voicemail_extension'):
+                    self.logger.info(f"  Voicemail Extension: {call.voicemail_extension}")
                 # Determine which party sent BYE and forward to the other
                 other_party_addr = None
                 
@@ -236,9 +243,15 @@ class SIPServer:
                         self.logger.error(f"Failed to forward BYE to other party: {e}")
             
             # End the call internally
+            self.logger.info(f"  Processing BYE - ending call {call_id}")
             self.pbx_core.end_call(call_id)
+            self.logger.info(f"  ✓ Call {call_id} ended")
+        else:
+            self.logger.info(f"  Call {call_id} not found in call manager")
 
         self._send_response(200, "OK", message, addr)
+        self.logger.info(f"  ✓ Sent 200 OK response to {addr}")
+        self.logger.info(f"")
 
     def _handle_cancel(self, message, addr):
         """Handle CANCEL request"""
