@@ -1584,8 +1584,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
 
             # Update the configuration section
-            if section not in self.pbx_core.config.config:
-                self.pbx_core.config.config[section] = {}
+            # Use config.get() to safely retrieve section with defaults
+            current_section = self.pbx_core.config.config.get(section, {})
             
             # Deep merge the data into the section
             def deep_merge(target, source):
@@ -1595,8 +1595,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         deep_merge(target[key], value)
                     else:
                         target[key] = value
+                return target
             
-            deep_merge(self.pbx_core.config.config[section], data)
+            # Create merged section and update config
+            merged_section = deep_merge(current_section.copy() if isinstance(current_section, dict) else {}, data)
+            self.pbx_core.config.config[section] = merged_section
             
             # Save configuration
             success = self.pbx_core.config.save()

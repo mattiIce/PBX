@@ -1,6 +1,9 @@
 // API Base URL
 const API_BASE = window.location.origin;
 
+// Constants
+const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
+
 // State
 let currentExtensions = [];
 
@@ -466,7 +469,7 @@ async function saveConfigSection(section, data) {
         });
         
         if (response.ok) {
-            showNotification('Configuration saved successfully. Restart may be required for some changes.', 'success');
+            showNotification(CONFIG_SAVE_SUCCESS_MESSAGE, 'success');
             // Reload configuration to reflect changes
             loadConfig();
         } else {
