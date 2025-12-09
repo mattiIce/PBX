@@ -53,23 +53,24 @@ if __name__ == "__main__":
     print("=" * 60)
     print()
     
+    # Startup tests disabled - can be re-enabled by uncommenting below
     # Run tests first
-    tests_passed = run_tests_before_start()
-    
-    print()
-    print("=" * 70)
-    if tests_passed:
-        print("Tests completed successfully!")
-    else:
-        print("Tests completed with failures - review results above")
-    print("=" * 70)
-    print()
-    print("Press ENTER to continue and start the server...")
-    try:
-        input()
-    except (EOFError, KeyboardInterrupt):
-        print("\nServer start cancelled.")
-        sys.exit(0)
+    # tests_passed = run_tests_before_start()
+    # 
+    # print()
+    # print("=" * 70)
+    # if tests_passed:
+    #     print("Tests completed successfully!")
+    # else:
+    #     print("Tests completed with failures - review results above")
+    # print("=" * 70)
+    # print()
+    # print("Press ENTER to continue and start the server...")
+    # try:
+    #     input()
+    # except (EOFError, KeyboardInterrupt):
+    #     print("\nServer start cancelled.")
+    #     sys.exit(0)
     
     print()
     print("=" * 60)

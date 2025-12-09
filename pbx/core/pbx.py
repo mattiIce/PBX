@@ -65,6 +65,12 @@ class PBXCore:
             self.extension_db = ExtensionDB(self.database)
             self.logger.info(f"Database backend initialized successfully ({self.database.db_type})")
             self.logger.info("Extensions, voicemail metadata, and phone registrations will be stored in database")
+            
+            # Clean up incomplete phone registrations at startup
+            # Only phones with MAC, IP, and Extension should be retained
+            success, count = self.registered_phones_db.cleanup_incomplete_registrations()
+            if success and count > 0:
+                self.logger.info(f"Startup cleanup: Removed {count} incomplete phone registration(s)")
         else:
             self.logger.warning("Database backend not available - running without database")
             self.logger.warning("Extensions will be loaded from config.yml only")
