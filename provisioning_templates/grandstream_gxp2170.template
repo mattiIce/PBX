@@ -14,6 +14,11 @@ P57 = 0    # PCMU
 P58 = 8    # PCMA
 P46 = 18   # G729
 
+# DTMF Settings
+P79 = 2    # DTMF Type: 0=In-audio, 1=RFC2833, 2=SIP INFO
+P184 = 0   # DTMF Info Type: 0=DTMF, 1=DTMF-Relay
+P78 = 101  # DTMF Payload Type (for RFC2833)
+
 # Network
 P8 = 0     # DHCP enabled
 

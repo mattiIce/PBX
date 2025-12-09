@@ -81,6 +81,43 @@ Built-in templates are available for:
 
 You can add templates for additional models by creating new `.template` files.
 
+## DTMF Configuration
+
+The PBX system supports multiple DTMF (touch-tone) signaling methods. Templates are pre-configured to use **SIP INFO** for DTMF transport, which is compatible with the PBX's voicemail IVR system.
+
+### DTMF Transport Methods
+
+1. **In-band (In-audio)**: DTMF tones sent as audio in the RTP stream
+   - Detected using audio analysis (Goertzel algorithm)
+   - Can be affected by audio codecs and quality
+
+2. **RFC 2833 (RTP Events)**: DTMF sent as RTP events 
+   - Separate from audio stream
+   - Payload type typically 101
+
+3. **SIP INFO**: DTMF sent as SIP INFO messages
+   - Out-of-band signaling
+   - Most reliable method
+   - **Recommended for this PBX system**
+
+### Template DTMF Settings
+
+**Grandstream (GXP2170)**:
+```
+P79 = 2    # DTMF Type: 0=In-audio, 1=RFC2833, 2=SIP INFO
+P184 = 0   # DTMF Info Type: 0=DTMF, 1=DTMF-Relay
+P78 = 101  # DTMF Payload Type (for RFC2833)
+```
+
+**Yealink (T46S)**:
+```
+account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
+account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
+```
+
+The PBX automatically handles DTMF from both **SIP INFO** messages and **in-band** detection, ensuring compatibility with various phone configurations.
+
 ## Example: Customizing a Yealink T46S Template
 
 1. Export the built-in template:

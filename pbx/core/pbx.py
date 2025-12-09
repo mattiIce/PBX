@@ -779,6 +779,42 @@ class PBXCore:
             # End CDR record for analytics
             self.cdr_system.end_record(call_id, hangup_cause='normal_clearing')
 
+    def handle_dtmf_info(self, call_id, dtmf_digit):
+        """
+        Handle DTMF digit received via SIP INFO message
+        
+        This method queues DTMF digits received via out-of-band SIP INFO
+        signaling for processing by IVR systems (voicemail, auto-attendant).
+        
+        Args:
+            call_id: Call identifier
+            dtmf_digit: DTMF digit ('0'-'9', '*', '#', 'A'-'D')
+        
+        Note:
+            Future enhancement: The IVR session loops should be updated to check
+            this queue in addition to in-band DTMF detection. Currently this
+            method prepares the infrastructure for SIP INFO DTMF support.
+        """
+        call = self.call_manager.get_call(call_id)
+        if not call:
+            self.logger.warning(f"Received DTMF INFO for unknown call {call_id}")
+            return
+        
+        # Create DTMF queue if it doesn't exist
+        if not hasattr(call, 'dtmf_info_queue'):
+            call.dtmf_info_queue = []
+        
+        # Queue the DTMF digit for processing
+        call.dtmf_info_queue.append(dtmf_digit)
+        
+        # Log based on call type
+        if hasattr(call, 'voicemail_ivr') and call.voicemail_ivr:
+            self.logger.info(f"Queued DTMF '{dtmf_digit}' from SIP INFO for voicemail IVR on call {call_id}")
+        elif hasattr(call, 'auto_attendant') and call.auto_attendant:
+            self.logger.info(f"Queued DTMF '{dtmf_digit}' from SIP INFO for auto-attendant on call {call_id}")
+        else:
+            self.logger.debug(f"Queued DTMF '{dtmf_digit}' from SIP INFO for call {call_id}")
+
     def transfer_call(self, call_id, new_destination):
         """
         Transfer call to new destination using SIP REFER
