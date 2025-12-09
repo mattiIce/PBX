@@ -899,3 +899,199 @@ textarea:focus {
         padding: 0;
     }
 }
+
+/* ========================================
+   WebRTC Phone Widget Styles
+   ======================================== */
+
+.webrtc-phone-widget {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: white;
+}
+
+.phone-display {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 12px;
+    color: #333;
+}
+
+.phone-status-container {
+    margin-bottom: 20px;
+}
+
+.webrtc-status {
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.webrtc-status.info {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #90caf9;
+}
+
+.webrtc-status.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #81c784;
+}
+
+.webrtc-status.warning {
+    background: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffb74d;
+}
+
+.webrtc-status.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #e57373;
+}
+
+.phone-input-group input[type="text"] {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.phone-input-group input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.phone-controls button {
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.phone-controls button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.phone-controls button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.phone-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#webrtc-call-btn {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+}
+
+#webrtc-call-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #45a049, #3d8b40);
+}
+
+#webrtc-hangup-btn {
+    background: linear-gradient(135deg, #f44336, #e53935);
+}
+
+#webrtc-hangup-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e53935, #c62828);
+}
+
+#webrtc-mute-btn {
+    background: #757575;
+}
+
+#webrtc-mute-btn:hover:not(:disabled) {
+    background: #616161;
+}
+
+#webrtc-mute-btn.muted {
+    background: #f44336;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Volume slider styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-track {
+    background: #ddd;
+    height: 6px;
+    border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #667eea;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin-top: -6px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: #ddd;
+    height: 6px;
+    border-radius: 3px;
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: #667eea;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #764ba2;
+    transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: #764ba2;
+    transform: scale(1.1);
+}
+
+/* Responsive adjustments for phone widget */
+@media (max-width: 768px) {
+    .webrtc-phone-widget {
+        padding: 20px;
+    }
+    
+    .phone-display {
+        padding: 15px;
+    }
+    
+    .phone-controls button {
+        font-size: 16px !important;
+        padding: 12px !important;
+    }
+}
