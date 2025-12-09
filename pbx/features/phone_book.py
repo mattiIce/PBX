@@ -8,6 +8,13 @@ from typing import Optional, Dict, List
 from datetime import datetime
 import json
 
+# Import ExtensionDB for database-based AD sync
+try:
+    from pbx.utils.database import ExtensionDB
+    EXTENSION_DB_AVAILABLE = True
+except ImportError:
+    EXTENSION_DB_AVAILABLE = False
+
 
 class PhoneBook:
     """
@@ -288,7 +295,37 @@ class PhoneBook:
         
         synced_count = 0
         
-        # Get all extensions (these should already be synced from AD if auto_provision is enabled)
+        # Try to pull from extensions database table first (preferred method)
+        # This is the active source that pulls from AD and has the most up-to-date data
+        if self.database and self.database.enabled and EXTENSION_DB_AVAILABLE:
+            try:
+                ext_db = ExtensionDB(self.database)
+                
+                # Get all AD-synced extensions from the extensions database table
+                ad_extensions = ext_db.get_ad_synced()
+                
+                self.logger.info(f"Found {len(ad_extensions)} AD-synced extensions in database")
+                
+                for ext_data in ad_extensions:
+                    success = self.add_entry(
+                        extension=ext_data['number'],
+                        name=ext_data['name'],
+                        email=ext_data.get('email'),
+                        ad_synced=True
+                    )
+                    if success:
+                        synced_count += 1
+                
+                self.logger.info(f"Synced {synced_count} entries from Active Directory (via extensions database)")
+                return synced_count
+                
+            except Exception as e:
+                # Broad exception catch is intentional - we want to gracefully fall back to
+                # extension_registry for ANY database issue (connection, permissions, missing table, etc.)
+                self.logger.error(f"Error syncing from extensions database: {type(e).__name__}: {e}")
+                self.logger.info("Falling back to extension registry...")
+        
+        # Fallback to extension registry (for systems not using database)
         all_extensions = extension_registry.get_all()
         
         for ext in all_extensions:
@@ -303,7 +340,7 @@ class PhoneBook:
                 if success:
                     synced_count += 1
         
-        self.logger.info(f"Synced {synced_count} entries from Active Directory")
+        self.logger.info(f"Synced {synced_count} entries from Active Directory (via extension registry)")
         return synced_count
     
     def export_xml(self) -> str:
