@@ -33,8 +33,6 @@ wheels/
 # Logs
 *.log
 logs/
-# Exception: allow test failure log to be committed for troubleshooting
-!test_failures.log
 
 # PBX runtime directories
 recordings/
@@ -67,3 +65,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated documentation
+*.pdf
