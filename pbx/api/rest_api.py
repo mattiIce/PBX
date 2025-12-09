@@ -354,6 +354,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_phone_lookup(identifier)
             elif path == '/api/integrations/ad/status':
                 self._handle_ad_status()
+            elif path.startswith('/api/integrations/ad/search'):
+                self._handle_ad_search()
             elif path == '/api/phone-book':
                 self._handle_get_phone_book()
             elif path == '/api/phone-book/export/xml':
@@ -447,6 +449,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 <li>GET /api/registered-phones/with-mac - List registered phones with MAC addresses from provisioning</li>
                 <li>GET /api/registered-phones/extension/{number} - List registered phones for extension</li>
                 <li>GET /api/phone-lookup/{mac_or_ip} - Unified lookup by MAC or IP address with correlation</li>
+                <li>GET /api/integrations/ad/search?q={query}&max_results={max} - Search Active Directory users by name, email, or telephoneNumber</li>
+                <li>GET /api/integrations/ad/status - Get Active Directory integration status</li>
+                <li>POST /api/integrations/ad/sync - Manually sync users from Active Directory</li>
             </ul>
         </body>
         </html>
@@ -1806,6 +1811,41 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'success': False,
                     'error': result['error']
                 }, 400)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_ad_search(self):
+        """Search for users in Active Directory"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        if not hasattr(self.pbx_core, 'ad_integration') or not self.pbx_core.ad_integration:
+            self._send_json({'error': 'Active Directory integration not enabled'}, 500)
+            return
+
+        try:
+            from urllib.parse import urlparse, parse_qs
+            
+            parsed = urlparse(self.path)
+            query_params = parse_qs(parsed.query)
+            query = query_params.get('q', [''])[0]
+            
+            if not query:
+                self._send_json({'error': 'Query parameter "q" is required'}, 400)
+                return
+            
+            # Get max_results parameter (optional)
+            max_results = int(query_params.get('max_results', ['50'])[0])
+            
+            # Search AD users using the telephoneNumber attribute (and other attributes)
+            results = self.pbx_core.ad_integration.search_users(query, max_results)
+            
+            self._send_json({
+                'success': True,
+                'count': len(results),
+                'results': results
+            })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
