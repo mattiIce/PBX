@@ -56,6 +56,27 @@ class PhoneTemplate:
         config = config.replace('{{SIP_PORT}}', str(server_config.get('sip_port', '5060')))
         config = config.replace('{{SERVER_NAME}}', str(server_config.get('server_name', 'PBX')))
 
+        # LDAP/LDAPS Phone Book Configuration
+        ldap_config = server_config.get('ldap_phonebook', {})
+        config = config.replace('{{LDAP_ENABLE}}', str(ldap_config.get('enable', '0')))
+        config = config.replace('{{LDAP_SERVER}}', str(ldap_config.get('server', '')))
+        config = config.replace('{{LDAP_PORT}}', str(ldap_config.get('port', '636')))
+        config = config.replace('{{LDAP_BASE}}', str(ldap_config.get('base', '')))
+        config = config.replace('{{LDAP_USER}}', str(ldap_config.get('user', '')))
+        config = config.replace('{{LDAP_PASSWORD}}', str(ldap_config.get('password', '')))
+        config = config.replace('{{LDAP_VERSION}}', str(ldap_config.get('version', '3')))
+        config = config.replace('{{LDAP_TLS_MODE}}', str(ldap_config.get('tls_mode', '1')))
+        config = config.replace('{{LDAP_NAME_FILTER}}', str(ldap_config.get('name_filter', '(|(cn=%)(sn=%))')))
+        config = config.replace('{{LDAP_NUMBER_FILTER}}', str(ldap_config.get('number_filter', '(|(telephoneNumber=%)(mobile=%))')))
+        config = config.replace('{{LDAP_NAME_ATTR}}', str(ldap_config.get('name_attr', 'cn')))
+        config = config.replace('{{LDAP_NUMBER_ATTR}}', str(ldap_config.get('number_attr', 'telephoneNumber')))
+        config = config.replace('{{LDAP_DISPLAY_NAME}}', str(ldap_config.get('display_name', 'Company Directory')))
+
+        # Remote Phone Book URL (fallback method)
+        remote_phonebook = server_config.get('remote_phonebook', {})
+        config = config.replace('{{REMOTE_PHONEBOOK_URL}}', str(remote_phonebook.get('url', '')))
+        config = config.replace('{{REMOTE_PHONEBOOK_REFRESH}}', str(remote_phonebook.get('refresh_interval', '60')))
+
         return config
 
 
@@ -248,6 +269,57 @@ phone_setting.call_return_server = {{SIP_SERVER}}
 auto_provision.dhcp_option.list_user_options = %NULL%
 auto_provision.dhcp_option.option60_value = 66
 
+# ============================================================================
+# Phone Book Configuration
+# ============================================================================
+# Two methods are supported for phone book access:
+# 1. LDAPS - Direct LDAP/LDAPS server connection (Primary method)
+# 2. Remote Phone Book URL - HTTP/HTTPS XML feed (Fallback method)
+
+# LDAP/LDAPS Phone Book Configuration
+# Enable LDAP directory lookup (0=disabled, 1=enabled)
+ldap.enable = {{LDAP_ENABLE}}
+
+# LDAP server address (hostname or IP)
+ldap.server = {{LDAP_SERVER}}
+
+# LDAP port (389 for LDAP, 636 for LDAPS)
+ldap.port = {{LDAP_PORT}}
+
+# Base DN for directory searches (e.g., dc=company,dc=com)
+ldap.base = {{LDAP_BASE}}
+
+# LDAP bind username (DN format, e.g., cn=phonebook,dc=company,dc=com)
+ldap.user = {{LDAP_USER}}
+
+# LDAP bind password
+ldap.password = {{LDAP_PASSWORD}}
+
+# LDAP version (typically 3)
+ldap.version = {{LDAP_VERSION}}
+
+# Enable SSL/TLS for secure LDAP (0=plain LDAP, 1=LDAPS/TLS)
+ldap.tls_mode = {{LDAP_TLS_MODE}}
+
+# LDAP search filters
+# Name filter: Search by name (% is replaced with user input)
+ldap.name_filter = {{LDAP_NAME_FILTER}}
+
+# Number filter: Search by phone number
+ldap.number_filter = {{LDAP_NUMBER_FILTER}}
+
+# LDAP attribute mapping
+ldap.name_attr = {{LDAP_NAME_ATTR}}
+ldap.number_attr = {{LDAP_NUMBER_ATTR}}
+ldap.display_name = {{LDAP_DISPLAY_NAME}}
+
+# Remote Phone Book URL (Fallback method)
+# URL to fetch XML phone book (leave empty if using LDAP only)
+remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
+
+# Remote phone book refresh interval in minutes
+remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
+
 # Line Key Configuration (extensible - customize as needed)
 linekey.2.type = 15
 linekey.2.line = 1
@@ -332,6 +404,57 @@ phone_setting.call_return_server = {{SIP_SERVER}}
 # Auto Provision Settings (Note: URL typically set via phone UI, not config file)
 auto_provision.dhcp_option.list_user_options = %NULL%
 auto_provision.dhcp_option.option60_value = 66
+
+# ============================================================================
+# Phone Book Configuration
+# ============================================================================
+# Two methods are supported for phone book access:
+# 1. LDAPS - Direct LDAP/LDAPS server connection (Primary method)
+# 2. Remote Phone Book URL - HTTP/HTTPS XML feed (Fallback method)
+
+# LDAP/LDAPS Phone Book Configuration
+# Enable LDAP directory lookup (0=disabled, 1=enabled)
+ldap.enable = {{LDAP_ENABLE}}
+
+# LDAP server address (hostname or IP)
+ldap.server = {{LDAP_SERVER}}
+
+# LDAP port (389 for LDAP, 636 for LDAPS)
+ldap.port = {{LDAP_PORT}}
+
+# Base DN for directory searches (e.g., dc=company,dc=com)
+ldap.base = {{LDAP_BASE}}
+
+# LDAP bind username (DN format, e.g., cn=phonebook,dc=company,dc=com)
+ldap.user = {{LDAP_USER}}
+
+# LDAP bind password
+ldap.password = {{LDAP_PASSWORD}}
+
+# LDAP version (typically 3)
+ldap.version = {{LDAP_VERSION}}
+
+# Enable SSL/TLS for secure LDAP (0=plain LDAP, 1=LDAPS/TLS)
+ldap.tls_mode = {{LDAP_TLS_MODE}}
+
+# LDAP search filters
+# Name filter: Search by name (% is replaced with user input)
+ldap.name_filter = {{LDAP_NAME_FILTER}}
+
+# Number filter: Search by phone number
+ldap.number_filter = {{LDAP_NUMBER_FILTER}}
+
+# LDAP attribute mapping
+ldap.name_attr = {{LDAP_NAME_ATTR}}
+ldap.number_attr = {{LDAP_NUMBER_ATTR}}
+ldap.display_name = {{LDAP_DISPLAY_NAME}}
+
+# Remote Phone Book URL (Fallback method)
+# URL to fetch XML phone book (leave empty if using LDAP only)
+remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
+
+# Remote phone book refresh interval in minutes
+remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
 
 # Line Key Configuration (extensible - customize as needed)
 linekey.2.type = 15
