@@ -1835,8 +1835,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Query parameter "q" is required'}, 400)
                 return
             
-            # Get max_results parameter (optional)
-            max_results = int(query_params.get('max_results', ['50'])[0])
+            # Get max_results parameter (optional) with validation
+            try:
+                max_results = int(query_params.get('max_results', ['50'])[0])
+                if max_results < 1 or max_results > 100:
+                    self._send_json({'error': 'max_results must be between 1 and 100'}, 400)
+                    return
+            except ValueError:
+                self._send_json({'error': 'max_results must be a valid integer'}, 400)
+                return
             
             # Search AD users using the telephoneNumber attribute (and other attributes)
             results = self.pbx_core.ad_integration.search_users(query, max_results)
