@@ -16,7 +16,7 @@ from pbx.core.call import Call, CallState
 from pbx.utils.config import Config
 
 
-def test_dtmf_info_for_ended_call_no_warning(caplog=None):
+def test_dtmf_info_for_ended_call_no_warning():
     """
     Test that DTMF INFO for ended calls doesn't produce warnings
     
@@ -82,10 +82,16 @@ def test_dtmf_info_for_ended_call_no_warning(caplog=None):
     logger.setLevel(original_level)
     
     # Verify that:
-    # 1. The method handled the DTMF without crashing
-    # 2. Debug message was logged (not warning)
-    assert 'ended/unknown call' in log_output.lower()
-    assert 'WARNING' not in log_output or 'warning' not in log_output.lower().split('dtmf')[1] if 'dtmf' in log_output.lower() else True
+    # 1. The method handled the DTMF without crashing (no exceptions)
+    # 2. Debug message about ended/unknown call was logged
+    assert 'ended/unknown call' in log_output.lower(), "Expected debug message about ended call"
+    
+    # 3. No WARNING level messages for DTMF on ended calls
+    # Split log into lines and check that lines mentioning DTMF don't contain WARNING
+    log_lines = log_output.split('\n')
+    dtmf_lines = [line for line in log_lines if 'dtmf' in line.lower() and 'ended' in line.lower()]
+    for line in dtmf_lines:
+        assert 'WARNING' not in line, f"Found WARNING in DTMF log line: {line}"
     
     print("✓ DTMF INFO for ended call handled gracefully with debug log")
 
