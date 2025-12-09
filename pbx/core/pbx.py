@@ -1405,8 +1405,18 @@ class PBXCore:
             start_time = time.time()
             
             while session_active and (time.time() - start_time) < timeout:
-                # Check for DTMF input
-                digit = dtmf_listener.get_digit(timeout=1.0)
+                # Check for DTMF input from SIP INFO or in-band
+                digit = None
+                
+                # Priority 1: Check SIP INFO queue
+                if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue:
+                    digit = call.dtmf_info_queue.pop(0)
+                    self.logger.info(f"Auto attendant received DTMF from SIP INFO: {digit}")
+                else:
+                    # Priority 2: Check in-band DTMF
+                    digit = dtmf_listener.get_digit(timeout=1.0)
+                    if digit:
+                        self.logger.info(f"Auto attendant received DTMF from in-band audio: {digit}")
                 
                 if digit:
                     self.logger.info(f"Auto attendant received DTMF: {digit}")
@@ -1997,37 +2007,47 @@ class PBXCore:
                         self.logger.debug(f"Voicemail IVR loop: call {call_id} ended, exiting")
                         break
                     
-                    # Collect audio for DTMF detection
-                    time.sleep(0.1)
+                    # Detect DTMF from either SIP INFO (out-of-band) or in-band audio
+                    digit = None
                     
-                    # Check for recorded audio (DTMF tones from user)
-                    if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
-                        # Get recent audio data
-                        if len(recorder.recorded_data) > 0:
-                            # Collect last portion of audio for DTMF detection
-                            recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
-                            
-                            if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:  # Need sufficient audio for DTMF
-                                try:
-                                    # Detect DTMF in audio with error handling
-                                    digit = dtmf_detector.detect(recent_audio)
-                                except Exception as e:
-                                    self.logger.error(f"Error detecting DTMF: {e}")
-                                    digit = None
+                    # Priority 1: Check for DTMF from SIP INFO messages (most reliable)
+                    if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue:
+                        digit = call.dtmf_info_queue.pop(0)
+                        self.logger.info(f"Detected DTMF digit from SIP INFO: {digit} in voicemail IVR")
+                    else:
+                        # Priority 2: Fall back to in-band DTMF detection from audio
+                        time.sleep(0.1)
+                        
+                        # Check for recorded audio (DTMF tones from user)
+                        if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                            # Get recent audio data
+                            if len(recorder.recorded_data) > 0:
+                                # Collect last portion of audio for DTMF detection
+                                recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
                                 
-                                if digit:
-                                    # Debounce: ignore duplicate detections of same digit within debounce period
-                                    current_time = time.time()
-                                    if digit == last_detected_digit and (current_time - last_detection_time) < DTMF_DEBOUNCE_SECONDS:
-                                        # Same digit detected too soon, likely echo or lingering tone
-                                        continue
+                                if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:  # Need sufficient audio for DTMF
+                                    try:
+                                        # Detect DTMF in audio with error handling
+                                        digit = dtmf_detector.detect(recent_audio)
+                                    except Exception as e:
+                                        self.logger.error(f"Error detecting DTMF: {e}")
+                                        digit = None
                                     
-                                    # Update debounce tracking
-                                    last_detected_digit = digit
-                                    last_detection_time = current_time
-                                    self.logger.info(f"Detected DTMF digit: {digit} in voicemail IVR")
-                                    
-                                    # Handle DTMF input through IVR
+                                    if digit:
+                                        # Debounce: ignore duplicate detections of same digit within debounce period
+                                        current_time = time.time()
+                                        if digit == last_detected_digit and (current_time - last_detection_time) < DTMF_DEBOUNCE_SECONDS:
+                                            # Same digit detected too soon, likely echo or lingering tone
+                                            continue
+                                        
+                                        # Update debounce tracking
+                                        last_detected_digit = digit
+                                        last_detection_time = current_time
+                                        self.logger.info(f"Detected DTMF digit from in-band audio: {digit} in voicemail IVR")
+                    
+                    # Process detected DTMF digit (from either SIP INFO or in-band)
+                    if digit:
+                        # Handle DTMF input through IVR
                                     action = voicemail_ivr.handle_dtmf(digit)
                                     
                                     # Process IVR action
@@ -2137,50 +2157,59 @@ class PBXCore:
                                             
                                             time.sleep(0.1)
                                             
-                                            # Check for DTMF # to stop recording
-                                            if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                                            # Check for DTMF # to stop recording (SIP INFO or in-band)
+                                            stop_digit = None
+                                            
+                                            # Priority 1: Check SIP INFO queue
+                                            if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue:
+                                                stop_digit = call.dtmf_info_queue.pop(0)
+                                                self.logger.info(f"Received DTMF from SIP INFO during recording: {stop_digit}")
+                                            # Priority 2: Check in-band audio
+                                            elif hasattr(recorder, 'recorded_data') and recorder.recorded_data:
                                                 recent_audio = b''.join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
                                                 if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
                                                     try:
-                                                        digit = dtmf_detector.detect(recent_audio)
+                                                        stop_digit = dtmf_detector.detect(recent_audio)
+                                                        if stop_digit:
+                                                            self.logger.info(f"Received DTMF from in-band audio during recording: {stop_digit}")
                                                     except Exception as e:
                                                         self.logger.error(f"Error detecting DTMF during recording: {e}")
-                                                        digit = None
-                                                    
-                                                    if digit == '#':
-                                                        self.logger.info(f"Recording stopped by user (#)")
-                                                        recording = False
-                                                        # Process through IVR to transition state
-                                                        action = voicemail_ivr.handle_dtmf('#')
-                                                        # Save recorded audio
-                                                        if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
-                                                            greeting_audio = b''.join(recorder.recorded_data)
-                                                            voicemail_ivr.save_recorded_greeting(greeting_audio)
-                                                            self.logger.info(f"Saved recorded greeting ({len(greeting_audio)} bytes)")
-                                                        # Handle the returned action
-                                                        if action.get('action') == 'play_prompt':
-                                                            # Play greeting review menu prompt
-                                                            prompt_type = action.get('prompt', 'greeting_review_menu')
-                                                            prompt_audio = get_prompt_audio(prompt_type)
-                                                            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                                                                temp_file.write(prompt_audio)
-                                                                prompt_file = temp_file.name
-                                                            try:
-                                                                player.play_file(prompt_file)
-                                                            finally:
-                                                                try:
-                                                                    os.unlink(prompt_file)
-                                                                except OSError:
-                                                                    pass
-                                                        elif action.get('action') == 'stop_recording':
-                                                            # Also valid, just log it
-                                                            self.logger.info(f"IVR returned stop_recording action, continuing")
-                                                        else:
-                                                            # Unexpected action type
-                                                            self.logger.warning(f"Unexpected action from IVR after #: {action.get('action')}")
-                                                        # Clear recorder after saving
-                                                        recorder.recorded_data = []
-                                                        break
+                                                        stop_digit = None
+                                            
+                                            if stop_digit == '#':
+                                                self.logger.info(f"Recording stopped by user (#)")
+                                                recording = False
+                                                # Process through IVR to transition state
+                                                action = voicemail_ivr.handle_dtmf('#')
+                                                # Save recorded audio
+                                                if hasattr(recorder, 'recorded_data') and recorder.recorded_data:
+                                                    greeting_audio = b''.join(recorder.recorded_data)
+                                                    voicemail_ivr.save_recorded_greeting(greeting_audio)
+                                                    self.logger.info(f"Saved recorded greeting ({len(greeting_audio)} bytes)")
+                                                # Handle the returned action
+                                                if action.get('action') == 'play_prompt':
+                                                    # Play greeting review menu prompt
+                                                    prompt_type = action.get('prompt', 'greeting_review_menu')
+                                                    prompt_audio = get_prompt_audio(prompt_type)
+                                                    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                                                        temp_file.write(prompt_audio)
+                                                        prompt_file = temp_file.name
+                                                    try:
+                                                        player.play_file(prompt_file)
+                                                    finally:
+                                                        try:
+                                                            os.unlink(prompt_file)
+                                                        except OSError:
+                                                            pass
+                                                elif action.get('action') == 'stop_recording':
+                                                    # Also valid, just log it
+                                                    self.logger.info(f"IVR returned stop_recording action, continuing")
+                                                else:
+                                                    # Unexpected action type
+                                                    self.logger.warning(f"Unexpected action from IVR after #: {action.get('action')}")
+                                                # Clear recorder after saving
+                                                recorder.recorded_data = []
+                                                break
                                     
                                     elif action['action'] == 'play_greeting':
                                         # Play back the recorded greeting for review

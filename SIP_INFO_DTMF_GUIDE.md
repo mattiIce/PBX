@@ -135,51 +135,57 @@ When phones fetch configuration via auto-provisioning, they will automatically b
 - [x] Provisioning templates with DTMF configuration
 - [x] Documentation
 
-### ⚠️ Partial Implementation
+### ✅ Full Implementation Complete
 
-The IVR session loops (voicemail IVR, auto-attendant) currently only check for in-band DTMF from audio. They need to be updated to also check the `dtmf_info_queue` on the call object.
+The IVR session loops now support both SIP INFO and in-band DTMF detection:
 
-**Location**: `pbx/core/pbx.py` - `_voicemail_ivr_session()` method, line ~1983
+**Voicemail IVR** (`pbx/core/pbx.py` - `_voicemail_ivr_session()`):
+- Checks SIP INFO queue first (priority 1)
+- Falls back to in-band audio detection (priority 2)
+- Supports DTMF during:
+  - PIN entry
+  - Menu navigation
+  - Greeting recording (# to stop)
 
-**Required Change**:
+**Auto-Attendant** (`pbx/core/pbx.py` - `_auto_attendant_session()`):
+- Checks SIP INFO queue first
+- Falls back to in-band listener
+- Supports menu navigation and transfers
+
+**Implementation Pattern**:
 ```python
-while ivr_active:
-    # Check if call is still active
-    if call.state == CallState.ENDED:
-        break
-    
-    # First, check for DTMF from SIP INFO messages
-    digit = None
-    if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue:
-        digit = call.dtmf_info_queue.pop(0)
-        self.logger.info(f"Processing DTMF '{digit}' from SIP INFO")
-    else:
-        # Fall back to in-band DTMF detection
-        # ... existing audio detection code ...
-    
-    # Process detected digit
+# Priority 1: Check SIP INFO queue
+if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue:
+    digit = call.dtmf_info_queue.pop(0)
+    self.logger.info(f"Detected DTMF from SIP INFO: {digit}")
+else:
+    # Priority 2: In-band detection
+    digit = dtmf_detector.detect(recent_audio)
     if digit:
-        action = voicemail_ivr.handle_dtmf(digit)
-        # ... handle action ...
+        self.logger.info(f"Detected DTMF from in-band audio: {digit}")
 ```
 
 ### 🔄 Future Enhancements
 
-1. **Complete IVR Integration**: Update all IVR loops to check SIP INFO queue
-2. **G.729 Codec Support**: Add G.729 transcoding or native support for voicemail
-3. **RFC 2833 Support**: Implement RTP event packet parsing
-4. **DTMF Buffer Management**: Add buffer size limits and timeout handling
-5. **Testing**: Comprehensive testing with various phone models
+1. **G.729 Codec Support**: Add G.729 transcoding or native support for voicemail
+2. **RFC 2833 Support**: Implement RTP event packet parsing as third DTMF method
+3. **DTMF Buffer Management**: Add buffer size limits and timeout handling
+4. **Testing**: Comprehensive testing with various phone models
+5. **Performance Optimization**: Consider async queue processing
 
 ## Testing
 
 ### Test Plan
 
-1. **Configure test phone** with SIP INFO DTMF
+1. **Configure test phone** with SIP INFO DTMF (see phone configuration section above)
 2. **Dial voicemail** access code (*XXXX)
-3. **Monitor logs** for "Queued DTMF" messages
-4. **Verify** DTMF digits are logged correctly
-5. **Current Expected Behavior**: Digits are queued but not yet processed by IVR
+3. **Enter PIN** using phone keypad
+4. **Navigate menus** (press 1, 2, *, etc.)
+5. **Monitor logs** for DTMF detection messages
+6. **Expected Behavior**: 
+   - IVR responds to DTMF digits
+   - Logs show "Detected DTMF from SIP INFO" messages
+   - Voicemail menu navigation works correctly
 
 ### Verification Commands
 
@@ -198,9 +204,11 @@ tail -f logs/pbx.log | grep "voicemail IVR"
 
 ### Phone sends DTMF but IVR doesn't respond
 
-**Cause**: IVR loops not yet updated to check SIP INFO queue
-
-**Solution**: This is expected behavior in current implementation. The infrastructure is in place but IVR integration is pending.
+**Check**:
+1. Verify phone DTMF Type is set to "SIP INFO"
+2. Check logs for "Queued DTMF" and "Detected DTMF from SIP INFO" messages
+3. Ensure call is active (not ended by codec mismatch)
+4. Try in-band DTMF as fallback test
 
 ### SIP INFO messages not received
 
