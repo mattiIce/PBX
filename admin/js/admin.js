@@ -1144,8 +1144,31 @@ let supportedModels = {};
 
 async function loadProvisioning() {
     await loadProvisioningSettings();
+    await loadPhonebookSettings();
     await loadSupportedVendors();
     await loadProvisioningDevices();
+}
+
+async function loadPhonebookSettings() {
+    try {
+        // Try to load existing settings from status endpoint or use defaults
+        const response = await fetch(`${API_BASE}/api/status`);
+        if (response.ok) {
+            const data = await response.json();
+            const serverIP = data.server_ip || window.location.hostname;
+            const port = data.api_port || '8080';
+            
+            // Pre-populate remote phonebook URL
+            document.getElementById('remote-phonebook-url').value = `http://${serverIP}:${port}/api/phone-book/export/xml`;
+            
+            // Set default values
+            document.getElementById('ldap-phonebook-port').value = '636';
+            document.getElementById('ldap-phonebook-display-name').value = 'Company Directory';
+            document.getElementById('remote-phonebook-refresh').value = '60';
+        }
+    } catch (error) {
+        console.error('Error loading phonebook settings:', error);
+    }
 }
 
 async function loadProvisioningSettings() {
@@ -1198,6 +1221,88 @@ async function saveProvisioningSettings() {
     
     showNotification('Settings saved. Update config.yml and restart required.', 'info');
     console.log(configMsg);
+}
+
+// Phone Book Configuration Functions
+function toggleLdapPhonebookSettings() {
+    const enabled = document.getElementById('ldap-phonebook-enabled').checked;
+    const settingsDiv = document.getElementById('ldap-phonebook-settings');
+    settingsDiv.style.display = enabled ? 'block' : 'none';
+}
+
+function toggleRemotePhonebookSettings() {
+    const enabled = document.getElementById('remote-phonebook-enabled').checked;
+    const settingsDiv = document.getElementById('remote-phonebook-settings');
+    settingsDiv.style.display = enabled ? 'block' : 'none';
+    
+    if (enabled) {
+        // Auto-populate remote phonebook URL based on server settings
+        const serverIP = document.getElementById('provisioning-server-ip').value || window.location.hostname;
+        const port = document.getElementById('provisioning-port').value || '8080';
+        document.getElementById('remote-phonebook-url').value = `http://${serverIP}:${port}/api/phone-book/export/xml`;
+    }
+}
+
+async function savePhonebookSettings() {
+    // LDAPS settings
+    const ldapEnabled = document.getElementById('ldap-phonebook-enabled').checked ? 1 : 0;
+    const ldapServer = document.getElementById('ldap-phonebook-server').value;
+    const ldapPort = document.getElementById('ldap-phonebook-port').value || '636';
+    const ldapBase = document.getElementById('ldap-phonebook-base').value;
+    const ldapUser = document.getElementById('ldap-phonebook-user').value;
+    const ldapPassword = document.getElementById('ldap-phonebook-password').value;
+    const ldapTls = document.getElementById('ldap-phonebook-tls').checked ? 1 : 0;
+    const ldapDisplayName = document.getElementById('ldap-phonebook-display-name').value || 'Company Directory';
+    
+    // Remote phonebook settings
+    const remoteEnabled = document.getElementById('remote-phonebook-enabled').checked;
+    const remoteUrl = document.getElementById('remote-phonebook-url').value;
+    const remoteRefresh = document.getElementById('remote-phonebook-refresh').value || '60';
+    
+    // Build configuration message
+    let configMsg = `Phone Book settings need to be updated in config.yml:\n\n`;
+    configMsg += `provisioning:\n`;
+    configMsg += `  # ... existing provisioning settings ...\n\n`;
+    
+    if (ldapEnabled) {
+        configMsg += `  # LDAP/LDAPS Phone Book Configuration\n`;
+        configMsg += `  ldap_phonebook:\n`;
+        configMsg += `    enable: ${ldapEnabled}\n`;
+        configMsg += `    server: ${ldapServer}\n`;
+        configMsg += `    port: ${ldapPort}\n`;
+        configMsg += `    base: ${ldapBase}\n`;
+        configMsg += `    user: ${ldapUser}\n`;
+        configMsg += `    password: \${LDAP_PHONEBOOK_PASSWORD}  # Set in .env file\n`;
+        configMsg += `    version: 3\n`;
+        configMsg += `    tls_mode: ${ldapTls}\n`;
+        configMsg += `    name_filter: (|(cn=%)(sn=%))\n`;
+        configMsg += `    number_filter: (|(telephoneNumber=%)(mobile=%))\n`;
+        configMsg += `    name_attr: cn\n`;
+        configMsg += `    number_attr: telephoneNumber\n`;
+        configMsg += `    display_name: ${ldapDisplayName}\n\n`;
+        
+        if (ldapPassword) {
+            configMsg += `Also add to .env file:\n`;
+            configMsg += `LDAP_PHONEBOOK_PASSWORD=${ldapPassword}\n\n`;
+        }
+    }
+    
+    if (remoteEnabled) {
+        configMsg += `  # Remote Phone Book URL (Fallback)\n`;
+        configMsg += `  remote_phonebook:\n`;
+        configMsg += `    url: ${remoteUrl}\n`;
+        configMsg += `    refresh_interval: ${remoteRefresh}\n\n`;
+    }
+    
+    configMsg += `Then restart the PBX server for changes to take effect.\n`;
+    configMsg += `\nPhones will need to be reprovisioned to receive the new phone book settings.`;
+    
+    // Show notification
+    showNotification('Phone Book settings saved. Update config.yml and restart required.', 'info');
+    console.log(configMsg);
+    
+    // Also show in alert for easy copy-paste
+    alert(configMsg);
 }
 
 async function loadSupportedVendors() {

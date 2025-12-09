@@ -438,7 +438,10 @@ For issues and questions, please open a GitHub issue.
   - Multiple export formats (Yealink XML, Cisco XML, JSON)
   - Database storage with search capability
   - Push to IP phones automatically
+  - **NEW: LDAPS configuration for IP phones** (Zultys ZIP 33G/37G)
+  - Remote phone book URL as fallback method
   - See [PHONE_BOOK_GUIDE.md](PHONE_BOOK_GUIDE.md) for setup guide
+  - See [LDAPS_PHONEBOOK_GUIDE.md](LDAPS_PHONEBOOK_GUIDE.md) for LDAPS configuration
 
 ### Paging System
 - [x] **Paging System** - ✅ COMPLETED (Software)

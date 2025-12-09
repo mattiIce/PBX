@@ -315,6 +315,90 @@
             </div>
 
             <div class="config-section">
+                <h3>Phone Book Configuration for IP Phones</h3>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p>📖 Configure how phones access the company directory. Two methods are supported:</p>
+                    <ul>
+                        <li><strong>LDAPS:</strong> Direct LDAP/LDAPS server connection (Primary method)</li>
+                        <li><strong>Remote URL:</strong> HTTP/HTTPS XML feed from PBX (Fallback method)</li>
+                    </ul>
+                    <p>💡 Both methods can be enabled simultaneously for redundancy.</p>
+                </div>
+                
+                <!-- LDAPS Configuration -->
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="ldap-phonebook-enabled" onchange="toggleLdapPhonebookSettings()">
+                        Enable LDAPS Phone Book
+                    </label>
+                    <small>Allow phones to directly query LDAP directory (Recommended for Zultys 33G/37G)</small>
+                </div>
+                
+                <div id="ldap-phonebook-settings" style="display: none; margin-left: 20px; border-left: 3px solid #007bff; padding-left: 15px;">
+                    <div class="form-group">
+                        <label>LDAP Server:</label>
+                        <input type="text" id="ldap-phonebook-server" placeholder="ldaps://192.168.1.22">
+                        <small>Use ldaps:// for secure connection (recommended)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>LDAP Port:</label>
+                        <input type="number" id="ldap-phonebook-port" placeholder="636">
+                        <small>636 for LDAPS (SSL), 389 for plain LDAP</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Base DN:</label>
+                        <input type="text" id="ldap-phonebook-base" placeholder="DC=company,DC=com">
+                        <small>Base distinguished name for directory searches</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Bind User (DN):</label>
+                        <input type="text" id="ldap-phonebook-user" placeholder="CN=phonebook,CN=Users,DC=company,DC=com">
+                        <small>User account for phone authentication (use read-only account)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Bind Password:</label>
+                        <input type="password" id="ldap-phonebook-password" placeholder="Enter password">
+                        <small>⚠️ Store securely in .env file as LDAP_PHONEBOOK_PASSWORD</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="ldap-phonebook-tls" checked>
+                            Use SSL/TLS (LDAPS)
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Display Name:</label>
+                        <input type="text" id="ldap-phonebook-display-name" placeholder="Company Directory">
+                        <small>Name shown on phone display</small>
+                    </div>
+                </div>
+                
+                <!-- Remote Phone Book URL Configuration -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>
+                        <input type="checkbox" id="remote-phonebook-enabled" onchange="toggleRemotePhonebookSettings()">
+                        Enable Remote Phone Book URL
+                    </label>
+                    <small>Provide HTTP/HTTPS URL for phones to fetch XML directory (Fallback)</small>
+                </div>
+                
+                <div id="remote-phonebook-settings" style="display: none; margin-left: 20px; border-left: 3px solid #28a745; padding-left: 15px;">
+                    <div class="form-group">
+                        <label>Phone Book URL:</label>
+                        <input type="text" id="remote-phonebook-url" readonly>
+                        <small>Automatically configured based on server settings</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Refresh Interval (minutes):</label>
+                        <input type="number" id="remote-phonebook-refresh" placeholder="60" min="1" max="1440">
+                        <small>How often phones should refresh the directory (1-1440 minutes)</small>
+                    </div>
+                </div>
+                
+                <button class="btn btn-success" onclick="savePhonebookSettings()">💾 Save Phone Book Settings</button>
+            </div>
+
+            <div class="config-section">
                 <h3>Supported Phone Models</h3>
                 <div id="supported-vendors-list" class="info-box">
                     <p>Loading supported vendors...</p>

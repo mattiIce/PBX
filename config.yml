@@ -262,6 +262,31 @@ provisioning:
   url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
   custom_templates_dir: 'provisioning_templates'
   devices: []
+  
+  # LDAP/LDAPS Phone Book Configuration for IP Phones
+  # This configures phones to directly access LDAP directory for lookups
+  # Supported on: Zultys ZIP 33G, ZIP 37G, Yealink phones, and other LDAP-capable devices
+  ldap_phonebook:
+    enable: 1  # Set to 1 to enable LDAP phonebook on phones
+    server: ldaps://192.168.1.22  # LDAP server address (use ldaps:// for secure connection)
+    port: 636  # 636 for LDAPS (SSL), 389 for plain LDAP
+    base: DC=albl,DC=com  # Base DN for directory searches
+    user: CN=phonebook,CN=Users,DC=albl,DC=com  # Bind DN for phone authentication
+    password: ${LDAP_PHONEBOOK_PASSWORD}  # Bind password (set in .env file)
+    version: 3  # LDAP protocol version (usually 3)
+    tls_mode: 1  # 1 for LDAPS/TLS, 0 for plain LDAP
+    name_filter: (|(cn=%)(sn=%))  # Search filter for names (% is user input)
+    number_filter: (|(telephoneNumber=%)(mobile=%))  # Search filter for numbers
+    name_attr: cn  # LDAP attribute for contact name
+    number_attr: telephoneNumber  # LDAP attribute for phone number
+    display_name: Company Directory  # Display name shown on phone
+  
+  # Remote Phone Book URL (Fallback method)
+  # This provides a URL where phones can fetch an XML directory
+  # Useful as a fallback if LDAP is unreliable or unavailable
+  remote_phonebook:
+    url: http://192.168.1.14:8080/api/phone-book/export/xml  # URL to XML phone book
+    refresh_interval: 60  # Refresh interval in minutes
 trunks: null
 integrations:
   active_directory:
