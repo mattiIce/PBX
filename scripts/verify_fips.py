@@ -105,8 +105,15 @@ def check_cryptography_library():
     try:
         import cryptography
         version = cryptography.__version__
-        version_parts = [int(x) for x in version.split('.')[:2]]
-        meets_requirement = version_parts[0] >= 41
+        # Parse version safely (handle alpha, beta, rc versions)
+        version_clean = version.split('-')[0].split('+')[0]  # Remove suffixes
+        version_parts = [int(x) for x in version_clean.split('.')]
+        
+        # Check if version >= 41.0.0
+        major = version_parts[0] if len(version_parts) > 0 else 0
+        minor = version_parts[1] if len(version_parts) > 1 else 0
+        
+        meets_requirement = (major > 41) or (major == 41 and minor >= 0)
         print_status("Cryptography version >= 41.0.0", meets_requirement,
                     f"Installed: {version}")
         if not meets_requirement:
@@ -281,9 +288,18 @@ def check_dependencies():
         'requests': '2.31.0',
     }
     
+    # Map package names to import names
+    package_import_map = {
+        'cryptography': 'cryptography',
+        'PyYAML': 'yaml',
+        'psycopg2-binary': 'psycopg2',
+        'requests': 'requests',
+    }
+    
     for package, min_version in packages.items():
         try:
-            module = __import__(package.replace('-', '_'))
+            import_name = package_import_map.get(package, package.replace('-', '_'))
+            module = __import__(import_name)
             version = getattr(module, '__version__', 'unknown')
             print_status(f"{package} installed", True, f"Version: {version}")
         except ImportError:
@@ -293,7 +309,8 @@ def check_dependencies():
     
     for package, min_version in optional_packages.items():
         try:
-            module = __import__(package.replace('-', '_'))
+            import_name = package_import_map.get(package, package.replace('-', '_'))
+            module = __import__(import_name)
             version = getattr(module, '__version__', 'unknown')
             print_status(f"{package} installed (optional)", True, 
                         f"Version: {version}")

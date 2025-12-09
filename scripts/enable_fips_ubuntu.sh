@@ -141,10 +141,27 @@ case $choice in
             tmp_dir=$(mktemp -d)
             cd "$tmp_dir"
             
-            # Download OpenSSL source
+            # Download OpenSSL source with verification
             openssl_src_version="3.0.13"
-            wget "https://www.openssl.org/source/openssl-${openssl_src_version}.tar.gz"
-            tar -xzf "openssl-${openssl_src_version}.tar.gz"
+            openssl_tar="openssl-${openssl_src_version}.tar.gz"
+            openssl_url="https://www.openssl.org/source/${openssl_tar}"
+            
+            echo "Downloading OpenSSL ${openssl_src_version}..."
+            wget "${openssl_url}"
+            
+            # Download SHA256 checksum
+            wget "${openssl_url}.sha256"
+            
+            # Verify checksum
+            echo "Verifying download integrity..."
+            if ! sha256sum -c "${openssl_tar}.sha256"; then
+                echo -e "${RED}Checksum verification failed!${NC}"
+                echo "Download may be corrupted or tampered with."
+                exit 1
+            fi
+            
+            echo "Checksum verified successfully"
+            tar -xzf "${openssl_tar}"
             cd "openssl-${openssl_src_version}"
             
             # Configure with FIPS
@@ -190,10 +207,12 @@ activate = 1
 activate = 1
 EOF
         
-        # Enable FIPS mode in kernel
-        echo "1" > /proc/sys/crypto/fips_enabled 2>/dev/null || true
+        # Note: /proc/sys/crypto/fips_enabled is typically read-only
+        # FIPS mode must be enabled via kernel boot parameters
+        echo ""
+        echo "Note: FIPS mode will be enabled on next boot via kernel parameter"
         
-        # Make it persistent
+        # Make it persistent via GRUB
         if ! grep -q "fips=1" /etc/default/grub; then
             sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="fips=1 /' /etc/default/grub
             update-grub

@@ -84,11 +84,27 @@ def generate_health_report():
     fips_mode, enforce_fips = check_pbx_config()
     encryption_ok = check_encryption_operations()
     
-    # Calculate overall health
-    checks = [kernel_fips, python_fips, crypto_fips, fips_mode, encryption_ok]
-    passed_checks = sum(1 for c in checks if c)
-    total_checks = len(checks)
-    health_score = (passed_checks / total_checks) * 100
+    # Calculate overall health with weighted checks
+    # Critical checks have higher weight
+    check_weights = {
+        'kernel_fips': 2.0,      # Critical: System FIPS mode
+        'python_fips': 1.5,      # Important: Python FIPS
+        'crypto_fips': 2.0,      # Critical: Crypto library FIPS
+        'fips_mode': 1.5,        # Important: Config setting
+        'encryption_ok': 2.0,    # Critical: Encryption works
+    }
+    
+    weighted_score = 0
+    total_weight = 0
+    
+    weighted_score += (2.0 if kernel_fips else 0)
+    weighted_score += (1.5 if python_fips else 0)
+    weighted_score += (2.0 if crypto_fips else 0)
+    weighted_score += (1.5 if fips_mode else 0)
+    weighted_score += (2.0 if encryption_ok else 0)
+    total_weight = sum(check_weights.values())
+    
+    health_score = (weighted_score / total_weight) * 100
     
     # Determine status
     if health_score == 100:
