@@ -1579,7 +1579,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             section = body.get('section')
             data = body.get('data')
 
-            if not section or not data:
+            if section is None or data is None:
                 self._send_json({'error': 'Missing section or data'}, 400)
                 return
 

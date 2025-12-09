@@ -584,9 +584,9 @@ function initializeForms() {
         voicemailForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             await saveConfigSection('voicemail', {
-                max_message_duration: parseInt(document.getElementById('voicemail-max-duration').value),
-                max_greeting_duration: parseInt(document.getElementById('voicemail-max-greeting').value),
-                no_answer_timeout: parseInt(document.getElementById('voicemail-no-answer-timeout').value),
+                max_message_duration: parseInt(document.getElementById('voicemail-max-duration').value, 10),
+                max_greeting_duration: parseInt(document.getElementById('voicemail-max-greeting').value, 10),
+                no_answer_timeout: parseInt(document.getElementById('voicemail-no-answer-timeout').value, 10),
                 allow_custom_greetings: document.getElementById('voicemail-allow-custom-greetings').checked,
                 email_notifications: document.getElementById('voicemail-email-notifications').checked
             });
@@ -601,7 +601,7 @@ function initializeForms() {
             await saveConfigSection('voicemail', {
                 smtp: {
                     host: document.getElementById('smtp-host').value,
-                    port: parseInt(document.getElementById('smtp-port').value),
+                    port: parseInt(document.getElementById('smtp-port').value, 10),
                     use_tls: document.getElementById('smtp-use-tls').checked,
                     username: document.getElementById('smtp-username').value,
                     password: document.getElementById('smtp-password').value
@@ -634,15 +634,15 @@ function initializeForms() {
             e.preventDefault();
             await saveConfigSection('security', {
                 password: {
-                    min_length: parseInt(document.getElementById('security-min-password').value),
+                    min_length: parseInt(document.getElementById('security-min-password').value, 10),
                     require_uppercase: document.getElementById('security-require-uppercase').checked,
                     require_lowercase: document.getElementById('security-require-lowercase').checked,
                     require_digit: document.getElementById('security-require-digit').checked,
                     require_special: document.getElementById('security-require-special').checked
                 },
                 rate_limit: {
-                    max_attempts: parseInt(document.getElementById('security-max-attempts').value),
-                    lockout_duration: parseInt(document.getElementById('security-lockout-duration').value)
+                    max_attempts: parseInt(document.getElementById('security-max-attempts').value, 10),
+                    lockout_duration: parseInt(document.getElementById('security-lockout-duration').value, 10)
                 },
                 fips_mode: document.getElementById('security-fips-mode').checked
             });
@@ -681,7 +681,7 @@ function initializeForms() {
         conferenceForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             await saveConfigSection('conference', {
-                max_participants: parseInt(document.getElementById('conference-max-participants').value),
+                max_participants: parseInt(document.getElementById('conference-max-participants').value, 10),
                 record_conferences: document.getElementById('conference-record').checked
             });
         });
