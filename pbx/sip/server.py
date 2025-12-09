@@ -6,6 +6,9 @@ import threading
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 from pbx.utils.logger import get_logger
 
+# Valid DTMF digits for SIP INFO validation
+VALID_DTMF_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'A', 'B', 'C', 'D']
+
 
 class SIPServer:
     """SIP server for handling registration and calls"""
@@ -303,8 +306,8 @@ class SIPServer:
         if message.body and content_type:
             content_type_lower = content_type.lower()
             
-            # Only process application/dtmf-relay and application/dtmf content types
-            if content_type_lower in ['application/dtmf-relay', 'application/dtmf']:
+            # Only process DTMF-related content types (handle charset and other parameters)
+            if content_type_lower.startswith('application/dtmf-relay') or content_type_lower.startswith('application/dtmf'):
                 # Parse DTMF from body
                 # Format can be:
                 # Signal=1
@@ -315,8 +318,8 @@ class SIPServer:
                         parts = line.split('=', 1)
                         if len(parts) == 2:
                             digit = parts[1].strip()
-                            # Validate DTMF digit
-                            if digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'A', 'B', 'C', 'D']:
+                            # Validate DTMF digit using constant
+                            if digit in VALID_DTMF_DIGITS:
                                 dtmf_digit = digit
                                 break
                             else:
