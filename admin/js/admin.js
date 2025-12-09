@@ -1,6 +1,9 @@
 // API Base URL
 const API_BASE = window.location.origin;
 
+// Constants
+const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
+
 // State
 let currentExtensions = [];
 
@@ -346,27 +349,136 @@ async function loadCalls() {
 
 // Configuration Functions
 async function loadConfig() {
-    // Load current configuration (if API endpoint exists)
-    // For now, we'll just initialize with default values
     try {
-        const response = await fetch(`${API_BASE}/api/config`);
+        const response = await fetch(`${API_BASE}/api/config/full`);
         if (response.ok) {
             const config = await response.json();
             
-            if (config.smtp) {
-                document.getElementById('smtp-host').value = config.smtp.host || '';
-                document.getElementById('smtp-port').value = config.smtp.port || 587;
-                document.getElementById('smtp-username').value = config.smtp.username || '';
+            // Feature Toggles
+            if (config.features) {
+                document.getElementById('feature-call-recording').checked = config.features.call_recording || false;
+                document.getElementById('feature-call-transfer').checked = config.features.call_transfer || false;
+                document.getElementById('feature-call-hold').checked = config.features.call_hold || false;
+                document.getElementById('feature-conference').checked = config.features.conference || false;
+                document.getElementById('feature-voicemail').checked = config.features.voicemail || false;
+                document.getElementById('feature-call-parking').checked = config.features.call_parking || false;
+                document.getElementById('feature-call-queues').checked = config.features.call_queues || false;
+                document.getElementById('feature-presence').checked = config.features.presence || false;
+                document.getElementById('feature-music-on-hold').checked = config.features.music_on_hold || false;
+                document.getElementById('feature-auto-attendant').checked = config.features.auto_attendant || false;
             }
             
-            if (config.email) {
-                document.getElementById('email-from').value = config.email.from_address || '';
-                document.getElementById('email-notifications-enabled').checked = config.email_notifications || false;
+            // Voicemail Settings
+            if (config.voicemail) {
+                document.getElementById('voicemail-max-duration').value = config.voicemail.max_message_duration || 180;
+                document.getElementById('voicemail-max-greeting').value = config.voicemail.max_greeting_duration || 30;
+                document.getElementById('voicemail-no-answer-timeout').value = config.voicemail.no_answer_timeout || 30;
+                document.getElementById('voicemail-allow-custom-greetings').checked = config.voicemail.allow_custom_greetings || false;
+                document.getElementById('voicemail-email-notifications').checked = config.voicemail.email_notifications || false;
+                
+                // SMTP Settings
+                if (config.voicemail.smtp) {
+                    document.getElementById('smtp-host').value = config.voicemail.smtp.host || '';
+                    document.getElementById('smtp-port').value = config.voicemail.smtp.port || 587;
+                    document.getElementById('smtp-use-tls').checked = config.voicemail.smtp.use_tls !== false;
+                    document.getElementById('smtp-username').value = config.voicemail.smtp.username || '';
+                }
+                
+                // Email Settings
+                if (config.voicemail.email) {
+                    document.getElementById('email-from').value = config.voicemail.email.from_address || '';
+                    document.getElementById('email-from-name').value = config.voicemail.email.from_name || '';
+                }
+            }
+            
+            // Recording Settings
+            if (config.recording) {
+                document.getElementById('recording-auto-record').checked = config.recording.auto_record || false;
+                document.getElementById('recording-format').value = config.recording.format || 'wav';
+                document.getElementById('recording-storage-path').value = config.recording.storage_path || 'recordings';
+            }
+            
+            // Security Settings
+            if (config.security) {
+                if (config.security.password) {
+                    document.getElementById('security-min-password').value = config.security.password.min_length || 12;
+                    document.getElementById('security-require-uppercase').checked = config.security.password.require_uppercase || false;
+                    document.getElementById('security-require-lowercase').checked = config.security.password.require_lowercase || false;
+                    document.getElementById('security-require-digit').checked = config.security.password.require_digit || false;
+                    document.getElementById('security-require-special').checked = config.security.password.require_special || false;
+                }
+                if (config.security.rate_limit) {
+                    document.getElementById('security-max-attempts').value = config.security.rate_limit.max_attempts || 5;
+                    document.getElementById('security-lockout-duration').value = config.security.rate_limit.lockout_duration || 900;
+                }
+                document.getElementById('security-fips-mode').checked = config.security.fips_mode || false;
+            }
+            
+            // Advanced Features
+            if (config.features) {
+                if (config.features.webrtc) {
+                    document.getElementById('advanced-webrtc-enabled').checked = config.features.webrtc.enabled || false;
+                }
+                if (config.features.webhooks) {
+                    document.getElementById('advanced-webhooks-enabled').checked = config.features.webhooks.enabled || false;
+                }
+                if (config.features.crm_integration) {
+                    document.getElementById('advanced-crm-enabled').checked = config.features.crm_integration.enabled || false;
+                }
+                if (config.features.hot_desking) {
+                    document.getElementById('advanced-hot-desking-enabled').checked = config.features.hot_desking.enabled || false;
+                    document.getElementById('advanced-hot-desking-require-pin').checked = config.features.hot_desking.require_pin || false;
+                }
+                if (config.features.voicemail_transcription) {
+                    document.getElementById('advanced-transcription-enabled').checked = config.features.voicemail_transcription.enabled || false;
+                }
+            }
+            
+            // Conference Settings
+            if (config.conference) {
+                document.getElementById('conference-max-participants').value = config.conference.max_participants || 50;
+                document.getElementById('conference-record').checked = config.conference.record_conferences || false;
+            }
+            
+            // Server Info (Read-Only)
+            if (config.server) {
+                document.getElementById('config-sip-port').value = config.server.sip_port || 5060;
+                document.getElementById('config-api-port').value = config.api?.port || 8080;
+                document.getElementById('config-external-ip').value = config.server.external_ip || '';
+                document.getElementById('config-server-name').value = config.server.server_name || '';
             }
         }
     } catch (error) {
-        // Config endpoint not available, silently use defaults
-        // This is expected when the endpoint hasn't been implemented yet
+        console.error('Error loading configuration:', error);
+        // Use defaults - this is expected when endpoint hasn't been implemented yet
+    }
+}
+
+// Helper function to save configuration sections
+async function saveConfigSection(section, data) {
+    try {
+        const response = await fetch(`${API_BASE}/api/config/section`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                section: section,
+                data: data
+            })
+        });
+        
+        if (response.ok) {
+            showNotification(CONFIG_SAVE_SUCCESS_MESSAGE, 'success');
+            // Reload configuration to reflect changes
+            loadConfig();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to save configuration', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving configuration:', error);
+        showNotification('Failed to save configuration', 'error');
     }
 }
 
@@ -446,43 +558,134 @@ function initializeForms() {
         }
     });
     
-    // Email Config Form
-    document.getElementById('email-config-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const configData = {
-            smtp: {
-                host: document.getElementById('smtp-host').value,
-                port: parseInt(document.getElementById('smtp-port').value),
-                username: document.getElementById('smtp-username').value,
-                password: document.getElementById('smtp-password').value
-            },
-            email: {
-                from_address: document.getElementById('email-from').value
-            },
-            email_notifications: document.getElementById('email-notifications-enabled').checked
-        };
-        
-        try {
-            const response = await fetch(`${API_BASE}/api/config`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(configData)
+    // Features Config Form
+    const featuresForm = document.getElementById('features-config-form');
+    if (featuresForm) {
+        featuresForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('features', {
+                call_recording: document.getElementById('feature-call-recording').checked,
+                call_transfer: document.getElementById('feature-call-transfer').checked,
+                call_hold: document.getElementById('feature-call-hold').checked,
+                conference: document.getElementById('feature-conference').checked,
+                voicemail: document.getElementById('feature-voicemail').checked,
+                call_parking: document.getElementById('feature-call-parking').checked,
+                call_queues: document.getElementById('feature-call-queues').checked,
+                presence: document.getElementById('feature-presence').checked,
+                music_on_hold: document.getElementById('feature-music-on-hold').checked,
+                auto_attendant: document.getElementById('feature-auto-attendant').checked
             });
-            
-            if (response.ok) {
-                showNotification('Configuration saved successfully. Restart required.', 'success');
-            } else {
-                const error = await response.json();
-                showNotification(error.error || 'Failed to save configuration', 'error');
-            }
-        } catch (error) {
-            console.error('Error saving configuration:', error);
-            showNotification('Failed to save configuration', 'error');
-        }
-    });
+        });
+    }
+    
+    // Voicemail Config Form
+    const voicemailForm = document.getElementById('voicemail-config-form');
+    if (voicemailForm) {
+        voicemailForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('voicemail', {
+                max_message_duration: parseInt(document.getElementById('voicemail-max-duration').value, 10),
+                max_greeting_duration: parseInt(document.getElementById('voicemail-max-greeting').value, 10),
+                no_answer_timeout: parseInt(document.getElementById('voicemail-no-answer-timeout').value, 10),
+                allow_custom_greetings: document.getElementById('voicemail-allow-custom-greetings').checked,
+                email_notifications: document.getElementById('voicemail-email-notifications').checked
+            });
+        });
+    }
+    
+    // Email Config Form
+    const emailForm = document.getElementById('email-config-form');
+    if (emailForm) {
+        emailForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('voicemail', {
+                smtp: {
+                    host: document.getElementById('smtp-host').value,
+                    port: parseInt(document.getElementById('smtp-port').value, 10),
+                    use_tls: document.getElementById('smtp-use-tls').checked,
+                    username: document.getElementById('smtp-username').value,
+                    password: document.getElementById('smtp-password').value
+                },
+                email: {
+                    from_address: document.getElementById('email-from').value,
+                    from_name: document.getElementById('email-from-name').value
+                }
+            });
+        });
+    }
+    
+    // Recording Config Form
+    const recordingForm = document.getElementById('recording-config-form');
+    if (recordingForm) {
+        recordingForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('recording', {
+                auto_record: document.getElementById('recording-auto-record').checked,
+                format: document.getElementById('recording-format').value,
+                storage_path: document.getElementById('recording-storage-path').value
+            });
+        });
+    }
+    
+    // Security Config Form
+    const securityForm = document.getElementById('security-config-form');
+    if (securityForm) {
+        securityForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('security', {
+                password: {
+                    min_length: parseInt(document.getElementById('security-min-password').value, 10),
+                    require_uppercase: document.getElementById('security-require-uppercase').checked,
+                    require_lowercase: document.getElementById('security-require-lowercase').checked,
+                    require_digit: document.getElementById('security-require-digit').checked,
+                    require_special: document.getElementById('security-require-special').checked
+                },
+                rate_limit: {
+                    max_attempts: parseInt(document.getElementById('security-max-attempts').value, 10),
+                    lockout_duration: parseInt(document.getElementById('security-lockout-duration').value, 10)
+                },
+                fips_mode: document.getElementById('security-fips-mode').checked
+            });
+        });
+    }
+    
+    // Advanced Features Form
+    const advancedForm = document.getElementById('advanced-features-form');
+    if (advancedForm) {
+        advancedForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('features', {
+                webrtc: {
+                    enabled: document.getElementById('advanced-webrtc-enabled').checked
+                },
+                webhooks: {
+                    enabled: document.getElementById('advanced-webhooks-enabled').checked
+                },
+                crm_integration: {
+                    enabled: document.getElementById('advanced-crm-enabled').checked
+                },
+                hot_desking: {
+                    enabled: document.getElementById('advanced-hot-desking-enabled').checked,
+                    require_pin: document.getElementById('advanced-hot-desking-require-pin').checked
+                },
+                voicemail_transcription: {
+                    enabled: document.getElementById('advanced-transcription-enabled').checked
+                }
+            });
+        });
+    }
+    
+    // Conference Config Form
+    const conferenceForm = document.getElementById('conference-config-form');
+    if (conferenceForm) {
+        conferenceForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveConfigSection('conference', {
+                max_participants: parseInt(document.getElementById('conference-max-participants').value, 10),
+                record_conferences: document.getElementById('conference-record').checked
+            });
+        });
+    }
     
     // Add Device Form
     const addDeviceForm = document.getElementById('add-device-form');

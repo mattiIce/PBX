@@ -462,22 +462,118 @@
         <!-- Configuration Tab -->
         <div id="config" class="tab-content">
             <h2>System Configuration</h2>
-            
+            <p class="info-box" style="margin-bottom: 20px;">
+                Configure key PBX settings below. Changes are saved to <code>config.yml</code> and may require a system restart to take effect.
+            </p>
+
+            <!-- Feature Toggles -->
             <div class="config-section">
-                <h3>Server Settings</h3>
-                <div class="form-group">
-                    <label>SIP Port:</label>
-                    <input type="number" id="config-sip-port" value="5060" disabled>
-                </div>
-                <div class="form-group">
-                    <label>API Port:</label>
-                    <input type="number" id="config-api-port" value="8080" disabled>
-                </div>
-                <p class="config-note">⚠️ Server settings require restart and must be changed in config.yml</p>
+                <h3>🎛️ Feature Toggles</h3>
+                <p class="config-note">Enable or disable system features</p>
+                <form id="features-config-form">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-call-recording">
+                            Enable Call Recording
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-call-transfer">
+                            Enable Call Transfer
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-call-hold">
+                            Enable Call Hold
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-conference">
+                            Enable Conference Calling
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-voicemail">
+                            Enable Voicemail
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-call-parking">
+                            Enable Call Parking
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-call-queues">
+                            Enable Call Queues
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-presence">
+                            Enable Presence (Status) System
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-music-on-hold">
+                            Enable Music on Hold
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="feature-auto-attendant">
+                            Enable Auto Attendant
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Feature Settings</button>
+                </form>
             </div>
 
+            <!-- Voicemail Settings -->
             <div class="config-section">
-                <h3>Email/SMTP Settings</h3>
+                <h3>📧 Voicemail Settings</h3>
+                <form id="voicemail-config-form">
+                    <div class="form-group">
+                        <label>Max Message Duration (seconds):</label>
+                        <input type="number" id="voicemail-max-duration" min="30" max="600" value="180">
+                        <small>Maximum length of voicemail messages (30-600 seconds)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Greeting Duration (seconds):</label>
+                        <input type="number" id="voicemail-max-greeting" min="10" max="60" value="30">
+                        <small>Maximum length of custom greetings (10-60 seconds)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>No Answer Timeout (seconds):</label>
+                        <input type="number" id="voicemail-no-answer-timeout" min="10" max="60" value="30">
+                        <small>How long to ring before sending to voicemail (10-60 seconds)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="voicemail-allow-custom-greetings">
+                            Allow Custom Greetings
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="voicemail-email-notifications">
+                            Enable Email Notifications
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Voicemail Settings</button>
+                </form>
+            </div>
+
+            <!-- Email/SMTP Settings -->
+            <div class="config-section">
+                <h3>📬 Email/SMTP Settings</h3>
+                <p class="config-note">Configure SMTP server for email notifications</p>
                 <form id="email-config-form">
                     <div class="form-group">
                         <label>SMTP Host:</label>
@@ -486,6 +582,12 @@
                     <div class="form-group">
                         <label>SMTP Port:</label>
                         <input type="number" id="smtp-port" placeholder="587">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="smtp-use-tls">
+                            Use TLS/SSL
+                        </label>
                     </div>
                     <div class="form-group">
                         <label>Username:</label>
@@ -500,14 +602,189 @@
                         <input type="email" id="email-from" placeholder="voicemail@company.com">
                     </div>
                     <div class="form-group">
+                        <label>From Name:</label>
+                        <input type="text" id="email-from-name" placeholder="PBX Voicemail">
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Email Settings</button>
+                </form>
+            </div>
+
+            <!-- Recording Settings -->
+            <div class="config-section">
+                <h3>🎙️ Call Recording Settings</h3>
+                <form id="recording-config-form">
+                    <div class="form-group">
                         <label>
-                            <input type="checkbox" id="email-notifications-enabled">
-                            Enable Email Notifications
+                            <input type="checkbox" id="recording-auto-record">
+                            Automatically Record All Calls
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-primary">💾 Save Email Settings</button>
+                    <div class="form-group">
+                        <label>Recording Format:</label>
+                        <select id="recording-format">
+                            <option value="wav">WAV (Uncompressed)</option>
+                            <option value="mp3">MP3 (Compressed)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Storage Path:</label>
+                        <input type="text" id="recording-storage-path" value="recordings">
+                        <small>Directory for storing recordings</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Recording Settings</button>
                 </form>
-                <p class="config-note">⚠️ Email settings are saved to config.yml and require restart</p>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="config-section">
+                <h3>🔒 Security Settings</h3>
+                <form id="security-config-form">
+                    <div class="form-group">
+                        <label>Minimum Password Length:</label>
+                        <input type="number" id="security-min-password" min="8" max="32" value="12">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="security-require-uppercase">
+                            Require Uppercase Letter
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="security-require-lowercase">
+                            Require Lowercase Letter
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="security-require-digit">
+                            Require Number
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="security-require-special">
+                            Require Special Character
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Login Attempts:</label>
+                        <input type="number" id="security-max-attempts" min="3" max="10" value="5">
+                        <small>Failed attempts before temporary lockout</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Lockout Duration (seconds):</label>
+                        <input type="number" id="security-lockout-duration" min="300" max="3600" value="900">
+                        <small>How long accounts are locked after too many failed attempts (300-3600 seconds)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="security-fips-mode">
+                            Enable FIPS 140-2 Compliance
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Security Settings</button>
+                </form>
+            </div>
+
+            <!-- Advanced Feature Settings -->
+            <div class="config-section">
+                <h3>🚀 Advanced Features</h3>
+                <form id="advanced-features-form">
+                    <h4>WebRTC Browser Calling</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="advanced-webrtc-enabled">
+                            Enable WebRTC
+                        </label>
+                        <small>Allow browser-based calling without downloads</small>
+                    </div>
+                    
+                    <h4>Webhooks</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="advanced-webhooks-enabled">
+                            Enable Webhooks
+                        </label>
+                        <small>Event-driven integrations with external systems</small>
+                    </div>
+                    
+                    <h4>CRM Integration</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="advanced-crm-enabled">
+                            Enable CRM Integration
+                        </label>
+                        <small>Auto-display caller information from CRM</small>
+                    </div>
+                    
+                    <h4>Hot Desking</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="advanced-hot-desking-enabled">
+                            Enable Hot Desking
+                        </label>
+                        <small>Allow users to log in from any phone</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="advanced-hot-desking-require-pin">
+                            Require PIN for Hot Desking
+                        </label>
+                    </div>
+                    
+                    <h4>Voicemail Transcription</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="advanced-transcription-enabled">
+                            Enable Voicemail Transcription
+                        </label>
+                        <small>Convert voicemails to text (requires Vosk or Google Cloud)</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">💾 Save Advanced Settings</button>
+                </form>
+            </div>
+
+            <!-- Conference Settings -->
+            <div class="config-section">
+                <h3>👥 Conference Settings</h3>
+                <form id="conference-config-form">
+                    <div class="form-group">
+                        <label>Max Participants:</label>
+                        <input type="number" id="conference-max-participants" min="3" max="100" value="50">
+                        <small>Maximum participants per conference (3-100)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="conference-record">
+                            Record Conferences by Default
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Conference Settings</button>
+                </form>
+            </div>
+
+            <!-- Server Info (Read-Only) -->
+            <div class="config-section">
+                <h3>ℹ️ Server Information</h3>
+                <p class="config-note">Read-only server information (edit in config.yml to change)</p>
+                <div class="form-group">
+                    <label>SIP Port:</label>
+                    <input type="number" id="config-sip-port" value="5060" disabled>
+                </div>
+                <div class="form-group">
+                    <label>API Port:</label>
+                    <input type="number" id="config-api-port" value="8080" disabled>
+                </div>
+                <div class="form-group">
+                    <label>External IP:</label>
+                    <input type="text" id="config-external-ip" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Server Name:</label>
+                    <input type="text" id="config-server-name" disabled>
+                </div>
             </div>
         </div>
     </div>

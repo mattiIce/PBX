@@ -233,6 +233,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_extension(number)
             elif path == '/api/config':
                 self._handle_update_config()
+            elif path == '/api/config/section':
+                self._handle_update_config_section()
             elif path.startswith('/api/voicemail/'):
                 self._handle_update_voicemail(path)
             else:
@@ -312,6 +314,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_qos_call_metrics(path)
             elif path == '/api/config':
                 self._handle_get_config()
+            elif path == '/api/config/full':
+                self._handle_get_full_config()
             elif path == '/api/provisioning/devices':
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
@@ -1470,6 +1474,140 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'success': True, 'message': 'Configuration updated successfully. Restart required.'})
             else:
                 self._send_json({'error': 'Failed to update configuration'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_full_config(self):
+        """Get full system configuration for admin panel"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            # Return comprehensive configuration for the admin panel
+            config_data = {
+                'server': {
+                    'sip_port': self.pbx_core.config.get('server.sip_port', 5060),
+                    'external_ip': self.pbx_core.config.get('server.external_ip', ''),
+                    'server_name': self.pbx_core.config.get('server.server_name', 'PBX System')
+                },
+                'api': {
+                    'port': self.pbx_core.config.get('api.port', 8080)
+                },
+                'features': {
+                    'call_recording': self.pbx_core.config.get('features.call_recording', True),
+                    'call_transfer': self.pbx_core.config.get('features.call_transfer', True),
+                    'call_hold': self.pbx_core.config.get('features.call_hold', True),
+                    'conference': self.pbx_core.config.get('features.conference', True),
+                    'voicemail': self.pbx_core.config.get('features.voicemail', True),
+                    'call_parking': self.pbx_core.config.get('features.call_parking', True),
+                    'call_queues': self.pbx_core.config.get('features.call_queues', True),
+                    'presence': self.pbx_core.config.get('features.presence', True),
+                    'music_on_hold': self.pbx_core.config.get('features.music_on_hold', True),
+                    'auto_attendant': self.pbx_core.config.get('features.auto_attendant', True),
+                    'webrtc': {
+                        'enabled': self.pbx_core.config.get('features.webrtc.enabled', True)
+                    },
+                    'webhooks': {
+                        'enabled': self.pbx_core.config.get('features.webhooks.enabled', False)
+                    },
+                    'crm_integration': {
+                        'enabled': self.pbx_core.config.get('features.crm_integration.enabled', True)
+                    },
+                    'hot_desking': {
+                        'enabled': self.pbx_core.config.get('features.hot_desking.enabled', True),
+                        'require_pin': self.pbx_core.config.get('features.hot_desking.require_pin', True)
+                    },
+                    'voicemail_transcription': {
+                        'enabled': self.pbx_core.config.get('features.voicemail_transcription.enabled', True)
+                    }
+                },
+                'voicemail': {
+                    'max_message_duration': self.pbx_core.config.get('voicemail.max_message_duration', 180),
+                    'max_greeting_duration': self.pbx_core.config.get('voicemail.max_greeting_duration', 30),
+                    'no_answer_timeout': self.pbx_core.config.get('voicemail.no_answer_timeout', 30),
+                    'allow_custom_greetings': self.pbx_core.config.get('voicemail.allow_custom_greetings', True),
+                    'email_notifications': self.pbx_core.config.get('voicemail.email_notifications', True),
+                    'smtp': {
+                        'host': self.pbx_core.config.get('voicemail.smtp.host', ''),
+                        'port': self.pbx_core.config.get('voicemail.smtp.port', 587),
+                        'use_tls': self.pbx_core.config.get('voicemail.smtp.use_tls', True),
+                        'username': self.pbx_core.config.get('voicemail.smtp.username', '')
+                    },
+                    'email': {
+                        'from_address': self.pbx_core.config.get('voicemail.email.from_address', ''),
+                        'from_name': self.pbx_core.config.get('voicemail.email.from_name', 'PBX Voicemail')
+                    }
+                },
+                'recording': {
+                    'auto_record': self.pbx_core.config.get('recording.auto_record', False),
+                    'format': self.pbx_core.config.get('recording.format', 'wav'),
+                    'storage_path': self.pbx_core.config.get('recording.storage_path', 'recordings')
+                },
+                'security': {
+                    'password': {
+                        'min_length': self.pbx_core.config.get('security.password.min_length', 12),
+                        'require_uppercase': self.pbx_core.config.get('security.password.require_uppercase', True),
+                        'require_lowercase': self.pbx_core.config.get('security.password.require_lowercase', True),
+                        'require_digit': self.pbx_core.config.get('security.password.require_digit', True),
+                        'require_special': self.pbx_core.config.get('security.password.require_special', True)
+                    },
+                    'rate_limit': {
+                        'max_attempts': self.pbx_core.config.get('security.rate_limit.max_attempts', 5),
+                        'lockout_duration': self.pbx_core.config.get('security.rate_limit.lockout_duration', 900)
+                    },
+                    'fips_mode': self.pbx_core.config.get('security.fips_mode', True)
+                },
+                'conference': {
+                    'max_participants': self.pbx_core.config.get('conference.max_participants', 50),
+                    'record_conferences': self.pbx_core.config.get('conference.record_conferences', False)
+                }
+            }
+            
+            self._send_json(config_data)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_update_config_section(self):
+        """Update a specific section of system configuration"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            body = self._get_body()
+            section = body.get('section')
+            data = body.get('data')
+
+            if section is None or data is None:
+                self._send_json({'error': 'Missing section or data'}, 400)
+                return
+
+            # Update the configuration section
+            # Use config.get() to safely retrieve section with defaults
+            current_section = self.pbx_core.config.config.get(section, {})
+            
+            # Deep merge the data into the section
+            def deep_merge(target, source):
+                """Deep merge source dict into target dict"""
+                for key, value in source.items():
+                    if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                        deep_merge(target[key], value)
+                    else:
+                        target[key] = value
+                return target
+            
+            # Create merged section and update config
+            merged_section = deep_merge(current_section.copy() if isinstance(current_section, dict) else {}, data)
+            self.pbx_core.config.config[section] = merged_section
+            
+            # Save configuration
+            success = self.pbx_core.config.save()
+
+            if success:
+                self._send_json({'success': True, 'message': 'Configuration updated successfully. Restart may be required for some changes.'})
+            else:
+                self._send_json({'error': 'Failed to save configuration'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
