@@ -113,6 +113,7 @@ class TestSIPMethods(unittest.TestCase):
         ]
         
         for idx, content_type in enumerate(content_types):
+            body = "Test data"
             sip_message = (
                 f"MESSAGE sip:1002@192.168.1.100:5060 SIP/2.0\r\n"
                 f"Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds{idx}\r\n"
@@ -121,9 +122,9 @@ class TestSIPMethods(unittest.TestCase):
                 f"Call-ID: msg-call-{125 + idx}\r\n"
                 f"CSeq: {idx + 1} MESSAGE\r\n"
                 f"Content-Type: {content_type}\r\n"
-                f"Content-Length: 11\r\n"
+                f"Content-Length: {len(body)}\r\n"
                 f"\r\n"
-                f"Test data"
+                f"{body}"
             )
             message = SIPMessage(sip_message)
             
