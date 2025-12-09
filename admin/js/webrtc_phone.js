@@ -193,7 +193,7 @@ class WebRTCPhone {
             console.log('SDP Offer created:', offer.sdp);
             
             // Send offer to PBX
-            await fetch(`${this.apiUrl}/api/webrtc/offer`, {
+            const offerResponse = await fetch(`${this.apiUrl}/api/webrtc/offer`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -201,6 +201,15 @@ class WebRTCPhone {
                     sdp: offer.sdp
                 })
             });
+            
+            if (!offerResponse.ok) {
+                throw new Error(`Failed to send offer: ${offerResponse.statusText}`);
+            }
+            
+            const offerData = await offerResponse.json();
+            if (!offerData.success) {
+                throw new Error('Offer was rejected by server');
+            }
             
             this.updateStatus(`Calling extension ${targetExt}...`, 'info');
             this.updateUIState('calling');
@@ -232,6 +241,12 @@ class WebRTCPhone {
     
     async sendICECandidate(candidate) {
         try {
+            // Validate session exists before sending ICE candidate
+            if (!this.sessionId) {
+                console.warn('Cannot send ICE candidate: no active session');
+                return;
+            }
+            
             await fetch(`${this.apiUrl}/api/webrtc/ice-candidate`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -300,8 +315,15 @@ let webrtcPhone = null;
 
 function initWebRTCPhone() {
     const apiUrl = window.location.origin;
-    // Use a WebRTC-only extension for admin browser phone
-    // This creates a virtual extension that doesn't need a physical phone
+    
+    // Use a WebRTC-only extension identifier for the admin browser phone
+    // Note: This is a virtual extension identifier used for session tracking.
+    // The WebRTC backend creates a session for this identifier without requiring
+    // a pre-registered extension in the PBX. Outbound calls are made as this
+    // virtual extension to any target extension.
+    // 
+    // If your PBX requires authenticated extensions, you can change this to
+    // an actual extension number (e.g., '1000') that exists in your system.
     const adminExtension = 'webrtc-admin'; 
     
     webrtcPhone = new WebRTCPhone(apiUrl, adminExtension);
