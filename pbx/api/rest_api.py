@@ -477,6 +477,31 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'PBX not initialized'}, 500)
 
+    def _validate_limit_parameter(self, params: dict, default: int, max_value: int) -> Optional[int]:
+        """
+        Helper method to validate limit query parameters
+        
+        Args:
+            params: Parsed query parameters
+            default: Default value if not provided
+            max_value: Maximum allowed value
+            
+        Returns:
+            Validated limit value or None if invalid (error response will be sent)
+        """
+        try:
+            limit = int(params.get('limit', [default])[0])
+            if limit < 1:
+                self._send_json({'error': 'limit must be at least 1'}, 400)
+                return None
+            if limit > max_value:
+                self._send_json({'error': f'limit cannot exceed {max_value}'}, 400)
+                return None
+            return limit
+        except ValueError:
+            self._send_json({'error': 'Invalid limit parameter, must be an integer'}, 400)
+            return None
+
     def _handle_get_statistics(self):
         """Get comprehensive statistics for dashboard"""
         if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):

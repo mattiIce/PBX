@@ -31,7 +31,7 @@ class QoSMetrics:
         self.packets_out_of_order = 0
         
         # Timing statistics (in milliseconds)
-        # Use deque for efficient O(1) operations instead of list
+        # Use deque for efficient O(1) append/pop operations (instead of list pop(0) which is O(n))
         self.jitter_samples = deque(maxlen=100)  # Recent jitter measurements
         self.latency_samples = deque(maxlen=100)  # Recent latency measurements
         self.max_jitter = 0.0
@@ -91,9 +91,12 @@ class QoSMetrics:
                 # Time difference between packet arrivals (in ms)
                 arrival_delta = (current_time - self.last_arrival_time) * 1000
                 
-                # Timestamp difference (assuming 8kHz sample rate for audio)
-                # Convert RTP timestamp units to milliseconds
-                timestamp_delta = (timestamp - self.last_packet_timestamp) / 8.0
+                # Timestamp difference
+                # Note: RTP timestamp units depend on codec sample rate (typically 8kHz for G.711)
+                # For accurate jitter, the clock rate should be provided per-codec
+                # Using 8kHz as default for telephony codecs (G.711)
+                clock_rate = 8.0  # kHz (could be made configurable per codec)
+                timestamp_delta = (timestamp - self.last_packet_timestamp) / clock_rate
                 
                 # Jitter is the absolute difference
                 jitter = abs(arrival_delta - timestamp_delta)
