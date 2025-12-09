@@ -5,6 +5,7 @@ Provides HTTP API for managing PBX features
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 from datetime import datetime, date
+from typing import Optional
 import socket
 import threading
 import os
