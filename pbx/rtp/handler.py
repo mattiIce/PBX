@@ -392,9 +392,9 @@ class RTPRecorder:
                     # These are DTMF signaling packets, not audio
                     if payload_type == 101:
                         self.logger.debug(f"Received RFC 2833 telephone-event packet (filtered from recording)")
-                        # If we have an RFC 2833 handler, let it process the event
+                        # If we have an RFC 2833 handler, delegate event processing
                         if self.rfc2833_handler:
-                            self.rfc2833_handler._handle_rtp_packet(data, addr)
+                            self.rfc2833_handler.handle_rtp_packet(data, addr)
                         continue
 
                     # Store only audio payloads (not telephone-events)

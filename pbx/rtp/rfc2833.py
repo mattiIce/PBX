@@ -11,6 +11,10 @@ import time
 from pbx.utils.logger import get_logger
 
 
+# Constants
+SAMPLE_RATE_8KHZ = 8000  # Standard sample rate for telephony
+PAYLOAD_TYPE_TELEPHONE_EVENT = 101  # RFC 2833 payload type
+
 # RFC 2833 Event Codes for DTMF digits
 RFC2833_EVENT_CODES = {
     '0': 0,
@@ -182,16 +186,19 @@ class RFC2833Receiver:
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
-                self._handle_rtp_packet(data, addr)
+                self.handle_rtp_packet(data, addr)
             except socket.timeout:
                 continue
             except Exception as e:
                 if self.running:
                     self.logger.error(f"Error receiving RFC 2833 packet: {e}")
     
-    def _handle_rtp_packet(self, data, addr):
+    def handle_rtp_packet(self, data, addr):
         """
-        Handle incoming RTP packet
+        Handle incoming RTP packet (public interface)
+        
+        This is the public method that should be called by external code
+        to process RTP packets for RFC 2833 events.
         
         Args:
             data: Packet data
@@ -320,9 +327,9 @@ class RFC2833Sender:
             return False
         
         try:
-            # Duration in timestamp units (8000 Hz sample rate)
+            # Duration in timestamp units (SAMPLE_RATE_8KHZ)
             # 160ms = 1280 timestamp units at 8kHz
-            duration_units = int((duration_ms / 1000.0) * 8000)
+            duration_units = int((duration_ms / 1000.0) * SAMPLE_RATE_8KHZ)
             
             # Send event packet stream (3 packets: start, continuation, end)
             # This follows RFC 2833 recommendation to send multiple packets
