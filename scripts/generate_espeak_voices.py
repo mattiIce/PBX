@@ -1,85 +1,63 @@
 #!/usr/bin/env python3
 """
-Generate Voice Prompts using eSpeak (Direct)
+Generate Voice Prompts using gTTS (Google Text-to-Speech)
 
-This script generates actual VOICE prompts using espeak directly.
+This script generates actual VOICE prompts using Google Text-to-Speech (gTTS).
 The generated files are in proper telephony format: 8000 Hz, 16-bit, mono WAV.
 
 Requirements:
-    sudo apt-get install espeak ffmpeg
+    pip install gTTS pydub
 
-Note: Works completely offline, no internet connection required!
-      Voice quality is robotic but clear and functional.
+Note: Requires internet connection to use Google TTS API (free, no API key needed)
+      Voice quality is natural and professional-sounding.
 """
 import os
 import sys
-import subprocess
 import tempfile
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from gtts import gTTS
+from pydub import AudioSegment
 from pbx.utils.logger import get_logger, PBXLogger
 
 
-def text_to_wav_telephony(text, output_file, speed=150, pitch=50):
+def text_to_wav_telephony(text, output_file, language='en', slow=False):
     """
     Convert text to WAV file in telephony format (8000 Hz, 16-bit, mono)
     
     Args:
         text: Text to convert to speech
         output_file: Output WAV file path
-        speed: Speech speed (words per minute, default 150)
-        pitch: Pitch adjustment (0-99, default 50)
+        language: Language code (default 'en')
+        slow: Whether to use slow speech rate
     
     Returns:
         bool: True if successful
     """
     try:
-        # Create temporary file
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
-            temp_wav_path = temp_wav.name
+        # Create TTS
+        tts = gTTS(text=text, lang=language, slow=slow)
         
-        # Generate speech with espeak
-        # -s speed (words per minute)
-        # -p pitch (0-99, default 50)
-        # -a amplitude/volume (0-200, default 100)
-        # -w write to WAV file
-        result = subprocess.run([
-            'espeak',
-            '-s', str(speed),
-            '-p', str(pitch),
-            '-a', '180',  # Slightly louder
-            '-w', temp_wav_path,
-            text
-        ], capture_output=True, text=True)
+        # Save to temporary MP3 file
+        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_mp3:
+            temp_mp3_path = temp_mp3.name
+            tts.save(temp_mp3_path)
         
-        if result.returncode != 0:
-            print(f"espeak error: {result.stderr}")
-            return False
+        # Convert to telephony format WAV (8000 Hz, mono, 16-bit)
+        audio = AudioSegment.from_mp3(temp_mp3_path)
+        audio = audio.set_channels(1)  # Mono
+        audio = audio.set_frame_rate(8000)  # 8000 Hz
+        audio = audio.set_sample_width(2)  # 16-bit
         
-        # Convert to telephony format using ffmpeg (8000 Hz, mono, 16-bit)
-        result = subprocess.run([
-            'ffmpeg', '-y', '-i', temp_wav_path,
-            '-ar', '8000',  # 8000 Hz sample rate
-            '-ac', '1',      # Mono
-            '-sample_fmt', 's16',  # 16-bit
-            '-loglevel', 'error',  # Only show errors
-            output_file
-        ], capture_output=True, text=True)
+        # Export as WAV
+        audio.export(output_file, format='wav')
         
         # Clean up temp file
-        try:
-            os.unlink(temp_wav_path)
-        except:
-            pass
+        os.unlink(temp_mp3_path)
         
-        if result.returncode == 0:
-            return True
-        else:
-            print(f"ffmpeg error: {result.stderr}")
-            return False
-            
+        return True
     except Exception as e:
         print(f"Error generating TTS: {e}")
         import traceback
@@ -130,7 +108,7 @@ def generate_auto_attendant_voices(output_dir='auto_attendant', company_name="yo
     }
     
     logger.info("=" * 70)
-    logger.info("Auto Attendant Voice Generator (eSpeak)")
+    logger.info("Auto Attendant Voice Generator (gTTS)")
     logger.info("=" * 70)
     logger.info("")
     
@@ -232,7 +210,7 @@ def generate_voicemail_voices(output_dir='voicemail_prompts'):
     }
     
     logger.info("=" * 70)
-    logger.info("Voicemail Voice Generator (eSpeak)")
+    logger.info("Voicemail Voice Generator (gTTS)")
     logger.info("=" * 70)
     logger.info("")
     
@@ -269,7 +247,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(
-        description='Generate voice prompts using eSpeak (Offline TTS)',
+        description='Generate voice prompts using gTTS (Google Text-to-Speech)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -278,12 +256,12 @@ Examples:
   %(prog)s --vm-only                          Generate only voicemail
   %(prog)s --company "ABC Company"            Use custom company name
   
-This script uses eSpeak to generate actual voice prompts.
-Works completely offline - no internet connection required!
+This script uses Google Text-to-Speech (gTTS) to generate actual voice prompts.
+Requires internet connection but no API key needed - completely free.
 
 Voice Quality:
-  - Robotic but clear and intelligible
-  - Professional quality requires cloud TTS or voice actor
+  - Natural and professional-sounding
+  - Sounds like a real person speaking
   
 The generated files are in proper telephony format:
   - Format: WAV
@@ -326,12 +304,12 @@ The generated files are in proper telephony format:
     
     logger.info("")
     logger.info("=" * 70)
-    logger.info("PBX Voice Prompt Generator (eSpeak TTS)")
+    logger.info("PBX Voice Prompt Generator (gTTS)")
     logger.info("=" * 70)
     logger.info("")
-    logger.info("Using eSpeak (free, offline text-to-speech)")
+    logger.info("Using Google Text-to-Speech (gTTS)")
     logger.info("Generating REAL VOICE prompts (not tones!)")
-    logger.info("Works completely offline - no internet required")
+    logger.info("Requires internet connection but no API key needed")
     logger.info("")
     
     total_success = 0
@@ -362,19 +340,16 @@ The generated files are in proper telephony format:
         logger.info("  - Ready to use with your PBX system")
         logger.info("")
         logger.info("Voice Quality:")
-        logger.info("  - Robotic but clear and intelligible")
-        logger.info("  - Suitable for testing and basic production use")
+        logger.info("  - Natural and professional-sounding")
+        logger.info("  - Suitable for production use")
         logger.info("")
-        logger.info("For higher quality voices, consider:")
-        logger.info("  - Google Cloud TTS (natural voices, $4/1M chars)")
-        logger.info("  - Amazon Polly (natural voices, $4/1M chars)")
-        logger.info("  - Azure TTS (neural voices, $4/1M chars)")
-        logger.info("  - Professional voice actor recordings")
+        logger.info("gTTS is the recommended option for voice generation!")
         logger.info("")
     else:
         logger.error(f"✗ WARNING: Only {total_success}/{total_files} prompts generated")
-        logger.error("Check that espeak and ffmpeg are installed:")
-        logger.error("  sudo apt-get install espeak ffmpeg")
+        logger.error("Check that gTTS and pydub are installed:")
+        logger.error("  pip install gTTS pydub")
+        logger.error("Also ensure you have internet connectivity for gTTS")
 
 
 if __name__ == '__main__':
