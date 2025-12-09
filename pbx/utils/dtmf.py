@@ -152,7 +152,8 @@ class DTMFDetector:
         # Unpack bytes to signed 16-bit integers, then normalize to [-1.0, 1.0]
         try:
             samples = []
-            for i in range(0, len(audio_bytes) - 1, 2):
+            # Process complete 2-byte pairs only (ignore last byte if length is odd)
+            for i in range(0, num_samples * 2, 2):
                 # Read 2 bytes as signed 16-bit little-endian
                 sample_int = struct.unpack('<h', audio_bytes[i:i+2])[0]
                 # Normalize to [-1.0, 1.0]
