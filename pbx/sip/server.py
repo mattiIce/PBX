@@ -303,7 +303,8 @@ class SIPServer:
         if message.body and content_type:
             content_type_lower = content_type.lower()
             
-            if 'dtmf-relay' in content_type_lower or 'dtmf' in content_type_lower:
+            # Only process application/dtmf-relay and application/dtmf content types
+            if content_type_lower in ['application/dtmf-relay', 'application/dtmf']:
                 # Parse DTMF from body
                 # Format can be:
                 # Signal=1
@@ -311,7 +312,15 @@ class SIPServer:
                 body_lines = message.body.strip().split('\n')
                 for line in body_lines:
                     if line.startswith('Signal='):
-                        dtmf_digit = line.split('=')[1].strip()
+                        parts = line.split('=', 1)
+                        if len(parts) == 2:
+                            digit = parts[1].strip()
+                            # Validate DTMF digit
+                            if digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'A', 'B', 'C', 'D']:
+                                dtmf_digit = digit
+                                break
+                            else:
+                                self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
                         break
                 
                 if dtmf_digit:

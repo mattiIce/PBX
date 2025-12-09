@@ -791,9 +791,15 @@ class PBXCore:
             dtmf_digit: DTMF digit ('0'-'9', '*', '#', 'A'-'D')
         
         Note:
-            Future enhancement: The IVR session loops should be updated to check
-            this queue in addition to in-band DTMF detection. Currently this
-            method prepares the infrastructure for SIP INFO DTMF support.
+            INFRASTRUCTURE ONLY - IVR Integration Pending:
+            The IVR session loops (_voicemail_ivr_session, _auto_attendant_session)
+            need to be updated to check call.dtmf_info_queue in addition to in-band
+            DTMF detection. This method provides the queueing infrastructure.
+            
+            To complete SIP INFO DTMF support, update IVR loops to:
+            1. Check if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue
+            2. Pop digit from queue: digit = call.dtmf_info_queue.pop(0)
+            3. Fall back to in-band detection if queue is empty
         """
         call = self.call_manager.get_call(call_id)
         if not call:
