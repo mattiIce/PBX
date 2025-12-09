@@ -77,7 +77,7 @@ class TestSIPMethods(unittest.TestCase):
         
         # Test handling
         addr = ('192.168.1.101', 5060)
-        self.sip_server._handle_message(message, addr)
+        self.sip_server._handle_sip_message_method(message, addr)
         # Should not raise exception
     
     def test_message_method_empty_body(self):
@@ -100,7 +100,7 @@ class TestSIPMethods(unittest.TestCase):
         
         # Test handling
         addr = ('192.168.1.101', 5060)
-        self.sip_server._handle_message(message, addr)
+        self.sip_server._handle_sip_message_method(message, addr)
         # Should not raise exception
     
     def test_message_method_various_content_types(self):
@@ -134,7 +134,7 @@ class TestSIPMethods(unittest.TestCase):
             
             # Test handling
             addr = ('192.168.1.101', 5060)
-            self.sip_server._handle_message(message, addr)
+            self.sip_server._handle_sip_message_method(message, addr)
             # Should not raise exception
     
     def test_prack_method(self):

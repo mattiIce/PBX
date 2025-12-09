@@ -135,7 +135,7 @@ class SIPServer:
         elif method == 'INFO':
             self._handle_info(message, addr)
         elif method == 'MESSAGE':
-            self._handle_message(message, addr)
+            self._handle_sip_message_method(message, addr)
         elif method == 'PRACK':
             self._handle_prack(message, addr)
         elif method == 'UPDATE':
@@ -344,7 +344,7 @@ class SIPServer:
         # Always respond with 200 OK to INFO requests
         self._send_response(200, "OK", message, addr)
 
-    def _handle_message(self, message, addr):
+    def _handle_sip_message_method(self, message, addr):
         """
         Handle MESSAGE request for instant messaging (RFC 3428)
         
