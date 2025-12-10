@@ -80,55 +80,64 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         audio = audio.set_sample_width(2)  # 16-bit
         
         # Export audio
-        if convert_to_g722:
-            # Use ffmpeg to encode directly to G.722
-            # ffmpeg has a production-quality G.722 encoder
-            try:
-                import subprocess
-                
-                # First export as PCM WAV
-                with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
-                    temp_wav_path = temp_wav.name
-                    audio.export(temp_wav_path, format='wav')
-                
-                # Use ffmpeg to convert to G.722
-                # G.722 uses 8kHz "clock rate" but actually samples at 16kHz
-                result = subprocess.run([
-                    'ffmpeg', '-y',  # Overwrite output
-                    '-i', temp_wav_path,  # Input PCM WAV
-                    '-ar', str(sample_rate),  # Sample rate
-                    '-ac', '1',  # Mono
-                    '-acodec', 'g722',  # G.722 codec
-                    output_file  # Output file
-                ], capture_output=True, text=True, timeout=30)
-                
-                # Clean up temp files
-                os.unlink(temp_mp3_path)
-                os.unlink(temp_wav_path)
-                
-                if result.returncode != 0:
-                    logger.warning(f"ffmpeg G.722 encoding failed: {result.stderr[:200]}")
+        temp_wav_path = None
+        try:
+            if convert_to_g722:
+                # Use ffmpeg to encode directly to G.722
+                # ffmpeg has a production-quality G.722 encoder
+                try:
+                    import subprocess
+                    
+                    # First export as PCM WAV
+                    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
+                        temp_wav_path = temp_wav.name
+                        audio.export(temp_wav_path, format='wav')
+                    
+                    # Use ffmpeg to convert to G.722
+                    # G.722 uses 8kHz "clock rate" but actually samples at 16kHz
+                    result = subprocess.run([
+                        'ffmpeg', '-y',  # Overwrite output
+                        '-i', temp_wav_path,  # Input PCM WAV
+                        '-ar', str(sample_rate),  # Sample rate
+                        '-ac', '1',  # Mono
+                        '-acodec', 'g722',  # G.722 codec
+                        output_file  # Output file
+                    ], capture_output=True, text=True, timeout=30)
+                    
+                    if result.returncode != 0:
+                        # Log full error at debug level, truncated at warning level
+                        logger.debug(f"ffmpeg G.722 encoding failed (full error): {result.stderr}")
+                        logger.warning(f"ffmpeg G.722 encoding failed: {result.stderr[:200]}...")
+                        logger.warning("Falling back to PCM WAV format")
+                        # Fallback: export as PCM WAV
+                        audio.export(output_file, format='wav')
+                    else:
+                        logger.debug("Successfully encoded to G.722 using ffmpeg")
+                        
+                except subprocess.TimeoutExpired as e:
+                    logger.warning(f"ffmpeg G.722 encoding timed out after 30s: {e}")
                     logger.warning("Falling back to PCM WAV format")
                     # Fallback: export as PCM WAV
                     audio.export(output_file, format='wav')
-                    os.unlink(temp_mp3_path)
-                else:
-                    logger.debug("Successfully encoded to G.722 using ffmpeg")
-                    
-            except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
-                logger.warning(f"G.722 encoding error: {e}, falling back to PCM")
-                # Fallback: export as PCM WAV
+                except FileNotFoundError:
+                    logger.warning("ffmpeg not found. Install ffmpeg for G.722 support.")
+                    logger.warning("Falling back to PCM WAV format")
+                    # Fallback: export as PCM WAV
+                    audio.export(output_file, format='wav')
+                except Exception as e:
+                    logger.warning(f"G.722 encoding error: {e}, falling back to PCM")
+                    logger.debug(f"Full error details: {e}", exc_info=True)
+                    # Fallback: export as PCM WAV
+                    audio.export(output_file, format='wav')
+            else:
+                # Export as PCM WAV directly (recommended for maximum quality)
                 audio.export(output_file, format='wav')
+        finally:
+            # Clean up temp files - ensure this happens exactly once
+            if os.path.exists(temp_mp3_path):
                 os.unlink(temp_mp3_path)
-                # Clean up temp file if it exists
-                if 'temp_wav_path' in locals() and os.path.exists(temp_wav_path):
-                    os.unlink(temp_wav_path)
-        else:
-            # Export as PCM WAV directly (recommended for maximum quality)
-            audio.export(output_file, format='wav')
-            
-            # Clean up temp file
-            os.unlink(temp_mp3_path)
+            if temp_wav_path and os.path.exists(temp_wav_path):
+                os.unlink(temp_wav_path)
         
         return True
     except Exception as e:

@@ -102,10 +102,14 @@ class G722State:
 
 class G722CodecITU:
     """
-    Production-quality ITU-T G.722 codec implementation
+    ITU-T G.722 codec implementation (Reference/Experimental)
     
-    This follows the exact algorithms specified in ITU-T Recommendation G.722
+    This implementation attempts to follow ITU-T Recommendation G.722
     for wideband (16kHz) speech coding at 64 kbit/s.
+    
+    NOTE: This is a reference implementation with simplified adaptive predictors.
+    For production use, ffmpeg's G.722 codec is recommended as it provides
+    a complete, battle-tested implementation.
     """
     
     SAMPLE_RATE = 16000
@@ -301,11 +305,13 @@ class G722CodecITU:
             dqm = abs(d_h)
         
         # Quantize using 2-bit levels
-        if dqm < Q2[0]:
+        # Q2 decision levels are for absolute values: [abs(-12), abs(12), abs(52)] = [12, 12, 52]
+        # Simplified: use thresholds 12 and 52
+        if dqm < 12:
             ih = 0
-        elif dqm < Q2[1]:
+        elif dqm < 32:  # Midpoint between 12 and 52
             ih = 1
-        elif dqm < Q2[2]:
+        elif dqm < 52:
             ih = 2
         else:
             ih = 3
@@ -453,14 +459,24 @@ class G722CodecITU:
         return det
     
     def _update_predictor_lower(self, state: G722State, dq: int):
-        """Update adaptive predictor for lower sub-band"""
-        # Simple predictor update
-        # This is a simplified version - full ITU-T has more complex adaptation
+        """
+        Update adaptive predictor for lower sub-band
+        
+        NOTE: This is a simplified predictor update. The full ITU-T specification
+        includes complex tone detection, coefficient adaptation, and leak factors
+        that are not implemented here. This is why the codec doesn't achieve
+        production-quality audio. For real use, ffmpeg's implementation is recommended.
+        """
+        # Simplified predictor update
         state.sp = state.s
     
     def _update_predictor_higher(self, state: G722State, dq: int):
-        """Update adaptive predictor for higher sub-band"""
-        # Simple predictor update
+        """
+        Update adaptive predictor for higher sub-band
+        
+        NOTE: Simplified version. See _update_predictor_lower comment for details.
+        """
+        # Simplified predictor update
         state.sp_h = state.s_h
     
     def _saturate(self, value: int, min_val: int, max_val: int) -> int:
