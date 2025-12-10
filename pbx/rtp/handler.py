@@ -726,11 +726,12 @@ class RTPPlayer:
                         elif audio_format == 6:
                             payload_type = 8  # PCMA (A-law)
                         elif audio_format == 1:
-                            # PCM format - convert to G.722 for HD audio quality
-                            payload_type = 9  # G.722
+                            # PCM format - try to convert to G.722 for HD audio quality
+                            # Will fall back to G.711 if G.722 is not available
+                            payload_type = 9  # G.722 (may be changed to 0 if fallback needed)
                             convert_to_g722 = True
-                            self.logger.info(f"PCM format detected - will convert to G.722 (HD Audio) "
-                                           f"for VoIP compatibility.")
+                            self.logger.info(f"PCM format detected - will attempt conversion to G.722 (HD Audio) "
+                                           f"for VoIP compatibility, with fallback to G.711 if needed.")
                         else:
                             self.logger.error(f"Unsupported audio format: {audio_format}")
                             return False
@@ -791,14 +792,23 @@ class RTPPlayer:
                         # Convert PCM to G.722 if needed
                         if convert_to_g722:
                             try:
-                                from pbx.utils.audio import pcm16_to_g722
+                                from pbx.utils.audio import pcm16_to_g722, pcm16_to_ulaw
                                 original_size = len(audio_data)
-                                audio_data = pcm16_to_g722(audio_data, sample_rate)
-                                self.logger.info(f"Converted PCM to G.722: {original_size} bytes -> {len(audio_data)} bytes")
-                                # G.722 operates at 16kHz, update sample rate for packet calculation
-                                sample_rate = 16000
+                                g722_data = pcm16_to_g722(audio_data, sample_rate)
+                                
+                                if g722_data is None:
+                                    # G.722 library not available, fall back to G.711 μ-law
+                                    self.logger.warning(f"G.722 codec library not available, falling back to G.711 μ-law (PCMU)")
+                                    audio_data = pcm16_to_ulaw(audio_data)
+                                    payload_type = 0  # PCMU
+                                    self.logger.info(f"Converted PCM to G.711 μ-law: {original_size} bytes -> {len(audio_data)} bytes")
+                                else:
+                                    audio_data = g722_data
+                                    self.logger.info(f"Converted PCM to G.722: {original_size} bytes -> {len(audio_data)} bytes")
+                                    # G.722 operates at 16kHz, update sample rate for packet calculation
+                                    sample_rate = 16000
                             except Exception as e:
-                                self.logger.error(f"Failed to convert PCM to G.722: {e}")
+                                self.logger.error(f"Failed to convert PCM audio: {e}")
                                 return False
 
                         # Calculate samples per packet based on sample rate

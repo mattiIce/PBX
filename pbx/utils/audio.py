@@ -91,14 +91,22 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
         sample_rate: Sample rate of input PCM data (8000 or 16000 Hz)
     
     Returns:
-        bytes: G.722 encoded audio data
+        bytes: G.722 encoded audio data, or None if G.722 is not available
     
     Note:
-        This uses the G722Codec class which currently has a stub implementation.
-        For production use with actual G.722 encoding, integrate a native G.722 library.
+        This uses the G722Codec class which requires a native G.722 library.
+        If the library is not available, this function returns None to allow
+        fallback to other codecs like G.711.
     """
     # Import G.722 codec
     from pbx.features.g722_codec import G722Codec
+    
+    # Create G.722 encoder to check if it's available
+    codec = G722Codec(bitrate=64000)
+    
+    # If G.722 native library is not available, return None to indicate fallback needed
+    if not codec.enabled:
+        return None
     
     # Validate input data
     if len(pcm_data) < 2:
@@ -138,9 +146,6 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
         upsampled.extend(struct.pack('<h', last_sample))
         
         pcm_data = bytes(upsampled)
-    
-    # Create G.722 encoder
-    codec = G722Codec(bitrate=64000)
     
     # Encode PCM to G.722
     g722_data = codec.encode(pcm_data)

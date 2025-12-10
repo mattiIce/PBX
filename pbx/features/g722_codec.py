@@ -69,7 +69,8 @@ class G722Codec:
             
             # For now, mark as stub implementation
             self.enabled = False
-            self.logger.warning("Native G.722 library not found - stub implementation active")
+            self.logger.warning("Native G.722 library not found")
+            self.logger.info("g.722 codec library not loaded - audio will use G.711 fallback")
             
         except Exception as e:
             self.logger.error(f"Failed to initialize G.722 codec: {e}")
