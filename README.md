@@ -32,7 +32,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Paging System** - Full overhead paging support with SIP/RTP integration (hardware-ready)
 - **Webhook System** - Event-driven integrations with HMAC signature support for real-time notifications
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
-- **REST API** - HTTP API for integration and management
+- **REST API** - HTTPS/HTTP API for integration and management
 - **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
 - **Multi-codec Support** - G.711, G.729 and more
 - **DTMF Detection** - Goertzel algorithm for interactive voice menus
@@ -52,6 +52,8 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **Microsoft Teams** - Presence sync and meeting escalation
 
 ### Security & Compliance
+- **HTTPS/SSL Support** - Secure API communication with TLS 1.2+ (see [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md))
+- **In-House CA Integration** - Automatic certificate request from enterprise Certificate Authority
 - **FIPS 140-2 Compliant Encryption** - Government-grade security
 - **TLS/SIPS** - Encrypted SIP signaling
 - **SRTP** - Encrypted media streams
