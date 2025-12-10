@@ -81,9 +81,15 @@ class PBXCore:
         # Pass database to extension registry so it can load extensions from DB
         self.extension_registry = ExtensionRegistry(self.config, database=self.database if self.database.enabled else None)
         self.call_manager = CallManager()
+        
+        # Initialize QoS monitoring system first (needed by RTP relay)
+        from pbx.features.qos_monitoring import QoSMonitor
+        self.qos_monitor = QoSMonitor(self)
+        
         self.rtp_relay = RTPRelay(
             self.config.get('server.rtp_port_range_start', 10000),
-            self.config.get('server.rtp_port_range_end', 20000)
+            self.config.get('server.rtp_port_range_end', 20000),
+            qos_monitor=self.qos_monitor
         )
 
         # Initialize SIP server
@@ -115,6 +121,7 @@ class PBXCore:
         from pbx.features.statistics import StatisticsEngine
         self.statistics_engine = StatisticsEngine(self.cdr_system)
         self.logger.info("Statistics and analytics engine initialized")
+        self.logger.info("QoS monitoring system initialized and integrated with RTP relay")
         
         # Initialize auto attendant if enabled
         if self.config.get('features.auto_attendant', False):

@@ -59,6 +59,7 @@
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
             <button class="tab-button" data-tab="webrtc-phone">📞 Phone</button>
             <button class="tab-button" data-tab="analytics">Analytics</button>
+            <button class="tab-button" data-tab="qos">Call Quality (QoS)</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
             <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
@@ -320,6 +321,141 @@
                 <h3>Peak Call Hours</h3>
                 <div id="peak-hours-display" class="info-box">
                     Loading peak hours...
+                </div>
+            </div>
+        </div>
+
+        <!-- QoS (Call Quality) Tab -->
+        <div id="qos" class="tab-content">
+            <h2>Call Quality Monitoring (QoS)</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadQoSMetrics()">🔄 Refresh Metrics</button>
+                <button class="btn btn-secondary" onclick="clearQoSAlerts()">🗑️ Clear Alerts</button>
+            </div>
+
+            <!-- QoS Overview Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-active-calls">-</div>
+                    <div class="stat-label">Active Monitored Calls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-total-calls">-</div>
+                    <div class="stat-label">Total Calls Monitored</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-avg-mos">-</div>
+                    <div class="stat-label">Average MOS Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-calls-with-issues">-</div>
+                    <div class="stat-label">Calls with Issues</div>
+                </div>
+            </div>
+
+            <!-- Active Call Quality -->
+            <div class="config-section">
+                <h3>🔴 Active Call Quality</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Call ID</th>
+                                <th>Duration</th>
+                                <th>MOS Score</th>
+                                <th>Quality</th>
+                                <th>Packet Loss %</th>
+                                <th>Jitter (ms)</th>
+                                <th>Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qos-active-calls-table">
+                            <tr>
+                                <td colspan="7" class="loading">Loading active call metrics...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- QoS Alerts -->
+            <div class="config-section">
+                <h3>⚠️ Quality Alerts</h3>
+                <div id="qos-alerts-container">
+                    <div class="info-box">Loading alerts...</div>
+                </div>
+            </div>
+
+            <!-- Historical Call Quality -->
+            <div class="config-section">
+                <h3>📊 Recent Call Quality History</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Call ID</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>MOS Score</th>
+                                <th>Quality</th>
+                                <th>Packet Loss %</th>
+                                <th>Jitter (ms)</th>
+                                <th>Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qos-history-table">
+                            <tr>
+                                <td colspan="8" class="loading">Loading call history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- QoS Alert Thresholds -->
+            <div class="config-section">
+                <h3>⚙️ Alert Threshold Configuration</h3>
+                <form id="qos-thresholds-form" onsubmit="saveQoSThresholds(event)">
+                    <div class="form-group">
+                        <label>Minimum MOS Score (alert below):</label>
+                        <input type="number" id="qos-threshold-mos" step="0.1" min="1.0" max="5.0" value="3.5">
+                        <small>Alert when MOS score drops below this value (1.0 - 5.0)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Packet Loss % (alert above):</label>
+                        <input type="number" id="qos-threshold-loss" step="0.1" min="0" max="100" value="2.0">
+                        <small>Alert when packet loss exceeds this percentage</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Jitter ms (alert above):</label>
+                        <input type="number" id="qos-threshold-jitter" step="1" min="0" max="500" value="50">
+                        <small>Alert when jitter exceeds this value in milliseconds</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Latency ms (alert above):</label>
+                        <input type="number" id="qos-threshold-latency" step="1" min="0" max="1000" value="300">
+                        <small>Alert when latency exceeds this value in milliseconds</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Thresholds</button>
+                </form>
+            </div>
+
+            <!-- QoS Info Box -->
+            <div class="config-section">
+                <h3>ℹ️ About QoS Monitoring</h3>
+                <div class="info-box">
+                    <p><strong>MOS Score (Mean Opinion Score):</strong> A rating from 1.0 (bad) to 5.0 (excellent) that represents perceived call quality.</p>
+                    <ul>
+                        <li><strong>4.3-5.0:</strong> Excellent - No perceptible quality issues</li>
+                        <li><strong>4.0-4.3:</strong> Good - Minor impairments, acceptable quality</li>
+                        <li><strong>3.6-4.0:</strong> Fair - Noticeable but tolerable impairments</li>
+                        <li><strong>3.1-3.6:</strong> Poor - Quality significantly affected</li>
+                        <li><strong>1.0-3.1:</strong> Bad - Severe quality issues</li>
+                    </ul>
+                    <p><strong>Packet Loss:</strong> Percentage of packets that didn't arrive. Above 2% can cause noticeable quality degradation.</p>
+                    <p><strong>Jitter:</strong> Variation in packet arrival times. High jitter (>50ms) causes choppy audio.</p>
+                    <p><strong>Latency:</strong> Round-trip delay. Above 300ms can cause conversational difficulties.</p>
                 </div>
             </div>
         </div>

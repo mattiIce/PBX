@@ -2276,3 +2276,144 @@ async function saveSSLSettings() {
         alert(`❌ Error saving SSL settings: ${error.message}`);
     }
 }
+
+// ====================================
+// QoS Monitoring Functions
+// ====================================
+
+async function loadQoSMetrics() {
+    try {
+        // Load statistics
+        const statsResponse = await fetch(`${API_BASE}/api/qos/statistics`);
+        const stats = await statsResponse.json();
+        
+        // Update overview stats
+        document.getElementById('qos-active-calls').textContent = stats.active_calls || 0;
+        document.getElementById('qos-total-calls').textContent = stats.total_calls || 0;
+        document.getElementById('qos-avg-mos').textContent = stats.average_mos ? stats.average_mos.toFixed(2) : '-';
+        document.getElementById('qos-calls-with-issues').textContent = stats.calls_with_issues || 0;
+        
+        // Load active call metrics
+        const activeResponse = await fetch(`${API_BASE}/api/qos/metrics`);
+        const activeMetrics = await activeResponse.json();
+        const activeTable = document.getElementById('qos-active-calls-table');
+        
+        if (activeMetrics.length === 0) {
+            activeTable.innerHTML = '<tr><td colspan="7" class="no-data">No active calls being monitored</td></tr>';
+        } else {
+            activeTable.innerHTML = activeMetrics.map(call => `
+                <tr>
+                    <td>${call.call_id}</td>
+                    <td>${call.duration_seconds}s</td>
+                    <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
+                    <td>${call.quality_rating}</td>
+                    <td>${call.packet_loss_percentage.toFixed(2)}%</td>
+                    <td>${call.jitter_avg_ms.toFixed(1)}</td>
+                    <td>${call.latency_avg_ms.toFixed(1)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Load alerts
+        const alertsResponse = await fetch(`${API_BASE}/api/qos/alerts`);
+        const alerts = await alertsResponse.json();
+        const alertsContainer = document.getElementById('qos-alerts-container');
+        
+        if (alerts.length === 0) {
+            alertsContainer.innerHTML = '<div class="info-box">✅ No quality alerts</div>';
+        } else {
+            alertsContainer.innerHTML = alerts.map(alert => `
+                <div class="alert-box ${alert.severity}">
+                    <strong>[${alert.type}]</strong> ${alert.message}
+                    <br><small>Call: ${alert.call_id} | Time: ${new Date(alert.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('');
+        }
+        
+        // Load historical metrics
+        const historyResponse = await fetch(`${API_BASE}/api/qos/history?limit=50`);
+        const history = await historyResponse.json();
+        const historyTable = document.getElementById('qos-history-table');
+        
+        if (history.length === 0) {
+            historyTable.innerHTML = '<tr><td colspan="8" class="no-data">No historical data available</td></tr>';
+        } else {
+            historyTable.innerHTML = history.map(call => `
+                <tr>
+                    <td>${call.call_id}</td>
+                    <td>${new Date(call.start_time).toLocaleString()}</td>
+                    <td>${call.duration_seconds}s</td>
+                    <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
+                    <td>${call.quality_rating}</td>
+                    <td>${call.packet_loss_percentage.toFixed(2)}%</td>
+                    <td>${call.jitter_avg_ms.toFixed(1)}</td>
+                    <td>${call.latency_avg_ms.toFixed(1)}</td>
+                </tr>
+            `).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error loading QoS metrics:', error);
+        showNotification('Failed to load QoS metrics', 'error');
+    }
+}
+
+function getQualityClass(mosScore) {
+    if (mosScore >= 4.3) return 'quality-excellent';
+    if (mosScore >= 4.0) return 'quality-good';
+    if (mosScore >= 3.6) return 'quality-fair';
+    if (mosScore >= 3.1) return 'quality-poor';
+    return 'quality-bad';
+}
+
+async function clearQoSAlerts() {
+    if (!confirm('Are you sure you want to clear all QoS alerts?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/qos/clear-alerts`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showNotification('QoS alerts cleared successfully', 'success');
+            await loadQoSMetrics();
+        } else {
+            showNotification('Failed to clear QoS alerts', 'error');
+        }
+    } catch (error) {
+        console.error('Error clearing QoS alerts:', error);
+        showNotification('Error clearing QoS alerts', 'error');
+    }
+}
+
+async function saveQoSThresholds(event) {
+    event.preventDefault();
+    
+    const thresholds = {
+        mos_min: parseFloat(document.getElementById('qos-threshold-mos').value),
+        packet_loss_max: parseFloat(document.getElementById('qos-threshold-loss').value),
+        jitter_max: parseFloat(document.getElementById('qos-threshold-jitter').value),
+        latency_max: parseFloat(document.getElementById('qos-threshold-latency').value)
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/qos/thresholds`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(thresholds)
+        });
+        
+        if (response.ok) {
+            showNotification('QoS thresholds updated successfully', 'success');
+        } else {
+            showNotification('Failed to update QoS thresholds', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving QoS thresholds:', error);
+        showNotification('Error saving QoS thresholds', 'error');
+    }
+}

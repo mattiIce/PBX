@@ -152,19 +152,21 @@ class RTPRelay:
     Used for call forwarding, conferencing, etc.
     """
 
-    def __init__(self, port_range_start=10000, port_range_end=20000):
+    def __init__(self, port_range_start=10000, port_range_end=20000, qos_monitor=None):
         """
         Initialize RTP relay
 
         Args:
             port_range_start: Start of port range for RTP
             port_range_end: End of port range for RTP
+            qos_monitor: Optional QoS monitor for tracking call quality
         """
         self.port_range_start = port_range_start
         self.port_range_end = port_range_end
         self.active_relays = {}
         self.logger = get_logger()
         self.port_pool = list(range(port_range_start, port_range_end, 2))  # Even ports for RTP
+        self.qos_monitor = qos_monitor
 
     def allocate_relay(self, call_id):
         """
@@ -183,7 +185,7 @@ class RTPRelay:
         rtp_port = self.port_pool.pop(0)
         rtcp_port = rtp_port + 1
 
-        handler = RTPRelayHandler(rtp_port, call_id)
+        handler = RTPRelayHandler(rtp_port, call_id, qos_monitor=self.qos_monitor)
         if handler.start():
             self.active_relays[call_id] = {
                 'rtp_port': rtp_port,
@@ -231,13 +233,14 @@ class RTPRelayHandler:
     RTP relay handler that forwards packets between two endpoints
     """
 
-    def __init__(self, local_port, call_id):
+    def __init__(self, local_port, call_id, qos_monitor=None):
         """
         Initialize RTP relay handler
 
         Args:
             local_port: Local port to bind to
             call_id: Call identifier for logging
+            qos_monitor: Optional QoS monitor for tracking call quality
         """
         self.local_port = local_port
         self.call_id = call_id
@@ -247,6 +250,12 @@ class RTPRelayHandler:
         self.endpoint_a = None  # (host, port)
         self.endpoint_b = None  # (host, port)
         self.lock = threading.Lock()
+        self.qos_monitor = qos_monitor
+        self.qos_metrics = None
+        
+        # Start QoS monitoring if monitor is available
+        if self.qos_monitor:
+            self.qos_metrics = self.qos_monitor.start_monitoring(call_id)
 
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
@@ -285,6 +294,11 @@ class RTPRelayHandler:
         self.running = False
         if self.socket:
             self.socket.close()
+        
+        # Stop QoS monitoring if active
+        if self.qos_monitor and self.qos_metrics:
+            self.qos_monitor.stop_monitoring(self.call_id)
+        
         self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
 
     def _relay_loop(self):
@@ -293,16 +307,34 @@ class RTPRelayHandler:
             try:
                 data, addr = self.socket.recvfrom(2048)
 
+                # Update QoS metrics if monitoring is enabled
+                if self.qos_metrics and len(data) >= 12:
+                    try:
+                        # Parse RTP header
+                        header = struct.unpack('!BBHII', data[:12])
+                        seq_num = header[2]
+                        timestamp = header[3]
+                        payload_size = len(data) - 12
+                        
+                        # Update received packet metrics
+                        self.qos_metrics.update_packet_received(seq_num, timestamp, payload_size)
+                    except Exception as qos_error:
+                        self.logger.debug(f"Error updating QoS metrics: {qos_error}")
+
                 # Determine which endpoint sent this packet and forward to the other
                 with self.lock:
                     if self.endpoint_a and self.endpoint_b:
                         # Check if packet is from endpoint A, send to B
                         if addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]:
                             self.socket.sendto(data, self.endpoint_b)
+                            if self.qos_metrics:
+                                self.qos_metrics.update_packet_sent()
                             self.logger.debug(f"Relayed {len(data)} bytes: A->B")
                         # Check if packet is from endpoint B, send to A
                         elif addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]:
                             self.socket.sendto(data, self.endpoint_a)
+                            if self.qos_metrics:
+                                self.qos_metrics.update_packet_sent()
                             self.logger.debug(f"Relayed {len(data)} bytes: B->A")
                         else:
                             # First packet from unknown endpoint, might need to learn the address
