@@ -193,6 +193,24 @@ class G722Codec:
         return True
     
     @staticmethod
+    def is_library_available() -> bool:
+        """
+        Check if native G.722 library is available
+        
+        Returns:
+            True if native library is loaded, False if using stub
+        """
+        # Try to detect if native library is available
+        # For now, always return False since we don't have the native library
+        # In production with actual library:
+        # try:
+        #     import spandsp
+        #     return True
+        # except ImportError:
+        #     return False
+        return False
+    
+    @staticmethod
     def get_capabilities() -> dict:
         """
         Get codec capabilities

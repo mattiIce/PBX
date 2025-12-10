@@ -101,12 +101,12 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
     # Import G.722 codec
     from pbx.features.g722_codec import G722Codec
     
-    # Create G.722 encoder to check if it's available
-    codec = G722Codec(bitrate=64000)
-    
-    # If G.722 native library is not available, return None to indicate fallback needed
-    if not codec.enabled:
+    # Check if G.722 native library is available (efficient static check)
+    if not G722Codec.is_library_available():
         return None
+    
+    # Create G.722 encoder
+    codec = G722Codec(bitrate=64000)
     
     # Validate input data
     if len(pcm_data) < 2:

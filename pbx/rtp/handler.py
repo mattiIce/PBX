@@ -7,6 +7,11 @@ import threading
 import struct
 from pbx.utils.logger import get_logger
 
+# RTP Payload Type constants (RFC 3551)
+PCMU_PAYLOAD_TYPE = 0  # G.711 μ-law
+PCMA_PAYLOAD_TYPE = 8  # G.711 A-law
+G722_PAYLOAD_TYPE = 9  # G.722 HD Audio
+
 
 class RTPHandler:
     """Handle RTP media streams"""
@@ -722,13 +727,13 @@ class RTPPlayer:
                         # 1 = PCM, 6 = A-law, 7 = μ-law
                         convert_to_g722 = False
                         if audio_format == 7:
-                            payload_type = 0  # PCMU (μ-law)
+                            payload_type = PCMU_PAYLOAD_TYPE  # PCMU (μ-law)
                         elif audio_format == 6:
-                            payload_type = 8  # PCMA (A-law)
+                            payload_type = PCMA_PAYLOAD_TYPE  # PCMA (A-law)
                         elif audio_format == 1:
                             # PCM format - try to convert to G.722 for HD audio quality
                             # Will fall back to G.711 if G.722 is not available
-                            payload_type = 9  # G.722 (may be changed to 0 if fallback needed)
+                            payload_type = G722_PAYLOAD_TYPE  # G.722 (may be changed to PCMU if fallback needed)
                             convert_to_g722 = True
                             self.logger.info(f"PCM format detected - will attempt conversion to G.722 (HD Audio) "
                                            f"for VoIP compatibility, with fallback to G.711 if needed.")
@@ -797,11 +802,11 @@ class RTPPlayer:
                                 g722_data = pcm16_to_g722(audio_data, sample_rate)
                                 
                                 if g722_data is None:
-                                    # G.722 library not available, fall back to G.711 μ-law
-                                    self.logger.warning(f"G.722 codec library not available, falling back to G.711 μ-law (PCMU)")
+                                    # G.722 library not available, fall back to G.711 u-law
+                                    self.logger.warning(f"G.722 codec library not available, falling back to G.711 u-law (PCMU)")
                                     audio_data = pcm16_to_ulaw(audio_data)
-                                    payload_type = 0  # PCMU
-                                    self.logger.info(f"Converted PCM to G.711 μ-law: {original_size} bytes -> {len(audio_data)} bytes")
+                                    payload_type = PCMU_PAYLOAD_TYPE
+                                    self.logger.info(f"Converted PCM to G.711 u-law: {original_size} bytes -> {len(audio_data)} bytes")
                                 else:
                                     audio_data = g722_data
                                     self.logger.info(f"Converted PCM to G.722: {original_size} bytes -> {len(audio_data)} bytes")
