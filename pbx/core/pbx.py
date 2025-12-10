@@ -580,17 +580,20 @@ class PBXCore:
         if rtp_ports:
             call.rtp_ports = rtp_ports
 
-            # Store caller's RTP info for later relay setup
+            # Store caller's RTP info and set endpoint immediately to avoid dropping early packets
             if caller_sdp:
                 call.caller_rtp = caller_sdp
                 call.caller_addr = from_addr
-
-                # Get the RTP handler and set remote endpoint for caller side
+                
+                # Set caller's endpoint immediately to enable early RTP packet learning
+                # This prevents dropping packets that arrive before the 200 OK response
+                caller_endpoint = (caller_sdp['address'], caller_sdp['port'])
                 relay_info = self.rtp_relay.active_relays.get(call_id)
                 if relay_info:
                     handler = relay_info['handler']
-                    # For now, just log - full relay needs bidirectional forwarding
-                    self.logger.info(f"RTP relay allocated on port {rtp_ports[0]}")
+                    # Set only endpoint A for now; endpoint B will be set after 200 OK
+                    handler.set_endpoints(caller_endpoint, None)
+                    self.logger.info(f"RTP relay allocated on port {rtp_ports[0]}, caller endpoint set to {caller_endpoint}")
 
         # Get destination extension's address
         dest_ext_obj = self.extension_registry.get(to_ext)
@@ -701,11 +704,14 @@ class PBXCore:
                 call.callee_rtp = callee_sdp
                 call.callee_addr = callee_addr
 
-        # Now we have both endpoints, set up the RTP relay
+        # Now we have both endpoints, complete the RTP relay setup
+        # Note: caller endpoint (A) was already set when INVITE was received
         if call.caller_rtp and call.callee_rtp and call.rtp_ports:
             caller_endpoint = (call.caller_rtp['address'], call.caller_rtp['port'])
             callee_endpoint = (call.callee_rtp['address'], call.callee_rtp['port'])
 
+            # Set both endpoints (caller was already set, but setting again is safe)
+            # This ensures callee endpoint (B) is now known for bidirectional relay
             self.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
             self.logger.info(f"RTP relay connected for call {call_id}")
 
