@@ -28,11 +28,12 @@ def get_tts_requirements():
     return "pip install gTTS pydub"
 
 
-def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=16000, convert_to_g722=True):
+def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=16000, convert_to_g722=False):
     """
     Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
     
-    By default, generates G.722 encoded WAV files for HD audio quality.
+    By default, generates high-quality PCM WAV files. G.722 encoding is available
+    if ffmpeg is installed with G.722 codec support.
     
     Args:
         text: Text to convert to speech
@@ -40,9 +41,11 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         language: Language code (default 'en' for English)
         tld: Top-level domain (default 'com' for US English accent)
         slow: Whether to use slow speech rate (default False for natural speed)
-        sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
-                    Can be 8000 Hz for G.711 compatibility or 16000 Hz for G.722
-        convert_to_g722: Convert output to G.722 format (default True)
+        sample_rate: Sample rate in Hz (default 16000 Hz for wideband audio)
+                    Can be 8000 Hz for narrowband or 16000 Hz for wideband
+        convert_to_g722: Convert output to G.722 format using ffmpeg (default False)
+                        Requires ffmpeg with G.722 codec support. Falls back to PCM
+                        if G.722 encoding fails. PCM provides better quality than G.722.
     
     Returns:
         bool: True if successful
@@ -76,31 +79,65 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         audio = audio.set_frame_rate(sample_rate)  # 16000 Hz (G.722) or 8000 Hz (G.711)
         audio = audio.set_sample_width(2)  # 16-bit
         
-        # Export as PCM WAV (temporarily)
-        if convert_to_g722:
-            # Use temporary file for PCM WAV
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
-                temp_wav_path = temp_wav.name
-                audio.export(temp_wav_path, format='wav')
-            
-            # Convert PCM WAV to G.722 WAV
-            from pbx.utils.audio import convert_pcm_wav_to_g722_wav
-            success = convert_pcm_wav_to_g722_wav(temp_wav_path, output_file)
-            
-            # Clean up temp files
-            os.unlink(temp_mp3_path)
-            os.unlink(temp_wav_path)
-            
-            if not success:
-                logger.error(f"Failed to convert to G.722 format, falling back to PCM")
-                # Fallback: export as PCM WAV
+        # Export audio
+        temp_wav_path = None
+        try:
+            if convert_to_g722:
+                # Use ffmpeg to encode directly to G.722
+                # ffmpeg has a production-quality G.722 encoder
+                try:
+                    import subprocess
+                    
+                    # First export as PCM WAV
+                    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
+                        temp_wav_path = temp_wav.name
+                        audio.export(temp_wav_path, format='wav')
+                    
+                    # Use ffmpeg to convert to G.722
+                    # G.722 uses 8kHz "clock rate" but actually samples at 16kHz
+                    result = subprocess.run([
+                        'ffmpeg', '-y',  # Overwrite output
+                        '-i', temp_wav_path,  # Input PCM WAV
+                        '-ar', str(sample_rate),  # Sample rate
+                        '-ac', '1',  # Mono
+                        '-acodec', 'g722',  # G.722 codec
+                        output_file  # Output file
+                    ], capture_output=True, text=True, timeout=30)
+                    
+                    if result.returncode != 0:
+                        # Log full error at debug level, truncated at warning level
+                        logger.debug(f"ffmpeg G.722 encoding failed (full error): {result.stderr}")
+                        logger.warning(f"ffmpeg G.722 encoding failed: {result.stderr[:200]}...")
+                        logger.warning("Falling back to PCM WAV format")
+                        # Fallback: export as PCM WAV
+                        audio.export(output_file, format='wav')
+                    else:
+                        logger.debug("Successfully encoded to G.722 using ffmpeg")
+                        
+                except subprocess.TimeoutExpired as e:
+                    logger.warning(f"ffmpeg G.722 encoding timed out after 30s: {e}")
+                    logger.warning("Falling back to PCM WAV format")
+                    # Fallback: export as PCM WAV
+                    audio.export(output_file, format='wav')
+                except FileNotFoundError:
+                    logger.warning("ffmpeg not found. Install ffmpeg for G.722 support.")
+                    logger.warning("Falling back to PCM WAV format")
+                    # Fallback: export as PCM WAV
+                    audio.export(output_file, format='wav')
+                except Exception as e:
+                    logger.warning(f"G.722 encoding error: {e}, falling back to PCM")
+                    logger.debug(f"Full error details: {e}", exc_info=True)
+                    # Fallback: export as PCM WAV
+                    audio.export(output_file, format='wav')
+            else:
+                # Export as PCM WAV directly (recommended for maximum quality)
                 audio.export(output_file, format='wav')
-        else:
-            # Export as PCM WAV directly
-            audio.export(output_file, format='wav')
-            
-            # Clean up temp file
-            os.unlink(temp_mp3_path)
+        finally:
+            # Clean up temp files - ensure this happens exactly once
+            if os.path.exists(temp_mp3_path):
+                os.unlink(temp_mp3_path)
+            if temp_wav_path and os.path.exists(temp_wav_path):
+                os.unlink(temp_wav_path)
         
         return True
     except Exception as e:

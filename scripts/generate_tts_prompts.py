@@ -46,10 +46,13 @@ def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your 
     Args:
         output_dir: Directory to save audio files
         company_name: Company name to use in greeting
-        sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
+        sample_rate: Sample rate in Hz (default 16000 Hz for wideband audio)
     
     Returns:
         int: Number of files successfully generated
+    
+    Note:
+        Generates PCM WAV files (not G.722) for maximum audio quality and compatibility.
     """
     logger = get_logger()
     
@@ -121,10 +124,13 @@ def generate_voicemail_tts(output_dir='voicemail_prompts', sample_rate=16000):
     
     Args:
         output_dir: Directory to save audio files
-        sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
+        sample_rate: Sample rate in Hz (default 16000 Hz for wideband audio)
     
     Returns:
         int: Number of files successfully generated
+    
+    Note:
+        Generates PCM WAV files (not G.722) for maximum audio quality and compatibility.
     """
     logger = get_logger()
     
@@ -227,19 +233,19 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                                    Generate all voice prompts (16kHz for G.722)
+  %(prog)s                                    Generate all voice prompts (16kHz wideband)
   %(prog)s --aa-only                          Generate only auto attendant
   %(prog)s --vm-only                          Generate only voicemail
   %(prog)s --company "ABC Company"            Use custom company name
   %(prog)s --aa-dir custom_aa                 Custom output directory
-  %(prog)s --sample-rate 8000                 Use 8kHz for G.711 compatibility
+  %(prog)s --sample-rate 8000                 Use 8kHz for narrowband audio
   
 This script uses Google Text-to-Speech (gTTS) to generate actual voice prompts.
 Requires internet connection but no API key needed - completely free.
 
 The generated files are in proper telephony format:
-  - Format: WAV
-  - Sample Rate: 16000 Hz (G.722 HD audio) or 8000 Hz (G.711 standard)
+  - Format: WAV (PCM)
+  - Sample Rate: 16000 Hz (wideband) or 8000 Hz (narrowband)
   - Bit Depth: 16-bit
   - Channels: Mono
         """
@@ -274,7 +280,7 @@ The generated files are in proper telephony format:
         type=int,
         default=16000,
         choices=[8000, 16000],
-        help='Sample rate in Hz: 8000 for G.711 standard, 16000 for G.722 HD audio (default: 16000)'
+        help='Sample rate in Hz: 8000 for narrowband, 16000 for wideband audio (default: 16000)'
     )
     
     args = parser.parse_args()
@@ -290,7 +296,8 @@ The generated files are in proper telephony format:
     logger.info("")
     logger.info("Using Google Text-to-Speech (gTTS)")
     logger.info("Generating REAL VOICE prompts (not tones)")
-    logger.info(f"Sample Rate: {args.sample_rate} Hz ({'G.722 HD Audio' if args.sample_rate == 16000 else 'G.711 Standard'})")
+    logger.info(f"Sample Rate: {args.sample_rate} Hz ({'Wideband' if args.sample_rate == 16000 else 'Narrowband'})")
+    logger.info(f"Format: PCM WAV (16-bit, mono)")
     logger.info("")
     
     total_success = 0
@@ -314,13 +321,13 @@ The generated files are in proper telephony format:
     logger.info("")
     logger.info("SUCCESS! Real voice prompts have been generated.")
     logger.info("The files are now in proper telephony format:")
-    logger.info(f"  - WAV format, {args.sample_rate} Hz, 16-bit, mono")
+    logger.info(f"  - PCM WAV format, {args.sample_rate} Hz, 16-bit, mono")
     logger.info("  - Ready to use with your PBX system")
     logger.info("")
     if args.sample_rate == 16000:
-        logger.info("These files support G.722 HD Audio codec for higher quality.")
+        logger.info("These files use wideband audio (16kHz) for higher quality.")
     else:
-        logger.info("These files are compatible with G.711 standard codec (8kHz sample rate).")
+        logger.info("These files use narrowband audio (8kHz) for standard telephony.")
     logger.info("")
     logger.info("To customize the voice or language:")
     logger.info("  - Edit this script and change the 'language' parameter")
