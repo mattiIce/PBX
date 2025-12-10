@@ -52,8 +52,12 @@ IHB_TABLE = [  # Higher sub-band
 ]
 
 # Quantizer scale factor adaptation
-WL_TABLE = [  # Lower sub-band
+WL_TABLE = [  # Lower sub-band (64 entries for 6-bit codes)
     -60, 3042, 1198, 538, 334, 172, 58, -30,
+    3042, 1198, 538, 334, 172, 58, -30, -60,
+    3042, 1198, 538, 334, 172, 58, -30, -60,
+    3042, 1198, 538, 334, 172, 58, -30, -60,
+    3042, 1198, 538, 334, 172, 58, -30, -60,
     3042, 1198, 538, 334, 172, 58, -30, -60,
     3042, 1198, 538, 334, 172, 58, -30, -60,
     3042, 1198, 538, 334, 172, 58, -30, -60
@@ -263,10 +267,10 @@ class G722Codec:
         higher_code = (code >> 6) & 0x03  # Upper 2 bits
         
         # Decode lower sub-band (6-bit ADPCM)
-        rlow = self._decode_adpcm(lower_code, state, True)
+        rlow = self._decode_lower_subband(lower_code, state)
         
         # Decode higher sub-band (2-bit ADPCM)
-        rhigh = self._decode_adpcm(higher_code, state, False)
+        rhigh = self._decode_higher_subband(higher_code, state)
         
         # Apply QMF synthesis to reconstruct 16kHz signal
         sample1, sample2 = self._qmf_tx_filter(rlow, rhigh, state)
@@ -326,169 +330,323 @@ class G722Codec:
         
         return xout1, xout2
     
-    def _encode_adpcm(self, input_sample: int, state: G722State, is_lower: bool) -> int:
+    def _encode_lower_subband(self, xl: int, state: G722State) -> int:
         """
-        ADPCM encoder for one sub-band
+        Encode lower sub-band using 6-bit ADPCM per ITU-T G.722
         
         Args:
-            input_sample: Input sample to encode
+            xl: Lower sub-band input sample
             state: Encoder state
-            is_lower: True for lower sub-band (6-bit), False for higher (2-bit)
             
         Returns:
-            Quantized code (0-63 for lower, 0-3 for higher)
+            6-bit encoded value (0-63)
         """
-        if is_lower:
-            # Lower sub-band uses 6-bit ADPCM (64 levels)
-            s = state.s_low
-            a = state.a_low
-            p = state.p_low
-            num_levels = 32
-        else:
-            # Higher sub-band uses 2-bit ADPCM (4 levels)
-            s = state.s_high
-            a = state.a_high
-            p = state.p_high
-            num_levels = 2
-        
-        # Compute prediction using adaptive predictor
-        sz = s + (a[0] * p[0] + a[1] * p[1]) // 4096
+        # Compute estimated signal
+        sz = state.spl + state.szl
+        state.szl = sz
         
         # Compute difference
-        diff = input_sample - sz
+        d = xl - sz
         
-        # Simplified quantization - divide range into levels
-        # This is a simplified version; full G.722 uses non-linear quantization
-        step_size = MAX_QUANTIZATION_RANGE // num_levels
-        mag = abs(diff)
-        index = min(mag // step_size, num_levels - 1)
+        # Quantize difference using logarithmic quantizer
+        # Use detl (quantizer scale factor) 
+        if state.detl < 0:
+            state.detl = 0
         
-        # Reconstruction
-        dq = (index * step_size + step_size // 2) * (1 if diff >= 0 else -1)
-        
-        # Encode with sign: positive values 0 to num_levels-1, negative as num_levels to 2*num_levels-1
-        if diff >= 0:
-            code = index
+        # Normalize difference by scale factor
+        if state.detl >= 32:
+            dqm = abs(d) * 32 // state.detl
         else:
-            code = (2 * num_levels - 1) - index
+            dqm = abs(d)
         
-        # Reconstruct signal
-        sr = sz + dq
-        
-        # Update predictor state
-        p_new = self._update_predictor_state(p, sr)
-        
-        # Update scale factor
-        scale_new = self._update_scale(state.scale_factor_low if is_lower else state.scale_factor_high, code, is_lower)
-        
-        # Store updated state
-        if is_lower:
-            state.s_low = sr
-            state.scale_factor_low = scale_new
-            state.p_low = p_new
+        # Quantize using decision levels
+        il = 0
+        for i in range(32):
+            if dqm <= Q6_DECISION_LEVELS[i]:
+                il = i
+                break
         else:
-            state.s_high = sr
-            state.scale_factor_high = scale_new
-            state.p_high = p_new
+            il = 31
         
-        return code
+        # Apply sign
+        if d < 0:
+            il = 63 - il
+        
+        # Inverse quantize for reconstruction
+        dql = self._inverse_quant_lower(il, state.detl)
+        
+        # Update predictor
+        state.sl = sz + dql
+        
+        # Adapt quantizer scale factor
+        state.detl = self._adapt_lower(il, state.detl)
+        
+        # Update pole-zero predictor
+        self._update_predictor_lower(state, dql)
+        
+        return il
     
-    def _decode_adpcm(self, code: int, state: G722State, is_lower: bool) -> int:
+    def _encode_higher_subband(self, xh: int, state: G722State) -> int:
         """
-        ADPCM decoder for one sub-band
+        Encode higher sub-band using 2-bit ADPCM per ITU-T G.722
         
         Args:
-            code: Quantized code to decode
-            state: Decoder state
-            is_lower: True for lower sub-band (6-bit), False for higher (2-bit)
+            xh: Higher sub-band input sample
+            state: Encoder state
             
         Returns:
-            Reconstructed sample
+            2-bit encoded value (0-3)
         """
-        if is_lower:
-            s = state.s_low
-            a = state.a_low
-            p = state.p_low
-            num_levels = 32
+        # Compute estimated signal
+        sz_h = state.sph + state.szh
+        state.szh = sz_h
+        
+        # Compute difference
+        d_h = xh - sz_h
+        
+        # Quantize difference
+        if state.deth < 0:
+            state.deth = 0
+        
+        if state.deth >= 8:
+            dqm = abs(d_h) * 8 // state.deth
         else:
-            s = state.s_high
-            a = state.a_high
-            p = state.p_high
-            num_levels = 2
+            dqm = abs(d_h)
         
-        # Compute prediction using adaptive predictor
-        sz = s + (a[0] * p[0] + a[1] * p[1]) // 4096
-        
-        # Decode: extract magnitude and sign from code
-        if code < num_levels:
-            # Positive value
-            index = code
-            sign = 1
+        # Quantize using 2-bit levels
+        # Use decision levels from Q2_DECISION_LEVELS
+        if dqm < 12:
+            ih = 0
+        elif dqm < 32:  # Midpoint between 12 and 52
+            ih = 1
+        elif dqm < 52:
+            ih = 2
         else:
-            # Negative value
-            index = (2 * num_levels - 1) - code
-            sign = -1
+            ih = 3
         
-        # Reconstruct
-        step_size = MAX_QUANTIZATION_RANGE // num_levels
-        dq = sign * (index * step_size + step_size // 2)
+        # Apply sign
+        if d_h < 0:
+            ih = 3 - ih
         
-        # Reconstruct signal
-        sr = sz + dq
+        # Inverse quantize
+        dqh = self._inverse_quant_higher(ih, state.deth)
         
-        # Update predictor state
-        p_new = self._update_predictor_state(p, sr)
+        # Update
+        state.sh = sz_h + dqh
+        state.deth = self._adapt_higher(ih, state.deth)
+        self._update_predictor_higher(state, dqh)
         
-        # Update scale factor
-        scale_new = self._update_scale(state.scale_factor_low if is_lower else state.scale_factor_high, code, is_lower)
-        
-        # Store updated state
-        if is_lower:
-            state.s_low = sr
-            state.scale_factor_low = scale_new
-            state.p_low = p_new
-        else:
-            state.s_high = sr
-            state.scale_factor_high = scale_new
-            state.p_high = p_new
-        
-        return sr
+        return ih
     
-    def _update_scale(self, current_scale: int, code: int, is_lower: bool) -> int:
+    def _inverse_quant_lower(self, il: int, det: int) -> int:
         """
-        Update adaptive quantizer scale factor
+        Inverse quantizer for lower sub-band
         
         Args:
-            current_scale: Current scale factor
-            code: Quantized code
-            is_lower: True for lower sub-band, False for higher
+            il: Quantized code (0-63)
+            det: Quantizer scale factor
+            
+        Returns:
+            Reconstructed quantized difference signal
+        """
+        # Get quantized magnitude
+        if il > 63:
+            il = 63
+        
+        # Apply sign
+        if il >= 32:
+            wd = il - 64
+        else:
+            wd = il
+        
+        # Scale by det using ILB_TABLE
+        if wd >= 0:
+            idx = wd
+        else:
+            idx = -wd
+        
+        if idx < 32:
+            dq = (ILB_TABLE[idx] * det) >> 15
+        else:
+            dq = (ILB_TABLE[31] * det) >> 15
+        
+        if wd < 0:
+            dq = -dq
+        
+        return dq
+    
+    def _inverse_quant_higher(self, ih: int, det: int) -> int:
+        """
+        Inverse quantizer for higher sub-band
+        
+        Args:
+            ih: Quantized code (0-3)
+            det: Quantizer scale factor
+            
+        Returns:
+            Reconstructed quantized difference signal
+        """
+        # Apply sign
+        if ih >= 2:
+            wd = ih - 4
+        else:
+            wd = ih
+        
+        # Scale using IHB_TABLE
+        if wd >= 0:
+            idx = wd
+        else:
+            idx = -wd
+        
+        if idx < 4:
+            dq = (IHB_TABLE[idx] * det) >> 15
+        else:
+            dq = (IHB_TABLE[3] * det) >> 15
+        
+        if wd < 0:
+            dq = -dq
+        
+        return dq
+    
+    def _adapt_lower(self, il: int, det: int) -> int:
+        """
+        Adapt quantizer scale factor for lower sub-band
+        
+        Args:
+            il: Quantized code
+            det: Current scale factor
             
         Returns:
             Updated scale factor
         """
-        # Simplified scale factor adaptation
-        # In full implementation, this uses lookup tables
-        if is_lower:
-            # 6-bit ADPCM scale adaptation
-            if code > 40:
-                delta = 2
-            elif code > 20:
-                delta = 1
-            elif code < 10:
-                delta = -1
-            else:
-                delta = 0
-        else:
-            # 2-bit ADPCM scale adaptation
-            if code > 2:
-                delta = 1
-            elif code < 1:
-                delta = -1
-            else:
-                delta = 0
+        # Limit index
+        if il > 63:
+            il = 63
         
-        new_scale = current_scale + delta
-        return self._saturate(new_scale, 0, 63)
+        # Adapt det using WL_TABLE
+        nbl = det + WL_TABLE[il]
+        
+        # Limit
+        if nbl < 0:
+            nbl = 0
+        elif nbl > 18432:
+            nbl = 18432
+        
+        # Convert to linear scale
+        det = nbl >> 11
+        if det < 1:
+            det = 1
+        
+        return det
+    
+    def _adapt_higher(self, ih: int, det: int) -> int:
+        """
+        Adapt quantizer scale factor for higher sub-band
+        
+        Args:
+            ih: Quantized code
+            det: Current scale factor
+            
+        Returns:
+            Updated scale factor
+        """
+        # Adapt using WH_TABLE
+        nbh = det + WH_TABLE[ih & 3]
+        
+        # Limit
+        if nbh < 0:
+            nbh = 0
+        elif nbh > 22528:
+            nbh = 22528
+        
+        # Convert to linear
+        det = nbh >> 11
+        if det < 1:
+            det = 1
+        
+        return det
+    
+    def _update_predictor_lower(self, state: G722State, dql: int):
+        """
+        Update adaptive predictor for lower sub-band
+        
+        NOTE: This is a simplified predictor update. The full ITU-T specification
+        includes complex tone detection, coefficient adaptation, and leak factors.
+        
+        Args:
+            state: Encoder state
+            dql: Quantized difference signal
+        """
+        # Simplified predictor update
+        state.spl = state.sl
+    
+    def _update_predictor_higher(self, state: G722State, dqh: int):
+        """
+        Update adaptive predictor for higher sub-band
+        
+        NOTE: Simplified version. For production use, a complete ITU-T 
+        compliant implementation is recommended.
+        
+        Args:
+            state: Encoder state
+            dqh: Quantized difference signal
+        """
+        # Simplified predictor update
+        state.sph = state.sh
+    
+    def _decode_lower_subband(self, il: int, state: G722State) -> int:
+        """
+        Decode lower sub-band from 6-bit code per ITU-T G.722
+        
+        Args:
+            il: Quantized code (0-63)
+            state: Decoder state
+            
+        Returns:
+            Reconstructed signal sample
+        """
+        # Inverse quantize
+        dql = self._inverse_quant_lower(il, state.detl)
+        
+        # Compute estimated signal
+        sz = state.spl + state.szl
+        state.szl = sz
+        
+        # Reconstruct signal
+        state.sl = sz + dql
+        
+        # Adapt and update
+        state.detl = self._adapt_lower(il, state.detl)
+        self._update_predictor_lower(state, dql)
+        
+        return state.sl
+    
+    def _decode_higher_subband(self, ih: int, state: G722State) -> int:
+        """
+        Decode higher sub-band from 2-bit code per ITU-T G.722
+        
+        Args:
+            ih: Quantized code (0-3)
+            state: Decoder state
+            
+        Returns:
+            Reconstructed signal sample
+        """
+        # Inverse quantize
+        dqh = self._inverse_quant_higher(ih, state.deth)
+        
+        # Compute estimated signal
+        sz_h = state.sph + state.szh
+        state.szh = sz_h
+        
+        # Reconstruct
+        state.sh = sz_h + dqh
+        
+        # Adapt and update
+        state.deth = self._adapt_higher(ih, state.deth)
+        self._update_predictor_higher(state, dqh)
+        
+        return state.sh
     
     def _saturate(self, value: int, min_val: int, max_val: int) -> int:
         """Saturate value to range"""
@@ -497,19 +655,6 @@ class G722Codec:
         elif value > max_val:
             return max_val
         return value
-    
-    def _update_predictor_state(self, p: List[int], sr: int) -> List[int]:
-        """
-        Update predictor state with new reconstructed signal value
-        
-        Args:
-            p: Current predictor state
-            sr: New reconstructed signal value
-            
-        Returns:
-            Updated predictor state
-        """
-        return [sr, p[0], p[1]]
     
     def get_info(self) -> dict:
         """
