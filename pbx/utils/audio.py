@@ -79,6 +79,63 @@ def pcm16_to_ulaw(pcm_data):
         return bytes(ulaw_data)
 
 
+def pcm16_to_g722(pcm_data, sample_rate=8000):
+    """
+    Convert 16-bit PCM audio data to G.722 format
+    
+    G.722 is a wideband codec that operates at 16kHz. If the input is at 8kHz,
+    it will be upsampled to 16kHz before encoding.
+    
+    Args:
+        pcm_data: Raw 16-bit PCM audio data (little-endian signed)
+        sample_rate: Sample rate of input PCM data (8000 or 16000 Hz)
+    
+    Returns:
+        bytes: G.722 encoded audio data
+    
+    Note:
+        This uses the G722Codec class which currently has a stub implementation.
+        For production use with actual G.722 encoding, integrate a native G.722 library.
+    """
+    # Import G.722 codec
+    from pbx.features.g722_codec import G722Codec
+    
+    # Upsample from 8kHz to 16kHz if needed
+    if sample_rate == 8000:
+        # Simple linear interpolation upsampling (2x)
+        # For each sample, insert an interpolated sample between current and next
+        upsampled = bytearray()
+        num_samples = len(pcm_data) // 2
+        
+        for i in range(num_samples - 1):
+            # Read current and next sample
+            current = struct.unpack('<h', pcm_data[i*2:(i+1)*2])[0]
+            next_sample = struct.unpack('<h', pcm_data[(i+1)*2:(i+2)*2])[0]
+            
+            # Add current sample
+            upsampled.extend(struct.pack('<h', current))
+            
+            # Add interpolated sample (average of current and next)
+            interpolated = (current + next_sample) // 2
+            upsampled.extend(struct.pack('<h', interpolated))
+        
+        # Add the last sample
+        if num_samples > 0:
+            last_sample = struct.unpack('<h', pcm_data[(num_samples-1)*2:num_samples*2])[0]
+            upsampled.extend(struct.pack('<h', last_sample))
+            upsampled.extend(struct.pack('<h', last_sample))  # Duplicate last sample
+        
+        pcm_data = bytes(upsampled)
+    
+    # Create G.722 encoder
+    codec = G722Codec(bitrate=64000)
+    
+    # Encode PCM to G.722
+    g722_data = codec.encode(pcm_data)
+    
+    return g722_data if g722_data is not None else b''
+
+
 def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     """
     Generate a simple beep tone in raw PCM format
