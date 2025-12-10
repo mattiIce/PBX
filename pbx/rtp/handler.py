@@ -5,6 +5,7 @@ Handles real-time audio/video streaming
 import socket
 import threading
 import struct
+import time
 from pbx.utils.logger import get_logger
 from pbx.utils.audio import WAV_FORMAT_PCM, WAV_FORMAT_ULAW, WAV_FORMAT_ALAW, WAV_FORMAT_G722
 
@@ -256,6 +257,8 @@ class RTPRelayHandler:
         self.qos_monitor = qos_monitor
         self.qos_metrics = None
         self._qos_packet_count = 0  # For sampling QoS updates
+        self._learning_timeout = 10.0  # Seconds to allow endpoint learning
+        self._start_time = None  # Track when relay started for timeout
         
         # Start QoS monitoring if monitor is available
         if self.qos_monitor:
@@ -280,6 +283,7 @@ class RTPRelayHandler:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.bind(('0.0.0.0', self.local_port))
             self.running = True
+            self._start_time = time.time()  # Track start time for learning timeout
 
             self.logger.info(f"RTP relay handler started on port {self.local_port} for call {self.call_id}")
 
@@ -356,12 +360,35 @@ class RTPRelayHandler:
                             self.logger.info(f"Learned endpoint B: {addr} (matched SDP)")
                         is_from_b = True
                     # Symmetric RTP: Learn from first packet (NAT traversal)
+                    # Security: Only learn within timeout window and validate packet format
                     elif not self.learned_a:
+                        # Check if we're still in the learning window
+                        elapsed = time.time() - self._start_time if self._start_time else 0
+                        if elapsed > self._learning_timeout:
+                            self.logger.warning(f"RTP learning timeout expired, rejecting packet from {addr}")
+                            continue
+                        
+                        # Validate this looks like a real RTP packet (at least 12 bytes header)
+                        if len(data) < 12:
+                            self.logger.debug(f"Rejecting too-short packet from {addr}")
+                            continue
+                        
                         # First packet from unknown source - assume it's endpoint A
                         self.learned_a = addr
                         is_from_a = True
                         self.logger.info(f"Learned endpoint A via symmetric RTP: {addr} (expected {self.endpoint_a})")
                     elif not self.learned_b and addr != self.learned_a:
+                        # Check if we're still in the learning window
+                        elapsed = time.time() - self._start_time if self._start_time else 0
+                        if elapsed > self._learning_timeout:
+                            self.logger.warning(f"RTP learning timeout expired, rejecting packet from {addr}")
+                            continue
+                        
+                        # Validate this looks like a real RTP packet
+                        if len(data) < 12:
+                            self.logger.debug(f"Rejecting too-short packet from {addr}")
+                            continue
+                        
                         # Second packet from different source - assume it's endpoint B
                         self.learned_b = addr
                         is_from_b = True
