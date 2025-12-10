@@ -22,6 +22,35 @@ class MockPBXCore:
         self.config = config
 
 
+def create_mock_config_with_ssl(cert_file, key_file):
+    """
+    Helper function to create a mock config with SSL settings
+    
+    Args:
+        cert_file: Path to certificate file
+        key_file: Path to key file
+        
+    Returns:
+        Config object with mocked SSL settings
+    """
+    config = Config("test_config.yml")
+    
+    # Override the get method to return our SSL config
+    original_get = config.get
+    def mock_get(key, default=None):
+        if key == 'api.ssl':
+            return {
+                'enabled': True,
+                'cert_file': cert_file,
+                'key_file': key_file,
+                'ca': {'enabled': False}
+            }
+        return original_get(key, default)
+    
+    config.get = mock_get
+    return config
+
+
 def test_ssl_enabled_missing_certificates():
     """
     Test that server handles SSL enabled with missing certificates gracefully
