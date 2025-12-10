@@ -184,8 +184,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_ice_candidate()
             elif path == '/api/webrtc/call':
                 self._handle_webrtc_call()
-            elif path == '/api/crm/screen-pop':
-                self._handle_trigger_screen_pop()
+            elif path == '/api/emergency/contacts':
+                self._handle_add_emergency_contact()
+            elif path == '/api/emergency/trigger':
+                self._handle_trigger_emergency_notification()
             elif path == '/api/hot-desk/login':
                 self._handle_hot_desk_login()
             elif path == '/api/hot-desk/logout':
@@ -325,6 +327,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_clear_voicemail_box(path)
             elif path.startswith('/api/voicemail-boxes/') and path.endswith('/greeting'):
                 self._handle_delete_voicemail_greeting(path)
+            elif path.startswith('/api/emergency/contacts/'):
+                # Extract contact ID from path
+                contact_id = path.split('/')[-1]
+                self._handle_delete_emergency_contact(contact_id)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -350,6 +356,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_call_center_metrics()
             elif path == '/api/analytics/export':
                 self._handle_export_analytics()
+            elif path == '/api/emergency/contacts':
+                self._handle_get_emergency_contacts()
+            elif path == '/api/emergency/history':
+                self._handle_get_emergency_history()
+            elif path == '/api/emergency/test':
+                self._handle_test_emergency_notification()
             elif path == '/api/qos/metrics':
                 self._handle_get_qos_metrics()
             elif path == '/api/qos/alerts':
@@ -4266,6 +4278,136 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Error exporting analytics: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'Statistics engine not initialized'}, 500)
+    
+    def _handle_get_emergency_contacts(self):
+        """Get emergency contacts"""
+        if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                priority_filter = int(params.get('priority', [None])[0]) if params.get('priority', [None])[0] else None
+                
+                contacts = self.pbx_core.emergency_notification.get_emergency_contacts(priority_filter)
+                
+                self._send_json({
+                    'contacts': contacts,
+                    'total': len(contacts)
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error getting emergency contacts: {e}")
+                self._send_json({'error': f'Error getting emergency contacts: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
+    
+    def _handle_add_emergency_contact(self):
+        """Add emergency contact"""
+        if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+                
+                contact = self.pbx_core.emergency_notification.add_emergency_contact(
+                    name=data.get('name'),
+                    extension=data.get('extension'),
+                    phone=data.get('phone'),
+                    email=data.get('email'),
+                    priority=data.get('priority', 1),
+                    notification_methods=data.get('notification_methods', ['call'])
+                )
+                
+                self._send_json({
+                    'success': True,
+                    'contact': contact.to_dict(),
+                    'message': 'Emergency contact added successfully'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error adding emergency contact: {e}")
+                self._send_json({'error': f'Error adding emergency contact: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
+    
+    def _handle_delete_emergency_contact(self, contact_id: str):
+        """Delete emergency contact"""
+        if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
+            try:
+                success = self.pbx_core.emergency_notification.remove_emergency_contact(contact_id)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': 'Emergency contact removed successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Contact not found'}, 404)
+                
+            except Exception as e:
+                self.logger.error(f"Error deleting emergency contact: {e}")
+                self._send_json({'error': f'Error deleting emergency contact: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
+    
+    def _handle_trigger_emergency_notification(self):
+        """Manually trigger emergency notification"""
+        if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+                
+                success = self.pbx_core.emergency_notification.trigger_emergency_notification(
+                    trigger_type=data.get('trigger_type', 'manual'),
+                    details=data.get('details', {})
+                )
+                
+                self._send_json({
+                    'success': success,
+                    'message': 'Emergency notification triggered'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error triggering emergency notification: {e}")
+                self._send_json({'error': f'Error triggering emergency notification: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
+    
+    def _handle_get_emergency_history(self):
+        """Get emergency notification history"""
+        if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                limit = int(params.get('limit', [50])[0])
+                
+                history = self.pbx_core.emergency_notification.get_notification_history(limit)
+                
+                self._send_json({
+                    'history': history,
+                    'total': len(history)
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error getting emergency history: {e}")
+                self._send_json({'error': f'Error getting emergency history: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
+    
+    def _handle_test_emergency_notification(self):
+        """Test emergency notification system"""
+        if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
+            try:
+                result = self.pbx_core.emergency_notification.test_emergency_notification()
+                self._send_json(result)
+                
+            except Exception as e:
+                self.logger.error(f"Error testing emergency notification: {e}")
+                self._send_json({'error': f'Error testing emergency notification: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
 
 
 class PBXAPIServer:

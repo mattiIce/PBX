@@ -60,6 +60,7 @@
             <button class="tab-button" data-tab="webrtc-phone">📞 Phone</button>
             <button class="tab-button" data-tab="analytics">Analytics</button>
             <button class="tab-button" data-tab="qos">Call Quality (QoS)</button>
+            <button class="tab-button" data-tab="emergency">🚨 Emergency</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
             <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
@@ -456,6 +457,126 @@
                     <p><strong>Packet Loss:</strong> Percentage of packets that didn't arrive. Above 2% can cause noticeable quality degradation.</p>
                     <p><strong>Jitter:</strong> Variation in packet arrival times. High jitter (>50ms) causes choppy audio.</p>
                     <p><strong>Latency:</strong> Round-trip delay. Above 300ms can cause conversational difficulties.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Notification Tab -->
+        <div id="emergency" class="tab-content">
+            <h2>🚨 Emergency Notification System</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadEmergencyContacts()">🔄 Refresh Contacts</button>
+                <button class="btn btn-warning" onclick="testEmergencyNotification()">🧪 Test System</button>
+                <button class="btn btn-danger" onclick="showTriggerEmergencyModal()">🚨 Trigger Emergency</button>
+            </div>
+
+            <!-- Emergency System Status -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-contacts-count">-</div>
+                    <div class="stat-label">Emergency Contacts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-notifications-sent">-</div>
+                    <div class="stat-label">Notifications Sent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-last-test">-</div>
+                    <div class="stat-label">Last Test</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-system-status">🟢 Active</div>
+                    <div class="stat-label">System Status</div>
+                </div>
+            </div>
+
+            <!-- Emergency Contacts -->
+            <div class="config-section">
+                <div class="section-header">
+                    <h3>📋 Emergency Contact List</h3>
+                    <button class="btn btn-success" onclick="showAddEmergencyContactModal()">➕ Add Contact</button>
+                </div>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p><strong>Emergency contacts</strong> will be notified automatically when:</p>
+                    <ul>
+                        <li>🚨 Someone dials 911 from the system</li>
+                        <li>⚠️ A panic button is activated</li>
+                        <li>🔴 An emergency notification is manually triggered</li>
+                    </ul>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Name</th>
+                                <th>Extension</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Notification Methods</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergency-contacts-table">
+                            <tr>
+                                <td colspan="7" class="loading">Loading emergency contacts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Emergency Notification History -->
+            <div class="config-section">
+                <h3>📜 Notification History</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Trigger Type</th>
+                                <th>Details</th>
+                                <th>Contacts Notified</th>
+                                <th>Methods Used</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergency-history-table">
+                            <tr>
+                                <td colspan="5" class="loading">Loading notification history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Emergency Information -->
+            <div class="config-section">
+                <h3>ℹ️ Emergency Notification Information</h3>
+                <div class="info-box">
+                    <h4>Priority Levels</h4>
+                    <ul>
+                        <li><strong>Priority 1 (Highest):</strong> First responders, security personnel</li>
+                        <li><strong>Priority 2:</strong> Management, supervisors</li>
+                        <li><strong>Priority 3:</strong> HR, facilities</li>
+                        <li><strong>Priority 4-5:</strong> Additional contacts</li>
+                    </ul>
+                    
+                    <h4>Notification Methods</h4>
+                    <ul>
+                        <li><strong>Call:</strong> Automated voice call to extension or phone</li>
+                        <li><strong>Page:</strong> Overhead paging announcement</li>
+                        <li><strong>Email:</strong> Emergency notification email</li>
+                        <li><strong>SMS:</strong> Text message alert (requires configuration)</li>
+                    </ul>
+                    
+                    <h4>911 Detection</h4>
+                    <p>When someone dials 911 from any extension, all emergency contacts are automatically notified with:</p>
+                    <ul>
+                        <li>Caller's extension and name</li>
+                        <li>Time of call</li>
+                        <li>Location information (if available)</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -1568,6 +1689,108 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditMenuOptionModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Menu Option</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Emergency Contact Modal -->
+    <div id="add-emergency-contact-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Add Emergency Contact</h3>
+                <span class="close" onclick="closeAddEmergencyContactModal()">&times;</span>
+            </div>
+            <form id="add-emergency-contact-form" onsubmit="addEmergencyContact(event)">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="emergency-contact-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Extension:</label>
+                    <input type="text" id="emergency-contact-extension" pattern="[0-9]+" placeholder="1001">
+                    <small>Internal extension number</small>
+                </div>
+                <div class="form-group">
+                    <label>External Phone:</label>
+                    <input type="tel" id="emergency-contact-phone" placeholder="+1-555-0100">
+                    <small>External phone number for calls/SMS</small>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="emergency-contact-email" placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Priority Level:</label>
+                    <select id="emergency-contact-priority" required>
+                        <option value="1">1 - Highest (First Responders)</option>
+                        <option value="2">2 - High (Management)</option>
+                        <option value="3" selected>3 - Medium (Staff)</option>
+                        <option value="4">4 - Low</option>
+                        <option value="5">5 - Lowest</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notification Methods:</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-call" value="call" checked>
+                            📞 Call (Voice notification)
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-page" value="page">
+                            📢 Page (Overhead announcement)
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-email" value="email">
+                            📧 Email
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-sms" value="sms">
+                            💬 SMS (Text message)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEmergencyContactModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Contact</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Trigger Emergency Modal -->
+    <div id="trigger-emergency-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚨 Trigger Emergency Notification</h3>
+                <span class="close" onclick="closeTriggerEmergencyModal()">&times;</span>
+            </div>
+            <form id="trigger-emergency-form" onsubmit="triggerEmergency(event)">
+                <div class="info-box" style="background: #fee2e2; border-color: #ef4444; margin-bottom: 15px;">
+                    <p><strong>⚠️ WARNING:</strong> This will send real emergency notifications to all configured contacts.</p>
+                    <p>Only use this for actual emergencies or coordinated testing.</p>
+                </div>
+                <div class="form-group">
+                    <label>Trigger Type:</label>
+                    <select id="trigger-type" required>
+                        <option value="manual">Manual Trigger</option>
+                        <option value="test">Test (Clearly marked as test)</option>
+                        <option value="panic_button">Panic Button</option>
+                        <option value="other">Other Emergency</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Location/Details:</label>
+                    <textarea id="trigger-details" rows="3" placeholder="Building A, Floor 3, Room 301"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Additional Information:</label>
+                    <textarea id="trigger-info" rows="3" placeholder="Describe the situation..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTriggerEmergencyModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">🚨 Send Emergency Notification</button>
                 </div>
             </form>
         </div>

@@ -173,6 +173,18 @@ class PBXCore:
         else:
             self.phone_book = None
 
+        # Initialize emergency notification system if enabled
+        if self.config.get('features.emergency_notification.enabled', True):
+            from pbx.features.emergency_notification import EmergencyNotificationSystem
+            self.emergency_notification = EmergencyNotificationSystem(
+                self, 
+                config=self.config, 
+                database=self.database if self.database.enabled else None
+            )
+            self.logger.info("Emergency notification system initialized")
+        else:
+            self.emergency_notification = None
+        
         # Initialize paging system if enabled
         if self.config.get('features.paging.enabled', False):
             from pbx.features.paging import PagingSystem

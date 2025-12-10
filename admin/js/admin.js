@@ -2563,3 +2563,284 @@ async function saveQoSThresholds(event) {
         showNotification('Error saving QoS thresholds', 'error');
     }
 }
+
+// ====================================
+// Emergency Notification Functions
+// ====================================
+
+async function loadEmergencyContacts() {
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/contacts`);
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('emergency-contacts-count').textContent = data.total || 0;
+        
+        // Update contacts table
+        const tbody = document.getElementById('emergency-contacts-table');
+        
+        if (!data.contacts || data.contacts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No emergency contacts configured</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.contacts.map(contact => {
+            const priorityBadge = getPriorityBadge(contact.priority);
+            const methods = contact.notification_methods.map(m => {
+                const icons = { call: '📞', page: '📢', email: '📧', sms: '💬' };
+                return `<span style="margin-right: 5px;" title="${m}">${icons[m] || m}</span>`;
+            }).join('');
+            
+            return `
+                <tr>
+                    <td>${priorityBadge}</td>
+                    <td><strong>${contact.name}</strong></td>
+                    <td>${contact.extension || '-'}</td>
+                    <td>${contact.phone || '-'}</td>
+                    <td>${contact.email || '-'}</td>
+                    <td>${methods}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmergencyContact('${contact.id}', '${contact.name}')">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        // Load notification history
+        await loadEmergencyHistory();
+        
+    } catch (error) {
+        console.error('Error loading emergency contacts:', error);
+        showNotification('Failed to load emergency contacts', 'error');
+    }
+}
+
+function getPriorityBadge(priority) {
+    const badges = {
+        1: '<span class="badge" style="background: #ef4444;">1 - Highest</span>',
+        2: '<span class="badge" style="background: #f97316;">2 - High</span>',
+        3: '<span class="badge" style="background: #eab308;">3 - Medium</span>',
+        4: '<span class="badge" style="background: #3b82f6;">4 - Low</span>',
+        5: '<span class="badge" style="background: #6b7280;">5 - Lowest</span>'
+    };
+    return badges[priority] || `<span class="badge">${priority}</span>`;
+}
+
+async function loadEmergencyHistory() {
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/history?limit=20`);
+        const data = await response.json();
+        
+        // Update notifications sent stat
+        document.getElementById('emergency-notifications-sent').textContent = data.total || 0;
+        
+        // Update last test
+        if (data.history && data.history.length > 0) {
+            const lastNotification = data.history[data.history.length - 1];
+            const lastTime = new Date(lastNotification.timestamp).toLocaleString();
+            document.getElementById('emergency-last-test').textContent = lastTime;
+        } else {
+            document.getElementById('emergency-last-test').textContent = 'Never';
+        }
+        
+        // Update history table
+        const tbody = document.getElementById('emergency-history-table');
+        
+        if (!data.history || data.history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No emergency notifications sent</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.history.slice().reverse().map(notification => {
+            const timestamp = new Date(notification.timestamp).toLocaleString();
+            const triggerType = notification.trigger_type;
+            const details = JSON.stringify(notification.details);
+            const contactsNotified = notification.contacts_notified.join(', ') || 'None';
+            const methods = notification.methods_used.join(', ') || 'None';
+            
+            return `
+                <tr>
+                    <td>${timestamp}</td>
+                    <td><span class="badge">${triggerType}</span></td>
+                    <td title="${details}">${truncate(details, 50)}</td>
+                    <td>${contactsNotified}</td>
+                    <td>${methods}</td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading emergency history:', error);
+    }
+}
+
+function truncate(str, length) {
+    if (str.length <= length) return str;
+    return str.substring(0, length) + '...';
+}
+
+function showAddEmergencyContactModal() {
+    document.getElementById('add-emergency-contact-modal').style.display = 'block';
+    // Reset form
+    document.getElementById('add-emergency-contact-form').reset();
+    document.getElementById('method-call').checked = true;
+}
+
+function closeAddEmergencyContactModal() {
+    document.getElementById('add-emergency-contact-modal').style.display = 'none';
+}
+
+async function addEmergencyContact(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('emergency-contact-name').value;
+    const extension = document.getElementById('emergency-contact-extension').value;
+    const phone = document.getElementById('emergency-contact-phone').value;
+    const email = document.getElementById('emergency-contact-email').value;
+    const priority = parseInt(document.getElementById('emergency-contact-priority').value);
+    
+    // Get selected notification methods
+    const methods = [];
+    if (document.getElementById('method-call').checked) methods.push('call');
+    if (document.getElementById('method-page').checked) methods.push('page');
+    if (document.getElementById('method-email').checked) methods.push('email');
+    if (document.getElementById('method-sms').checked) methods.push('sms');
+    
+    if (methods.length === 0) {
+        showNotification('Please select at least one notification method', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/contacts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                extension: extension || null,
+                phone: phone || null,
+                email: email || null,
+                priority: priority,
+                notification_methods: methods
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('Emergency contact added successfully', 'success');
+            closeAddEmergencyContactModal();
+            loadEmergencyContacts();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to add emergency contact', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error adding emergency contact:', error);
+        showNotification('Failed to add emergency contact', 'error');
+    }
+}
+
+async function deleteEmergencyContact(contactId, contactName) {
+    if (!confirm(`Delete emergency contact "${contactName}"?\n\nThis contact will no longer receive emergency notifications.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/contacts/${contactId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showNotification('Emergency contact deleted successfully', 'success');
+            loadEmergencyContacts();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to delete emergency contact', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting emergency contact:', error);
+        showNotification('Failed to delete emergency contact', 'error');
+    }
+}
+
+function showTriggerEmergencyModal() {
+    document.getElementById('trigger-emergency-modal').style.display = 'block';
+    document.getElementById('trigger-emergency-form').reset();
+}
+
+function closeTriggerEmergencyModal() {
+    document.getElementById('trigger-emergency-modal').style.display = 'none';
+}
+
+async function triggerEmergency(event) {
+    event.preventDefault();
+    
+    const triggerType = document.getElementById('trigger-type').value;
+    const location = document.getElementById('trigger-details').value;
+    const additionalInfo = document.getElementById('trigger-info').value;
+    
+    // Extra confirmation for non-test emergencies
+    if (triggerType !== 'test') {
+        if (!confirm('⚠️ This will send REAL emergency notifications to all contacts.\n\nAre you sure you want to continue?')) {
+            return;
+        }
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/trigger`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                trigger_type: triggerType,
+                details: {
+                    location: location,
+                    additional_info: additionalInfo,
+                    triggered_by: 'Admin Panel',
+                    timestamp: new Date().toISOString()
+                }
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('🚨 Emergency notification sent to all contacts', 'success');
+            closeTriggerEmergencyModal();
+            loadEmergencyContacts();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to trigger emergency notification', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error triggering emergency:', error);
+        showNotification('Failed to trigger emergency notification', 'error');
+    }
+}
+
+async function testEmergencyNotification() {
+    if (!confirm('Test the emergency notification system?\n\nThis will send a clearly marked TEST notification to all configured contacts.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/test`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`✅ ${data.message}\n\nContacts configured: ${data.contacts_configured}\nMethods: ${data.notification_methods.join(', ')}`, 'success');
+            loadEmergencyContacts();
+        } else {
+            showNotification('Emergency notification test failed', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error testing emergency notification:', error);
+        showNotification('Failed to test emergency notification', 'error');
+    }
+}
