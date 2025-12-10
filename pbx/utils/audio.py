@@ -100,12 +100,25 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
     # Import G.722 codec
     from pbx.features.g722_codec import G722Codec
     
+    # Validate input data
+    if len(pcm_data) < 2:
+        # Not enough data for even one 16-bit sample
+        return b''
+    
+    # Ensure data length is even (complete 16-bit samples)
+    if len(pcm_data) % 2 != 0:
+        # Truncate incomplete last sample
+        pcm_data = pcm_data[:-1]
+    
     # Upsample from 8kHz to 16kHz if needed
     if sample_rate == 8000:
         # Simple linear interpolation upsampling (2x)
         # For each sample, insert an interpolated sample between current and next
         upsampled = bytearray()
         num_samples = len(pcm_data) // 2
+        
+        if num_samples == 0:
+            return b''
         
         for i in range(num_samples - 1):
             # Read current and next sample
@@ -119,11 +132,10 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
             interpolated = (current + next_sample) // 2
             upsampled.extend(struct.pack('<h', interpolated))
         
-        # Add the last sample
-        if num_samples > 0:
-            last_sample = struct.unpack('<h', pcm_data[(num_samples-1)*2:num_samples*2])[0]
-            upsampled.extend(struct.pack('<h', last_sample))
-            upsampled.extend(struct.pack('<h', last_sample))  # Duplicate last sample
+        # Add the last sample twice (duplicate to maintain 2:1 ratio)
+        last_sample = struct.unpack('<h', pcm_data[(num_samples-1)*2:num_samples*2])[0]
+        upsampled.extend(struct.pack('<h', last_sample))
+        upsampled.extend(struct.pack('<h', last_sample))
         
         pcm_data = bytes(upsampled)
     
