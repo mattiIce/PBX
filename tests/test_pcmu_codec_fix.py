@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import struct
+import math
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -51,7 +52,6 @@ def create_test_pcm_wav(sample_rate=8000, duration_samples=800):
         f.write(struct.pack('<I', duration_samples * 2))  # data size
         
         # Write PCM samples (simple sine wave)
-        import math
         for i in range(duration_samples):
             # Generate a 440 Hz tone
             sample = int(16000 * math.sin(2 * math.pi * 440 * i / sample_rate))
@@ -146,7 +146,6 @@ def test_pcm_to_pcmu_conversion():
         
     finally:
         # Clean up
-        import os
         if os.path.exists(pcm_file_8k):
             os.remove(pcm_file_8k)
         if os.path.exists(pcm_file_16k):
@@ -154,6 +153,5 @@ def test_pcm_to_pcmu_conversion():
 
 
 if __name__ == '__main__':
-    import math
     success = test_pcm_to_pcmu_conversion()
     sys.exit(0 if success else 1)
