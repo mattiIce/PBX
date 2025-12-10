@@ -531,10 +531,63 @@ class DatabaseBackend:
         )
         """
 
+        # Emergency contacts table
+        emergency_contacts_table = """
+        CREATE TABLE IF NOT EXISTS emergency_contacts (
+            id VARCHAR(100) PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            extension VARCHAR(20),
+            phone VARCHAR(50),
+            email VARCHAR(255),
+            priority INTEGER DEFAULT 1,
+            notification_methods TEXT,
+            active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS emergency_contacts (
+            id VARCHAR(100) PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            extension VARCHAR(20),
+            phone VARCHAR(50),
+            email VARCHAR(255),
+            priority INTEGER DEFAULT 1,
+            notification_methods TEXT,
+            active BOOLEAN DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+
+        # Emergency notifications table
+        emergency_notifications_table = """
+        CREATE TABLE IF NOT EXISTS emergency_notifications (
+            id VARCHAR(100) PRIMARY KEY,
+            timestamp VARCHAR(50) NOT NULL,
+            trigger_type VARCHAR(50) NOT NULL,
+            details TEXT,
+            contacts_notified TEXT,
+            methods_used TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """ if self.db_type == 'postgresql' else """
+        CREATE TABLE IF NOT EXISTS emergency_notifications (
+            id VARCHAR(100) PRIMARY KEY,
+            timestamp VARCHAR(50) NOT NULL,
+            trigger_type VARCHAR(50) NOT NULL,
+            details TEXT,
+            contacts_notified TEXT,
+            methods_used TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+
         # Execute table creation
         success = True
         for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table, 
-                         provisioned_devices_table, extensions_table, security_audit_table]:
+                         provisioned_devices_table, extensions_table, security_audit_table,
+                         emergency_contacts_table, emergency_notifications_table]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
@@ -557,7 +610,11 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_ext_ad_synced ON extensions(ad_synced)",
             "CREATE INDEX IF NOT EXISTS idx_security_audit_timestamp ON security_audit(timestamp)",
             "CREATE INDEX IF NOT EXISTS idx_security_audit_identifier ON security_audit(identifier)",
-            "CREATE INDEX IF NOT EXISTS idx_security_audit_event_type ON security_audit(event_type)"
+            "CREATE INDEX IF NOT EXISTS idx_security_audit_event_type ON security_audit(event_type)",
+            "CREATE INDEX IF NOT EXISTS idx_emergency_contacts_active ON emergency_contacts(active)",
+            "CREATE INDEX IF NOT EXISTS idx_emergency_contacts_priority ON emergency_contacts(priority)",
+            "CREATE INDEX IF NOT EXISTS idx_emergency_notifications_timestamp ON emergency_notifications(timestamp)",
+            "CREATE INDEX IF NOT EXISTS idx_emergency_notifications_trigger_type ON emergency_notifications(trigger_type)"
         ]
 
         for index_sql in indexes:
