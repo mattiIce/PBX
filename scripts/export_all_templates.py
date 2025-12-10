@@ -107,7 +107,7 @@ Examples:
         # Get API URL from config
         api_host = config.get('server.external_ip', 'localhost')
         api_port = config.get('api.port', 8080)
-        api_url = f"http://{api_host}:{api_port}"
+        api_url = f"https://{api_host}:{api_port}"
         
         print("Next steps:")
         print("1. Review the exported templates in the provisioning_templates directory")

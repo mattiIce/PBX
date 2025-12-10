@@ -7,7 +7,7 @@ import json
 import time
 
 # PBX API base URL
-BASE_URL = "http://localhost:8080"
+BASE_URL = "https://localhost:8080"
 
 
 def check_pbx_status():
@@ -187,7 +187,7 @@ def main():
     print("=" * 60)
     print("\nNext steps:")
     print("1. Configure your IP phones to use the provisioning URL")
-    print("2. Set DHCP Option 66 to: http://<pbx-ip>:8080/provision/{mac}.cfg")
+    print("2. Set DHCP Option 66 to: https://<pbx-ip>:8080/provision/{mac}.cfg")
     print("3. Reboot phones to auto-provision")
     print("\nFor more information, see PHONE_PROVISIONING.md")
 

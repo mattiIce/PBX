@@ -83,7 +83,7 @@ def check_api_connectivity(host='localhost', port=8080):
     print_section("API Connectivity Check")
     
     try:
-        url = f"http://{host}:{port}/api/status"
+        url = f"https://{host}:{port}/api/status"
         print(f"Testing connection to: {url}")
         
         response = requests.get(url, timeout=5)
@@ -110,7 +110,7 @@ def get_diagnostics(host='localhost', port=8080):
     print_section("Provisioning Diagnostics")
     
     try:
-        url = f"http://{host}:{port}/api/provisioning/diagnostics"
+        url = f"https://{host}:{port}/api/provisioning/diagnostics"
         print(f"Fetching diagnostics from: {url}")
         
         response = requests.get(url, timeout=5)
@@ -150,7 +150,7 @@ def get_recent_requests(host='localhost', port=8080, limit=10):
     print_section(f"Recent Provisioning Requests (last {limit})")
     
     try:
-        url = f"http://{host}:{port}/api/provisioning/requests?limit={limit}"
+        url = f"https://{host}:{port}/api/provisioning/requests?limit={limit}"
         print(f"Fetching request history from: {url}")
         
         response = requests.get(url, timeout=5)
@@ -200,7 +200,7 @@ def test_mac_lookup(mac_address, host='localhost', port=8080):
     print(f"Normalized: {normalized}")
     
     try:
-        url = f"http://{host}:{port}/api/provisioning/devices"
+        url = f"https://{host}:{port}/api/provisioning/devices"
         response = requests.get(url, timeout=5)
         
         if response.status_code == 200:
@@ -222,7 +222,7 @@ def test_mac_lookup(mac_address, host='localhost', port=8080):
             if not found:
                 print(f"\n✗ Device NOT registered")
                 print(f"  Register it using:")
-                print(f"    curl -X POST http://{host}:{port}/api/provisioning/devices \\")
+                print(f"    curl -X POST https://{host}:{port}/api/provisioning/devices \\")
                 print(f"      -H 'Content-Type: application/json' \\")
                 print(f"      -d '{{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
             
@@ -243,7 +243,7 @@ def test_config_download(mac_address, host='localhost', port=8080):
     normalized = normalize_mac_address(mac_address)
     
     try:
-        url = f"http://{host}:{port}/provision/{normalized}.cfg"
+        url = f"https://{host}:{port}/provision/{normalized}.cfg"
         print(f"Testing URL: {url}")
         
         response = requests.get(url, timeout=5)
@@ -281,7 +281,7 @@ def print_phone_config_recommendations():
     """Print phone configuration recommendations"""
     print("\n2. Verify Phone Configuration:")
     print("   - Check phone's provisioning URL setting")
-    print("   - URL format: http://<pbx-ip>:8080/provision/$mac.cfg")
+    print("   - URL format: https://<pbx-ip>:8080/provision/$mac.cfg")
     print("   - Some phones use $MA instead of $mac")
     print("   - Ensure phone is using DHCP Option 66 OR manual URL")
 
@@ -289,7 +289,7 @@ def print_phone_config_recommendations():
 def print_device_registration_recommendations():
     """Print device registration recommendations"""
     print("\n3. Check Device Registration:")
-    print("   - Use: curl http://localhost:8080/api/provisioning/devices")
+    print("   - Use: curl https://localhost:8080/api/provisioning/devices")
     print("   - Register devices with POST /api/provisioning/devices")
     print("   - Ensure MAC address format matches (phone may use different format)")
     print("   - Note: System automatically triggers phone reboot after registration")
@@ -307,7 +307,7 @@ def print_manual_test_recommendations():
     """Print manual testing recommendations"""
     print("\n5. Test Manually:")
     print("   - Get MAC address from phone (usually in phone menu: Status → Network)")
-    print("   - Test URL: curl http://<pbx-ip>:8080/provision/<mac>.cfg")
+    print("   - Test URL: curl https://<pbx-ip>:8080/provision/<mac>.cfg")
     print("   - If successful, issue is with phone configuration")
     print("   - If failed, issue is with PBX device registration")
 

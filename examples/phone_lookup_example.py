@@ -20,7 +20,7 @@ def print_json(data, title=None):
     print()
 
 
-def list_all_phones_with_mac(pbx_url="http://localhost:8080"):
+def list_all_phones_with_mac(pbx_url="https://localhost:8080"):
     """
     List all registered phones with MAC addresses from provisioning
     """
@@ -55,7 +55,7 @@ def list_all_phones_with_mac(pbx_url="http://localhost:8080"):
         print(response.text)
 
 
-def lookup_by_ip(ip_address, pbx_url="http://localhost:8080"):
+def lookup_by_ip(ip_address, pbx_url="https://localhost:8080"):
     """
     Lookup phone by IP address to find MAC and other details
     
@@ -87,7 +87,7 @@ def lookup_by_ip(ip_address, pbx_url="http://localhost:8080"):
         print(response.text)
 
 
-def lookup_by_mac(mac_address, pbx_url="http://localhost:8080"):
+def lookup_by_mac(mac_address, pbx_url="https://localhost:8080"):
     """
     Lookup phone by MAC address to find current IP
     
@@ -119,7 +119,7 @@ def lookup_by_mac(mac_address, pbx_url="http://localhost:8080"):
         print(response.text)
 
 
-def find_phones_without_mac_in_sip(pbx_url="http://localhost:8080"):
+def find_phones_without_mac_in_sip(pbx_url="https://localhost:8080"):
     """
     Find phones that didn't provide MAC in SIP registration
     but have MAC in provisioning system
@@ -164,7 +164,7 @@ def find_phones_without_mac_in_sip(pbx_url="http://localhost:8080"):
         print()
 
 
-def demonstrate_use_case_scenarios(pbx_url="http://localhost:8080"):
+def demonstrate_use_case_scenarios(pbx_url="https://localhost:8080"):
     """
     Demonstrate practical use case scenarios
     """
@@ -205,7 +205,7 @@ def demonstrate_use_case_scenarios(pbx_url="http://localhost:8080"):
 
 def main():
     """Main function"""
-    pbx_url = "http://localhost:8080"
+    pbx_url = "https://localhost:8080"
     
     if len(sys.argv) > 1:
         pbx_url = sys.argv[1]

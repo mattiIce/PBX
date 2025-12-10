@@ -99,7 +99,7 @@ provisioning:
   custom_templates_dir: ''
   devices: []
   enabled: true
-  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+  url_format: https://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
 queues:
 - max_wait_time: 300
   name: Sales Queue

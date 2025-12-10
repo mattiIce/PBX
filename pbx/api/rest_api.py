@@ -1279,9 +1279,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.warning(f"  Reason: Device not registered or template not found")
                 logger.warning(f"  See detailed error messages above for troubleshooting guidance")
                 logger.warning(f"  To register this device:")
-                logger.warning(f"    curl -X POST https://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+                logger.warning(f"    curl -k -X POST https://YOUR_PBX_IP:8080/api/provisioning/devices \\")
                 logger.warning(f"      -H 'Content-Type: application/json' \\")
                 logger.warning(f"      -d '{{\"mac_address\":\"{mac}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
+                logger.warning(f"    Note: Use -k with curl if using self-signed certificates")
                 self._send_json({'error': 'Device or template not found'}, 404)
         except Exception as e:
             logger.error(f"Error handling provisioning request: {e}")
