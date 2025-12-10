@@ -39,13 +39,14 @@ if not is_tts_available():
     sys.exit(1)
 
 
-def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your company"):
+def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your company", sample_rate=16000):
     """
     Generate TTS voice prompts for auto attendant
     
     Args:
         output_dir: Directory to save audio files
         company_name: Company name to use in greeting
+        sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
     
     Returns:
         int: Number of files successfully generated
@@ -97,7 +98,7 @@ def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your 
         logger.info(f"  Text: \"{text}\"")
         
         try:
-            if text_to_wav_telephony(text, output_file):
+            if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):
                 file_size = os.path.getsize(output_file)
                 logger.info(f"  ✓ Generated ({file_size:,} bytes) - {description}")
                 success_count += 1
@@ -114,12 +115,13 @@ def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your 
     return success_count
 
 
-def generate_voicemail_tts(output_dir='voicemail_prompts'):
+def generate_voicemail_tts(output_dir='voicemail_prompts', sample_rate=16000):
     """
     Generate TTS voice prompts for voicemail system
     
     Args:
         output_dir: Directory to save audio files
+        sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
     
     Returns:
         int: Number of files successfully generated
@@ -199,7 +201,7 @@ def generate_voicemail_tts(output_dir='voicemail_prompts'):
         logger.info(f"  Text: \"{text}\"")
         
         try:
-            if text_to_wav_telephony(text, output_file):
+            if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):
                 file_size = os.path.getsize(output_file)
                 logger.info(f"  ✓ Generated ({file_size:,} bytes) - {description}")
                 success_count += 1
@@ -225,18 +227,19 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                                    Generate all voice prompts
+  %(prog)s                                    Generate all voice prompts (16kHz for G.722)
   %(prog)s --aa-only                          Generate only auto attendant
   %(prog)s --vm-only                          Generate only voicemail
   %(prog)s --company "ABC Company"            Use custom company name
   %(prog)s --aa-dir custom_aa                 Custom output directory
+  %(prog)s --sample-rate 8000                 Use 8kHz for G.711 compatibility
   
 This script uses Google Text-to-Speech (gTTS) to generate actual voice prompts.
 Requires internet connection but no API key needed - completely free.
 
 The generated files are in proper telephony format:
   - Format: WAV
-  - Sample Rate: 8000 Hz
+  - Sample Rate: 16000 Hz (G.722 HD audio) or 8000 Hz (G.711 standard)
   - Bit Depth: 16-bit
   - Channels: Mono
         """
@@ -266,6 +269,13 @@ The generated files are in proper telephony format:
         default='voicemail_prompts',
         help='Output directory for voicemail prompts (default: voicemail_prompts)'
     )
+    parser.add_argument(
+        '--sample-rate',
+        type=int,
+        default=16000,
+        choices=[8000, 16000],
+        help='Sample rate in Hz: 8000 for G.711 standard, 16000 for G.722 HD audio (default: 16000)'
+    )
     
     args = parser.parse_args()
     
@@ -280,6 +290,7 @@ The generated files are in proper telephony format:
     logger.info("")
     logger.info("Using Google Text-to-Speech (gTTS)")
     logger.info("Generating REAL VOICE prompts (not tones)")
+    logger.info(f"Sample Rate: {args.sample_rate} Hz ({'G.722 HD Audio' if args.sample_rate == 16000 else 'G.711 Standard'})")
     logger.info("")
     
     total_success = 0
@@ -287,13 +298,13 @@ The generated files are in proper telephony format:
     
     # Generate auto attendant prompts
     if not args.vm_only:
-        aa_count = generate_auto_attendant_tts(args.aa_dir, args.company)
+        aa_count = generate_auto_attendant_tts(args.aa_dir, args.company, args.sample_rate)
         total_success += aa_count
         total_files += 5
     
     # Generate voicemail prompts
     if not args.aa_only:
-        vm_count = generate_voicemail_tts(args.vm_dir)
+        vm_count = generate_voicemail_tts(args.vm_dir, args.sample_rate)
         total_success += vm_count
         total_files += 12
     
@@ -303,8 +314,13 @@ The generated files are in proper telephony format:
     logger.info("")
     logger.info("SUCCESS! Real voice prompts have been generated.")
     logger.info("The files are now in proper telephony format:")
-    logger.info("  - WAV format, 8000 Hz, 16-bit, mono")
+    logger.info(f"  - WAV format, {args.sample_rate} Hz, 16-bit, mono")
     logger.info("  - Ready to use with your PBX system")
+    logger.info("")
+    if args.sample_rate == 16000:
+        logger.info("These files support G.722 HD Audio codec for higher quality.")
+    else:
+        logger.info("These files are compatible with G.711 standard codec (8kHz sample rate).")
     logger.info("")
     logger.info("To customize the voice or language:")
     logger.info("  - Edit this script and change the 'language' parameter")
