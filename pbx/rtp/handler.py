@@ -637,9 +637,12 @@ class RTPPlayer:
         """
         # Note: Import here to avoid circular dependency with audio module
         try:
-            from pbx.utils.audio import generate_beep_tone
+            from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
+            # Generate PCM tone (16-bit samples)
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
-            return self.send_audio(pcm_data, payload_type=0)
+            # Convert to μ-law for PCMU codec (payload type 0)
+            ulaw_data = pcm16_to_ulaw(pcm_data)
+            return self.send_audio(ulaw_data, payload_type=0)
         except ImportError:
             self.logger.error("Audio utilities not available")
             return False
