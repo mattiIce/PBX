@@ -166,6 +166,18 @@ class ExtensionRegistry:
         """
         return self.extensions.get(str(number))
 
+    def get_extension(self, number):
+        """
+        Get extension by number (alias for get() for backward compatibility)
+
+        Args:
+            number: Extension number
+
+        Returns:
+            Extension object or None
+        """
+        return self.get(number)
+
     def register(self, number, address):
         """
         Register extension
