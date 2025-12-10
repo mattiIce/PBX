@@ -68,3 +68,10 @@ Thumbs.db
 
 # Generated documentation
 *.pdf
+
+# SSL/TLS certificates
+*.pem
+*.key
+*.crt
+*.csr
+certs/

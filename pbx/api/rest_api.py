@@ -1,6 +1,6 @@
 """
 REST API Server for PBX Management
-Provides HTTP API for managing PBX features
+Provides HTTP/HTTPS API for managing PBX features
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
@@ -14,6 +14,7 @@ import traceback
 import zipfile
 import tempfile
 import shutil
+import ssl
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
@@ -1208,21 +1209,21 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Detect vendor from User-Agent and provide specific guidance
                 user_agent = request_info['user_agent'].lower()
                 if 'zultys' in user_agent:
-                    logger.error(f"  ✓ Zultys Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Zultys Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
                     logger.error(f"    Configure in: Phone Menu → Setup → Network → Provisioning")
-                    logger.error(f"    Or DHCP Option 66: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"    Or DHCP Option 66: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
                 elif 'yealink' in user_agent:
-                    logger.error(f"  ✓ Yealink Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Yealink Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
                     logger.error(f"    Configure in: Web Interface → Settings → Auto Provision")
                 elif 'polycom' in user_agent:
-                    logger.error(f"  ✓ Polycom Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Polycom Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
                     logger.error(f"    Configure in: Web Interface → Settings → Provisioning Server")
                 elif 'cisco' in user_agent:
-                    logger.error(f"  ✓ Cisco Phones - Use: http://YOUR_PBX_IP:8080/provision/$MA.cfg")
+                    logger.error(f"  ✓ Cisco Phones - Use: https://YOUR_PBX_IP:8080/provision/$MA.cfg")
                     logger.error(f"    Note: Cisco uses $MA instead of $mac")
                     logger.error(f"    Configure in: Web Interface → Admin Login → Voice → Provisioning")
                 elif 'grandstream' in user_agent:
-                    logger.error(f"  ✓ Grandstream Phones - Use: http://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Grandstream Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
                     logger.error(f"    Configure in: Web Interface → Maintenance → Upgrade and Provisioning")
                 else:
                     logger.error(f"  Common MAC variable formats by vendor:")
@@ -1278,7 +1279,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.warning(f"  Reason: Device not registered or template not found")
                 logger.warning(f"  See detailed error messages above for troubleshooting guidance")
                 logger.warning(f"  To register this device:")
-                logger.warning(f"    curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+                logger.warning(f"    curl -X POST https://YOUR_PBX_IP:8080/api/provisioning/devices \\")
                 logger.warning(f"      -H 'Content-Type: application/json' \\")
                 logger.warning(f"      -d '{{\"mac_address\":\"{mac}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
                 self._send_json({'error': 'Device or template not found'}, 404)
@@ -3953,7 +3954,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
 
 class PBXAPIServer:
-    """REST API server for PBX"""
+    """REST API server for PBX with HTTPS support"""
 
     def __init__(self, pbx_core, host='0.0.0.0', port=8080):
         """
@@ -3970,19 +3971,246 @@ class PBXAPIServer:
         self.server = None
         self.logger = get_logger()
         self.running = False
+        self.ssl_enabled = False
+        self.ssl_context = None
 
         # Set PBX core for handler
         PBXAPIHandler.pbx_core = pbx_core
+        
+        # Configure SSL/TLS if enabled
+        self._configure_ssl()
+
+    def _configure_ssl(self):
+        """Configure SSL context if SSL is enabled in config"""
+        ssl_config = self.pbx_core.config.get('api.ssl', {})
+        ssl_enabled = ssl_config.get('enabled', False)
+        
+        if not ssl_enabled:
+            self.logger.info("SSL/HTTPS is disabled - using HTTP")
+            return
+        
+        cert_file = ssl_config.get('cert_file')
+        key_file = ssl_config.get('key_file')
+        
+        # Check for in-house CA auto-request
+        ca_config = ssl_config.get('ca', {})
+        ca_enabled = ca_config.get('enabled', False)
+        
+        if ca_enabled and (not cert_file or not os.path.exists(cert_file)):
+            self.logger.info("Certificate not found, attempting to request from in-house CA")
+            if self._request_certificate_from_ca(ca_config, cert_file, key_file):
+                self.logger.info("Certificate successfully obtained from in-house CA")
+            else:
+                self.logger.error("Failed to obtain certificate from in-house CA")
+                self.logger.error("Falling back to manual certificate configuration")
+        
+        if not cert_file or not key_file:
+            self.logger.error("SSL enabled but cert_file or key_file not configured")
+            self.logger.error("Please configure api.ssl.cert_file and api.ssl.key_file in config.yml")
+            self.logger.error("Or run: python scripts/generate_ssl_cert.py")
+            self.logger.error("Or enable api.ssl.ca.enabled for in-house CA auto-request")
+            return
+        
+        if not os.path.exists(cert_file):
+            self.logger.error(f"SSL certificate file not found: {cert_file}")
+            self.logger.error("Options:")
+            self.logger.error("  1. Generate self-signed: python scripts/generate_ssl_cert.py")
+            self.logger.error("  2. Request from CA: python scripts/request_ca_cert.py")
+            self.logger.error("  3. Enable auto-request: set api.ssl.ca.enabled: true in config.yml")
+            return
+        
+        if not os.path.exists(key_file):
+            self.logger.error(f"SSL key file not found: {key_file}")
+            return
+        
+        try:
+            # Create SSL context
+            self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            self.ssl_context.load_cert_chain(cert_file, key_file)
+            
+            # Load CA certificate if provided (for client certificate validation)
+            ca_cert = ca_config.get('ca_cert')
+            if ca_cert and os.path.exists(ca_cert):
+                self.ssl_context.load_verify_locations(cafile=ca_cert)
+                self.logger.info(f"Loaded CA certificate: {ca_cert}")
+            
+            # Configure strong cipher suites
+            self.ssl_context.set_ciphers('HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4')
+            
+            # Require TLS 1.2 or higher
+            self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+            
+            # Additional security settings
+            self.ssl_context.options |= ssl.OP_NO_SSLv2
+            self.ssl_context.options |= ssl.OP_NO_SSLv3
+            self.ssl_context.options |= ssl.OP_NO_TLSv1
+            self.ssl_context.options |= ssl.OP_NO_TLSv1_1
+            
+            self.ssl_enabled = True
+            self.logger.info(f"SSL/HTTPS enabled with certificate: {cert_file}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to configure SSL: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
+        """
+        Request certificate from in-house CA
+        
+        This generates a CSR (Certificate Signing Request) and submits it to
+        the in-house CA for signing.
+        
+        Args:
+            ca_config: CA configuration dictionary
+            cert_file: Path where to save the certificate
+            key_file: Path where to save the private key
+            
+        Returns:
+            True if certificate was successfully obtained
+        """
+        try:
+            import requests
+            from cryptography import x509
+            from cryptography.x509.oid import NameOID
+            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.asymmetric import rsa
+            from cryptography.hazmat.primitives import serialization
+            
+            ca_server = ca_config.get('server_url')
+            ca_endpoint = ca_config.get('request_endpoint', '/api/sign-cert')
+            
+            if not ca_server:
+                self.logger.error("CA server URL not configured")
+                return False
+            
+            # Get server hostname/IP for certificate request
+            hostname = self.pbx_core.config.get('server.external_ip', 'localhost')
+            
+            self.logger.info(f"Requesting certificate for hostname: {hostname} from CA: {ca_server}")
+            
+            # Create certificate directory if it doesn't exist
+            cert_dir = os.path.dirname(cert_file) or 'certs'
+            os.makedirs(cert_dir, exist_ok=True)
+            
+            # Check if we already have a private key, otherwise generate one
+            if os.path.exists(key_file):
+                self.logger.info(f"Using existing private key: {key_file}")
+                with open(key_file, 'rb') as f:
+                    private_key = serialization.load_pem_private_key(f.read(), password=None)
+            else:
+                self.logger.info("Generating new RSA private key (2048 bits)")
+                private_key = rsa.generate_private_key(
+                    public_exponent=65537,
+                    key_size=2048,
+                )
+                
+                # Save private key
+                with open(key_file, 'wb') as f:
+                    f.write(private_key.private_bytes(
+                        encoding=serialization.Encoding.PEM,
+                        format=serialization.PrivateFormat.TraditionalOpenSSL,
+                        encryption_algorithm=serialization.NoEncryption()
+                    ))
+                
+                # Set restrictive permissions on private key
+                os.chmod(key_file, 0o600)
+                self.logger.info(f"Private key saved to: {key_file}")
+            
+            # Generate CSR (Certificate Signing Request)
+            self.logger.info("Generating Certificate Signing Request (CSR)")
+            csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "State"),
+                x509.NameAttribute(NameOID.LOCALITY_NAME, "City"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PBX System"),
+                x509.NameAttribute(NameOID.COMMON_NAME, hostname),
+            ])).add_extension(
+                x509.SubjectAlternativeName([
+                    x509.DNSName(hostname),
+                    x509.DNSName("localhost"),
+                ]),
+                critical=False,
+            ).sign(private_key, hashes.SHA256())
+            
+            # Convert CSR to PEM format
+            csr_pem = csr.public_bytes(serialization.Encoding.PEM).decode('utf-8')
+            
+            # Submit CSR to CA
+            self.logger.info(f"Submitting CSR to CA: {ca_server}{ca_endpoint}")
+            
+            # Verify CA certificate if provided
+            ca_cert = ca_config.get('ca_cert')
+            verify = ca_cert if ca_cert and os.path.exists(ca_cert) else True
+            
+            response = requests.post(
+                f"{ca_server}{ca_endpoint}",
+                json={
+                    'csr': csr_pem,
+                    'hostname': hostname,
+                    'common_name': hostname
+                },
+                timeout=30,
+                verify=verify
+            )
+            
+            if response.status_code != 200:
+                self.logger.error(f"CA server returned error: {response.status_code}")
+                self.logger.error(f"Response: {response.text}")
+                return False
+            
+            # Parse response
+            cert_data = response.json()
+            signed_cert = cert_data.get('certificate')
+            
+            if not signed_cert:
+                self.logger.error("CA did not return a signed certificate")
+                return False
+            
+            # Save certificate
+            with open(cert_file, 'w') as f:
+                f.write(signed_cert)
+            
+            self.logger.info(f"Certificate saved to: {cert_file}")
+            
+            # Save CA certificate if returned
+            ca_cert_data = cert_data.get('ca_certificate')
+            if ca_cert_data and not ca_config.get('ca_cert'):
+                ca_cert_path = os.path.join(cert_dir, 'ca.crt')
+                with open(ca_cert_path, 'w') as f:
+                    f.write(ca_cert_data)
+                self.logger.info(f"CA certificate saved to: {ca_cert_path}")
+            
+            return True
+            
+        except ImportError as e:
+            self.logger.error(f"Required library not available: {e}")
+            self.logger.error("Install with: pip install requests cryptography")
+            return False
+        except Exception as e:
+            self.logger.error(f"Error requesting certificate from in-house CA: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
     def start(self):
         """Start API server"""
         try:
             self.server = HTTPServer((self.host, self.port), PBXAPIHandler)
+            
+            # Wrap with SSL if enabled
+            if self.ssl_enabled and self.ssl_context:
+                self.server.socket = self.ssl_context.wrap_socket(
+                    self.server.socket,
+                    server_side=True
+                )
+            
             # Set timeout on socket to allow periodic checking of running flag
             self.server.socket.settimeout(1.0)
             self.running = True
 
-            self.logger.info(f"API server started on http://{self.host}:{self.port}")
+            protocol = "https" if self.ssl_enabled else "http"
+            self.logger.info(f"API server started on {protocol}://{self.host}:{self.port}")
 
             # Start in separate thread
             server_thread = threading.Thread(target=self._run)
@@ -3992,6 +4220,8 @@ class PBXAPIServer:
             return True
         except Exception as e:
             self.logger.error(f"Failed to start API server: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def _run(self):

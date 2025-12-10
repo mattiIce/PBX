@@ -21,6 +21,20 @@ api:
   host: 0.0.0.0
   port: 8080
   enable_cors: true
+  # HTTPS/SSL Configuration
+  ssl:
+    enabled: true                           # Enable HTTPS (recommended for production)
+    cert_file: certs/server.crt            # Path to SSL certificate file
+    key_file: certs/server.key             # Path to SSL private key file
+    # In-house CA configuration (optional - for auto certificate request)
+    ca:
+      enabled: false                        # Enable auto-request from in-house CA
+      server_url: https://ca.example.com    # URL of your in-house CA server
+      # API endpoint should accept POST with CSR and return signed certificate
+      request_endpoint: /api/sign-cert      # CA endpoint for certificate signing
+      # Optional: CA certificate for validation
+      ca_cert: certs/ca.crt                 # Path to CA certificate (optional)
+    # For development/testing, generate self-signed cert with: python scripts/generate_ssl_cert.py
 database:
   type: postgresql  # Use sqlite by default (change to postgresql for production)
   # PostgreSQL configuration (used when type: postgresql)
@@ -308,7 +322,7 @@ security:
   require_strong_passwords: true  # Deprecated - use password settings
 provisioning:
   enabled: true
-  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+  url_format: https://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
   custom_templates_dir: 'provisioning_templates'
   devices: []
   
@@ -341,7 +355,7 @@ provisioning:
   # This provides a URL where phones can fetch an XML directory
   # Useful as a fallback if LDAP is unreliable or unavailable
   remote_phonebook:
-    url: http://192.168.1.14:8080/api/phone-book/export/xml  # URL to XML phone book
+    url: https://192.168.1.14:8080/api/phone-book/export/xml  # URL to XML phone book
     refresh_interval: 60  # Refresh interval in minutes
 trunks: null
 integrations:

@@ -2,6 +2,8 @@ api:
   enable_cors: true
   host: 0.0.0.0
   port: 8080
+  ssl:
+    enabled: false  # Disabled for testing
 conference:
   max_participants: 50
   record_conferences: false
