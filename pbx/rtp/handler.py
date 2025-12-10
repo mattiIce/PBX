@@ -433,11 +433,13 @@ class RTPRelayHandler:
                             self.qos_metrics.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: B->A (A not learned, using SDP)")
                     elif is_from_a:
-                        # From A but B not known at all yet - buffer/wait
-                        self.logger.debug(f"Packet from A buffered - waiting for B endpoint")
+                        # From A but B not known at all yet - must drop packet
+                        # This is rare since endpoint_b is usually set soon after endpoint_a
+                        self.logger.debug(f"Packet from A dropped - waiting for B endpoint")
                     elif is_from_b:
-                        # From B but A not known at all yet - buffer/wait
-                        self.logger.debug(f"Packet from B buffered - waiting for A endpoint")
+                        # From B but A not known at all yet - must drop packet
+                        # This is rare since endpoint_a is usually set first
+                        self.logger.debug(f"Packet from B dropped - waiting for A endpoint")
 
             except Exception as e:
                 if self.running:
