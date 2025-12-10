@@ -1046,8 +1046,9 @@ function closeVoicemailPlayer() {
     loadVoicemailForExtension();
 }
 
+// Legacy function - maintained for backward compatibility
+// Redirects to new modal player
 async function playVoicemail(extension, messageId) {
-    // Redirect to new modal player
     openVoicemailPlayer(extension, messageId);
 }
 

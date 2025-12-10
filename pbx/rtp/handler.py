@@ -309,8 +309,8 @@ class RTPRelayHandler:
                 data, addr = self.socket.recvfrom(2048)
 
                 # Update QoS metrics if monitoring is enabled (sample every 10th packet for performance)
-                if self.qos_metrics and len(data) >= 12 and hasattr(self, '_qos_packet_count'):
-                    self._qos_packet_count = getattr(self, '_qos_packet_count', 0) + 1
+                if self.qos_metrics and len(data) >= 12:
+                    self._qos_packet_count += 1
                     if self._qos_packet_count % 10 == 0:
                         try:
                             # Parse RTP header

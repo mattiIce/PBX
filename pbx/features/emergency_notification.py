@@ -191,31 +191,45 @@ class EmergencyNotificationSystem:
     def _save_contact_to_db(self, contact: EmergencyContact):
         """Save emergency contact to database"""
         try:
-            query = """
-                INSERT INTO emergency_contacts 
-                (id, name, extension, phone, email, priority, notification_methods, active)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, true)
-                ON CONFLICT (id) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    extension = EXCLUDED.extension,
-                    phone = EXCLUDED.phone,
-                    email = EXCLUDED.email,
-                    priority = EXCLUDED.priority,
-                    notification_methods = EXCLUDED.notification_methods,
-                    active = true
-            """
+            # Check if contact exists (database-agnostic approach)
+            check_query = "SELECT id FROM emergency_contacts WHERE id = %s"
+            existing = self.database.fetch_one(check_query, (contact.id,))
             
-            methods_json = json.dumps(contact.notification_methods)
+            if existing:
+                # Update existing contact
+                query = """
+                    UPDATE emergency_contacts 
+                    SET name = %s, extension = %s, phone = %s, email = %s,
+                        priority = %s, notification_methods = %s, active = true
+                    WHERE id = %s
+                """
+                params = (
+                    contact.name,
+                    contact.extension,
+                    contact.phone,
+                    contact.email,
+                    contact.priority,
+                    json.dumps(contact.notification_methods),
+                    contact.id
+                )
+            else:
+                # Insert new contact
+                query = """
+                    INSERT INTO emergency_contacts 
+                    (id, name, extension, phone, email, priority, notification_methods, active)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, true)
+                """
+                params = (
+                    contact.id,
+                    contact.name,
+                    contact.extension,
+                    contact.phone,
+                    contact.email,
+                    contact.priority,
+                    json.dumps(contact.notification_methods)
+                )
             
-            self.database.execute(query, (
-                contact.id,
-                contact.name,
-                contact.extension,
-                contact.phone,
-                contact.email,
-                contact.priority,
-                methods_json
-            ))
+            self.database.execute(query, params)
             
         except Exception as e:
             self.logger.error(f"Failed to save contact to database: {e}")
