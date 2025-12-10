@@ -11,7 +11,48 @@ The PBX system supports HTTPS/SSL for secure API communication. This includes:
 
 ## Quick Start
 
-### Option 1: Self-Signed Certificate (Development/Testing)
+### ⭐ NEW: Admin Panel Method (Recommended)
+
+The easiest way to set up HTTPS is through the admin panel - no terminal commands required!
+
+1. **Access the admin panel:**
+   ```
+   http://YOUR_SERVER_IP:8080/admin/
+   ```
+
+2. **Navigate to Configuration tab:**
+   - Click on the "Configuration" tab in the admin panel
+   - Scroll down to the "🔒 SSL/HTTPS Configuration" section
+
+3. **Generate a self-signed certificate:**
+   - Enter your server's hostname or IP address
+   - Set the validity period (default: 365 days)
+   - Click "🔐 Generate Certificate"
+   - The certificate will be automatically generated and saved
+
+4. **Enable HTTPS:**
+   - Check the "Enable HTTPS/SSL" checkbox
+   - Click "💾 Save SSL Settings"
+
+5. **Restart the PBX server:**
+   ```bash
+   sudo systemctl restart pbx
+   ```
+   Or if running manually:
+   ```bash
+   python main.py
+   ```
+
+6. **Access the admin panel via HTTPS:**
+   ```
+   https://YOUR_SERVER_IP:8080/admin/
+   ```
+   
+   **Note:** Your browser will show a security warning for self-signed certificates. This is expected for development.
+
+### Option 1: Self-Signed Certificate (Command Line)
+
+For users who prefer the command line or need automation:
 
 1. **Generate a self-signed certificate:**
    ```bash
@@ -130,11 +171,59 @@ The HTTPS implementation includes:
 - **No SSLv2/SSLv3** support
 - **FIPS-compatible** (when using appropriate certificates)
 
+## Admin Panel SSL Management
+
+The admin panel provides a user-friendly interface for managing SSL certificates without using the terminal.
+
+### Features
+
+- **Certificate Status Dashboard**: View current SSL configuration and certificate details
+- **Certificate Generation**: Generate self-signed certificates with custom hostname and validity period
+- **Expiry Warnings**: Automatic alerts when certificates are expiring soon
+- **One-Click Enable/Disable**: Toggle HTTPS on/off from the admin panel
+- **Certificate Details**: View subject, issuer, validity dates, and expiry countdown
+
+### Accessing SSL Configuration
+
+1. Log into the admin panel at `http://YOUR_SERVER_IP:8080/admin/`
+2. Click the "Configuration" tab
+3. Scroll to the "🔒 SSL/HTTPS Configuration" section
+
+### Generating Certificates via Admin Panel
+
+1. In the SSL/HTTPS Configuration section, check "Enable HTTPS/SSL"
+2. The certificate section will expand
+3. Enter your server's hostname or IP address in the "Hostname/IP Address" field
+4. Set the certificate validity period (1-3650 days)
+5. Click "🔐 Generate Certificate"
+6. A success message will confirm the certificate was created
+7. Click "💾 Save SSL Settings" to persist the configuration
+8. Restart the PBX server for changes to take effect
+
+### Monitoring Certificate Status
+
+The admin panel displays:
+- **Current Status**: Whether HTTPS is enabled or disabled
+- **Certificate Existence**: Whether certificate files are present
+- **Certificate Details**: Subject, issuer, validity period
+- **Expiry Warning**: Days until certificate expires
+  - ✅ Green: More than 30 days remaining
+  - ⚠️ Orange: Less than 30 days remaining
+  - ❌ Red: Certificate has expired
+
+### API Endpoints
+
+The admin panel uses these REST API endpoints:
+
+- `GET /api/ssl/status` - Retrieve SSL configuration and certificate status
+- `POST /api/ssl/generate-certificate` - Generate a new self-signed certificate
+- `PUT /api/config/section` - Update SSL configuration
+
 ## Script Reference
 
 ### generate_ssl_cert.py
 
-Generate a self-signed certificate for development/testing.
+Generate a self-signed certificate for development/testing via command line.
 
 **Usage:**
 ```bash
@@ -151,6 +240,8 @@ Options:
 # Generate certificate for specific hostname
 python scripts/generate_ssl_cert.py --hostname pbx.example.com --days 730
 ```
+
+**Note:** The admin panel provides the same functionality in a more user-friendly interface.
 
 ### request_ca_cert.py
 

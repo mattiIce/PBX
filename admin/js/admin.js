@@ -449,8 +449,17 @@ async function loadConfig() {
                 document.getElementById('config-api-port').value = config.api?.port || 8080;
                 document.getElementById('config-external-ip').value = config.server.external_ip || '';
                 document.getElementById('config-server-name').value = config.server.server_name || '';
+                
+                // Pre-fill SSL hostname with external IP
+                const sslHostnameInput = document.getElementById('ssl-hostname');
+                if (sslHostnameInput && config.server.external_ip) {
+                    sslHostnameInput.value = config.server.external_ip;
+                }
             }
         }
+        
+        // Load SSL status separately
+        await loadSSLStatus();
     } catch (error) {
         console.error('Error loading configuration:', error);
         // Use defaults - this is expected when endpoint hasn't been implemented yet
@@ -689,6 +698,9 @@ function initializeForms() {
             });
         });
     }
+    
+    // Initialize SSL Config Form
+    initializeSSLConfigForm();
     
     // Add Device Form
     const addDeviceForm = document.getElementById('add-device-form');
@@ -2047,4 +2059,220 @@ function updatePeakHours(peakHours) {
     ).join('') + '</ul>';
     
     display.innerHTML = html;
+}
+
+// ============================================================================
+// SSL/HTTPS Configuration Functions
+// ============================================================================
+
+async function loadSSLStatus() {
+    try {
+        const response = await fetch(`${API_BASE}/api/ssl/status`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            updateSSLStatusDisplay(data);
+            
+            // Update form fields
+            document.getElementById('ssl-enabled').checked = data.enabled;
+            document.getElementById('ssl-cert-file').value = data.cert_file || 'certs/server.crt';
+            document.getElementById('ssl-key-file').value = data.key_file || 'certs/server.key';
+            
+            // Show/hide certificate section based on enabled status
+            const certSection = document.getElementById('ssl-certificate-section');
+            if (certSection) {
+                certSection.style.display = data.enabled ? 'block' : 'none';
+            }
+            
+            // Show certificate details if available
+            if (data.cert_details) {
+                displayCertificateDetails(data.cert_details);
+            }
+        } else {
+            console.error('Failed to load SSL status:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading SSL status:', error);
+    }
+}
+
+function updateSSLStatusDisplay(data) {
+    const statusInfo = document.getElementById('ssl-status-info');
+    if (!statusInfo) return;
+    
+    let statusHtml = '';
+    
+    if (data.enabled) {
+        if (data.cert_exists && data.key_exists) {
+            if (data.cert_details) {
+                const isExpired = data.cert_details.is_expired;
+                const daysLeft = data.cert_details.days_until_expiry;
+                
+                if (isExpired) {
+                    statusHtml = `<p>❌ <strong>HTTPS Enabled</strong> but certificate has <strong>EXPIRED</strong></p>`;
+                } else if (daysLeft < 30) {
+                    statusHtml = `<p>⚠️ <strong>HTTPS Enabled</strong> - Certificate expires in <strong>${daysLeft} days</strong></p>`;
+                } else {
+                    statusHtml = `<p>✅ <strong>HTTPS Enabled</strong> - Certificate valid for <strong>${daysLeft} days</strong></p>`;
+                }
+            } else {
+                statusHtml = '<p>✅ <strong>HTTPS Enabled</strong> - Certificate files found</p>';
+            }
+        } else {
+            statusHtml = '<p>⚠️ <strong>HTTPS Enabled</strong> but certificate files are missing</p>';
+            if (!data.cert_exists) {
+                statusHtml += `<p style="color: #d32f2f;">Missing: ${data.cert_file}</p>`;
+            }
+            if (!data.key_exists) {
+                statusHtml += `<p style="color: #d32f2f;">Missing: ${data.key_file}</p>`;
+            }
+        }
+    } else {
+        statusHtml = '<p>⚠️ <strong>HTTPS Disabled</strong> - Using unencrypted HTTP</p>';
+    }
+    
+    statusInfo.innerHTML = statusHtml;
+}
+
+function displayCertificateDetails(details) {
+    const certDetailsSection = document.getElementById('cert-details-section');
+    if (!certDetailsSection) return;
+    
+    certDetailsSection.style.display = 'block';
+    
+    document.getElementById('cert-subject').value = details.subject || 'N/A';
+    document.getElementById('cert-issuer').value = details.issuer || 'N/A';
+    document.getElementById('cert-valid-from').value = formatDate(details.valid_from) || 'N/A';
+    document.getElementById('cert-valid-until').value = formatDate(details.valid_until) || 'N/A';
+    
+    const daysField = document.getElementById('cert-days-expiry');
+    const daysLeft = details.days_until_expiry;
+    
+    if (details.is_expired) {
+        daysField.value = 'EXPIRED';
+        daysField.style.color = '#d32f2f';
+        daysField.style.fontWeight = 'bold';
+    } else if (daysLeft < 30) {
+        daysField.value = `${daysLeft} days (⚠️ Expires soon!)`;
+        daysField.style.color = '#ff9800';
+        daysField.style.fontWeight = 'bold';
+    } else {
+        daysField.value = `${daysLeft} days`;
+        daysField.style.color = '#4CAF50';
+        daysField.style.fontWeight = 'normal';
+    }
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    } catch (error) {
+        return dateString;
+    }
+}
+
+async function generateSSLCertificate() {
+    const hostname = document.getElementById('ssl-hostname').value.trim();
+    const daysValid = parseInt(document.getElementById('ssl-days-valid').value) || 365;
+    
+    if (!hostname) {
+        alert('Please enter a hostname or IP address');
+        return;
+    }
+    
+    if (!confirm(`Generate self-signed SSL certificate for ${hostname}?\n\nThis will create new certificate files and may overwrite existing ones.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/ssl/generate-certificate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                hostname: hostname,
+                days_valid: daysValid
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert(`✅ SSL certificate generated successfully!\n\n` +
+                  `Certificate: ${data.cert_file}\n` +
+                  `Private Key: ${data.key_file}\n` +
+                  `Valid for: ${data.valid_days} days\n\n` +
+                  `⚠️ You must restart the PBX server for HTTPS to take effect.`);
+            
+            // Reload SSL status
+            await loadSSLStatus();
+        } else {
+            alert(`❌ Failed to generate certificate: ${data.error}`);
+        }
+    } catch (error) {
+        console.error('Error generating certificate:', error);
+        alert(`❌ Error generating certificate: ${error.message}`);
+    }
+}
+
+async function refreshSSLStatus() {
+    await loadSSLStatus();
+}
+
+// Initialize SSL config form
+function initializeSSLConfigForm() {
+    const sslConfigForm = document.getElementById('ssl-config-form');
+    if (sslConfigForm) {
+        sslConfigForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveSSLSettings();
+        });
+    }
+    
+    // Toggle certificate section visibility
+    const sslEnabledCheckbox = document.getElementById('ssl-enabled');
+    if (sslEnabledCheckbox) {
+        sslEnabledCheckbox.addEventListener('change', (e) => {
+            const certSection = document.getElementById('ssl-certificate-section');
+            if (certSection) {
+                certSection.style.display = e.target.checked ? 'block' : 'none';
+            }
+        });
+    }
+}
+
+async function saveSSLSettings() {
+    const enabled = document.getElementById('ssl-enabled').checked;
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/config/section`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                section: 'api',
+                data: {
+                    ssl: {
+                        enabled: enabled
+                    }
+                }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ SSL settings saved successfully!\n\n⚠️ Server restart required for changes to take effect.');
+            await loadSSLStatus();
+        } else {
+            alert(`❌ Failed to save SSL settings: ${data.error}`);
+        }
+    } catch (error) {
+        console.error('Error saving SSL settings:', error);
+        alert(`❌ Error saving SSL settings: ${error.message}`);
+    }
 }

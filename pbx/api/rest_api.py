@@ -4,8 +4,9 @@ Provides HTTP/HTTPS API for managing PBX features
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from typing import Optional
+from pathlib import Path
 import socket
 import threading
 import os
@@ -15,11 +16,24 @@ import zipfile
 import tempfile
 import shutil
 import ssl
+import ipaddress
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
 from pbx.utils.tts import text_to_wav_telephony, is_tts_available, get_tts_requirements
 from pbx.features.phone_provisioning import normalize_mac_address
+
+# Optional imports for SSL certificate generation
+try:
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.backends import default_backend
+    SSL_GENERATION_AVAILABLE = True
+except ImportError:
+    SSL_GENERATION_AVAILABLE = False
 
 # Admin directory path
 ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
@@ -212,6 +226,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_auto_attendant_menu_option()
             elif path.startswith('/api/voicemail-boxes/') and path.endswith('/export'):
                 self._handle_export_voicemail_box(path)
+            elif path == '/api/ssl/generate-certificate':
+                self._handle_generate_ssl_certificate()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -342,6 +358,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_config()
             elif path == '/api/config/full':
                 self._handle_get_full_config()
+            elif path == '/api/ssl/status':
+                self._handle_get_ssl_status()
             elif path == '/api/provisioning/devices':
                 self._handle_get_provisioning_devices()
             elif path == '/api/provisioning/vendors':
@@ -1536,7 +1554,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'server_name': self.pbx_core.config.get('server.server_name', 'PBX System')
                 },
                 'api': {
-                    'port': self.pbx_core.config.get('api.port', 8080)
+                    'port': self.pbx_core.config.get('api.port', 8080),
+                    'ssl': {
+                        'enabled': self.pbx_core.config.get('api.ssl.enabled', False),
+                        'cert_file': self.pbx_core.config.get('api.ssl.cert_file', 'certs/server.crt'),
+                        'key_file': self.pbx_core.config.get('api.ssl.key_file', 'certs/server.key')
+                    }
                 },
                 'features': {
                     'call_recording': self.pbx_core.config.get('features.call_recording', True),
@@ -1653,6 +1676,183 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({'error': 'Failed to save configuration'}, 500)
         except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_ssl_status(self):
+        """Get SSL/HTTPS configuration status"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            ssl_config = self.pbx_core.config.get('api.ssl', {})
+            cert_file = ssl_config.get('cert_file', 'certs/server.crt')
+            key_file = ssl_config.get('key_file', 'certs/server.key')
+            
+            # Check if certificate files exist
+            cert_exists = os.path.exists(cert_file)
+            key_exists = os.path.exists(key_file)
+            
+            # Get certificate details if it exists
+            cert_details = None
+            if cert_exists and SSL_GENERATION_AVAILABLE:
+                try:
+                    with open(cert_file, 'rb') as f:
+                        cert_data = f.read()
+                        cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+                        
+                        now = datetime.now(timezone.utc)
+                        cert_details = {
+                            'subject': cert.subject.rfc4514_string(),
+                            'issuer': cert.issuer.rfc4514_string(),
+                            'valid_from': cert.not_valid_before.isoformat(),
+                            'valid_until': cert.not_valid_after.isoformat(),
+                            'is_expired': cert.not_valid_after < now,
+                            'days_until_expiry': (cert.not_valid_after - now).days,
+                            'serial_number': str(cert.serial_number)
+                        }
+                except Exception as e:
+                    self.logger.warning(f"Failed to parse certificate: {e}")
+            
+            status_data = {
+                'enabled': ssl_config.get('enabled', False),
+                'cert_file': cert_file,
+                'key_file': key_file,
+                'cert_exists': cert_exists,
+                'key_exists': key_exists,
+                'cert_details': cert_details,
+                'ca': {
+                    'enabled': ssl_config.get('ca', {}).get('enabled', False),
+                    'server_url': ssl_config.get('ca', {}).get('server_url', '')
+                }
+            }
+            
+            self._send_json(status_data)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_generate_ssl_certificate(self):
+        """Generate self-signed SSL certificate"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            body = self._get_body() or {}
+            
+            # Get parameters
+            hostname = body.get('hostname', self.pbx_core.config.get('server.external_ip', 'localhost'))
+            days_valid = body.get('days_valid', 365)
+            cert_dir = body.get('cert_dir', 'certs')
+            
+            # Validate parameters
+            if not hostname:
+                hostname = 'localhost'
+            
+            if not isinstance(days_valid, int) or days_valid < 1 or days_valid > 3650:
+                days_valid = 365
+            
+            self.logger.info(f"Generating self-signed SSL certificate for {hostname}")
+            
+            # Check if SSL generation is available
+            if not SSL_GENERATION_AVAILABLE:
+                self._send_json({
+                    'error': 'Required cryptography library not available',
+                    'details': 'Install with: pip install cryptography'
+                }, 500)
+                return
+            
+            # Create cert directory if it doesn't exist
+            cert_path = Path(cert_dir)
+            cert_path.mkdir(exist_ok=True)
+            
+            # Generate private key
+            private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048,
+            )
+            
+            # Generate certificate
+            subject = issuer = x509.Name([
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "State"),
+                x509.NameAttribute(NameOID.LOCALITY_NAME, "City"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PBX System"),
+                x509.NameAttribute(NameOID.COMMON_NAME, hostname),
+            ])
+            
+            # Build list of Subject Alternative Names
+            san_list = [
+                x509.DNSName(hostname),
+                x509.DNSName("localhost"),
+                x509.IPAddress(ipaddress.IPv4Address("127.0.0.1")),
+            ]
+            
+            # Try to add the hostname as an IP address if it's a valid IP
+            try:
+                ip = ipaddress.ip_address(hostname)
+                san_list.append(x509.IPAddress(ip))
+            except ValueError:
+                # Not an IP address, it's a hostname
+                pass
+            
+            cert = x509.CertificateBuilder().subject_name(
+                subject
+            ).issuer_name(
+                issuer
+            ).public_key(
+                private_key.public_key()
+            ).serial_number(
+                x509.random_serial_number()
+            ).not_valid_before(
+                datetime.now(timezone.utc)
+            ).not_valid_after(
+                datetime.now(timezone.utc) + timedelta(days=days_valid)
+            ).add_extension(
+                x509.SubjectAlternativeName(san_list),
+                critical=False,
+            ).sign(private_key, hashes.SHA256())
+            
+            # Write private key to file
+            key_file = cert_path / "server.key"
+            with open(key_file, "wb") as f:
+                f.write(private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption()
+                ))
+            
+            # Set restrictive permissions on private key
+            os.chmod(key_file, 0o600)
+            
+            # Write certificate to file
+            cert_file = cert_path / "server.crt"
+            with open(cert_file, "wb") as f:
+                f.write(cert.public_bytes(serialization.Encoding.PEM))
+            
+            self.logger.info(f"SSL certificate generated successfully: {cert_file}")
+            
+            # Update configuration to enable SSL
+            ssl_config = self.pbx_core.config.get('api.ssl', {})
+            ssl_config['enabled'] = True
+            ssl_config['cert_file'] = str(cert_file)
+            ssl_config['key_file'] = str(key_file)
+            
+            self.pbx_core.config.config.setdefault('api', {})['ssl'] = ssl_config
+            self.pbx_core.config.save()
+            
+            self._send_json({
+                'success': True,
+                'message': 'SSL certificate generated successfully. Server restart required to enable HTTPS.',
+                'cert_file': str(cert_file),
+                'key_file': str(key_file),
+                'hostname': hostname,
+                'valid_days': days_valid
+            })
+        except Exception as e:
+            self.logger.error(f"Failed to generate SSL certificate: {e}")
+            import traceback
+            traceback.print_exc()
             self._send_json({'error': str(e)}, 500)
 
     def _handle_get_voicemail(self, path):

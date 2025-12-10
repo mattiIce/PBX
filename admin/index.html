@@ -1084,6 +1084,101 @@
                 </form>
             </div>
 
+            <!-- SSL/HTTPS Configuration -->
+            <div class="config-section">
+                <h3>🔒 SSL/HTTPS Configuration</h3>
+                <p class="config-note">Configure HTTPS encryption for secure API communication</p>
+                
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <p><strong>Current Status:</strong></p>
+                    <div id="ssl-status-info">
+                        <p>⏳ Loading SSL status...</p>
+                    </div>
+                </div>
+
+                <form id="ssl-config-form">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="ssl-enabled">
+                            Enable HTTPS/SSL
+                        </label>
+                        <small>Encrypt API communication using SSL/TLS certificates</small>
+                    </div>
+
+                    <div id="ssl-certificate-section" style="display: none; margin-left: 20px; border-left: 3px solid #2196F3; padding-left: 15px;">
+                        <h4>Certificate Configuration</h4>
+                        
+                        <div class="form-group">
+                            <label>Certificate File Path:</label>
+                            <input type="text" id="ssl-cert-file" placeholder="certs/server.crt" readonly>
+                            <small>Location of the SSL certificate file</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Private Key File Path:</label>
+                            <input type="text" id="ssl-key-file" placeholder="certs/server.key" readonly>
+                            <small>Location of the SSL private key file</small>
+                        </div>
+
+                        <div id="cert-details-section" style="display: none; margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+                            <h4 style="margin-top: 0;">Certificate Details</h4>
+                            <div class="form-group">
+                                <label>Subject:</label>
+                                <input type="text" id="cert-subject" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Issuer:</label>
+                                <input type="text" id="cert-issuer" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Valid From:</label>
+                                <input type="text" id="cert-valid-from" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Valid Until:</label>
+                                <input type="text" id="cert-valid-until" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Days Until Expiry:</label>
+                                <input type="text" id="cert-days-expiry" readonly>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-top: 20px;">Generate Self-Signed Certificate</h4>
+                        <p class="config-note">Generate a self-signed certificate for development/testing. For production, use a certificate from a trusted CA (Let's Encrypt, DigiCert, etc.).</p>
+                        
+                        <div class="form-group">
+                            <label>Hostname/IP Address:</label>
+                            <input type="text" id="ssl-hostname" placeholder="192.168.1.14">
+                            <small>The hostname or IP address that will be used to access the server</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Certificate Validity (days):</label>
+                            <input type="number" id="ssl-days-valid" value="365" min="1" max="3650">
+                            <small>How many days the certificate will be valid (1-3650)</small>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-primary" onclick="generateSSLCertificate()">🔐 Generate Certificate</button>
+                            <button type="button" class="btn btn-secondary" onclick="refreshSSLStatus()">🔄 Refresh Status</button>
+                        </div>
+
+                        <div class="info-box" style="margin-top: 20px;">
+                            <p><strong>⚠️ Important Notes:</strong></p>
+                            <ul>
+                                <li>Self-signed certificates will show security warnings in browsers</li>
+                                <li>After generating or configuring certificates, you must restart the PBX server</li>
+                                <li>For production use, obtain certificates from a trusted CA like Let's Encrypt</li>
+                                <li>Private keys are stored with restricted permissions (600) for security</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success" style="margin-top: 15px;">💾 Save SSL Settings</button>
+                </form>
+            </div>
+
             <!-- Server Info (Read-Only) -->
             <div class="config-section">
                 <h3>ℹ️ Server Information</h3>
