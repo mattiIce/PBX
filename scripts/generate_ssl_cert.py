@@ -5,6 +5,7 @@ For development and testing purposes only
 """
 import os
 import sys
+import ipaddress
 from pathlib import Path
 
 try:

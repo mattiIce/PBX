@@ -104,8 +104,7 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
             f"{ca_server}{ca_endpoint}",
             json={
                 'csr': csr_pem,
-                'hostname': hostname,
-                'common_name': hostname
+                'hostname': hostname  # hostname serves as common_name in the CSR
             },
             timeout=30,
             verify=verify
