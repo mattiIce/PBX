@@ -354,7 +354,8 @@ class WebRTCSignalingServer:
         Get ICE servers configuration for client
         
         Returns:
-            Dictionary with ICE servers configuration and codec preferences
+            Dictionary with ICE servers configuration, codec preferences,
+            audio settings, and DTMF configuration (matches Zultys ZIP33G)
         """
         ice_servers = []
         

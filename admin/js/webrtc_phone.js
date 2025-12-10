@@ -73,12 +73,13 @@ class WebRTCPhone {
         }
     }
     
+    /**
+     * Request microphone access automatically on page load
+     * @description Provides a better user experience by prompting for permissions upfront.
+     *              Matches Zultys ZIP33G behavior where the phone is always ready to use.
+     * @returns {Promise<boolean>} True if access granted, false otherwise
+     */
     async requestMicrophoneAccess() {
-        /**
-         * Request microphone access automatically on page load
-         * This provides a better user experience by prompting for permissions upfront
-         * Matches Zultys ZIP33G behavior where the phone is always ready to use
-         */
         try {
             this.updateStatus('Requesting microphone access...', 'info');
             
