@@ -123,6 +123,9 @@ class DatabaseBackend:
         try:
             self.connection = sqlite3.connect(db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
+            # SQLite doesn't have autocommit attribute by default, so we set it explicitly
+            # This ensures consistent behavior when checking autocommit in other methods
+            self.connection.autocommit = False
             self.enabled = True
             self.logger.info(f"✓ Successfully connected to SQLite database")
             self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
