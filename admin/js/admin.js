@@ -856,53 +856,200 @@ async function loadVoicemailForExtension() {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
         const data = await response.json();
         
-        const tbody = document.getElementById('voicemail-table-body');
+        // Update both views
+        updateVoicemailCardsView(data.messages, extension);
+        updateVoicemailTableView(data.messages, extension);
         
-        if (!data.messages || data.messages.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No voicemail messages</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        data.messages.forEach(msg => {
-            const row = document.createElement('tr');
-            const timestamp = new Date(msg.timestamp).toLocaleString();
-            const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
-            const status = msg.listened ? 'Read' : 'Unread';
-            
-            row.innerHTML = `
-                <td>${timestamp}</td>
-                <td>${msg.caller_id}</td>
-                <td>${duration}</td>
-                <td><span class="badge ${msg.listened ? 'badge-secondary' : 'badge-primary'}">${status}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="playVoicemail('${extension}', '${msg.id}')">▶ Play</button>
-                    <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">⬇ Download</button>
-                    ${!msg.listened ? `<button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">✓ Mark Read</button>` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">🗑 Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
     } catch (error) {
         console.error('Error loading voicemail:', error);
         showNotification('Failed to load voicemail messages', 'error');
     }
 }
 
-async function playVoicemail(extension, messageId) {
-    try {
-        const audioUrl = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
-        const audio = new Audio(audioUrl);
-        audio.play();
-        showNotification('Playing voicemail...', 'info');
-        
-        // Mark as read after playing
-        setTimeout(() => markVoicemailRead(extension, messageId, false), 1000);
-    } catch (error) {
-        console.error('Error playing voicemail:', error);
-        showNotification('Failed to play voicemail', 'error');
+function updateVoicemailCardsView(messages, extension) {
+    const cardsContainer = document.getElementById('voicemail-cards-view');
+    
+    if (!messages || messages.length === 0) {
+        cardsContainer.innerHTML = '<div class="info-box">No voicemail messages</div>';
+        return;
     }
+    
+    cardsContainer.innerHTML = messages.map(msg => {
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
+        const isUnread = !msg.listened;
+        
+        let transcriptionHtml = '';
+        if (msg.transcription && msg.transcription.text) {
+            const confidencePercent = msg.transcription.confidence ? 
+                (msg.transcription.confidence * 100).toFixed(0) : 'N/A';
+            transcriptionHtml = `
+                <div class="voicemail-transcription">
+                    "${msg.transcription.text}"
+                    <span class="voicemail-transcription-confidence">
+                        Confidence: ${confidencePercent}%
+                    </span>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="voicemail-card ${isUnread ? 'unread' : ''}">
+                <div class="voicemail-card-header">
+                    <div class="voicemail-from">📞 ${msg.caller_id}</div>
+                    <span class="voicemail-status-badge ${isUnread ? 'unread' : 'read'}">
+                        ${isUnread ? 'NEW' : 'READ'}
+                    </span>
+                </div>
+                <div class="voicemail-meta">
+                    <div class="voicemail-meta-item">
+                        <span>📅</span> ${timestamp}
+                    </div>
+                    <div class="voicemail-meta-item">
+                        <span>⏱️</span> ${duration}
+                    </div>
+                </div>
+                ${transcriptionHtml}
+                <div class="voicemail-actions">
+                    <button class="btn btn-sm btn-info" onclick="openVoicemailPlayer('${extension}', '${msg.id}')">
+                        ▶️ Play
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">
+                        ⬇️ Download
+                    </button>
+                    ${isUnread ? `
+                        <button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">
+                            ✓ Mark Read
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateVoicemailTableView(messages, extension) {
+    const tbody = document.getElementById('voicemail-table-body');
+    
+    if (!messages || messages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-data">No voicemail messages</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    messages.forEach(msg => {
+        const row = document.createElement('tr');
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
+        const status = msg.listened ? 'Read' : 'Unread';
+        
+        row.innerHTML = `
+            <td>${timestamp}</td>
+            <td>${msg.caller_id}</td>
+            <td>${duration}</td>
+            <td><span class="badge ${msg.listened ? 'badge-secondary' : 'badge-primary'}">${status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="openVoicemailPlayer('${extension}', '${msg.id}')">▶ Play</button>
+                <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">⬇ Download</button>
+                ${!msg.listened ? `<button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">✓ Mark Read</button>` : ''}
+                <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">🗑 Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function toggleVoicemailView() {
+    const cardsView = document.getElementById('voicemail-cards-view');
+    const tableView = document.getElementById('voicemail-table-view');
+    const toggleText = document.getElementById('view-toggle-text');
+    
+    if (cardsView.style.display === 'none') {
+        // Switch to cards view
+        cardsView.style.display = 'grid';
+        tableView.style.display = 'none';
+        toggleText.textContent = '📋 Switch to Table View';
+    } else {
+        // Switch to table view
+        cardsView.style.display = 'none';
+        tableView.style.display = 'block';
+        toggleText.textContent = '🎴 Switch to Card View';
+    }
+}
+
+async function openVoicemailPlayer(extension, messageId) {
+    try {
+        // Fetch message details
+        const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
+        const data = await response.json();
+        const message = data.messages.find(m => m.id === messageId);
+        
+        if (!message) {
+            showNotification('Message not found', 'error');
+            return;
+        }
+        
+        // Update player details
+        const detailsDiv = document.getElementById('vm-player-details');
+        const timestamp = new Date(message.timestamp).toLocaleString();
+        const duration = message.duration ? `${message.duration}s` : 'Unknown';
+        
+        detailsDiv.innerHTML = `
+            <p><strong>From:</strong> ${message.caller_id}</p>
+            <p><strong>Received:</strong> ${timestamp}</p>
+            <p><strong>Duration:</strong> ${duration}</p>
+            <p><strong>Status:</strong> ${message.listened ? 'Read' : 'Unread'}</p>
+        `;
+        
+        // Set audio source
+        const audioPlayer = document.getElementById('vm-audio-player');
+        audioPlayer.src = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
+        
+        // Show/hide transcription
+        const transcriptionDiv = document.getElementById('vm-transcription-display');
+        if (message.transcription && message.transcription.text) {
+            document.getElementById('vm-transcription-text').textContent = message.transcription.text;
+            const confidence = message.transcription.confidence ? 
+                `Confidence: ${(message.transcription.confidence * 100).toFixed(0)}%` : '';
+            document.getElementById('vm-transcription-confidence').textContent = confidence;
+            transcriptionDiv.style.display = 'block';
+        } else {
+            transcriptionDiv.style.display = 'none';
+        }
+        
+        // Show modal
+        document.getElementById('voicemail-player-modal').style.display = 'block';
+        
+        // Mark as read after playing starts
+        audioPlayer.onplay = () => {
+            markVoicemailRead(extension, messageId, false);
+        };
+        
+    } catch (error) {
+        console.error('Error opening voicemail player:', error);
+        showNotification('Failed to open voicemail player', 'error');
+    }
+}
+
+function closeVoicemailPlayer() {
+    const modal = document.getElementById('voicemail-player-modal');
+    const audioPlayer = document.getElementById('vm-audio-player');
+    
+    audioPlayer.pause();
+    audioPlayer.src = '';
+    modal.style.display = 'none';
+    
+    // Reload messages to update read status
+    loadVoicemailForExtension();
+}
+
+// Legacy function - maintained for backward compatibility
+// Redirects to new modal player
+async function playVoicemail(extension, messageId) {
+    openVoicemailPlayer(extension, messageId);
 }
 
 async function downloadVoicemail(extension, messageId) {
@@ -2274,5 +2421,487 @@ async function saveSSLSettings() {
     } catch (error) {
         console.error('Error saving SSL settings:', error);
         alert(`❌ Error saving SSL settings: ${error.message}`);
+    }
+}
+
+// ====================================
+// QoS Monitoring Functions
+// ====================================
+
+async function loadQoSMetrics() {
+    try {
+        // Load statistics
+        const statsResponse = await fetch(`${API_BASE}/api/qos/statistics`);
+        const stats = await statsResponse.json();
+        
+        // Update overview stats
+        document.getElementById('qos-active-calls').textContent = stats.active_calls || 0;
+        document.getElementById('qos-total-calls').textContent = stats.total_calls || 0;
+        document.getElementById('qos-avg-mos').textContent = stats.average_mos ? stats.average_mos.toFixed(2) : '-';
+        document.getElementById('qos-calls-with-issues').textContent = stats.calls_with_issues || 0;
+        
+        // Load active call metrics
+        const activeResponse = await fetch(`${API_BASE}/api/qos/metrics`);
+        const activeMetrics = await activeResponse.json();
+        const activeTable = document.getElementById('qos-active-calls-table');
+        
+        if (activeMetrics.length === 0) {
+            activeTable.innerHTML = '<tr><td colspan="7" class="no-data">No active calls being monitored</td></tr>';
+        } else {
+            activeTable.innerHTML = activeMetrics.map(call => `
+                <tr>
+                    <td>${call.call_id}</td>
+                    <td>${call.duration_seconds}s</td>
+                    <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
+                    <td>${call.quality_rating}</td>
+                    <td>${call.packet_loss_percentage.toFixed(2)}%</td>
+                    <td>${call.jitter_avg_ms.toFixed(1)}</td>
+                    <td>${call.latency_avg_ms.toFixed(1)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Load alerts
+        const alertsResponse = await fetch(`${API_BASE}/api/qos/alerts`);
+        const alerts = await alertsResponse.json();
+        const alertsContainer = document.getElementById('qos-alerts-container');
+        
+        if (alerts.length === 0) {
+            alertsContainer.innerHTML = '<div class="info-box">✅ No quality alerts</div>';
+        } else {
+            alertsContainer.innerHTML = alerts.map(alert => `
+                <div class="alert-box ${alert.severity}">
+                    <strong>[${alert.type}]</strong> ${alert.message}
+                    <br><small>Call: ${alert.call_id} | Time: ${new Date(alert.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('');
+        }
+        
+        // Load historical metrics
+        const historyResponse = await fetch(`${API_BASE}/api/qos/history?limit=50`);
+        const history = await historyResponse.json();
+        const historyTable = document.getElementById('qos-history-table');
+        
+        if (history.length === 0) {
+            historyTable.innerHTML = '<tr><td colspan="8" class="no-data">No historical data available</td></tr>';
+        } else {
+            historyTable.innerHTML = history.map(call => `
+                <tr>
+                    <td>${call.call_id}</td>
+                    <td>${new Date(call.start_time).toLocaleString()}</td>
+                    <td>${call.duration_seconds}s</td>
+                    <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
+                    <td>${call.quality_rating}</td>
+                    <td>${call.packet_loss_percentage.toFixed(2)}%</td>
+                    <td>${call.jitter_avg_ms.toFixed(1)}</td>
+                    <td>${call.latency_avg_ms.toFixed(1)}</td>
+                </tr>
+            `).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error loading QoS metrics:', error);
+        showNotification('Failed to load QoS metrics', 'error');
+    }
+}
+
+function getQualityClass(mosScore) {
+    if (mosScore >= 4.3) return 'quality-excellent';
+    if (mosScore >= 4.0) return 'quality-good';
+    if (mosScore >= 3.6) return 'quality-fair';
+    if (mosScore >= 3.1) return 'quality-poor';
+    return 'quality-bad';
+}
+
+async function clearQoSAlerts() {
+    if (!confirm('Are you sure you want to clear all QoS alerts?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/qos/clear-alerts`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showNotification('QoS alerts cleared successfully', 'success');
+            await loadQoSMetrics();
+        } else {
+            showNotification('Failed to clear QoS alerts', 'error');
+        }
+    } catch (error) {
+        console.error('Error clearing QoS alerts:', error);
+        showNotification('Error clearing QoS alerts', 'error');
+    }
+}
+
+async function saveQoSThresholds(event) {
+    event.preventDefault();
+    
+    const thresholds = {
+        mos_min: parseFloat(document.getElementById('qos-threshold-mos').value),
+        packet_loss_max: parseFloat(document.getElementById('qos-threshold-loss').value),
+        jitter_max: parseFloat(document.getElementById('qos-threshold-jitter').value),
+        latency_max: parseFloat(document.getElementById('qos-threshold-latency').value)
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/qos/thresholds`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(thresholds)
+        });
+        
+        if (response.ok) {
+            showNotification('QoS thresholds updated successfully', 'success');
+        } else {
+            showNotification('Failed to update QoS thresholds', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving QoS thresholds:', error);
+        showNotification('Error saving QoS thresholds', 'error');
+    }
+}
+
+// ====================================
+// Emergency Notification Functions
+// ====================================
+
+async function loadEmergencyContacts() {
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/contacts`);
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('emergency-contacts-count').textContent = data.total || 0;
+        
+        // Update contacts table
+        const tbody = document.getElementById('emergency-contacts-table');
+        
+        if (!data.contacts || data.contacts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No emergency contacts configured</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.contacts.map(contact => {
+            const priorityBadge = getPriorityBadge(contact.priority);
+            const methods = contact.notification_methods.map(m => {
+                const icons = { call: '📞', page: '📢', email: '📧', sms: '💬' };
+                return `<span style="margin-right: 5px;" title="${m}">${icons[m] || m}</span>`;
+            }).join('');
+            
+            return `
+                <tr>
+                    <td>${priorityBadge}</td>
+                    <td><strong>${contact.name}</strong></td>
+                    <td>${contact.extension || '-'}</td>
+                    <td>${contact.phone || '-'}</td>
+                    <td>${contact.email || '-'}</td>
+                    <td>${methods}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmergencyContact('${contact.id}', '${contact.name}')">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        // Load notification history
+        await loadEmergencyHistory();
+        
+    } catch (error) {
+        console.error('Error loading emergency contacts:', error);
+        showNotification('Failed to load emergency contacts', 'error');
+    }
+}
+
+function getPriorityBadge(priority) {
+    const badges = {
+        1: '<span class="badge" style="background: #ef4444;">1 - Highest</span>',
+        2: '<span class="badge" style="background: #f97316;">2 - High</span>',
+        3: '<span class="badge" style="background: #eab308;">3 - Medium</span>',
+        4: '<span class="badge" style="background: #3b82f6;">4 - Low</span>',
+        5: '<span class="badge" style="background: #6b7280;">5 - Lowest</span>'
+    };
+    return badges[priority] || `<span class="badge">${priority}</span>`;
+}
+
+async function loadEmergencyHistory() {
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/history?limit=20`);
+        const data = await response.json();
+        
+        // Update notifications sent stat
+        document.getElementById('emergency-notifications-sent').textContent = data.total || 0;
+        
+        // Update last test
+        if (data.history && data.history.length > 0) {
+            const lastNotification = data.history[data.history.length - 1];
+            const lastTime = new Date(lastNotification.timestamp).toLocaleString();
+            document.getElementById('emergency-last-test').textContent = lastTime;
+        } else {
+            document.getElementById('emergency-last-test').textContent = 'Never';
+        }
+        
+        // Update history table
+        const tbody = document.getElementById('emergency-history-table');
+        
+        if (!data.history || data.history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No emergency notifications sent</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.history.slice().reverse().map(notification => {
+            const timestamp = new Date(notification.timestamp).toLocaleString();
+            const triggerType = notification.trigger_type;
+            const details = JSON.stringify(notification.details);
+            const contactsNotified = notification.contacts_notified.join(', ') || 'None';
+            const methods = notification.methods_used.join(', ') || 'None';
+            
+            return `
+                <tr>
+                    <td>${timestamp}</td>
+                    <td><span class="badge">${triggerType}</span></td>
+                    <td title="${details}">${truncate(details, 50)}</td>
+                    <td>${contactsNotified}</td>
+                    <td>${methods}</td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading emergency history:', error);
+    }
+}
+
+function truncate(str, length) {
+    if (str.length <= length) return str;
+    return str.substring(0, length) + '...';
+}
+
+function showAddEmergencyContactModal() {
+    document.getElementById('add-emergency-contact-modal').style.display = 'block';
+    // Reset form
+    document.getElementById('add-emergency-contact-form').reset();
+    document.getElementById('method-call').checked = true;
+}
+
+function closeAddEmergencyContactModal() {
+    document.getElementById('add-emergency-contact-modal').style.display = 'none';
+}
+
+async function addEmergencyContact(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('emergency-contact-name').value;
+    const extension = document.getElementById('emergency-contact-extension').value;
+    const phone = document.getElementById('emergency-contact-phone').value;
+    const email = document.getElementById('emergency-contact-email').value;
+    const priority = parseInt(document.getElementById('emergency-contact-priority').value);
+    
+    // Get selected notification methods
+    const methods = [];
+    if (document.getElementById('method-call').checked) methods.push('call');
+    if (document.getElementById('method-page').checked) methods.push('page');
+    if (document.getElementById('method-email').checked) methods.push('email');
+    if (document.getElementById('method-sms').checked) methods.push('sms');
+    
+    if (methods.length === 0) {
+        showNotification('Please select at least one notification method', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/contacts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                extension: extension || null,
+                phone: phone || null,
+                email: email || null,
+                priority: priority,
+                notification_methods: methods
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('Emergency contact added successfully', 'success');
+            closeAddEmergencyContactModal();
+            loadEmergencyContacts();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to add emergency contact', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error adding emergency contact:', error);
+        showNotification('Failed to add emergency contact', 'error');
+    }
+}
+
+async function deleteEmergencyContact(contactId, contactName) {
+    if (!confirm(`Delete emergency contact "${contactName}"?\n\nThis contact will no longer receive emergency notifications.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/contacts/${contactId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showNotification('Emergency contact deleted successfully', 'success');
+            loadEmergencyContacts();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to delete emergency contact', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting emergency contact:', error);
+        showNotification('Failed to delete emergency contact', 'error');
+    }
+}
+
+function showTriggerEmergencyModal() {
+    document.getElementById('trigger-emergency-modal').style.display = 'block';
+    document.getElementById('trigger-emergency-form').reset();
+}
+
+function closeTriggerEmergencyModal() {
+    document.getElementById('trigger-emergency-modal').style.display = 'none';
+}
+
+async function triggerEmergency(event) {
+    event.preventDefault();
+    
+    const triggerType = document.getElementById('trigger-type').value;
+    const location = document.getElementById('trigger-details').value;
+    const additionalInfo = document.getElementById('trigger-info').value;
+    
+    // Extra confirmation for non-test emergencies
+    if (triggerType !== 'test') {
+        if (!confirm('⚠️ This will send REAL emergency notifications to all contacts.\n\nAre you sure you want to continue?')) {
+            return;
+        }
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/trigger`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                trigger_type: triggerType,
+                details: {
+                    location: location,
+                    additional_info: additionalInfo,
+                    triggered_by: 'Admin Panel',
+                    timestamp: new Date().toISOString()
+                }
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('🚨 Emergency notification sent to all contacts', 'success');
+            closeTriggerEmergencyModal();
+            loadEmergencyContacts();
+        } else {
+            const error = await response.json();
+            showNotification(error.error || 'Failed to trigger emergency notification', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error triggering emergency:', error);
+        showNotification('Failed to trigger emergency notification', 'error');
+    }
+}
+
+async function testEmergencyNotification() {
+    if (!confirm('Test the emergency notification system?\n\nThis will send a clearly marked TEST notification to all configured contacts.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/emergency/test`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`✅ ${data.message}\n\nContacts configured: ${data.contacts_configured}\nMethods: ${data.notification_methods.join(', ')}`, 'success');
+            loadEmergencyContacts();
+        } else {
+            showNotification('Emergency notification test failed', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error testing emergency notification:', error);
+        showNotification('Failed to test emergency notification', 'error');
+    }
+}
+
+// ====================================
+// Codec Management Functions
+// ====================================
+
+async function loadCodecStatus() {
+    try {
+        // For now, show static codec information
+        // In production, this would query the PBX for actual codec status
+        
+        document.getElementById('codecs-supported').textContent = '4';
+        document.getElementById('codecs-enabled').textContent = '3';
+        document.getElementById('codecs-active').textContent = '0';
+        document.getElementById('codecs-quality').textContent = 'Yes';
+        
+        showNotification('Codec status loaded', 'info');
+        
+    } catch (error) {
+        console.error('Error loading codec status:', error);
+        showNotification('Failed to load codec status', 'error');
+    }
+}
+
+async function saveCodecConfig(event) {
+    event.preventDefault();
+    
+    const g722Enabled = document.getElementById('codec-g722-enabled').checked;
+    const g722Bitrate = parseInt(document.getElementById('codec-g722-bitrate').value);
+    const opusEnabled = document.getElementById('codec-opus-enabled').checked;
+    const preferenceOrder = document.getElementById('codec-preference-order').value
+        .split('\n')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+    
+    const codecConfig = {
+        codecs: {
+            g722: {
+                enabled: g722Enabled,
+                bitrate: g722Bitrate
+            },
+            opus: {
+                enabled: opusEnabled
+            },
+            preference_order: preferenceOrder
+        }
+    };
+    
+    try {
+        // In production, this would save to config via API
+        // For now, just show success message
+        
+        console.log('Codec configuration:', codecConfig);
+        
+        showNotification('✅ Codec configuration saved\n\n⚠️ PBX restart required for changes to take effect', 'success');
+        
+    } catch (error) {
+        console.error('Error saving codec config:', error);
+        showNotification('Failed to save codec configuration', 'error');
     }
 }

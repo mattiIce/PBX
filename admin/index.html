@@ -59,12 +59,15 @@
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
             <button class="tab-button" data-tab="webrtc-phone">📞 Phone</button>
             <button class="tab-button" data-tab="analytics">Analytics</button>
+            <button class="tab-button" data-tab="qos">Call Quality (QoS)</button>
+            <button class="tab-button" data-tab="emergency">🚨 Emergency</button>
             <button class="tab-button" data-tab="extensions">Extensions</button>
             <button class="tab-button" data-tab="phones">Registered Phones</button>
             <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
             <button class="tab-button" data-tab="auto-attendant">Auto Attendant</button>
             <button class="tab-button" data-tab="voicemail">Voicemail</button>
             <button class="tab-button" data-tab="calls">Active Calls</button>
+            <button class="tab-button" data-tab="codecs">Codecs</button>
             <button class="tab-button" data-tab="config">Configuration</button>
         </nav>
 
@@ -320,6 +323,261 @@
                 <h3>Peak Call Hours</h3>
                 <div id="peak-hours-display" class="info-box">
                     Loading peak hours...
+                </div>
+            </div>
+        </div>
+
+        <!-- QoS (Call Quality) Tab -->
+        <div id="qos" class="tab-content">
+            <h2>Call Quality Monitoring (QoS)</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadQoSMetrics()">🔄 Refresh Metrics</button>
+                <button class="btn btn-secondary" onclick="clearQoSAlerts()">🗑️ Clear Alerts</button>
+            </div>
+
+            <!-- QoS Overview Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-active-calls">-</div>
+                    <div class="stat-label">Active Monitored Calls</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-total-calls">-</div>
+                    <div class="stat-label">Total Calls Monitored</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-avg-mos">-</div>
+                    <div class="stat-label">Average MOS Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="qos-calls-with-issues">-</div>
+                    <div class="stat-label">Calls with Issues</div>
+                </div>
+            </div>
+
+            <!-- Active Call Quality -->
+            <div class="config-section">
+                <h3>🔴 Active Call Quality</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Call ID</th>
+                                <th>Duration</th>
+                                <th>MOS Score</th>
+                                <th>Quality</th>
+                                <th>Packet Loss %</th>
+                                <th>Jitter (ms)</th>
+                                <th>Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qos-active-calls-table">
+                            <tr>
+                                <td colspan="7" class="loading">Loading active call metrics...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- QoS Alerts -->
+            <div class="config-section">
+                <h3>⚠️ Quality Alerts</h3>
+                <div id="qos-alerts-container">
+                    <div class="info-box">Loading alerts...</div>
+                </div>
+            </div>
+
+            <!-- Historical Call Quality -->
+            <div class="config-section">
+                <h3>📊 Recent Call Quality History</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Call ID</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>MOS Score</th>
+                                <th>Quality</th>
+                                <th>Packet Loss %</th>
+                                <th>Jitter (ms)</th>
+                                <th>Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qos-history-table">
+                            <tr>
+                                <td colspan="8" class="loading">Loading call history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- QoS Alert Thresholds -->
+            <div class="config-section">
+                <h3>⚙️ Alert Threshold Configuration</h3>
+                <form id="qos-thresholds-form" onsubmit="saveQoSThresholds(event)">
+                    <div class="form-group">
+                        <label>Minimum MOS Score (alert below):</label>
+                        <input type="number" id="qos-threshold-mos" step="0.1" min="1.0" max="5.0" value="3.5">
+                        <small>Alert when MOS score drops below this value (1.0 - 5.0)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Packet Loss % (alert above):</label>
+                        <input type="number" id="qos-threshold-loss" step="0.1" min="0" max="100" value="2.0">
+                        <small>Alert when packet loss exceeds this percentage</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Jitter ms (alert above):</label>
+                        <input type="number" id="qos-threshold-jitter" step="1" min="0" max="500" value="50">
+                        <small>Alert when jitter exceeds this value in milliseconds</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Latency ms (alert above):</label>
+                        <input type="number" id="qos-threshold-latency" step="1" min="0" max="1000" value="300">
+                        <small>Alert when latency exceeds this value in milliseconds</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Thresholds</button>
+                </form>
+            </div>
+
+            <!-- QoS Info Box -->
+            <div class="config-section">
+                <h3>ℹ️ About QoS Monitoring</h3>
+                <div class="info-box">
+                    <p><strong>MOS Score (Mean Opinion Score):</strong> A rating from 1.0 (bad) to 5.0 (excellent) that represents perceived call quality.</p>
+                    <ul>
+                        <li><strong>4.3-5.0:</strong> Excellent - No perceptible quality issues</li>
+                        <li><strong>4.0-4.3:</strong> Good - Minor impairments, acceptable quality</li>
+                        <li><strong>3.6-4.0:</strong> Fair - Noticeable but tolerable impairments</li>
+                        <li><strong>3.1-3.6:</strong> Poor - Quality significantly affected</li>
+                        <li><strong>1.0-3.1:</strong> Bad - Severe quality issues</li>
+                    </ul>
+                    <p><strong>Packet Loss:</strong> Percentage of packets that didn't arrive. Above 2% can cause noticeable quality degradation.</p>
+                    <p><strong>Jitter:</strong> Variation in packet arrival times. High jitter (>50ms) causes choppy audio.</p>
+                    <p><strong>Latency:</strong> Round-trip delay. Above 300ms can cause conversational difficulties.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Notification Tab -->
+        <div id="emergency" class="tab-content">
+            <h2>🚨 Emergency Notification System</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadEmergencyContacts()">🔄 Refresh Contacts</button>
+                <button class="btn btn-warning" onclick="testEmergencyNotification()">🧪 Test System</button>
+                <button class="btn btn-danger" onclick="showTriggerEmergencyModal()">🚨 Trigger Emergency</button>
+            </div>
+
+            <!-- Emergency System Status -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-contacts-count">-</div>
+                    <div class="stat-label">Emergency Contacts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-notifications-sent">-</div>
+                    <div class="stat-label">Notifications Sent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-last-test">-</div>
+                    <div class="stat-label">Last Test</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="emergency-system-status">🟢 Active</div>
+                    <div class="stat-label">System Status</div>
+                </div>
+            </div>
+
+            <!-- Emergency Contacts -->
+            <div class="config-section">
+                <div class="section-header">
+                    <h3>📋 Emergency Contact List</h3>
+                    <button class="btn btn-success" onclick="showAddEmergencyContactModal()">➕ Add Contact</button>
+                </div>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p><strong>Emergency contacts</strong> will be notified automatically when:</p>
+                    <ul>
+                        <li>🚨 Someone dials 911 from the system</li>
+                        <li>⚠️ A panic button is activated</li>
+                        <li>🔴 An emergency notification is manually triggered</li>
+                    </ul>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Name</th>
+                                <th>Extension</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Notification Methods</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergency-contacts-table">
+                            <tr>
+                                <td colspan="7" class="loading">Loading emergency contacts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Emergency Notification History -->
+            <div class="config-section">
+                <h3>📜 Notification History</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Trigger Type</th>
+                                <th>Details</th>
+                                <th>Contacts Notified</th>
+                                <th>Methods Used</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergency-history-table">
+                            <tr>
+                                <td colspan="5" class="loading">Loading notification history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Emergency Information -->
+            <div class="config-section">
+                <h3>ℹ️ Emergency Notification Information</h3>
+                <div class="info-box">
+                    <h4>Priority Levels</h4>
+                    <ul>
+                        <li><strong>Priority 1 (Highest):</strong> First responders, security personnel</li>
+                        <li><strong>Priority 2:</strong> Management, supervisors</li>
+                        <li><strong>Priority 3:</strong> HR, facilities</li>
+                        <li><strong>Priority 4-5:</strong> Additional contacts</li>
+                    </ul>
+                    
+                    <h4>Notification Methods</h4>
+                    <ul>
+                        <li><strong>Call:</strong> Automated voice call to extension or phone</li>
+                        <li><strong>Page:</strong> Overhead paging announcement</li>
+                        <li><strong>Email:</strong> Emergency notification email</li>
+                        <li><strong>SMS:</strong> Text message alert (requires configuration)</li>
+                    </ul>
+                    
+                    <h4>911 Detection</h4>
+                    <p>When someone dials 911 from any extension, all emergency contacts are automatically notified with:</p>
+                    <ul>
+                        <li>Caller's extension and name</li>
+                        <li>Time of call</li>
+                        <li>Location information (if available)</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -743,7 +1001,20 @@
 
             <div id="voicemail-messages-section" style="display: none;">
                 <h3>Voicemail Messages</h3>
-                <div class="table-container">
+                <div class="action-buttons" style="margin-bottom: 15px;">
+                    <button class="btn btn-secondary" onclick="toggleVoicemailView()">
+                        <span id="view-toggle-text">📋 Switch to Table View</span>
+                    </button>
+                </div>
+                
+                <!-- Card View (Visual Voicemail) -->
+                <div id="voicemail-cards-view" class="voicemail-cards-container">
+                    <!-- Voicemail cards will be inserted here -->
+                    <div class="info-box">Select an extension to view voicemails</div>
+                </div>
+                
+                <!-- Table View (Legacy) -->
+                <div id="voicemail-table-view" class="table-container" style="display: none;">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -762,6 +1033,31 @@
                     </table>
                 </div>
             </div>
+            
+            <!-- Audio Player Modal -->
+            <div id="voicemail-player-modal" class="modal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3>🎵 Voicemail Player</h3>
+                        <span class="close" onclick="closeVoicemailPlayer()">&times;</span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div id="vm-player-details" class="info-box" style="margin-bottom: 15px;">
+                            <!-- Message details will be inserted here -->
+                        </div>
+                        <audio id="vm-audio-player" controls style="width: 100%; margin-bottom: 15px;">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div id="vm-transcription-display" style="display: none;">
+                            <h4>📝 Transcription</h4>
+                            <div class="transcription-box">
+                                <p id="vm-transcription-text"></p>
+                                <small id="vm-transcription-confidence" style="color: #6b7280;"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Active Calls Tab -->
@@ -775,6 +1071,204 @@
                 <div id="calls-list" class="calls-list">
                     <div class="loading">Loading calls...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Codecs Tab -->
+        <div id="codecs" class="tab-content">
+            <h2>🎵 Audio & Video Codecs</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadCodecStatus()">🔄 Refresh Status</button>
+            </div>
+
+            <!-- Codec Overview -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-supported">-</div>
+                    <div class="stat-label">Supported Codecs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-enabled">-</div>
+                    <div class="stat-label">Enabled Codecs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-active">-</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-quality">-</div>
+                    <div class="stat-label">HD Audio Capable</div>
+                </div>
+            </div>
+
+            <!-- Audio Codecs -->
+            <div class="config-section">
+                <h3>🔊 Audio Codecs</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Codec</th>
+                                <th>Type</th>
+                                <th>Bitrate</th>
+                                <th>Quality</th>
+                                <th>Bandwidth</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>G.711 (μ-law/A-law)</strong></td>
+                                <td>Narrowband</td>
+                                <td>64 kbps</td>
+                                <td>Standard</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Standard</span></td>
+                                <td>Built-in, always available</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.722</strong></td>
+                                <td>Wideband</td>
+                                <td>48/56/64 kbps</td>
+                                <td>HD Audio</td>
+                                <td>7 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Available</span></td>
+                                <td>Framework ready for native library</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Opus</strong></td>
+                                <td>Adaptive</td>
+                                <td>6-510 kbps</td>
+                                <td>Best Quality</td>
+                                <td>Up to 20 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Implemented</span></td>
+                                <td>Modern codec with FEC, PLC, DTX</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.729</strong></td>
+                                <td>Narrowband</td>
+                                <td>8 kbps</td>
+                                <td>Compressed</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Not Implemented</span></td>
+                                <td>Low bandwidth codec (patent-encumbered)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Video Codecs -->
+            <div class="config-section">
+                <h3>📹 Video Codecs</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Codec</th>
+                                <th>Type</th>
+                                <th>Quality</th>
+                                <th>Bitrate Range</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>VP8</strong></td>
+                                <td>WebRTC</td>
+                                <td>HD</td>
+                                <td>100-2000 kbps</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Planned</span></td>
+                                <td>Open-source WebRTC video codec</td>
+                            </tr>
+                            <tr>
+                                <td><strong>H.264</strong></td>
+                                <td>Standard</td>
+                                <td>HD/Full HD</td>
+                                <td>100-5000 kbps</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Planned</span></td>
+                                <td>Widely supported video codec</td>
+                            </tr>
+                            <tr>
+                                <td><strong>H.265 (HEVC)</strong></td>
+                                <td>Advanced</td>
+                                <td>4K capable</td>
+                                <td>50-4000 kbps</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Future</span></td>
+                                <td>Next-gen codec with better compression</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Codec Information -->
+            <div class="config-section">
+                <h3>ℹ️ Codec Information</h3>
+                <div class="info-box">
+                    <h4>Audio Codec Comparison</h4>
+                    <ul>
+                        <li><strong>G.711:</strong> Uncompressed PCM. Standard quality (3.1 kHz), high bandwidth. Universal compatibility.</li>
+                        <li><strong>G.722:</strong> Wideband (7 kHz). HD audio quality with moderate bandwidth. Better clarity than G.711.</li>
+                        <li><strong>Opus:</strong> Modern adaptive codec. Best quality with variable bitrate. Includes FEC, PLC, and DTX. Recommended for WebRTC.</li>
+                        <li><strong>G.729:</strong> Low bandwidth (8 kbps). Compressed quality. Good for limited bandwidth scenarios.</li>
+                    </ul>
+                    
+                    <h4>Audio Quality Levels</h4>
+                    <ul>
+                        <li><strong>Narrowband (3.1 kHz):</strong> Standard telephone quality - G.711, G.729</li>
+                        <li><strong>Wideband (7 kHz):</strong> HD audio quality - G.722</li>
+                        <li><strong>Superwideband (12-20 kHz):</strong> Best audio quality - Opus</li>
+                    </ul>
+                    
+                    <h4>Codec Selection Guidelines</h4>
+                    <ul>
+                        <li><strong>Internal calls:</strong> Use G.722 or Opus for best quality</li>
+                        <li><strong>External/trunk calls:</strong> G.711 for compatibility, G.722 if supported</li>
+                        <li><strong>Low bandwidth:</strong> G.729 or Opus at low bitrate</li>
+                        <li><strong>WebRTC:</strong> Opus (required), VP8/H.264 for video</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Codec Configuration -->
+            <div class="config-section">
+                <h3>⚙️ Codec Configuration</h3>
+                <form id="codec-config-form" onsubmit="saveCodecConfig(event)">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="codec-g722-enabled" checked>
+                            Enable G.722 HD Audio
+                        </label>
+                        <small>Wideband audio codec for higher quality calls</small>
+                    </div>
+                    <div class="form-group">
+                        <label>G.722 Default Bitrate:</label>
+                        <select id="codec-g722-bitrate">
+                            <option value="48000">48 kbps</option>
+                            <option value="56000">56 kbps</option>
+                            <option value="64000" selected>64 kbps (Recommended)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="codec-opus-enabled" checked>
+                            Enable Opus Codec
+                        </label>
+                        <small>Modern adaptive codec with best quality</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Codec Preference Order:</label>
+                        <textarea id="codec-preference-order" rows="4" placeholder="Opus&#10;G.722&#10;G.711">Opus
+G.722
+G.711</textarea>
+                        <small>Codecs will be negotiated in this order (one per line)</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Codec Settings</button>
+                </form>
             </div>
         </div>
 
@@ -1394,6 +1888,108 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditMenuOptionModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Menu Option</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Emergency Contact Modal -->
+    <div id="add-emergency-contact-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Add Emergency Contact</h3>
+                <span class="close" onclick="closeAddEmergencyContactModal()">&times;</span>
+            </div>
+            <form id="add-emergency-contact-form" onsubmit="addEmergencyContact(event)">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="emergency-contact-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Extension:</label>
+                    <input type="text" id="emergency-contact-extension" pattern="[0-9]+" placeholder="1001">
+                    <small>Internal extension number</small>
+                </div>
+                <div class="form-group">
+                    <label>External Phone:</label>
+                    <input type="tel" id="emergency-contact-phone" placeholder="+1-555-0100">
+                    <small>External phone number for calls/SMS</small>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="emergency-contact-email" placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Priority Level:</label>
+                    <select id="emergency-contact-priority" required>
+                        <option value="1">1 - Highest (First Responders)</option>
+                        <option value="2">2 - High (Management)</option>
+                        <option value="3" selected>3 - Medium (Staff)</option>
+                        <option value="4">4 - Low</option>
+                        <option value="5">5 - Lowest</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notification Methods:</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-call" value="call" checked>
+                            📞 Call (Voice notification)
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-page" value="page">
+                            📢 Page (Overhead announcement)
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-email" value="email">
+                            📧 Email
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" id="method-sms" value="sms">
+                            💬 SMS (Text message)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEmergencyContactModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Contact</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Trigger Emergency Modal -->
+    <div id="trigger-emergency-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚨 Trigger Emergency Notification</h3>
+                <span class="close" onclick="closeTriggerEmergencyModal()">&times;</span>
+            </div>
+            <form id="trigger-emergency-form" onsubmit="triggerEmergency(event)">
+                <div class="info-box" style="background: #fee2e2; border-color: #ef4444; margin-bottom: 15px;">
+                    <p><strong>⚠️ WARNING:</strong> This will send real emergency notifications to all configured contacts.</p>
+                    <p>Only use this for actual emergencies or coordinated testing.</p>
+                </div>
+                <div class="form-group">
+                    <label>Trigger Type:</label>
+                    <select id="trigger-type" required>
+                        <option value="manual">Manual Trigger</option>
+                        <option value="test">Test (Clearly marked as test)</option>
+                        <option value="panic_button">Panic Button</option>
+                        <option value="other">Other Emergency</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Location/Details:</label>
+                    <textarea id="trigger-details" rows="3" placeholder="Building A, Floor 3, Room 301"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Additional Information:</label>
+                    <textarea id="trigger-info" rows="3" placeholder="Describe the situation..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTriggerEmergencyModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">🚨 Send Emergency Notification</button>
                 </div>
             </form>
         </div>
