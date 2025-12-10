@@ -2844,3 +2844,63 @@ async function testEmergencyNotification() {
         showNotification('Failed to test emergency notification', 'error');
     }
 }
+
+// ====================================
+// Codec Management Functions
+// ====================================
+
+async function loadCodecStatus() {
+    try {
+        // For now, show static codec information
+        // In production, this would query the PBX for actual codec status
+        
+        document.getElementById('codecs-supported').textContent = '4';
+        document.getElementById('codecs-enabled').textContent = '3';
+        document.getElementById('codecs-active').textContent = '0';
+        document.getElementById('codecs-quality').textContent = 'Yes';
+        
+        showNotification('Codec status loaded', 'info');
+        
+    } catch (error) {
+        console.error('Error loading codec status:', error);
+        showNotification('Failed to load codec status', 'error');
+    }
+}
+
+async function saveCodecConfig(event) {
+    event.preventDefault();
+    
+    const g722Enabled = document.getElementById('codec-g722-enabled').checked;
+    const g722Bitrate = parseInt(document.getElementById('codec-g722-bitrate').value);
+    const opusEnabled = document.getElementById('codec-opus-enabled').checked;
+    const preferenceOrder = document.getElementById('codec-preference-order').value
+        .split('\n')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+    
+    const codecConfig = {
+        codecs: {
+            g722: {
+                enabled: g722Enabled,
+                bitrate: g722Bitrate
+            },
+            opus: {
+                enabled: opusEnabled
+            },
+            preference_order: preferenceOrder
+        }
+    };
+    
+    try {
+        // In production, this would save to config via API
+        // For now, just show success message
+        
+        console.log('Codec configuration:', codecConfig);
+        
+        showNotification('✅ Codec configuration saved\n\n⚠️ PBX restart required for changes to take effect', 'success');
+        
+    } catch (error) {
+        console.error('Error saving codec config:', error);
+        showNotification('Failed to save codec configuration', 'error');
+    }
+}

@@ -67,6 +67,7 @@
             <button class="tab-button" data-tab="auto-attendant">Auto Attendant</button>
             <button class="tab-button" data-tab="voicemail">Voicemail</button>
             <button class="tab-button" data-tab="calls">Active Calls</button>
+            <button class="tab-button" data-tab="codecs">Codecs</button>
             <button class="tab-button" data-tab="config">Configuration</button>
         </nav>
 
@@ -1070,6 +1071,204 @@
                 <div id="calls-list" class="calls-list">
                     <div class="loading">Loading calls...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Codecs Tab -->
+        <div id="codecs" class="tab-content">
+            <h2>🎵 Audio & Video Codecs</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadCodecStatus()">🔄 Refresh Status</button>
+            </div>
+
+            <!-- Codec Overview -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-supported">-</div>
+                    <div class="stat-label">Supported Codecs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-enabled">-</div>
+                    <div class="stat-label">Enabled Codecs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-active">-</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="codecs-quality">-</div>
+                    <div class="stat-label">HD Audio Capable</div>
+                </div>
+            </div>
+
+            <!-- Audio Codecs -->
+            <div class="config-section">
+                <h3>🔊 Audio Codecs</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Codec</th>
+                                <th>Type</th>
+                                <th>Bitrate</th>
+                                <th>Quality</th>
+                                <th>Bandwidth</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>G.711 (μ-law/A-law)</strong></td>
+                                <td>Narrowband</td>
+                                <td>64 kbps</td>
+                                <td>Standard</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Standard</span></td>
+                                <td>Built-in, always available</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.722</strong></td>
+                                <td>Wideband</td>
+                                <td>48/56/64 kbps</td>
+                                <td>HD Audio</td>
+                                <td>7 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Available</span></td>
+                                <td>Framework ready for native library</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Opus</strong></td>
+                                <td>Adaptive</td>
+                                <td>6-510 kbps</td>
+                                <td>Best Quality</td>
+                                <td>Up to 20 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Implemented</span></td>
+                                <td>Modern codec with FEC, PLC, DTX</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.729</strong></td>
+                                <td>Narrowband</td>
+                                <td>8 kbps</td>
+                                <td>Compressed</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Not Implemented</span></td>
+                                <td>Low bandwidth codec (patent-encumbered)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Video Codecs -->
+            <div class="config-section">
+                <h3>📹 Video Codecs</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Codec</th>
+                                <th>Type</th>
+                                <th>Quality</th>
+                                <th>Bitrate Range</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>VP8</strong></td>
+                                <td>WebRTC</td>
+                                <td>HD</td>
+                                <td>100-2000 kbps</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Planned</span></td>
+                                <td>Open-source WebRTC video codec</td>
+                            </tr>
+                            <tr>
+                                <td><strong>H.264</strong></td>
+                                <td>Standard</td>
+                                <td>HD/Full HD</td>
+                                <td>100-5000 kbps</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Planned</span></td>
+                                <td>Widely supported video codec</td>
+                            </tr>
+                            <tr>
+                                <td><strong>H.265 (HEVC)</strong></td>
+                                <td>Advanced</td>
+                                <td>4K capable</td>
+                                <td>50-4000 kbps</td>
+                                <td><span class="badge" style="background: #6b7280;">⚠️ Future</span></td>
+                                <td>Next-gen codec with better compression</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Codec Information -->
+            <div class="config-section">
+                <h3>ℹ️ Codec Information</h3>
+                <div class="info-box">
+                    <h4>Audio Codec Comparison</h4>
+                    <ul>
+                        <li><strong>G.711:</strong> Uncompressed PCM. Standard quality (3.1 kHz), high bandwidth. Universal compatibility.</li>
+                        <li><strong>G.722:</strong> Wideband (7 kHz). HD audio quality with moderate bandwidth. Better clarity than G.711.</li>
+                        <li><strong>Opus:</strong> Modern adaptive codec. Best quality with variable bitrate. Includes FEC, PLC, and DTX. Recommended for WebRTC.</li>
+                        <li><strong>G.729:</strong> Low bandwidth (8 kbps). Compressed quality. Good for limited bandwidth scenarios.</li>
+                    </ul>
+                    
+                    <h4>Audio Quality Levels</h4>
+                    <ul>
+                        <li><strong>Narrowband (3.1 kHz):</strong> Standard telephone quality - G.711, G.729</li>
+                        <li><strong>Wideband (7 kHz):</strong> HD audio quality - G.722</li>
+                        <li><strong>Superwideband (12-20 kHz):</strong> Best audio quality - Opus</li>
+                    </ul>
+                    
+                    <h4>Codec Selection Guidelines</h4>
+                    <ul>
+                        <li><strong>Internal calls:</strong> Use G.722 or Opus for best quality</li>
+                        <li><strong>External/trunk calls:</strong> G.711 for compatibility, G.722 if supported</li>
+                        <li><strong>Low bandwidth:</strong> G.729 or Opus at low bitrate</li>
+                        <li><strong>WebRTC:</strong> Opus (required), VP8/H.264 for video</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Codec Configuration -->
+            <div class="config-section">
+                <h3>⚙️ Codec Configuration</h3>
+                <form id="codec-config-form" onsubmit="saveCodecConfig(event)">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="codec-g722-enabled" checked>
+                            Enable G.722 HD Audio
+                        </label>
+                        <small>Wideband audio codec for higher quality calls</small>
+                    </div>
+                    <div class="form-group">
+                        <label>G.722 Default Bitrate:</label>
+                        <select id="codec-g722-bitrate">
+                            <option value="48000">48 kbps</option>
+                            <option value="56000">56 kbps</option>
+                            <option value="64000" selected>64 kbps (Recommended)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="codec-opus-enabled" checked>
+                            Enable Opus Codec
+                        </label>
+                        <small>Modern adaptive codec with best quality</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Codec Preference Order:</label>
+                        <textarea id="codec-preference-order" rows="4" placeholder="Opus&#10;G.722&#10;G.711">Opus
+G.722
+G.711</textarea>
+                        <small>Codecs will be negotiated in this order (one per line)</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Codec Settings</button>
+                </form>
             </div>
         </div>
 
