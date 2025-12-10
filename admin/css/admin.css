@@ -96,6 +96,21 @@ header h1 {
     font-weight: 600;
 }
 
+/* Phone Required Tab Indicator */
+.tab-button.phone-required {
+    position: relative;
+}
+
+.tab-button.phone-required span {
+    font-size: 0.7em;
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+.tab-button.phone-required:hover span {
+    opacity: 1;
+}
+
 /* Tab Content */
 .tab-content {
     display: none;
