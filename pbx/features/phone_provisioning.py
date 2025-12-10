@@ -650,7 +650,7 @@ P30 = 13   # GMT-8
 
         # Generate config URL based on MAC
         provisioning_url_format = self.config.get('provisioning.url_format',
-                                                  'http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg')
+                                                  'https://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg')
         config_url = provisioning_url_format.replace('{mac}', device.mac_address)
         config_url = config_url.replace('{{SERVER_IP}}',
                                        self.config.get('server.external_ip', '127.0.0.1'))
@@ -879,10 +879,11 @@ P30 = 13   # GMT-8
             self.logger.warning(f"  → Device needs to be registered first")
             self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
             self.logger.warning(f"  → Example:")
-            self.logger.warning(f"     curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+            self.logger.warning(f"     curl -k -X POST https://YOUR_PBX_IP:8080/api/provisioning/devices \\")
             self.logger.warning(f"       -H 'Content-Type: application/json' \\")
             self.logger.warning(f"       -d '{{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
             self.logger.warning(f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys")
+            self.logger.warning(f"  → Note: Use -k with curl if using self-signed certificates")
             
             # Check if there are similar MACs (might be a format issue)
             mac_prefix = normalized[:6]  # First 6 chars (OUI)

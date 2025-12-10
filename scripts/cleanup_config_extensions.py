@@ -101,7 +101,7 @@ def main():
     # Add comment explaining where extensions are stored
     comment = """# Extensions are now stored in the database
 # To view extensions: python scripts/list_extensions_from_db.py
-# To add extensions: Use the admin web interface at http://YOUR_SERVER_IP:8080/admin/
+# To add extensions: Use the admin web interface at https://YOUR_SERVER_IP:8080/admin/
 # (replace YOUR_SERVER_IP with your server address, e.g., localhost)
 # or the API endpoint: POST /api/extensions
 """
@@ -128,7 +128,7 @@ def main():
     print("     python main.py")
     print()
     print("  2. Access the admin interface:")
-    print("     http://YOUR_SERVER_IP:8080/admin/")
+    print("     https://YOUR_SERVER_IP:8080/admin/")
     print("     (replace YOUR_SERVER_IP with your server address)")
     print()
     print("  3. Extensions will be loaded from the database automatically")

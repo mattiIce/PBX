@@ -1160,9 +1160,10 @@ async function loadPhonebookSettings() {
             const data = await response.json();
             const serverIP = data.server_ip || window.location.hostname;
             const port = data.api_port || '8080';
+            const protocol = window.location.protocol; // Use current protocol (http: or https:)
             
             // Pre-populate remote phonebook URL
-            document.getElementById('remote-phonebook-url').value = `http://${serverIP}:${port}/api/phone-book/export/xml`;
+            document.getElementById('remote-phonebook-url').value = `${protocol}//${serverIP}:${port}/api/phone-book/export/xml`;
             
             // Set default values
             document.getElementById('ldap-phonebook-port').value = '636';
@@ -1200,7 +1201,8 @@ function toggleProvisioningEnabled() {
 function updateProvisioningUrlFormat() {
     const serverIP = document.getElementById('provisioning-server-ip').value || 'SERVER';
     const port = document.getElementById('provisioning-port').value || '8080';
-    const urlFormat = `http://${serverIP}:${port}/provision/{mac}.cfg`;
+    const protocol = window.location.protocol; // Use current protocol (http: or https:)
+    const urlFormat = `${protocol}//${serverIP}:${port}/provision/{mac}.cfg`;
     document.getElementById('provisioning-url-format').value = urlFormat;
 }
 
@@ -1209,6 +1211,7 @@ async function saveProvisioningSettings() {
     const serverIP = document.getElementById('provisioning-server-ip').value;
     const port = document.getElementById('provisioning-port').value;
     const customDir = document.getElementById('provisioning-custom-dir').value;
+    const protocol = window.location.protocol; // Use current protocol (http: or https:)
     
     if (!serverIP) {
         showNotification('Please enter a server IP address', 'error');
@@ -1218,7 +1221,7 @@ async function saveProvisioningSettings() {
     const configMsg = `Provisioning settings need to be updated in config.yml:\n\n` +
           `provisioning:\n` +
           `  enabled: ${enabled}\n` +
-          `  url_format: http://${serverIP}:${port}/provision/{mac}.cfg\n` +
+          `  url_format: ${protocol}//${serverIP}:${port}/provision/{mac}.cfg\n` +
           `  custom_templates_dir: "${customDir}"\n\n` +
           'Then restart the PBX server.';
     
@@ -1242,7 +1245,8 @@ function toggleRemotePhonebookSettings() {
         // Auto-populate remote phonebook URL based on server settings
         const serverIP = document.getElementById('provisioning-server-ip').value || window.location.hostname;
         const port = document.getElementById('provisioning-port').value || '8080';
-        document.getElementById('remote-phonebook-url').value = `http://${serverIP}:${port}/api/phone-book/export/xml`;
+        const protocol = window.location.protocol; // Use current protocol (http: or https:)
+        document.getElementById('remote-phonebook-url').value = `${protocol}//${serverIP}:${port}/api/phone-book/export/xml`;
     }
 }
 

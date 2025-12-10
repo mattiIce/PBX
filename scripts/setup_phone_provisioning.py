@@ -27,7 +27,7 @@ except ImportError:
 class PhoneProvisioningSetup:
     """Interactive setup for phone provisioning"""
 
-    def __init__(self, config_path='config.yml', api_url='http://localhost:8080'):
+    def __init__(self, config_path='config.yml', api_url='https://localhost:8080'):
         self.config_path = config_path
         self.api_url = api_url
         self.config = None
@@ -259,7 +259,7 @@ class PhoneProvisioningSetup:
         port = self.get_input("Enter API port", str(current_port))
         
         # Build provisioning URL
-        url_format = f"http://{server_ip}:{port}/provision/{{mac}}.cfg"
+        url_format = f"https://{server_ip}:{port}/provision/{{mac}}.cfg"
         
         print(f"\nℹ️  Phones will download configuration from:")
         print(f"   {url_format}")
@@ -511,7 +511,7 @@ class PhoneProvisioningSetup:
             port = api_section.get('port', 8080)
             server_section = self.config.get('server', {})
             ip = server_section.get('external_ip', 'localhost')
-            print(f"   http://{ip}:{port}/admin/")
+            print(f"   https://{ip}:{port}/admin/")
         
         print()
         print("📚 For more information, see PHONE_PROVISIONING.md")
@@ -590,7 +590,7 @@ Examples:
   python scripts/setup_phone_provisioning.py --config /path/to/config.yml
   
   # Use different API URL
-  python scripts/setup_phone_provisioning.py --api-url http://192.168.1.100:8080
+  python scripts/setup_phone_provisioning.py --api-url https://192.168.1.100:8080
         """
     )
     
@@ -602,8 +602,8 @@ Examples:
     
     parser.add_argument(
         '--api-url',
-        default='http://localhost:8080',
-        help='PBX API URL (default: http://localhost:8080)'
+        default='https://localhost:8080',
+        help='PBX API URL (default: https://localhost:8080)'
     )
     
     args = parser.parse_args()
