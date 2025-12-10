@@ -267,14 +267,21 @@ class RTPRelayHandler:
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
         Set the two endpoints to relay between
+        
+        Either or both endpoints can be None initially. The relay will learn
+        endpoints from actual RTP packets (symmetric RTP) or wait until both
+        are explicitly set.
 
         Args:
-            endpoint_a: Tuple of (host, port)
-            endpoint_b: Tuple of (host, port)
+            endpoint_a: Tuple of (host, port) or None
+            endpoint_b: Tuple of (host, port) or None
         """
         with self.lock:
-            self.endpoint_a = endpoint_a
-            self.endpoint_b = endpoint_b
+            # Only update if not None, preserving existing values
+            if endpoint_a is not None:
+                self.endpoint_a = endpoint_a
+            if endpoint_b is not None:
+                self.endpoint_b = endpoint_b
 
     def start(self):
         """Start RTP relay handler"""
@@ -334,9 +341,9 @@ class RTPRelayHandler:
                 # Symmetric RTP: Learn actual source addresses from first packets
                 # This handles NAT traversal where actual source differs from SDP
                 with self.lock:
-                    if not self.endpoint_a or not self.endpoint_b:
-                        # Not enough info to relay yet
-                        continue
+                    # Allow learning even if only one endpoint is set (fixes early packet dropping)
+                    # This is important because INVITE sets endpoint_a but endpoint_b is only
+                    # set after 200 OK. RTP packets may arrive during this window.
                     
                     # Determine if this packet is from A, B, or unknown
                     is_from_a = False
@@ -348,13 +355,13 @@ class RTPRelayHandler:
                     elif self.learned_b and (addr[0] == self.learned_b[0] and addr[1] == self.learned_b[1]):
                         is_from_b = True
                     # Check if packet matches expected SDP address for A
-                    elif (addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]):
+                    elif self.endpoint_a and (addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]):
                         if not self.learned_a:
                             self.learned_a = addr
                             self.logger.info(f"Learned endpoint A: {addr} (matched SDP)")
                         is_from_a = True
                     # Check if packet matches expected SDP address for B
-                    elif (addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]):
+                    elif self.endpoint_b and (addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]):
                         if not self.learned_b:
                             self.learned_b = addr
                             self.logger.info(f"Learned endpoint B: {addr} (matched SDP)")
@@ -376,7 +383,8 @@ class RTPRelayHandler:
                         # First packet from unknown source - assume it's endpoint A
                         self.learned_a = addr
                         is_from_a = True
-                        self.logger.info(f"Learned endpoint A via symmetric RTP: {addr} (expected {self.endpoint_a})")
+                        expected_str = f" (expected {self.endpoint_a})" if self.endpoint_a else " (no SDP endpoint set)"
+                        self.logger.info(f"Learned endpoint A via symmetric RTP: {addr}{expected_str}")
                     elif not self.learned_b and addr != self.learned_a:
                         # Check if we're still in the learning window
                         elapsed = time.time() - self._start_time if self._start_time else 0
@@ -392,7 +400,8 @@ class RTPRelayHandler:
                         # Second packet from different source - assume it's endpoint B
                         self.learned_b = addr
                         is_from_b = True
-                        self.logger.info(f"Learned endpoint B via symmetric RTP: {addr} (expected {self.endpoint_b})")
+                        expected_str = f" (expected {self.endpoint_b})" if self.endpoint_b else " (no SDP endpoint set)"
+                        self.logger.info(f"Learned endpoint B via symmetric RTP: {addr}{expected_str}")
                     else:
                         # Packet from unknown third source or duplicate
                         self.logger.debug(f"RTP packet from unknown source: {addr} (learned A:{self.learned_a}, B:{self.learned_b})")
@@ -411,18 +420,26 @@ class RTPRelayHandler:
                         if self.qos_metrics:
                             self.qos_metrics.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: B->A")
-                    elif is_from_a:
-                        # From A but B not learned yet - try sending to expected B
+                    elif is_from_a and self.endpoint_b:
+                        # From A but B not learned yet - try sending to expected B (if known)
                         self.socket.sendto(data, self.endpoint_b)
                         if self.qos_metrics:
                             self.qos_metrics.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: A->B (B not learned, using SDP)")
-                    elif is_from_b:
-                        # From B but A not learned yet - try sending to expected A
+                    elif is_from_b and self.endpoint_a:
+                        # From B but A not learned yet - try sending to expected A (if known)
                         self.socket.sendto(data, self.endpoint_a)
                         if self.qos_metrics:
                             self.qos_metrics.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: B->A (A not learned, using SDP)")
+                    elif is_from_a:
+                        # From A but B not known at all yet - must drop packet
+                        # This is rare since endpoint_b is usually set soon after endpoint_a
+                        self.logger.debug(f"Packet from A dropped - waiting for B endpoint")
+                    elif is_from_b:
+                        # From B but A not known at all yet - must drop packet
+                        # This is rare since endpoint_a is usually set first
+                        self.logger.debug(f"Packet from B dropped - waiting for A endpoint")
 
             except Exception as e:
                 if self.running:
