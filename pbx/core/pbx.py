@@ -1052,10 +1052,10 @@ class PBXCore:
                     import os
                     
                     # Create RTP player to send audio to caller
-                    # Note: Using adjacent port (rtp_port + 1) for sending audio back to caller
-                    # In production, consider implementing proper port allocation to avoid conflicts
+                    # Use the same port as the RTPRecorder since both bind to 0.0.0.0
+                    # and can handle bidirectional RTP communication
                     player = RTPPlayer(
-                        local_port=call.rtp_ports[0] + 1,  # Adjacent port for sending
+                        local_port=call.rtp_ports[0],  # Same port as RTPRecorder
                         remote_host=call.caller_rtp['address'],
                         remote_port=call.caller_rtp['port'],
                         call_id=call_id
@@ -1362,8 +1362,9 @@ class PBXCore:
                 return
             
             # Create RTP player for audio prompts
+            # Use the same port as allocated for the call for proper RTP communication
             player = RTPPlayer(
-                local_port=call.rtp_ports[0] + 1,
+                local_port=call.rtp_ports[0],
                 remote_host=call.caller_rtp['address'],
                 remote_port=call.caller_rtp['port'],
                 call_id=call_id
@@ -1889,8 +1890,9 @@ class PBXCore:
                 self.end_call(call_id)
                 return
 
+            # Use the same port as allocated for the call for proper RTP communication
             player = RTPPlayer(
-                local_port=call.rtp_ports[0] + 1,
+                local_port=call.rtp_ports[0],
                 remote_host=call.caller_rtp['address'],
                 remote_port=call.caller_rtp['port'],
                 call_id=call_id
@@ -1993,11 +1995,12 @@ class PBXCore:
             self.logger.info(f"[VM IVR] ✓ Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}")
             
             # Create RTP player for sending audio prompts
+            # Use the same port as allocated for the call for proper RTP communication
             self.logger.info(f"[VM IVR] Creating RTP player for audio prompts...")
-            self.logger.info(f"[VM IVR]   Local port: {call.rtp_ports[0] + 1}")
+            self.logger.info(f"[VM IVR]   Local port: {call.rtp_ports[0]}")
             self.logger.info(f"[VM IVR]   Remote: {call.caller_rtp['address']}:{call.caller_rtp['port']}")
             player = RTPPlayer(
-                local_port=call.rtp_ports[0] + 1,
+                local_port=call.rtp_ports[0],
                 remote_host=call.caller_rtp['address'],
                 remote_port=call.caller_rtp['port'],
                 call_id=call_id
