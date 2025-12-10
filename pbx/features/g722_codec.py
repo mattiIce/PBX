@@ -32,6 +32,9 @@ class G722Codec:
     MODE_56K = 56000   # 56 kbit/s
     MODE_48K = 48000   # 48 kbit/s
     
+    # Class-level flag to track if stub warning has been logged
+    _stub_warning_logged = False
+    
     def __init__(self, bitrate: int = MODE_64K):
         """
         Initialize G.722 codec
@@ -52,8 +55,10 @@ class G722Codec:
         
         if self.enabled:
             self.logger.info(f"G.722 codec initialized at {bitrate} bps")
-        else:
+        elif not G722Codec._stub_warning_logged:
+            # Only log the stub warning once per session
             self.logger.warning("G.722 codec library not available - using stub implementation")
+            G722Codec._stub_warning_logged = True
     
     def _init_codec_library(self):
         """Initialize native G.722 codec library"""
@@ -69,7 +74,7 @@ class G722Codec:
             
             # For now, mark as stub implementation
             self.enabled = False
-            self.logger.warning("Native G.722 library not found - stub implementation active")
+            # Only log this warning once at the class level (in __init__)
             
         except Exception as e:
             self.logger.error(f"Failed to initialize G.722 codec: {e}")
