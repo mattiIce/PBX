@@ -28,7 +28,7 @@ def get_tts_requirements():
     return "pip install gTTS pydub"
 
 
-def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=16000, convert_to_g722=False):
+def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=8000, convert_to_g722=False):
     """
     Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
     
@@ -41,7 +41,7 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         language: Language code (default 'en' for English)
         tld: Top-level domain (default 'com' for US English accent)
         slow: Whether to use slow speech rate (default False for natural speed)
-        sample_rate: Sample rate in Hz (default 16000 Hz for wideband audio)
+        sample_rate: Sample rate in Hz (default 8000 Hz for PCMU/G.711 audio)
                     Can be 8000 Hz for narrowband or 16000 Hz for wideband
         convert_to_g722: Convert output to G.722 format using ffmpeg (default False)
                         Requires ffmpeg with G.722 codec support. Falls back to PCM
@@ -73,10 +73,10 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
             tts.save(temp_mp3_path)
         
         # Convert to telephony format WAV (16-bit, mono, specified sample rate)
-        # Default to 16kHz for G.722 HD audio codec support
+        # Default to 8kHz for PCMU/G.711 codec support
         audio = AudioSegment.from_mp3(temp_mp3_path)
         audio = audio.set_channels(1)  # Mono
-        audio = audio.set_frame_rate(sample_rate)  # 16000 Hz (G.722) or 8000 Hz (G.711)
+        audio = audio.set_frame_rate(sample_rate)  # 8000 Hz (G.711/PCMU) or 16000 Hz (G.722)
         audio = audio.set_sample_width(2)  # 16-bit
         
         # Export audio
@@ -145,7 +145,7 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         raise
 
 
-def generate_prompts(prompts, output_dir, company_name=None, sample_rate=16000):
+def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
     """
     Generate multiple voice prompts from text
     
@@ -153,7 +153,7 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=16000):
         prompts: Dict of {filename: text} to generate
         output_dir: Directory to save audio files
         company_name: Optional company name to substitute in text
-        sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
+        sample_rate: Sample rate in Hz (default 8000 Hz for PCMU/G.711 audio)
         
     Returns:
         tuple: (success_count, total_count)
