@@ -175,17 +175,24 @@ Features with foundational implementations that can be extended:
   - Files: pbx/features/statistics.py, admin/index.html (Analytics tab)
   - Impact: Complete system health monitoring and business intelligence
 
-- [⚠️] **Historical Call Analytics** - CDR-based reporting
-  - Status: Framework exists in pbx/features/cdr.py
-  - Current: Call Detail Records stored and retrievable
-  - Needs: Advanced query capabilities, visualization, trends
-  - Impact: Business insights from call data
+- [x] **Historical Call Analytics** - CDR-based reporting
+  - Status: ✅ FULLY IMPLEMENTED (December 10, 2025)
+  - Features: Advanced query with date ranges and filters, comprehensive metrics
+  - Query Capabilities: Filter by extension, disposition, duration, date range
+  - Export: CSV export functionality for external analysis
+  - Visualization: Dashboard charts and trends (existing analytics tab)
+  - Integration: QoS metrics integrated into call quality analytics
+  - Impact: Complete business insights from call data
 
-- [⚠️] **Agent Performance Metrics** - Queue agent statistics
-  - Status: Framework exists in pbx/features/call_queue.py
-  - Current: Agent call counts, last call time tracking
-  - Needs: Comprehensive metrics (avg handle time, service level, etc.)
-  - Impact: Call center optimization
+- [x] **Agent Performance Metrics** - Queue agent statistics
+  - Status: ✅ FULLY IMPLEMENTED (December 10, 2025)
+  - Metrics: Average Handle Time (AHT), Average Speed of Answer (ASA)
+  - Service Level: % calls answered within threshold (20s default)
+  - Abandonment Rate: % calls abandoned before answer
+  - Answer Rate: % calls successfully answered
+  - Queue Filtering: Per-queue or all-queues metrics
+  - API Endpoints: /api/analytics/call-center
+  - Impact: Complete call center optimization metrics
 
 - [x] **Call Quality Monitoring (QoS)** - MOS score tracking and alerts
   - Status: ✅ FULLY INTEGRATED (December 10, 2025)

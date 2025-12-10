@@ -344,6 +344,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_calls()
             elif path == '/api/statistics':
                 self._handle_get_statistics()
+            elif path == '/api/analytics/advanced':
+                self._handle_get_advanced_analytics()
+            elif path == '/api/analytics/call-center':
+                self._handle_get_call_center_metrics()
+            elif path == '/api/analytics/export':
+                self._handle_export_analytics()
             elif path == '/api/qos/metrics':
                 self._handle_get_qos_metrics()
             elif path == '/api/qos/alerts':
@@ -580,8 +586,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Get dashboard statistics
                 stats = self.pbx_core.statistics_engine.get_dashboard_statistics(days)
                 
-                # Add call quality metrics
-                stats['call_quality'] = self.pbx_core.statistics_engine.get_call_quality_metrics()
+                # Add call quality metrics (with QoS integration)
+                stats['call_quality'] = self.pbx_core.statistics_engine.get_call_quality_metrics(self.pbx_core)
                 
                 # Add real-time metrics
                 stats['real_time'] = self.pbx_core.statistics_engine.get_real_time_metrics(self.pbx_core)
@@ -4152,6 +4158,114 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
+    
+    def _handle_get_advanced_analytics(self):
+        """Get advanced analytics with date range and filters"""
+        if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                
+                start_date = params.get('start_date', [None])[0]
+                end_date = params.get('end_date', [None])[0]
+                
+                if not start_date or not end_date:
+                    self._send_json({'error': 'start_date and end_date parameters required'}, 400)
+                    return
+                
+                # Parse filters
+                filters = {}
+                if 'extension' in params:
+                    filters['extension'] = params['extension'][0]
+                if 'disposition' in params:
+                    filters['disposition'] = params['disposition'][0]
+                if 'min_duration' in params:
+                    filters['min_duration'] = int(params['min_duration'][0])
+                
+                analytics = self.pbx_core.statistics_engine.get_advanced_analytics(
+                    start_date, end_date, filters if filters else None
+                )
+                
+                self._send_json(analytics)
+                
+            except ValueError as e:
+                self._send_json({'error': f'Invalid date format: {str(e)}'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error getting advanced analytics: {e}")
+                self._send_json({'error': f'Error getting advanced analytics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Statistics engine not initialized'}, 500)
+    
+    def _handle_get_call_center_metrics(self):
+        """Get call center performance metrics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                
+                days = int(params.get('days', [7])[0])
+                queue_name = params.get('queue', [None])[0]
+                
+                metrics = self.pbx_core.statistics_engine.get_call_center_metrics(days, queue_name)
+                
+                self._send_json(metrics)
+                
+            except Exception as e:
+                self.logger.error(f"Error getting call center metrics: {e}")
+                self._send_json({'error': f'Error getting call center metrics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Statistics engine not initialized'}, 500)
+    
+    def _handle_export_analytics(self):
+        """Export analytics data to CSV"""
+        if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                
+                start_date = params.get('start_date', [None])[0]
+                end_date = params.get('end_date', [None])[0]
+                
+                if not start_date or not end_date:
+                    self._send_json({'error': 'start_date and end_date parameters required'}, 400)
+                    return
+                
+                # Get analytics data
+                analytics = self.pbx_core.statistics_engine.get_advanced_analytics(
+                    start_date, end_date, None
+                )
+                
+                # Export to CSV
+                import tempfile
+                import os
+                
+                temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv')
+                temp_file.close()
+                
+                if self.pbx_core.statistics_engine.export_to_csv(analytics['records'], temp_file.name):
+                    # Send file
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/csv')
+                    self.send_header('Content-Disposition', 
+                                    f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"')
+                    self.end_headers()
+                    
+                    with open(temp_file.name, 'rb') as f:
+                        self.wfile.write(f.read())
+                    
+                    # Clean up temp file
+                    os.unlink(temp_file.name)
+                else:
+                    self._send_json({'error': 'Failed to export data'}, 500)
+                
+            except Exception as e:
+                self.logger.error(f"Error exporting analytics: {e}")
+                self._send_json({'error': f'Error exporting analytics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Statistics engine not initialized'}, 500)
 
 
 class PBXAPIServer:
