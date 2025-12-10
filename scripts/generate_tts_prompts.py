@@ -39,14 +39,14 @@ if not is_tts_available():
     sys.exit(1)
 
 
-def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your company", sample_rate=16000):
+def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your company", sample_rate=8000):
     """
     Generate TTS voice prompts for auto attendant
     
     Args:
         output_dir: Directory to save audio files
         company_name: Company name to use in greeting
-        sample_rate: Sample rate in Hz (default 16000 Hz for wideband audio)
+        sample_rate: Sample rate in Hz (default 8000 Hz for PCMU/G.711 audio)
     
     Returns:
         int: Number of files successfully generated
@@ -118,13 +118,13 @@ def generate_auto_attendant_tts(output_dir='auto_attendant', company_name="your 
     return success_count
 
 
-def generate_voicemail_tts(output_dir='voicemail_prompts', sample_rate=16000):
+def generate_voicemail_tts(output_dir='voicemail_prompts', sample_rate=8000):
     """
     Generate TTS voice prompts for voicemail system
     
     Args:
         output_dir: Directory to save audio files
-        sample_rate: Sample rate in Hz (default 16000 Hz for wideband audio)
+        sample_rate: Sample rate in Hz (default 8000 Hz for PCMU/G.711 audio)
     
     Returns:
         int: Number of files successfully generated
@@ -245,7 +245,7 @@ Requires internet connection but no API key needed - completely free.
 
 The generated files are in proper telephony format:
   - Format: WAV (PCM)
-  - Sample Rate: 16000 Hz (wideband) or 8000 Hz (narrowband)
+  - Sample Rate: 8000 Hz (narrowband/PCMU) or 16000 Hz (wideband/G.722)
   - Bit Depth: 16-bit
   - Channels: Mono
         """
@@ -278,9 +278,9 @@ The generated files are in proper telephony format:
     parser.add_argument(
         '--sample-rate',
         type=int,
-        default=16000,
+        default=8000,
         choices=[8000, 16000],
-        help='Sample rate in Hz: 8000 for narrowband, 16000 for wideband audio (default: 16000)'
+        help='Sample rate in Hz: 8000 for narrowband (PCMU/G.711), 16000 for wideband (default: 8000)'
     )
     
     args = parser.parse_args()
@@ -296,7 +296,7 @@ The generated files are in proper telephony format:
     logger.info("")
     logger.info("Using Google Text-to-Speech (gTTS)")
     logger.info("Generating REAL VOICE prompts (not tones)")
-    logger.info(f"Sample Rate: {args.sample_rate} Hz ({'Wideband' if args.sample_rate == 16000 else 'Narrowband'})")
+    logger.info(f"Sample Rate: {args.sample_rate} Hz ({'Wideband/G.722' if args.sample_rate == 16000 else 'Narrowband/PCMU'})")
     logger.info(f"Format: PCM WAV (16-bit, mono)")
     logger.info("")
     
@@ -325,9 +325,9 @@ The generated files are in proper telephony format:
     logger.info("  - Ready to use with your PBX system")
     logger.info("")
     if args.sample_rate == 16000:
-        logger.info("These files use wideband audio (16kHz) for higher quality.")
+        logger.info("These files use wideband audio (16kHz) for G.722 codec.")
     else:
-        logger.info("These files use narrowband audio (8kHz) for standard telephony.")
+        logger.info("These files use narrowband audio (8kHz) for PCMU/G.711 codec.")
     logger.info("")
     logger.info("To customize the voice or language:")
     logger.info("  - Edit this script and change the 'language' parameter")

@@ -3880,8 +3880,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 output_file = os.path.join(audio_path, f'{filename}.wav')
                 
                 try:
-                    # Use shared utility function for TTS generation
-                    if text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False):
+                    # Use shared utility function for TTS generation with 8kHz for PCMU
+                    if text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=8000):
                         self.logger.info(f"Generated {filename}.wav using gTTS")
                 except Exception as e:
                     self.logger.error(f"Failed to generate {filename}.wav: {e}")

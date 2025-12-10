@@ -163,13 +163,13 @@ class SDPBuilder:
             local_ip: Local IP address for RTP
             local_port: Local RTP port
             session_id: Session ID (can be timestamp)
-            codecs: List of codec payload types (default: ['9', '0', '8', '101'])
+            codecs: List of codec payload types (default: ['0', '8', '9', '101'])
 
         Returns:
             SDP body as string
         """
         if codecs is None:
-            codecs = ['9', '0', '8', '101']  # G722, PCMU, PCMA, telephone-event
+            codecs = ['0', '8', '9', '101']  # PCMU, PCMA, G722, telephone-event
 
         sdp = SDPSession()
         sdp.version = 0
