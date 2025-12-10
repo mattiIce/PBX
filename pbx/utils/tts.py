@@ -30,7 +30,7 @@ def get_tts_requirements():
 
 def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=16000):
     """
-    Convert text to WAV file in telephony format (16-bit, mono)
+    Convert text to WAV file in telephony format (16000 Hz, 16-bit, mono by default)
     using gTTS (Google Text-to-Speech)
     
     Args:

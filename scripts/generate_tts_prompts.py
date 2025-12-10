@@ -239,7 +239,7 @@ Requires internet connection but no API key needed - completely free.
 
 The generated files are in proper telephony format:
   - Format: WAV
-  - Sample Rate: 16000 Hz (G.722 HD audio) or 8000 Hz (G.711 legacy)
+  - Sample Rate: 16000 Hz (G.722 HD audio) or 8000 Hz (G.711 standard)
   - Bit Depth: 16-bit
   - Channels: Mono
         """
@@ -274,7 +274,7 @@ The generated files are in proper telephony format:
         type=int,
         default=16000,
         choices=[8000, 16000],
-        help='Sample rate in Hz: 8000 for G.711, 16000 for G.722 HD (default: 16000)'
+        help='Sample rate in Hz: 8000 for G.711 standard, 16000 for G.722 HD audio (default: 16000)'
     )
     
     args = parser.parse_args()
@@ -320,7 +320,7 @@ The generated files are in proper telephony format:
     if args.sample_rate == 16000:
         logger.info("These files support G.722 HD Audio codec for higher quality.")
     else:
-        logger.info("These files are compatible with G.711 codec.")
+        logger.info("These files are compatible with G.711 standard codec (8kHz sample rate).")
     logger.info("")
     logger.info("To customize the voice or language:")
     logger.info("  - Edit this script and change the 'language' parameter")
