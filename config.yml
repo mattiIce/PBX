@@ -140,7 +140,8 @@ features:
     
     # Codec Configuration
     # Priority: PCMU (0) > PCMA (8) > G722 (9) > RFC2833 (101) for DTMF
-    # PCMU/G.711 μ-law preferred for best compatibility, with G.722 HD audio as fallback
+    # Note: G.711 (PCMU/PCMA) prioritized over G.722 due to better reliability and compatibility
+    # G.722 HD audio available as fallback option
     codecs:
       - payload_type: 0
         name: PCMU

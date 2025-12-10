@@ -95,12 +95,12 @@ features:
 ### Codec Priority
 
 The default codec negotiation priority is:
-1. **G.722 (Wideband HD)** - Payload 9, Priority 1
-2. **PCMU (G.711 μ-law)** - Payload 0, Priority 2
-3. **PCMA (G.711 A-law)** - Payload 8, Priority 3
+1. **PCMU (G.711 μ-law)** - Payload 0, Priority 1
+2. **PCMA (G.711 A-law)** - Payload 8, Priority 2
+3. **G.722 (Wideband HD)** - Payload 9, Priority 3
 4. **telephone-event (DTMF)** - Payload 101, Priority 4
 
-This prioritizes HD audio quality when both endpoints support G.722, with automatic fallback to G.711 codecs for compatibility.
+This prioritizes reliable G.711 codecs for maximum compatibility, with G.722 HD audio available as a fallback option for phones that prefer wideband audio. The G.722 codec has been deprioritized due to known implementation issues with quantization in the custom codec implementation.
 
 ## Phone Provisioning
 
