@@ -163,13 +163,13 @@ class SDPBuilder:
             local_ip: Local IP address for RTP
             local_port: Local RTP port
             session_id: Session ID (can be timestamp)
-            codecs: List of codec payload types (default: ['0', '8', '101'])
+            codecs: List of codec payload types (default: ['0', '8', '9', '101'])
 
         Returns:
             SDP body as string
         """
         if codecs is None:
-            codecs = ['0', '8', '101']  # PCMU, PCMA, telephone-event
+            codecs = ['0', '8', '9', '101']  # PCMU, PCMA, G722, telephone-event
 
         sdp = SDPSession()
         sdp.version = 0
@@ -188,19 +188,30 @@ class SDPBuilder:
             'address': local_ip
         }
 
+        # Build attributes dynamically based on codecs
+        attributes = []
+        
+        # Add rtpmap for each codec
+        if '0' in codecs:
+            attributes.append('rtpmap:0 PCMU/8000')
+        if '8' in codecs:
+            attributes.append('rtpmap:8 PCMA/8000')
+        if '9' in codecs:
+            # G.722 uses 8000 in SDP even though actual rate is 16000 (RFC 3551 quirk)
+            attributes.append('rtpmap:9 G722/8000')
+        if '101' in codecs:
+            attributes.append('rtpmap:101 telephone-event/8000')
+            attributes.append('fmtp:101 0-16')
+        
+        attributes.append('sendrecv')
+
         # Add audio media
         media = {
             'type': 'audio',
             'port': local_port,
             'protocol': 'RTP/AVP',
             'formats': codecs,
-            'attributes': [
-                'rtpmap:0 PCMU/8000',
-                'rtpmap:8 PCMA/8000',
-                'rtpmap:101 telephone-event/8000',
-                'fmtp:101 0-16',
-                'sendrecv'
-            ]
+            'attributes': attributes
         }
         sdp.media.append(media)
 
