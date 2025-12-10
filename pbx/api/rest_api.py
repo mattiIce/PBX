@@ -4462,22 +4462,67 @@ class PBXAPIServer:
                 self.logger.error("Falling back to manual certificate configuration")
         
         if not cert_file or not key_file:
-            self.logger.error("SSL enabled but cert_file or key_file not configured")
-            self.logger.error("Please configure api.ssl.cert_file and api.ssl.key_file in config.yml")
-            self.logger.error("Or run: python scripts/generate_ssl_cert.py")
-            self.logger.error("Or enable api.ssl.ca.enabled for in-house CA auto-request")
+            self.logger.error("=" * 80)
+            self.logger.error("SSL CONFIGURATION ERROR")
+            self.logger.error("=" * 80)
+            self.logger.error("SSL is enabled in config.yml but cert_file or key_file is not configured")
+            self.logger.error("")
+            self.logger.error("To fix this issue, choose one of the following options:")
+            self.logger.error("")
+            self.logger.error("Option 1: Generate a self-signed certificate (for development/testing)")
+            self.logger.error("  Run: python scripts/generate_ssl_cert.py")
+            self.logger.error("")
+            self.logger.error("Option 2: Disable SSL temporarily")
+            self.logger.error("  Edit config.yml and set: api.ssl.enabled: false")
+            self.logger.error("")
+            self.logger.error("Option 3: Enable auto-request from in-house CA")
+            self.logger.error("  Edit config.yml and set: api.ssl.ca.enabled: true")
+            self.logger.error("")
+            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error("=" * 80)
             return
         
         if not os.path.exists(cert_file):
+            self.logger.error("=" * 80)
+            self.logger.error("SSL CERTIFICATE NOT FOUND")
+            self.logger.error("=" * 80)
             self.logger.error(f"SSL certificate file not found: {cert_file}")
-            self.logger.error("Options:")
-            self.logger.error("  1. Generate self-signed: python scripts/generate_ssl_cert.py")
-            self.logger.error("  2. Request from CA: python scripts/request_ca_cert.py")
-            self.logger.error("  3. Enable auto-request: set api.ssl.ca.enabled: true in config.yml")
+            self.logger.error("")
+            self.logger.error("To fix this issue, choose one of the following options:")
+            self.logger.error("")
+            self.logger.error("Option 1: Generate a self-signed certificate (for development/testing)")
+            self.logger.error("  Run: python scripts/generate_ssl_cert.py")
+            self.logger.error("")
+            self.logger.error("Option 2: Request a certificate from your CA")
+            self.logger.error("  Run: python scripts/request_ca_cert.py")
+            self.logger.error("")
+            self.logger.error("Option 3: Enable auto-request from in-house CA")
+            self.logger.error("  Edit config.yml and set: api.ssl.ca.enabled: true")
+            self.logger.error("")
+            self.logger.error("Option 4: Disable SSL temporarily")
+            self.logger.error("  Edit config.yml and set: api.ssl.enabled: false")
+            self.logger.error("")
+            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error("=" * 80)
             return
         
         if not os.path.exists(key_file):
-            self.logger.error(f"SSL key file not found: {key_file}")
+            self.logger.error("=" * 80)
+            self.logger.error("SSL PRIVATE KEY NOT FOUND")
+            self.logger.error("=" * 80)
+            self.logger.error(f"SSL private key file not found: {key_file}")
+            self.logger.error("")
+            self.logger.error("The private key file is missing. This usually means:")
+            self.logger.error("  - The certificate was not generated properly")
+            self.logger.error("  - The file was deleted or moved")
+            self.logger.error("  - The path in config.yml is incorrect")
+            self.logger.error("")
+            self.logger.error("To fix this issue:")
+            self.logger.error("  1. Regenerate the certificate: python scripts/generate_ssl_cert.py")
+            self.logger.error("  2. Or disable SSL: Edit config.yml and set api.ssl.enabled: false")
+            self.logger.error("")
+            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error("=" * 80)
             return
         
         try:
@@ -4507,7 +4552,23 @@ class PBXAPIServer:
             self.logger.info(f"SSL/HTTPS enabled with certificate: {cert_file}")
             
         except Exception as e:
+            self.logger.error("=" * 80)
+            self.logger.error("SSL CONFIGURATION FAILED")
+            self.logger.error("=" * 80)
             self.logger.error(f"Failed to configure SSL: {e}")
+            self.logger.error("")
+            self.logger.error("Common causes:")
+            self.logger.error("  - Invalid certificate or key file format")
+            self.logger.error("  - Mismatched certificate and key pair")
+            self.logger.error("  - Insufficient file permissions")
+            self.logger.error("  - Corrupted certificate files")
+            self.logger.error("")
+            self.logger.error("To fix this issue:")
+            self.logger.error("  1. Regenerate the certificate: python scripts/generate_ssl_cert.py")
+            self.logger.error("  2. Or disable SSL: Edit config.yml and set api.ssl.enabled: false")
+            self.logger.error("")
+            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error("=" * 80)
             import traceback
             traceback.print_exc()
 
@@ -4666,7 +4727,34 @@ class PBXAPIServer:
             self.running = True
 
             protocol = "https" if self.ssl_enabled else "http"
-            self.logger.info(f"API server started on {protocol}://{self.host}:{self.port}")
+            
+            # Check if there's a mismatch between config and actual state
+            ssl_config = self.pbx_core.config.get('api.ssl', {})
+            config_ssl_enabled = ssl_config.get('enabled', False)
+            
+            if config_ssl_enabled and not self.ssl_enabled:
+                # SSL is enabled in config but not actually running
+                self.logger.warning("=" * 80)
+                self.logger.warning("SSL/HTTPS CONFIGURATION MISMATCH")
+                self.logger.warning("=" * 80)
+                self.logger.warning(f"config.yml has api.ssl.enabled: true")
+                self.logger.warning(f"However, SSL could not be configured (see errors above)")
+                self.logger.warning(f"")
+                self.logger.warning(f"SERVER IS RUNNING ON HTTP (not HTTPS)")
+                self.logger.warning(f"")
+                self.logger.warning(f"Access the admin panel at:")
+                self.logger.warning(f"  http://{self.host}:{self.port}/admin/")
+                self.logger.warning(f"")
+                self.logger.warning(f"To fix this:")
+                self.logger.warning(f"  1. Generate SSL certificate: python scripts/generate_ssl_cert.py")
+                self.logger.warning(f"  2. Then restart the server: sudo systemctl restart pbx")
+                self.logger.warning(f"  OR")
+                self.logger.warning(f"  3. Disable SSL in config.yml: set api.ssl.enabled: false")
+                self.logger.warning("=" * 80)
+            else:
+                self.logger.info(f"API server started on {protocol}://{self.host}:{self.port}")
+                if self.ssl_enabled:
+                    self.logger.info(f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
             # Start in separate thread
             server_thread = threading.Thread(target=self._run)
