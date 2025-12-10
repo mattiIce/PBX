@@ -148,6 +148,97 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
     return g722_data if g722_data is not None else b''
 
 
+def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
+    """
+    Convert a PCM WAV file to G.722 WAV format
+    
+    Reads a PCM WAV file, converts the audio data to G.722 encoding,
+    and writes it back as a G.722 WAV file.
+    
+    Args:
+        input_wav_path: Path to input PCM WAV file
+        output_wav_path: Path to output G.722 WAV file (default: overwrite input)
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    if output_wav_path is None:
+        output_wav_path = input_wav_path
+    
+    try:
+        with open(input_wav_path, 'rb') as f:
+            # Read RIFF header
+            riff = f.read(4)
+            if riff != b'RIFF':
+                return False
+            
+            file_size = struct.unpack('<I', f.read(4))[0]
+            wave = f.read(4)
+            if wave != b'WAVE':
+                return False
+            
+            # Find fmt chunk
+            sample_rate = None
+            channels = None
+            audio_data = None
+            
+            while True:
+                chunk_id = f.read(4)
+                if not chunk_id or len(chunk_id) < 4:
+                    break
+                
+                chunk_size = struct.unpack('<I', f.read(4))[0]
+                
+                if chunk_id == b'fmt ':
+                    # Parse format chunk
+                    fmt_data = f.read(chunk_size)
+                    audio_format = struct.unpack('<H', fmt_data[0:2])[0]
+                    channels = struct.unpack('<H', fmt_data[2:4])[0]
+                    sample_rate = struct.unpack('<I', fmt_data[4:8])[0]
+                    bits_per_sample = struct.unpack('<H', fmt_data[14:16])[0]
+                    
+                    # Only process PCM files
+                    if audio_format != 1:
+                        return False
+                        
+                elif chunk_id == b'data':
+                    # Read PCM audio data
+                    audio_data = f.read(chunk_size)
+                else:
+                    # Skip unknown chunks
+                    f.read(chunk_size)
+            
+            if audio_data is None or sample_rate is None:
+                return False
+            
+            # Convert PCM to G.722
+            g722_data = pcm16_to_g722(audio_data, sample_rate)
+            
+            if not g722_data:
+                return False
+            
+            # Write G.722 WAV file
+            with open(output_wav_path, 'wb') as out_f:
+                # G.722 WAV uses format code 0x0067 and 8kHz clock rate
+                # Note: G.722 actually samples at 16kHz but uses 8kHz clock rate per RFC
+                header = build_wav_header(
+                    len(g722_data),
+                    sample_rate=8000,  # G.722 clock rate (8kHz)
+                    channels=1,
+                    bits_per_sample=8,
+                    audio_format=0x0067  # G.722 format code
+                )
+                out_f.write(header)
+                out_f.write(g722_data)
+            
+            return True
+            
+    except Exception as e:
+        import warnings
+        warnings.warn(f"Failed to convert WAV to G.722: {e}")
+        return False
+
+
 def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     """
     Generate a simple beep tone in raw PCM format
@@ -172,28 +263,37 @@ def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     return b''.join(samples)
 
 
-def build_wav_header(data_size, sample_rate=8000, channels=1, bits_per_sample=16):
+def build_wav_header(data_size, sample_rate=8000, channels=1, bits_per_sample=16, audio_format=1):
     """
     Build a WAV file header
 
     Args:
-        data_size: Size of PCM data in bytes
+        data_size: Size of audio data in bytes
         sample_rate: Sample rate in Hz
         channels: Number of audio channels
         bits_per_sample: Bits per sample (8 or 16)
+        audio_format: Audio format code (1=PCM, 7=μ-law, 0x0067=G.722)
 
     Returns:
         bytes: WAV header
     """
-    byte_rate = sample_rate * channels * bits_per_sample // 8
-    block_align = channels * bits_per_sample // 8
+    # Calculate byte rate and block align based on format
+    if audio_format == 0x0067:  # G.722
+        # G.722 uses 8-bit samples at 8kHz clock rate (actual 16kHz sampling)
+        # Bitrate is 64 kbit/s = 8000 bytes/s
+        byte_rate = 8000 * channels
+        block_align = 1 * channels
+        bits_per_sample = 8  # G.722 uses 8-bit encoded samples
+    else:
+        byte_rate = sample_rate * channels * bits_per_sample // 8
+        block_align = channels * bits_per_sample // 8
 
     header = b'RIFF'
     header += struct.pack('<I', 36 + data_size)  # File size - 8
     header += b'WAVE'
     header += b'fmt '
-    header += struct.pack('<I', 16)  # Subchunk1Size (16 for PCM)
-    header += struct.pack('<H', 1)  # AudioFormat (1 for PCM)
+    header += struct.pack('<I', 16)  # Subchunk1Size (16 for basic formats)
+    header += struct.pack('<H', audio_format)  # AudioFormat
     header += struct.pack('<H', channels)
     header += struct.pack('<I', sample_rate)
     header += struct.pack('<I', byte_rate)

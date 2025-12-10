@@ -28,10 +28,11 @@ def get_tts_requirements():
     return "pip install gTTS pydub"
 
 
-def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=16000):
+def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=16000, convert_to_g722=True):
     """
-    Convert text to WAV file in telephony format (16000 Hz, 16-bit, mono by default)
-    using gTTS (Google Text-to-Speech)
+    Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
+    
+    By default, generates G.722 encoded WAV files for HD audio quality.
     
     Args:
         text: Text to convert to speech
@@ -41,6 +42,7 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         slow: Whether to use slow speech rate (default False for natural speed)
         sample_rate: Sample rate in Hz (default 16000 Hz for G.722 HD audio)
                     Can be 8000 Hz for G.711 compatibility or 16000 Hz for G.722
+        convert_to_g722: Convert output to G.722 format (default True)
     
     Returns:
         bool: True if successful
@@ -74,11 +76,31 @@ def text_to_wav_telephony(text, output_file, language='en', tld='com', slow=Fals
         audio = audio.set_frame_rate(sample_rate)  # 16000 Hz (G.722) or 8000 Hz (G.711)
         audio = audio.set_sample_width(2)  # 16-bit
         
-        # Export as WAV
-        audio.export(output_file, format='wav')
-        
-        # Clean up temp file
-        os.unlink(temp_mp3_path)
+        # Export as PCM WAV (temporarily)
+        if convert_to_g722:
+            # Use temporary file for PCM WAV
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
+                temp_wav_path = temp_wav.name
+                audio.export(temp_wav_path, format='wav')
+            
+            # Convert PCM WAV to G.722 WAV
+            from pbx.utils.audio import convert_pcm_wav_to_g722_wav
+            success = convert_pcm_wav_to_g722_wav(temp_wav_path, output_file)
+            
+            # Clean up temp files
+            os.unlink(temp_mp3_path)
+            os.unlink(temp_wav_path)
+            
+            if not success:
+                logger.error(f"Failed to convert to G.722 format, falling back to PCM")
+                # Fallback: export as PCM WAV
+                audio.export(output_file, format='wav')
+        else:
+            # Export as PCM WAV directly
+            audio.export(output_file, format='wav')
+            
+            # Clean up temp file
+            os.unlink(temp_mp3_path)
         
         return True
     except Exception as e:
