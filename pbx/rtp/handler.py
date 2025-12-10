@@ -722,7 +722,7 @@ class RTPPlayer:
                             extra_bytes = f.read(chunk_size - 16)
 
                         # Determine payload type based on format
-                        convert_to_g722 = False
+                        convert_to_pcmu = False
                         if audio_format == WAV_FORMAT_ULAW:
                             payload_type = 0  # PCMU (μ-law)
                         elif audio_format == WAV_FORMAT_ALAW:
@@ -730,14 +730,14 @@ class RTPPlayer:
                         elif audio_format == WAV_FORMAT_G722:
                             # G.722 format - already encoded, no conversion needed
                             payload_type = 9  # G.722
-                            convert_to_g722 = False
                             self.logger.info(f"G.722 format detected - already encoded for VoIP.")
                         elif audio_format == WAV_FORMAT_PCM:
-                            # PCM format - convert to G.722 for HD audio quality
-                            payload_type = 9  # G.722
-                            convert_to_g722 = True
-                            self.logger.info(f"PCM format detected - will convert to G.722 (HD Audio) "
-                                           f"for VoIP compatibility.")
+                            # PCM format - convert to PCMU (G.711 μ-law) for maximum compatibility
+                            # Note: Previously converted to G.722, but G.722 has implementation issues
+                            payload_type = 0  # PCMU
+                            convert_to_pcmu = True
+                            self.logger.info(f"PCM format detected - will convert to PCMU (G.711 μ-law) "
+                                           f"for maximum compatibility.")
                         else:
                             self.logger.error(f"Unsupported audio format: {audio_format}")
                             return False
@@ -795,17 +795,28 @@ class RTPPlayer:
                             else:  # 8-bit formats (G.711, G.722)
                                 audio_data = audio_data[::2]
 
-                        # Convert PCM to G.722 if needed
-                        if convert_to_g722:
+                        # Convert PCM to PCMU if needed
+                        if convert_to_pcmu:
                             try:
-                                from pbx.utils.audio import pcm16_to_g722
+                                from pbx.utils.audio import pcm16_to_ulaw
                                 original_size = len(audio_data)
-                                audio_data = pcm16_to_g722(audio_data, sample_rate)
-                                self.logger.info(f"Converted PCM to G.722: {original_size} bytes -> {len(audio_data)} bytes")
-                                # G.722 operates at 16kHz, update sample rate for packet calculation
-                                sample_rate = 16000
+                                
+                                # First, downsample from 16kHz to 8kHz if needed
+                                if sample_rate == 16000:
+                                    # Simple decimation: take every other sample
+                                    downsampled = bytearray()
+                                    for i in range(0, len(audio_data), 4):  # Skip every other 16-bit sample
+                                        if i + 1 < len(audio_data):
+                                            downsampled.extend(audio_data[i:i+2])
+                                    audio_data = bytes(downsampled)
+                                    sample_rate = 8000
+                                    self.logger.info(f"Downsampled from 16kHz to 8kHz: {original_size} bytes -> {len(audio_data)} bytes")
+                                
+                                # Convert to μ-law
+                                audio_data = pcm16_to_ulaw(audio_data)
+                                self.logger.info(f"Converted PCM to PCMU: {len(audio_data)} bytes (μ-law)")
                             except Exception as e:
-                                self.logger.error(f"Failed to convert PCM to G.722: {e}")
+                                self.logger.error(f"Failed to convert PCM to PCMU: {e}")
                                 return False
                         elif payload_type == 9:
                             # G.722 format - already encoded, ensure correct sample rate for packets

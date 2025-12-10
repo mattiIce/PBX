@@ -169,7 +169,7 @@ class SDPBuilder:
             SDP body as string
         """
         if codecs is None:
-            codecs = ['0', '8', '9', '101']  # PCMU, PCMA, G722, telephone-event
+            codecs = ['0', '8', '9', '101']  # PCMU, PCMA, G722, telephone-event (priority order)
 
         sdp = SDPSession()
         sdp.version = 0
