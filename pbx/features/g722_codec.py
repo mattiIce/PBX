@@ -10,6 +10,9 @@ from typing import Optional, Tuple, List
 import struct
 
 
+# Quantization constants
+MAX_QUANTIZATION_RANGE = 256  # Maximum range for simplified quantization
+
 # Note: This implementation uses a simplified quantization approach
 # Full ITU-T G.722 specification includes complex quantization tables
 # that can be integrated for enhanced accuracy if needed
@@ -294,7 +297,7 @@ class G722Codec:
         
         # Simplified quantization - divide range into levels
         # This is a simplified version; full G.722 uses non-linear quantization
-        step_size = 256 // num_levels  # Simplified step
+        step_size = MAX_QUANTIZATION_RANGE // num_levels
         mag = abs(diff)
         index = min(mag // step_size, num_levels - 1)
         
@@ -310,8 +313,8 @@ class G722Codec:
         # Reconstruct signal
         sr = sz + dq
         
-        # Update predictor state (simplified adaptive predictor)
-        p_new = [sr, p[0]]
+        # Update predictor state
+        p_new = self._update_predictor_state(p, sr)
         
         # Update scale factor
         scale_new = self._update_scale(state.scale_factor_low if is_lower else state.scale_factor_high, code, is_lower)
@@ -320,11 +323,11 @@ class G722Codec:
         if is_lower:
             state.s_low = sr
             state.scale_factor_low = scale_new
-            state.p_low = p_new[:2] + [p[1]]
+            state.p_low = p_new
         else:
             state.s_high = sr
             state.scale_factor_high = scale_new
-            state.p_high = p_new[:2] + [p[1]]
+            state.p_high = p_new
         
         return code
     
@@ -365,14 +368,14 @@ class G722Codec:
             sign = -1
         
         # Reconstruct
-        step_size = 256 // num_levels
+        step_size = MAX_QUANTIZATION_RANGE // num_levels
         dq = sign * (index * step_size + step_size // 2)
         
         # Reconstruct signal
         sr = sz + dq
         
         # Update predictor state
-        p_new = [sr, p[0]]
+        p_new = self._update_predictor_state(p, sr)
         
         # Update scale factor
         scale_new = self._update_scale(state.scale_factor_low if is_lower else state.scale_factor_high, code, is_lower)
@@ -381,11 +384,11 @@ class G722Codec:
         if is_lower:
             state.s_low = sr
             state.scale_factor_low = scale_new
-            state.p_low = p_new[:2] + [p[1]]
+            state.p_low = p_new
         else:
             state.s_high = sr
             state.scale_factor_high = scale_new
-            state.p_high = p_new[:2] + [p[1]]
+            state.p_high = p_new
         
         return sr
     
@@ -432,6 +435,19 @@ class G722Codec:
         elif value > max_val:
             return max_val
         return value
+    
+    def _update_predictor_state(self, p: List[int], sr: int) -> List[int]:
+        """
+        Update predictor state with new reconstructed signal value
+        
+        Args:
+            p: Current predictor state
+            sr: New reconstructed signal value
+            
+        Returns:
+            Updated predictor state
+        """
+        return [sr, p[0], p[1]]
     
     def get_info(self) -> dict:
         """

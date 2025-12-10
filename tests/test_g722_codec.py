@@ -1,6 +1,7 @@
 """
 Tests for G.722 HD Audio Codec
 """
+import struct
 import unittest
 from pbx.features.g722_codec import G722Codec, G722CodecManager
 
@@ -92,7 +93,6 @@ class TestG722Codec(unittest.TestCase):
         codec = G722Codec()
         
         # Create test PCM data with some pattern (sine-like)
-        import struct
         pcm_data = bytearray()
         for i in range(320):  # 320 samples = 640 bytes
             # Create a simple pattern
