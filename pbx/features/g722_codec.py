@@ -133,22 +133,42 @@ class G722Codec:
         Stub encoder (for development/testing without native library)
         
         G.722 at 64kbps compresses 16-bit PCM by roughly 2:1
+        
+        This stub implementation downsamples the 16-bit PCM to 8-bit to simulate
+        compression and avoid null byte artifacts that cause audio issues.
         """
-        # Simulate compression by returning half the data
-        # In reality, this would be actual G.722 encoding
-        compressed_size = len(pcm_data) // 2
-        return b'\x00' * compressed_size
+        # Convert 16-bit PCM samples to 8-bit by taking the high byte
+        # This preserves the audio waveform while compressing 2:1
+        encoded = bytearray()
+        for i in range(0, len(pcm_data) - 1, 2):
+            # Read 16-bit little-endian signed sample
+            sample = struct.unpack('<h', pcm_data[i:i+2])[0]
+            # Convert to 8-bit unsigned (0-255 range)
+            # Scale from [-32768, 32767] to [0, 255]
+            sample_8bit = ((sample + 32768) >> 8) & 0xFF
+            encoded.append(sample_8bit)
+        
+        return bytes(encoded)
     
     def _stub_decode(self, g722_data: bytes) -> bytes:
         """
         Stub decoder (for development/testing without native library)
         
         Expands G.722 data back to 16-bit PCM
+        
+        This stub implementation upsamples 8-bit data to 16-bit PCM to simulate
+        decompression and maintain audio quality.
         """
-        # Simulate decompression by doubling the data size
-        # In reality, this would be actual G.722 decoding
-        expanded_size = len(g722_data) * 2
-        return b'\x00' * expanded_size
+        # Convert 8-bit samples back to 16-bit PCM
+        decoded = bytearray()
+        for byte in g722_data:
+            # Convert from 8-bit unsigned (0-255) to 16-bit signed
+            # Scale from [0, 255] to [-32768, 32767]
+            sample_16bit = (byte << 8) - 32768
+            # Pack as little-endian signed 16-bit
+            decoded.extend(struct.pack('<h', sample_16bit))
+        
+        return bytes(decoded)
     
     def get_info(self) -> dict:
         """
