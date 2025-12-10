@@ -538,10 +538,11 @@ class RTPPlayer:
         Args:
             audio_data: Raw audio data (format depends on payload_type)
                         - For PCMU/PCMA (PT 0/8): 8-bit samples (1 byte per sample)
+                        - For G.722 (PT 9): 8-bit encoded samples (1 byte per sample)
                         - For PCM (PT 10/11): 16-bit samples (2 bytes per sample)
-            payload_type: RTP payload type (0 = PCMU, 8 = PCMA, 10 = L16 stereo, 11 = L16 mono)
+            payload_type: RTP payload type (0 = PCMU, 8 = PCMA, 9 = G.722, 10 = L16 stereo, 11 = L16 mono)
             samples_per_packet: Number of samples per RTP packet (default 160 = 20ms at 8kHz)
-            bytes_per_sample: Bytes per sample (None=auto-detect, 1 for G.711, 2 for 16-bit PCM)
+            bytes_per_sample: Bytes per sample (None=auto-detect, 1 for G.711/G.722, 2 for 16-bit PCM)
 
         Returns:
             bool: True if successful
@@ -554,8 +555,9 @@ class RTPPlayer:
             # Determine bytes per sample if not explicitly provided
             if bytes_per_sample is None:
                 # G.711 formats (PCMU, PCMA) are 8-bit = 1 byte per sample
+                # G.722 is also 8-bit encoded = 1 byte per sample
                 # PCM formats are typically 16-bit = 2 bytes per sample
-                if payload_type in [0, 8]:  # PCMU or PCMA
+                if payload_type in [0, 8, 9]:  # PCMU, PCMA, or G.722
                     bytes_per_sample = 1
                 else:  # PCM or other formats
                     bytes_per_sample = 2
