@@ -96,6 +96,10 @@ class DatabaseBackend:
                 user=user,
                 password=self.config.get('database.password', '')
             )
+            # Enable autocommit mode to prevent transaction state issues
+            # This ensures each query is automatically committed and errors don't
+            # leave the connection in a failed transaction state
+            self.connection.autocommit = True
             self.enabled = True
             self.logger.info("✓ Successfully connected to PostgreSQL database")
             self.logger.info(f"  Connection established: {host}:{port}/{database}")
@@ -119,6 +123,9 @@ class DatabaseBackend:
         try:
             self.connection = sqlite3.connect(db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
+            # SQLite doesn't have autocommit attribute by default, so we set it explicitly
+            # This ensures consistent behavior when checking autocommit in other methods
+            self.connection.autocommit = False
             self.enabled = True
             self.logger.info(f"✓ Successfully connected to SQLite database")
             self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
@@ -157,7 +164,9 @@ class DatabaseBackend:
                 cursor.execute(query, params)
             else:
                 cursor.execute(query)
-            self.connection.commit()
+            # Only commit if not in autocommit mode
+            if not self.connection.autocommit:
+                self.connection.commit()
             cursor.close()
             return True
         except Exception as e:
@@ -180,10 +189,14 @@ class DatabaseBackend:
                 # This is expected when tables/indexes exist but user lacks ownership
                 # Log as debug instead of error to avoid alarming users
                 self.logger.debug(f"Skipping {context}: {e}")
+                if self.connection and not self.connection.autocommit:
+                    self.connection.rollback()
                 return True  # Return True since this is not a critical failure
             elif any(pattern in error_msg for pattern in already_exists_errors):
                 # Object already exists - this is fine
                 self.logger.debug(f"{context.capitalize()} already exists: {e}")
+                if self.connection and not self.connection.autocommit:
+                    self.connection.rollback()
                 return True
             else:
                 # This is an actual error - log verbosely
@@ -192,7 +205,7 @@ class DatabaseBackend:
                 self.logger.error(f"  Parameters: {params}")
                 self.logger.error(f"  Database type: {self.db_type}")
                 self.logger.error(f"  Traceback: {traceback.format_exc()}")
-                if self.connection:
+                if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
                 return False
 
@@ -250,6 +263,8 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
+            if self.connection and not self.connection.autocommit:
+                self.connection.rollback()
             return None
 
     def fetch_all(self, query: str, params: tuple = None) -> List[Dict]:
@@ -290,6 +305,8 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
+            if self.connection and not self.connection.autocommit:
+                self.connection.rollback()
             return []
 
     def create_tables(self):
@@ -599,6 +616,8 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
+                if self.connection and not self.connection.autocommit:
+                    self.connection.rollback()
         
         self.logger.info("Schema migration check complete")
 
