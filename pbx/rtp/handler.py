@@ -6,6 +6,7 @@ import socket
 import threading
 import struct
 from pbx.utils.logger import get_logger
+from pbx.utils.audio import generate_beep_tone, pcm16_to_g722, pcm16_to_ulaw
 
 # RTP Payload Type constants (RFC 3551)
 PCMU_PAYLOAD_TYPE = 0  # G.711 μ-law
@@ -637,13 +638,11 @@ class RTPPlayer:
         Returns:
             bool: True if successful
         """
-        # Note: Import here to avoid circular dependency with audio module
         try:
-            from pbx.utils.audio import generate_beep_tone
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
             return self.send_audio(pcm_data, payload_type=0)
-        except ImportError:
-            self.logger.error("Audio utilities not available")
+        except Exception as e:
+            self.logger.error(f"Failed to generate beep tone: {e}")
             return False
 
     def play_file(self, file_path):
@@ -797,7 +796,6 @@ class RTPPlayer:
                         # Convert PCM to G.722 if needed
                         if convert_to_g722:
                             try:
-                                from pbx.utils.audio import pcm16_to_g722, pcm16_to_ulaw
                                 original_size = len(audio_data)
                                 g722_data = pcm16_to_g722(audio_data, sample_rate)
                                 
