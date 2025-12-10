@@ -36,25 +36,25 @@ account.1.registration_period = 3600
 # Codec Configuration
 # ============================================================================
 # PBX supports: PCMU (payload 0), PCMA (payload 8), G.722 (payload 9), RFC2833 (payload 101)
-# Priority order: PCMU > PCMA > G.722 (wideband HD audio)
+# Priority order: G.722 > PCMU > PCMA (HD audio first, then G.711 fallbacks)
 
-# Codec 1: PCMU (G.711 μ-law) - Primary codec
+# Codec 1: G.722 (Wideband HD Audio) - Primary codec for HD quality (16 kHz)
 account.1.codec.1.enable = 1
-account.1.codec.1.payload_type = 0
+account.1.codec.1.payload_type = 9
 account.1.codec.1.priority = 1
-account.1.codec.1.name = PCMU
+account.1.codec.1.name = G722
 
-# Codec 2: PCMA (G.711 A-law) - Secondary codec
+# Codec 2: PCMU (G.711 μ-law) - Secondary codec
 account.1.codec.2.enable = 1
-account.1.codec.2.payload_type = 8
+account.1.codec.2.payload_type = 0
 account.1.codec.2.priority = 2
-account.1.codec.2.name = PCMA
+account.1.codec.2.name = PCMU
 
-# Codec 3: G.722 (Wideband HD Audio) - HD quality codec (16 kHz)
+# Codec 3: PCMA (G.711 A-law) - Tertiary codec
 account.1.codec.3.enable = 1
-account.1.codec.3.payload_type = 9
+account.1.codec.3.payload_type = 8
 account.1.codec.3.priority = 3
-account.1.codec.3.name = G722
+account.1.codec.3.name = PCMA
 
 # Codec 4-5: Disabled (reserved for future use)
 account.1.codec.4.enable = 0

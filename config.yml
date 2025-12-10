@@ -139,18 +139,19 @@ features:
       #   credential: your-turn-password
     
     # Codec Configuration (matches Zultys ZIP33G settings)
-    # Priority: PCMU (0) > PCMA (8) > G722 (9) > RFC2833 (101) for DTMF
+    # Priority: G722 (9) > PCMU (0) > PCMA (8) > RFC2833 (101) for DTMF
+    # G.722 HD audio preferred for best quality, with G.711 fallbacks
     codecs:
+      - payload_type: 9
+        name: G722
+        priority: 1
+        enabled: true
       - payload_type: 0
         name: PCMU
-        priority: 1
+        priority: 2
         enabled: true
       - payload_type: 8
         name: PCMA
-        priority: 2
-        enabled: true
-      - payload_type: 9
-        name: G722
         priority: 3
         enabled: true
       - payload_type: 101
