@@ -27,7 +27,7 @@ class TestG722Codec(unittest.TestCase):
         self.assertEqual(info['payload_type'], 9)
     
     def test_encode_stub(self):
-        """Test stub encoding"""
+        """Test encoding"""
         codec = G722Codec()
         
         # Create fake PCM data (16-bit, 16kHz, 20ms = 320 samples = 640 bytes)
@@ -36,11 +36,11 @@ class TestG722Codec(unittest.TestCase):
         encoded = codec.encode(pcm_data)
         
         self.assertIsNotNone(encoded)
-        # G.722 at 64kbps should compress roughly 2:1
-        self.assertEqual(len(encoded), len(pcm_data) // 2)
+        # G.722 encodes 2 samples (4 bytes) into 1 byte, so 640 bytes -> 160 bytes
+        self.assertEqual(len(encoded), len(pcm_data) // 4)
     
     def test_decode_stub(self):
-        """Test stub decoding"""
+        """Test decoding"""
         codec = G722Codec()
         
         # Create fake G.722 data
@@ -49,8 +49,8 @@ class TestG722Codec(unittest.TestCase):
         decoded = codec.decode(g722_data)
         
         self.assertIsNotNone(decoded)
-        # Decoding should expand back to PCM size
-        self.assertEqual(len(decoded), len(g722_data) * 2)
+        # Each G.722 byte decodes to 2 samples (4 bytes), so 320 bytes -> 1280 bytes
+        self.assertEqual(len(decoded), len(g722_data) * 4)
     
     def test_sdp_description(self):
         """Test SDP description generation"""
@@ -86,6 +86,32 @@ class TestG722Codec(unittest.TestCase):
         self.assertEqual(codec_64k.bitrate, 64000)
         self.assertEqual(codec_56k.bitrate, 56000)
         self.assertEqual(codec_48k.bitrate, 48000)
+    
+    def test_encode_decode_roundtrip(self):
+        """Test that encode/decode roundtrip preserves data shape"""
+        codec = G722Codec()
+        
+        # Create test PCM data with some pattern (sine-like)
+        import struct
+        pcm_data = bytearray()
+        for i in range(320):  # 320 samples = 640 bytes
+            # Create a simple pattern
+            value = int((i % 100) * 327 - 16384)
+            pcm_data.extend(struct.pack('<h', value))
+        pcm_data = bytes(pcm_data)
+        
+        # Encode
+        encoded = codec.encode(pcm_data)
+        self.assertIsNotNone(encoded)
+        self.assertEqual(len(encoded), 160)  # 640 bytes / 4 = 160 bytes
+        
+        # Decode
+        decoded = codec.decode(encoded)
+        self.assertIsNotNone(decoded)
+        self.assertEqual(len(decoded), 640)  # 160 bytes * 4 = 640 bytes (same as input)
+        
+        # Verify we can decode what we encoded (sizes should match pattern)
+        # Note: Due to quantization, values won't be identical but shape should be preserved
 
 
 class TestG722CodecManager(unittest.TestCase):
