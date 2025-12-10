@@ -101,14 +101,13 @@ header h1 {
     position: relative;
 }
 
-.tab-button.phone-required::after {
-    content: '🎤';
+.tab-button.phone-required span {
     font-size: 0.7em;
     margin-left: 4px;
     opacity: 0.6;
 }
 
-.tab-button.phone-required:hover::after {
+.tab-button.phone-required:hover span {
     opacity: 1;
 }
 
