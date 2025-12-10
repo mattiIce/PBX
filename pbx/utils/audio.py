@@ -12,6 +12,12 @@ import os
 MAX_16BIT_SIGNED = 32767  # Maximum value for 16-bit signed integer
 DEFAULT_AMPLITUDE = 0.5  # Default amplitude (50% of maximum)
 
+# Audio format codes for WAV files
+WAV_FORMAT_PCM = 1  # Pulse Code Modulation (linear PCM)
+WAV_FORMAT_ULAW = 7  # μ-law (G.711)
+WAV_FORMAT_ALAW = 6  # A-law (G.711)
+WAV_FORMAT_G722 = 0x0067  # G.722 (HD Audio)
+
 
 def pcm16_to_ulaw(pcm_data):
     """
@@ -198,7 +204,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                     bits_per_sample = struct.unpack('<H', fmt_data[14:16])[0]
                     
                     # Only process PCM files
-                    if audio_format != 1:
+                    if audio_format != WAV_FORMAT_PCM:
                         return False
                         
                 elif chunk_id == b'data':
@@ -226,7 +232,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                     sample_rate=8000,  # G.722 clock rate (8kHz)
                     channels=1,
                     bits_per_sample=8,
-                    audio_format=0x0067  # G.722 format code
+                    audio_format=WAV_FORMAT_G722
                 )
                 out_f.write(header)
                 out_f.write(g722_data)
@@ -234,7 +240,6 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
             return True
             
     except Exception as e:
-        import warnings
         warnings.warn(f"Failed to convert WAV to G.722: {e}")
         return False
 
@@ -263,7 +268,7 @@ def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     return b''.join(samples)
 
 
-def build_wav_header(data_size, sample_rate=8000, channels=1, bits_per_sample=16, audio_format=1):
+def build_wav_header(data_size, sample_rate=8000, channels=1, bits_per_sample=16, audio_format=WAV_FORMAT_PCM):
     """
     Build a WAV file header
 
@@ -272,13 +277,13 @@ def build_wav_header(data_size, sample_rate=8000, channels=1, bits_per_sample=16
         sample_rate: Sample rate in Hz
         channels: Number of audio channels
         bits_per_sample: Bits per sample (8 or 16)
-        audio_format: Audio format code (1=PCM, 7=μ-law, 0x0067=G.722)
+        audio_format: Audio format code (WAV_FORMAT_PCM, WAV_FORMAT_ULAW, etc.)
 
     Returns:
         bytes: WAV header
     """
     # Calculate byte rate and block align based on format
-    if audio_format == 0x0067:  # G.722
+    if audio_format == WAV_FORMAT_G722:  # G.722
         # G.722 uses 8-bit samples at 8kHz clock rate (actual 16kHz sampling)
         # Bitrate is 64 kbit/s = 8000 bytes/s
         byte_rate = 8000 * channels
