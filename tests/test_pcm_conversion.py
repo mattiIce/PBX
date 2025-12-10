@@ -26,12 +26,6 @@ def test_pcm16_to_g722_conversion():
     g722_data = pcm16_to_g722(pcm_data, sample_rate=8000)
     
     # Verify output characteristics
-    # If G.722 library is not available, the function returns None
-    if g722_data is None:
-        print(f"✓ G.722 library not available - fallback will be used in production")
-        print(f"  This is expected when native G.722 library is not installed")
-        return
-    
     assert isinstance(g722_data, bytes), "G.722 data should be bytes"
     assert len(g722_data) > 0, "G.722 data should not be empty"
     
