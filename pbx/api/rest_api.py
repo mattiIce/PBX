@@ -1685,19 +1685,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 try:
                     from cryptography import x509
                     from cryptography.hazmat.backends import default_backend
-                    from datetime import datetime
+                    from datetime import datetime, timezone
                     
                     with open(cert_file, 'rb') as f:
                         cert_data = f.read()
                         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
                         
+                        now = datetime.now(timezone.utc)
                         cert_details = {
                             'subject': cert.subject.rfc4514_string(),
                             'issuer': cert.issuer.rfc4514_string(),
                             'valid_from': cert.not_valid_before.isoformat(),
                             'valid_until': cert.not_valid_after.isoformat(),
-                            'is_expired': cert.not_valid_after < datetime.utcnow(),
-                            'days_until_expiry': (cert.not_valid_after - datetime.utcnow()).days,
+                            'is_expired': cert.not_valid_after < now,
+                            'days_until_expiry': (cert.not_valid_after - now).days,
                             'serial_number': str(cert.serial_number)
                         }
                 except Exception as e:
@@ -1750,7 +1751,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 from cryptography.hazmat.primitives import hashes
                 from cryptography.hazmat.primitives.asymmetric import rsa
                 from cryptography.hazmat.primitives import serialization
-                from datetime import datetime, timedelta
+                from datetime import datetime, timedelta, timezone
                 import ipaddress
             except ImportError as e:
                 self._send_json({
@@ -1803,9 +1804,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             ).serial_number(
                 x509.random_serial_number()
             ).not_valid_before(
-                datetime.utcnow()
+                datetime.now(timezone.utc)
             ).not_valid_after(
-                datetime.utcnow() + timedelta(days=days_valid)
+                datetime.now(timezone.utc) + timedelta(days=days_valid)
             ).add_extension(
                 x509.SubjectAlternativeName(san_list),
                 critical=False,
