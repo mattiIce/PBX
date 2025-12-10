@@ -99,7 +99,7 @@ features:
   # WebRTC Browser Calling - No-download browser-based calling
   webrtc:
     enabled: true
-    session_timeout: 300      # Session timeout in seconds (5 minutes)
+    session_timeout: 3600     # Session timeout in seconds (matches ZIP33G: 3600s/1 hour)
     ice_transport_policy: all # ICE transport policy: 'all' or 'relay'
     
     # STUN servers for NAT traversal
@@ -113,6 +113,50 @@ features:
       # - url: turn:your-turn-server.com:3478
       #   username: your-turn-username
       #   credential: your-turn-password
+    
+    # Codec Configuration (matches Zultys ZIP33G settings)
+    # Priority: PCMU (0) > PCMA (8) > RFC2833 (101) for DTMF
+    codecs:
+      - payload_type: 0
+        name: PCMU
+        priority: 1
+        enabled: true
+      - payload_type: 8
+        name: PCMA
+        priority: 2
+        enabled: true
+      - payload_type: 101
+        name: telephone-event
+        priority: 3
+        enabled: true
+    
+    # DTMF Configuration (matches Zultys ZIP33G)
+    # Primary: RFC2833 (out-of-band RTP events)
+    # Fallback: SIP INFO
+    dtmf:
+      mode: RFC2833              # Primary DTMF method
+      payload_type: 101          # RFC2833 payload type
+      duration: 160              # DTMF duration in milliseconds
+      sip_info_fallback: true    # Enable SIP INFO as fallback
+    
+    # RTP Settings (matches Zultys ZIP33G)
+    rtp:
+      port_min: 10000            # Minimum RTP port
+      port_max: 20000            # Maximum RTP port
+      packet_time: 20            # RTP packet time in milliseconds
+    
+    # NAT Settings (matches Zultys ZIP33G)
+    nat:
+      udp_update_time: 30        # Keep-alive interval in seconds
+      rport: true                # Enable rport for NAT traversal
+    
+    # Audio Settings (matches Zultys ZIP33G)
+    audio:
+      echo_cancellation: true    # Enable echo cancellation
+      noise_reduction: true      # Enable noise reduction
+      auto_gain_control: true    # Enable automatic gain control
+      voice_activity_detection: true  # Enable VAD
+      comfort_noise: true        # Enable comfort noise generation
   
   # CRM Integration and Screen Pop - Auto-display customer info on calls
   crm_integration:

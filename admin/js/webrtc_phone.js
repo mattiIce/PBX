@@ -73,6 +73,40 @@ class WebRTCPhone {
         }
     }
     
+    async requestMicrophoneAccess() {
+        /**
+         * Request microphone access automatically on page load
+         * This provides a better user experience by prompting for permissions upfront
+         * Matches Zultys ZIP33G behavior where the phone is always ready to use
+         */
+        try {
+            this.updateStatus('Requesting microphone access...', 'info');
+            
+            // Request microphone access with ZIP33G-compatible audio settings
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,   // Matches ZIP33G echo_cancellation
+                    noiseSuppression: true,   // Matches ZIP33G noise_reduction
+                    autoGainControl: true     // Matches ZIP33G auto gain control
+                },
+                video: false
+            });
+            
+            // Stop the tracks immediately - we just wanted to get permission
+            // The actual stream will be created when a call is made
+            stream.getTracks().forEach(track => track.stop());
+            
+            this.updateStatus('Ready to call (microphone access granted)', 'success');
+            console.log('[WebRTC Phone] Microphone access granted');
+            return true;
+            
+        } catch (err) {
+            console.error('[WebRTC Phone] Microphone access denied:', err);
+            this.updateStatus('Microphone access denied. Please allow microphone access in browser settings.', 'error');
+            return false;
+        }
+    }
+    
     async createSession() {
         try {
             this.updateStatus('Creating WebRTC session...', 'info');
@@ -313,7 +347,7 @@ class WebRTCPhone {
 // Initialize WebRTC phone when admin panel loads
 let webrtcPhone = null;
 
-function initWebRTCPhone() {
+async function initWebRTCPhone() {
     const apiUrl = window.location.origin;
     
     // Use a WebRTC-only extension identifier for the admin browser phone
@@ -328,6 +362,10 @@ function initWebRTCPhone() {
     
     webrtcPhone = new WebRTCPhone(apiUrl, adminExtension);
     console.log('WebRTC Phone initialized');
+    
+    // Automatically request microphone access on load
+    // This prompts the user for permission immediately rather than waiting for a call
+    await webrtcPhone.requestMicrophoneAccess();
 }
 
 // Call this after DOM is loaded
