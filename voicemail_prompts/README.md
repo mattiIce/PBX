@@ -59,9 +59,12 @@ This directory needs these 12 voice files:
 
 All files must be:
 - Format: WAV
-- Sample Rate: 8000 Hz
+- Sample Rate: 16000 Hz (for G.722 HD audio support)
 - Bit Depth: 16-bit
 - Channels: Mono
+
+**Note**: Files are generated at 16kHz to support the G.722 HD audio codec. 
+The system will automatically handle conversion if needed for G.711 codecs.
 
 ## More Info
 
