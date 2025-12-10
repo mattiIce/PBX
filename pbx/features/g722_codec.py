@@ -414,12 +414,12 @@ class G722Codec:
             dqm = abs(d_h)
         
         # Quantize using 2-bit levels
-        # Use decision levels from Q2_DECISION_LEVELS
-        if dqm < 12:
+        # Use decision levels from Q2_DECISION_LEVELS: [-12, 12, 52]
+        if dqm < Q2_DECISION_LEVELS[0] * -1:  # Less than 12
             ih = 0
-        elif dqm < 32:  # Midpoint between 12 and 52
+        elif dqm < (Q2_DECISION_LEVELS[1] + Q2_DECISION_LEVELS[2]) // 2:  # Less than 32 (midpoint)
             ih = 1
-        elif dqm < 52:
+        elif dqm < Q2_DECISION_LEVELS[2]:  # Less than 52
             ih = 2
         else:
             ih = 3
