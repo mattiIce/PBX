@@ -81,7 +81,36 @@ class WebRTCSignalingServer:
         ])
         self.turn_servers = self._get_config('features.webrtc.turn_servers', [])
         self.ice_transport_policy = self._get_config('features.webrtc.ice_transport_policy', 'all')
-        self.session_timeout = self._get_config('features.webrtc.session_timeout', 300)  # 5 minutes
+        self.session_timeout = self._get_config('features.webrtc.session_timeout', 3600)  # 1 hour (matches ZIP33G)
+        
+        # Codec configuration (matches Zultys ZIP33G)
+        self.codecs = self._get_config('features.webrtc.codecs', [
+            {'payload_type': 0, 'name': 'PCMU', 'priority': 1, 'enabled': True},
+            {'payload_type': 8, 'name': 'PCMA', 'priority': 2, 'enabled': True},
+            {'payload_type': 101, 'name': 'telephone-event', 'priority': 3, 'enabled': True}
+        ])
+        
+        # DTMF configuration (matches Zultys ZIP33G)
+        self.dtmf_mode = self._get_config('features.webrtc.dtmf.mode', 'RFC2833')
+        self.dtmf_payload_type = self._get_config('features.webrtc.dtmf.payload_type', 101)
+        self.dtmf_duration = self._get_config('features.webrtc.dtmf.duration', 160)
+        self.dtmf_sip_info_fallback = self._get_config('features.webrtc.dtmf.sip_info_fallback', True)
+        
+        # RTP configuration (matches Zultys ZIP33G)
+        self.rtp_port_min = self._get_config('features.webrtc.rtp.port_min', 10000)
+        self.rtp_port_max = self._get_config('features.webrtc.rtp.port_max', 20000)
+        self.rtp_packet_time = self._get_config('features.webrtc.rtp.packet_time', 20)
+        
+        # NAT configuration (matches Zultys ZIP33G)
+        self.nat_udp_update_time = self._get_config('features.webrtc.nat.udp_update_time', 30)
+        self.nat_rport = self._get_config('features.webrtc.nat.rport', True)
+        
+        # Audio configuration (matches Zultys ZIP33G)
+        self.audio_echo_cancellation = self._get_config('features.webrtc.audio.echo_cancellation', True)
+        self.audio_noise_reduction = self._get_config('features.webrtc.audio.noise_reduction', True)
+        self.audio_auto_gain_control = self._get_config('features.webrtc.audio.auto_gain_control', True)
+        self.audio_vad = self._get_config('features.webrtc.audio.voice_activity_detection', True)
+        self.audio_comfort_noise = self._get_config('features.webrtc.audio.comfort_noise', True)
         
         # Sessions
         self.sessions: Dict[str, WebRTCSession] = {}
@@ -325,7 +354,8 @@ class WebRTCSignalingServer:
         Get ICE servers configuration for client
         
         Returns:
-            Dictionary with ICE servers configuration
+            Dictionary with ICE servers configuration, codec preferences,
+            audio settings, and DTMF configuration (matches Zultys ZIP33G)
         """
         ice_servers = []
         
@@ -343,7 +373,22 @@ class WebRTCSignalingServer:
         
         return {
             'iceServers': ice_servers,
-            'iceTransportPolicy': self.ice_transport_policy
+            'iceTransportPolicy': self.ice_transport_policy,
+            # Include codec preferences (matches Zultys ZIP33G)
+            'codecs': self.codecs,
+            # Include audio settings (matches Zultys ZIP33G)
+            'audio': {
+                'echoCancellation': self.audio_echo_cancellation,
+                'noiseSuppression': self.audio_noise_reduction,
+                'autoGainControl': self.audio_auto_gain_control
+            },
+            # Include DTMF settings (matches Zultys ZIP33G)
+            'dtmf': {
+                'mode': self.dtmf_mode,
+                'payloadType': self.dtmf_payload_type,
+                'duration': self.dtmf_duration,
+                'sipInfoFallback': self.dtmf_sip_info_fallback
+            }
         }
     
     def get_sessions_info(self) -> list:
