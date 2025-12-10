@@ -55,9 +55,18 @@
             </div>
         </header>
 
+        <!-- Feature Requirements Info Banner -->
+        <div id="feature-info-banner" class="info-box" style="margin: 15px 0; background: #f0f9ff; border-left: 4px solid #3b82f6;">
+            <p style="margin: 0; font-size: 14px;">
+                ℹ️ <strong>Most features work without a phone or microphone!</strong> 
+                Only the <strong>📞 Phone</strong> tab requires microphone access for making calls. 
+                All other features (management, configuration, analytics) are fully accessible.
+            </p>
+        </div>
+
         <nav class="tabs">
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-button" data-tab="webrtc-phone">📞 Phone</button>
+            <button class="tab-button phone-required" data-tab="webrtc-phone" title="Requires microphone access">📞 Phone</button>
             <button class="tab-button" data-tab="analytics">Analytics</button>
             <button class="tab-button" data-tab="qos">Call Quality (QoS)</button>
             <button class="tab-button" data-tab="emergency">🚨 Emergency</button>
@@ -137,6 +146,19 @@
         <!-- WebRTC Phone Tab -->
         <div id="webrtc-phone" class="tab-content">
             <h2>📞 WebRTC Browser Phone</h2>
+            
+            <!-- Microphone Requirement Alert -->
+            <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                <p style="margin: 0 0 10px 0;">
+                    <strong>⚠️ Microphone Access Required</strong>
+                </p>
+                <p style="margin: 0;">
+                    This feature requires microphone access to make calls. If your OS or browser blocks microphone access, 
+                    you can still use all other admin panel features (Extensions, Voicemail, Analytics, Configuration, etc.) 
+                    which don't require a phone or microphone.
+                </p>
+            </div>
+            
             <div class="info-box" style="margin-bottom: 20px;">
                 <p>🎯 <strong>Make calls directly from your browser without a physical phone!</strong></p>
                 <p>This WebRTC-based phone allows you to make calls to any extension from your computer. Perfect for working from home!</p>

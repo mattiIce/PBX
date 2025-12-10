@@ -97,7 +97,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
         
         # Permissions-Policy: Control browser features
-        self.send_header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+        # Allow microphone for WebRTC phone functionality, block camera and geolocation
+        self.send_header('Permissions-Policy', 'geolocation=(), microphone=(self), camera=()')
         
         self.end_headers()
 
