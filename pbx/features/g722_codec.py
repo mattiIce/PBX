@@ -164,9 +164,9 @@ class G722Codec:
         for byte in g722_data:
             # Convert from 8-bit unsigned (0-255) to 16-bit signed
             # Scale from [0, 255] to [-32768, 32767]
-            sample_16bit = ((byte << 8) - 32768) & 0xFFFF
+            sample_16bit = (byte << 8) - 32768
             # Pack as little-endian signed 16-bit
-            decoded.extend(struct.pack('<h', struct.unpack('<H', struct.pack('<H', sample_16bit))[0] - 65536 if sample_16bit >= 32768 else sample_16bit))
+            decoded.extend(struct.pack('<h', sample_16bit))
         
         return bytes(decoded)
     
