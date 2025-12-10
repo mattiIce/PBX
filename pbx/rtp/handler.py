@@ -5,6 +5,7 @@ Handles real-time audio/video streaming
 import socket
 import threading
 import struct
+import time
 from pbx.utils.logger import get_logger
 from pbx.utils.audio import WAV_FORMAT_PCM, WAV_FORMAT_ULAW, WAV_FORMAT_ALAW, WAV_FORMAT_G722
 
@@ -248,12 +249,16 @@ class RTPRelayHandler:
         self.logger = get_logger()
         self.socket = None
         self.running = False
-        self.endpoint_a = None  # (host, port)
-        self.endpoint_b = None  # (host, port)
+        self.endpoint_a = None  # (host, port) - Expected endpoint from SDP
+        self.endpoint_b = None  # (host, port) - Expected endpoint from SDP
+        self.learned_a = None   # (host, port) - Actual source learned from first packet
+        self.learned_b = None   # (host, port) - Actual source learned from first packet
         self.lock = threading.Lock()
         self.qos_monitor = qos_monitor
         self.qos_metrics = None
         self._qos_packet_count = 0  # For sampling QoS updates
+        self._learning_timeout = 10.0  # Seconds to allow endpoint learning
+        self._start_time = None  # Track when relay started for timeout
         
         # Start QoS monitoring if monitor is available
         if self.qos_monitor:
@@ -278,6 +283,7 @@ class RTPRelayHandler:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.bind(('0.0.0.0', self.local_port))
             self.running = True
+            self._start_time = time.time()  # Track start time for learning timeout
 
             self.logger.info(f"RTP relay handler started on port {self.local_port} for call {self.call_id}")
 
@@ -304,7 +310,7 @@ class RTPRelayHandler:
         self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
 
     def _relay_loop(self):
-        """Relay RTP packets between endpoints"""
+        """Relay RTP packets between endpoints with symmetric RTP support"""
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
@@ -325,24 +331,98 @@ class RTPRelayHandler:
                         except Exception as qos_error:
                             self.logger.debug(f"Error updating QoS metrics: {qos_error}")
 
-                # Determine which endpoint sent this packet and forward to the other
+                # Symmetric RTP: Learn actual source addresses from first packets
+                # This handles NAT traversal where actual source differs from SDP
                 with self.lock:
-                    if self.endpoint_a and self.endpoint_b:
-                        # Check if packet is from endpoint A, send to B
-                        if addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]:
-                            self.socket.sendto(data, self.endpoint_b)
-                            if self.qos_metrics:
-                                self.qos_metrics.update_packet_sent()
-                            self.logger.debug(f"Relayed {len(data)} bytes: A->B")
-                        # Check if packet is from endpoint B, send to A
-                        elif addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]:
-                            self.socket.sendto(data, self.endpoint_a)
-                            if self.qos_metrics:
-                                self.qos_metrics.update_packet_sent()
-                            self.logger.debug(f"Relayed {len(data)} bytes: B->A")
-                        else:
-                            # First packet from unknown endpoint, might need to learn the address
-                            self.logger.debug(f"RTP packet from unknown source: {addr}")
+                    if not self.endpoint_a or not self.endpoint_b:
+                        # Not enough info to relay yet
+                        continue
+                    
+                    # Determine if this packet is from A, B, or unknown
+                    is_from_a = False
+                    is_from_b = False
+                    
+                    # Check learned addresses first (most reliable)
+                    if self.learned_a and (addr[0] == self.learned_a[0] and addr[1] == self.learned_a[1]):
+                        is_from_a = True
+                    elif self.learned_b and (addr[0] == self.learned_b[0] and addr[1] == self.learned_b[1]):
+                        is_from_b = True
+                    # Check if packet matches expected SDP address for A
+                    elif (addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]):
+                        if not self.learned_a:
+                            self.learned_a = addr
+                            self.logger.info(f"Learned endpoint A: {addr} (matched SDP)")
+                        is_from_a = True
+                    # Check if packet matches expected SDP address for B
+                    elif (addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]):
+                        if not self.learned_b:
+                            self.learned_b = addr
+                            self.logger.info(f"Learned endpoint B: {addr} (matched SDP)")
+                        is_from_b = True
+                    # Symmetric RTP: Learn from first packet (NAT traversal)
+                    # Security: Only learn within timeout window and validate packet format
+                    elif not self.learned_a:
+                        # Check if we're still in the learning window
+                        elapsed = time.time() - self._start_time if self._start_time else 0
+                        if elapsed > self._learning_timeout:
+                            self.logger.warning(f"RTP learning timeout expired, rejecting packet from {addr}")
+                            continue
+                        
+                        # Validate this looks like a real RTP packet (at least 12 bytes header)
+                        if len(data) < 12:
+                            self.logger.debug(f"Rejecting too-short packet from {addr}")
+                            continue
+                        
+                        # First packet from unknown source - assume it's endpoint A
+                        self.learned_a = addr
+                        is_from_a = True
+                        self.logger.info(f"Learned endpoint A via symmetric RTP: {addr} (expected {self.endpoint_a})")
+                    elif not self.learned_b and addr != self.learned_a:
+                        # Check if we're still in the learning window
+                        elapsed = time.time() - self._start_time if self._start_time else 0
+                        if elapsed > self._learning_timeout:
+                            self.logger.warning(f"RTP learning timeout expired, rejecting packet from {addr}")
+                            continue
+                        
+                        # Validate this looks like a real RTP packet
+                        if len(data) < 12:
+                            self.logger.debug(f"Rejecting too-short packet from {addr}")
+                            continue
+                        
+                        # Second packet from different source - assume it's endpoint B
+                        self.learned_b = addr
+                        is_from_b = True
+                        self.logger.info(f"Learned endpoint B via symmetric RTP: {addr} (expected {self.endpoint_b})")
+                    else:
+                        # Packet from unknown third source or duplicate
+                        self.logger.debug(f"RTP packet from unknown source: {addr} (learned A:{self.learned_a}, B:{self.learned_b})")
+                        continue
+                    
+                    # Forward packet to the other endpoint
+                    if is_from_a and self.learned_b:
+                        # Packet from A, send to B (using learned address)
+                        self.socket.sendto(data, self.learned_b)
+                        if self.qos_metrics:
+                            self.qos_metrics.update_packet_sent()
+                        self.logger.debug(f"Relayed {len(data)} bytes: A->B")
+                    elif is_from_b and self.learned_a:
+                        # Packet from B, send to A (using learned address)
+                        self.socket.sendto(data, self.learned_a)
+                        if self.qos_metrics:
+                            self.qos_metrics.update_packet_sent()
+                        self.logger.debug(f"Relayed {len(data)} bytes: B->A")
+                    elif is_from_a:
+                        # From A but B not learned yet - try sending to expected B
+                        self.socket.sendto(data, self.endpoint_b)
+                        if self.qos_metrics:
+                            self.qos_metrics.update_packet_sent()
+                        self.logger.debug(f"Relayed {len(data)} bytes: A->B (B not learned, using SDP)")
+                    elif is_from_b:
+                        # From B but A not learned yet - try sending to expected A
+                        self.socket.sendto(data, self.endpoint_a)
+                        if self.qos_metrics:
+                            self.qos_metrics.update_packet_sent()
+                        self.logger.debug(f"Relayed {len(data)} bytes: B->A (A not learned, using SDP)")
 
             except Exception as e:
                 if self.running:
@@ -637,9 +717,12 @@ class RTPPlayer:
         """
         # Note: Import here to avoid circular dependency with audio module
         try:
-            from pbx.utils.audio import generate_beep_tone
+            from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
+            # Generate PCM tone (16-bit samples)
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
-            return self.send_audio(pcm_data, payload_type=0)
+            # Convert to μ-law for PCMU codec (payload type 0)
+            ulaw_data = pcm16_to_ulaw(pcm_data)
+            return self.send_audio(ulaw_data, payload_type=0)
         except ImportError:
             self.logger.error("Audio utilities not available")
             return False
