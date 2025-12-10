@@ -646,9 +646,9 @@ class RTPPlayer:
         Play an audio file from a WAV file
 
         Supports WAV files with:
-        - G.711 μ-law (8-bit, 8kHz) - most common for PBX
-        - G.711 A-law (8-bit, 8kHz)
-        - PCM (16-bit, 8kHz/16kHz)
+        - G.711 μ-law (8-bit, 8kHz) - legacy format
+        - G.711 A-law (8-bit, 8kHz) - legacy format
+        - PCM (16-bit, 8kHz/16kHz) - converted to G.722 for HD audio
 
         Args:
             file_path: Path to WAV file
@@ -720,16 +720,16 @@ class RTPPlayer:
 
                         # Determine payload type based on format
                         # 1 = PCM, 6 = A-law, 7 = μ-law
-                        convert_to_ulaw = False
+                        convert_to_g722 = False
                         if audio_format == 7:
                             payload_type = 0  # PCMU (μ-law)
                         elif audio_format == 6:
                             payload_type = 8  # PCMA (A-law)
                         elif audio_format == 1:
-                            # PCM format - convert to G.711 μ-law for compatibility
-                            payload_type = 0  # PCMU (μ-law)
-                            convert_to_ulaw = True
-                            self.logger.info(f"PCM format detected - will convert to G.711 μ-law (PCMU) "
+                            # PCM format - convert to G.722 for HD audio quality
+                            payload_type = 9  # G.722
+                            convert_to_g722 = True
+                            self.logger.info(f"PCM format detected - will convert to G.722 (HD Audio) "
                                            f"for VoIP compatibility.")
                         else:
                             self.logger.error(f"Unsupported audio format: {audio_format}")
@@ -788,15 +788,17 @@ class RTPPlayer:
                             else:  # 8-bit formats (G.711)
                                 audio_data = audio_data[::2]
 
-                        # Convert PCM to G.711 μ-law if needed
-                        if convert_to_ulaw:
+                        # Convert PCM to G.722 if needed
+                        if convert_to_g722:
                             try:
-                                from pbx.utils.audio import pcm16_to_ulaw
+                                from pbx.utils.audio import pcm16_to_g722
                                 original_size = len(audio_data)
-                                audio_data = pcm16_to_ulaw(audio_data)
-                                self.logger.info(f"Converted PCM to G.711 μ-law: {original_size} bytes -> {len(audio_data)} bytes")
+                                audio_data = pcm16_to_g722(audio_data, sample_rate)
+                                self.logger.info(f"Converted PCM to G.722: {original_size} bytes -> {len(audio_data)} bytes")
+                                # G.722 operates at 16kHz, update sample rate for packet calculation
+                                sample_rate = 16000
                             except Exception as e:
-                                self.logger.error(f"Failed to convert PCM to μ-law: {e}")
+                                self.logger.error(f"Failed to convert PCM to G.722: {e}")
                                 return False
 
                         # Calculate samples per packet based on sample rate

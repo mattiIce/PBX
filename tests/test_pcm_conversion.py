@@ -1,5 +1,5 @@
 """
-Test PCM to G.711 μ-law conversion functionality
+Test PCM to G.722 conversion functionality
 """
 import sys
 import os
@@ -11,9 +11,9 @@ import struct
 import tempfile
 
 
-def test_pcm16_to_ulaw_conversion():
-    """Test PCM 16-bit to μ-law conversion"""
-    from pbx.utils.audio import pcm16_to_ulaw
+def test_pcm16_to_g722_conversion():
+    """Test PCM 16-bit to G.722 conversion"""
+    from pbx.utils.audio import pcm16_to_g722
     
     # Create a simple test PCM signal (16-bit little-endian signed)
     # Let's create a few samples with known values
@@ -22,25 +22,25 @@ def test_pcm16_to_ulaw_conversion():
     for sample in test_samples:
         pcm_data += struct.pack('<h', sample)
     
-    # Convert to μ-law
-    ulaw_data = pcm16_to_ulaw(pcm_data)
+    # Convert to G.722 at 8kHz (will be upsampled to 16kHz)
+    g722_data = pcm16_to_g722(pcm_data, sample_rate=8000)
     
     # Verify output characteristics
-    assert len(ulaw_data) == len(test_samples), "μ-law data should have one byte per sample"
-    assert isinstance(ulaw_data, bytes), "μ-law data should be bytes"
+    assert isinstance(g722_data, bytes), "G.722 data should be bytes"
+    assert len(g722_data) > 0, "G.722 data should not be empty"
     
-    # μ-law values should be in valid range (0-255)
-    for byte_val in ulaw_data:
-        assert 0 <= byte_val <= 255, f"μ-law byte {byte_val} out of range"
+    # G.722 compresses approximately 2:1 (but after upsampling 8kHz->16kHz)
+    # After upsampling, PCM data doubles, then G.722 compresses by ~2x
+    # So final size should be similar to original
     
-    print(f"✓ Successfully converted {len(test_samples)} PCM samples to μ-law")
+    print(f"✓ Successfully converted {len(test_samples)} PCM samples to G.722")
     print(f"  PCM data size: {len(pcm_data)} bytes")
-    print(f"  μ-law data size: {len(ulaw_data)} bytes")
-    print(f"  Compression ratio: {len(pcm_data) / len(ulaw_data):.1f}x")
+    print(f"  G.722 data size: {len(g722_data)} bytes")
+    print(f"  Compression ratio: {len(pcm_data) / len(g722_data):.1f}x")
 
 
-def test_pcm_wav_to_ulaw_with_rtp():
-    """Test playing a PCM WAV file via RTP (with conversion)"""
+def test_pcm_wav_to_g722_with_rtp():
+    """Test playing a PCM WAV file via RTP (with conversion to G.722)"""
     from pbx.rtp.handler import RTPPlayer
     from pbx.utils.audio import build_wav_header, generate_beep_tone
     
@@ -71,16 +71,16 @@ def test_pcm_wav_to_ulaw_with_rtp():
         assert started, "RTP player should start successfully"
         
         # Attempt to play the PCM WAV file
-        # This should automatically convert PCM to μ-law
+        # This should automatically convert PCM to G.722
         result = player.play_file(temp_path)
         
         # Stop the player
         player.stop()
         
         # The conversion should succeed
-        assert result is True, "Playing PCM WAV file should succeed after conversion to μ-law"
+        assert result is True, "Playing PCM WAV file should succeed after conversion to G.722"
         
-        print(f"✓ Successfully played PCM WAV file with automatic conversion to G.711 μ-law")
+        print(f"✓ Successfully played PCM WAV file with automatic conversion to G.722")
         
     finally:
         # Clean up temporary file
@@ -151,11 +151,11 @@ def test_ulaw_wav_still_works():
 
 def run_all_tests():
     """Run all tests in this module"""
-    print("Testing PCM to G.711 μ-law conversion...")
+    print("Testing PCM to G.722 conversion...")
     print("-" * 60)
-    test_pcm16_to_ulaw_conversion()
+    test_pcm16_to_g722_conversion()
     print()
-    test_pcm_wav_to_ulaw_with_rtp()
+    test_pcm_wav_to_g722_with_rtp()
     print()
     test_ulaw_wav_still_works()
     print("-" * 60)
