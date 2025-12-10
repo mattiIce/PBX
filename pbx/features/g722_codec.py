@@ -10,45 +10,9 @@ from typing import Optional, Tuple, List
 import struct
 
 
-# G.722 ADPCM quantizer tables
-# These tables are from ITU-T G.722 specification
-
-# Quantizer step sizes for lower sub-band (6-bit ADPCM)
-LOWER_STEP_SIZE = [
-    -60, -60, -60, -60, -60, -60, -60, -60,
-    -60, -60, -60, -60, -60, -60, -60, -60,
-    -60, -60, -60, -60, -60, -60, -60, -60,
-    -60, -60, -60, -60, -60, -60, -60, -2,
-    2, 4, 6, 8, 10, 12, 14, 16,
-    18, 20, 22, 24, 26, 28, 30, 32,
-    34, 36, 38, 40, 42, 44, 46, 48,
-    50, 52, 54, 56, 58, 60, 62, 64
-]
-
-# Quantizer step sizes for higher sub-band (2-bit ADPCM)
-UPPER_STEP_SIZE = [-60, -60, -2, 2]
-
-# Quantizer decision levels (thresholds) for 6-bit ADPCM
-# These are the boundaries between quantization regions
-Q6_DECISION = [
-    35, 72, 110, 150, 190, 233, 276, 323,
-    370, 422, 473, 530, 587, 650, 714, 786,
-    858, 940, 1023, 1121, 1219, 1332, 1445, 1579,
-    1713, 1876, 2040, 2241, 2442, 2689, 2936, 32767
-]
-
-# Quantizer reconstruction levels for 6-bit ADPCM  
-# These are the actual values used for reconstruction
-Q6_RECON = [
-    17, 53, 91, 130, 170, 211, 254, 299,
-    346, 396, 447, 501, 558, 618, 682, 750,
-    822, 899, 981, 1072, 1170, 1275, 1388, 1512,
-    1646, 1794, 1958, 2140, 2341, 2565, 2812, 3084
-]
-
-# Quantizer tables for 2-bit ADPCM (higher sub-band)
-Q2_DECISION = [7, 15, 23, 32767]
-Q2_RECON = [3, 11, 19, 27]
+# Note: This implementation uses a simplified quantization approach
+# Full ITU-T G.722 specification includes complex quantization tables
+# that can be integrated for enhanced accuracy if needed
 
 
 class G722State:
@@ -311,24 +275,18 @@ class G722Codec:
         """
         if is_lower:
             # Lower sub-band uses 6-bit ADPCM (64 levels)
-            scale = state.scale_factor_low
             s = state.s_low
             a = state.a_low
-            b = state.b_low
-            d = state.d_low
             p = state.p_low
             num_levels = 32
         else:
             # Higher sub-band uses 2-bit ADPCM (4 levels)
-            scale = state.scale_factor_high
             s = state.s_high
             a = state.a_high
-            b = state.b_high
-            d = state.d_high
             p = state.p_high
             num_levels = 2
         
-        # Compute prediction
+        # Compute prediction using adaptive predictor
         sz = s + (a[0] * p[0] + a[1] * p[1]) // 4096
         
         # Compute difference
@@ -349,27 +307,24 @@ class G722Codec:
         else:
             code = (2 * num_levels - 1) - index
         
-        # Update state
+        # Reconstruct signal
         sr = sz + dq
         
-        # Update predictor coefficients (simplified)
+        # Update predictor state (simplified adaptive predictor)
         p_new = [sr, p[0]]
-        d_new = [dq] + d[:6]
         
-        # Update scale factor (simplified adaptive quantizer)
-        scale_new = self._update_scale(scale, code, is_lower)
+        # Update scale factor
+        scale_new = self._update_scale(state.scale_factor_low if is_lower else state.scale_factor_high, code, is_lower)
         
         # Store updated state
         if is_lower:
             state.s_low = sr
             state.scale_factor_low = scale_new
             state.p_low = p_new[:2] + [p[1]]
-            state.d_low = d_new
         else:
             state.s_high = sr
             state.scale_factor_high = scale_new
             state.p_high = p_new[:2] + [p[1]]
-            state.d_high = d_new
         
         return code
     
@@ -386,21 +341,17 @@ class G722Codec:
             Reconstructed sample
         """
         if is_lower:
-            scale = state.scale_factor_low
             s = state.s_low
             a = state.a_low
-            b = state.b_low
             p = state.p_low
             num_levels = 32
         else:
-            scale = state.scale_factor_high
             s = state.s_high
             a = state.a_high
-            b = state.b_high
             p = state.p_high
             num_levels = 2
         
-        # Compute prediction
+        # Compute prediction using adaptive predictor
         sz = s + (a[0] * p[0] + a[1] * p[1]) // 4096
         
         # Decode: extract magnitude and sign from code
@@ -420,11 +371,11 @@ class G722Codec:
         # Reconstruct signal
         sr = sz + dq
         
-        # Update predictor
+        # Update predictor state
         p_new = [sr, p[0]]
         
         # Update scale factor
-        scale_new = self._update_scale(scale, code, is_lower)
+        scale_new = self._update_scale(state.scale_factor_low if is_lower else state.scale_factor_high, code, is_lower)
         
         # Store updated state
         if is_lower:
@@ -437,22 +388,6 @@ class G722Codec:
             state.p_high = p_new[:2] + [p[1]]
         
         return sr
-    
-    def _quantize(self, magnitude: int, q_decision: List[int]) -> int:
-        """
-        Quantize a magnitude value using decision levels
-        
-        Args:
-            magnitude: Absolute value to quantize
-            q_decision: Decision level table
-            
-        Returns:
-            Quantized code index
-        """
-        for i, threshold in enumerate(q_decision):
-            if magnitude < threshold:
-                return i
-        return len(q_decision) - 1
     
     def _update_scale(self, current_scale: int, code: int, is_lower: bool) -> int:
         """
