@@ -2,10 +2,27 @@
 
 This guide explains how to configure HTTPS/SSL encryption for the PBX API server.
 
+## ⚠️ IMPORTANT: HTTPS is Enabled by Default
+
+As of the latest version, **HTTPS is enabled by default** for secure communication. A self-signed SSL certificate must be generated before starting the server.
+
+**Quick Start:**
+```bash
+# Generate self-signed certificate
+python scripts/generate_ssl_cert.py --hostname YOUR_IP_OR_HOSTNAME
+
+# Start the server (HTTPS enabled automatically)
+python main.py
+```
+
+The server will be accessible at `https://YOUR_SERVER_IP:8080/admin/`
+
+**Note:** Browsers will show a security warning for self-signed certificates. For production use, obtain a certificate from a trusted CA like Let's Encrypt.
+
 ## Overview
 
 The PBX system supports HTTPS/SSL for secure API communication. This includes:
-- **Self-signed certificates** for development and testing
+- **Self-signed certificates** for development and testing (default)
 - **In-house CA integration** for enterprise environments
 - **Manual certificate configuration** for production use with trusted CAs
 
