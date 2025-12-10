@@ -252,6 +252,7 @@ class RTPRelayHandler:
         self.lock = threading.Lock()
         self.qos_monitor = qos_monitor
         self.qos_metrics = None
+        self._qos_packet_count = 0  # For sampling QoS updates
         
         # Start QoS monitoring if monitor is available
         if self.qos_monitor:
@@ -307,19 +308,21 @@ class RTPRelayHandler:
             try:
                 data, addr = self.socket.recvfrom(2048)
 
-                # Update QoS metrics if monitoring is enabled
-                if self.qos_metrics and len(data) >= 12:
-                    try:
-                        # Parse RTP header
-                        header = struct.unpack('!BBHII', data[:12])
-                        seq_num = header[2]
-                        timestamp = header[3]
-                        payload_size = len(data) - 12
-                        
-                        # Update received packet metrics
-                        self.qos_metrics.update_packet_received(seq_num, timestamp, payload_size)
-                    except Exception as qos_error:
-                        self.logger.debug(f"Error updating QoS metrics: {qos_error}")
+                # Update QoS metrics if monitoring is enabled (sample every 10th packet for performance)
+                if self.qos_metrics and len(data) >= 12 and hasattr(self, '_qos_packet_count'):
+                    self._qos_packet_count = getattr(self, '_qos_packet_count', 0) + 1
+                    if self._qos_packet_count % 10 == 0:
+                        try:
+                            # Parse RTP header
+                            header = struct.unpack('!BBHII', data[:12])
+                            seq_num = header[2]
+                            timestamp = header[3]
+                            payload_size = len(data) - 12
+                            
+                            # Update received packet metrics
+                            self.qos_metrics.update_packet_received(seq_num, timestamp, payload_size)
+                        except Exception as qos_error:
+                            self.logger.debug(f"Error updating QoS metrics: {qos_error}")
 
                 # Determine which endpoint sent this packet and forward to the other
                 with self.lock:

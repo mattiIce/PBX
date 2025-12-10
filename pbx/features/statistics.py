@@ -452,7 +452,7 @@ class StatisticsEngine:
             Boolean indicating success
         """
         try:
-            import csv
+            import csv  # Import here to avoid unnecessary dependency if not used
             
             if not records:
                 return False
