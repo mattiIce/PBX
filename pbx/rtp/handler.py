@@ -6,6 +6,7 @@ import socket
 import threading
 import struct
 from pbx.utils.logger import get_logger
+from pbx.utils.audio import WAV_FORMAT_PCM, WAV_FORMAT_ULAW, WAV_FORMAT_ALAW, WAV_FORMAT_G722
 
 
 class RTPHandler:
@@ -719,13 +720,17 @@ class RTPPlayer:
                             extra_bytes = f.read(chunk_size - 16)
 
                         # Determine payload type based on format
-                        # 1 = PCM, 6 = A-law, 7 = μ-law
                         convert_to_g722 = False
-                        if audio_format == 7:
+                        if audio_format == WAV_FORMAT_ULAW:
                             payload_type = 0  # PCMU (μ-law)
-                        elif audio_format == 6:
+                        elif audio_format == WAV_FORMAT_ALAW:
                             payload_type = 8  # PCMA (A-law)
-                        elif audio_format == 1:
+                        elif audio_format == WAV_FORMAT_G722:
+                            # G.722 format - already encoded, no conversion needed
+                            payload_type = 9  # G.722
+                            convert_to_g722 = False
+                            self.logger.info(f"G.722 format detected - already encoded for VoIP.")
+                        elif audio_format == WAV_FORMAT_PCM:
                             # PCM format - convert to G.722 for HD audio quality
                             payload_type = 9  # G.722
                             convert_to_g722 = True
@@ -781,11 +786,11 @@ class RTPPlayer:
                         if num_channels == 2:
                             self.logger.warning(f"Stereo audio detected, extracting left channel only")
                             # Extract left channel (assuming interleaved samples)
-                            if audio_format == 1:  # PCM 16-bit
+                            if audio_format == WAV_FORMAT_PCM:  # PCM 16-bit
                                 # Extract every other 16-bit sample (left channel)
                                 # More efficient using slice with step
                                 audio_data = audio_data[::4] + audio_data[1::4]
-                            else:  # 8-bit formats (G.711)
+                            else:  # 8-bit formats (G.711, G.722)
                                 audio_data = audio_data[::2]
 
                         # Convert PCM to G.722 if needed
@@ -800,6 +805,10 @@ class RTPPlayer:
                             except Exception as e:
                                 self.logger.error(f"Failed to convert PCM to G.722: {e}")
                                 return False
+                        elif payload_type == 9:
+                            # G.722 format - already encoded, ensure correct sample rate for packets
+                            # G.722 uses 8kHz clock rate but actual 16kHz sampling
+                            sample_rate = 16000
 
                         # Calculate samples per packet based on sample rate
                         # 20ms packet = sample_rate * 0.02
