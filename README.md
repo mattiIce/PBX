@@ -112,13 +112,22 @@ nano .env
 
 See [ENV_SETUP_GUIDE.md](ENV_SETUP_GUIDE.md) for detailed instructions on configuring credentials.
 
-5. Configure the system:
+5. Generate SSL certificate (required for HTTPS):
+```bash
+# Generate self-signed certificate for development/testing
+python scripts/generate_ssl_cert.py --hostname YOUR_IP_OR_HOSTNAME
+
+# For production, use a trusted CA like Let's Encrypt
+# See HTTPS_SETUP_GUIDE.md for detailed instructions
+```
+
+6. Configure the system:
 ```bash
 # Edit config.yml with your settings
 nano config.yml
 ```
 
-6. Start the PBX:
+7. Start the PBX:
 ```bash
 python main.py
 ```
@@ -126,12 +135,16 @@ python main.py
 The PBX will start on:
 - SIP Server: UDP port 5060
 - RTP Media: UDP ports 10000-20000
-- REST API: HTTP port 8080
-- Admin Panel: http://localhost:8080/admin/
+- REST API: HTTPS port 8080 (HTTP also supported, configure in config.yml)
+- Admin Panel: https://localhost:8080/admin/
+
+**Note:** Browsers will show a security warning for self-signed certificates during development. This is normal. For production, use a certificate from a trusted CA like Let's Encrypt.
 
 ## 🖥️ Admin Panel
 
-Access the web-based admin panel at `http://localhost:8080/admin/` to manage your PBX system through a modern, intuitive interface.
+Access the web-based admin panel at `https://localhost:8080/admin/` to manage your PBX system through a modern, intuitive interface.
+
+**Note:** For self-signed certificates, you may need to accept a browser security warning on first access.
 
 ### Features:
 - **Dashboard** - Real-time system status and statistics
