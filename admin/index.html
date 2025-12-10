@@ -879,7 +879,20 @@
 
             <div id="voicemail-messages-section" style="display: none;">
                 <h3>Voicemail Messages</h3>
-                <div class="table-container">
+                <div class="action-buttons" style="margin-bottom: 15px;">
+                    <button class="btn btn-secondary" onclick="toggleVoicemailView()">
+                        <span id="view-toggle-text">📋 Switch to Table View</span>
+                    </button>
+                </div>
+                
+                <!-- Card View (Visual Voicemail) -->
+                <div id="voicemail-cards-view" class="voicemail-cards-container">
+                    <!-- Voicemail cards will be inserted here -->
+                    <div class="info-box">Select an extension to view voicemails</div>
+                </div>
+                
+                <!-- Table View (Legacy) -->
+                <div id="voicemail-table-view" class="table-container" style="display: none;">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -896,6 +909,31 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- Audio Player Modal -->
+            <div id="voicemail-player-modal" class="modal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3>🎵 Voicemail Player</h3>
+                        <span class="close" onclick="closeVoicemailPlayer()">&times;</span>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div id="vm-player-details" class="info-box" style="margin-bottom: 15px;">
+                            <!-- Message details will be inserted here -->
+                        </div>
+                        <audio id="vm-audio-player" controls style="width: 100%; margin-bottom: 15px;">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div id="vm-transcription-display" style="display: none;">
+                            <h4>📝 Transcription</h4>
+                            <div class="transcription-box">
+                                <p id="vm-transcription-text"></p>
+                                <small id="vm-transcription-confidence" style="color: #6b7280;"></small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -856,53 +856,199 @@ async function loadVoicemailForExtension() {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
         const data = await response.json();
         
-        const tbody = document.getElementById('voicemail-table-body');
+        // Update both views
+        updateVoicemailCardsView(data.messages, extension);
+        updateVoicemailTableView(data.messages, extension);
         
-        if (!data.messages || data.messages.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No voicemail messages</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        data.messages.forEach(msg => {
-            const row = document.createElement('tr');
-            const timestamp = new Date(msg.timestamp).toLocaleString();
-            const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
-            const status = msg.listened ? 'Read' : 'Unread';
-            
-            row.innerHTML = `
-                <td>${timestamp}</td>
-                <td>${msg.caller_id}</td>
-                <td>${duration}</td>
-                <td><span class="badge ${msg.listened ? 'badge-secondary' : 'badge-primary'}">${status}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="playVoicemail('${extension}', '${msg.id}')">▶ Play</button>
-                    <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">⬇ Download</button>
-                    ${!msg.listened ? `<button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">✓ Mark Read</button>` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">🗑 Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
     } catch (error) {
         console.error('Error loading voicemail:', error);
         showNotification('Failed to load voicemail messages', 'error');
     }
 }
 
-async function playVoicemail(extension, messageId) {
-    try {
-        const audioUrl = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
-        const audio = new Audio(audioUrl);
-        audio.play();
-        showNotification('Playing voicemail...', 'info');
-        
-        // Mark as read after playing
-        setTimeout(() => markVoicemailRead(extension, messageId, false), 1000);
-    } catch (error) {
-        console.error('Error playing voicemail:', error);
-        showNotification('Failed to play voicemail', 'error');
+function updateVoicemailCardsView(messages, extension) {
+    const cardsContainer = document.getElementById('voicemail-cards-view');
+    
+    if (!messages || messages.length === 0) {
+        cardsContainer.innerHTML = '<div class="info-box">No voicemail messages</div>';
+        return;
     }
+    
+    cardsContainer.innerHTML = messages.map(msg => {
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
+        const isUnread = !msg.listened;
+        
+        let transcriptionHtml = '';
+        if (msg.transcription && msg.transcription.text) {
+            const confidencePercent = msg.transcription.confidence ? 
+                (msg.transcription.confidence * 100).toFixed(0) : 'N/A';
+            transcriptionHtml = `
+                <div class="voicemail-transcription">
+                    "${msg.transcription.text}"
+                    <span class="voicemail-transcription-confidence">
+                        Confidence: ${confidencePercent}%
+                    </span>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="voicemail-card ${isUnread ? 'unread' : ''}">
+                <div class="voicemail-card-header">
+                    <div class="voicemail-from">📞 ${msg.caller_id}</div>
+                    <span class="voicemail-status-badge ${isUnread ? 'unread' : 'read'}">
+                        ${isUnread ? 'NEW' : 'READ'}
+                    </span>
+                </div>
+                <div class="voicemail-meta">
+                    <div class="voicemail-meta-item">
+                        <span>📅</span> ${timestamp}
+                    </div>
+                    <div class="voicemail-meta-item">
+                        <span>⏱️</span> ${duration}
+                    </div>
+                </div>
+                ${transcriptionHtml}
+                <div class="voicemail-actions">
+                    <button class="btn btn-sm btn-info" onclick="openVoicemailPlayer('${extension}', '${msg.id}')">
+                        ▶️ Play
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">
+                        ⬇️ Download
+                    </button>
+                    ${isUnread ? `
+                        <button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">
+                            ✓ Mark Read
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateVoicemailTableView(messages, extension) {
+    const tbody = document.getElementById('voicemail-table-body');
+    
+    if (!messages || messages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-data">No voicemail messages</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    messages.forEach(msg => {
+        const row = document.createElement('tr');
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
+        const status = msg.listened ? 'Read' : 'Unread';
+        
+        row.innerHTML = `
+            <td>${timestamp}</td>
+            <td>${msg.caller_id}</td>
+            <td>${duration}</td>
+            <td><span class="badge ${msg.listened ? 'badge-secondary' : 'badge-primary'}">${status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="openVoicemailPlayer('${extension}', '${msg.id}')">▶ Play</button>
+                <button class="btn btn-sm btn-success" onclick="downloadVoicemail('${extension}', '${msg.id}')">⬇ Download</button>
+                ${!msg.listened ? `<button class="btn btn-sm btn-secondary" onclick="markVoicemailRead('${extension}', '${msg.id}')">✓ Mark Read</button>` : ''}
+                <button class="btn btn-sm btn-danger" onclick="deleteVoicemail('${extension}', '${msg.id}')">🗑 Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function toggleVoicemailView() {
+    const cardsView = document.getElementById('voicemail-cards-view');
+    const tableView = document.getElementById('voicemail-table-view');
+    const toggleText = document.getElementById('view-toggle-text');
+    
+    if (cardsView.style.display === 'none') {
+        // Switch to cards view
+        cardsView.style.display = 'grid';
+        tableView.style.display = 'none';
+        toggleText.textContent = '📋 Switch to Table View';
+    } else {
+        // Switch to table view
+        cardsView.style.display = 'none';
+        tableView.style.display = 'block';
+        toggleText.textContent = '🎴 Switch to Card View';
+    }
+}
+
+async function openVoicemailPlayer(extension, messageId) {
+    try {
+        // Fetch message details
+        const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
+        const data = await response.json();
+        const message = data.messages.find(m => m.id === messageId);
+        
+        if (!message) {
+            showNotification('Message not found', 'error');
+            return;
+        }
+        
+        // Update player details
+        const detailsDiv = document.getElementById('vm-player-details');
+        const timestamp = new Date(message.timestamp).toLocaleString();
+        const duration = message.duration ? `${message.duration}s` : 'Unknown';
+        
+        detailsDiv.innerHTML = `
+            <p><strong>From:</strong> ${message.caller_id}</p>
+            <p><strong>Received:</strong> ${timestamp}</p>
+            <p><strong>Duration:</strong> ${duration}</p>
+            <p><strong>Status:</strong> ${message.listened ? 'Read' : 'Unread'}</p>
+        `;
+        
+        // Set audio source
+        const audioPlayer = document.getElementById('vm-audio-player');
+        audioPlayer.src = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
+        
+        // Show/hide transcription
+        const transcriptionDiv = document.getElementById('vm-transcription-display');
+        if (message.transcription && message.transcription.text) {
+            document.getElementById('vm-transcription-text').textContent = message.transcription.text;
+            const confidence = message.transcription.confidence ? 
+                `Confidence: ${(message.transcription.confidence * 100).toFixed(0)}%` : '';
+            document.getElementById('vm-transcription-confidence').textContent = confidence;
+            transcriptionDiv.style.display = 'block';
+        } else {
+            transcriptionDiv.style.display = 'none';
+        }
+        
+        // Show modal
+        document.getElementById('voicemail-player-modal').style.display = 'block';
+        
+        // Mark as read after playing starts
+        audioPlayer.onplay = () => {
+            markVoicemailRead(extension, messageId, false);
+        };
+        
+    } catch (error) {
+        console.error('Error opening voicemail player:', error);
+        showNotification('Failed to open voicemail player', 'error');
+    }
+}
+
+function closeVoicemailPlayer() {
+    const modal = document.getElementById('voicemail-player-modal');
+    const audioPlayer = document.getElementById('vm-audio-player');
+    
+    audioPlayer.pause();
+    audioPlayer.src = '';
+    modal.style.display = 'none';
+    
+    // Reload messages to update read status
+    loadVoicemailForExtension();
+}
+
+async function playVoicemail(extension, messageId) {
+    // Redirect to new modal player
+    openVoicemailPlayer(extension, messageId);
 }
 
 async function downloadVoicemail(extension, messageId) {

@@ -1153,3 +1153,130 @@ input[type="range"]::-moz-range-thumb:hover {
     font-style: italic;
     padding: 20px;
 }
+
+/* ====================================
+   Visual Voicemail Styles
+   ==================================== */
+
+.voicemail-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.voicemail-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.voicemail-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.voicemail-card.unread {
+    border-left: 4px solid #667eea;
+    background: linear-gradient(135deg, #ffffff 0%, #f3f4ff 100%);
+}
+
+.voicemail-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.voicemail-from {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.voicemail-status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.voicemail-status-badge.unread {
+    background: #667eea;
+    color: white;
+}
+
+.voicemail-status-badge.read {
+    background: #e5e7eb;
+    color: #6b7280;
+}
+
+.voicemail-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.voicemail-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.voicemail-transcription {
+    background: #f9fafb;
+    border-left: 3px solid #10b981;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #374151;
+    font-style: italic;
+}
+
+.voicemail-transcription-confidence {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+    font-style: normal;
+}
+
+.voicemail-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.voicemail-actions button {
+    flex: 1;
+    min-width: 100px;
+}
+
+.transcription-box {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.transcription-box p {
+    margin: 0;
+    line-height: 1.7;
+    color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .voicemail-cards-container {
+        grid-template-columns: 1fr;
+    }
+}
