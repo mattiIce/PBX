@@ -4,8 +4,9 @@ Provides HTTP/HTTPS API for managing PBX features
 """
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from typing import Optional
+from pathlib import Path
 import socket
 import threading
 import os
@@ -15,11 +16,24 @@ import zipfile
 import tempfile
 import shutil
 import ssl
+import ipaddress
 from urllib.parse import urlparse, parse_qs
 from pbx.utils.logger import get_logger
 from pbx.utils.config import Config
 from pbx.utils.tts import text_to_wav_telephony, is_tts_available, get_tts_requirements
 from pbx.features.phone_provisioning import normalize_mac_address
+
+# Optional imports for SSL certificate generation
+try:
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.backends import default_backend
+    SSL_GENERATION_AVAILABLE = True
+except ImportError:
+    SSL_GENERATION_AVAILABLE = False
 
 # Admin directory path
 ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
@@ -1681,12 +1695,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             # Get certificate details if it exists
             cert_details = None
-            if cert_exists:
+            if cert_exists and SSL_GENERATION_AVAILABLE:
                 try:
-                    from cryptography import x509
-                    from cryptography.hazmat.backends import default_backend
-                    from datetime import datetime, timezone
-                    
                     with open(cert_file, 'rb') as f:
                         cert_data = f.read()
                         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
@@ -1744,24 +1754,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             self.logger.info(f"Generating self-signed SSL certificate for {hostname}")
             
-            # Import required libraries
-            try:
-                from cryptography import x509
-                from cryptography.x509.oid import NameOID
-                from cryptography.hazmat.primitives import hashes
-                from cryptography.hazmat.primitives.asymmetric import rsa
-                from cryptography.hazmat.primitives import serialization
-                from datetime import datetime, timedelta, timezone
-                import ipaddress
-            except ImportError as e:
+            # Check if SSL generation is available
+            if not SSL_GENERATION_AVAILABLE:
                 self._send_json({
                     'error': 'Required cryptography library not available',
-                    'details': str(e)
+                    'details': 'Install with: pip install cryptography'
                 }, 500)
                 return
             
             # Create cert directory if it doesn't exist
-            from pathlib import Path
             cert_path = Path(cert_dir)
             cert_path.mkdir(exist_ok=True)
             
