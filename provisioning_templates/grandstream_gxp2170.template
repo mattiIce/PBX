@@ -12,6 +12,7 @@ P2 = 3600
 # Codecs
 P57 = 0    # PCMU
 P58 = 8    # PCMA
+P67 = 9    # G722
 P46 = 18   # G729
 
 # DTMF Settings

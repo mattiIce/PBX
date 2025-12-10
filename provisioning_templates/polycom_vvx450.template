@@ -11,7 +11,8 @@
   
   <voice voice.codecPref.G711_Mu="1"
          voice.codecPref.G711_A="2"
-         voice.codecPref.G729_AB="3"/>
+         voice.codecPref.G722="3"
+         voice.codecPref.G729_AB="4"/>
   
   <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"
             tcpIpApp.sntp.gmtOffset="-28800"/>

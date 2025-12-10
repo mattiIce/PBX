@@ -55,6 +55,16 @@ dialplan:
   parking_pattern: ^7[0-9]$
   queue_pattern: ^8[0-9]{3}$
   auto_attendant_pattern: ^0$
+codecs:
+  # G.722 HD Audio Codec - Wideband audio (16 kHz) for higher quality voice calls
+  g722:
+    enabled: true
+    bitrate: 64000  # 64 kbit/s (can be 48000, 56000, or 64000)
+  # Opus Codec - Modern adaptive codec (see OPUS_CODEC_GUIDE.md for details)
+  opus:
+    enabled: false  # Enable when opuslib is installed
+    sample_rate: 48000
+    bitrate: 32000
 features:
   call_recording: true
   call_transfer: true
@@ -129,19 +139,24 @@ features:
       #   credential: your-turn-password
     
     # Codec Configuration (matches Zultys ZIP33G settings)
-    # Priority: PCMU (0) > PCMA (8) > RFC2833 (101) for DTMF
+    # Priority: G722 (9) > PCMU (0) > PCMA (8) > RFC2833 (101) for DTMF
+    # G.722 HD audio preferred for best quality, with G.711 fallbacks
     codecs:
+      - payload_type: 9
+        name: G722
+        priority: 1
+        enabled: true
       - payload_type: 0
         name: PCMU
-        priority: 1
+        priority: 2
         enabled: true
       - payload_type: 8
         name: PCMA
-        priority: 2
+        priority: 3
         enabled: true
       - payload_type: 101
         name: telephone-event
-        priority: 3
+        priority: 4
         enabled: true
     
     # DTMF Configuration (matches Zultys ZIP33G)
