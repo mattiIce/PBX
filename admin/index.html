@@ -72,10 +72,9 @@
 
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Communication</div>
-                    <button class="tab-button phone-required" data-tab="webrtc-phone" title="Currently non-functional" style="opacity: 0.6; text-decoration: line-through;">
+                    <button class="tab-button phone-required" data-tab="webrtc-phone" title="Make calls from your browser">
                         <span class="tab-icon">📞</span>
-                        <span class="tab-text">Phone (Disabled)</span>
-                        <span class="tab-badge">🚫</span>
+                        <span class="tab-text">Phone</span>
                     </button>
                     <button class="tab-button" data-tab="calls">
                         <span class="tab-icon">📱</span>
@@ -210,25 +209,10 @@
         <div id="webrtc-phone" class="tab-content">
             <h2>📞 WebRTC Browser Phone</h2>
             
-            <!-- NON-FUNCTIONAL WARNING -->
-            <div class="info-box" style="margin-bottom: 20px; background: #fee; border-left: 4px solid #c00;">
-                <p style="margin: 0 0 10px 0; font-size: 18px;">
-                    <strong>🚫 CURRENTLY NON-FUNCTIONAL</strong>
-                </p>
-                <p style="margin: 0 0 10px 0;">
-                    <strong>Web audio (WebRTC phone) is currently not working and is disabled.</strong>
-                    This is a critical component for browser-based calling but requires significant fixes.
-                </p>
-                <p style="margin: 0;">
-                    All other admin panel features (Extensions, Voicemail, Analytics, Configuration, Provisioning, etc.) 
-                    are fully functional. Use a physical IP phone or SIP client for making calls until this is resolved.
-                </p>
-            </div>
-            
             <!-- Microphone Requirement Alert -->
-            <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ffc107; opacity: 0.5;">
+            <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ffc107;">
                 <p style="margin: 0 0 10px 0;">
-                    <strong>⚠️ Microphone Access Required (When Functional)</strong>
+                    <strong>⚠️ Microphone Access Required</strong>
                 </p>
                 <p style="margin: 0;">
                     This feature requires microphone access to make calls. If your OS or browser blocks microphone access, 
@@ -237,18 +221,19 @@
                 </p>
             </div>
             
-            <div class="info-box" style="margin-bottom: 20px; opacity: 0.5;">
+            <div class="info-box" style="margin-bottom: 20px;">
                 <p>🎯 <strong>Make calls directly from your browser without a physical phone!</strong></p>
                 <p>This WebRTC-based phone allows you to make calls to any extension from your computer. Perfect for working from home!</p>
+                <p><strong>Supported Codecs:</strong> PCMU (G.711 μ-law), PCMA (G.711 A-law), G.722 HD Audio, Opus</p>
                 <p>⚠️ <strong>Note:</strong> Please allow microphone access when prompted by your browser.</p>
                 <p>🎧 <strong>Tip:</strong> Use headphones to prevent echo and feedback during calls.</p>
             </div>
 
-            <div class="config-section" style="max-width: 600px; margin: 0 auto; opacity: 0.5; pointer-events: none;">
+            <div class="config-section" style="max-width: 600px; margin: 0 auto;">
                 <div class="webrtc-phone-widget">
                     <div class="phone-display">
                         <div class="phone-status-container">
-                            <div id="webrtc-status" class="webrtc-status info">Feature Disabled - Not Functional</div>
+                            <div id="webrtc-status" class="webrtc-status info">Ready to call</div>
                         </div>
                         
                         <div class="phone-input-group" style="margin: 20px 0;">

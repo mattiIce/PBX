@@ -9,6 +9,27 @@ from pbx.utils.logger import get_logger
 # Valid DTMF digits for SIP INFO validation
 VALID_DTMF_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'A', 'B', 'C', 'D']
 
+# RFC 2833 Event Code to DTMF digit mapping (for SIP INFO messages that send event codes)
+# Some phones send "Signal=11" instead of "Signal=#"
+RFC2833_EVENT_TO_DTMF = {
+    '0': '0',
+    '1': '1',
+    '2': '2',
+    '3': '3',
+    '4': '4',
+    '5': '5',
+    '6': '6',
+    '7': '7',
+    '8': '8',
+    '9': '9',
+    '10': '*',
+    '11': '#',
+    '12': 'A',
+    '13': 'B',
+    '14': 'C',
+    '15': 'D',
+}
+
 
 class SIPServer:
     """SIP server for handling registration and calls"""
@@ -339,9 +360,15 @@ class SIPServer:
                         parts = line.split('=', 1)
                         if len(parts) == 2:
                             digit = parts[1].strip()
-                            # Validate DTMF digit using constant
+                            
+                            # Check if it's already a valid DTMF digit character
                             if digit in VALID_DTMF_DIGITS:
                                 dtmf_digit = digit
+                                break
+                            # Check if it's an RFC 2833 event code (some phones send "11" for "#")
+                            elif digit in RFC2833_EVENT_TO_DTMF:
+                                dtmf_digit = RFC2833_EVENT_TO_DTMF[digit]
+                                self.logger.debug(f"Converted RFC 2833 event code {digit} to DTMF digit {dtmf_digit}")
                                 break
                             else:
                                 self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
