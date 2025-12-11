@@ -108,9 +108,13 @@ class EmergencyNotificationSystem:
             )
             self.emergency_contacts.append(contact)
         
-        # TODO: Load from database if available
+        # Load from database if available
         if self.database and self.database.enabled:
             self._load_contacts_from_db()
+    
+    def _get_db_placeholder(self):
+        """Get database-agnostic placeholder for SQL queries"""
+        return '?' if self.database.db_type == 'sqlite' else '%s'
     
     def _load_contacts_from_db(self):
         """Load emergency contacts from database"""
@@ -124,13 +128,13 @@ class EmergencyNotificationSystem:
             results = self.database.fetch_all(query)
             
             for row in results:
-                methods = json.loads(row[6]) if row[6] else ['call']
+                methods = json.loads(row['notification_methods']) if row['notification_methods'] else ['call']
                 contact = EmergencyContact(
-                    name=row[1],
-                    extension=row[2],
-                    phone=row[3],
-                    email=row[4],
-                    priority=row[5],
+                    name=row['name'],
+                    extension=row['extension'],
+                    phone=row['phone'],
+                    email=row['email'],
+                    priority=row['priority'],
                     notification_methods=methods
                 )
                 # Only add if not already in list from config
@@ -191,17 +195,21 @@ class EmergencyNotificationSystem:
     def _save_contact_to_db(self, contact: EmergencyContact):
         """Save emergency contact to database"""
         try:
+            placeholder = self._get_db_placeholder()
+            
             # Check if contact exists (database-agnostic approach)
-            check_query = "SELECT id FROM emergency_contacts WHERE id = %s"
+            check_query = f"SELECT id FROM emergency_contacts WHERE id = {placeholder}"
             existing = self.database.fetch_one(check_query, (contact.id,))
             
             if existing:
-                # Update existing contact
-                query = """
+                # Update existing contact - use placeholder list for clarity
+                placeholders = ', '.join([placeholder] * 6)  # 6 fields to update
+                query = f"""
                     UPDATE emergency_contacts 
-                    SET name = %s, extension = %s, phone = %s, email = %s,
-                        priority = %s, notification_methods = %s, active = true
-                    WHERE id = %s
+                    SET name = {placeholder}, extension = {placeholder}, phone = {placeholder}, 
+                        email = {placeholder}, priority = {placeholder}, notification_methods = {placeholder}, 
+                        active = true
+                    WHERE id = {placeholder}
                 """
                 params = (
                     contact.name,
@@ -213,11 +221,12 @@ class EmergencyNotificationSystem:
                     contact.id
                 )
             else:
-                # Insert new contact
-                query = """
+                # Insert new contact - use placeholder list for clarity
+                placeholders = ', '.join([placeholder] * 7)  # 7 fields
+                query = f"""
                     INSERT INTO emergency_contacts 
                     (id, name, extension, phone, email, priority, notification_methods, active)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, true)
+                    VALUES ({placeholders}, true)
                 """
                 params = (
                     contact.id,
@@ -253,7 +262,8 @@ class EmergencyNotificationSystem:
                 # Remove from database
                 if self.database and self.database.enabled:
                     try:
-                        query = "UPDATE emergency_contacts SET active = false WHERE id = %s"
+                        placeholder = self._get_db_placeholder()
+                        query = f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"
                         self.database.execute(query, (contact_id,))
                     except Exception as e:
                         self.logger.error(f"Failed to remove contact from database: {e}")
@@ -398,10 +408,12 @@ class EmergencyNotificationSystem:
     def _save_notification_to_db(self, notification_record: Dict):
         """Save notification record to database"""
         try:
-            query = """
+            placeholder = self._get_db_placeholder()
+            placeholders = ', '.join([placeholder] * 6)  # 6 fields
+            query = f"""
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                VALUES ({placeholders})
             """
             
             self.database.execute(query, (
