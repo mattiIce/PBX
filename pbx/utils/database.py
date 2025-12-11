@@ -676,6 +676,41 @@ class DatabaseBackend:
                 if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
         
+        # Migration: Add security columns to extensions table
+        extensions_columns = [
+            ("password_salt", "VARCHAR(255)"),
+            ("voicemail_pin_hash", "VARCHAR(255)"),
+            ("voicemail_pin_salt", "VARCHAR(255)")
+        ]
+        
+        for column_name, column_type in extensions_columns:
+            # Check if column exists
+            check_query = """
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='extensions' AND column_name=%s
+            """ if self.db_type == 'postgresql' else """
+            SELECT name FROM pragma_table_info('extensions') WHERE name=?
+            """
+            
+            try:
+                cursor = self.connection.cursor()
+                cursor.execute(check_query, (column_name,))
+                exists = cursor.fetchone() is not None
+                cursor.close()
+                
+                if not exists:
+                    # Add column
+                    alter_query = f"ALTER TABLE extensions ADD COLUMN {column_name} {column_type}"
+                    self.logger.info(f"Adding column to extensions: {column_name}")
+                    self._execute_with_context(alter_query, f"add column {column_name} to extensions", critical=False)
+                else:
+                    self.logger.debug(f"Column {column_name} already exists in extensions")
+            except Exception as e:
+                self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
+                if self.connection and not self.connection.autocommit:
+                    self.connection.rollback()
+        
         self.logger.info("Schema migration check complete")
 
 
