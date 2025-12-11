@@ -252,9 +252,21 @@ async function loadExtensions() {
             return div.innerHTML;
         };
         
+        // Helper function to generate extension badges
+        const generateBadges = (ext) => {
+            let badges = '';
+            if (ext.ad_synced) {
+                badges += ' <span class="ad-badge" title="Synced from Active Directory">AD</span>';
+            }
+            if (ext.is_admin) {
+                badges += ' <span class="admin-badge" title="Admin Privileges">👑 Admin</span>';
+            }
+            return badges;
+        };
+        
         tbody.innerHTML = extensions.map(ext => `
             <tr>
-                <td><strong>${escapeHtml(ext.number)}</strong>${ext.ad_synced ? ' <span class="ad-badge" title="Synced from Active Directory">AD</span>' : ''}</td>
+                <td><strong>${escapeHtml(ext.number)}</strong>${generateBadges(ext)}</td>
                 <td>${escapeHtml(ext.name)}</td>
                 <td>${ext.email ? escapeHtml(ext.email) : 'Not set'}</td>
                 <td class="${ext.registered ? 'status-online' : 'status-offline'}">
@@ -294,6 +306,7 @@ function editExtension(number) {
     document.getElementById('edit-ext-name').value = ext.name;
     document.getElementById('edit-ext-email').value = ext.email || '';
     document.getElementById('edit-ext-allow-external').checked = Boolean(ext.allow_external);
+    document.getElementById('edit-ext-is-admin').checked = Boolean(ext.is_admin);
     document.getElementById('edit-ext-password').value = '';
     
     document.getElementById('edit-extension-modal').classList.add('active');
@@ -507,7 +520,8 @@ function initializeForms() {
             email: document.getElementById('new-ext-email').value,
             password: document.getElementById('new-ext-password').value,
             allow_external: document.getElementById('new-ext-allow-external').checked,
-            voicemail_pin: document.getElementById('new-ext-voicemail-pin').value
+            voicemail_pin: document.getElementById('new-ext-voicemail-pin').value,
+            is_admin: document.getElementById('new-ext-is-admin').checked
         };
         
         try {
@@ -541,7 +555,8 @@ function initializeForms() {
         const extensionData = {
             name: document.getElementById('edit-ext-name').value,
             email: document.getElementById('edit-ext-email').value,
-            allow_external: document.getElementById('edit-ext-allow-external').checked
+            allow_external: document.getElementById('edit-ext-allow-external').checked,
+            is_admin: document.getElementById('edit-ext-is-admin').checked
         };
         
         const password = document.getElementById('edit-ext-password').value;

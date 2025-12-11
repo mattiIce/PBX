@@ -477,6 +477,7 @@ class DatabaseBackend:
             allow_external BOOLEAN DEFAULT TRUE,
             voicemail_pin_hash VARCHAR(255),
             voicemail_pin_salt VARCHAR(255),
+            is_admin BOOLEAN DEFAULT FALSE,
             ad_synced BOOLEAN DEFAULT FALSE,
             ad_username VARCHAR(100),
             password_changed_at TIMESTAMP,
@@ -496,6 +497,7 @@ class DatabaseBackend:
             allow_external BOOLEAN DEFAULT 1,
             voicemail_pin_hash VARCHAR(255),
             voicemail_pin_salt VARCHAR(255),
+            is_admin BOOLEAN DEFAULT 0,
             ad_synced BOOLEAN DEFAULT 0,
             ad_username VARCHAR(100),
             password_changed_at TIMESTAMP,
@@ -680,7 +682,8 @@ class DatabaseBackend:
         extensions_columns = [
             ("password_salt", "VARCHAR(255)"),
             ("voicemail_pin_hash", "VARCHAR(255)"),
-            ("voicemail_pin_salt", "VARCHAR(255)")
+            ("voicemail_pin_salt", "VARCHAR(255)"),
+            ("is_admin", "BOOLEAN DEFAULT FALSE" if self.db_type == 'postgresql' else "BOOLEAN DEFAULT 0")
         ]
         
         for column_name, column_type in extensions_columns:
@@ -1119,7 +1122,7 @@ class ExtensionDB:
 
     def add(self, number: str, name: str, password_hash: str, email: str = None, 
             allow_external: bool = True, voicemail_pin: str = None, 
-            ad_synced: bool = False, ad_username: str = None) -> bool:
+            ad_synced: bool = False, ad_username: str = None, is_admin: bool = False) -> bool:
         """
         Add a new extension
         
@@ -1132,6 +1135,7 @@ class ExtensionDB:
             voicemail_pin: Voicemail PIN (optional) - will be stored as hash/salt
             ad_synced: Whether synced from Active Directory
             ad_username: Active Directory username (optional)
+            is_admin: Whether extension has admin privileges (optional)
             
         Returns:
             bool: True if successful
@@ -1145,14 +1149,14 @@ class ExtensionDB:
             return False
                 
         query = """
-        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """ if self.db.db_type == 'postgresql' else """
-        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         
-        return self.db.execute(query, (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username))
+        return self.db.execute(query, (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin))
 
     def get(self, number: str) -> Optional[Dict]:
         """
@@ -1200,7 +1204,7 @@ class ExtensionDB:
     def update(self, number: str, name: str = None, email: str = None, 
                password_hash: str = None, allow_external: bool = None,
                voicemail_pin: str = None, ad_synced: bool = None, 
-               ad_username: str = None) -> bool:
+               ad_username: str = None, is_admin: bool = None) -> bool:
         """
         Update an extension
         
@@ -1213,6 +1217,7 @@ class ExtensionDB:
             voicemail_pin: Voicemail PIN (optional)
             ad_synced: Whether synced from Active Directory (optional)
             ad_username: Active Directory username (optional)
+            is_admin: Whether extension has admin privileges (optional)
             
         Returns:
             bool: True if successful
@@ -1258,6 +1263,10 @@ class ExtensionDB:
         if ad_username is not None:
             updates.append("ad_username = %s" if self.db.db_type == 'postgresql' else "ad_username = ?")
             params.append(ad_username)
+        
+        if is_admin is not None:
+            updates.append("is_admin = %s" if self.db.db_type == 'postgresql' else "is_admin = ?")
+            params.append(is_admin)
         
         if not updates:
             return True  # Nothing to update

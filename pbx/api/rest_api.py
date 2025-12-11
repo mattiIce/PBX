@@ -1428,6 +1428,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             password = body.get('password')
             allow_external = body.get('allow_external', True)
             voicemail_pin = body.get('voicemail_pin')
+            is_admin = body.get('is_admin', False)
 
             if not all([number, name, password]):
                 self._send_json({'error': 'Missing required fields'}, 400)
@@ -1477,7 +1478,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     allow_external=allow_external,
                     voicemail_pin=voicemail_pin if voicemail_pin else None,
                     ad_synced=False,
-                    ad_username=None
+                    ad_username=None,
+                    is_admin=is_admin
                 )
             else:
                 # Fall back to config.yml
@@ -1505,6 +1507,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             password = body.get('password')  # Optional
             allow_external = body.get('allow_external')
             voicemail_pin = body.get('voicemail_pin')
+            is_admin = body.get('is_admin')
 
             # Check if extension exists
             extension = self.pbx_core.extension_registry.get(number)
@@ -1540,7 +1543,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     email=email,
                     password_hash=password_hash,
                     allow_external=allow_external,
-                    voicemail_pin=voicemail_pin
+                    voicemail_pin=voicemail_pin,
+                    is_admin=is_admin
                 )
             else:
                 # Fall back to config.yml
