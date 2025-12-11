@@ -55,30 +55,93 @@
             </div>
         </header>
 
-        <!-- Feature Requirements Info Banner -->
-        <div id="feature-info-banner" class="info-box" style="margin: 15px 0; background: #f0f9ff; border-left: 4px solid #3b82f6;">
-            <p style="margin: 0; font-size: 14px;">
-                ℹ️ <strong>Most features work without a phone or microphone!</strong> 
-                Only the <strong>📞 Phone</strong> tab requires microphone access for making calls. 
-                All other features (management, configuration, analytics) are fully accessible.
-            </p>
-        </div>
+        <div class="layout-wrapper">
+            <!-- Left Sidebar Navigation -->
+            <nav class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Overview</div>
+                    <button class="tab-button active" data-tab="dashboard">
+                        <span class="tab-icon">📊</span>
+                        <span class="tab-text">Dashboard</span>
+                    </button>
+                    <button class="tab-button" data-tab="analytics">
+                        <span class="tab-icon">📈</span>
+                        <span class="tab-text">Analytics</span>
+                    </button>
+                </div>
 
-        <nav class="tabs">
-            <button class="tab-button active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-button phone-required" data-tab="webrtc-phone" title="Currently non-functional" style="opacity: 0.6; text-decoration: line-through;">📞 Phone (Disabled) <span aria-hidden="true">🚫</span></button>
-            <button class="tab-button" data-tab="analytics">Analytics</button>
-            <button class="tab-button" data-tab="qos">Call Quality (QoS)</button>
-            <button class="tab-button" data-tab="emergency">🚨 Emergency</button>
-            <button class="tab-button" data-tab="extensions">Extensions</button>
-            <button class="tab-button" data-tab="phones">Registered Phones</button>
-            <button class="tab-button" data-tab="provisioning">Phone Provisioning</button>
-            <button class="tab-button" data-tab="auto-attendant">Auto Attendant</button>
-            <button class="tab-button" data-tab="voicemail">Voicemail</button>
-            <button class="tab-button" data-tab="calls">Active Calls</button>
-            <button class="tab-button" data-tab="codecs">Codecs</button>
-            <button class="tab-button" data-tab="config">Configuration</button>
-        </nav>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Communication</div>
+                    <button class="tab-button phone-required" data-tab="webrtc-phone" title="Currently non-functional" style="opacity: 0.6; text-decoration: line-through;">
+                        <span class="tab-icon">📞</span>
+                        <span class="tab-text">Phone (Disabled)</span>
+                        <span class="tab-badge">🚫</span>
+                    </button>
+                    <button class="tab-button" data-tab="calls">
+                        <span class="tab-icon">📱</span>
+                        <span class="tab-text">Active Calls</span>
+                    </button>
+                    <button class="tab-button" data-tab="qos">
+                        <span class="tab-icon">📡</span>
+                        <span class="tab-text">Call Quality</span>
+                    </button>
+                    <button class="tab-button" data-tab="emergency">
+                        <span class="tab-icon">🚨</span>
+                        <span class="tab-text">Emergency</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Management</div>
+                    <button class="tab-button" data-tab="extensions">
+                        <span class="tab-icon">👥</span>
+                        <span class="tab-text">Extensions</span>
+                    </button>
+                    <button class="tab-button" data-tab="phones">
+                        <span class="tab-icon">☎️</span>
+                        <span class="tab-text">Registered Phones</span>
+                    </button>
+                    <button class="tab-button" data-tab="provisioning">
+                        <span class="tab-icon">⚙️</span>
+                        <span class="tab-text">Phone Provisioning</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Features</div>
+                    <button class="tab-button" data-tab="auto-attendant">
+                        <span class="tab-icon">🤖</span>
+                        <span class="tab-text">Auto Attendant</span>
+                    </button>
+                    <button class="tab-button" data-tab="voicemail">
+                        <span class="tab-icon">📧</span>
+                        <span class="tab-text">Voicemail</span>
+                    </button>
+                    <button class="tab-button" data-tab="codecs">
+                        <span class="tab-icon">🎵</span>
+                        <span class="tab-text">Codecs</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">System</div>
+                    <button class="tab-button" data-tab="config">
+                        <span class="tab-icon">🔧</span>
+                        <span class="tab-text">Configuration</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Feature Requirements Info Banner -->
+                <div id="feature-info-banner" class="info-box" style="margin-bottom: 20px; background: #f0f9ff; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0; font-size: 14px;">
+                        ℹ️ <strong>Most features work without a phone or microphone!</strong> 
+                        Only the <strong>📞 Phone</strong> tab requires microphone access for making calls. 
+                        All other features (management, configuration, analytics) are fully accessible.
+                    </p>
+                </div>
 
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">
@@ -1757,7 +1820,9 @@ G.711</textarea>
                 </div>
             </div>
         </div>
-    </div>
+            </div><!-- end main-content -->
+        </div><!-- end layout-wrapper -->
+    </div><!-- end container -->
 
     <!-- Add Extension Modal -->
     <div id="add-extension-modal" class="modal">
