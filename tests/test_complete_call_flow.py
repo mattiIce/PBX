@@ -213,8 +213,8 @@ a=sendrecv
         print(f"   ✓ SDP to caller contains PBX endpoint: {pbx_ip}:{pbx_rtp_port}")
         
         print("\n2. Both parties send RTP to PBX")
-        print("   ✓ Caller sends RTP → PBX:{pbx_rtp_port}")
-        print("   ✓ Callee sends RTP → PBX:{pbx_rtp_port}")
+        print(f"   ✓ Caller sends RTP → PBX:{pbx_rtp_port}")
+        print(f"   ✓ Callee sends RTP → PBX:{pbx_rtp_port}")
         
         print("\n3. PBX relays RTP bidirectionally")
         print("   ✓ PBX relays: Caller ←→ Callee")
@@ -231,7 +231,7 @@ a=sendrecv
     def test_codec_negotiation(self):
         """Test that codec negotiation works correctly"""
         # Generate SDP with default codecs
-        sdp = SDPBuilder.build_audio_sdp('192.168.1.1', 10000)
+        sdp = SDPBuilder.build_audio_sdp('192.168.1.1', 10000, '12345')
         
         # Parse it back
         session = SDPSession()
