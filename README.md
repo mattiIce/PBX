@@ -482,7 +482,8 @@ For issues and questions, please open a GitHub issue.
 ⚠️ **Audio Features Currently Non-Functional**
 - **WebRTC Browser Phone**: Currently disabled and not working. Use physical IP phones or SIP clients for calls.
 - **Hardphone Audio**: Audio playback on physical IP phones is experiencing issues and may be distorted or non-functional. Investigation ongoing.
-- **Root Cause**: Audio sample rate mismatch - audio files are 8kHz (PCMU from gTTS) but system may be treating them as 16kHz.
+- **Root Cause**: Audio sample rate mismatch - voicemail prompt files are 16kHz but system expects 8kHz for PCMU codec, causing downsampling and distortion.
+- **Fix Available**: See [AUDIO_SAMPLE_RATE_FIX.md](AUDIO_SAMPLE_RATE_FIX.md) for detailed solution (regenerate audio prompts at 8kHz).
 
 These are critical components being actively investigated. All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) remain fully functional.
 
