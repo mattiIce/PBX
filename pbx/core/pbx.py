@@ -888,11 +888,15 @@ class PBXCore:
         server_ip = self._get_server_ip()
 
         if call.rtp_ports and call.caller_addr:
+            # Extract caller's codecs for compatibility
+            caller_codecs = call.caller_rtp.get('formats', None) if call.caller_rtp else None
+            
             # Build SDP for caller (with PBX RTP endpoint)
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
-                session_id=call_id
+                session_id=call_id,
+                codecs=caller_codecs  # Use caller's codecs
             )
 
             # Build 200 OK for caller using original INVITE
