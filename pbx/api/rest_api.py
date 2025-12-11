@@ -2617,8 +2617,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Extension is required'}, 400)
                 return
             
-            # Verify extension exists
-            if not self.pbx_core.extension_registry.get_extension(extension):
+            # Verify extension exists (allow virtual extensions starting with 'webrtc-' for browser-based calling)
+            is_virtual_extension = extension.startswith('webrtc-')
+            if not is_virtual_extension and not self.pbx_core.extension_registry.get_extension(extension):
                 if verbose_logging:
                     self.logger.warning(f"[VERBOSE] Extension not found in registry: {extension}")
                 self._send_json({'error': 'Extension not found'}, 404)
