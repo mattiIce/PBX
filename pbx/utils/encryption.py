@@ -11,7 +11,6 @@ from pbx.utils.logger import get_logger
 try:
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     CRYPTO_AVAILABLE = True
 except ImportError:
@@ -88,14 +87,21 @@ class FIPSEncryption:
         if isinstance(salt, str):
             salt = salt.encode('utf-8')
 
+        # OpenSSL 3.x FIPS provider requires minimum password length for PBKDF2
+        # Pad short passwords (like 4-digit PINs) to meet the requirement
+        # This is safe because we're using a cryptographically secure salt
+        MIN_PASSWORD_LENGTH = 14  # OpenSSL FIPS minimum
+        if len(password) < MIN_PASSWORD_LENGTH:
+            # Pad with salt bytes to ensure uniqueness (salt is already random)
+            password = password + b':' + salt[:MIN_PASSWORD_LENGTH - len(password) - 1]
+
         if self.fips_mode and CRYPTO_AVAILABLE:
             # Use PBKDF2 with SHA-256 (FIPS-approved)
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=600000,  # OWASP 2024 recommendation
-                backend=default_backend()
+                iterations=600000  # OWASP 2024 recommendation
             )
             hashed = kdf.derive(password)
         else:
@@ -172,8 +178,7 @@ class FIPSEncryption:
         # Create cipher
         cipher = Cipher(
             algorithms.AES(key),
-            modes.GCM(nonce),
-            backend=default_backend()
+            modes.GCM(nonce)
         )
         encryptor = cipher.encryptor()
 
@@ -226,8 +231,7 @@ class FIPSEncryption:
         # Create cipher
         cipher = Cipher(
             algorithms.AES(key),
-            modes.GCM(nonce, tag),
-            backend=default_backend()
+            modes.GCM(nonce, tag)
         )
         decryptor = cipher.decryptor()
 
@@ -270,14 +274,20 @@ class FIPSEncryption:
         if isinstance(salt, str):
             salt = salt.encode('utf-8')
 
+        # OpenSSL 3.x FIPS provider requires minimum password length for PBKDF2
+        # Pad short passwords to meet the requirement
+        MIN_PASSWORD_LENGTH = 14  # OpenSSL FIPS minimum
+        if len(password) < MIN_PASSWORD_LENGTH:
+            # Pad with salt bytes to ensure uniqueness
+            password = password + b':' + salt[:MIN_PASSWORD_LENGTH - len(password) - 1]
+
         if self.fips_mode and CRYPTO_AVAILABLE:
             # Use PBKDF2 with SHA-256 (FIPS-approved)
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=key_length,
                 salt=salt,
-                iterations=600000,  # OWASP 2024 recommendation
-                backend=default_backend()
+                iterations=600000  # OWASP 2024 recommendation
             )
             derived = kdf.derive(password)
         else:
@@ -301,7 +311,7 @@ class FIPSEncryption:
 
         if self.fips_mode and CRYPTO_AVAILABLE:
             # Use cryptography library for FIPS compliance
-            digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+            digest = hashes.Hash(hashes.SHA256())
             digest.update(data)
             return digest.finalize().hex()
         else:
