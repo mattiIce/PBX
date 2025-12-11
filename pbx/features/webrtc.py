@@ -3,6 +3,7 @@ WebRTC Browser Calling Support
 Provides WebRTC signaling and integration with PBX SIP infrastructure
 """
 import json
+import os
 import uuid
 import threading
 import time
@@ -902,7 +903,6 @@ class WebRTCGateway:
                         
                         if caller_address and caller_port:
                             from pbx.rtp.handler import RTPPlayer
-                            import os
                             
                             # Create RTP player to send audio to WebRTC client
                             player = RTPPlayer(
