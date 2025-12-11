@@ -932,16 +932,83 @@ class WebRTCGateway:
                     self.logger.info(f"[VERBOSE] Target is voicemail access: {target_extension}")
                 
                 # Mark as voicemail access call
-                call.is_voicemail_access = True
+                call.voicemail_access = True
                 target_mailbox = target_extension[1:]  # Remove * prefix
-                call.voicemail_target = target_mailbox
+                call.voicemail_extension = target_mailbox
                 
-                # Log that voicemail access was detected
-                # Note: Full voicemail access via WebRTC requires additional RTP setup
-                # similar to auto attendant. For now, the call is created and marked
-                # for voicemail, but audio playback is not yet implemented.
                 self.logger.info(f"Voicemail access pattern detected for mailbox {target_mailbox} from call {call_id}")
-                self.logger.warning(f"WebRTC voicemail access audio not yet implemented - call created but no prompts will play")
+                
+                # ============================================================
+                # RTP SETUP FOR WEBRTC VOICEMAIL ACCESS - BIDIRECTIONAL AUDIO
+                # ============================================================
+                # This mirrors the pattern used for auto attendant and regular
+                # SIP phone voicemail access. Sets up full-duplex audio channel.
+                # ============================================================
+                
+                # Verify target mailbox exists
+                if self.pbx_core.voicemail_system:
+                    mailbox = self.pbx_core.voicemail_system.get_mailbox(target_mailbox)
+                    
+                    if self.verbose_logging:
+                        self.logger.info(f"[VERBOSE] Setting up voicemail IVR for WebRTC")
+                        self.logger.info(f"  Mailbox: {target_mailbox}")
+                        self.logger.info(f"  Call ID: {call_id}")
+                    
+                    # Create VoicemailIVR for this call
+                    from pbx.features.voicemail import VoicemailIVR
+                    voicemail_ivr = VoicemailIVR(self.pbx_core.voicemail_system, target_mailbox)
+                    call.voicemail_ivr = voicemail_ivr
+                    
+                    # Mark call as connected (similar to regular SIP voicemail access)
+                    call.connect()
+                    if self.verbose_logging:
+                        self.logger.info(f"[VERBOSE] Call marked as connected, state: {call.state}")
+                    
+                    # Start CDR record for analytics
+                    if hasattr(self.pbx_core, 'cdr_system') and self.pbx_core.cdr_system:
+                        self.pbx_core.cdr_system.start_record(call_id, from_extension, target_extension)
+                        if self.verbose_logging:
+                            self.logger.info(f"[VERBOSE] CDR record started")
+                    
+                    # Get caller's RTP endpoint from call
+                    if call.caller_rtp and isinstance(call.caller_rtp, dict):
+                        caller_address = call.caller_rtp.get('address')
+                        caller_port = call.caller_rtp.get('port')
+                        
+                        if caller_address and caller_port and call.rtp_ports:
+                            if self.verbose_logging:
+                                self.logger.info(f"[VERBOSE] Starting voicemail IVR session with RTP")
+                                self.logger.info(f"  Caller RTP: {caller_address}:{caller_port}")
+                                self.logger.info(f"  Local RTP port: {call.rtp_ports[0]}")
+                            
+                            # Start voicemail IVR session in a separate thread
+                            # This handles audio prompts and DTMF input, just like regular phones
+                            import threading
+                            ivr_thread = threading.Thread(
+                                target=self.pbx_core._voicemail_ivr_session,
+                                args=(call_id, call, mailbox, voicemail_ivr),
+                                daemon=True
+                            )
+                            ivr_thread.start()
+                            
+                            self.logger.info(f"WebRTC voicemail IVR session started for call {call_id}")
+                            if self.verbose_logging:
+                                self.logger.info(f"[VERBOSE] Voicemail IVR thread started successfully")
+                        else:
+                            self.logger.warning(f"Incomplete RTP info for WebRTC voicemail call {call_id}")
+                            if self.verbose_logging:
+                                self.logger.warning(f"[VERBOSE] Missing RTP data:")
+                                self.logger.warning(f"  caller_address: {caller_address}")
+                                self.logger.warning(f"  caller_port: {caller_port}")
+                                self.logger.warning(f"  rtp_ports: {call.rtp_ports}")
+                    else:
+                        self.logger.warning(f"No caller RTP info available for WebRTC voicemail call {call_id}")
+                        if self.verbose_logging:
+                            self.logger.warning(f"[VERBOSE] caller_rtp: {call.caller_rtp}")
+                else:
+                    self.logger.error(f"Voicemail system not available for WebRTC call {call_id}")
+                    if self.verbose_logging:
+                        self.logger.error(f"[VERBOSE] pbx_core.voicemail_system is None")
             
             # For regular extension calls, the call is set up
             # When the target extension answers, the CallManager will bridge the media

@@ -483,6 +483,10 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
             # End notification - neutral tone
             (600, 300), (500, 300),
         ],
+        'beep': [
+            # Standard recording beep - single high tone
+            (1000, 400),
+        ],
     }
     
     sequence = tone_sequences.get(prompt_type, [(800, 300)])  # Default tone
