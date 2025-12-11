@@ -937,14 +937,21 @@ P30 = 13   # GMT-8
             self.logger.warning(f"  Registered devices: {list(self.devices.keys())}")
             
             # Provide helpful guidance
+            # Determine protocol based on actual API configuration
+            # Note: Provisioning typically uses HTTP even when API uses HTTPS
+            # because phones often cannot validate self-signed certificates
+            ssl_enabled = self.config.get('api.ssl.enabled', False)
+            api_protocol = 'https' if ssl_enabled else 'http'
+            api_port = self.config.get('api.port', 8080)
+            server_ip = self.config.get('server.external_ip', '192.168.1.14')
+            
             self.logger.warning(f"  → Device needs to be registered first")
             self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
             self.logger.warning(f"  → Example:")
-            self.logger.warning(f"     curl -k -X POST https://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+            self.logger.warning(f"     curl -X POST {api_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\")
             self.logger.warning(f"       -H 'Content-Type: application/json' \\")
             self.logger.warning(f"       -d '{{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
             self.logger.warning(f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys")
-            self.logger.warning(f"  → Note: Use -k with curl if using self-signed certificates")
             
             # Check if there are similar MACs (might be a format issue)
             mac_prefix = normalized[:6]  # First 6 chars (OUI)
