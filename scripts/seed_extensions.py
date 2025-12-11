@@ -84,11 +84,21 @@ def main():
     encryption = get_encryption(fips_mode)
     
     # Define default extensions to seed
-    # NOTE: These are example extensions. Update with your organization's extensions.
+    # NOTE: These are example extensions for initial setup.
+    # Extension 1001 is the operator/admin extension used by the webphone in the admin panel.
+    # Extension 'webrtc-admin' is the special extension for the browser-based webphone.
     default_extensions = [
         {
+            'number': 'webrtc-admin',
+            'name': 'Admin WebPhone',
+            'email': 'admin@albl.com',
+            'password': 'webrtc-admin-secure-password',  # Will be hashed
+            'allow_external': True,
+            'voicemail_pin': None  # No voicemail for virtual extension
+        },
+        {
             'number': '1001',
-            'name': 'Codi Mattinson',
+            'name': 'Codi Mattinson (Operator)',
             'email': 'cmattinson@albl.com',
             'password': 'password1001',  # Will be hashed
             'allow_external': True,
