@@ -1457,18 +1457,44 @@ class PBXCore:
         # Start CDR record for analytics
         self.cdr_system.start_record(call_id, from_ext, to_ext)
         
-        # Allocate RTP ports for bidirectional audio communication
-        # These ports will be used by RTPPlayer (sending prompts) and RTPDTMFListener (receiving DTMF)
-        # in the auto attendant session thread. The RTP relay handler manages the socket binding.
-        rtp_ports = self.rtp_relay.allocate_relay(call_id)
-        if rtp_ports:
-            call.rtp_ports = rtp_ports
-        else:
-            self.logger.error(f"Failed to allocate RTP ports for auto attendant {call_id}")
+        # Allocate RTP port for audio communication
+        # For auto attendant, we don't need a relay (which forwards between two endpoints).
+        # Instead, we directly play audio to the caller and listen for DTMF.
+        # Find an available port from the RTP port pool.
+        try:
+            rtp_port = self.rtp_relay.port_pool.pop(0)
+        except IndexError:
+            self.logger.error(f"No available RTP ports for auto attendant {call_id}")
             return False
         
-        # Answer the call
+        rtcp_port = rtp_port + 1
+        call.rtp_ports = (rtp_port, rtcp_port)
+        self.logger.info(f"Allocated RTP port {rtp_port} for auto attendant {call_id} (no relay needed)")
+        
+        # Store port allocation for cleanup
+        call.aa_rtp_port = rtp_port
+        
+        # Send 180 Ringing first to provide ring-back tone to caller
         server_ip = self._get_server_ip()
+        ringing_response = SIPMessageBuilder.build_response(
+            180,
+            "Ringing",
+            call.original_invite
+        )
+        
+        # Build Contact header for ringing response
+        sip_port = self.config.get('server.sip_port', 5060)
+        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        ringing_response.set_header('Contact', contact_uri)
+        
+        # Send ringing response to caller
+        self.sip_server._send_message(ringing_response.build(), call.caller_addr)
+        self.logger.info(f"Sent 180 Ringing for auto attendant call {call_id}")
+        
+        # Brief delay to allow ring-back tone to be established
+        time.sleep(0.5)
+        
+        # Answer the call
         
         # Build SDP for answering
         aa_sdp = SDPBuilder.build_audio_sdp(
@@ -1569,16 +1595,29 @@ class PBXCore:
             action = session.get('session')
             audio_file = session.get('file')
             
+            self.logger.info(f"[Auto Attendant] Starting audio playback for call {call_id}")
+            audio_played = False
+            
             if audio_file and os.path.exists(audio_file):
-                player.play_file(audio_file)
+                self.logger.info(f"[Auto Attendant] Playing welcome file: {audio_file}")
+                audio_played = player.play_file(audio_file)
+                if audio_played:
+                    self.logger.info(f"[Auto Attendant] ✓ Welcome audio played successfully")
+                else:
+                    self.logger.error(f"[Auto Attendant] ✗ Failed to play welcome audio")
             else:
                 # Try to load from auto_attendant/welcome.wav, fallback to tone generation
+                self.logger.info(f"[Auto Attendant] Generating welcome prompt audio")
                 prompt_data = get_prompt_audio('welcome', prompt_dir='auto_attendant')
                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                     temp_file.write(prompt_data)
                     temp_file_path = temp_file.name
                 try:
-                    player.play_file(temp_file_path)
+                    audio_played = player.play_file(temp_file_path)
+                    if audio_played:
+                        self.logger.info(f"[Auto Attendant] ✓ Generated welcome audio played successfully")
+                    else:
+                        self.logger.error(f"[Auto Attendant] ✗ Failed to play generated welcome audio")
                 finally:
                     try:
                         os.unlink(temp_file_path)
@@ -1588,17 +1627,28 @@ class PBXCore:
             time.sleep(0.5)
             
             # Play main menu
+            self.logger.info(f"[Auto Attendant] Playing main menu for call {call_id}")
             menu_audio = self.auto_attendant._get_audio_file('main_menu')
             if menu_audio and os.path.exists(menu_audio):
-                player.play_file(menu_audio)
+                self.logger.info(f"[Auto Attendant] Playing menu file: {menu_audio}")
+                audio_played = player.play_file(menu_audio)
+                if audio_played:
+                    self.logger.info(f"[Auto Attendant] ✓ Menu audio played successfully")
+                else:
+                    self.logger.error(f"[Auto Attendant] ✗ Failed to play menu audio")
             else:
                 # Try to load from auto_attendant/main_menu.wav, fallback to tone generation
+                self.logger.info(f"[Auto Attendant] Generating menu prompt audio")
                 prompt_data = get_prompt_audio('main_menu', prompt_dir='auto_attendant')
                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
                     temp_file.write(prompt_data)
                     temp_file_path = temp_file.name
                 try:
-                    player.play_file(temp_file_path)
+                    audio_played = player.play_file(temp_file_path)
+                    if audio_played:
+                        self.logger.info(f"[Auto Attendant] ✓ Generated menu audio played successfully")
+                    else:
+                        self.logger.error(f"[Auto Attendant] ✗ Failed to play generated menu audio")
                 finally:
                     try:
                         os.unlink(temp_file_path)
@@ -1694,10 +1744,24 @@ class PBXCore:
             player.stop()
             dtmf_listener.stop()
             
+            # Return port to pool
+            if hasattr(call, 'aa_rtp_port'):
+                self.rtp_relay.port_pool.append(call.aa_rtp_port)
+                self.rtp_relay.port_pool.sort()
+                self.logger.info(f"Returned RTP port {call.aa_rtp_port} to pool")
+            
         except Exception as e:
             self.logger.error(f"Error in auto attendant session: {e}")
             import traceback
             self.logger.error(traceback.format_exc())
+            
+            # Ensure port is returned even on error
+            if hasattr(call, 'aa_rtp_port'):
+                try:
+                    self.rtp_relay.port_pool.append(call.aa_rtp_port)
+                    self.rtp_relay.port_pool.sort()
+                except Exception:
+                    pass
         finally:
             # End the call
             time.sleep(1)
