@@ -1456,10 +1456,16 @@ class PBXCore:
         
         # Parse SDP from caller's INVITE
         caller_sdp = None
+        caller_codecs = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
             caller_sdp = caller_sdp_obj.get_audio_info()
+            if caller_sdp:
+                # Extract caller's codec list for negotiation
+                caller_codecs = caller_sdp.get('formats', None)
+                if caller_codecs:
+                    self.logger.info(f"Auto attendant: Caller codecs: {caller_codecs}")
         
         # Create call for auto attendant
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
