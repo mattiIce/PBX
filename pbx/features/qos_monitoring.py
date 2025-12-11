@@ -151,6 +151,13 @@ class QoSMetrics:
         
         Uses E-Model (ITU-T G.107) simplified calculation
         """
+        # If no packets were received and no latency data, we can't calculate a meaningful MOS
+        # In this case, keep MOS at 0.0 to indicate "no data"
+        if self.packets_received == 0 and not self.latency_samples:
+            # No receive data available - cannot calculate MOS
+            # This indicates a problem with the call (no RTP received)
+            return
+        
         # Start with perfect score
         r_factor = 93.2
         
@@ -187,6 +194,8 @@ class QoSMetrics:
         """Mark the call as ended"""
         with self.lock:
             self.end_time = datetime.now()
+            # Ensure MOS score is calculated at call end
+            self._calculate_mos()
     
     def get_summary(self) -> Dict:
         """
