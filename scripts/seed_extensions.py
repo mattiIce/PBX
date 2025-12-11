@@ -84,50 +84,55 @@ def main():
     encryption = get_encryption(fips_mode)
     
     # Define default extensions to seed
-    # NOTE: These are example extensions for initial setup.
-    # Extension 1001 is the operator/admin extension used by the webphone in the admin panel.
+    # NOTE: These are EXAMPLE extensions for initial setup/testing only.
     # Extension 'webrtc-admin' is the special extension for the browser-based webphone.
     # SECURITY: All extensions must have a voicemail PIN for secure voicemail access.
+    # 
+    # ⚠️  IMPORTANT: These use placeholder credentials for initial setup.
+    # After seeding, you should:
+    # 1. Change all passwords immediately via the admin panel
+    # 2. Set unique voicemail PINs for each extension
+    # 3. Update names and emails to match your organization
     default_extensions = [
         {
             'number': 'webrtc-admin',
             'name': 'Admin WebPhone',
-            'email': 'admin@albl.com',
-            'password': 'webrtc-admin-secure-password',  # Will be hashed
+            'email': 'admin@example.com',
+            'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': '9999'  # Required for security
+            'voicemail_pin': '9999'  # Change after setup
         },
         {
             'number': '1001',
-            'name': 'Codi Mattinson (Operator)',
-            'email': 'cmattinson@albl.com',
-            'password': 'password1001',  # Will be hashed
+            'name': 'Extension 1001 (Operator)',
+            'email': 'ext1001@example.com',
+            'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': '1234'
+            'voicemail_pin': '1001'  # Change after setup
         },
         {
             'number': '1002',
-            'name': 'Bill Sautter',
-            'email': 'bsautter@albl.com',
-            'password': 'password1002',  # Will be hashed
+            'name': 'Extension 1002',
+            'email': 'ext1002@example.com',
+            'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': '1234'
+            'voicemail_pin': '1002'  # Change after setup
         },
         {
             'number': '1003',
-            'name': 'Lisa Dingman',
-            'email': 'ldingman@albl.com',
-            'password': 'password1003',  # Will be hashed
+            'name': 'Extension 1003',
+            'email': 'ext1003@example.com',
+            'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': False,
-            'voicemail_pin': '1234'
+            'voicemail_pin': '1003'  # Change after setup
         },
         {
             'number': '1004',
-            'name': 'Customer Service',
-            'email': 'support@albl.com',
-            'password': 'password1004',  # Will be hashed
+            'name': 'Extension 1004',
+            'email': 'ext1004@example.com',
+            'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': '1234'
+            'voicemail_pin': '1004'  # Change after setup
         }
     ]
     
