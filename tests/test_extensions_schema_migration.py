@@ -135,8 +135,9 @@ def test_extensions_columns_already_exist():
         assert 'password_salt' in columns
         print(f"  Columns present: {columns}")
         
-        # Run migration again - should not fail
-        db._migrate_schema()
+        # Run create_tables again - should not fail (migration runs internally)
+        result = db.create_tables()
+        assert result is True
         print("  ✓ Migration ran without errors on existing schema")
         
         db.disconnect()
