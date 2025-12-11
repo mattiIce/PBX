@@ -20,15 +20,20 @@ body {
     background: #ffffff;
     box-shadow: none;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header */
 header {
     background: #2c3e50;
     color: white;
-    padding: 20px 40px;
+    padding: 20px 30px;
     text-align: left;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 header h1 {
@@ -63,61 +68,107 @@ header h1 {
     background: #ef4444;
 }
 
-/* Navigation Tabs */
-.tabs {
+/* Layout Wrapper - Sidebar + Main Content */
+.layout-wrapper {
     display: flex;
-    background: #ffffff;
-    border-bottom: 1px solid #e1e8ed;
-    padding: 0 40px;
-    overflow-x: auto;
+    flex: 1;
+    overflow: hidden;
 }
 
+/* Left Sidebar Navigation */
+.sidebar {
+    width: 260px;
+    background: #ffffff;
+    border-right: 1px solid #e1e8ed;
+    overflow-y: auto;
+    flex-shrink: 0;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-section {
+    padding: 20px 0 10px 0;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+.sidebar-section:last-child {
+    border-bottom: none;
+}
+
+.sidebar-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    padding: 0 20px 10px 20px;
+    margin-bottom: 5px;
+}
+
+/* Navigation Tab Buttons */
 .tab-button {
-    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 20px;
     background: none;
     border: none;
-    border-bottom: 3px solid transparent;
+    border-left: 3px solid transparent;
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 500;
     color: #6c757d;
     transition: all 0.2s ease;
-    white-space: nowrap;
+    text-align: left;
+    gap: 12px;
 }
 
 .tab-button:hover {
+    background: #f8f9fa;
     color: #3498db;
-    border-bottom-color: #e1e8ed;
+    border-left-color: #e1e8ed;
 }
 
 .tab-button.active {
     color: #3498db;
-    border-bottom-color: #3498db;
+    background: #f0f9ff;
+    border-left-color: #3498db;
     font-weight: 600;
 }
 
+.tab-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+
+.tab-text {
+    flex: 1;
+}
+
+.tab-badge {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
 /* Phone Required Tab Indicator */
-.tab-button.phone-required {
-    position: relative;
-}
-
-.tab-button.phone-required span {
-    font-size: 0.7em;
-    margin-left: 4px;
-    opacity: 0.6;
-}
-
-.tab-button.phone-required:hover span {
+.tab-button.phone-required:hover .tab-badge {
     opacity: 1;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    background: #f5f7fa;
 }
 
 /* Tab Content */
 .tab-content {
     display: none;
-    padding: 30px 40px;
-    background: #f5f7fa;
-    min-height: calc(100vh - 200px);
-    animation: fadeIn 0.2s;
+    padding: 30px;
+    animation: fadeIn 0.3s;
 }
 
 .tab-content.active {
@@ -1391,9 +1442,68 @@ input[type="range"]::-moz-range-thumb:hover {
     color: #374151;
 }
 
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
     .voicemail-cards-container {
         grid-template-columns: 1fr;
+    }
+    
+    /* Make sidebar collapsible on mobile */
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 200;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    .main-content {
+        width: 100%;
+    }
+    
+    .tab-content {
+        padding: 20px 15px;
+    }
+    
+    header {
+        padding: 15px 20px;
+    }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+    /* Tablet layout - smaller sidebar */
+    .sidebar {
+        width: 200px;
+    }
+    
+    .sidebar-section-title {
+        font-size: 0.7rem;
+        padding: 0 15px 8px 15px;
+    }
+    
+    .tab-button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .tab-icon {
+        font-size: 1.1rem;
+        width: 20px;
+    }
+}
+
+/* Print styles - hide sidebar when printing */
+@media print {
+    .sidebar {
+        display: none;
+    }
+    
+    .main-content {
+        width: 100%;
     }
 }
