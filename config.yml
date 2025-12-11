@@ -140,9 +140,9 @@ features:
       #   credential: your-turn-password
     
     # Codec Configuration
-    # Priority: PCMU (0) > PCMA (8) > G722 (9) > RFC2833 (101) for DTMF
-    # Note: G.711 (PCMU/PCMA) prioritized over G.722 due to better reliability and compatibility
-    # G.722 HD audio available as fallback option
+    # Priority: PCMU (0) > PCMA (8) > G722 (9) > Opus (optional) > RFC2833 (101) for DTMF
+    # Note: G.711 (PCMU/PCMA) prioritized for maximum compatibility with hardware phones
+    # G.722 HD audio and Opus available as high-quality options for browser clients
     codecs:
       - payload_type: 0
         name: PCMU
@@ -156,9 +156,15 @@ features:
         name: G722
         priority: 3
         enabled: true
+      - payload_type: 111
+        name: opus
+        priority: 4
+        enabled: true
+        sample_rate: 48000
+        channels: 2
       - payload_type: 101
         name: telephone-event
-        priority: 4
+        priority: 5
         enabled: true
     
     # DTMF Configuration (matches Zultys ZIP33G)
