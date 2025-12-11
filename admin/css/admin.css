@@ -1318,6 +1318,46 @@ input[type="range"]::-moz-range-thumb:hover {
 .no-data {
     text-align: center;
     color: #6b7280;
+    padding: 20px;
+}
+
+/* ====================================
+   QoS Diagnostics
+   ==================================== */
+
+.diagnostic-row {
+    background-color: #fef3c7;
+}
+
+.diagnostic-cell {
+    padding: 0 !important;
+}
+
+.diagnostic-alert {
+    padding: 12px 16px;
+    background-color: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    color: #92400e;
+    font-size: 0.9em;
+}
+
+.diagnostic-alert strong {
+    color: #78350f;
+}
+
+.diagnostic-alert small {
+    display: block;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.one-way-audio-issue {
+    background-color: #fee2e2;
+}
+
+.one-way-audio-issue td {
+    color: #991b1b;
+}
     font-style: italic;
     padding: 20px;
 }

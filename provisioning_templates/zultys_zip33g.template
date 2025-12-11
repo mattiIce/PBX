@@ -38,18 +38,30 @@ account.1.registration_period = 3600
 # PBX supports: PCMU (payload 0), PCMA (payload 8), G.722 (payload 9), RFC2833 (payload 101)
 # Priority order: PCMU > PCMA > G.722 (G.711 preferred for reliability, G.722 as fallback)
 # Note: G.722 deprioritized due to known implementation issues with quantization
+#
+# ZIP33G Codec Requirements:
+# The ZIP33G requires explicit sample_rate, bitrate, and ptime settings for PCMU/PCMA codecs
+# to function properly. The ZIP37G natively supports these codecs and does not require
+# these additional parameters. Without these settings, the ZIP33G may fail to negotiate
+# or properly encode/decode PCMU/PCMA audio streams.
 
 # Codec 1: PCMU (G.711 μ-law) - Primary codec for maximum compatibility and reliability
 account.1.codec.1.enable = 1
 account.1.codec.1.payload_type = 0
 account.1.codec.1.priority = 1
 account.1.codec.1.name = PCMU
+account.1.codec.1.sample_rate = 8000
+account.1.codec.1.bitrate = 64
+account.1.codec.1.ptime = 20
 
 # Codec 2: PCMA (G.711 A-law) - Secondary codec
 account.1.codec.2.enable = 1
 account.1.codec.2.payload_type = 8
 account.1.codec.2.priority = 2
 account.1.codec.2.name = PCMA
+account.1.codec.2.sample_rate = 8000
+account.1.codec.2.bitrate = 64
+account.1.codec.2.ptime = 20
 
 # Codec 3: G.722 (Wideband HD Audio) - Tertiary codec (deprioritized)
 account.1.codec.3.enable = 1
