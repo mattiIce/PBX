@@ -47,6 +47,7 @@ class WebRTCPhone {
         this.volumeSlider = document.getElementById('webrtc-volume');
         this.statusDiv = document.getElementById('webrtc-status');
         this.targetExtension = document.getElementById('webrtc-target-ext');
+        this.keypadSection = document.getElementById('webrtc-keypad-section');
         
         // Create remote audio element
         this.remoteAudio = document.getElementById('webrtc-remote-audio');
@@ -54,8 +55,14 @@ class WebRTCPhone {
             this.remoteAudio = document.createElement('audio');
             this.remoteAudio.id = 'webrtc-remote-audio';
             this.remoteAudio.autoplay = true;
+            this.remoteAudio.playsinline = true;
             document.body.appendChild(this.remoteAudio);
         }
+        
+        // Ensure audio element is ready for playback
+        this.remoteAudio.autoplay = true;
+        this.remoteAudio.playsinline = true;
+        this.remoteAudio.volume = 0.8; // Set initial volume
         
         // Set up event listeners
         if (this.callButton) {
@@ -71,7 +78,30 @@ class WebRTCPhone {
             this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
         }
         
+        // Set up keypad buttons
+        this.setupKeypad();
+        
         this.updateUIState('idle');
+    }
+    
+    setupKeypad() {
+        // Add event listeners to all keypad buttons
+        const keypadButtons = document.querySelectorAll('.keypad-btn');
+        keypadButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const digit = e.currentTarget.getAttribute('data-digit');
+                if (digit && this.isCallActive) {
+                    this.sendDTMF(digit);
+                    // Visual feedback
+                    e.currentTarget.classList.add('pressed');
+                    setTimeout(() => {
+                        e.currentTarget.classList.remove('pressed');
+                    }, 300);
+                }
+            });
+        });
+        
+        verboseLog('Keypad initialized with', keypadButtons.length, 'buttons');
     }
     
     updateStatus(message, type = 'info') {
@@ -94,6 +124,21 @@ class WebRTCPhone {
         if (this.muteButton) {
             this.muteButton.disabled = (state === 'idle');
         }
+        
+        // Show keypad only when connected
+        if (this.keypadSection) {
+            if (state === 'connected' || state === 'calling') {
+                this.keypadSection.style.display = 'block';
+            } else {
+                this.keypadSection.style.display = 'none';
+            }
+        }
+        
+        // Enable/disable keypad buttons
+        const keypadButtons = document.querySelectorAll('.keypad-btn');
+        keypadButtons.forEach(button => {
+            button.disabled = (state !== 'connected' && state !== 'calling');
+        });
     }
     
     /**
@@ -236,9 +281,23 @@ class WebRTCPhone {
                     trackId: event.track.id
                 });
                 
-                if (this.remoteAudio) {
+                if (this.remoteAudio && event.streams && event.streams.length > 0) {
                     this.remoteAudio.srcObject = event.streams[0];
-                    this.updateStatus('Receiving audio...', 'success');
+                    
+                    // Ensure audio plays - modern browsers require user interaction
+                    // Try to play, handling any errors
+                    const playPromise = this.remoteAudio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            console.log('Remote audio playback started successfully');
+                            this.updateStatus('Audio connected', 'success');
+                        }).catch(err => {
+                            console.warn('Audio autoplay prevented:', err);
+                            this.updateStatus('Audio ready (click to unmute if needed)', 'warning');
+                        });
+                    }
+                } else {
+                    console.warn('No remote audio element or streams available');
                 }
             };
             
@@ -461,6 +520,61 @@ class WebRTCPhone {
         } catch (error) {
             console.error('Error sending ICE candidate:', error);
             verboseLog('Error sending ICE candidate:', {
+                error: error,
+                message: error.message
+            });
+        }
+    }
+    
+    /**
+     * Send DTMF tone during an active call
+     * @param {string} digit - The digit to send (0-9, *, #)
+     */
+    async sendDTMF(digit) {
+        if (!this.isCallActive || !this.sessionId) {
+            console.warn('Cannot send DTMF: No active call');
+            return;
+        }
+        
+        try {
+            verboseLog('Sending DTMF digit:', digit);
+            
+            // Send DTMF via API
+            const response = await fetch(`${this.apiUrl}/api/webrtc/dtmf`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    session_id: this.sessionId,
+                    digit: digit,
+                    duration: 160  // milliseconds (standard duration)
+                })
+            });
+            
+            verboseLog('DTMF response:', {
+                status: response.status,
+                statusText: response.statusText
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`DTMF '${digit}' sent successfully`);
+                verboseLog('DTMF send result:', data);
+                
+                // Brief visual feedback in status
+                const currentStatus = this.statusDiv.textContent;
+                this.updateStatus(`Sent: ${digit}`, 'info');
+                setTimeout(() => {
+                    if (this.isCallActive) {
+                        this.updateStatus(currentStatus, 'success');
+                    }
+                }, 500);
+            } else {
+                console.error(`Failed to send DTMF '${digit}':`, response.statusText);
+                this.updateStatus(`Failed to send: ${digit}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error sending DTMF:', error);
+            verboseLog('DTMF send error:', {
                 error: error,
                 message: error.message
             });
