@@ -902,22 +902,29 @@ class WebRTCGateway:
                         
                         if caller_address and caller_port:
                             from pbx.rtp.handler import RTPPlayer
+                            import os
                             
                             # Create RTP player to send audio to WebRTC client
                             player = RTPPlayer(
-                                audio_file,
-                                caller_address,
-                                caller_port,
-                                call.rtp_ports[0] if call.rtp_ports else None
+                                local_port=call.rtp_ports[0] if call.rtp_ports else None,
+                                remote_host=caller_address,
+                                remote_port=caller_port,
+                                call_id=call_id
                             )
                             
                             # Store player reference in call for cleanup
                             call.rtp_player = player
                             
-                            # Start playing audio
-                            player.play()
-                            
-                            self.logger.info(f"Auto attendant playing welcome message for call {call_id}")
+                            # Start the RTP player
+                            if player.start():
+                                # Play the audio file
+                                if audio_file and os.path.exists(audio_file):
+                                    player.play_file(audio_file)
+                                    self.logger.info(f"Auto attendant playing welcome message for call {call_id}")
+                                else:
+                                    self.logger.warning(f"Audio file not found: {audio_file}")
+                            else:
+                                self.logger.error(f"Failed to start RTP player for auto attendant call {call_id}")
                         else:
                             self.logger.warning(f"Incomplete caller RTP info (missing address or port) for call {call_id}")
                     else:
