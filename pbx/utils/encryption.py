@@ -2,16 +2,17 @@
 FIPS-compliant encryption utilities
 Provides FIPS 140-2 compliant cryptographic operations for the PBX system
 """
+import base64
 import hashlib
 import secrets
-import base64
+
 from pbx.utils.logger import get_logger
 
 # Check if cryptography library is available
 try:
     from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
@@ -48,41 +49,44 @@ class FIPSEncryption:
                 "FIPS 140-2 compliance requires the cryptography library for:\n"
                 "  - PBKDF2-HMAC-SHA256 password hashing\n"
                 "  - AES-256-GCM encryption\n"
-                "  - Secure key derivation"
-            )
-            
+                "  - Secure key derivation")
+
             if enforce_fips:
                 self.logger.error(error_msg)
                 raise ImportError(
                     "FIPS mode enforcement failed: cryptography library not available. "
-                    "Install with: pip install cryptography"
-                )
+                    "Install with: pip install cryptography")
             else:
                 self.logger.warning(error_msg)
-                self.logger.warning("Falling back to standard library (non-FIPS compliant)")
+                self.logger.warning(
+                    "Falling back to standard library (non-FIPS compliant)")
 
         if fips_mode and CRYPTO_AVAILABLE:
             self.logger.info("FIPS 140-2 compliant encryption ENABLED")
-            self.logger.info("  ✓ Using PBKDF2-HMAC-SHA256 for password hashing")
+            self.logger.info(
+                "  ✓ Using PBKDF2-HMAC-SHA256 for password hashing")
             self.logger.info("  ✓ Using AES-256-GCM for data encryption")
-            self.logger.info("  ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)")
+            self.logger.info(
+                "  ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)")
         elif not fips_mode:
-            self.logger.warning("FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
+            self.logger.warning(
+                "FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
 
     def _pad_password(self, password, salt):
         """
         Pad short passwords to meet OpenSSL 3.x FIPS PBKDF2 requirements
-        
+
         Args:
             password: Password bytes
             salt: Salt bytes
-            
+
         Returns:
             Padded password bytes
         """
         if len(password) < self.MIN_PASSWORD_LENGTH:
             # Pad with salt bytes to ensure uniqueness (salt is already random)
-            password = password + b':' + salt[:self.MIN_PASSWORD_LENGTH - len(password) - 1]
+            password = password + b':' + \
+                salt[:self.MIN_PASSWORD_LENGTH - len(password) - 1]
         return password
 
     def hash_password(self, password, salt=None):
@@ -302,7 +306,8 @@ class FIPSEncryption:
             derived = kdf.derive(password)
         else:
             # Fallback to hashlib
-            derived = hashlib.pbkdf2_hmac('sha256', password, salt, 600000, dklen=key_length)
+            derived = hashlib.pbkdf2_hmac(
+                'sha256', password, salt, 600000, dklen=key_length)
 
         return derived, salt
 

@@ -3,8 +3,9 @@ Voicemail system
 """
 import os
 from datetime import datetime
-from pbx.utils.logger import get_logger
+
 from pbx.utils.config import Config
+from pbx.utils.logger import get_logger
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -26,7 +27,14 @@ GREETING_FILENAME = "greeting.wav"
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
 
-    def __init__(self, extension_number, storage_path="voicemail", config=None, email_notifier=None, database=None, transcription_service=None):
+    def __init__(
+            self,
+            extension_number,
+            storage_path="voicemail",
+            config=None,
+            email_notifier=None,
+            database=None,
+            transcription_service=None):
         """
         Initialize voicemail box
 
@@ -47,7 +55,9 @@ class VoicemailBox:
         self.database = database
         self.transcription_service = transcription_service
         self.pin = None  # Voicemail PIN
-        self.greeting_path = os.path.join(self.storage_path, GREETING_FILENAME)  # Custom greeting file
+        self.greeting_path = os.path.join(
+            self.storage_path,
+            GREETING_FILENAME)  # Custom greeting file
 
         # Load PIN from extension config if available
         if config:
@@ -98,11 +108,14 @@ class VoicemailBox:
         }
 
         self.messages.append(message)
-        self.logger.info(f"Voicemail saved to file system for extension {self.extension_number}")
+        self.logger.info(
+            f"Voicemail saved to file system for extension {
+                self.extension_number}")
         self.logger.info(f"  Message ID: {message_id}")
         self.logger.info(f"  Caller ID: {caller_id}")
         self.logger.info(f"  File path: {file_path}")
-        self.logger.info(f"  Duration: {duration}s" if duration else "  Duration: unknown")
+        self.logger.info(
+            f"  Duration: {duration}s" if duration else "  Duration: unknown")
 
         # Save to database if available
         if self.database and self.database.enabled:
@@ -110,11 +123,11 @@ class VoicemailBox:
             try:
                 placeholder = self._get_db_placeholder()
                 query = f"""
-                INSERT INTO voicemail_messages 
+                INSERT INTO voicemail_messages
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
                 VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
                 """
-                
+
                 params = (
                     message_id,
                     self.extension_number,
@@ -124,50 +137,61 @@ class VoicemailBox:
                     False,
                     timestamp
                 )
-                
+
                 self.logger.debug(f"  Database type: {self.database.db_type}")
-                self.logger.debug(f"  Executing INSERT query for message_id: {message_id}")
-                
+                self.logger.debug(
+                    f"  Executing INSERT query for message_id: {message_id}")
+
                 if self.database.execute(query, params):
-                    self.logger.info(f"✓ Voicemail metadata successfully saved to {self.database.db_type} database")
+                    self.logger.info(
+                        f"✓ Voicemail metadata successfully saved to {
+                            self.database.db_type} database")
                     self.logger.info(f"  Extension: {self.extension_number}")
                     self.logger.info(f"  Message ID: {message_id}")
                     self.logger.info(f"  Caller: {caller_id}")
                 else:
-                    self.logger.warning(f"✗ Failed to save voicemail metadata to database for extension {self.extension_number}")
+                    self.logger.warning(
+                        f"✗ Failed to save voicemail metadata to database for extension {
+                            self.extension_number}")
                     self.logger.warning(f"  Message ID: {message_id}")
             except Exception as e:
                 self.logger.error(f"✗ Error saving voicemail to database: {e}")
                 self.logger.error(f"  Message ID: {message_id}")
                 self.logger.error(f"  Extension: {self.extension_number}")
         else:
-            self.logger.warning(f"Database not available - voicemail metadata NOT saved to database")
-            self.logger.warning(f"  Message ID: {message_id} stored as file only")
+            self.logger.warning(
+                f"Database not available - voicemail metadata NOT saved to database")
+            self.logger.warning(
+                f"  Message ID: {message_id} stored as file only")
 
         # Transcribe voicemail if enabled
         transcription_result = None
         if self.transcription_service:
             self.logger.info(f"Transcribing voicemail {message_id}...")
-            transcription_result = self.transcription_service.transcribe(file_path)
-            
+            transcription_result = self.transcription_service.transcribe(
+                file_path)
+
             if transcription_result['success']:
                 self.logger.info(f"✓ Voicemail transcribed successfully")
-                self.logger.info(f"  Confidence: {transcription_result['confidence']:.2%}")
-                self.logger.debug(f"  Text: {transcription_result['text'][:100]}...")
-                
+                self.logger.info(
+                    f"  Confidence: {
+                        transcription_result['confidence']:.2%}")
+                self.logger.debug(
+                    f"  Text: {transcription_result['text'][:100]}...")
+
                 # Add transcription to message
                 message['transcription'] = transcription_result['text']
                 message['transcription_confidence'] = transcription_result['confidence']
                 message['transcription_language'] = transcription_result['language']
                 message['transcription_provider'] = transcription_result['provider']
                 message['transcribed_at'] = transcription_result['timestamp']
-                
+
                 # Update database with transcription
                 if self.database and self.database.enabled:
                     try:
                         placeholder = self._get_db_placeholder()
                         query = f"""
-                        UPDATE voicemail_messages 
+                        UPDATE voicemail_messages
                         SET transcription_text = {placeholder},
                             transcription_confidence = {placeholder},
                             transcription_language = {placeholder},
@@ -185,17 +209,22 @@ class VoicemailBox:
                         ))
                         self.logger.info(f"✓ Transcription saved to database")
                     except Exception as e:
-                        self.logger.error(f"✗ Error saving transcription to database: {e}")
+                        self.logger.error(
+                            f"✗ Error saving transcription to database: {e}")
             else:
-                self.logger.warning(f"✗ Voicemail transcription failed: {transcription_result['error']}")
+                self.logger.warning(
+                    f"✗ Voicemail transcription failed: {
+                        transcription_result['error']}")
 
         # Send email notification if enabled
-        transcription_text = transcription_result['text'] if transcription_result and transcription_result['success'] else None
+        transcription_text = transcription_result[
+            'text'] if transcription_result and transcription_result['success'] else None
         if self.email_notifier and self.config:
-            # Get extension configuration - check database first, then config file
+            # Get extension configuration - check database first, then config
+            # file
             extension_config = None
             email_address = None
-            
+
             # Try database first if available
             if self.database and self.database.enabled:
                 try:
@@ -205,43 +234,50 @@ class VoicemailBox:
                     if db_extension:
                         extension_config = db_extension
                         email_address = db_extension.get('email')
-                        self.logger.debug(f"Found email address from database for extension {self.extension_number}")
+                        self.logger.debug(
+                            f"Found email address from database for extension {
+                                self.extension_number}")
                 except Exception as e:
-                    self.logger.error(f"Error getting extension from database: {e}")
-            
+                    self.logger.error(
+                        f"Error getting extension from database: {e}")
+
             # Fallback to config file if not found in database
             if not extension_config:
-                extension_config = self.config.get_extension(self.extension_number)
+                extension_config = self.config.get_extension(
+                    self.extension_number)
                 if extension_config:
                     email_address = extension_config.get('email')
-                    self.logger.debug(f"Found email address from config for extension {self.extension_number}")
-            
+                    self.logger.debug(
+                        f"Found email address from config for extension {
+                            self.extension_number}")
+
             if extension_config and email_address:
-                    # Check if email notifier supports transcription parameter
-                    import inspect
-                    sig = inspect.signature(self.email_notifier.send_voicemail_notification)
-                    
-                    if 'transcription' in sig.parameters:
-                        # Email notifier supports transcription
-                        self.email_notifier.send_voicemail_notification(
-                            to_email=email_address,
-                            extension_number=self.extension_number,
-                            caller_id=caller_id,
-                            timestamp=timestamp,
-                            audio_file_path=file_path,
-                            duration=duration,
-                            transcription=transcription_text
-                        )
-                    else:
-                        # Older email notifier without transcription support
-                        self.email_notifier.send_voicemail_notification(
-                            to_email=email_address,
-                            extension_number=self.extension_number,
-                            caller_id=caller_id,
-                            timestamp=timestamp,
-                            audio_file_path=file_path,
-                            duration=duration
-                        )
+                # Check if email notifier supports transcription parameter
+                import inspect
+                sig = inspect.signature(
+                    self.email_notifier.send_voicemail_notification)
+
+                if 'transcription' in sig.parameters:
+                    # Email notifier supports transcription
+                    self.email_notifier.send_voicemail_notification(
+                        to_email=email_address,
+                        extension_number=self.extension_number,
+                        caller_id=caller_id,
+                        timestamp=timestamp,
+                        audio_file_path=file_path,
+                        duration=duration,
+                        transcription=transcription_text
+                    )
+                else:
+                    # Older email notifier without transcription support
+                    self.email_notifier.send_voicemail_notification(
+                        to_email=email_address,
+                        extension_number=self.extension_number,
+                        caller_id=caller_id,
+                        timestamp=timestamp,
+                        audio_file_path=file_path,
+                        duration=duration
+                    )
 
         return message_id
 
@@ -270,24 +306,29 @@ class VoicemailBox:
             if msg['id'] == message_id:
                 msg['listened'] = True
                 self.logger.info(f"Marked voicemail {message_id} as listened")
-                
+
                 # Update database if available
                 if self.database and self.database.enabled:
-                    self.logger.info(f"Updating voicemail listened status in database...")
+                    self.logger.info(
+                        f"Updating voicemail listened status in database...")
                     try:
                         placeholder = self._get_db_placeholder()
                         query = f"""
-                        UPDATE voicemail_messages 
+                        UPDATE voicemail_messages
                         SET listened = {placeholder}
                         WHERE message_id = {placeholder}
                         """
                         self.database.execute(query, (True, message_id))
-                        self.logger.info(f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database")
+                        self.logger.info(
+                            f"✓ Successfully updated voicemail {message_id} as listened in {
+                                self.database.db_type} database")
                     except Exception as e:
-                        self.logger.error(f"✗ Error updating voicemail in database: {e}")
+                        self.logger.error(
+                            f"✗ Error updating voicemail in database: {e}")
                 else:
-                    self.logger.warning(f"Database not available - listened status not persisted to database")
-                
+                    self.logger.warning(
+                        f"Database not available - listened status not persisted to database")
+
                 break
 
     def delete_message(self, message_id):
@@ -303,11 +344,13 @@ class VoicemailBox:
         for i, msg in enumerate(self.messages):
             if msg['id'] == message_id:
                 self.logger.info(f"Deleting voicemail {message_id}...")
-                
+
                 # Delete file
                 if os.path.exists(msg['file_path']):
                     os.remove(msg['file_path'])
-                    self.logger.info(f"  ✓ Deleted audio file: {msg['file_path']}")
+                    self.logger.info(
+                        f"  ✓ Deleted audio file: {
+                            msg['file_path']}")
 
                 # Delete from database if available
                 if self.database and self.database.enabled:
@@ -315,19 +358,24 @@ class VoicemailBox:
                     try:
                         placeholder = self._get_db_placeholder()
                         query = f"""
-                        DELETE FROM voicemail_messages 
+                        DELETE FROM voicemail_messages
                         WHERE message_id = {placeholder}
                         """
                         self.database.execute(query, (message_id,))
-                        self.logger.info(f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database")
+                        self.logger.info(
+                            f"  ✓ Successfully deleted voicemail {message_id} from {
+                                self.database.db_type} database")
                     except Exception as e:
-                        self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
+                        self.logger.error(
+                            f"  ✗ Error deleting voicemail from database: {e}")
                 else:
-                    self.logger.warning(f"  Database not available - only file deleted")
+                    self.logger.warning(
+                        f"  Database not available - only file deleted")
 
                 # Remove from list
                 self.messages.pop(i)
-                self.logger.info(f"✓ Voicemail {message_id} deleted successfully")
+                self.logger.info(
+                    f"✓ Voicemail {message_id} deleted successfully")
                 return True
         return False
 
@@ -335,10 +383,13 @@ class VoicemailBox:
         """Load existing voicemail messages from database or disk"""
         # Try loading from database first if available
         if self.database and self.database.enabled:
-            self.logger.info(f"Loading voicemail messages from database for extension {self.extension_number}...")
+            self.logger.info(
+                f"Loading voicemail messages from database for extension {
+                    self.extension_number}...")
             try:
                 placeholder = self._get_db_placeholder()
-                # Build query safely - placeholder is only '%s' or '?' from internal method
+                # Build query safely - placeholder is only '%s' or '?' from
+                # internal method
                 query = """
                 SELECT message_id, caller_id, file_path, duration, listened, created_at,
                        transcription_text, transcription_confidence, transcription_language,
@@ -347,9 +398,11 @@ class VoicemailBox:
                 WHERE extension_number = {}
                 ORDER BY created_at DESC
                 """.format(placeholder)
-                self.logger.debug(f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}")
+                self.logger.debug(
+                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {
+                        self.extension_number}")
                 rows = self.database.fetch_all(query, (self.extension_number,))
-                
+
                 for row in rows:
                     # Convert created_at to datetime if it's a string
                     timestamp = row['created_at']
@@ -361,20 +414,27 @@ class VoicemailBox:
                             else:
                                 # Fallback for Python < 3.7
                                 # Try common timestamp formats
-                                for fmt in ['%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S']:
+                                for fmt in [
+                                        '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S']:
                                     try:
-                                        timestamp = datetime.strptime(timestamp, fmt)
+                                        timestamp = datetime.strptime(
+                                            timestamp, fmt)
                                         break
                                     except ValueError:
                                         continue
                                 else:
-                                    # If parsing fails, use current time and log warning
-                                    self.logger.warning(f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time")
+                                    # If parsing fails, use current time and
+                                    # log warning
+                                    self.logger.warning(
+                                        f"Could not parse timestamp '{timestamp}' for voicemail {
+                                            row['message_id']}, using current time")
                                     timestamp = datetime.now()
                         except ValueError:
-                            self.logger.warning(f"Invalid timestamp format for voicemail {row['message_id']}, using current time")
+                            self.logger.warning(
+                                f"Invalid timestamp format for voicemail {
+                                    row['message_id']}, using current time")
                             timestamp = datetime.now()
-                    
+
                     message = {
                         'id': row['message_id'],
                         'caller_id': row['caller_id'],
@@ -383,30 +443,45 @@ class VoicemailBox:
                         'listened': bool(row['listened']),
                         'duration': row['duration']
                     }
-                    
+
                     # Add transcription data if available
                     if row.get('transcription_text'):
                         message['transcription'] = row['transcription_text']
-                        message['transcription_confidence'] = row.get('transcription_confidence')
-                        message['transcription_language'] = row.get('transcription_language')
-                        message['transcription_provider'] = row.get('transcription_provider')
+                        message['transcription_confidence'] = row.get(
+                            'transcription_confidence')
+                        message['transcription_language'] = row.get(
+                            'transcription_language')
+                        message['transcription_provider'] = row.get(
+                            'transcription_provider')
                         message['transcribed_at'] = row.get('transcribed_at')
-                    
+
                     self.messages.append(message)
-                    self.logger.debug(f"  Loaded message: {row['message_id']} from {row['caller_id']}")
-                
-                self.logger.info(f"✓ Successfully loaded {len(self.messages)} voicemail message(s) from {self.database.db_type} database")
+                    self.logger.debug(
+                        f"  Loaded message: {
+                            row['message_id']} from {
+                            row['caller_id']}")
+
+                self.logger.info(
+                    f"✓ Successfully loaded {
+                        len(
+                            self.messages)} voicemail message(s) from {
+                        self.database.db_type} database")
                 if len(self.messages) > 0:
-                    unread_count = sum(1 for m in self.messages if not m['listened'])
-                    self.logger.info(f"  Total: {len(self.messages)} messages ({unread_count} unread)")
+                    unread_count = sum(
+                        1 for m in self.messages if not m['listened'])
+                    self.logger.info(
+                        f"  Total: {len(self.messages)} messages ({unread_count} unread)")
                 return
             except Exception as e:
-                self.logger.error(f"✗ Error loading voicemail messages from database: {e}")
-                self.logger.warning(f"  Falling back to loading from file system")
+                self.logger.error(
+                    f"✗ Error loading voicemail messages from database: {e}")
+                self.logger.warning(
+                    f"  Falling back to loading from file system")
                 # Fall back to loading from disk
         else:
-            self.logger.warning(f"Database not available - loading voicemails from file system only")
-        
+            self.logger.warning(
+                f"Database not available - loading voicemails from file system only")
+
         # Load from disk if database is not available or failed
         if not os.path.exists(self.storage_path):
             return
@@ -424,7 +499,8 @@ class VoicemailBox:
                     time_str = parts[2]
 
                     try:
-                        timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                        timestamp = datetime.strptime(
+                            f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
 
                         message = {
                             'id': name_without_ext,
@@ -437,7 +513,8 @@ class VoicemailBox:
 
                         self.messages.append(message)
                     except ValueError:
-                        self.logger.warning(f"Could not parse timestamp from voicemail file: {filename}")
+                        self.logger.warning(
+                            f"Could not parse timestamp from voicemail file: {filename}")
 
     def set_pin(self, pin):
         """
@@ -450,11 +527,15 @@ class VoicemailBox:
             True if PIN was set successfully
         """
         if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
-            self.logger.warning(f"Invalid PIN format for extension {self.extension_number}")
+            self.logger.warning(
+                f"Invalid PIN format for extension {
+                    self.extension_number}")
             return False
 
         self.pin = str(pin)
-        self.logger.info(f"Updated voicemail PIN for extension {self.extension_number}")
+        self.logger.info(
+            f"Updated voicemail PIN for extension {
+                self.extension_number}")
         return True
 
     def verify_pin(self, pin):
@@ -491,10 +572,14 @@ class VoicemailBox:
         try:
             with open(self.greeting_path, 'wb') as f:
                 f.write(audio_data)
-            self.logger.info(f"Saved custom greeting for extension {self.extension_number}")
+            self.logger.info(
+                f"Saved custom greeting for extension {
+                    self.extension_number}")
             return True
         except Exception as e:
-            self.logger.error(f"Error saving greeting for extension {self.extension_number}: {e}")
+            self.logger.error(
+                f"Error saving greeting for extension {
+                    self.extension_number}: {e}")
             return False
 
     def get_greeting_path(self):
@@ -518,11 +603,15 @@ class VoicemailBox:
         try:
             if os.path.exists(self.greeting_path):
                 os.remove(self.greeting_path)
-                self.logger.info(f"Deleted custom greeting for extension {self.extension_number}")
+                self.logger.info(
+                    f"Deleted custom greeting for extension {
+                        self.extension_number}")
                 return True
             return False
         except Exception as e:
-            self.logger.error(f"Error deleting greeting for extension {self.extension_number}: {e}")
+            self.logger.error(
+                f"Error deleting greeting for extension {
+                    self.extension_number}: {e}")
             return False
 
 
@@ -574,7 +663,12 @@ class VoicemailSystem:
             )
         return self.mailboxes[extension_number]
 
-    def save_message(self, extension_number, caller_id, audio_data, duration=None):
+    def save_message(
+            self,
+            extension_number,
+            caller_id,
+            audio_data,
+            duration=None):
         """
         Save voicemail message
 
@@ -650,7 +744,10 @@ class VoicemailIVR:
     STATE_GREETING_REVIEW = 'greeting_review'
     STATE_GOODBYE = 'goodbye'
 
-    def __init__(self, voicemail_system: VoicemailSystem, extension_number: str):
+    def __init__(
+            self,
+            voicemail_system: VoicemailSystem,
+            extension_number: str):
         """
         Initialize voicemail IVR for an extension
 
@@ -662,7 +759,7 @@ class VoicemailIVR:
         self.extension_number = extension_number
         self.mailbox = voicemail_system.get_mailbox(extension_number)
         self.logger = get_logger()
-        
+
         # IVR state
         self.state = self.STATE_WELCOME
         self.pin_attempts = 0
@@ -671,8 +768,9 @@ class VoicemailIVR:
         self.current_messages = []
         self.entered_pin = ''  # Collect PIN digits from user
         self.recorded_greeting_data = None  # Temporary storage for recorded greeting
-        
-        self.logger.info(f"Voicemail IVR initialized for extension {extension_number}")
+
+        self.logger.info(
+            f"Voicemail IVR initialized for extension {extension_number}")
 
     def handle_dtmf(self, digit: str) -> dict:
         """
@@ -722,7 +820,7 @@ class VoicemailIVR:
             pin_valid = self.mailbox.verify_pin(self.entered_pin)
             # Clear PIN immediately after verification for security
             self.entered_pin = ''
-            
+
             if pin_valid:
                 self.state = self.STATE_MAIN_MENU
                 unread_count = len(self.mailbox.get_messages(unread_only=True))
@@ -766,8 +864,9 @@ class VoicemailIVR:
             # Listen to messages
             self.current_messages = self.mailbox.get_messages(unread_only=True)
             if not self.current_messages:
-                self.current_messages = self.mailbox.get_messages(unread_only=False)
-            
+                self.current_messages = self.mailbox.get_messages(
+                    unread_only=False)
+
             if self.current_messages:
                 self.current_message_index = 0
                 self.state = self.STATE_PLAYING_MESSAGE
@@ -784,16 +883,15 @@ class VoicemailIVR:
                     'prompt': 'no_messages',
                     'message': 'You have no messages'
                 }
-        
+
         elif digit == '2':
             # Options menu
             self.state = self.STATE_OPTIONS_MENU
             return {
                 'action': 'play_prompt',
                 'prompt': 'options_menu',
-                'message': 'Press 1 to record greeting, * to return to main menu'
-            }
-        
+                'message': 'Press 1 to record greeting, * to return to main menu'}
+
         elif digit == '*':
             # Exit
             self.state = self.STATE_GOODBYE
@@ -802,7 +900,7 @@ class VoicemailIVR:
                 'prompt': 'goodbye',
                 'message': 'Goodbye'
             }
-        
+
         return {
             'action': 'play_prompt',
             'prompt': 'invalid_option',
@@ -831,7 +929,7 @@ class VoicemailIVR:
                 'file_path': msg['file_path'],
                 'caller_id': msg['caller_id']
             }
-        
+
         elif digit == '2':
             # Next message
             self.current_message_index += 1
@@ -851,12 +949,12 @@ class VoicemailIVR:
                     'prompt': 'no_more_messages',
                     'message': 'No more messages. Returning to main menu.'
                 }
-        
+
         elif digit == '3':
             # Delete current message
             msg = self.current_messages[self.current_message_index]
             self.mailbox.delete_message(msg['id'])
-            
+
             # Move to next message or main menu
             if self.current_message_index < len(self.current_messages) - 1:
                 self.current_message_index += 1
@@ -875,7 +973,7 @@ class VoicemailIVR:
                     'prompt': 'message_deleted',
                     'message': 'Message deleted. Returning to main menu.'
                 }
-        
+
         elif digit == '*':
             # Return to main menu
             self.state = self.STATE_MAIN_MENU
@@ -885,7 +983,7 @@ class VoicemailIVR:
                 'prompt': 'main_menu',
                 'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
             }
-        
+
         return {
             'action': 'play_prompt',
             'prompt': 'invalid_option',
@@ -901,9 +999,8 @@ class VoicemailIVR:
                 'action': 'start_recording',
                 'recording_type': 'greeting',
                 'prompt': 'record_greeting',
-                'message': 'Record your greeting after the tone. Press # when finished.'
-            }
-        
+                'message': 'Record your greeting after the tone. Press # when finished.'}
+
         elif digit == '*':
             # Return to main menu
             self.state = self.STATE_MAIN_MENU
@@ -913,7 +1010,7 @@ class VoicemailIVR:
                 'prompt': 'main_menu',
                 'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
             }
-        
+
         return {
             'action': 'play_prompt',
             'prompt': 'invalid_option',
@@ -931,7 +1028,7 @@ class VoicemailIVR:
                 'prompt': 'greeting_review_menu',
                 'message': 'Greeting recorded. Press 1 to listen, 2 to re-record, 3 to delete and use default, * to save and return to main menu'
             }
-        
+
         # During recording, other digits are ignored
         return {
             'action': 'continue_recording',
@@ -947,7 +1044,7 @@ class VoicemailIVR:
                 'prompt': 'greeting_playback',
                 'message': 'Playing your greeting...'
             }
-        
+
         elif digit == '2':
             # Re-record the greeting
             self.recorded_greeting_data = None  # Clear previous recording
@@ -956,9 +1053,8 @@ class VoicemailIVR:
                 'action': 'start_recording',
                 'recording_type': 'greeting',
                 'prompt': 'record_greeting',
-                'message': 'Record your greeting after the tone. Press # when finished.'
-            }
-        
+                'message': 'Record your greeting after the tone. Press # when finished.'}
+
         elif digit == '3':
             # Delete greeting and use default
             self.recorded_greeting_data = None
@@ -971,35 +1067,38 @@ class VoicemailIVR:
                 'prompt': 'greeting_deleted',
                 'message': f'Custom greeting deleted, using default. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
             }
-        
+
         elif digit == '*':
             # Save the greeting and return to main menu
             if self.recorded_greeting_data:
                 try:
-                    success = self.mailbox.save_greeting(self.recorded_greeting_data)
+                    success = self.mailbox.save_greeting(
+                        self.recorded_greeting_data)
                     if success:
                         self.recorded_greeting_data = None  # Clear only on successful save
                         self.state = self.STATE_MAIN_MENU
-                        unread_count = len(self.mailbox.get_messages(unread_only=True))
+                        unread_count = len(
+                            self.mailbox.get_messages(
+                                unread_only=True))
                         return {
                             'action': 'play_prompt',
                             'prompt': 'greeting_saved',
                             'message': f'Greeting saved. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
                         }
                     else:
-                        self.logger.error(f"Failed to save greeting for extension {self.extension_number}")
+                        self.logger.error(
+                            f"Failed to save greeting for extension {
+                                self.extension_number}")
                         return {
                             'action': 'play_prompt',
                             'prompt': 'error',
-                            'message': 'Error saving greeting. Press 2 to try again or 3 to cancel.'
-                        }
+                            'message': 'Error saving greeting. Press 2 to try again or 3 to cancel.'}
                 except Exception as e:
                     self.logger.error(f"Error saving greeting: {e}")
                     return {
                         'action': 'play_prompt',
                         'prompt': 'error',
-                        'message': 'Error saving greeting. Press 2 to try again or 3 to cancel.'
-                    }
+                        'message': 'Error saving greeting. Press 2 to try again or 3 to cancel.'}
             self.state = self.STATE_MAIN_MENU
             unread_count = len(self.mailbox.get_messages(unread_only=True))
             return {
@@ -1007,7 +1106,7 @@ class VoicemailIVR:
                 'prompt': 'main_menu',
                 'message': f'You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit'
             }
-        
+
         return {
             'action': 'play_prompt',
             'prompt': 'invalid_option',
@@ -1026,7 +1125,7 @@ class VoicemailIVR:
         """
         self.recorded_greeting_data = audio_data
         return True
-    
+
     def get_recorded_greeting(self):
         """
         Get the temporarily stored greeting for playback

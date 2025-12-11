@@ -2,24 +2,25 @@
 """
 Test PBX shutdown functionality
 """
-import sys
 import os
 import signal
-import time
-import threading
+import sys
 import tempfile
+import threading
+import time
+
 import yaml
+
+from pbx.core.pbx import PBXCore
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-from pbx.core.pbx import PBXCore
 
 
 def test_pbx_shutdown():
     """Test that PBX shuts down properly when stop() is called"""
     print("Testing PBX shutdown...")
-    
+
     # Create a minimal config file
     config_data = {
         'server': {
@@ -59,48 +60,48 @@ def test_pbx_shutdown():
             'enabled': False
         }
     }
-    
+
     # Write config to temporary file
     with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
         yaml.dump(config_data, f)
         config_file = f.name
-    
+
     try:
         # Create and start PBX
         pbx = PBXCore(config_file)
         assert pbx.start(), "PBX should start successfully"
         print("✓ PBX started")
-        
+
         # Give it a moment to fully initialize
         time.sleep(2)
-        
+
         # Verify it's running
         assert pbx.running, "PBX should be running"
         print("✓ PBX is running")
-        
+
         # Stop the PBX
         pbx.stop()
         print("✓ PBX stop() called")
-        
+
         # Give threads a moment to stop
         time.sleep(2)
-        
+
         # Verify it stopped
         assert not pbx.running, "PBX should not be running after stop()"
         print("✓ PBX stopped successfully")
-        
+
     finally:
         # Clean up config file
         if os.path.exists(config_file):
             os.unlink(config_file)
-    
+
     print("✓ PBX shutdown test passed")
 
 
 def test_signal_handling_simulation():
     """Test that signal handling mechanism works"""
     print("\nTesting signal handling simulation...")
-    
+
     # Create a minimal config file
     config_data = {
         'server': {
@@ -140,15 +141,15 @@ def test_signal_handling_simulation():
             'enabled': False
         }
     }
-    
+
     # Write config to temporary file
     with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
         yaml.dump(config_data, f)
         config_file = f.name
-    
+
     running = True
     pbx = None
-    
+
     def signal_handler_test():
         """Simulate the signal handler"""
         nonlocal running, pbx
@@ -156,37 +157,37 @@ def test_signal_handling_simulation():
         running = False
         if pbx:
             pbx.stop()
-    
+
     try:
         # Create and start PBX
         pbx = PBXCore(config_file)
         assert pbx.start(), "PBX should start successfully"
         print("✓ PBX started")
-        
+
         # Simulate the main loop
         loop_iterations = 0
         max_iterations = 5
-        
+
         # After a few iterations, simulate Ctrl+C
         while running and loop_iterations < max_iterations:
             time.sleep(0.5)
             loop_iterations += 1
-            
+
             # Simulate signal after 2 iterations
             if loop_iterations == 2:
                 print("Simulating Ctrl+C signal...")
                 signal_handler_test()
-        
+
         # Verify the loop exited because running was set to False
         assert not running, "Running flag should be False after signal"
         assert not pbx.running, "PBX should not be running"
         print("✓ Signal handling simulation passed")
-        
+
     finally:
         # Clean up
         if os.path.exists(config_file):
             os.unlink(config_file)
-    
+
     print("✓ Signal handling test passed")
 
 

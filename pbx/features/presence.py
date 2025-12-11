@@ -4,6 +4,7 @@ Allows users to see availability of other extensions in real-time
 """
 from datetime import datetime
 from enum import Enum
+
 from pbx.utils.logger import get_logger
 
 
@@ -220,7 +221,8 @@ class PresenceSystem:
 
         if subscriber_extension not in self.subscribers[watched_extension]:
             self.subscribers[watched_extension].append(subscriber_extension)
-            self.logger.debug(f"{subscriber_extension} subscribed to {watched_extension}")
+            self.logger.debug(
+                f"{subscriber_extension} subscribed to {watched_extension}")
 
     def unsubscribe(self, subscriber_extension, watched_extension):
         """
@@ -232,7 +234,8 @@ class PresenceSystem:
         """
         if watched_extension in self.subscribers:
             if subscriber_extension in self.subscribers[watched_extension]:
-                self.subscribers[watched_extension].remove(subscriber_extension)
+                self.subscribers[watched_extension].remove(
+                    subscriber_extension)
 
     def _notify_subscribers(self, extension):
         """
@@ -245,7 +248,9 @@ class PresenceSystem:
         if subscribers:
             user = self.users.get(extension)
             if user:
-                self.logger.debug(f"Notifying {len(subscribers)} subscribers of {extension} presence change")
+                self.logger.debug(
+                    f"Notifying {
+                        len(subscribers)} subscribers of {extension} presence change")
                 # In a real implementation, send presence update messages
 
     def check_auto_status(self):

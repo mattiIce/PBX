@@ -108,7 +108,8 @@ class SIPMessage:
         if self.is_request():
             lines.append(f"{self.method} {self.uri} {self.version}")
         else:
-            lines.append(f"{self.version} {self.status_code} {self.status_text}")
+            lines.append(
+                f"{self.version} {self.status_code} {self.status_text}")
 
         # Headers
         for key, value in self.headers.items():

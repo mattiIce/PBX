@@ -3,11 +3,17 @@ RTP Media Handler
 Handles real-time audio/video streaming
 """
 import socket
-import threading
 import struct
+import threading
 import time
+
+from pbx.utils.audio import (
+    WAV_FORMAT_ALAW,
+    WAV_FORMAT_G722,
+    WAV_FORMAT_PCM,
+    WAV_FORMAT_ULAW,
+)
 from pbx.utils.logger import get_logger
-from pbx.utils.audio import WAV_FORMAT_PCM, WAV_FORMAT_ULAW, WAV_FORMAT_ALAW, WAV_FORMAT_G722
 
 
 class RTPHandler:
@@ -94,7 +100,9 @@ class RTPHandler:
 
         payload = data[12:]
 
-        self.logger.debug(f"Received RTP packet: seq={seq_num}, pt={payload_type}, size={len(payload)}")
+        self.logger.debug(
+            f"Received RTP packet: seq={seq_num}, pt={payload_type}, size={
+                len(payload)}")
 
         # In a real implementation, you would:
         # 1. Buffer and reorder packets based on sequence number
@@ -124,15 +132,18 @@ class RTPHandler:
             extension = 0
             csrc_count = 0
 
-            byte0 = (version << 6) | (padding << 5) | (extension << 4) | csrc_count
+            byte0 = (
+                version << 6) | (
+                padding << 5) | (
+                extension << 4) | csrc_count
             byte1 = (int(marker) << 7) | (payload_type & 0x7F)
 
             header = struct.pack('!BBHII',
-                                byte0,
-                                byte1,
-                                self.sequence_number,
-                                self.timestamp,
-                                self.ssrc)
+                                 byte0,
+                                 byte1,
+                                 self.sequence_number,
+                                 self.timestamp,
+                                 self.ssrc)
 
             packet = header + payload
 
@@ -140,7 +151,8 @@ class RTPHandler:
 
             # Update sequence and timestamp
             self.sequence_number = (self.sequence_number + 1) & 0xFFFF
-            self.timestamp += len(payload)  # Simplified, should be based on sample rate
+            # Simplified, should be based on sample rate
+            self.timestamp += len(payload)
 
             return True
         except Exception as e:
@@ -154,7 +166,11 @@ class RTPRelay:
     Used for call forwarding, conferencing, etc.
     """
 
-    def __init__(self, port_range_start=10000, port_range_end=20000, qos_monitor=None):
+    def __init__(
+            self,
+            port_range_start=10000,
+            port_range_end=20000,
+            qos_monitor=None):
         """
         Initialize RTP relay
 
@@ -167,7 +183,11 @@ class RTPRelay:
         self.port_range_end = port_range_end
         self.active_relays = {}
         self.logger = get_logger()
-        self.port_pool = list(range(port_range_start, port_range_end, 2))  # Even ports for RTP
+        self.port_pool = list(
+            range(
+                port_range_start,
+                port_range_end,
+                2))  # Even ports for RTP
         self.qos_monitor = qos_monitor
 
     def allocate_relay(self, call_id):
@@ -187,14 +207,16 @@ class RTPRelay:
         rtp_port = self.port_pool.pop(0)
         rtcp_port = rtp_port + 1
 
-        handler = RTPRelayHandler(rtp_port, call_id, qos_monitor=self.qos_monitor)
+        handler = RTPRelayHandler(
+            rtp_port, call_id, qos_monitor=self.qos_monitor)
         if handler.start():
             self.active_relays[call_id] = {
                 'rtp_port': rtp_port,
                 'rtcp_port': rtcp_port,
                 'handler': handler
             }
-            self.logger.info(f"Allocated RTP relay for call {call_id}: ports {rtp_port}/{rtcp_port}")
+            self.logger.info(
+                f"Allocated RTP relay for call {call_id}: ports {rtp_port}/{rtcp_port}")
             return (rtp_port, rtcp_port)
         else:
             self.port_pool.insert(0, rtp_port)
@@ -212,7 +234,8 @@ class RTPRelay:
         if call_id in self.active_relays:
             handler = self.active_relays[call_id]['handler']
             handler.set_endpoints(endpoint_a, endpoint_b)
-            self.logger.info(f"RTP relay {call_id}: {endpoint_a} <-> {endpoint_b}")
+            self.logger.info(
+                f"RTP relay {call_id}: {endpoint_a} <-> {endpoint_b}")
 
     def release_relay(self, call_id):
         """
@@ -251,27 +274,35 @@ class RTPRelayHandler:
         self.running = False
         self.endpoint_a = None  # (host, port) - Expected endpoint from SDP
         self.endpoint_b = None  # (host, port) - Expected endpoint from SDP
-        self.learned_a = None   # (host, port) - Actual source learned from first packet
-        self.learned_b = None   # (host, port) - Actual source learned from first packet
+        # (host, port) - Actual source learned from first packet
+        self.learned_a = None
+        # (host, port) - Actual source learned from first packet
+        self.learned_b = None
         self.lock = threading.Lock()
         self.qos_monitor = qos_monitor
-        # Track QoS separately for each direction to avoid mixing sequence numbers
+        # Track QoS separately for each direction to avoid mixing sequence
+        # numbers
         self.qos_metrics_a_to_b = None  # Metrics for packets from A to B
         self.qos_metrics_b_to_a = None  # Metrics for packets from B to A
         self._learning_timeout = 10.0  # Seconds to allow endpoint learning
         self._start_time = None  # Track when relay started for timeout
-        
+
         # Start QoS monitoring if monitor is available
-        # We track each direction separately since they have independent RTP sequence numbers
+        # We track each direction separately since they have independent RTP
+        # sequence numbers
         if self.qos_monitor:
-            self.qos_metrics_a_to_b = self.qos_monitor.start_monitoring(f"{call_id}_a_to_b")
-            self.qos_metrics_b_to_a = self.qos_monitor.start_monitoring(f"{call_id}_b_to_a")
-            self.logger.debug("QoS monitoring started for call %s (both directions)", call_id)
+            self.qos_metrics_a_to_b = self.qos_monitor.start_monitoring(
+                f"{call_id}_a_to_b")
+            self.qos_metrics_b_to_a = self.qos_monitor.start_monitoring(
+                f"{call_id}_b_to_a")
+            self.logger.debug(
+                "QoS monitoring started for call %s (both directions)",
+                call_id)
 
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
         Set the two endpoints to relay between
-        
+
         Either or both endpoints can be None initially. The relay will learn
         endpoints from actual RTP packets (symmetric RTP) or wait until both
         are explicitly set.
@@ -296,7 +327,10 @@ class RTPRelayHandler:
             self.running = True
             self._start_time = time.time()  # Track start time for learning timeout
 
-            self.logger.info(f"RTP relay handler started on port {self.local_port} for call {self.call_id}")
+            self.logger.info(
+                f"RTP relay handler started on port {
+                    self.local_port} for call {
+                    self.call_id}")
 
             # Start receiving thread
             receive_thread = threading.Thread(target=self._relay_loop)
@@ -313,15 +347,17 @@ class RTPRelayHandler:
         self.running = False
         if self.socket:
             self.socket.close()
-        
+
         # Stop QoS monitoring if active (both directions)
         if self.qos_monitor:
             if self.qos_metrics_a_to_b:
                 self.qos_monitor.stop_monitoring(f"{self.call_id}_a_to_b")
             if self.qos_metrics_b_to_a:
                 self.qos_monitor.stop_monitoring(f"{self.call_id}_b_to_a")
-        
-        self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
+
+        self.logger.info(
+            f"RTP relay handler stopped on port {
+                self.local_port}")
 
     def _relay_loop(self):
         """Relay RTP packets between endpoints with symmetric RTP support"""
@@ -330,18 +366,21 @@ class RTPRelayHandler:
                 data, addr = self.socket.recvfrom(2048)
 
                 # Symmetric RTP: Learn actual source addresses from first packets
-                # This handles NAT traversal where actual source differs from SDP
+                # This handles NAT traversal where actual source differs from
+                # SDP
                 with self.lock:
                     # Allow learning even if only one endpoint is set (fixes early packet dropping)
                     # This is important because INVITE sets endpoint_a but endpoint_b is only
-                    # set after 200 OK. RTP packets may arrive during this window.
-                    
+                    # set after 200 OK. RTP packets may arrive during this
+                    # window.
+
                     # Determine if this packet is from A, B, or unknown
                     is_from_a = False
                     is_from_b = False
-                    
+
                     # Check learned addresses first (most reliable)
-                    if self.learned_a and (addr[0] == self.learned_a[0] and addr[1] == self.learned_a[1]):
+                    if self.learned_a and (
+                            addr[0] == self.learned_a[0] and addr[1] == self.learned_a[1]):
                         is_from_a = True
                     elif self.learned_b and (addr[0] == self.learned_b[0] and addr[1] == self.learned_b[1]):
                         is_from_b = True
@@ -349,57 +388,75 @@ class RTPRelayHandler:
                     elif self.endpoint_a and (addr[0] == self.endpoint_a[0] and addr[1] == self.endpoint_a[1]):
                         if not self.learned_a:
                             self.learned_a = addr
-                            self.logger.info(f"Learned endpoint A: {addr} (matched SDP)")
+                            self.logger.info(
+                                f"Learned endpoint A: {addr} (matched SDP)")
                         is_from_a = True
                     # Check if packet matches expected SDP address for B
                     elif self.endpoint_b and (addr[0] == self.endpoint_b[0] and addr[1] == self.endpoint_b[1]):
                         if not self.learned_b:
                             self.learned_b = addr
-                            self.logger.info(f"Learned endpoint B: {addr} (matched SDP)")
+                            self.logger.info(
+                                f"Learned endpoint B: {addr} (matched SDP)")
                         is_from_b = True
                     # Symmetric RTP: Learn from first packet (NAT traversal)
-                    # Security: Only learn within timeout window and validate packet format
+                    # Security: Only learn within timeout window and validate
+                    # packet format
                     elif not self.learned_a:
                         # Check if we're still in the learning window
                         elapsed = time.time() - self._start_time if self._start_time else 0
                         if elapsed > self._learning_timeout:
-                            self.logger.warning(f"RTP learning timeout expired, rejecting packet from {addr}")
+                            self.logger.warning(
+                                f"RTP learning timeout expired, rejecting packet from {addr}")
                             continue
-                        
-                        # Validate this looks like a real RTP packet (at least 12 bytes header)
+
+                        # Validate this looks like a real RTP packet (at least
+                        # 12 bytes header)
                         if len(data) < 12:
-                            self.logger.debug(f"Rejecting too-short packet from {addr}")
+                            self.logger.debug(
+                                f"Rejecting too-short packet from {addr}")
                             continue
-                        
-                        # First packet from unknown source - assume it's endpoint A
+
+                        # First packet from unknown source - assume it's
+                        # endpoint A
                         self.learned_a = addr
                         is_from_a = True
-                        expected_str = f" (expected {self.endpoint_a})" if self.endpoint_a else " (no SDP endpoint set)"
-                        self.logger.info(f"Learned endpoint A via symmetric RTP: {addr}{expected_str}")
+                        expected_str = f" (expected {
+                            self.endpoint_a})" if self.endpoint_a else " (no SDP endpoint set)"
+                        self.logger.info(
+                            f"Learned endpoint A via symmetric RTP: {addr}{expected_str}")
                     elif not self.learned_b and addr != self.learned_a:
                         # Check if we're still in the learning window
                         elapsed = time.time() - self._start_time if self._start_time else 0
                         if elapsed > self._learning_timeout:
-                            self.logger.warning(f"RTP learning timeout expired, rejecting packet from {addr}")
+                            self.logger.warning(
+                                f"RTP learning timeout expired, rejecting packet from {addr}")
                             continue
-                        
+
                         # Validate this looks like a real RTP packet
                         if len(data) < 12:
-                            self.logger.debug(f"Rejecting too-short packet from {addr}")
+                            self.logger.debug(
+                                f"Rejecting too-short packet from {addr}")
                             continue
-                        
-                        # Second packet from different source - assume it's endpoint B
+
+                        # Second packet from different source - assume it's
+                        # endpoint B
                         self.learned_b = addr
                         is_from_b = True
-                        expected_str = f" (expected {self.endpoint_b})" if self.endpoint_b else " (no SDP endpoint set)"
-                        self.logger.info(f"Learned endpoint B via symmetric RTP: {addr}{expected_str}")
+                        expected_str = f" (expected {
+                            self.endpoint_b})" if self.endpoint_b else " (no SDP endpoint set)"
+                        self.logger.info(
+                            f"Learned endpoint B via symmetric RTP: {addr}{expected_str}")
                     else:
                         # Packet from unknown third source or duplicate
-                        self.logger.debug(f"RTP packet from unknown source: {addr} (learned A:{self.learned_a}, B:{self.learned_b})")
+                        self.logger.debug(
+                            f"RTP packet from unknown source: {addr} (learned A:{
+                                self.learned_a}, B:{
+                                self.learned_b})")
                         continue
-                    
+
                     # Forward packet to the other endpoint and update QoS metrics
-                    # Parse RTP header once for QoS tracking (only if we have valid data)
+                    # Parse RTP header once for QoS tracking (only if we have
+                    # valid data)
                     seq_num = None
                     timestamp = None
                     payload_size = None
@@ -410,14 +467,16 @@ class RTPRelayHandler:
                             timestamp = header[3]
                             payload_size = len(data) - 12
                         except Exception as parse_error:
-                            self.logger.debug(f"Error parsing RTP header for QoS: {parse_error}")
-                    
+                            self.logger.debug(
+                                f"Error parsing RTP header for QoS: {parse_error}")
+
                     if is_from_a and self.learned_b:
                         # Packet from A, send to B (using learned address)
                         self.socket.sendto(data, self.learned_b)
                         # Track QoS for A->B direction
                         if self.qos_metrics_a_to_b and seq_num is not None:
-                            self.qos_metrics_a_to_b.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_a_to_b.update_packet_received(
+                                seq_num, timestamp, payload_size)
                             self.qos_metrics_a_to_b.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: A->B")
                     elif is_from_b and self.learned_a:
@@ -425,33 +484,45 @@ class RTPRelayHandler:
                         self.socket.sendto(data, self.learned_a)
                         # Track QoS for B->A direction
                         if self.qos_metrics_b_to_a and seq_num is not None:
-                            self.qos_metrics_b_to_a.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_b_to_a.update_packet_received(
+                                seq_num, timestamp, payload_size)
                             self.qos_metrics_b_to_a.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: B->A")
                     elif is_from_a and self.endpoint_b:
-                        # From A but B not learned yet - try sending to expected B (if known)
+                        # From A but B not learned yet - try sending to
+                        # expected B (if known)
                         self.socket.sendto(data, self.endpoint_b)
                         # Track QoS for A->B direction
                         if self.qos_metrics_a_to_b and seq_num is not None:
-                            self.qos_metrics_a_to_b.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_a_to_b.update_packet_received(
+                                seq_num, timestamp, payload_size)
                             self.qos_metrics_a_to_b.update_packet_sent()
-                        self.logger.debug(f"Relayed {len(data)} bytes: A->B (B not learned, using SDP)")
+                        self.logger.debug(
+                            f"Relayed {
+                                len(data)} bytes: A->B (B not learned, using SDP)")
                     elif is_from_b and self.endpoint_a:
-                        # From B but A not learned yet - try sending to expected A (if known)
+                        # From B but A not learned yet - try sending to
+                        # expected A (if known)
                         self.socket.sendto(data, self.endpoint_a)
                         # Track QoS for B->A direction
                         if self.qos_metrics_b_to_a and seq_num is not None:
-                            self.qos_metrics_b_to_a.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_b_to_a.update_packet_received(
+                                seq_num, timestamp, payload_size)
                             self.qos_metrics_b_to_a.update_packet_sent()
-                        self.logger.debug(f"Relayed {len(data)} bytes: B->A (A not learned, using SDP)")
+                        self.logger.debug(
+                            f"Relayed {
+                                len(data)} bytes: B->A (A not learned, using SDP)")
                     elif is_from_a:
                         # From A but B not known at all yet - must drop packet
-                        # This is rare since endpoint_b is usually set soon after endpoint_a
-                        self.logger.debug(f"Packet from A dropped - waiting for B endpoint")
+                        # This is rare since endpoint_b is usually set soon
+                        # after endpoint_a
+                        self.logger.debug(
+                            f"Packet from A dropped - waiting for B endpoint")
                     elif is_from_b:
                         # From B but A not known at all yet - must drop packet
                         # This is rare since endpoint_a is usually set first
-                        self.logger.debug(f"Packet from B dropped - waiting for A endpoint")
+                        self.logger.debug(
+                            f"Packet from B dropped - waiting for A endpoint")
 
             except Exception as e:
                 if self.running:
@@ -493,7 +564,10 @@ class RTPRecorder:
             self.socket.settimeout(0.5)  # 500ms timeout for recv
             self.running = True
 
-            self.logger.info(f"RTP recorder started on port {self.local_port} for call {self.call_id}")
+            self.logger.info(
+                f"RTP recorder started on port {
+                    self.local_port} for call {
+                    self.call_id}")
 
             # Start recording thread
             record_thread = threading.Thread(target=self._record_loop)
@@ -536,8 +610,10 @@ class RTPRecorder:
                     # Filter out RFC 2833 telephone-event packets (payload type 101)
                     # These are DTMF signaling packets, not audio
                     if payload_type == 101:
-                        self.logger.debug(f"Received RFC 2833 telephone-event packet (filtered from recording)")
-                        # If we have an RFC 2833 handler, delegate event processing
+                        self.logger.debug(
+                            f"Received RFC 2833 telephone-event packet (filtered from recording)")
+                        # If we have an RFC 2833 handler, delegate event
+                        # processing
                         if self.rfc2833_handler:
                             self.rfc2833_handler.handle_rtp_packet(data, addr)
                         continue
@@ -546,7 +622,10 @@ class RTPRecorder:
                     with self.lock:
                         self.recorded_data.append(payload)
 
-                    self.logger.debug(f"Recorded {len(payload)} bytes (PT {payload_type}) from call {self.call_id}")
+                    self.logger.debug(
+                        f"Recorded {
+                            len(payload)} bytes (PT {payload_type}) from call {
+                            self.call_id}")
 
             except socket.timeout:
                 # Timeout is normal, just continue
@@ -619,11 +698,15 @@ class RTPPlayer:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
-            # This is intentional for VoIP systems which need to handle multi-homed servers
+            # This is intentional for VoIP systems which need to handle
+            # multi-homed servers
             self.socket.bind(('0.0.0.0', self.local_port))
             self.running = True
 
-            self.logger.info(f"RTP player started on port {self.local_port} for call {self.call_id}")
+            self.logger.info(
+                f"RTP player started on port {
+                    self.local_port} for call {
+                    self.call_id}")
             return True
         except Exception as e:
             self.logger.error(f"Failed to start RTP player: {e}")
@@ -640,7 +723,12 @@ class RTPPlayer:
             self.socket = None
         self.logger.info(f"RTP player stopped for call {self.call_id}")
 
-    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160, bytes_per_sample=None):
+    def send_audio(
+            self,
+            audio_data,
+            payload_type=0,
+            samples_per_packet=160,
+            bytes_per_sample=None):
         """
         Send audio data via RTP packets
 
@@ -673,7 +761,8 @@ class RTPPlayer:
 
             # Split audio into packets
             bytes_per_packet = samples_per_packet * bytes_per_sample
-            num_packets = (len(audio_data) + bytes_per_packet - 1) // bytes_per_packet
+            num_packets = (
+                len(audio_data) + bytes_per_packet - 1) // bytes_per_packet
 
             for i in range(num_packets):
                 start = i * bytes_per_packet
@@ -684,18 +773,22 @@ class RTPPlayer:
                 rtp_packet = self._build_rtp_packet(payload, payload_type)
 
                 # Send packet
-                self.socket.sendto(rtp_packet, (self.remote_host, self.remote_port))
+                self.socket.sendto(
+                    rtp_packet, (self.remote_host, self.remote_port))
 
                 # Increment sequence and timestamp
                 with self.lock:
                     self.sequence_number = (self.sequence_number + 1) & 0xFFFF
-                    self.timestamp = (self.timestamp + samples_per_packet) & 0xFFFFFFFF
+                    self.timestamp = (
+                        self.timestamp + samples_per_packet) & 0xFFFFFFFF
 
                 # Small delay to pace packets (20ms for 160 samples at 8kHz)
                 import time
                 time.sleep(0.020)
 
-            self.logger.info(f"Sent {num_packets} RTP packets for call {self.call_id}")
+            self.logger.info(
+                f"Sent {num_packets} RTP packets for call {
+                    self.call_id}")
             return True
 
         except Exception as e:
@@ -724,12 +817,12 @@ class RTPPlayer:
 
         with self.lock:
             header = struct.pack('>BBHII',
-                byte0,
-                byte1,
-                self.sequence_number,
-                self.timestamp,
-                self.ssrc
-            )
+                                 byte0,
+                                 byte1,
+                                 self.sequence_number,
+                                 self.timestamp,
+                                 self.ssrc
+                                 )
 
         return header + payload
 
@@ -747,8 +840,10 @@ class RTPPlayer:
         # Note: Import here to avoid circular dependency with audio module
         try:
             from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
+
             # Generate PCM tone (16-bit samples)
-            pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
+            pcm_data = generate_beep_tone(
+                frequency, duration_ms, sample_rate=8000)
             # Convert to μ-law for PCMU codec (payload type 0)
             ulaw_data = pcm16_to_ulaw(pcm_data)
             return self.send_audio(ulaw_data, payload_type=0)
@@ -783,43 +878,51 @@ class RTPPlayer:
                 # Read WAV header
                 riff = f.read(4)
                 if riff != b'RIFF' or len(riff) < 4:
-                    self.logger.error(f"Invalid WAV file (bad RIFF header): {file_path}")
+                    self.logger.error(
+                        f"Invalid WAV file (bad RIFF header): {file_path}")
                     return False
 
                 size_bytes = f.read(4)
                 if len(size_bytes) < 4:
-                    self.logger.error(f"Truncated WAV file (no file size): {file_path}")
+                    self.logger.error(
+                        f"Truncated WAV file (no file size): {file_path}")
                     return False
                 file_size = struct.unpack('<I', size_bytes)[0]
 
                 wave = f.read(4)
                 if wave != b'WAVE' or len(wave) < 4:
-                    self.logger.error(f"Invalid WAV file (bad WAVE marker): {file_path}")
+                    self.logger.error(
+                        f"Invalid WAV file (bad WAVE marker): {file_path}")
                     return False
 
                 # Find fmt chunk
                 while True:
                     chunk_id = f.read(4)
                     if not chunk_id or len(chunk_id) < 4:
-                        self.logger.error(f"No format chunk found in WAV file: {file_path}")
+                        self.logger.error(
+                            f"No format chunk found in WAV file: {file_path}")
                         return False
 
                     size_bytes = f.read(4)
                     if not size_bytes or len(size_bytes) < 4:
-                        self.logger.error(f"Truncated chunk size in WAV file: {file_path}")
+                        self.logger.error(
+                            f"Truncated chunk size in WAV file: {file_path}")
                         return False
                     chunk_size = struct.unpack('<I', size_bytes)[0]
 
                     if chunk_id == b'fmt ':
-                        # Validate fmt chunk size (minimum 16 bytes for basic format)
+                        # Validate fmt chunk size (minimum 16 bytes for basic
+                        # format)
                         if chunk_size < 16:
-                            self.logger.error(f"Invalid fmt chunk size in WAV file: {file_path}")
+                            self.logger.error(
+                                f"Invalid fmt chunk size in WAV file: {file_path}")
                             return False
 
                         # Parse format
                         fmt_data = f.read(16)
                         if len(fmt_data) < 16:
-                            self.logger.error(f"Truncated fmt chunk in WAV file: {file_path}")
+                            self.logger.error(
+                                f"Truncated fmt chunk in WAV file: {file_path}")
                             return False
 
                         audio_format = struct.unpack('<H', fmt_data[0:2])[0]
@@ -827,7 +930,8 @@ class RTPPlayer:
                         sample_rate = struct.unpack('<I', fmt_data[4:8])[0]
                         byte_rate = struct.unpack('<I', fmt_data[8:12])[0]
                         block_align = struct.unpack('<H', fmt_data[12:14])[0]
-                        bits_per_sample = struct.unpack('<H', fmt_data[14:16])[0]
+                        bits_per_sample = struct.unpack(
+                            '<H', fmt_data[14:16])[0]
 
                         # Skip any extra format bytes
                         if chunk_size > 16:
@@ -840,22 +944,26 @@ class RTPPlayer:
                         elif audio_format == WAV_FORMAT_ALAW:
                             payload_type = 8  # PCMA (A-law)
                         elif audio_format == WAV_FORMAT_G722:
-                            # G.722 format - already encoded, no conversion needed
+                            # G.722 format - already encoded, no conversion
+                            # needed
                             payload_type = 9  # G.722
-                            self.logger.info(f"G.722 format detected - already encoded for VoIP.")
+                            self.logger.info(
+                                f"G.722 format detected - already encoded for VoIP.")
                         elif audio_format == WAV_FORMAT_PCM:
                             # PCM format - convert to PCMU (G.711 μ-law) for maximum compatibility
-                            # Note: Previously converted to G.722, but G.722 has implementation issues
+                            # Note: Previously converted to G.722, but G.722
+                            # has implementation issues
                             payload_type = 0  # PCMU
                             convert_to_pcmu = True
-                            self.logger.info(f"PCM format detected - will convert to PCMU (G.711 μ-law) "
-                                           f"for maximum compatibility.")
+                            self.logger.info(
+                                f"PCM format detected - will convert to PCMU (G.711 μ-law) " f"for maximum compatibility.")
                         else:
-                            self.logger.error(f"Unsupported audio format: {audio_format}")
+                            self.logger.error(
+                                f"Unsupported audio format: {audio_format}")
                             return False
 
                         self.logger.info(f"WAV file: format={audio_format}, channels={num_channels}, "
-                                       f"rate={sample_rate}Hz, bits={bits_per_sample}")
+                                         f"rate={sample_rate}Hz, bits={bits_per_sample}")
                         break
 
                     elif chunk_id == b'data':
@@ -870,36 +978,44 @@ class RTPPlayer:
                 while True:
                     chunk_id = f.read(4)
                     if not chunk_id or len(chunk_id) < 4:
-                        self.logger.error(f"No data chunk found in WAV file: {file_path}")
+                        self.logger.error(
+                            f"No data chunk found in WAV file: {file_path}")
                         return False
 
                     size_bytes = f.read(4)
                     if not size_bytes or len(size_bytes) < 4:
-                        self.logger.error(f"Truncated data chunk size in WAV file: {file_path}")
+                        self.logger.error(
+                            f"Truncated data chunk size in WAV file: {file_path}")
                         return False
                     chunk_size = struct.unpack('<I', size_bytes)[0]
 
                     if chunk_id == b'data':
                         # Validate data size is reasonable
                         if chunk_size == 0:
-                            self.logger.error(f"Empty data chunk in WAV file: {file_path}")
+                            self.logger.error(
+                                f"Empty data chunk in WAV file: {file_path}")
                             return False
                         if chunk_size > 100 * 1024 * 1024:  # 100MB limit
-                            self.logger.error(f"Data chunk too large ({chunk_size} bytes) in WAV file: {file_path}")
+                            self.logger.error(
+                                f"Data chunk too large ({chunk_size} bytes) in WAV file: {file_path}")
                             return False
 
                         # Read audio data
                         audio_data = f.read(chunk_size)
                         if len(audio_data) < chunk_size:
-                            self.logger.warning(f"Truncated audio data in WAV file: {file_path} "
-                                              f"(expected {chunk_size}, got {len(audio_data)})")
-                            # Continue with partial data rather than failing completely
+                            self.logger.warning(
+                                f"Truncated audio data in WAV file: {file_path} " f"(expected {chunk_size}, got {
+                                    len(audio_data)})")
+                            # Continue with partial data rather than failing
+                            # completely
 
                         # For mono files, use data as-is
                         # For stereo, we'd need to downmix (take left channel)
                         if num_channels == 2:
-                            self.logger.warning(f"Stereo audio detected, extracting left channel only")
-                            # Extract left channel (assuming interleaved samples)
+                            self.logger.warning(
+                                f"Stereo audio detected, extracting left channel only")
+                            # Extract left channel (assuming interleaved
+                            # samples)
                             if audio_format == WAV_FORMAT_PCM:  # PCM 16-bit
                                 # Extract every other 16-bit sample (left channel)
                                 # More efficient using slice with step
@@ -912,27 +1028,36 @@ class RTPPlayer:
                             try:
                                 from pbx.utils.audio import pcm16_to_ulaw
                                 original_size = len(audio_data)
-                                
-                                # First, downsample from 16kHz to 8kHz if needed
+
+                                # First, downsample from 16kHz to 8kHz if
+                                # needed
                                 if sample_rate == 16000:
-                                    # Simple decimation: take every other sample
+                                    # Simple decimation: take every other
+                                    # sample
                                     downsampled = bytearray()
-                                    for i in range(0, len(audio_data), 4):  # Skip every other 16-bit sample
+                                    for i in range(
+                                            0, len(audio_data), 4):  # Skip every other 16-bit sample
                                         if i + 1 < len(audio_data):
-                                            downsampled.extend(audio_data[i:i+2])
+                                            downsampled.extend(
+                                                audio_data[i:i + 2])
                                     audio_data = bytes(downsampled)
                                     sample_rate = 8000
-                                    self.logger.info(f"Downsampled from 16kHz to 8kHz: {original_size} bytes -> {len(audio_data)} bytes")
-                                
+                                    self.logger.info(
+                                        f"Downsampled from 16kHz to 8kHz: {original_size} bytes -> {len(audio_data)} bytes")
+
                                 # Convert to μ-law
                                 audio_data = pcm16_to_ulaw(audio_data)
-                                self.logger.info(f"Converted PCM to PCMU: {len(audio_data)} bytes (μ-law)")
+                                self.logger.info(
+                                    f"Converted PCM to PCMU: {
+                                        len(audio_data)} bytes (μ-law)")
                             except Exception as e:
-                                self.logger.error(f"Failed to convert PCM to PCMU: {e}")
+                                self.logger.error(
+                                    f"Failed to convert PCM to PCMU: {e}")
                                 return False
                         elif payload_type == 9:
                             # G.722 format - already encoded, ensure correct sample rate for packets
-                            # G.722 uses 8kHz clock rate but actual 16kHz sampling
+                            # G.722 uses 8kHz clock rate but actual 16kHz
+                            # sampling
                             sample_rate = 16000
 
                         # Calculate samples per packet based on sample rate
@@ -940,13 +1065,17 @@ class RTPPlayer:
                         samples_per_packet = int(sample_rate * 0.02)
 
                         # Send the audio
-                        self.logger.info(f"Playing audio file: {file_path} ({len(audio_data)} bytes)")
-                        return self.send_audio(audio_data, payload_type, samples_per_packet)
+                        self.logger.info(
+                            f"Playing audio file: {file_path} ({
+                                len(audio_data)} bytes)")
+                        return self.send_audio(
+                            audio_data, payload_type, samples_per_packet)
 
                     else:
                         # Skip this chunk (with size validation)
                         if chunk_size > 100 * 1024 * 1024:  # 100MB limit
-                            self.logger.error(f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}")
+                            self.logger.error(
+                                f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}")
                             return False
                         f.read(chunk_size)
 
@@ -980,13 +1109,14 @@ class RTPDTMFListener:
         self.lock = threading.Lock()
         self.audio_buffer = []
         self.sample_rate = 8000  # Standard for telephony
-        
+
         # DTMF detection frame sizes (based on DTMFDetector default of 205 samples per frame)
         # We need ~2x frame size for reliable detection with overlap
         self.dtmf_frame_size = 205  # Samples per DTMF detection frame
-        self.dtmf_buffer_size = 410  # Buffer size for detection (2x frame size)
+        # Buffer size for detection (2x frame size)
+        self.dtmf_buffer_size = 410
         self.dtmf_slide_size = 205   # Sliding window size
-        
+
         # Initialize DTMF detector
         from pbx.utils.dtmf import DTMFDetector
         self.dtmf_detector = DTMFDetector(sample_rate=self.sample_rate)
@@ -997,12 +1127,16 @@ class RTPDTMFListener:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
-            # This is intentional for VoIP systems which need to handle multi-homed servers
+            # This is intentional for VoIP systems which need to handle
+            # multi-homed servers
             self.socket.bind(('0.0.0.0', self.local_port))
             self.socket.settimeout(0.1)  # 100ms timeout for recv
             self.running = True
 
-            self.logger.info(f"RTP DTMF listener started on port {self.local_port} for call {self.call_id}")
+            self.logger.info(
+                f"RTP DTMF listener started on port {
+                    self.local_port} for call {
+                    self.call_id}")
 
             # Start listening thread
             listen_thread = threading.Thread(target=self._listen_loop)
@@ -1028,7 +1162,7 @@ class RTPDTMFListener:
     def _listen_loop(self):
         """Listen for RTP packets and detect DTMF tones"""
         import time
-        
+
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
@@ -1041,25 +1175,29 @@ class RTPDTMFListener:
                     payload = data[12:]
 
                     # Convert audio payload to samples for DTMF detection
-                    # Assuming G.711 μ-law (payload type 0) or A-law (payload type 8)
+                    # Assuming G.711 μ-law (payload type 0) or A-law (payload
+                    # type 8)
                     if payload_type in [0, 8]:
                         # Convert G.711 to linear PCM samples
                         samples = self._decode_g711(payload, payload_type)
-                        
+
                         with self.lock:
                             self.audio_buffer.extend(samples)
-                            
+
                             # Process buffer when we have enough samples
                             if len(self.audio_buffer) >= self.dtmf_buffer_size:
                                 # Try to detect DTMF tone
-                                digit = self.dtmf_detector.detect_tone(self.audio_buffer[:self.dtmf_buffer_size])
-                                
+                                digit = self.dtmf_detector.detect_tone(
+                                    self.audio_buffer[:self.dtmf_buffer_size])
+
                                 if digit:
-                                    # Check if this is a new digit (not a repeat)
+                                    # Check if this is a new digit (not a
+                                    # repeat)
                                     if not self.detected_digits or self.detected_digits[-1] != digit:
                                         self.detected_digits.append(digit)
-                                        self.logger.info(f"DTMF digit detected: {digit}")
-                                
+                                        self.logger.info(
+                                            f"DTMF digit detected: {digit}")
+
                                 # Keep a sliding window of audio
                                 self.audio_buffer = self.audio_buffer[self.dtmf_slide_size:]
 
@@ -1082,7 +1220,7 @@ class RTPDTMFListener:
             list: Linear PCM samples normalized to [-1.0, 1.0]
         """
         samples = []
-        
+
         for byte in payload:
             if payload_type == 0:  # μ-law
                 # Simplified μ-law decode
@@ -1090,10 +1228,10 @@ class RTPDTMFListener:
             else:  # A-law (payload_type == 8)
                 # Simplified A-law decode
                 sample = self._alaw_to_linear(byte)
-            
+
             # Normalize to [-1.0, 1.0]
             samples.append(sample / 32768.0)
-        
+
         return samples
 
     def _ulaw_to_linear(self, ulaw_byte):
@@ -1111,11 +1249,11 @@ class RTPDTMFListener:
         sign = (ulaw_byte & 0x80) >> 7
         exponent = (ulaw_byte & 0x70) >> 4
         mantissa = ulaw_byte & 0x0F
-        
+
         # Calculate linear value
         # 0x84 (132) is the bias value added to mantissa in μ-law encoding
         linear = ((mantissa << 3) + 0x84) << exponent
-        
+
         if sign:
             return -linear
         else:
@@ -1136,13 +1274,13 @@ class RTPDTMFListener:
         sign = (alaw_byte & 0x80) >> 7
         exponent = (alaw_byte & 0x70) >> 4
         mantissa = alaw_byte & 0x0F
-        
+
         if exponent == 0:
             linear = (mantissa << 4) + 8
         else:
             # 0x108 (264) is the bias for non-zero exponents in A-law encoding
             linear = ((mantissa << 4) + 0x108) << (exponent - 1)
-        
+
         if sign:
             return -linear
         else:
@@ -1160,15 +1298,15 @@ class RTPDTMFListener:
         """
         import time
         start_time = time.time()
-        
+
         while (time.time() - start_time) < timeout:
             with self.lock:
                 if self.detected_digits:
                     return self.detected_digits.pop(0)
-            
+
             # Small delay to avoid busy waiting
             time.sleep(0.05)
-        
+
         return None
 
     def clear_digits(self):

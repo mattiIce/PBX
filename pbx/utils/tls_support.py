@@ -3,6 +3,7 @@ TLS/SRTP Support for FIPS-compliant encrypted communications
 Provides SIPS (SIP over TLS) and SRTP (Secure RTP) functionality
 """
 import ssl
+
 from pbx.utils.logger import get_logger
 
 # Check if cryptography library is available for SRTP
@@ -61,7 +62,8 @@ class TLSManager:
                 self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
             else:
                 # Use strong ciphers but not limited to FIPS
-                self.ssl_context.set_ciphers('HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4')
+                self.ssl_context.set_ciphers(
+                    'HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4')
                 self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
 
             # Additional security settings
@@ -145,7 +147,8 @@ class SRTPManager:
             True if session created
         """
         if not CRYPTO_AVAILABLE:
-            self.logger.error("SRTP not available - cryptography library required")
+            self.logger.error(
+                "SRTP not available - cryptography library required")
             return False
 
         try:

@@ -4,6 +4,7 @@ Manages incoming calls and distributes them to available agents
 """
 from datetime import datetime
 from enum import Enum
+
 from pbx.utils.logger import get_logger
 
 
@@ -127,7 +128,10 @@ class CallQueue:
             agent: Agent object
         """
         self.agents[agent.extension] = agent
-        self.logger.info(f"Added agent {agent.extension} to queue {self.queue_number}")
+        self.logger.info(
+            f"Added agent {
+                agent.extension} to queue {
+                self.queue_number}")
 
     def remove_agent(self, extension):
         """Remove agent from queue"""
@@ -153,7 +157,10 @@ class CallQueue:
         queued_call.position = len(self.queue) + 1
         self.queue.append(queued_call)
 
-        self.logger.info(f"Call {call_id} added to queue {self.queue_number}, position {queued_call.position}")
+        self.logger.info(
+            f"Call {call_id} added to queue {
+                self.queue_number}, position {
+                queued_call.position}")
         return queued_call
 
     def dequeue(self):
@@ -181,7 +188,8 @@ class CallQueue:
         Returns:
             Agent object or None
         """
-        available_agents = [a for a in self.agents.values() if a.is_available()]
+        available_agents = [
+            a for a in self.agents.values() if a.is_available()]
 
         if not available_agents:
             return None
@@ -193,14 +201,15 @@ class CallQueue:
         elif self.strategy == QueueStrategy.ROUND_ROBIN:
             # Round robin distribution
             if available_agents:
-                agent = available_agents[self.round_robin_index % len(available_agents)]
+                agent = available_agents[self.round_robin_index % len(
+                    available_agents)]
                 self.round_robin_index += 1
                 return agent
 
         elif self.strategy == QueueStrategy.LEAST_RECENT:
             # Agent who hasn't taken a call longest
             agent = min(available_agents,
-                       key=lambda a: a.last_call_time or datetime.min)
+                        key=lambda a: a.last_call_time or datetime.min)
             return agent
 
         elif self.strategy == QueueStrategy.FEWEST_CALLS:
@@ -220,7 +229,8 @@ class CallQueue:
         assignments = []
 
         # Check for expired calls
-        expired = [c for c in self.queue if c.get_wait_time() > self.max_wait_time]
+        expired = [c for c in self.queue if c.get_wait_time() >
+                   self.max_wait_time]
         for call in expired:
             self.queue.remove(call)
             self.logger.warning(f"Call {call.call_id} expired in queue")
@@ -235,13 +245,17 @@ class CallQueue:
             if call:
                 agent.set_busy(call.call_id)
                 assignments.append((call, agent))
-                self.logger.info(f"Assigned call {call.call_id} to agent {agent.extension}")
+                self.logger.info(
+                    f"Assigned call {
+                        call.call_id} to agent {
+                        agent.extension}")
 
         return assignments
 
     def get_queue_status(self):
         """Get queue status information"""
-        available_agents = sum(1 for a in self.agents.values() if a.is_available())
+        available_agents = sum(
+            1 for a in self.agents.values() if a.is_available())
 
         return {
             'queue_number': self.queue_number,
@@ -267,7 +281,11 @@ class QueueSystem:
         self.queues = {}
         self.logger = get_logger()
 
-    def create_queue(self, queue_number, name, strategy=QueueStrategy.ROUND_ROBIN):
+    def create_queue(
+            self,
+            queue_number,
+            name,
+            strategy=QueueStrategy.ROUND_ROBIN):
         """
         Create new queue
 

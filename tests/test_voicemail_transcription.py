@@ -1,22 +1,22 @@
 """
 Tests for voicemail transcription functionality
 """
-import unittest
 import os
+import struct
 import sys
 import tempfile
+import unittest
 import wave
-import struct
 from datetime import datetime
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+from pbx.features.voicemail_transcription import VoicemailTranscriptionService
 
 # Mock the optional dependencies before importing the module
 sys.modules['vosk'] = MagicMock()
 sys.modules['google'] = MagicMock()
 sys.modules['google.cloud'] = MagicMock()
 sys.modules['google.cloud.speech'] = MagicMock()
-
-from pbx.features.voicemail_transcription import VoicemailTranscriptionService
 
 
 class TestVoicemailTranscription(unittest.TestCase):
@@ -25,9 +25,10 @@ class TestVoicemailTranscription(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
-        
+
         # Create test audio file (simple WAV)
-        self.test_audio_path = os.path.join(self.temp_dir, "test_voicemail.wav")
+        self.test_audio_path = os.path.join(
+            self.temp_dir, "test_voicemail.wav")
         self._create_test_wav(self.test_audio_path)
 
     def tearDown(self):
@@ -40,20 +41,21 @@ class TestVoicemailTranscription(unittest.TestCase):
     def _create_test_wav(self, filepath, duration=1.0, sample_rate=8000):
         """
         Create a test WAV file with a simple varying amplitude wave
-        
+
         Args:
             filepath: Path to save WAV file
             duration: Duration in seconds
             sample_rate: Sample rate in Hz
         """
         num_samples = int(duration * sample_rate)
-        
+
         # Generate samples with varying amplitude
         samples = []
         for i in range(num_samples):
-            value = int(32767.0 * 0.5 * (1 + (i % 100) / 100))  # Simple varying amplitude
+            # Simple varying amplitude
+            value = int(32767.0 * 0.5 * (1 + (i % 100) / 100))
             samples.append(struct.pack('<h', value))
-        
+
         # Write WAV file
         with wave.open(filepath, 'w') as wav_file:
             wav_file.setnchannels(1)  # Mono
@@ -64,14 +66,17 @@ class TestVoicemailTranscription(unittest.TestCase):
     def test_transcription_service_disabled(self):
         """Test transcription service when disabled"""
         config = Mock()
-        config.get = Mock(return_value={'voicemail_transcription': {'enabled': False}})
-        
+        config.get = Mock(
+            return_value={
+                'voicemail_transcription': {
+                    'enabled': False}})
+
         service = VoicemailTranscriptionService(config)
-        
+
         self.assertFalse(service.enabled)
-        
+
         result = service.transcribe(self.test_audio_path)
-        
+
         self.assertFalse(result['success'])
         self.assertIsNone(result['text'])
         self.assertEqual(result['error'], 'Transcription service is disabled')
@@ -86,11 +91,11 @@ class TestVoicemailTranscription(unittest.TestCase):
                 'vosk_model_path': 'models/test'
             }
         })
-        
+
         service = VoicemailTranscriptionService(config)
-        
+
         result = service.transcribe('/nonexistent/file.wav')
-        
+
         self.assertFalse(result['success'])
         self.assertIn('Audio file not found', result['error'])
 
@@ -104,10 +109,10 @@ class TestVoicemailTranscription(unittest.TestCase):
                 'api_key': 'test-key'
             }
         })
-        
+
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
-        
+
         self.assertFalse(result['success'])
         self.assertIn('Unsupported transcription provider', result['error'])
 
@@ -123,34 +128,36 @@ class TestVoicemailTranscription(unittest.TestCase):
                 'api_key': None  # Google uses GOOGLE_APPLICATION_CREDENTIALS
             }
         })
-        
+
         # Mock Google Speech client
         mock_client = MagicMock()
         mock_speech.SpeechClient.return_value = mock_client
-        
+
         # Mock configuration classes
         mock_speech.RecognitionAudio = MagicMock()
         mock_speech.RecognitionConfig = MagicMock()
         mock_speech.RecognitionConfig.AudioEncoding = MagicMock()
-        
+
         # Mock recognition response
         mock_alternative = MagicMock()
         mock_alternative.transcript = 'This is a Google transcription test.'
         mock_alternative.confidence = 0.95
-        
+
         mock_result = MagicMock()
         mock_result.alternatives = [mock_alternative]
-        
+
         mock_response = MagicMock()
         mock_response.results = [mock_result]
-        
+
         mock_client.recognize.return_value = mock_response
-        
+
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
-        
+
         self.assertTrue(result['success'])
-        self.assertEqual(result['text'], 'This is a Google transcription test.')
+        self.assertEqual(
+            result['text'],
+            'This is a Google transcription test.')
         self.assertEqual(result['confidence'], 0.95)
         self.assertEqual(result['provider'], 'google')
         self.assertIsNone(result['error'])
@@ -167,41 +174,51 @@ class TestVoicemailTranscription(unittest.TestCase):
                 'api_key': None
             }
         })
-        
+
         # Mock Google Speech client
         mock_client = MagicMock()
         mock_speech.SpeechClient.return_value = mock_client
-        
+
         # Mock configuration classes
         mock_speech.RecognitionAudio = MagicMock()
         mock_speech.RecognitionConfig = MagicMock()
         mock_speech.RecognitionConfig.AudioEncoding = MagicMock()
-        
+
         # Mock empty response
         mock_response = MagicMock()
         mock_response.results = []
-        
+
         mock_client.recognize.return_value = mock_response
-        
+
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
-        
+
         self.assertFalse(result['success'])
         self.assertEqual(result['error'], 'Transcription returned no results')
 
     def test_transcription_result_structure(self):
         """Test that transcription result has correct structure"""
         config = Mock()
-        config.get = Mock(return_value={'voicemail_transcription': {'enabled': False}})
-        
+        config.get = Mock(
+            return_value={
+                'voicemail_transcription': {
+                    'enabled': False}})
+
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
-        
+
         # Verify all required keys are present
-        required_keys = ['success', 'text', 'confidence', 'language', 'provider', 'timestamp', 'error']
+        required_keys = [
+            'success',
+            'text',
+            'confidence',
+            'language',
+            'provider',
+            'timestamp',
+            'error']
         for key in required_keys:
             self.assertIn(key, result)
-        
+
         # Verify types
         self.assertIsInstance(result['success'], bool)
         self.assertIsInstance(result['confidence'], float)

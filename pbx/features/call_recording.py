@@ -5,6 +5,7 @@ Records audio from calls for compliance, quality assurance, and training
 import os
 import wave
 from datetime import datetime
+
 from pbx.utils.logger import get_logger
 
 
@@ -50,7 +51,10 @@ class CallRecording:
         self.recording = True
         self.start_time = datetime.now()
 
-        self.logger.info(f"Started recording call {self.call_id} to {self.file_path}")
+        self.logger.info(
+            f"Started recording call {
+                self.call_id} to {
+                self.file_path}")
         return self.file_path
 
     def add_audio(self, audio_data):

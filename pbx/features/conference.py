@@ -58,7 +58,9 @@ class ConferenceRoom:
         for i, participant in enumerate(self.participants):
             if participant['extension'] == extension:
                 self.participants.pop(i)
-                self.logger.info(f"Removed {extension} from conference {self.room_number}")
+                self.logger.info(
+                    f"Removed {extension} from conference {
+                        self.room_number}")
                 return True
         return False
 
@@ -107,7 +109,8 @@ class ConferenceSystem:
             ConferenceRoom object
         """
         if room_number not in self.rooms:
-            self.rooms[room_number] = ConferenceRoom(room_number, max_participants)
+            self.rooms[room_number] = ConferenceRoom(
+                room_number, max_participants)
             self.logger.info(f"Created conference room {room_number}")
         return self.rooms[room_number]
 
@@ -159,7 +162,8 @@ class ConferenceSystem:
             # Clean up empty rooms
             if room.is_empty():
                 del self.rooms[room_number]
-                self.logger.info(f"Removed empty conference room {room_number}")
+                self.logger.info(
+                    f"Removed empty conference room {room_number}")
 
             return result
         return False

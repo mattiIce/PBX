@@ -2,11 +2,10 @@
 Audio utilities for PBX system
 Provides audio generation and processing functions
 """
-import struct
 import math
-import warnings
 import os
-
+import struct
+import warnings
 
 # Audio generation constants
 MAX_16BIT_SIGNED = 32767  # Maximum value for 16-bit signed integer
@@ -22,13 +21,13 @@ WAV_FORMAT_G722 = 0x0067  # G.722 (HD Audio)
 def pcm16_to_ulaw(pcm_data):
     """
     Convert 16-bit PCM audio data to G.711 μ-law format
-    
+
     Args:
         pcm_data: Raw 16-bit PCM audio data (little-endian signed)
-    
+
     Returns:
         bytes: G.711 μ-law encoded audio data (8-bit per sample)
-    
+
     Note:
         This function uses Python's audioop module which is deprecated in Python 3.11+
         and will be removed in Python 3.13. For production use, consider using an
@@ -36,38 +35,40 @@ def pcm16_to_ulaw(pcm_data):
     """
     try:
         import audioop
+
         # Suppress deprecation warning for audioop
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=DeprecationWarning)
-            # Convert 16-bit linear PCM to μ-law (1 = mono, 2 bytes per sample for 16-bit)
+            # Convert 16-bit linear PCM to μ-law (1 = mono, 2 bytes per sample
+            # for 16-bit)
             ulaw_data = audioop.lin2ulaw(pcm_data, 2)
         return ulaw_data
     except ImportError:
         # Fallback: implement μ-law encoding manually if audioop is not available
         # This is a simplified implementation of μ-law encoding
         ulaw_data = bytearray()
-        
+
         # μ-law constants
         BIAS = 0x84
         CLIP = 32635
-        
+
         for i in range(0, len(pcm_data), 2):
             # Read 16-bit little-endian sample
             if i + 1 >= len(pcm_data):
                 break
-            sample = struct.unpack('<h', pcm_data[i:i+2])[0]
-            
+            sample = struct.unpack('<h', pcm_data[i:i + 2])[0]
+
             # Get sign and magnitude
             sign = 0x80 if sample < 0 else 0x00
             sample = abs(sample)
-            
+
             # Clip the sample
             if sample > CLIP:
                 sample = CLIP
-            
+
             # Add bias
             sample = sample + BIAS
-            
+
             # Find exponent (position of highest set bit in range)
             # Start from highest exponent and work down
             exponent = 0
@@ -75,126 +76,129 @@ def pcm16_to_ulaw(pcm_data):
                 if sample & (1 << (exp + 3)):
                     exponent = exp
                     break
-            
+
             mantissa = (sample >> (exponent + 3)) & 0x0F
-            
+
             # Compose μ-law byte
             ulaw_byte = ~(sign | (exponent << 4) | mantissa) & 0xFF
             ulaw_data.append(ulaw_byte)
-        
+
         return bytes(ulaw_data)
 
 
 def pcm16_to_g722(pcm_data, sample_rate=8000):
     """
     Convert 16-bit PCM audio data to G.722 format
-    
+
     G.722 is a wideband codec that operates at 16kHz. If the input is at 8kHz,
     it will be upsampled to 16kHz before encoding.
-    
+
     Args:
         pcm_data: Raw 16-bit PCM audio data (little-endian signed)
         sample_rate: Sample rate of input PCM data (8000 or 16000 Hz)
-    
+
     Returns:
         bytes: G.722 encoded audio data
-    
+
     Note:
         This uses the G722Codec class which currently has a stub implementation.
         For production use with actual G.722 encoding, integrate a native G.722 library.
     """
     # Import G.722 codec
     from pbx.features.g722_codec import G722Codec
-    
+
     # Validate input data
     if len(pcm_data) < 2:
         # Not enough data for even one 16-bit sample
         return b''
-    
+
     # Ensure data length is even (complete 16-bit samples)
     if len(pcm_data) % 2 != 0:
         # Truncate incomplete last sample
         pcm_data = pcm_data[:-1]
-    
+
     # Upsample from 8kHz to 16kHz if needed
     if sample_rate == 8000:
         # Simple linear interpolation upsampling (2x)
-        # For each sample, insert an interpolated sample between current and next
+        # For each sample, insert an interpolated sample between current and
+        # next
         upsampled = bytearray()
         num_samples = len(pcm_data) // 2
-        
+
         if num_samples == 0:
             return b''
-        
+
         for i in range(num_samples - 1):
             # Read current and next sample
-            current = struct.unpack('<h', pcm_data[i*2:(i+1)*2])[0]
-            next_sample = struct.unpack('<h', pcm_data[(i+1)*2:(i+2)*2])[0]
-            
+            current = struct.unpack('<h', pcm_data[i * 2:(i + 1) * 2])[0]
+            next_sample = struct.unpack(
+                '<h', pcm_data[(i + 1) * 2:(i + 2) * 2])[0]
+
             # Add current sample
             upsampled.extend(struct.pack('<h', current))
-            
+
             # Add interpolated sample (average of current and next)
             interpolated = (current + next_sample) // 2
             upsampled.extend(struct.pack('<h', interpolated))
-        
+
         # Add the last sample twice (duplicate to maintain 2:1 ratio)
-        last_sample = struct.unpack('<h', pcm_data[(num_samples-1)*2:num_samples*2])[0]
+        last_sample = struct.unpack(
+            '<h', pcm_data[(num_samples - 1) * 2:num_samples * 2])[0]
         upsampled.extend(struct.pack('<h', last_sample))
         upsampled.extend(struct.pack('<h', last_sample))
-        
+
         pcm_data = bytes(upsampled)
-    
+
     # Create G.722 encoder
     codec = G722Codec(bitrate=64000)
-    
+
     # Encode PCM to G.722
     g722_data = codec.encode(pcm_data)
-    
+
     return g722_data if g722_data is not None else b''
 
 
 def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
     """
     Convert a PCM WAV file to G.722 WAV format
-    
+
     Reads a PCM WAV file, converts the audio data to G.722 encoding,
     and writes it back as a G.722 WAV file.
-    
+
     Args:
         input_wav_path: Path to input PCM WAV file
         output_wav_path: Path to output G.722 WAV file (default: overwrite input)
-    
+
     Returns:
         bool: True if successful, False otherwise
     """
     if output_wav_path is None:
         output_wav_path = input_wav_path
-    
+
     try:
         with open(input_wav_path, 'rb') as f:
             # Read RIFF header
             riff = f.read(4)
             if riff != b'RIFF':
                 return False
-            
+
             file_size = struct.unpack('<I', f.read(4))[0]
             wave = f.read(4)
             if wave != b'WAVE':
                 return False
-            
+
             # Find fmt chunk
             sample_rate = None
             channels = None
             audio_data = None
-            
+
             while True:
                 chunk_id = f.read(4)
                 if not chunk_id or len(chunk_id) < 4:
                     break
-                
+
                 chunk_size = struct.unpack('<I', f.read(4))[0]
-                
+
                 if chunk_id == b'fmt ':
                     # Parse format chunk
                     fmt_data = f.read(chunk_size)
@@ -202,31 +206,32 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                     channels = struct.unpack('<H', fmt_data[2:4])[0]
                     sample_rate = struct.unpack('<I', fmt_data[4:8])[0]
                     bits_per_sample = struct.unpack('<H', fmt_data[14:16])[0]
-                    
+
                     # Only process PCM files
                     if audio_format != WAV_FORMAT_PCM:
                         return False
-                        
+
                 elif chunk_id == b'data':
                     # Read PCM audio data
                     audio_data = f.read(chunk_size)
                 else:
                     # Skip unknown chunks
                     f.read(chunk_size)
-            
+
             if audio_data is None or sample_rate is None:
                 return False
-            
+
             # Convert PCM to G.722
             g722_data = pcm16_to_g722(audio_data, sample_rate)
-            
+
             if not g722_data:
                 return False
-            
+
             # Write G.722 WAV file
             with open(output_wav_path, 'wb') as out_f:
                 # G.722 WAV uses format code 0x0067 and 8kHz clock rate
-                # Note: G.722 actually samples at 16kHz but uses 8kHz clock rate per RFC
+                # Note: G.722 actually samples at 16kHz but uses 8kHz clock
+                # rate per RFC
                 header = build_wav_header(
                     len(g722_data),
                     sample_rate=8000,  # G.722 clock rate (8kHz)
@@ -236,9 +241,9 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                 )
                 out_f.write(header)
                 out_f.write(g722_data)
-            
+
             return True
-            
+
     except Exception as e:
         warnings.warn(f"Failed to convert WAV to G.722: {e}")
         return False
@@ -262,13 +267,25 @@ def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     for i in range(num_samples):
         # Generate sine wave
         t = i / sample_rate
-        value = int(MAX_16BIT_SIGNED * DEFAULT_AMPLITUDE * math.sin(2 * math.pi * frequency * t))
+        value = int(
+            MAX_16BIT_SIGNED *
+            DEFAULT_AMPLITUDE *
+            math.sin(
+                2 *
+                math.pi *
+                frequency *
+                t))
         samples.append(struct.pack('<h', value))  # 16-bit signed little-endian
 
     return b''.join(samples)
 
 
-def build_wav_header(data_size, sample_rate=8000, channels=1, bits_per_sample=16, audio_format=WAV_FORMAT_PCM):
+def build_wav_header(
+        data_size,
+        sample_rate=8000,
+        channels=1,
+        bits_per_sample=16,
+        audio_format=WAV_FORMAT_PCM):
     """
     Build a WAV file header
 
@@ -317,7 +334,10 @@ def generate_voicemail_beep():
     Returns:
         bytes: Complete WAV file with beep tone
     """
-    pcm_data = generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000)
+    pcm_data = generate_beep_tone(
+        frequency=1000,
+        duration_ms=500,
+        sample_rate=8000)
     header = build_wav_header(len(pcm_data), sample_rate=8000)
     return header + pcm_data
 
@@ -393,10 +413,10 @@ def generate_busy_tone():
 def generate_voice_prompt(prompt_type, sample_rate=8000):
     """
     Generate a voice-like prompt using tone sequences
-    
+
     Since we don't have TTS, we use distinctive tone patterns to represent different prompts.
     These tones are designed to be recognizable and indicate specific messages.
-    
+
     Args:
         prompt_type: Type of prompt to generate:
             - 'leave_message': "Please leave a message after the tone"
@@ -406,10 +426,10 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
             - 'no_messages': "You have no messages"
             - 'goodbye': "Goodbye"
         sample_rate: Sample rate in Hz
-    
+
     Returns:
         bytes: Complete WAV file with prompt tones
-    
+
     Note: In production, these would be replaced with actual recorded voice prompts
     """
     # Define tone sequences for different prompts
@@ -453,7 +473,8 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
         ],
         'auto_attendant_menu': [
             # Menu option tones - distinctive pattern
-            (700, 200), (0, 100), (800, 200), (0, 100), (700, 200), (0, 100), (900, 300),
+            (700, 200), (0, 100), (800, 200), (0,
+                                               100), (700, 200), (0, 100), (900, 300),
         ],
         'timeout': [
             # Warning tone for timeout
@@ -488,9 +509,9 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
             (1000, 400),
         ],
     }
-    
+
     sequence = tone_sequences.get(prompt_type, [(800, 300)])  # Default tone
-    
+
     pcm_data = b''
     for frequency, duration_ms in sequence:
         if frequency == 0:
@@ -502,9 +523,16 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
             num_samples = int(sample_rate * duration_ms / 1000)
             for i in range(num_samples):
                 t = i / sample_rate
-                value = int(MAX_16BIT_SIGNED * DEFAULT_AMPLITUDE * math.sin(2 * math.pi * frequency * t))
+                value = int(
+                    MAX_16BIT_SIGNED *
+                    DEFAULT_AMPLITUDE *
+                    math.sin(
+                        2 *
+                        math.pi *
+                        frequency *
+                        t))
                 pcm_data += struct.pack('<h', value)
-    
+
     header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
     return header + pcm_data
 
@@ -512,20 +540,20 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
 def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
     """
     Load a voice prompt WAV file from disk
-    
+
     Args:
         prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
         prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
-    
+
     Returns:
         bytes: WAV file contents if file exists, None otherwise
-    
+
     Note: This function attempts to load actual recorded voice prompts.
           If the file doesn't exist, the caller should fall back to generate_voice_prompt()
     """
     # Build path to prompt file
     prompt_file = os.path.join(prompt_dir, f"{prompt_type}.wav")
-    
+
     # Check if file exists
     if os.path.exists(prompt_file):
         try:
@@ -538,30 +566,33 @@ def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
             import warnings
             warnings.warn(f"Failed to read prompt file {prompt_file}: {e}")
             return None
-    
+
     return None
 
 
-def get_prompt_audio(prompt_type, prompt_dir='voicemail_prompts', sample_rate=8000):
+def get_prompt_audio(
+        prompt_type,
+        prompt_dir='voicemail_prompts',
+        sample_rate=8000):
     """
     Get voice prompt audio, trying to load from file first, then generating tones as fallback
-    
+
     This is a convenience function that combines load_prompt_file() and generate_voice_prompt().
     It first attempts to load a recorded WAV file, and if that fails, generates tone-based prompts.
-    
+
     Args:
         prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
         prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
         sample_rate: Sample rate for generated prompts if file not found
-    
+
     Returns:
         bytes: Complete WAV file data (either from file or generated)
     """
     # Try to load from file first
     audio_data = load_prompt_file(prompt_type, prompt_dir)
-    
+
     if audio_data is not None:
         return audio_data
-    
+
     # Fallback to generated tone prompts
     return generate_voice_prompt(prompt_type, sample_rate)

@@ -1,10 +1,11 @@
 """
 Voicemail transcription service using speech-to-text
 """
+import json
 import os
 import wave
-import json
 from datetime import datetime
+
 from pbx.utils.logger import get_logger
 
 # Constants for Vosk transcription
@@ -13,7 +14,7 @@ VOSK_DEFAULT_CONFIDENCE = 0.95  # Default confidence when Vosk doesn't provide o
 
 # Import Vosk (free, offline speech recognition)
 try:
-    from vosk import Model, KaldiRecognizer
+    from vosk import KaldiRecognizer, Model
     VOSK_AVAILABLE = True
 except ImportError:
     VOSK_AVAILABLE = False
@@ -47,14 +48,19 @@ class VoicemailTranscriptionService:
 
         # Load configuration
         if config:
-            transcription_config = config.get('features', {}).get('voicemail_transcription', {})
+            transcription_config = config.get(
+                'features', {}).get(
+                'voicemail_transcription', {})
             self.enabled = transcription_config.get('enabled', False)
-            self.provider = transcription_config.get('provider', 'vosk')  # Default to vosk (free)
+            self.provider = transcription_config.get(
+                'provider', 'vosk')  # Default to vosk (free)
             self.api_key = transcription_config.get('api_key')
-            self.vosk_model_path = transcription_config.get('vosk_model_path', 'models/vosk-model-small-en-us-0.15')
+            self.vosk_model_path = transcription_config.get(
+                'vosk_model_path', 'models/vosk-model-small-en-us-0.15')
 
             if self.enabled:
-                self.logger.info(f"Voicemail transcription service initialized")
+                self.logger.info(
+                    f"Voicemail transcription service initialized")
                 self.logger.info(f"  Provider: {self.provider}")
                 if self.provider == 'vosk':
                     self.logger.info(f"  Model path: {self.vosk_model_path}")
@@ -63,18 +69,28 @@ class VoicemailTranscriptionService:
                         try:
                             if os.path.exists(self.vosk_model_path):
                                 self.vosk_model = Model(self.vosk_model_path)
-                                self.logger.info("  Vosk model loaded successfully (offline transcription ready)")
+                                self.logger.info(
+                                    "  Vosk model loaded successfully (offline transcription ready)")
                             else:
-                                self.logger.warning(f"  Vosk model not found at {self.vosk_model_path}")
-                                self.logger.info("  Download model from: https://alphacephei.com/vosk/models")
+                                self.logger.warning(
+                                    f"  Vosk model not found at {
+                                        self.vosk_model_path}")
+                                self.logger.info(
+                                    "  Download model from: https://alphacephei.com/vosk/models")
                         except Exception as e:
-                            self.logger.error(f"  Failed to load Vosk model: {e}")
+                            self.logger.error(
+                                f"  Failed to load Vosk model: {e}")
                     else:
-                        self.logger.warning("  Vosk library not installed. Install with: pip install vosk")
+                        self.logger.warning(
+                            "  Vosk library not installed. Install with: pip install vosk")
                 else:
-                    self.logger.info(f"  API key configured: {bool(self.api_key)}")
+                    self.logger.info(
+                        f"  API key configured: {
+                            bool(
+                                self.api_key)}")
             else:
-                self.logger.debug("Voicemail transcription service disabled in configuration")
+                self.logger.debug(
+                    "Voicemail transcription service disabled in configuration")
 
     def transcribe(self, audio_file_path, language='en-US'):
         """
@@ -129,7 +145,8 @@ class VoicemailTranscriptionService:
             elif self.provider == 'google':
                 return self._transcribe_google(audio_file_path, language)
             else:
-                error_msg = f"Unsupported transcription provider: {self.provider}. Use 'vosk' (recommended, free) or 'google'"
+                error_msg = f"Unsupported transcription provider: {
+                    self.provider}. Use 'vosk' (recommended, free) or 'google'"
                 self.logger.error(error_msg)
                 return {
                     'success': False,
@@ -155,12 +172,12 @@ class VoicemailTranscriptionService:
     def _create_error_response(self, error_msg, language, provider=None):
         """
         Helper method to create error response structure
-        
+
         Args:
             error_msg: Error message string
             language: Language code
             provider: Provider name (optional)
-            
+
         Returns:
             Dictionary with error response structure
         """
@@ -191,22 +208,24 @@ class VoicemailTranscriptionService:
             return self._create_error_response(error_msg, language, 'vosk')
 
         if not self.vosk_model:
-            error_msg = f"Vosk model not loaded. Check model path: {self.vosk_model_path}"
+            error_msg = f"Vosk model not loaded. Check model path: {
+                self.vosk_model_path}"
             self.logger.error(error_msg)
-            self.logger.info("Download models from: https://alphacephei.com/vosk/models")
+            self.logger.info(
+                "Download models from: https://alphacephei.com/vosk/models")
             return self._create_error_response(error_msg, language, 'vosk')
 
         try:
             # Open WAV file
             wf = wave.open(audio_file_path, "rb")
-            
+
             # Validate audio format
             if wf.getnchannels() != 1:
                 wf.close()
                 error_msg = "Audio must be mono channel"
                 self.logger.error(error_msg)
                 return self._create_error_response(error_msg, language, 'vosk')
-            
+
             # Check sample rate - Vosk works best with 8kHz or 16kHz
             sample_rate = wf.getframerate()
             if sample_rate not in [8000, 16000, 32000, 44100, 48000]:
@@ -214,15 +233,15 @@ class VoicemailTranscriptionService:
                 error_msg = f"Unsupported sample rate: {sample_rate}. Use 8000, 16000, 32000, 44100, or 48000 Hz"
                 self.logger.error(error_msg)
                 return self._create_error_response(error_msg, language, 'vosk')
-            
+
             # Create recognizer
             rec = KaldiRecognizer(self.vosk_model, sample_rate)
             rec.SetWords(True)  # Enable word-level timestamps
-            
+
             # Process audio in chunks
             self.logger.info(f"Processing audio with Vosk (offline)...")
             results = []
-            
+
             while True:
                 data = wf.readframes(VOSK_FRAME_SIZE)
                 if len(data) == 0:
@@ -231,17 +250,17 @@ class VoicemailTranscriptionService:
                     result = json.loads(rec.Result())
                     if 'text' in result and result['text']:
                         results.append(result['text'])
-            
+
             # Get final result
             final_result = json.loads(rec.FinalResult())
             if 'text' in final_result and final_result['text']:
                 results.append(final_result['text'])
-            
+
             wf.close()
-            
+
             # Combine all text
             text = ' '.join(results).strip()
-            
+
             if text:
                 self.logger.info(f"✓ Transcription successful (offline)")
                 self.logger.info(f"  Text length: {len(text)} characters")
@@ -257,7 +276,8 @@ class VoicemailTranscriptionService:
                 }
             else:
                 self.logger.warning("Transcription returned empty text")
-                return self._create_error_response('Transcription returned empty text', language, 'vosk')
+                return self._create_error_response(
+                    'Transcription returned empty text', language, 'vosk')
 
         except Exception as e:
             self.logger.error(f"Vosk transcription error: {e}")
@@ -319,7 +339,9 @@ class VoicemailTranscriptionService:
 
                     if text:
                         self.logger.info(f"✓ Transcription successful")
-                        self.logger.info(f"  Text length: {len(text)} characters")
+                        self.logger.info(
+                            f"  Text length: {
+                                len(text)} characters")
                         self.logger.info(f"  Confidence: {confidence:.2%}")
                         self.logger.debug(f"  Text: {text[:100]}...")
                         return {

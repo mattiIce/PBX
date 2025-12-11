@@ -2,9 +2,10 @@
 Zoom Integration
 Enables Zoom Phone, video meetings, and collaboration features
 """
-from pbx.utils.logger import get_logger
 from datetime import datetime, timedelta
-from typing import Optional, Dict
+from typing import Dict, Optional
+
+from pbx.utils.logger import get_logger
 
 try:
     import requests
@@ -32,14 +33,18 @@ class ZoomIntegration:
         self.account_id = config.get('integrations.zoom.account_id')
         self.client_id = config.get('integrations.zoom.client_id')
         self.client_secret = config.get('integrations.zoom.client_secret')
-        self.phone_enabled = config.get('integrations.zoom.phone_enabled', False)
-        self.api_base_url = config.get('integrations.zoom.api_base_url', 'https://api.zoom.us/v2')
+        self.phone_enabled = config.get(
+            'integrations.zoom.phone_enabled', False)
+        self.api_base_url = config.get(
+            'integrations.zoom.api_base_url',
+            'https://api.zoom.us/v2')
         self.access_token = None
         self.token_expiry = None
 
         if self.enabled:
             if not REQUESTS_AVAILABLE:
-                self.logger.error("Zoom integration requires 'requests' library. Install with: pip install requests")
+                self.logger.error(
+                    "Zoom integration requires 'requests' library. Install with: pip install requests")
                 self.enabled = False
             else:
                 self.logger.info("Zoom integration enabled")
@@ -65,34 +70,42 @@ class ZoomIntegration:
         try:
             # Server-to-Server OAuth token endpoint
             token_url = "https://zoom.us/oauth/token"
-            
+
             params = {
                 'grant_type': 'account_credentials',
                 'account_id': self.account_id
             }
-            
+
             auth = (self.client_id, self.client_secret)
-            
+
             self.logger.info("Authenticating with Zoom API...")
-            response = requests.post(token_url, params=params, auth=auth, timeout=10)
-            
+            response = requests.post(
+                token_url, params=params, auth=auth, timeout=10)
+
             if response.status_code == 200:
                 data = response.json()
                 self.access_token = data.get('access_token')
                 expires_in = data.get('expires_in', 3600)
-                self.token_expiry = datetime.now() + timedelta(seconds=expires_in - TOKEN_EXPIRY_BUFFER_SECONDS)
-                
+                self.token_expiry = datetime.now() + timedelta(seconds=expires_in -
+                                                               TOKEN_EXPIRY_BUFFER_SECONDS)
+
                 self.logger.info("Zoom authentication successful")
                 return True
             else:
-                self.logger.error(f"Zoom authentication failed: {response.status_code} - {response.text}")
+                self.logger.error(
+                    f"Zoom authentication failed: {response.status_code} - {response.text}")
                 return False
-                
+
         except Exception as e:
             self.logger.error(f"Zoom authentication error: {e}")
             return False
 
-    def create_meeting(self, topic: str, start_time: str = None, duration_minutes: int = 60, **kwargs) -> Optional[Dict]:
+    def create_meeting(
+            self,
+            topic: str,
+            start_time: str = None,
+            duration_minutes: int = 60,
+            **kwargs) -> Optional[Dict]:
         """
         Create a Zoom meeting
 
@@ -114,12 +127,12 @@ class ZoomIntegration:
 
         try:
             url = f"{self.api_base_url}/users/me/meetings"
-            
+
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
             }
-            
+
             # Build meeting payload
             payload = {
                 'topic': topic,
@@ -133,18 +146,22 @@ class ZoomIntegration:
                     'auto_recording': kwargs.get('auto_recording', 'none')
                 }
             }
-            
+
             if start_time:
                 payload['start_time'] = start_time
-                payload['timezone'] = kwargs.get('timezone', 'America/New_York')
-            
+                payload['timezone'] = kwargs.get(
+                    'timezone', 'America/New_York')
+
             self.logger.info(f"Creating Zoom meeting: {topic}")
-            response = requests.post(url, headers=headers, json=payload, timeout=10)
-            
+            response = requests.post(
+                url, headers=headers, json=payload, timeout=10)
+
             if response.status_code in [200, 201]:
                 meeting_data = response.json()
-                self.logger.info(f"Zoom meeting created: {meeting_data.get('id')}")
-                
+                self.logger.info(
+                    f"Zoom meeting created: {
+                        meeting_data.get('id')}")
+
                 return {
                     'meeting_id': meeting_data.get('id'),
                     'join_url': meeting_data.get('join_url'),
@@ -155,9 +172,10 @@ class ZoomIntegration:
                     'duration': meeting_data.get('duration')
                 }
             else:
-                self.logger.error(f"Failed to create Zoom meeting: {response.status_code} - {response.text}")
+                self.logger.error(
+                    f"Failed to create Zoom meeting: {response.status_code} - {response.text}")
                 return None
-                
+
         except Exception as e:
             self.logger.error(f"Error creating Zoom meeting: {e}")
             return None
@@ -176,12 +194,16 @@ class ZoomIntegration:
             return None
 
         self.logger.info(f"Starting instant Zoom meeting for {host_extension}")
-        
+
         # Create an instant meeting (type=1, no start_time)
         topic = f"Instant Meeting - Extension {host_extension}"
         return self.create_meeting(topic=topic, duration_minutes=60)
 
-    def route_to_zoom_phone(self, from_number: str, to_number: str, pbx_core=None):
+    def route_to_zoom_phone(
+            self,
+            from_number: str,
+            to_number: str,
+            pbx_core=None):
         """
         Route call through Zoom Phone SIP trunking
 
@@ -208,7 +230,8 @@ class ZoomIntegration:
             self.logger.warning("Zoom Phone is not enabled in configuration")
             return False
 
-        self.logger.info(f"Routing call from {from_number} to {to_number} via Zoom Phone")
+        self.logger.info(
+            f"Routing call from {from_number} to {to_number} via Zoom Phone")
 
         # Zoom Phone SIP trunking endpoint
         zoom_phone_domain = 'pbx.zoom.us'
@@ -227,24 +250,30 @@ class ZoomIntegration:
                         break
 
                 if trunk and trunk.can_make_call():
-                    self.logger.info(f"Using SIP trunk '{trunk.name}' for Zoom Phone call")
-                    
+                    self.logger.info(
+                        f"Using SIP trunk '{
+                            trunk.name}' for Zoom Phone call")
+
                     # Allocate channel
                     if trunk.allocate_channel():
-                        self.logger.info(f"Initiating SIP call to {sip_uri} via trunk {trunk.name}")
-                        
+                        self.logger.info(
+                            f"Initiating SIP call to {sip_uri} via trunk {
+                                trunk.name}")
+
                         # In production, this would:
                         # 1. Build SIP INVITE with Zoom Phone-specific headers
                         # 2. Include authentication credentials from trunk config
                         # 3. Handle codec negotiation (G.711, G.729, Opus)
                         # 4. Bridge the call with the internal extension
                         # 5. Handle call progress and status updates
-                        
+
                         # For now, log the action and return success indicator
-                        self.logger.info(f"Call routed to Zoom Phone: {from_number} -> {to_number}")
+                        self.logger.info(
+                            f"Call routed to Zoom Phone: {from_number} -> {to_number}")
                         return True
                     else:
-                        self.logger.error("Failed to allocate channel on Zoom Phone trunk")
+                        self.logger.error(
+                            "Failed to allocate channel on Zoom Phone trunk")
                         return False
                 else:
                     self.logger.warning(
@@ -293,29 +322,32 @@ class ZoomIntegration:
 
         try:
             url = f"{self.api_base_url}/phone/users/{user_id}/settings"
-            
+
             headers = {
                 'Authorization': f'Bearer {self.access_token}',
                 'Content-Type': 'application/json'
             }
-            
+
             self.logger.info(f"Getting Zoom Phone status for user {user_id}")
             response = requests.get(url, headers=headers, timeout=10)
-            
+
             if response.status_code == 200:
                 data = response.json()
-                self.logger.info(f"Retrieved Zoom Phone status for user {user_id}")
-                return {
-                    'user_id': user_id,
-                    'status': data.get('calling_plans', [{}])[0].get('status', 'unknown') if data.get('calling_plans') else 'unknown',
-                    'extension_number': data.get('extension_number'),
-                    'phone_numbers': data.get('phone_numbers', []),
-                    'raw_data': data
-                }
+                self.logger.info(
+                    f"Retrieved Zoom Phone status for user {user_id}")
+                return {'user_id': user_id,
+                        'status': data.get('calling_plans',
+                                           [{}])[0].get('status',
+                                                        'unknown') if data.get('calling_plans') else 'unknown',
+                        'extension_number': data.get('extension_number'),
+                        'phone_numbers': data.get('phone_numbers',
+                                                  []),
+                        'raw_data': data}
             else:
-                self.logger.warning(f"Failed to get Zoom Phone status: {response.status_code} - {response.text}")
+                self.logger.warning(
+                    f"Failed to get Zoom Phone status: {response.status_code} - {response.text}")
                 return None
-                
+
         except Exception as e:
             self.logger.error(f"Error getting Zoom Phone status: {e}")
             return None

@@ -4,6 +4,7 @@ Plays audio while calls are on hold
 """
 import os
 import random
+
 from pbx.utils.logger import get_logger
 
 
@@ -41,7 +42,9 @@ class MusicOnHold:
                     audio_files = self._scan_audio_files(class_path)
                     if audio_files:
                         self.classes[item] = audio_files
-                        self.logger.info(f"Loaded MOH class '{item}' with {len(audio_files)} files")
+                        self.logger.info(
+                            f"Loaded MOH class '{item}' with {
+                                len(audio_files)} files")
 
     def _scan_audio_files(self, directory):
         """
@@ -137,7 +140,9 @@ class MusicOnHold:
             files: List of audio file paths
         """
         self.classes[class_name] = files
-        self.logger.info(f"Added MOH class '{class_name}' with {len(files)} files")
+        self.logger.info(
+            f"Added MOH class '{class_name}' with {
+                len(files)} files")
 
     def get_classes(self):
         """Get list of available MOH classes"""

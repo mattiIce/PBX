@@ -3,11 +3,28 @@ SIP Server implementation
 """
 import socket
 import threading
+
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 from pbx.utils.logger import get_logger
 
 # Valid DTMF digits for SIP INFO validation
-VALID_DTMF_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'A', 'B', 'C', 'D']
+VALID_DTMF_DIGITS = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '*',
+    '#',
+    'A',
+    'B',
+    'C',
+    'D']
 
 # RFC 2833 Event Code to DTMF digit mapping (for SIP INFO messages that send event codes)
 # Some phones send "Signal=11" instead of "Signal=#"
@@ -115,7 +132,9 @@ class SIPServer:
         try:
             message = SIPMessage(raw_message)
 
-            self.logger.debug(f"Received {message.method or message.status_code} from {addr}")
+            self.logger.debug(
+                f"Received {
+                    message.method or message.status_code} from {addr}")
 
             if message.is_request():
                 self._handle_request(message, addr)
@@ -173,14 +192,15 @@ class SIPServer:
 
         # Extract extension from URI or From header
         from_header = message.get_header('From')
-        
+
         # Extract additional registration info
         user_agent = message.get_header('User-Agent')
         contact = message.get_header('Contact')
 
         if self.pbx_core:
             # Simple registration - in production, verify credentials
-            success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
+            success = self.pbx_core.register_extension(
+                from_header, addr, user_agent, contact)
 
             if success:
                 self._send_response(200, "OK", message, addr)
@@ -200,7 +220,8 @@ class SIPServer:
             call_id = message.get_header('Call-ID')
 
             # Route call through PBX core
-            success = self.pbx_core.route_call(from_header, to_header, call_id, message, addr)
+            success = self.pbx_core.route_call(
+                from_header, to_header, call_id, message, addr)
 
             if success:
                 self._send_response(100, "Trying", message, addr)
@@ -222,7 +243,8 @@ class SIPServer:
                 if call and call.callee_addr:
                     # Forward ACK to callee
                     self._send_message(message.build(), call.callee_addr)
-                    self.logger.debug(f"Forwarded ACK to callee for call {call_id}")
+                    self.logger.debug(
+                        f"Forwarded ACK to callee for call {call_id}")
 
         # ACK is not responded to
 
@@ -233,36 +255,46 @@ class SIPServer:
         self.logger.info(f">>> BYE REQUEST RECEIVED <<<")
         self.logger.info(f"  Call ID: {call_id}")
         self.logger.info(f"  From: {addr}")
-        
+
         if self.pbx_core:
             call = self.pbx_core.call_manager.get_call(call_id)
-            
+
             # Forward BYE to the other party in the call if present
             if call:
-                self.logger.info(f"  Call Type: {'Voicemail Access' if hasattr(call, 'voicemail_access') and call.voicemail_access else 'Regular Call'}")
+                self.logger.info(
+                    f"  Call Type: {
+                        'Voicemail Access' if hasattr(
+                            call,
+                            'voicemail_access') and call.voicemail_access else 'Regular Call'}")
                 self.logger.info(f"  Call State: {call.state}")
                 if hasattr(call, 'voicemail_extension'):
-                    self.logger.info(f"  Voicemail Extension: {call.voicemail_extension}")
+                    self.logger.info(
+                        f"  Voicemail Extension: {
+                            call.voicemail_extension}")
                 # Determine which party sent BYE and forward to the other
                 other_party_addr = None
-                
+
                 if call.caller_addr and call.caller_addr == addr:
                     # Caller sent BYE, forward to callee
                     other_party_addr = call.callee_addr
-                    self.logger.debug(f"BYE from caller, forwarding to callee at {other_party_addr}")
+                    self.logger.debug(
+                        f"BYE from caller, forwarding to callee at {other_party_addr}")
                 elif call.callee_addr and call.callee_addr == addr:
                     # Callee sent BYE, forward to caller
                     other_party_addr = call.caller_addr
-                    self.logger.debug(f"BYE from callee, forwarding to caller at {other_party_addr}")
-                
+                    self.logger.debug(
+                        f"BYE from callee, forwarding to caller at {other_party_addr}")
+
                 # Forward BYE to the other party if they exist
                 if other_party_addr:
                     try:
                         self._send_message(message.build(), other_party_addr)
-                        self.logger.info(f"Forwarded BYE to other party at {other_party_addr}")
+                        self.logger.info(
+                            f"Forwarded BYE to other party at {other_party_addr}")
                     except Exception as e:
-                        self.logger.error(f"Failed to forward BYE to other party: {e}")
-            
+                        self.logger.error(
+                            f"Failed to forward BYE to other party: {e}")
+
             # End the call internally
             self.logger.info(f"  Processing BYE - ending call {call_id}")
             self.pbx_core.end_call(call_id)
@@ -283,7 +315,9 @@ class SIPServer:
         """Handle OPTIONS request"""
         self.logger.debug(f"OPTIONS request from {addr}")
         response = SIPMessageBuilder.build_response(200, "OK", message)
-        response.set_header('Allow', 'INVITE, ACK, BYE, CANCEL, OPTIONS, REGISTER, SUBSCRIBE, NOTIFY, INFO, REFER, MESSAGE, PRACK, UPDATE, PUBLISH')
+        response.set_header(
+            'Allow',
+            'INVITE, ACK, BYE, CANCEL, OPTIONS, REGISTER, SUBSCRIBE, NOTIFY, INFO, REFER, MESSAGE, PRACK, UPDATE, PUBLISH')
         self._send_message(response.build(), addr)
 
     def _handle_subscribe(self, message, addr):
@@ -295,15 +329,18 @@ class SIPServer:
         expires = message.get_header('Expires') or '3600'
 
         if event:
-            self.logger.info(f"SUBSCRIBE for event: {event}, expires: {expires}")
+            self.logger.info(
+                f"SUBSCRIBE for event: {event}, expires: {expires}")
 
         # Accept the subscription (basic implementation)
-        # In full implementation, would track subscriptions and send NOTIFY updates
+        # In full implementation, would track subscriptions and send NOTIFY
+        # updates
         response = SIPMessageBuilder.build_response(200, "OK", message)
         response.set_header('Expires', expires)
         self._send_message(response.build(), addr)
 
-        # Optionally send initial NOTIFY (would need full NOTIFY implementation)
+        # Optionally send initial NOTIFY (would need full NOTIFY
+        # implementation)
 
     def _handle_notify(self, message, addr):
         """Handle NOTIFY request"""
@@ -318,7 +355,8 @@ class SIPServer:
         # Get the Refer-To header
         refer_to = message.get_header('Refer-To')
         if not refer_to:
-            self._send_response(400, "Bad Request - Missing Refer-To", message, addr)
+            self._send_response(
+                400, "Bad Request - Missing Refer-To", message, addr)
             return
 
         self.logger.info(f"REFER to: {refer_to}")
@@ -332,24 +370,26 @@ class SIPServer:
     def _handle_info(self, message, addr):
         """
         Handle INFO request (typically used for DTMF signaling)
-        
+
         SIP INFO can carry DTMF digits in the message body with Content-Type:
         - application/dtmf-relay (RFC 2833 style)
         - application/dtmf (simple format)
         """
         self.logger.debug(f"INFO request from {addr}")
-        
+
         # Get call context
         call_id = message.get_header('Call-ID')
         content_type = message.get_header('Content-Type')
-        
+
         # Extract DTMF digit from message body
         dtmf_digit = None
         if message.body and content_type:
             content_type_lower = content_type.lower()
-            
-            # Only process DTMF-related content types (handle charset and other parameters)
-            if content_type_lower.startswith('application/dtmf-relay') or content_type_lower.startswith('application/dtmf'):
+
+            # Only process DTMF-related content types (handle charset and other
+            # parameters)
+            if content_type_lower.startswith(
+                    'application/dtmf-relay') or content_type_lower.startswith('application/dtmf'):
                 # Parse DTMF from body
                 # Format can be:
                 # Signal=1
@@ -360,47 +400,53 @@ class SIPServer:
                         parts = line.split('=', 1)
                         if len(parts) == 2:
                             digit = parts[1].strip()
-                            
-                            # Check if it's already a valid DTMF digit character
+
+                            # Check if it's already a valid DTMF digit
+                            # character
                             if digit in VALID_DTMF_DIGITS:
                                 dtmf_digit = digit
                                 break
-                            # Check if it's an RFC 2833 event code (some phones send "11" for "#")
+                            # Check if it's an RFC 2833 event code (some phones
+                            # send "11" for "#")
                             elif digit in RFC2833_EVENT_TO_DTMF:
                                 dtmf_digit = RFC2833_EVENT_TO_DTMF[digit]
-                                self.logger.debug(f"Converted RFC 2833 event code {digit} to DTMF digit {dtmf_digit}")
+                                self.logger.debug(
+                                    f"Converted RFC 2833 event code {digit} to DTMF digit {dtmf_digit}")
                                 break
                             else:
-                                self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
+                                self.logger.warning(
+                                    f"Invalid DTMF digit in SIP INFO: {digit}")
                         break
-                
+
                 if dtmf_digit:
-                    self.logger.info(f"Received DTMF via SIP INFO: {dtmf_digit} for call {call_id}")
-                    
+                    self.logger.info(
+                        f"Received DTMF via SIP INFO: {dtmf_digit} for call {call_id}")
+
                     # Deliver DTMF to PBX core for processing
                     if self.pbx_core and call_id:
                         self.pbx_core.handle_dtmf_info(call_id, dtmf_digit)
-        
+
         # Always respond with 200 OK to INFO requests
         self._send_response(200, "OK", message, addr)
 
     def _handle_sip_message_method(self, message, addr):
         """
         Handle MESSAGE request for instant messaging (RFC 3428)
-        
+
         MESSAGE is used to send instant messages between SIP endpoints.
         The message body typically contains text/plain content.
         """
         self.logger.info(f"MESSAGE request from {addr}")
-        
+
         # Get message details
         from_header = message.get_header('From')
         to_header = message.get_header('To')
         content_type = message.get_header('Content-Type')
-        
+
         if message.body:
-            self.logger.info(f"MESSAGE from {from_header} to {to_header}: {message.body[:100]}")
-            
+            self.logger.info(
+                f"MESSAGE from {from_header} to {to_header}: {message.body[:100]}")
+
             # Forward message to PBX core if available for delivery
             if self.pbx_core:
                 # In full implementation, would route message to recipient
@@ -409,57 +455,59 @@ class SIPServer:
                 self.logger.debug(f"MESSAGE body: {message.body}")
         else:
             self.logger.warning("MESSAGE request received with empty body")
-        
+
         # Accept the message
         self._send_response(200, "OK", message, addr)
 
     def _handle_prack(self, message, addr):
         """
         Handle PRACK request for Provisional Response Acknowledgment (RFC 3262)
-        
+
         PRACK is used to acknowledge provisional responses (1xx) reliably.
         This enables reliable transmission of provisional responses like 180 Ringing.
         """
         self.logger.debug(f"PRACK request from {addr}")
-        
-        # Get RAck header which identifies the provisional response being acknowledged
+
+        # Get RAck header which identifies the provisional response being
+        # acknowledged
         rack_header = message.get_header('RAck')
         call_id = message.get_header('Call-ID')
-        
+
         if rack_header:
-            self.logger.info(f"PRACK acknowledging response: {rack_header} for call {call_id}")
-        
+            self.logger.info(
+                f"PRACK acknowledging response: {rack_header} for call {call_id}")
+
         # In full implementation, would:
         # 1. Verify RAck matches a sent reliable provisional response
         # 2. Stop retransmitting that provisional response
         # 3. Continue with call establishment
-        
+
         # Accept the PRACK
         self._send_response(200, "OK", message, addr)
 
     def _handle_update(self, message, addr):
         """
         Handle UPDATE request for session modification (RFC 3311)
-        
+
         UPDATE allows modification of session parameters (like SDP) without
         changing the dialog state. Unlike re-INVITE, it cannot be used to
         change the remote target or route set.
         """
         self.logger.info(f"UPDATE request from {addr}")
-        
+
         call_id = message.get_header('Call-ID')
         content_type = message.get_header('Content-Type')
-        
+
         # Check if this is a session update with SDP
         if message.body and content_type and 'sdp' in content_type.lower():
             self.logger.info(f"UPDATE with SDP for call {call_id}")
-            
+
             # In full implementation, would:
             # 1. Parse SDP to understand requested changes
             # 2. Validate changes are acceptable
             # 3. Update media session parameters
             # 4. Respond with 200 OK and answer SDP
-            
+
             # For now, accept the update
             self._send_response(200, "OK", message, addr)
         else:
@@ -470,34 +518,35 @@ class SIPServer:
     def _handle_publish(self, message, addr):
         """
         Handle PUBLISH request for event state publication (RFC 3903)
-        
+
         PUBLISH is used to publish event state to an event state compositor (ESC).
         Common uses include publishing presence information, dialog state, etc.
         """
         self.logger.info(f"PUBLISH request from {addr}")
-        
+
         # Get event and expires headers
         event = message.get_header('Event')
         expires = message.get_header('Expires') or '3600'
         sip_if_match = message.get_header('SIP-If-Match')
         content_type = message.get_header('Content-Type')
-        
+
         if event:
             self.logger.info(f"PUBLISH for event: {event}, expires: {expires}")
-        
+
         # In full implementation, would:
         # 1. Store published event state
         # 2. Generate entity tag (ETag) for this publication
         # 3. Notify subscribers of state changes
         # 4. Handle conditional requests using SIP-If-Match
-        
+
         if sip_if_match:
             # This is a refresh or modification of existing publication
-            self.logger.debug(f"PUBLISH refresh/modify with SIP-If-Match: {sip_if_match}")
-        
+            self.logger.debug(
+                f"PUBLISH refresh/modify with SIP-If-Match: {sip_if_match}")
+
         if message.body and content_type:
             self.logger.debug(f"PUBLISH body content-type: {content_type}")
-        
+
         # Accept the publication
         response = SIPMessageBuilder.build_response(200, "OK", message)
         response.set_header('Expires', expires)
@@ -507,7 +556,9 @@ class SIPServer:
 
     def _handle_response(self, message, addr):
         """Handle SIP response"""
-        self.logger.debug(f"Received response {message.status_code} from {addr}")
+        self.logger.debug(
+            f"Received response {
+                message.status_code} from {addr}")
 
         # Handle responses from callee
         if self.pbx_core and message.status_code:
@@ -521,7 +572,8 @@ class SIPServer:
                     if call:
                         call.ring()  # Mark call as ringing
                         if call.caller_addr:
-                            self._send_message(message.build(), call.caller_addr)
+                            self._send_message(
+                                message.build(), call.caller_addr)
 
             elif message.status_code == 200:
                 # OK - callee answered
@@ -539,7 +591,8 @@ class SIPServer:
             request: Original request message
             addr: Destination address
         """
-        response = SIPMessageBuilder.build_response(status_code, status_text, request)
+        response = SIPMessageBuilder.build_response(
+            status_code, status_text, request)
         self._send_message(response.build(), addr)
 
     def _send_message(self, message, addr):

@@ -94,7 +94,8 @@ class SDPSession:
         """
         for media in self.media:
             if media['type'] == 'audio':
-                # Get connection info (prefer media-level, fallback to session-level)
+                # Get connection info (prefer media-level, fallback to
+                # session-level)
                 connection = media.get('connection', self.connection)
 
                 return {
@@ -119,8 +120,14 @@ class SDPSession:
         # Origin
         if self.origin:
             o = self.origin
-            lines.append(f"o={o['username']} {o['session_id']} {o['version']} "
-                        f"{o['network_type']} {o['address_type']} {o['address']}")
+            lines.append(
+                f"o={
+                    o['username']} {
+                    o['session_id']} {
+                    o['version']} " f"{
+                    o['network_type']} {
+                        o['address_type']} {
+                            o['address']}")
 
         # Session name
         lines.append(f"s={self.session_name}")
@@ -128,7 +135,11 @@ class SDPSession:
         # Connection (session-level)
         if self.connection:
             c = self.connection
-            lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
+            lines.append(
+                f"c={
+                    c['network_type']} {
+                    c['address_type']} {
+                    c['address']}")
 
         # Time (required by SDP spec)
         lines.append("t=0 0")
@@ -137,12 +148,20 @@ class SDPSession:
         for media in self.media:
             # Media line
             formats = ' '.join(media['formats'])
-            lines.append(f"m={media['type']} {media['port']} {media['protocol']} {formats}")
+            lines.append(
+                f"m={
+                    media['type']} {
+                    media['port']} {
+                    media['protocol']} {formats}")
 
             # Media-level connection
             if 'connection' in media:
                 c = media['connection']
-                lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
+                lines.append(
+                    f"c={
+                        c['network_type']} {
+                        c['address_type']} {
+                        c['address']}")
 
             # Attributes
             for attr in media.get('attributes', []):
@@ -170,7 +189,8 @@ class SDPBuilder:
             SDP body as string
         """
         if codecs is None:
-            codecs = ['0', '8', '9', '101']  # PCMU, PCMA, G722, telephone-event (default order)
+            # PCMU, PCMA, G722, telephone-event (default order)
+            codecs = ['0', '8', '9', '101']
 
         sdp = SDPSession()
         sdp.version = 0
@@ -191,19 +211,20 @@ class SDPBuilder:
 
         # Build attributes dynamically based on codecs
         attributes = []
-        
+
         # Add rtpmap for each codec
         if '0' in codecs:
             attributes.append('rtpmap:0 PCMU/8000')
         if '8' in codecs:
             attributes.append('rtpmap:8 PCMA/8000')
         if '9' in codecs:
-            # G.722 uses 8000 in SDP even though actual rate is 16000 (RFC 3551 quirk)
+            # G.722 uses 8000 in SDP even though actual rate is 16000 (RFC 3551
+            # quirk)
             attributes.append('rtpmap:9 G722/8000')
         if '101' in codecs:
             attributes.append('rtpmap:101 telephone-event/8000')
             attributes.append('fmtp:101 0-16')
-        
+
         attributes.append('sendrecv')
 
         # Add audio media

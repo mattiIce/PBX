@@ -1,16 +1,17 @@
 """
 Email notification system for voicemail
 """
-import smtplib
 import os
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.audio import MIMEAudio
-from email.utils import formatdate
-from datetime import datetime
-from pbx.utils.logger import get_logger
+import smtplib
 import threading
 import time
+from datetime import datetime
+from email.mime.audio import MIMEAudio
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate
+
+from pbx.utils.logger import get_logger
 
 
 class EmailNotifier:
@@ -37,25 +38,40 @@ class EmailNotifier:
 
             # Email settings
             self.from_address = config.get('voicemail.email.from_address')
-            self.from_name = config.get('voicemail.email.from_name', 'PBX Voicemail')
-            self.subject_template = config.get('voicemail.email.subject_template',
-                                              'New Voicemail from {caller_id}')
-            self.include_attachment = config.get('voicemail.email.include_attachment', True)
-            self.send_immediately = config.get('voicemail.email.send_immediately', True)
+            self.from_name = config.get(
+                'voicemail.email.from_name', 'PBX Voicemail')
+            self.subject_template = config.get(
+                'voicemail.email.subject_template',
+                'New Voicemail from {caller_id}')
+            self.include_attachment = config.get(
+                'voicemail.email.include_attachment', True)
+            self.send_immediately = config.get(
+                'voicemail.email.send_immediately', True)
 
             # Reminder settings
-            self.reminders_enabled = config.get('voicemail.reminders.enabled', False)
-            self.reminder_time = config.get('voicemail.reminders.time', '09:00')
-            self.reminders_unread_only = config.get('voicemail.reminders.unread_only', True)
+            self.reminders_enabled = config.get(
+                'voicemail.reminders.enabled', False)
+            self.reminder_time = config.get(
+                'voicemail.reminders.time', '09:00')
+            self.reminders_unread_only = config.get(
+                'voicemail.reminders.unread_only', True)
 
             # Validate required SMTP settings
             if not self.smtp_host or not self.from_address:
-                self.logger.warning("Email notifications enabled but SMTP host or from_address not configured!")
-                self.logger.warning("Please configure SMTP settings in .env file or config.yml")
-                self.logger.warning("  Required: voicemail.smtp.host, voicemail.email.from_address")
-                self.logger.warning("  Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)")
+                self.logger.warning(
+                    "Email notifications enabled but SMTP host or from_address not configured!")
+                self.logger.warning(
+                    "Please configure SMTP settings in .env file or config.yml")
+                self.logger.warning(
+                    "  Required: voicemail.smtp.host, voicemail.email.from_address")
+                self.logger.warning(
+                    "  Optional: voicemail.smtp.username, voicemail.smtp.password (for authenticated SMTP)")
             else:
-                self.logger.info(f"Email notifications enabled - SMTP: {self.smtp_host}:{self.smtp_port}, From: {self.from_address}")
+                self.logger.info(
+                    f"Email notifications enabled - SMTP: {
+                        self.smtp_host}:{
+                        self.smtp_port}, From: {
+                        self.from_address}")
 
             # Start reminder thread if enabled
             if self.reminders_enabled:
@@ -63,8 +79,14 @@ class EmailNotifier:
         else:
             self.logger.info("Email notifications disabled")
 
-    def send_voicemail_notification(self, to_email, extension_number, caller_id,
-                                    timestamp, audio_file_path=None, duration=None):
+    def send_voicemail_notification(
+            self,
+            to_email,
+            extension_number,
+            caller_id,
+            timestamp,
+            audio_file_path=None,
+            duration=None):
         """
         Send voicemail notification email
 
@@ -83,15 +105,20 @@ class EmailNotifier:
             return False
 
         if not to_email:
-            self.logger.warning(f"No email address configured for extension {extension_number} - cannot send notification")
+            self.logger.warning(
+                f"No email address configured for extension {extension_number} - cannot send notification")
             return False
 
         # Validate SMTP configuration before attempting to send
         if not self.smtp_host or not self.from_address:
-            self.logger.warning(f"Cannot send email notification - SMTP not properly configured (host: {self.smtp_host}, from: {self.from_address})")
+            self.logger.warning(
+                f"Cannot send email notification - SMTP not properly configured (host: {
+                    self.smtp_host}, from: {
+                    self.from_address})")
             return False
 
-        self.logger.info(f"Attempting to send voicemail notification to {to_email} for extension {extension_number}")
+        self.logger.info(
+            f"Attempting to send voicemail notification to {to_email} for extension {extension_number}")
 
         try:
             # Create message
@@ -101,11 +128,8 @@ class EmailNotifier:
             msg['Date'] = formatdate(localtime=True)
 
             # Format subject
-            subject = self.subject_template.format(
-                caller_id=caller_id,
-                timestamp=timestamp.strftime('%Y-%m-%d %H:%M:%S') if isinstance(timestamp, datetime) else timestamp,
-                extension=extension_number
-            )
+            subject = self.subject_template.format(caller_id=caller_id, timestamp=timestamp.strftime(
+                '%Y-%m-%d %H:%M:%S') if isinstance(timestamp, datetime) else timestamp, extension=extension_number)
             msg['Subject'] = subject
 
             # Create email body
@@ -115,16 +139,20 @@ class EmailNotifier:
             msg.attach(MIMEText(body, 'plain'))
 
             # Attach audio file if requested and available
-            if self.include_attachment and audio_file_path and os.path.exists(audio_file_path):
+            if self.include_attachment and audio_file_path and os.path.exists(
+                    audio_file_path):
                 try:
                     with open(audio_file_path, 'rb') as f:
                         audio_data = f.read()
 
                     audio = MIMEAudio(audio_data, 'wav')
-                    audio.add_header('Content-Disposition', 'attachment',
-                                   filename=os.path.basename(audio_file_path))
+                    audio.add_header(
+                        'Content-Disposition',
+                        'attachment',
+                        filename=os.path.basename(audio_file_path))
                     msg.attach(audio)
-                    self.logger.debug(f"Attached audio file: {audio_file_path}")
+                    self.logger.debug(
+                        f"Attached audio file: {audio_file_path}")
                 except Exception as e:
                     self.logger.error(f"Failed to attach audio file: {e}")
 
@@ -141,7 +169,12 @@ class EmailNotifier:
             self.logger.error(f"Failed to prepare voicemail notification: {e}")
             return False
 
-    def send_reminder(self, to_email, extension_number, unread_count, messages):
+    def send_reminder(
+            self,
+            to_email,
+            extension_number,
+            unread_count,
+            messages):
         """
         Send daily reminder about unread voicemails
 
@@ -166,11 +199,13 @@ class EmailNotifier:
             msg['From'] = f"{self.from_name} <{self.from_address}>"
             msg['To'] = to_email
             msg['Date'] = formatdate(localtime=True)
-            msg['Subject'] = f"Voicemail Reminder: {unread_count} Unread Message{'s' if unread_count > 1 else ''}"
+            msg['Subject'] = f"Voicemail Reminder: {unread_count} Unread Message{
+                's' if unread_count > 1 else ''}"
 
             # Create body
             body = f"Hello,\n\n"
-            body += f"You have {unread_count} unread voicemail message{'s' if unread_count > 1 else ''} "
+            body += f"You have {unread_count} unread voicemail message{
+                's' if unread_count > 1 else ''} "
             body += f"in your mailbox (Extension {extension_number}):\n\n"
 
             for i, msg_info in enumerate(messages, 1):
@@ -197,7 +232,12 @@ class EmailNotifier:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
 
-    def _create_email_body(self, extension_number, caller_id, timestamp, duration=None):
+    def _create_email_body(
+            self,
+            extension_number,
+            caller_id,
+            timestamp,
+            duration=None):
         """
         Create email body text
 
@@ -273,12 +313,14 @@ class EmailNotifier:
                 try:
                     # Check if it's time to send reminders
                     now = datetime.now()
-                    reminder_hour, reminder_min = map(int, self.reminder_time.split(':'))
+                    reminder_hour, reminder_min = map(
+                        int, self.reminder_time.split(':'))
 
                     if now.hour == reminder_hour and now.minute == reminder_min:
                         self.logger.info("Sending daily voicemail reminders")
                         self._send_all_reminders()
-                        # Sleep for 61 seconds to avoid sending multiple times in same minute
+                        # Sleep for 61 seconds to avoid sending multiple times
+                        # in same minute
                         time.sleep(61)
                     else:
                         # Check every 30 seconds
@@ -299,5 +341,7 @@ class EmailNotifier:
         which iterates through mailboxes and calls send_reminder() for each extension.
         """
         # This is intentionally minimal - the VoicemailSystem class handles
-        # the iteration and calls send_reminder() for each extension with unread messages
-        self.logger.debug("Reminder time reached - VoicemailSystem will send reminders")
+        # the iteration and calls send_reminder() for each extension with
+        # unread messages
+        self.logger.debug(
+            "Reminder time reached - VoicemailSystem will send reminders")

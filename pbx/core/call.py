@@ -47,18 +47,19 @@ class Call:
         self.routed_to_voicemail = False  # Flag to track if routed to VM
         self.transferred = False  # Flag to track if call has been transferred
         self.transfer_destination = None  # Destination extension for transfer
-        
+
         # Voicemail access attributes
         self.voicemail_access = False  # Flag indicating voicemail access call
         self.voicemail_extension = None  # Target extension for voicemail access
         self.voicemail_ivr = None  # VoicemailIVR instance for interactive menus
-        
+
         # Auto attendant attributes
         self.auto_attendant_active = False  # Flag indicating auto attendant call
         self.aa_session = None  # Auto attendant session data
-        
+
         # DTMF handling attributes
-        self.dtmf_info_queue = []  # Queue for out-of-band DTMF digits (SIP INFO)
+        # Queue for out-of-band DTMF digits (SIP INFO)
+        self.dtmf_info_queue = []
 
     def start(self):
         """Start the call"""
@@ -98,7 +99,11 @@ class Call:
         return (end - self.start_time).total_seconds()
 
     def __str__(self):
-        return f"Call {self.call_id}: {self.from_extension} -> {self.to_extension} ({self.state.value})"
+        return f"Call {
+            self.call_id}: {
+            self.from_extension} -> {
+            self.to_extension} ({
+                self.state.value})"
 
 
 class CallManager:
