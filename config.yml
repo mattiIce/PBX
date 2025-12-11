@@ -123,6 +123,7 @@ features:
   # WebRTC Browser Calling - No-download browser-based calling
   webrtc:
     enabled: true
+    verbose_logging: false    # Enable verbose logging for debugging call failures
     session_timeout: 3600     # Session timeout in seconds (matches ZIP33G: 3600s/1 hour)
     ice_transport_policy: all # ICE transport policy: 'all' or 'relay'
     
