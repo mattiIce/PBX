@@ -154,7 +154,7 @@ class WebRTCPhone {
             if (!response.ok) {
                 const errorText = await response.text();
                 verboseLog('Session creation failed - response text:', errorText);
-                throw new Error(`Failed to create session: ${response.statusText}`);
+                throw new Error(`Failed to create session: ${response.statusText} - ${errorText}`);
             }
             
             const data = await response.json();
@@ -365,7 +365,7 @@ class WebRTCPhone {
             if (!offerResponse.ok) {
                 const errorText = await offerResponse.text();
                 verboseLog('Offer failed - response text:', errorText);
-                throw new Error(`Failed to send offer: ${offerResponse.statusText}`);
+                throw new Error(`Failed to send offer: ${offerResponse.statusText} - ${errorText}`);
             }
             
             const offerData = await offerResponse.json();
