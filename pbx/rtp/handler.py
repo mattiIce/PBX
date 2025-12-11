@@ -255,14 +255,18 @@ class RTPRelayHandler:
         self.learned_b = None   # (host, port) - Actual source learned from first packet
         self.lock = threading.Lock()
         self.qos_monitor = qos_monitor
-        self.qos_metrics = None
+        # Track QoS separately for each direction to avoid mixing sequence numbers
+        self.qos_metrics_a_to_b = None  # Metrics for packets from A to B
+        self.qos_metrics_b_to_a = None  # Metrics for packets from B to A
         self._learning_timeout = 10.0  # Seconds to allow endpoint learning
         self._start_time = None  # Track when relay started for timeout
         
         # Start QoS monitoring if monitor is available
+        # We track each direction separately since they have independent RTP sequence numbers
         if self.qos_monitor:
-            self.qos_metrics = self.qos_monitor.start_monitoring(call_id)
-            self.logger.debug("QoS monitoring started for call %s", call_id)
+            self.qos_metrics_a_to_b = self.qos_monitor.start_monitoring(f"{call_id}_a_to_b")
+            self.qos_metrics_b_to_a = self.qos_monitor.start_monitoring(f"{call_id}_b_to_a")
+            self.logger.debug("QoS monitoring started for call %s (both directions)", call_id)
 
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
@@ -310,9 +314,12 @@ class RTPRelayHandler:
         if self.socket:
             self.socket.close()
         
-        # Stop QoS monitoring if active
-        if self.qos_monitor and self.qos_metrics:
-            self.qos_monitor.stop_monitoring(self.call_id)
+        # Stop QoS monitoring if active (both directions)
+        if self.qos_monitor:
+            if self.qos_metrics_a_to_b:
+                self.qos_monitor.stop_monitoring(f"{self.call_id}_a_to_b")
+            if self.qos_metrics_b_to_a:
+                self.qos_monitor.stop_monitoring(f"{self.call_id}_b_to_a")
         
         self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
 
@@ -321,20 +328,6 @@ class RTPRelayHandler:
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
-
-                # Update QoS metrics if monitoring is enabled
-                if self.qos_metrics and len(data) >= 12:
-                    try:
-                        # Parse RTP header
-                        header = struct.unpack('!BBHII', data[:12])
-                        seq_num = header[2]
-                        timestamp = header[3]
-                        payload_size = len(data) - 12
-                        
-                        # Update received packet metrics for every packet
-                        self.qos_metrics.update_packet_received(seq_num, timestamp, payload_size)
-                    except Exception as qos_error:
-                        self.logger.debug(f"Error updating QoS metrics: {qos_error}")
 
                 # Symmetric RTP: Learn actual source addresses from first packets
                 # This handles NAT traversal where actual source differs from SDP
@@ -405,30 +398,51 @@ class RTPRelayHandler:
                         self.logger.debug(f"RTP packet from unknown source: {addr} (learned A:{self.learned_a}, B:{self.learned_b})")
                         continue
                     
-                    # Forward packet to the other endpoint
+                    # Forward packet to the other endpoint and update QoS metrics
+                    # Parse RTP header once for QoS tracking (only if we have valid data)
+                    seq_num = None
+                    timestamp = None
+                    payload_size = None
+                    if len(data) >= 12:
+                        try:
+                            header = struct.unpack('!BBHII', data[:12])
+                            seq_num = header[2]
+                            timestamp = header[3]
+                            payload_size = len(data) - 12
+                        except Exception as parse_error:
+                            self.logger.debug(f"Error parsing RTP header for QoS: {parse_error}")
+                    
                     if is_from_a and self.learned_b:
                         # Packet from A, send to B (using learned address)
                         self.socket.sendto(data, self.learned_b)
-                        if self.qos_metrics:
-                            self.qos_metrics.update_packet_sent()
+                        # Track QoS for A->B direction
+                        if self.qos_metrics_a_to_b and seq_num is not None:
+                            self.qos_metrics_a_to_b.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_a_to_b.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: A->B")
                     elif is_from_b and self.learned_a:
                         # Packet from B, send to A (using learned address)
                         self.socket.sendto(data, self.learned_a)
-                        if self.qos_metrics:
-                            self.qos_metrics.update_packet_sent()
+                        # Track QoS for B->A direction
+                        if self.qos_metrics_b_to_a and seq_num is not None:
+                            self.qos_metrics_b_to_a.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_b_to_a.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: B->A")
                     elif is_from_a and self.endpoint_b:
                         # From A but B not learned yet - try sending to expected B (if known)
                         self.socket.sendto(data, self.endpoint_b)
-                        if self.qos_metrics:
-                            self.qos_metrics.update_packet_sent()
+                        # Track QoS for A->B direction
+                        if self.qos_metrics_a_to_b and seq_num is not None:
+                            self.qos_metrics_a_to_b.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_a_to_b.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: A->B (B not learned, using SDP)")
                     elif is_from_b and self.endpoint_a:
                         # From B but A not learned yet - try sending to expected A (if known)
                         self.socket.sendto(data, self.endpoint_a)
-                        if self.qos_metrics:
-                            self.qos_metrics.update_packet_sent()
+                        # Track QoS for B->A direction
+                        if self.qos_metrics_b_to_a and seq_num is not None:
+                            self.qos_metrics_b_to_a.update_packet_received(seq_num, timestamp, payload_size)
+                            self.qos_metrics_b_to_a.update_packet_sent()
                         self.logger.debug(f"Relayed {len(data)} bytes: B->A (A not learned, using SDP)")
                     elif is_from_a:
                         # From A but B not known at all yet - must drop packet
