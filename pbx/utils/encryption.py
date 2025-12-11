@@ -27,6 +27,9 @@ class FIPSEncryption:
     - AES-256 for encryption (FIPS 197)
     """
 
+    # OpenSSL 3.x FIPS provider requires minimum password length for PBKDF2
+    MIN_PASSWORD_LENGTH = 14
+
     def __init__(self, fips_mode=False, enforce_fips=False):
         """
         Initialize FIPS encryption
@@ -66,6 +69,22 @@ class FIPSEncryption:
         elif not fips_mode:
             self.logger.warning("FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
 
+    def _pad_password(self, password, salt):
+        """
+        Pad short passwords to meet OpenSSL 3.x FIPS PBKDF2 requirements
+        
+        Args:
+            password: Password bytes
+            salt: Salt bytes
+            
+        Returns:
+            Padded password bytes
+        """
+        if len(password) < self.MIN_PASSWORD_LENGTH:
+            # Pad with salt bytes to ensure uniqueness (salt is already random)
+            password = password + b':' + salt[:self.MIN_PASSWORD_LENGTH - len(password) - 1]
+        return password
+
     def hash_password(self, password, salt=None):
         """
         Hash password using FIPS-approved SHA-256
@@ -87,13 +106,8 @@ class FIPSEncryption:
         if isinstance(salt, str):
             salt = salt.encode('utf-8')
 
-        # OpenSSL 3.x FIPS provider requires minimum password length for PBKDF2
-        # Pad short passwords (like 4-digit PINs) to meet the requirement
-        # This is safe because we're using a cryptographically secure salt
-        MIN_PASSWORD_LENGTH = 14  # OpenSSL FIPS minimum
-        if len(password) < MIN_PASSWORD_LENGTH:
-            # Pad with salt bytes to ensure uniqueness (salt is already random)
-            password = password + b':' + salt[:MIN_PASSWORD_LENGTH - len(password) - 1]
+        # Pad short passwords to meet OpenSSL 3.x FIPS requirements
+        password = self._pad_password(password, salt)
 
         if self.fips_mode and CRYPTO_AVAILABLE:
             # Use PBKDF2 with SHA-256 (FIPS-approved)
@@ -274,12 +288,8 @@ class FIPSEncryption:
         if isinstance(salt, str):
             salt = salt.encode('utf-8')
 
-        # OpenSSL 3.x FIPS provider requires minimum password length for PBKDF2
-        # Pad short passwords to meet the requirement
-        MIN_PASSWORD_LENGTH = 14  # OpenSSL FIPS minimum
-        if len(password) < MIN_PASSWORD_LENGTH:
-            # Pad with salt bytes to ensure uniqueness
-            password = password + b':' + salt[:MIN_PASSWORD_LENGTH - len(password) - 1]
+        # Pad short passwords to meet OpenSSL 3.x FIPS requirements
+        password = self._pad_password(password, salt)
 
         if self.fips_mode and CRYPTO_AVAILABLE:
             # Use PBKDF2 with SHA-256 (FIPS-approved)
