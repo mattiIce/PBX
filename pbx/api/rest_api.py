@@ -1247,24 +1247,30 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.error(f"  📋 SOLUTION: Update provisioning URL to use correct MAC variable for your phone:")
                 logger.error(f"")
                 
+                # Determine the correct protocol to use
+                # Use HTTP for provisioning (phones typically can't validate self-signed certs)
+                provisioning_protocol = "http"
+                server_ip = self.pbx_core.config.get('server.external_ip', '192.168.1.14')
+                api_port = self.pbx_core.config.get('api.port', 8080)
+                
                 # Detect vendor from User-Agent and provide specific guidance
                 user_agent = request_info['user_agent'].lower()
                 if 'zultys' in user_agent:
-                    logger.error(f"  ✓ Zultys Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Zultys Phones - Use: {provisioning_protocol}://{server_ip}:{api_port}/provision/$mac.cfg")
                     logger.error(f"    Configure in: Phone Menu → Setup → Network → Provisioning")
-                    logger.error(f"    Or DHCP Option 66: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"    Or DHCP Option 66: {provisioning_protocol}://{server_ip}:{api_port}/provision/$mac.cfg")
                 elif 'yealink' in user_agent:
-                    logger.error(f"  ✓ Yealink Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Yealink Phones - Use: {provisioning_protocol}://{server_ip}:{api_port}/provision/$mac.cfg")
                     logger.error(f"    Configure in: Web Interface → Settings → Auto Provision")
                 elif 'polycom' in user_agent:
-                    logger.error(f"  ✓ Polycom Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Polycom Phones - Use: {provisioning_protocol}://{server_ip}:{api_port}/provision/$mac.cfg")
                     logger.error(f"    Configure in: Web Interface → Settings → Provisioning Server")
                 elif 'cisco' in user_agent:
-                    logger.error(f"  ✓ Cisco Phones - Use: https://YOUR_PBX_IP:8080/provision/$MA.cfg")
+                    logger.error(f"  ✓ Cisco Phones - Use: {provisioning_protocol}://{server_ip}:{api_port}/provision/$MA.cfg")
                     logger.error(f"    Note: Cisco uses $MA instead of $mac")
                     logger.error(f"    Configure in: Web Interface → Admin Login → Voice → Provisioning")
                 elif 'grandstream' in user_agent:
-                    logger.error(f"  ✓ Grandstream Phones - Use: https://YOUR_PBX_IP:8080/provision/$mac.cfg")
+                    logger.error(f"  ✓ Grandstream Phones - Use: {provisioning_protocol}://{server_ip}:{api_port}/provision/$mac.cfg")
                     logger.error(f"    Configure in: Web Interface → Maintenance → Upgrade and Provisioning")
                 else:
                     logger.error(f"  Common MAC variable formats by vendor:")
@@ -1319,11 +1325,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.warning(f"✗ Provisioning failed for MAC {mac} from IP {request_info['ip']}")
                 logger.warning(f"  Reason: Device not registered or template not found")
                 logger.warning(f"  See detailed error messages above for troubleshooting guidance")
+                
+                # Determine the correct protocol to use
+                provisioning_protocol = "http"
+                server_ip = self.pbx_core.config.get('server.external_ip', '192.168.1.14')
+                api_port = self.pbx_core.config.get('api.port', 8080)
+                
                 logger.warning(f"  To register this device:")
-                logger.warning(f"    curl -k -X POST https://YOUR_PBX_IP:8080/api/provisioning/devices \\")
+                logger.warning(f"    curl -X POST {provisioning_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\")
                 logger.warning(f"      -H 'Content-Type: application/json' \\")
                 logger.warning(f"      -d '{{\"mac_address\":\"{mac}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
-                logger.warning(f"    Note: Use -k with curl if using self-signed certificates")
                 self._send_json({'error': 'Device or template not found'}, 404)
         except Exception as e:
             logger.error(f"Error handling provisioning request: {e}")

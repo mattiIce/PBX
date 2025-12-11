@@ -23,7 +23,7 @@ api:
   enable_cors: true
   # HTTPS/SSL Configuration
   ssl:
-    enabled: true                           # HTTPS enabled for secure communication
+    enabled: false                          # HTTPS disabled - using HTTP for compatibility with phone provisioning
     cert_file: certs/server.crt            # Path to SSL certificate file
     key_file: certs/server.key             # Path to SSL private key file
     # In-house CA configuration (optional - for auto certificate request)
@@ -376,7 +376,7 @@ provisioning:
   # Useful as a fallback if LDAP is unreliable or unavailable
   # Note: This URL is also auto-configured in the Admin Panel based on your server settings
   remote_phonebook:
-    url: https://192.168.1.14:8080/api/phone-book/export/xml  # URL to XML phone book (update with your server IP)
+    url: http://192.168.1.14:8080/api/phone-book/export/xml  # URL to XML phone book (using HTTP for phone compatibility)
     refresh_interval: 60  # Refresh interval in minutes
 trunks: null
 integrations:
