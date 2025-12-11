@@ -10,6 +10,7 @@ Place your custom templates here with the naming convention:
 ```
 
 For example:
+- `yealink_t28g.template` - Template for Yealink T28G phones
 - `yealink_t46s.template` - Template for Yealink T46S phones
 - `polycom_vvx450.template` - Template for Polycom VVX 450 phones
 - `zultys_zip33g.template` - Template for Zultys ZIP 33G phones
@@ -32,7 +33,7 @@ Use the command-line script to export all built-in templates:
 ```bash
 python scripts/export_all_templates.py
 ```
-This will export all 6 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Grandstream GXP2170) to this directory. You can then edit any template you want to customize.
+This will export all 7 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T28G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Grandstream GXP2170) to this directory. You can then edit any template you want to customize.
 
 ### Option 2: Export via Admin Panel
 1. Access the admin panel at `http://your-pbx-ip:8080/admin/`
@@ -74,7 +75,7 @@ When a phone requests configuration:
 
 Built-in templates are available for:
 - **Zultys**: zip33g, zip37g
-- **Yealink**: t46s
+- **Yealink**: t28g, t46s
 - **Polycom**: vvx450
 - **Cisco**: spa504g
 - **Grandstream**: gxp2170

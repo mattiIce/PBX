@@ -516,6 +516,46 @@ local_time.ntp_server1 = pool.ntp.org
 """
         self.add_template('yealink', 't46s', yealink_t46s_template)
 
+        # Yealink T28G template (basic business phone)
+        yealink_t28g_template = """#!version:1.0.0.1
+
+# Yealink T28G Configuration File
+
+# Account 1
+account.1.enable = 1
+account.1.label = {{EXTENSION_NAME}}
+account.1.display_name = {{EXTENSION_NAME}}
+account.1.auth_name = {{EXTENSION_NUMBER}}
+account.1.user_name = {{EXTENSION_NUMBER}}
+account.1.password = {{EXTENSION_PASSWORD}}
+account.1.sip_server.1.address = {{SIP_SERVER}}
+account.1.sip_server.1.port = {{SIP_PORT}}
+account.1.sip_server.1.expires = 3600
+
+# Codecs - Priority: PCMU > PCMA > G722 (G.711 preferred for reliability)
+account.1.codec.1.enable = 1
+account.1.codec.1.payload_type = PCMU
+account.1.codec.2.enable = 1
+account.1.codec.2.payload_type = PCMA
+account.1.codec.3.enable = 1
+account.1.codec.3.payload_type = G722
+account.1.codec.4.enable = 0
+
+# DTMF Settings - Using SIP INFO for reliable voicemail IVR
+account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay  
+account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
+
+# Network
+network.internet_port.type = 0
+network.internet_port.dhcp = 1
+
+# Time
+local_time.time_zone = -8
+local_time.ntp_server1 = pool.ntp.org
+"""
+        self.add_template('yealink', 't28g', yealink_t28g_template)
+
         # Polycom VVX 450 template
         polycom_vvx450_template = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- Polycom VVX 450 Configuration -->

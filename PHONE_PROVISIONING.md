@@ -44,6 +44,7 @@ The system includes built-in templates for the following vendors and models:
 - ZIP 37G - Advanced SIP phone with additional features
 
 ### Yealink
+- T28G - Basic business IP phone with 6 lines
 - T46S - Popular business IP phone with color display
 
 ### Polycom
