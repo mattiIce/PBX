@@ -256,13 +256,13 @@ class RTPRelayHandler:
         self.lock = threading.Lock()
         self.qos_monitor = qos_monitor
         self.qos_metrics = None
-        self._qos_packet_count = 0  # For sampling QoS updates
         self._learning_timeout = 10.0  # Seconds to allow endpoint learning
         self._start_time = None  # Track when relay started for timeout
         
         # Start QoS monitoring if monitor is available
         if self.qos_monitor:
             self.qos_metrics = self.qos_monitor.start_monitoring(call_id)
+            self.logger.debug(f"QoS monitoring started for call {call_id}")
 
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
@@ -322,21 +322,19 @@ class RTPRelayHandler:
             try:
                 data, addr = self.socket.recvfrom(2048)
 
-                # Update QoS metrics if monitoring is enabled (sample every 10th packet for performance)
+                # Update QoS metrics if monitoring is enabled
                 if self.qos_metrics and len(data) >= 12:
-                    self._qos_packet_count += 1
-                    if self._qos_packet_count % 10 == 0:
-                        try:
-                            # Parse RTP header
-                            header = struct.unpack('!BBHII', data[:12])
-                            seq_num = header[2]
-                            timestamp = header[3]
-                            payload_size = len(data) - 12
-                            
-                            # Update received packet metrics
-                            self.qos_metrics.update_packet_received(seq_num, timestamp, payload_size)
-                        except Exception as qos_error:
-                            self.logger.debug(f"Error updating QoS metrics: {qos_error}")
+                    try:
+                        # Parse RTP header
+                        header = struct.unpack('!BBHII', data[:12])
+                        seq_num = header[2]
+                        timestamp = header[3]
+                        payload_size = len(data) - 12
+                        
+                        # Update received packet metrics for every packet
+                        self.qos_metrics.update_packet_received(seq_num, timestamp, payload_size)
+                    except Exception as qos_error:
+                        self.logger.debug(f"Error updating QoS metrics: {qos_error}")
 
                 # Symmetric RTP: Learn actual source addresses from first packets
                 # This handles NAT traversal where actual source differs from SDP
