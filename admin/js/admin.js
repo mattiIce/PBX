@@ -2583,21 +2583,33 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
     // Bidirectional call - show both directions and diagnostics
     const { baseCallId, a_to_b, b_to_a } = group;
     
-    // Detect one-way audio issues
-    const aToBAudioOK = a_to_b.mos_score > 1.0 && a_to_b.packets_received > 0;
-    const bToAAudioOK = b_to_a.mos_score > 1.0 && b_to_a.packets_received > 0;
+    // Detect one-way audio issues (check packets_received exists and is > 0)
+    const aToBAudioOK = a_to_b.mos_score > 1.0 && (a_to_b.packets_received || 0) > 0;
+    const bToAAudioOK = b_to_a.mos_score > 1.0 && (b_to_a.packets_received || 0) > 0;
     const hasOneWayAudio = !aToBAudioOK || !bToAAudioOK;
+    
+    // Diagnostic message templates
+    const DIAGNOSTIC_MESSAGES = {
+        bothDirections: '⚠️ <strong>No Audio in Both Directions</strong> - No RTP packets received',
+        aToB: '⚠️ <strong>One-Way Audio Issue</strong> - No audio A→B (only B→A working)',
+        bToA: '⚠️ <strong>One-Way Audio Issue</strong> - No audio B→A (only A→B working)'
+    };
+    
+    const TROUBLESHOOTING_STEPS = `1) Check firewall/NAT rules for RTP ports (10000-20000)
+                    2) Verify symmetric RTP is working
+                    3) Check endpoint is sending RTP packets
+                    4) Verify network path with tcpdump`;
     
     // Generate diagnostic message
     let diagnosticHTML = '';
     if (hasOneWayAudio) {
         let issueDesc = '';
         if (!aToBAudioOK && !bToAAudioOK) {
-            issueDesc = '⚠️ <strong>No Audio in Both Directions</strong> - No RTP packets received';
+            issueDesc = DIAGNOSTIC_MESSAGES.bothDirections;
         } else if (!aToBAudioOK) {
-            issueDesc = '⚠️ <strong>One-Way Audio Issue</strong> - No audio A→B (only B→A working)';
+            issueDesc = DIAGNOSTIC_MESSAGES.aToB;
         } else {
-            issueDesc = '⚠️ <strong>One-Way Audio Issue</strong> - No audio B→A (only A→B working)';
+            issueDesc = DIAGNOSTIC_MESSAGES.bToA;
         }
         
         diagnosticHTML = `<tr class="diagnostic-row">
@@ -2605,26 +2617,26 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
                 <div class="diagnostic-alert">
                     ${issueDesc}
                     <br><small><strong>Troubleshooting:</strong> 
-                    1) Check firewall/NAT rules for RTP ports (10000-20000)
-                    2) Verify symmetric RTP is working
-                    3) Check endpoint is sending RTP packets
-                    4) Verify network path with tcpdump
+                    ${TROUBLESHOOTING_STEPS}
                     </small>
                 </div>
             </td>
         </tr>`;
     }
     
+    // Build call ID cell with direction indicator
+    const callIdWithDirection = `${baseCallId}<br><small style="color: #6b7280;">↳ A→B</small>`;
+    
     // Generate rows for both directions
-    const baseCols = includeStartTime 
-        ? `<td>${baseCallId}</td>
+    const aToRowCols = includeStartTime 
+        ? `<td>${callIdWithDirection}</td>
            <td>${new Date(a_to_b.start_time).toLocaleString()}</td>
            <td>${a_to_b.duration_seconds}s</td>`
-        : `<td>${baseCallId}</td>
+        : `<td>${callIdWithDirection}</td>
            <td>${a_to_b.duration_seconds}s</td>`;
     
     const aToRow = `<tr ${!aToBAudioOK ? 'class="one-way-audio-issue"' : ''}>
-        ${baseCols}
+        ${aToRowCols}
         <td class="${getQualityClass(a_to_b.mos_score)}">${a_to_b.mos_score.toFixed(2)}</td>
         <td>${a_to_b.quality_rating} ${!aToBAudioOK ? '⚠️' : ''}</td>
         <td>${a_to_b.packet_loss_percentage.toFixed(2)}%</td>
@@ -2646,13 +2658,7 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
         <td>${b_to_a.latency_avg_ms.toFixed(1)}</td>
     </tr>`;
     
-    // Fix the first row to show direction indicator
-    const aToRowFixed = aToRow.replace(
-        baseCols, 
-        baseCols.replace(baseCallId, `${baseCallId}<br><small style="color: #6b7280;">↳ A→B</small>`)
-    );
-    
-    return diagnosticHTML + aToRowFixed + bToRow;
+    return diagnosticHTML + aToRow + bToRow;
 }
 
 function getQualityClass(mosScore) {
