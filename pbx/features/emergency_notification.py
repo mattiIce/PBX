@@ -108,7 +108,7 @@ class EmergencyNotificationSystem:
             )
             self.emergency_contacts.append(contact)
         
-        # TODO: Load from database if available
+        # Load from database if available
         if self.database and self.database.enabled:
             self._load_contacts_from_db()
     
@@ -124,13 +124,13 @@ class EmergencyNotificationSystem:
             results = self.database.fetch_all(query)
             
             for row in results:
-                methods = json.loads(row[6]) if row[6] else ['call']
+                methods = json.loads(row['notification_methods']) if row['notification_methods'] else ['call']
                 contact = EmergencyContact(
-                    name=row[1],
-                    extension=row[2],
-                    phone=row[3],
-                    email=row[4],
-                    priority=row[5],
+                    name=row['name'],
+                    extension=row['extension'],
+                    phone=row['phone'],
+                    email=row['email'],
+                    priority=row['priority'],
                     notification_methods=methods
                 )
                 # Only add if not already in list from config
@@ -191,17 +191,20 @@ class EmergencyNotificationSystem:
     def _save_contact_to_db(self, contact: EmergencyContact):
         """Save emergency contact to database"""
         try:
+            # Use ? for SQLite, %s for PostgreSQL
+            placeholder = '?' if self.database.db_type == 'sqlite' else '%s'
+            
             # Check if contact exists (database-agnostic approach)
-            check_query = "SELECT id FROM emergency_contacts WHERE id = %s"
+            check_query = f"SELECT id FROM emergency_contacts WHERE id = {placeholder}"
             existing = self.database.fetch_one(check_query, (contact.id,))
             
             if existing:
                 # Update existing contact
-                query = """
+                query = f"""
                     UPDATE emergency_contacts 
-                    SET name = %s, extension = %s, phone = %s, email = %s,
-                        priority = %s, notification_methods = %s, active = true
-                    WHERE id = %s
+                    SET name = {placeholder}, extension = {placeholder}, phone = {placeholder}, email = {placeholder},
+                        priority = {placeholder}, notification_methods = {placeholder}, active = true
+                    WHERE id = {placeholder}
                 """
                 params = (
                     contact.name,
@@ -214,10 +217,10 @@ class EmergencyNotificationSystem:
                 )
             else:
                 # Insert new contact
-                query = """
+                query = f"""
                     INSERT INTO emergency_contacts 
                     (id, name, extension, phone, email, priority, notification_methods, active)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, true)
+                    VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, true)
                 """
                 params = (
                     contact.id,
@@ -253,7 +256,8 @@ class EmergencyNotificationSystem:
                 # Remove from database
                 if self.database and self.database.enabled:
                     try:
-                        query = "UPDATE emergency_contacts SET active = false WHERE id = %s"
+                        placeholder = '?' if self.database.db_type == 'sqlite' else '%s'
+                        query = f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"
                         self.database.execute(query, (contact_id,))
                     except Exception as e:
                         self.logger.error(f"Failed to remove contact from database: {e}")
@@ -398,10 +402,11 @@ class EmergencyNotificationSystem:
     def _save_notification_to_db(self, notification_record: Dict):
         """Save notification record to database"""
         try:
-            query = """
+            placeholder = '?' if self.database.db_type == 'sqlite' else '%s'
+            query = f"""
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
             """
             
             self.database.execute(query, (
