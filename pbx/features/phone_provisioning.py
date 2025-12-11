@@ -225,7 +225,7 @@ account.1.enable = 1
 account.1.label = {{EXTENSION_NAME}}
 account.1.display_name = {{EXTENSION_NAME}}
 account.1.user_name = {{EXTENSION_NUMBER}}
-account.1.auth_name = {{EXTENSION_NUMBER}}
+account.1.auth_name = {{EXTENSION_NUMBER}}  # Use extension number for SIP authentication (matches T28G)
 account.1.password = {{EXTENSION_PASSWORD}}
 
 # SIP Server Configuration (Modern Format - firmware 47.80.132.4+)
@@ -258,6 +258,7 @@ account.1.codec.3.enable = 1
 account.1.codec.3.payload_type = 9
 account.1.codec.3.priority = 3
 account.1.codec.3.name = G722
+# Note: G722 is a wideband codec (16kHz). ZIP33G handles G722 parameters internally.
 
 account.1.codec.4.enable = 0
 
@@ -271,7 +272,7 @@ account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
 voice_mail.number.1 = *{{EXTENSION_NUMBER}}
 
 # Account Features
-account.1.missed_calllog = 1
+account.1.missed_calllog = 1  # Enable missed call logging for better user experience
 account.1.earlymedia = 1
 account.1.nat.udp_update_time = 30
 account.1.blf.subscribe_period = 3600
