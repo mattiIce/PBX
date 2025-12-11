@@ -2456,17 +2456,9 @@ async function loadQoSMetrics() {
         if (activeMetrics.length === 0) {
             activeTable.innerHTML = '<tr><td colspan="7" class="no-data">No active calls being monitored</td></tr>';
         } else {
-            activeTable.innerHTML = activeMetrics.map(call => `
-                <tr>
-                    <td>${call.call_id}</td>
-                    <td>${call.duration_seconds}s</td>
-                    <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
-                    <td>${call.quality_rating}</td>
-                    <td>${call.packet_loss_percentage.toFixed(2)}%</td>
-                    <td>${call.jitter_avg_ms.toFixed(1)}</td>
-                    <td>${call.latency_avg_ms.toFixed(1)}</td>
-                </tr>
-            `).join('');
+            // Group bidirectional calls and detect one-way audio issues
+            const callGroups = groupBidirectionalCalls(activeMetrics);
+            activeTable.innerHTML = callGroups.map(group => generateCallRowsWithDiagnostics(group)).join('');
         }
         
         // Load alerts
@@ -2495,24 +2487,172 @@ async function loadQoSMetrics() {
         if (history.length === 0) {
             historyTable.innerHTML = '<tr><td colspan="8" class="no-data">No historical data available</td></tr>';
         } else {
-            historyTable.innerHTML = history.map(call => `
-                <tr>
-                    <td>${call.call_id}</td>
-                    <td>${new Date(call.start_time).toLocaleString()}</td>
-                    <td>${call.duration_seconds}s</td>
-                    <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
-                    <td>${call.quality_rating}</td>
-                    <td>${call.packet_loss_percentage.toFixed(2)}%</td>
-                    <td>${call.jitter_avg_ms.toFixed(1)}</td>
-                    <td>${call.latency_avg_ms.toFixed(1)}</td>
-                </tr>
-            `).join('');
+            // Group bidirectional calls for history view
+            const callGroups = groupBidirectionalCalls(history);
+            historyTable.innerHTML = callGroups.map(group => generateCallRowsWithDiagnostics(group, true)).join('');
         }
         
     } catch (error) {
         console.error('Error loading QoS metrics:', error);
         showNotification('Failed to load QoS metrics', 'error');
     }
+}
+
+/**
+ * Group bidirectional calls (a_to_b and b_to_a) together
+ * Returns an array of call groups, each containing either a single call or paired bidirectional calls
+ */
+function groupBidirectionalCalls(metrics) {
+    const groups = [];
+    const processed = new Set();
+    
+    for (const call of metrics) {
+        if (processed.has(call.call_id)) {
+            continue;
+        }
+        
+        // Check if this is a bidirectional call (ends with _a_to_b or _b_to_a)
+        const baseCallId = call.call_id.replace(/_a_to_b$|_b_to_a$/, '');
+        const isDirectional = call.call_id.endsWith('_a_to_b') || call.call_id.endsWith('_b_to_a');
+        
+        if (isDirectional) {
+            // Look for the paired direction
+            const pairedCallId = call.call_id.endsWith('_a_to_b') 
+                ? `${baseCallId}_b_to_a` 
+                : `${baseCallId}_a_to_b`;
+            
+            const pairedCall = metrics.find(c => c.call_id === pairedCallId);
+            
+            if (pairedCall) {
+                // Both directions found - create a group
+                groups.push({
+                    baseCallId,
+                    isBidirectional: true,
+                    a_to_b: call.call_id.endsWith('_a_to_b') ? call : pairedCall,
+                    b_to_a: call.call_id.endsWith('_b_to_a') ? call : pairedCall
+                });
+                processed.add(call.call_id);
+                processed.add(pairedCall.call_id);
+            } else {
+                // Only one direction found
+                groups.push({
+                    baseCallId,
+                    isBidirectional: false,
+                    call
+                });
+                processed.add(call.call_id);
+            }
+        } else {
+            // Not a bidirectional call, treat as standalone
+            groups.push({
+                baseCallId: call.call_id,
+                isBidirectional: false,
+                call
+            });
+            processed.add(call.call_id);
+        }
+    }
+    
+    return groups;
+}
+
+/**
+ * Generate table rows for a call group with diagnostic information
+ */
+function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
+    if (!group.isBidirectional) {
+        // Single direction or non-directional call
+        const call = group.call;
+        const cols = includeStartTime 
+            ? `<td>${call.call_id}</td>
+               <td>${new Date(call.start_time).toLocaleString()}</td>
+               <td>${call.duration_seconds}s</td>`
+            : `<td>${call.call_id}</td>
+               <td>${call.duration_seconds}s</td>`;
+        
+        return `<tr>
+            ${cols}
+            <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
+            <td>${call.quality_rating}</td>
+            <td>${call.packet_loss_percentage.toFixed(2)}%</td>
+            <td>${call.jitter_avg_ms.toFixed(1)}</td>
+            <td>${call.latency_avg_ms.toFixed(1)}</td>
+        </tr>`;
+    }
+    
+    // Bidirectional call - show both directions and diagnostics
+    const { baseCallId, a_to_b, b_to_a } = group;
+    
+    // Detect one-way audio issues
+    const aToBAudioOK = a_to_b.mos_score > 1.0 && a_to_b.packets_received > 0;
+    const bToAAudioOK = b_to_a.mos_score > 1.0 && b_to_a.packets_received > 0;
+    const hasOneWayAudio = !aToBAudioOK || !bToAAudioOK;
+    
+    // Generate diagnostic message
+    let diagnosticHTML = '';
+    if (hasOneWayAudio) {
+        let issueDesc = '';
+        if (!aToBAudioOK && !bToAAudioOK) {
+            issueDesc = '⚠️ <strong>No Audio in Both Directions</strong> - No RTP packets received';
+        } else if (!aToBAudioOK) {
+            issueDesc = '⚠️ <strong>One-Way Audio Issue</strong> - No audio A→B (only B→A working)';
+        } else {
+            issueDesc = '⚠️ <strong>One-Way Audio Issue</strong> - No audio B→A (only A→B working)';
+        }
+        
+        diagnosticHTML = `<tr class="diagnostic-row">
+            <td colspan="${includeStartTime ? 8 : 7}" class="diagnostic-cell">
+                <div class="diagnostic-alert">
+                    ${issueDesc}
+                    <br><small><strong>Troubleshooting:</strong> 
+                    1) Check firewall/NAT rules for RTP ports (10000-20000)
+                    2) Verify symmetric RTP is working
+                    3) Check endpoint is sending RTP packets
+                    4) Verify network path with tcpdump
+                    </small>
+                </div>
+            </td>
+        </tr>`;
+    }
+    
+    // Generate rows for both directions
+    const baseCols = includeStartTime 
+        ? `<td>${baseCallId}</td>
+           <td>${new Date(a_to_b.start_time).toLocaleString()}</td>
+           <td>${a_to_b.duration_seconds}s</td>`
+        : `<td>${baseCallId}</td>
+           <td>${a_to_b.duration_seconds}s</td>`;
+    
+    const aToRow = `<tr ${!aToBAudioOK ? 'class="one-way-audio-issue"' : ''}>
+        ${baseCols}
+        <td class="${getQualityClass(a_to_b.mos_score)}">${a_to_b.mos_score.toFixed(2)}</td>
+        <td>${a_to_b.quality_rating} ${!aToBAudioOK ? '⚠️' : ''}</td>
+        <td>${a_to_b.packet_loss_percentage.toFixed(2)}%</td>
+        <td>${a_to_b.jitter_avg_ms.toFixed(1)}</td>
+        <td>${a_to_b.latency_avg_ms.toFixed(1)}</td>
+    </tr>`;
+    
+    const bToRow = `<tr ${!bToAAudioOK ? 'class="one-way-audio-issue"' : ''}>
+        ${includeStartTime 
+            ? `<td style="padding-left: 20px;">↳ B→A</td>
+               <td>${new Date(b_to_a.start_time).toLocaleString()}</td>
+               <td>${b_to_a.duration_seconds}s</td>`
+            : `<td style="padding-left: 20px;">↳ B→A</td>
+               <td>${b_to_a.duration_seconds}s</td>`}
+        <td class="${getQualityClass(b_to_a.mos_score)}">${b_to_a.mos_score.toFixed(2)}</td>
+        <td>${b_to_a.quality_rating} ${!bToAAudioOK ? '⚠️' : ''}</td>
+        <td>${b_to_a.packet_loss_percentage.toFixed(2)}%</td>
+        <td>${b_to_a.jitter_avg_ms.toFixed(1)}</td>
+        <td>${b_to_a.latency_avg_ms.toFixed(1)}</td>
+    </tr>`;
+    
+    // Fix the first row to show direction indicator
+    const aToRowFixed = aToRow.replace(
+        baseCols, 
+        baseCols.replace(baseCallId, `${baseCallId}<br><small style="color: #6b7280;">↳ A→B</small>`)
+    );
+    
+    return diagnosticHTML + aToRowFixed + bToRow;
 }
 
 function getQualityClass(mosScore) {

@@ -578,10 +578,29 @@
                         <li><strong>3.6-4.0:</strong> Fair - Noticeable but tolerable impairments</li>
                         <li><strong>3.1-3.6:</strong> Poor - Quality significantly affected</li>
                         <li><strong>1.0-3.1:</strong> Bad - Severe quality issues</li>
+                        <li><strong>0.0:</strong> No Audio - No RTP packets received (one-way audio issue)</li>
                     </ul>
                     <p><strong>Packet Loss:</strong> Percentage of packets that didn't arrive. Above 2% can cause noticeable quality degradation.</p>
                     <p><strong>Jitter:</strong> Variation in packet arrival times. High jitter (>50ms) causes choppy audio.</p>
                     <p><strong>Latency:</strong> Round-trip delay. Above 300ms can cause conversational difficulties.</p>
+                    
+                    <h4 style="margin-top: 20px;">📊 Understanding Bidirectional Call Quality</h4>
+                    <p>Each call is monitored in <strong>both directions</strong> (A→B and B→A) separately. This helps diagnose:</p>
+                    <ul>
+                        <li><strong>One-Way Audio:</strong> When one direction shows MOS 0.00, audio is only flowing in one direction</li>
+                        <li><strong>Asymmetric Quality:</strong> Different quality in each direction may indicate network routing issues</li>
+                        <li><strong>Firewall/NAT Issues:</strong> One direction working but not the other suggests port forwarding problems</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 20px;">🔧 Troubleshooting One-Way Audio</h4>
+                    <p>If you see <strong>MOS 0.00 in one direction</strong>:</p>
+                    <ol>
+                        <li><strong>Check Firewall:</strong> Ensure UDP ports 10000-20000 are open bidirectionally</li>
+                        <li><strong>Verify NAT:</strong> Check that symmetric RTP is enabled and working</li>
+                        <li><strong>Inspect Network:</strong> Use <code>tcpdump -n udp portrange 10000-20000</code> to verify RTP packets</li>
+                        <li><strong>Check Codec:</strong> Ensure both endpoints support the negotiated codec</li>
+                        <li><strong>Review Logs:</strong> Look for RTP handler errors in system logs</li>
+                    </ol>
                 </div>
             </div>
         </div>
