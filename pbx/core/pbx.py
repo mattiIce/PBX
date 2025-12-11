@@ -1461,11 +1461,12 @@ class PBXCore:
         # For auto attendant, we don't need a relay (which forwards between two endpoints).
         # Instead, we directly play audio to the caller and listen for DTMF.
         # Find an available port from the RTP port pool.
-        if not self.rtp_relay.port_pool:
+        try:
+            rtp_port = self.rtp_relay.port_pool.pop(0)
+        except IndexError:
             self.logger.error(f"No available RTP ports for auto attendant {call_id}")
             return False
         
-        rtp_port = self.rtp_relay.port_pool.pop(0)
         rtcp_port = rtp_port + 1
         call.rtp_ports = (rtp_port, rtcp_port)
         self.logger.info(f"Allocated RTP port {rtp_port} for auto attendant {call_id} (no relay needed)")
@@ -1491,7 +1492,6 @@ class PBXCore:
         self.logger.info(f"Sent 180 Ringing for auto attendant call {call_id}")
         
         # Brief delay to allow ring-back tone to be established
-        import time
         time.sleep(0.5)
         
         # Answer the call
@@ -1760,7 +1760,7 @@ class PBXCore:
                 try:
                     self.rtp_relay.port_pool.append(call.aa_rtp_port)
                     self.rtp_relay.port_pool.sort()
-                except:
+                except Exception:
                     pass
         finally:
             # End the call
