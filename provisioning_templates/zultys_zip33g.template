@@ -127,30 +127,18 @@ account.1.dnd.enable = 0
 # Critical for voicemail access, auto-attendant, and IVR systems
 #
 # DTMF Methods:
-# - RFC2833 (recommended): Out-of-band RTP events (payload type 101)
-#   Most reliable, works with any audio codec, industry standard
-# - SIP INFO: DTMF sent via SIP signaling messages
-#   Good fallback, codec-independent
-# - In-band: DTMF tones in audio stream (not recommended for VoIP)
-#   Affected by codec compression, unreliable with G.729
+# - Type 0: In-band DTMF tones in audio stream (not recommended for VoIP)
+# - Type 1: RFC2833 - Out-of-band RTP events (payload type 101)
+# - Type 2: SIP INFO - DTMF sent via SIP signaling messages
 #
-# Note: Based on PCAP analysis, the Zultys ZIP33G currently uses SIP INFO
-# for DTMF and also advertises RFC2833 support. This configuration
-# explicitly sets RFC2833 as the primary method for better reliability.
+# Note: Based on successful testing with Yealink T28G configuration,
+# SIP INFO (type 2) provides the most reliable DTMF performance for ZIP33G
+# phones, particularly for voicemail access and IVR systems.
 
-# DTMF method: RFC2833 (out-of-band RTP events)
-# Values: RFC2833, SIP-INFO, In-band
-account.1.dtmf_mode = RFC2833
-
-# RFC2833 payload type (standard is 101)
-account.1.dtmf_payload_type = 101
-
-# DTMF duration in milliseconds (standard is 100-250ms)
-account.1.dtmf_duration = 160
-
-# Enable SIP INFO as fallback if RFC2833 fails
-# Values: 0=disabled, 1=enabled
-account.1.dtmf_sip_info_fallback = 1
+# DTMF Settings - Using SIP INFO for reliable voicemail IVR (from working T28G config)
+account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
+account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
 
 # ============================================================================
 # Network Settings
