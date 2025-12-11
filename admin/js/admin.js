@@ -2449,7 +2449,8 @@ async function loadQoSMetrics() {
         
         // Load active call metrics
         const activeResponse = await fetch(`${API_BASE}/api/qos/metrics`);
-        const activeMetrics = await activeResponse.json();
+        const activeData = await activeResponse.json();
+        const activeMetrics = activeData.metrics || [];
         const activeTable = document.getElementById('qos-active-calls-table');
         
         if (activeMetrics.length === 0) {
@@ -2470,7 +2471,8 @@ async function loadQoSMetrics() {
         
         // Load alerts
         const alertsResponse = await fetch(`${API_BASE}/api/qos/alerts`);
-        const alerts = await alertsResponse.json();
+        const alertsData = await alertsResponse.json();
+        const alerts = alertsData.alerts || [];
         const alertsContainer = document.getElementById('qos-alerts-container');
         
         if (alerts.length === 0) {
@@ -2486,7 +2488,8 @@ async function loadQoSMetrics() {
         
         // Load historical metrics
         const historyResponse = await fetch(`${API_BASE}/api/qos/history?limit=50`);
-        const history = await historyResponse.json();
+        const historyData = await historyResponse.json();
+        const history = historyData.metrics || [];
         const historyTable = document.getElementById('qos-history-table');
         
         if (history.length === 0) {
