@@ -477,8 +477,19 @@ For issues and questions, please open a GitHub issue.
   - Asynchronous delivery with worker threads
   - See [WEBHOOK_SYSTEM_GUIDE.md](WEBHOOK_SYSTEM_GUIDE.md) for setup guide
 
+### Known Issues
+
+⚠️ **Audio Features Currently Non-Functional**
+- **WebRTC Browser Phone**: Currently disabled and not working. Use physical IP phones or SIP clients for calls.
+- **Hardphone Audio**: Audio playback on physical IP phones is experiencing issues and may be distorted or non-functional. Investigation ongoing.
+- **Root Cause**: Audio sample rate mismatch - audio files are 8kHz (PCMU from gTTS) but system may be treating them as 16kHz.
+
+These are critical components being actively investigated. All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) remain fully functional.
+
 ### Future Enhancements
-- [ ] WebRTC support for browser-based calls
+- [ ] Fix WebRTC browser-based calling (currently non-functional)
+- [ ] Fix hardphone audio playback issues
+- [ ] Resolve audio sample rate mismatch (8kHz vs 16kHz)
 - [ ] SMS/Messaging integration
 - [ ] Mobile app support (iOS/Android)
 - [ ] Clustering/High availability

@@ -66,7 +66,7 @@
 
         <nav class="tabs">
             <button class="tab-button active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-button phone-required" data-tab="webrtc-phone" title="Requires microphone access">📞 Phone <span aria-hidden="true">🎤</span></button>
+            <button class="tab-button phone-required" data-tab="webrtc-phone" title="Currently non-functional" style="opacity: 0.6; text-decoration: line-through;">📞 Phone (Disabled) <span aria-hidden="true">🚫</span></button>
             <button class="tab-button" data-tab="analytics">Analytics</button>
             <button class="tab-button" data-tab="qos">Call Quality (QoS)</button>
             <button class="tab-button" data-tab="emergency">🚨 Emergency</button>
@@ -147,10 +147,25 @@
         <div id="webrtc-phone" class="tab-content">
             <h2>📞 WebRTC Browser Phone</h2>
             
-            <!-- Microphone Requirement Alert -->
-            <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ffc107;">
+            <!-- NON-FUNCTIONAL WARNING -->
+            <div class="info-box" style="margin-bottom: 20px; background: #fee; border-left: 4px solid #c00;">
+                <p style="margin: 0 0 10px 0; font-size: 18px;">
+                    <strong>🚫 CURRENTLY NON-FUNCTIONAL</strong>
+                </p>
                 <p style="margin: 0 0 10px 0;">
-                    <strong>⚠️ Microphone Access Required</strong>
+                    <strong>Web audio (WebRTC phone) is currently not working and is disabled.</strong>
+                    This is a critical component for browser-based calling but requires significant fixes.
+                </p>
+                <p style="margin: 0;">
+                    All other admin panel features (Extensions, Voicemail, Analytics, Configuration, Provisioning, etc.) 
+                    are fully functional. Use a physical IP phone or SIP client for making calls until this is resolved.
+                </p>
+            </div>
+            
+            <!-- Microphone Requirement Alert -->
+            <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ffc107; opacity: 0.5;">
+                <p style="margin: 0 0 10px 0;">
+                    <strong>⚠️ Microphone Access Required (When Functional)</strong>
                 </p>
                 <p style="margin: 0;">
                     This feature requires microphone access to make calls. If your OS or browser blocks microphone access, 
@@ -159,18 +174,18 @@
                 </p>
             </div>
             
-            <div class="info-box" style="margin-bottom: 20px;">
+            <div class="info-box" style="margin-bottom: 20px; opacity: 0.5;">
                 <p>🎯 <strong>Make calls directly from your browser without a physical phone!</strong></p>
                 <p>This WebRTC-based phone allows you to make calls to any extension from your computer. Perfect for working from home!</p>
                 <p>⚠️ <strong>Note:</strong> Please allow microphone access when prompted by your browser.</p>
                 <p>🎧 <strong>Tip:</strong> Use headphones to prevent echo and feedback during calls.</p>
             </div>
 
-            <div class="config-section" style="max-width: 600px; margin: 0 auto;">
+            <div class="config-section" style="max-width: 600px; margin: 0 auto; opacity: 0.5; pointer-events: none;">
                 <div class="webrtc-phone-widget">
                     <div class="phone-display">
                         <div class="phone-status-container">
-                            <div id="webrtc-status" class="webrtc-status info">Ready to call</div>
+                            <div id="webrtc-status" class="webrtc-status info">Feature Disabled - Not Functional</div>
                         </div>
                         
                         <div class="phone-input-group" style="margin: 20px 0;">
@@ -185,6 +200,7 @@
                                 maxlength="16"
                                 style="width: 100%; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 8px;"
                                 placeholder="1001"
+                                disabled
                             >
                             <small style="display: block; margin-top: 5px; color: #666;">
                                 Enter extension (e.g., 0 for auto attendant, 1001 for operator, *1001 for voicemail)
@@ -196,8 +212,9 @@
                                 id="webrtc-call-btn" 
                                 class="btn btn-success" 
                                 style="padding: 15px; font-size: 18px; width: 100%;"
+                                disabled
                             >
-                                📞 Call Extension
+                                📞 Call Extension (Disabled)
                             </button>
                             
                             <button 

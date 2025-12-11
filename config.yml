@@ -339,7 +339,10 @@ security:
   require_strong_passwords: true  # Deprecated - use password settings
 provisioning:
   enabled: true
-  url_format: https://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+  # Note: Using HTTP for provisioning because most IP phones cannot validate self-signed SSL certificates
+  # Even though the admin API uses HTTPS, provisioning should use HTTP for compatibility
+  # If you have trusted CA certificates, you can change this to https://
+  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
   custom_templates_dir: 'provisioning_templates'
   devices: []
   
