@@ -202,11 +202,13 @@ class EmergencyNotificationSystem:
             existing = self.database.fetch_one(check_query, (contact.id,))
             
             if existing:
-                # Update existing contact
+                # Update existing contact - use placeholder list for clarity
+                placeholders = ', '.join([placeholder] * 6)  # 6 fields to update
                 query = f"""
                     UPDATE emergency_contacts 
-                    SET name = {placeholder}, extension = {placeholder}, phone = {placeholder}, email = {placeholder},
-                        priority = {placeholder}, notification_methods = {placeholder}, active = true
+                    SET name = {placeholder}, extension = {placeholder}, phone = {placeholder}, 
+                        email = {placeholder}, priority = {placeholder}, notification_methods = {placeholder}, 
+                        active = true
                     WHERE id = {placeholder}
                 """
                 params = (
@@ -219,11 +221,12 @@ class EmergencyNotificationSystem:
                     contact.id
                 )
             else:
-                # Insert new contact
+                # Insert new contact - use placeholder list for clarity
+                placeholders = ', '.join([placeholder] * 7)  # 7 fields
                 query = f"""
                     INSERT INTO emergency_contacts 
                     (id, name, extension, phone, email, priority, notification_methods, active)
-                    VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, true)
+                    VALUES ({placeholders}, true)
                 """
                 params = (
                     contact.id,
@@ -406,10 +409,11 @@ class EmergencyNotificationSystem:
         """Save notification record to database"""
         try:
             placeholder = self._get_db_placeholder()
+            placeholders = ', '.join([placeholder] * 6)  # 6 fields
             query = f"""
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
-                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+                VALUES ({placeholders})
             """
             
             self.database.execute(query, (
