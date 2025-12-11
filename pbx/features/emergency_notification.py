@@ -112,6 +112,10 @@ class EmergencyNotificationSystem:
         if self.database and self.database.enabled:
             self._load_contacts_from_db()
     
+    def _get_db_placeholder(self):
+        """Get database-agnostic placeholder for SQL queries"""
+        return '?' if self.database.db_type == 'sqlite' else '%s'
+    
     def _load_contacts_from_db(self):
         """Load emergency contacts from database"""
         try:
@@ -191,8 +195,7 @@ class EmergencyNotificationSystem:
     def _save_contact_to_db(self, contact: EmergencyContact):
         """Save emergency contact to database"""
         try:
-            # Use ? for SQLite, %s for PostgreSQL
-            placeholder = '?' if self.database.db_type == 'sqlite' else '%s'
+            placeholder = self._get_db_placeholder()
             
             # Check if contact exists (database-agnostic approach)
             check_query = f"SELECT id FROM emergency_contacts WHERE id = {placeholder}"
@@ -256,7 +259,7 @@ class EmergencyNotificationSystem:
                 # Remove from database
                 if self.database and self.database.enabled:
                     try:
-                        placeholder = '?' if self.database.db_type == 'sqlite' else '%s'
+                        placeholder = self._get_db_placeholder()
                         query = f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"
                         self.database.execute(query, (contact_id,))
                     except Exception as e:
@@ -402,7 +405,7 @@ class EmergencyNotificationSystem:
     def _save_notification_to_db(self, notification_record: Dict):
         """Save notification record to database"""
         try:
-            placeholder = '?' if self.database.db_type == 'sqlite' else '%s'
+            placeholder = self._get_db_placeholder()
             query = f"""
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
