@@ -863,6 +863,80 @@ class WebRTCGateway:
                 if self.verbose_logging:
                     self.logger.info(f"[VERBOSE] Associated call ID {call_id} with session {session_id}")
             
+            # 5. Set up RTP relay for media path
+            rtp_ports = self.pbx_core.rtp_relay.allocate_relay(call_id)
+            if rtp_ports:
+                call.rtp_ports = rtp_ports
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] RTP ports allocated: {rtp_ports}")
+            else:
+                self.logger.error(f"Failed to allocate RTP ports for WebRTC call {call_id}")
+                return None
+            
+            # 6. Handle special extensions (auto attendant, voicemail, etc.)
+            # Check if target is auto attendant
+            if self.pbx_core.auto_attendant and target_extension == self.pbx_core.auto_attendant.get_extension():
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] Target is auto attendant, starting session")
+                
+                # Mark as auto attendant call
+                call.auto_attendant_active = True
+                
+                # Start auto attendant session
+                aa_session = self.pbx_core.auto_attendant.start_session(call_id, from_extension)
+                call.aa_session = aa_session
+                
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] Auto attendant session started")
+                    self.logger.info(f"[VERBOSE] Initial action: {aa_session.get('action')}")
+                
+                # Set up RTP player to play the welcome message
+                if aa_session.get('action') == 'play' and aa_session.get('file'):
+                    audio_file = aa_session.get('file')
+                    
+                    # Get caller's RTP endpoint from call
+                    if call.caller_rtp:
+                        from pbx.rtp.handler import RTPPlayer
+                        
+                        # Create RTP player to send audio to WebRTC client
+                        player = RTPPlayer(
+                            audio_file,
+                            call.caller_rtp['address'],
+                            call.caller_rtp['port'],
+                            call.rtp_ports[0] if rtp_ports else None
+                        )
+                        
+                        # Store player reference in call for cleanup
+                        call.rtp_player = player
+                        
+                        # Start playing audio
+                        player.play()
+                        
+                        self.logger.info(f"Auto attendant playing welcome message for call {call_id}")
+                    else:
+                        self.logger.warning(f"No caller RTP info available for auto attendant call {call_id}")
+            
+            # Check if target is voicemail access (*xxxx pattern)
+            elif target_extension.startswith('*') and len(target_extension) >= 4 and target_extension[1:].isdigit():
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] Target is voicemail access: {target_extension}")
+                
+                # Mark as voicemail access call
+                call.is_voicemail_access = True
+                target_mailbox = target_extension[1:]  # Remove * prefix
+                call.voicemail_target = target_mailbox
+                
+                # Start voicemail access
+                if hasattr(self.pbx_core, 'voicemail_system'):
+                    # The voicemail system should play prompts
+                    self.logger.info(f"Voicemail access initiated for mailbox {target_mailbox} from call {call_id}")
+                    
+                    # TODO: Set up voicemail prompts and authentication
+                    # This would require similar RTP player setup as auto attendant
+            
+            # For regular extension calls, the call is set up
+            # When the target extension answers, the CallManager will bridge the media
+            
             self.logger.info(f"Call {call_id} initiated from WebRTC session {session_id} to {target_extension}")
             
             if self.verbose_logging:
