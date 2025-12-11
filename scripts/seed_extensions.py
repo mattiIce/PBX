@@ -87,6 +87,7 @@ def main():
     # NOTE: These are example extensions for initial setup.
     # Extension 1001 is the operator/admin extension used by the webphone in the admin panel.
     # Extension 'webrtc-admin' is the special extension for the browser-based webphone.
+    # SECURITY: All extensions must have a voicemail PIN for secure voicemail access.
     default_extensions = [
         {
             'number': 'webrtc-admin',
@@ -94,7 +95,7 @@ def main():
             'email': 'admin@albl.com',
             'password': 'webrtc-admin-secure-password',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': None  # No voicemail for virtual extension
+            'voicemail_pin': '9999'  # Required for security
         },
         {
             'number': '1001',
