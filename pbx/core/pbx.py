@@ -1119,8 +1119,23 @@ class PBXCore:
             return True
 
         # Check voicemail pattern
-        voicemail_pattern = dialplan.get('voicemail_pattern', '^\\*[0-9]{3}$')
+        voicemail_pattern = dialplan.get('voicemail_pattern', '^\\*[0-9]{3,4}$')
         if re.match(voicemail_pattern, extension):
+            return True
+
+        # Check auto attendant pattern
+        auto_attendant_pattern = dialplan.get('auto_attendant_pattern', '^0$')
+        if re.match(auto_attendant_pattern, extension):
+            return True
+
+        # Check parking pattern
+        parking_pattern = dialplan.get('parking_pattern', '^7[0-9]$')
+        if re.match(parking_pattern, extension):
+            return True
+
+        # Check queue pattern
+        queue_pattern = dialplan.get('queue_pattern', '^8[0-9]{3}$')
+        if re.match(queue_pattern, extension):
             return True
 
         return False

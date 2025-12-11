@@ -762,20 +762,35 @@ class WebRTCGateway:
                 self.logger.info(f"  Session State: {session.state}")
                 self.logger.info(f"  Has Local SDP: {session.local_sdp is not None}")
             
-            # Verify target extension exists
+            # Verify target extension exists or is a valid dialplan pattern
+            # Check if it's a regular extension in the registry
             target_ext_obj = self.pbx_core.extension_registry.get_extension(target_extension)
+            
+            # If not in registry, check if it matches a valid dialplan pattern
+            # (voicemail, auto attendant, conference, etc.)
+            is_valid_dialplan = False
             if not target_ext_obj:
-                self.logger.error(f"Target extension {target_extension} not found")
+                is_valid_dialplan = self.pbx_core._check_dialplan(target_extension)
+            
+            if not target_ext_obj and not is_valid_dialplan:
+                self.logger.error(f"Target extension {target_extension} not found and doesn't match any dialplan pattern")
                 if self.verbose_logging:
-                    self.logger.error(f"[VERBOSE] Extension registry check failed:")
+                    self.logger.error(f"[VERBOSE] Extension validation failed:")
                     all_exts = list(self.pbx_core.extension_registry.extensions.keys()) if hasattr(self.pbx_core.extension_registry, 'extensions') else []
                     self.logger.error(f"  Available extensions: {all_exts[:10]}{'...' if len(all_exts) > 10 else ''}")
+                    self.logger.error(f"  Dialplan check result: {is_valid_dialplan}")
                 return None
             
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] Target extension verified:")
+                self.logger.info(f"[VERBOSE] Target extension validated:")
                 self.logger.info(f"  Extension: {target_extension}")
-                self.logger.info(f"  Extension Object: {target_ext_obj}")
+                if target_ext_obj:
+                    self.logger.info(f"  Extension Object: {target_ext_obj}")
+                    self.logger.info(f"  Found in registry: Yes")
+                else:
+                    self.logger.info(f"  Extension Object: None")
+                    self.logger.info(f"  Found in registry: No")
+                    self.logger.info(f"  Matches dialplan pattern: Yes")
             
             # 2. Create SIP call through CallManager
             call_id = str(uuid.uuid4())
@@ -847,6 +862,89 @@ class WebRTCGateway:
                 webrtc_signaling.set_session_call_id(session_id, call_id)
                 if self.verbose_logging:
                     self.logger.info(f"[VERBOSE] Associated call ID {call_id} with session {session_id}")
+            
+            # 5. Set up RTP relay for media path
+            rtp_ports = self.pbx_core.rtp_relay.allocate_relay(call_id)
+            if rtp_ports:
+                call.rtp_ports = rtp_ports
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] RTP ports allocated: {rtp_ports}")
+            else:
+                self.logger.error(f"Failed to allocate RTP ports for WebRTC call {call_id}")
+                return None
+            
+            # 6. Handle special extensions (auto attendant, voicemail, etc.)
+            # Check if target is auto attendant
+            if self.pbx_core.auto_attendant and target_extension == self.pbx_core.auto_attendant.get_extension():
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] Target is auto attendant, starting session")
+                
+                # Mark as auto attendant call
+                call.auto_attendant_active = True
+                
+                # Start auto attendant session
+                aa_session = self.pbx_core.auto_attendant.start_session(call_id, from_extension)
+                call.aa_session = aa_session
+                
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] Auto attendant session started")
+                    self.logger.info(f"[VERBOSE] Initial action: {aa_session.get('action')}")
+                
+                # Set up RTP player to play the welcome message
+                if aa_session.get('action') == 'play' and aa_session.get('file'):
+                    audio_file = aa_session.get('file')
+                    
+                    # Get caller's RTP endpoint from call
+                    if call.caller_rtp and isinstance(call.caller_rtp, dict):
+                        # Validate RTP info has required fields
+                        caller_address = call.caller_rtp.get('address')
+                        caller_port = call.caller_rtp.get('port')
+                        
+                        if caller_address and caller_port:
+                            from pbx.rtp.handler import RTPPlayer
+                            
+                            # Create RTP player to send audio to WebRTC client
+                            player = RTPPlayer(
+                                audio_file,
+                                caller_address,
+                                caller_port,
+                                call.rtp_ports[0] if call.rtp_ports else None
+                            )
+                            
+                            # Store player reference in call for cleanup
+                            call.rtp_player = player
+                            
+                            # Start playing audio
+                            player.play()
+                            
+                            self.logger.info(f"Auto attendant playing welcome message for call {call_id}")
+                        else:
+                            self.logger.warning(f"Incomplete caller RTP info (missing address or port) for call {call_id}")
+                    else:
+                        self.logger.warning(f"No caller RTP info available for auto attendant call {call_id}")
+            
+            # Check if target is voicemail access (*xxxx pattern)
+            # Use regex to match dialplan pattern for consistency
+            import re
+            voicemail_pattern = r'^\*[0-9]{3,4}$'
+            if re.match(voicemail_pattern, target_extension):
+                if self.verbose_logging:
+                    self.logger.info(f"[VERBOSE] Target is voicemail access: {target_extension}")
+                
+                # Mark as voicemail access call
+                call.is_voicemail_access = True
+                target_mailbox = target_extension[1:]  # Remove * prefix
+                call.voicemail_target = target_mailbox
+                
+                # Log that voicemail access was detected
+                # Note: Full voicemail access via WebRTC requires additional RTP setup
+                # similar to auto attendant. For now, the call is created and marked
+                # for voicemail, but audio playback is not yet implemented.
+                self.logger.info(f"Voicemail access pattern detected for mailbox {target_mailbox} from call {call_id}")
+                self.logger.warning(f"WebRTC voicemail access audio not yet implemented - call created but no prompts will play")
+            
+            # For regular extension calls, the call is set up
+            # When the target extension answers, the CallManager will bridge the media
             
             self.logger.info(f"Call {call_id} initiated from WebRTC session {session_id} to {target_extension}")
             

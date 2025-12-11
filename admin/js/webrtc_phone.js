@@ -24,6 +24,7 @@ class WebRTCPhone {
         this.apiUrl = apiUrl;
         this.extension = extension; // Admin's extension for making calls
         this.sessionId = null;
+        this.callId = null;
         this.peerConnection = null;
         this.localStream = null;
         this.isCallActive = false;
@@ -405,6 +406,7 @@ class WebRTCPhone {
             
             if (callData.success) {
                 this.isCallActive = true;
+                this.callId = callData.call_id; // Store call ID for hangup
                 this.updateStatus(`Calling ${targetExt}... (Call ID: ${callData.call_id})`, 'success');
                 verboseLog('Call initiated successfully:', {
                     callId: callData.call_id
@@ -465,8 +467,45 @@ class WebRTCPhone {
         }
     }
     
-    hangup() {
+    async hangup() {
         console.log('Hanging up call');
+        
+        // Notify server to terminate the call
+        if (this.sessionId || this.callId) {
+            try {
+                verboseLog('Notifying server of hangup:', {
+                    sessionId: this.sessionId,
+                    callId: this.callId
+                });
+                
+                const hangupResponse = await fetch(`${this.apiUrl}/api/webrtc/hangup`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: this.sessionId,
+                        call_id: this.callId
+                    })
+                });
+                
+                if (hangupResponse.ok) {
+                    const hangupData = await hangupResponse.json();
+                    verboseLog('Server hangup response:', hangupData);
+                    console.log('Server notified of call termination');
+                } else {
+                    console.warn('Failed to notify server of hangup:', hangupResponse.statusText);
+                    verboseLog('Hangup notification failed:', {
+                        status: hangupResponse.status,
+                        statusText: hangupResponse.statusText
+                    });
+                }
+            } catch (error) {
+                console.error('Error notifying server of hangup:', error);
+                verboseLog('Error in hangup notification:', {
+                    error: error,
+                    message: error.message
+                });
+            }
+        }
         
         // Stop local stream
         if (this.localStream) {
@@ -482,6 +521,7 @@ class WebRTCPhone {
         
         // Reset state
         this.sessionId = null;
+        this.callId = null;
         this.isCallActive = false;
         
         this.updateStatus('Call ended', 'info');

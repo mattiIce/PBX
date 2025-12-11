@@ -185,6 +185,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_ice_candidate()
             elif path == '/api/webrtc/call':
                 self._handle_webrtc_call()
+            elif path == '/api/webrtc/hangup':
+                self._handle_webrtc_hangup()
             elif path == '/api/emergency/contacts':
                 self._handle_add_emergency_contact()
             elif path == '/api/emergency/trigger':
@@ -2793,6 +2795,68 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             if verbose_logging:
                 self.logger.error(f"[VERBOSE] Exception in call handler: {e}")
+                import traceback
+                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_hangup(self):
+        """Handle WebRTC call hangup/termination"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX core not available'}, 500)
+            return
+        
+        verbose_logging = False
+        if hasattr(self.pbx_core, 'webrtc_signaling'):
+            verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            call_id = data.get('call_id')
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] WebRTC hangup request:")
+                self.logger.info(f"  Session ID: {session_id}")
+                self.logger.info(f"  Call ID: {call_id}")
+                self.logger.info(f"  Client IP: {self.client_address[0]}")
+            
+            if not session_id:
+                self._send_json({'error': 'session_id is required'}, 400)
+                return
+            
+            # Terminate the call if call_id is provided
+            if call_id and hasattr(self.pbx_core, 'call_manager'):
+                call = self.pbx_core.call_manager.get_call(call_id)
+                if call:
+                    if verbose_logging:
+                        self.logger.info(f"[VERBOSE] Terminating call {call_id}")
+                    
+                    # End the call through call manager
+                    self.pbx_core.call_manager.end_call(call_id)
+                    
+                    if verbose_logging:
+                        self.logger.info(f"[VERBOSE] Call {call_id} terminated successfully")
+                else:
+                    if verbose_logging:
+                        self.logger.warning(f"[VERBOSE] Call {call_id} not found in call manager")
+            
+            # Clean up WebRTC session
+            if hasattr(self.pbx_core, 'webrtc_signaling'):
+                session = self.pbx_core.webrtc_signaling.get_session(session_id)
+                if session:
+                    # Close the session
+                    self.pbx_core.webrtc_signaling.close_session(session_id)
+                    if verbose_logging:
+                        self.logger.info(f"[VERBOSE] WebRTC session {session_id} closed")
+            
+            self._send_json({
+                'success': True,
+                'message': 'Call terminated successfully'
+            })
+            
+        except Exception as e:
+            if verbose_logging:
+                self.logger.error(f"[VERBOSE] Exception in hangup handler: {e}")
                 import traceback
                 self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
