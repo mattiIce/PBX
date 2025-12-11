@@ -269,10 +269,13 @@ class WebRTCSignalingServer:
                     if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
                         try:
                             # Register WebRTC client as a phone in the database
+                            # Use hash of session_id for MAC to avoid collisions while keeping reasonable length
+                            import hashlib
+                            mac_suffix = hashlib.sha256(session_id.encode()).hexdigest()[:12]
                             success, stored_mac = self.pbx_core.registered_phones_db.register_phone(
                                 extension_number=extension,
                                 ip_address='webrtc',  # Special marker for WebRTC connections
-                                mac_address=f'webrtc-{session_id[:12]}',  # Use session ID as unique identifier
+                                mac_address=f'webrtc-{mac_suffix}',  # Use hash of session ID for uniqueness
                                 user_agent=f'WebRTC Browser Client (Session: {session_id})',
                                 contact_uri=f'<webrtc:{extension}@{session_id}>'
                             )
