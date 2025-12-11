@@ -543,7 +543,7 @@ account.1.codec.4.enable = 0
 
 # DTMF Settings - Using SIP INFO for reliable voicemail IVR
 account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
-account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay  
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
 account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
 
 # Network
