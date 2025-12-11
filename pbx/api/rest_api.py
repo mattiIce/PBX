@@ -2586,9 +2586,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
         
+        verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+        
         try:
             data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
             extension = data.get('extension')
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] WebRTC session creation request:")
+                self.logger.info(f"  Extension: {extension}")
+                self.logger.info(f"  Client IP: {self.client_address[0]}")
             
             if not extension:
                 self._send_json({'error': 'Extension is required'}, 400)
@@ -2596,17 +2603,30 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             # Verify extension exists
             if not self.pbx_core.extension_registry.get_extension(extension):
+                if verbose_logging:
+                    self.logger.warning(f"[VERBOSE] Extension not found in registry: {extension}")
                 self._send_json({'error': 'Extension not found'}, 404)
                 return
             
             session = self.pbx_core.webrtc_signaling.create_session(extension)
             
-            self._send_json({
+            response_data = {
                 'success': True,
                 'session': session.to_dict(),
                 'ice_servers': self.pbx_core.webrtc_signaling.get_ice_servers_config()
-            })
+            }
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] Session created successfully:")
+                self.logger.info(f"  Session ID: {session.session_id}")
+                self.logger.info(f"  ICE servers configured: {len(response_data['ice_servers'].get('iceServers', []))}")
+            
+            self._send_json(response_data)
         except Exception as e:
+            if verbose_logging:
+                self.logger.error(f"[VERBOSE] Error creating WebRTC session: {e}")
+                import traceback
+                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
     
     def _handle_webrtc_offer(self):
@@ -2615,10 +2635,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
         
+        verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+        
         try:
             data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             sdp = data.get('sdp')
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] WebRTC offer received:")
+                self.logger.info(f"  Session ID: {session_id}")
+                self.logger.info(f"  SDP length: {len(sdp) if sdp else 0} bytes")
+                self.logger.info(f"  Client IP: {self.client_address[0]}")
             
             if not session_id or not sdp:
                 self._send_json({'error': 'session_id and sdp are required'}, 400)
@@ -2627,10 +2655,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             success = self.pbx_core.webrtc_signaling.handle_offer(session_id, sdp)
             
             if success:
+                if verbose_logging:
+                    self.logger.info(f"[VERBOSE] Offer handled successfully")
                 self._send_json({'success': True, 'message': 'Offer received'})
             else:
+                if verbose_logging:
+                    self.logger.warning(f"[VERBOSE] Session not found for offer")
                 self._send_json({'error': 'Session not found'}, 404)
         except Exception as e:
+            if verbose_logging:
+                self.logger.error(f"[VERBOSE] Error handling WebRTC offer: {e}")
+                import traceback
+                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
     
     def _handle_webrtc_answer(self):
@@ -2663,10 +2699,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
         
+        verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+        
         try:
             data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             candidate = data.get('candidate')
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] ICE candidate received:")
+                self.logger.info(f"  Session ID: {session_id}")
+                if candidate:
+                    self.logger.info(f"  Candidate: {candidate.get('candidate', 'N/A')}")
             
             if not session_id or not candidate:
                 self._send_json({'error': 'session_id and candidate are required'}, 400)
@@ -2677,8 +2721,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if success:
                 self._send_json({'success': True, 'message': 'ICE candidate added'})
             else:
+                if verbose_logging:
+                    self.logger.warning(f"[VERBOSE] Session not found for ICE candidate")
                 self._send_json({'error': 'Session not found'}, 404)
         except Exception as e:
+            if verbose_logging:
+                self.logger.error(f"[VERBOSE] Error handling ICE candidate: {e}")
             self._send_json({'error': str(e)}, 500)
     
     def _handle_webrtc_call(self):
@@ -2687,26 +2735,49 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'WebRTC gateway not available'}, 500)
             return
         
+        verbose_logging = False
+        if hasattr(self.pbx_core, 'webrtc_signaling'):
+            verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+        
         try:
             data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             target_extension = data.get('target_extension')
             
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] WebRTC call initiation request:")
+                self.logger.info(f"  Session ID: {session_id}")
+                self.logger.info(f"  Target Extension: {target_extension}")
+                self.logger.info(f"  Client IP: {self.client_address[0]}")
+            
             if not session_id or not target_extension:
                 self._send_json({'error': 'session_id and target_extension are required'}, 400)
                 return
             
-            call_id = self.pbx_core.webrtc_gateway.initiate_call(session_id, target_extension)
+            call_id = self.pbx_core.webrtc_gateway.initiate_call(
+                session_id, 
+                target_extension,
+                webrtc_signaling=self.pbx_core.webrtc_signaling if hasattr(self.pbx_core, 'webrtc_signaling') else None
+            )
             
             if call_id:
+                if verbose_logging:
+                    self.logger.info(f"[VERBOSE] Call initiated successfully:")
+                    self.logger.info(f"  Call ID: {call_id}")
                 self._send_json({
                     'success': True,
                     'call_id': call_id,
                     'message': f'Call initiated to {target_extension}'
                 })
             else:
+                if verbose_logging:
+                    self.logger.error(f"[VERBOSE] Call initiation failed - no call ID returned")
                 self._send_json({'error': 'Failed to initiate call'}, 500)
         except Exception as e:
+            if verbose_logging:
+                self.logger.error(f"[VERBOSE] Exception in call handler: {e}")
+                import traceback
+                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
     
     def _handle_get_webrtc_sessions(self):
