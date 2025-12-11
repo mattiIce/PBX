@@ -91,8 +91,9 @@ class ExtensionRegistry:
             'email': db_extension.get('email', ''),
             'password_hash': db_extension.get('password_hash', ''),
             'allow_external': db_extension.get('allow_external', True),
-            'voicemail_pin': db_extension.get('voicemail_pin', ''),
+            'voicemail_pin_hash': db_extension.get('voicemail_pin_hash', ''),
             'ad_synced': db_extension.get('ad_synced', False),
+            'is_admin': db_extension.get('is_admin', False),
         }
         
         return Extension(number, name, ext_config)

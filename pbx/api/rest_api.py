@@ -571,7 +571,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             extensions = self.pbx_core.extension_registry.get_all()
             data = [{'number': e.number, 'name': e.name, 'email': e.config.get('email'),
                     'registered': e.registered, 'allow_external': e.config.get('allow_external', True),
-                    'ad_synced': e.config.get('ad_synced', False), 'voicemail_pin': e.config.get('voicemail_pin')}
+                    'ad_synced': e.config.get('ad_synced', False), 'voicemail_pin_hash': e.config.get('voicemail_pin_hash'),
+                    'is_admin': e.config.get('is_admin', False)}
                    for e in extensions]
             self._send_json(data)
         else:
