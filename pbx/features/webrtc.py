@@ -63,15 +63,17 @@ class WebRTCSignalingServer:
     - Integration with SIP infrastructure
     """
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, pbx_core=None):
         """
         Initialize WebRTC signaling server
         
         Args:
             config: Configuration object
+            pbx_core: PBXCore instance (optional, for extension registration)
         """
         self.logger = get_logger()
         self.config = config or {}
+        self.pbx_core = pbx_core
         
         # WebRTC configuration
         self.enabled = self._get_config('features.webrtc.enabled', False)
@@ -222,6 +224,52 @@ class WebRTCSignalingServer:
             self.logger.info(f"  Total active sessions: {len(self.sessions)}")
             self.logger.info(f"  Sessions for extension {extension}: {len(self.extension_sessions.get(extension, set()))}")
         
+        # Register the extension in the extension registry if PBX core is available
+        if self.pbx_core:
+            try:
+                # Check if extension exists in registry
+                ext_obj = self.pbx_core.extension_registry.get_extension(extension)
+                if ext_obj:
+                    # Register as active with a virtual WebRTC address
+                    # Use session_id as the unique identifier for the WebRTC connection
+                    webrtc_addr = ('webrtc', session_id)
+                    self.pbx_core.extension_registry.register(extension, webrtc_addr)
+                    self.logger.info(f"Registered WebRTC extension {extension} in extension registry")
+                    
+                    if self.verbose_logging:
+                        self.logger.info(f"[VERBOSE] Extension registered:")
+                        self.logger.info(f"  Extension: {extension}")
+                        self.logger.info(f"  WebRTC Address: {webrtc_addr}")
+                    
+                    # Track in registered_phones_db if available
+                    if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+                        try:
+                            # Register WebRTC client as a phone in the database
+                            success, stored_mac = self.pbx_core.registered_phones_db.register_phone(
+                                extension_number=extension,
+                                ip_address='webrtc',  # Special marker for WebRTC connections
+                                mac_address=f'webrtc-{session_id[:12]}',  # Use session ID as unique identifier
+                                user_agent=f'WebRTC Browser Client (Session: {session_id})',
+                                contact_uri=f'<webrtc:{extension}@{session_id}>'
+                            )
+                            
+                            if success:
+                                self.logger.info(f"Registered WebRTC session in phones database: ext={extension}")
+                                if self.verbose_logging:
+                                    self.logger.info(f"[VERBOSE] Phone DB registration successful")
+                            else:
+                                self.logger.warning(f"Failed to register WebRTC session in phones database")
+                        except Exception as e:
+                            self.logger.error(f"Error registering WebRTC session in phones database: {e}")
+                else:
+                    self.logger.warning(f"Extension {extension} not found in registry for WebRTC session")
+                    if self.verbose_logging:
+                        self.logger.warning(f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions.keys())[:10]}")
+            except Exception as e:
+                self.logger.error(f"Error registering WebRTC extension: {e}")
+                import traceback
+                self.logger.error(traceback.format_exc())
+        
         if self.on_session_created:
             try:
                 self.on_session_created(session)
@@ -260,15 +308,32 @@ class WebRTCSignalingServer:
         if not session:
             return False
         
+        # Get extension before removing session
+        extension = session.extension
+        
         # Remove from sessions
         del self.sessions[session_id]
         
         # Remove from extension tracking
-        extension = session.extension
         if extension in self.extension_sessions:
             self.extension_sessions[extension].discard(session_id)
-            if not self.extension_sessions[extension]:
+            # Check if this was the last session for this extension
+            last_session = not self.extension_sessions[extension]
+            if last_session:
                 del self.extension_sessions[extension]
+                
+                # Unregister the extension from the registry if it was the last session
+                if self.pbx_core:
+                    try:
+                        self.pbx_core.extension_registry.unregister(extension)
+                        self.logger.info(f"Unregistered WebRTC extension {extension} from extension registry")
+                        
+                        if self.verbose_logging:
+                            self.logger.info(f"[VERBOSE] Extension unregistered:")
+                            self.logger.info(f"  Extension: {extension}")
+                            self.logger.info(f"  Reason: Last WebRTC session closed")
+                    except Exception as e:
+                        self.logger.error(f"Error unregistering WebRTC extension: {e}")
         
         self.logger.info(f"Closed WebRTC session: {session_id} (extension: {extension})")
         

@@ -200,7 +200,7 @@ class PBXCore:
         # Initialize WebRTC if enabled
         if self.config.get('features.webrtc.enabled', False):
             from pbx.features.webrtc import WebRTCSignalingServer, WebRTCGateway
-            self.webrtc_signaling = WebRTCSignalingServer(self.config)
+            self.webrtc_signaling = WebRTCSignalingServer(self.config, self)
             self.webrtc_gateway = WebRTCGateway(self)
             self.logger.info("WebRTC browser calling initialized")
         else:
