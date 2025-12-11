@@ -5,8 +5,11 @@
 The PBX system is experiencing audio quality issues due to a sample rate mismatch:
 
 1. **Current State**: Voicemail prompt WAV files are generated at **16kHz** (16000 Hz)
-2. **Expected State**: Telephony audio should be at **8kHz** (8000 Hz) for PCMU (G.711 μ-law) codec
-3. **Result**: The RTP handler downsamples 16kHz audio to 8kHz, causing audio distortion and quality degradation
+2. **Expected State**: Telephony audio MUST be at **8kHz** (8000 Hz) for PCMU (G.711 μ-law) codec
+3. **Our Codec**: We are ONLY using PCMU (G.711 μ-law) - no wideband codecs like G.722
+4. **Result**: The RTP handler downsamples 16kHz audio to 8kHz, causing audio distortion and quality degradation
+
+**IMPORTANT**: Since we are exclusively using PCMU (8kHz), ALL audio files must be 8kHz. There is no use case for 16kHz audio in this system.
 
 ## Root Cause
 
@@ -60,26 +63,15 @@ This will create 8kHz PCM WAV files that:
 2. Convert cleanly to PCMU without quality loss
 3. Are the correct format for telephony applications
 
-## Alternative Solution (Advanced)
+## Why Not Use G.722 or Other Wideband Codecs?
 
-If you want high-quality wideband audio, use G.722 codec instead of PCMU:
+**Decision**: This PBX system uses ONLY PCMU (G.711 μ-law) codec at 8kHz.
 
-1. Generate files at 16kHz:
-   ```bash
-   python scripts/generate_tts_prompts.py --sample-rate 16000 --voicemail
-   ```
+- We are NOT using G.722 (16kHz wideband codec)
+- We are NOT using any other PCM 16kHz codecs
+- All audio must be 8kHz to match PCMU requirements
 
-2. Ensure G.722 codec is enabled in config.yml:
-   ```yaml
-   codecs:
-     g722:
-       enabled: true
-       bitrate: 64000
-   ```
-
-3. The RTP handler will use G.722 for 16kHz audio (no downsampling needed)
-
-**Note**: G.722 requires both the PBX and the phone to support the codec.
+Using 16kHz audio with PCMU requires downsampling, which degrades quality. The correct solution is to use 8kHz audio from the start.
 
 ## Testing
 
