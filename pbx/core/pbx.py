@@ -600,6 +600,43 @@ class PBXCore:
         if not dest_ext_obj or not dest_ext_obj.address:
             self.logger.error(f"Cannot get address for extension {to_ext}")
             return False
+        
+        # Check if destination is a WebRTC extension
+        is_webrtc_destination = (
+            dest_ext_obj.address and 
+            isinstance(dest_ext_obj.address, tuple) and 
+            len(dest_ext_obj.address) == 2 and 
+            dest_ext_obj.address[0] == 'webrtc'
+        )
+        
+        if is_webrtc_destination:
+            # Route call to WebRTC client
+            session_id = dest_ext_obj.address[1]  # Extract session ID from address tuple
+            self.logger.info(f"Routing call to WebRTC extension {to_ext} (session: {session_id})")
+            
+            if self.webrtc_gateway:
+                # Get caller's SDP if available
+                caller_sdp_str = message.body if message.body else None
+                
+                # Route the call through WebRTC gateway
+                success = self.webrtc_gateway.receive_call(
+                    session_id=session_id,
+                    call_id=call_id,
+                    caller_sdp=caller_sdp_str,
+                    webrtc_signaling=self.webrtc_signaling if hasattr(self, 'webrtc_signaling') else None
+                )
+                
+                if success:
+                    self.logger.info(f"Call {call_id} routed to WebRTC session {session_id}")
+                    # Note: The WebRTC client will be notified via the signaling channel
+                    # and should send an answer when the user accepts the call
+                    return True
+                else:
+                    self.logger.error(f"Failed to route call to WebRTC session {session_id}")
+                    return False
+            else:
+                self.logger.error("WebRTC gateway not available for routing call")
+                return False
 
         # Build SDP for forwarding INVITE to callee
         # Use the server's external IP address for SDP

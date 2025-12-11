@@ -229,6 +229,30 @@ class WebRTCSignalingServer:
             try:
                 # Check if extension exists in registry
                 ext_obj = self.pbx_core.extension_registry.get_extension(extension)
+                
+                if not ext_obj and extension.startswith('webrtc-'):
+                    # Auto-create virtual WebRTC extension if it doesn't exist
+                    # This allows WebRTC clients to connect without pre-configuring the extension
+                    self.logger.info(f"Auto-creating virtual WebRTC extension: {extension}")
+                    
+                    from pbx.features.extensions import Extension
+                    virtual_ext_config = {
+                        'number': extension,
+                        'name': f'WebRTC Client ({extension})',
+                        'allow_external': True,
+                        'virtual': True,  # Mark as virtual extension
+                        'webrtc_only': True  # Mark as WebRTC-only extension
+                    }
+                    
+                    ext_obj = Extension(extension, virtual_ext_config['name'], virtual_ext_config)
+                    self.pbx_core.extension_registry.extensions[extension] = ext_obj
+                    self.logger.info(f"Created virtual extension {extension} in registry")
+                    
+                    if self.verbose_logging:
+                        self.logger.info(f"[VERBOSE] Virtual extension created:")
+                        self.logger.info(f"  Extension: {extension}")
+                        self.logger.info(f"  Type: Virtual WebRTC")
+                
                 if ext_obj:
                     # Register as active with a virtual WebRTC address
                     # Use session_id as the unique identifier for the WebRTC connection
