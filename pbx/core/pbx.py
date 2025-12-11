@@ -665,6 +665,7 @@ class PBXCore:
 
         # Parse SDP from caller's INVITE
         caller_sdp = None
+        caller_codecs = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
@@ -672,6 +673,10 @@ class PBXCore:
 
             if caller_sdp:
                 self.logger.info(f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
+                # Extract caller's codec list to maintain codec compatibility
+                caller_codecs = caller_sdp.get('formats', None)
+                if caller_codecs:
+                    self.logger.info(f"Caller codecs: {caller_codecs}")
 
         # Create call
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
@@ -758,10 +763,12 @@ class PBXCore:
 
         if rtp_ports:
             # Create new INVITE with PBX's RTP endpoint in SDP
+            # Use caller's codecs to ensure compatibility
             callee_sdp_body = SDPBuilder.build_audio_sdp(
                 server_ip,
                 rtp_ports[0],
-                session_id=call_id
+                session_id=call_id,
+                codecs=caller_codecs  # Pass caller's codecs for proper negotiation
             )
 
             # Forward INVITE to callee
@@ -1188,11 +1195,15 @@ class PBXCore:
         if call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports:
             server_ip = self._get_server_ip()
 
+            # Extract caller's codecs from the stored RTP info for compatibility
+            caller_codecs = call.caller_rtp.get('formats', None) if call.caller_rtp else None
+
             # Build SDP for the voicemail recording endpoint
             voicemail_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
-                session_id=call_id
+                session_id=call_id,
+                codecs=caller_codecs  # Use caller's codecs
             )
 
             # Send 200 OK to answer the call for voicemail recording
@@ -1496,11 +1507,12 @@ class PBXCore:
         
         # Answer the call
         
-        # Build SDP for answering
+        # Build SDP for answering, using caller's codecs for compatibility
         aa_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
-            session_id=call_id
+            session_id=call_id,
+            codecs=caller_codecs  # Use caller's codecs
         )
         
         # Send 200 OK to answer the call
@@ -1820,12 +1832,15 @@ class PBXCore:
         # Parse SDP from caller's INVITE
         self.logger.info(f"[VM Access] Step 3: Parsing SDP from caller INVITE")
         caller_sdp = None
+        caller_codecs = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
             caller_sdp = caller_sdp_obj.get_audio_info()
             if caller_sdp:
                 self.logger.info(f"[VM Access] ✓ Caller SDP parsed: address={caller_sdp.get('address')}, port={caller_sdp.get('port')}, formats={caller_sdp.get('formats')}")
+                # Extract caller's codec list for negotiation
+                caller_codecs = caller_sdp.get('formats', None)
             else:
                 self.logger.warning(f"[VM Access] ⚠ No audio info found in caller SDP")
         else:
@@ -1863,11 +1878,12 @@ class PBXCore:
         server_ip = self._get_server_ip()
         self.logger.info(f"[VM Access] Server IP: {server_ip}")
 
-        # Build SDP for answering
+        # Build SDP for answering, using caller's codecs for compatibility
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
-            session_id=call_id
+            session_id=call_id,
+            codecs=caller_codecs  # Use caller's codecs
         )
         self.logger.info(f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})")
 
@@ -1962,6 +1978,7 @@ class PBXCore:
         
         # Parse SDP from caller's INVITE
         caller_sdp = None
+        caller_codecs = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
@@ -1969,6 +1986,8 @@ class PBXCore:
             
             if caller_sdp:
                 self.logger.info(f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
+                # Extract caller's codec list for negotiation
+                caller_codecs = caller_sdp.get('formats', None)
         
         # Create call for paging
         call = self.call_manager.create_call(call_id, from_ext, to_ext)
@@ -2017,11 +2036,12 @@ class PBXCore:
         # Answer the call immediately (auto-answer for paging)
         server_ip = self._get_server_ip()
         
-        # Build SDP for answering
+        # Build SDP for answering, using caller's codecs for compatibility
         paging_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
-            session_id=call_id
+            session_id=call_id,
+            codecs=caller_codecs  # Use caller's codecs
         )
         
         # Send 200 OK to answer the call
