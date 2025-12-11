@@ -174,6 +174,13 @@ class PhoneProvisioning:
         self.logger.info(f"Provisioning URL format: {self.config.get('provisioning.url_format', 'Not configured')}")
         self.logger.info(f"Server external IP: {self.config.get('server.external_ip', 'Not configured')}")
         self.logger.info(f"API port: {self.config.get('api.port', 'Not configured')}")
+        
+        # Check SSL status for provisioning URL generation
+        ssl_enabled = self.config.get('api.ssl.enabled', False)
+        if ssl_enabled:
+            self.logger.warning("SSL is enabled - phones may not be able to provision with self-signed certificates")
+            self.logger.warning("Consider using HTTP for provisioning or obtaining trusted certificates")
+            self.logger.warning("To use HTTP for provisioning: set provisioning.url_format to http://... in config.yml")
 
     def _load_devices_from_database(self):
         """Load provisioned devices from database into memory"""
@@ -649,8 +656,22 @@ P30 = 13   # GMT-8
         device = ProvisioningDevice(mac_address, extension_number, vendor, model)
 
         # Generate config URL based on MAC
-        provisioning_url_format = self.config.get('provisioning.url_format',
-                                                  'https://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg')
+        # Auto-detect protocol based on SSL settings
+        # Note: Most phones cannot validate self-signed certificates, so HTTP is recommended
+        # for provisioning even when SSL is enabled for the admin API
+        provisioning_url_format = self.config.get('provisioning.url_format')
+        
+        if not provisioning_url_format:
+            # Auto-generate URL format based on SSL status
+            # Default to HTTP for phone provisioning (phones often can't handle self-signed certs)
+            ssl_enabled = self.config.get('api.ssl.enabled', False)
+            protocol = 'http'  # Always use HTTP for provisioning by default
+            provisioning_url_format = f'{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/{{mac}}.cfg'
+            self.logger.info(f"Auto-generated provisioning URL format: {provisioning_url_format}")
+            if ssl_enabled:
+                self.logger.info("Note: Using HTTP for provisioning even though SSL is enabled")
+                self.logger.info("Phones typically cannot validate self-signed certificates")
+        
         config_url = provisioning_url_format.replace('{mac}', device.mac_address)
         config_url = config_url.replace('{{SERVER_IP}}',
                                        self.config.get('server.external_ip', '127.0.0.1'))
