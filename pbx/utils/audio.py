@@ -182,14 +182,13 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
             if riff != b'RIFF':
                 return False
 
-            file_size = struct.unpack('<I', f.read(4))[0]
+            _ = struct.unpack('<I', f.read(4))[0]  # file_size
             wave = f.read(4)
             if wave != b'WAVE':
                 return False
 
             # Find fmt chunk
             sample_rate = None
-            channels = None
             audio_data = None
 
             while True:
@@ -203,9 +202,9 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                     # Parse format chunk
                     fmt_data = f.read(chunk_size)
                     audio_format = struct.unpack('<H', fmt_data[0:2])[0]
-                    channels = struct.unpack('<H', fmt_data[2:4])[0]
+                    _ = struct.unpack('<H', fmt_data[2:4])[0]  # channels
                     sample_rate = struct.unpack('<I', fmt_data[4:8])[0]
-                    bits_per_sample = struct.unpack('<H', fmt_data[14:16])[0]
+                    _ = struct.unpack('<H', fmt_data[14:16])[0]  # bits_per_sample
 
                     # Only process PCM files
                     if audio_format != WAV_FORMAT_PCM:

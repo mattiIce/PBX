@@ -4,7 +4,7 @@ Securely loads sensitive configuration from environment variables
 """
 import os
 import re
-from typing import Any, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 

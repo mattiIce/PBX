@@ -391,7 +391,7 @@ class PBXCore:
 
             try:
                 # Hash the password
-                password_hash, password_salt = encryption.hash_password(
+                password_hash, _ = encryption.hash_password(
                     ext_config['password'])
 
                 # Add extension to database
@@ -588,7 +588,7 @@ class PBXCore:
                         contact, user_agent)
 
                     try:
-                        success, stored_mac = self.registered_phones_db.register_phone(
+                        _, stored_mac = self.registered_phones_db.register_phone(
                             extension_number=extension_number,
                             ip_address=ip_address,
                             mac_address=mac_address,
@@ -1632,7 +1632,6 @@ class PBXCore:
         Returns:
             True if call was handled
         """
-        from pbx.rtp.handler import RTPPlayer
         from pbx.sip.message import SIPMessageBuilder
         from pbx.sip.sdp import SDPBuilder, SDPSession
 
@@ -2715,7 +2714,6 @@ class PBXCore:
                 # Main IVR loop - listen for DTMF input
                 ivr_active = True
                 last_audio_check = time.time()
-                audio_buffer = []
 
                 # DTMF debouncing: track last detected digit and time to
                 # prevent duplicates
