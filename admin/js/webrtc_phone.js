@@ -125,19 +125,17 @@ class WebRTCPhone {
             this.muteButton.disabled = (state === 'idle');
         }
         
-        // Show keypad only when connected
+        // Show keypad and enable buttons when call is active (calling or connected)
+        const isCallActive = (state === 'connected' || state === 'calling');
+        
         if (this.keypadSection) {
-            if (state === 'connected' || state === 'calling') {
-                this.keypadSection.style.display = 'block';
-            } else {
-                this.keypadSection.style.display = 'none';
-            }
+            this.keypadSection.style.display = isCallActive ? 'block' : 'none';
         }
         
-        // Enable/disable keypad buttons
+        // Enable/disable keypad buttons based on call state
         const keypadButtons = document.querySelectorAll('.keypad-btn');
         keypadButtons.forEach(button => {
-            button.disabled = (state !== 'connected' && state !== 'calling');
+            button.disabled = !isCallActive;
         });
     }
     
@@ -281,7 +279,7 @@ class WebRTCPhone {
                     trackId: event.track.id
                 });
                 
-                if (this.remoteAudio && event.streams && event.streams.length > 0) {
+                if (this.remoteAudio && event.streams?.length > 0) {
                     this.remoteAudio.srcObject = event.streams[0];
                     
                     // Ensure audio plays - modern browsers require user interaction

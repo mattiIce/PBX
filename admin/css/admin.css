@@ -1188,20 +1188,13 @@ input[type="range"]::-moz-range-thumb:hover {
     animation: keypad-press 0.3s ease;
 }
 
-/* Audio element - ensure it's visible but minimized */
+/* Audio element - keep accessible but visually hidden */
 #webrtc-remote-audio {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 30px;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-}
-
-#webrtc-remote-audio:hover {
-    opacity: 1;
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
 }
 
 /* Responsive adjustments for phone widget */

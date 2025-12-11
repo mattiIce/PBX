@@ -2942,18 +2942,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     if verbose_logging:
                         self.logger.info(f"[VERBOSE] Sending DTMF '{digit}' via RFC2833")
                     
-                    # Send DTMF via RFC2833
-                    target_handler.rfc2833_sender.send_dtmf(digit, duration_ms=duration)
+                    # Send DTMF via RFC2833 and check return value
+                    success = target_handler.rfc2833_sender.send_dtmf(digit, duration_ms=duration)
                     
-                    self._send_json({
-                        'success': True,
-                        'message': f'DTMF tone "{digit}" sent successfully',
-                        'digit': digit,
-                        'duration': duration
-                    })
-                    
-                    if verbose_logging:
-                        self.logger.info(f"[VERBOSE] DTMF '{digit}' sent successfully")
+                    if success:
+                        self._send_json({
+                            'success': True,
+                            'message': f'DTMF tone "{digit}" sent successfully',
+                            'digit': digit,
+                            'duration': duration
+                        })
+                        
+                        if verbose_logging:
+                            self.logger.info(f"[VERBOSE] DTMF '{digit}' sent successfully")
+                    else:
+                        if verbose_logging:
+                            self.logger.error(f"[VERBOSE] Failed to send DTMF '{digit}'")
+                        self._send_json({'error': f'Failed to send DTMF tone "{digit}"'}, 500)
                 else:
                     if verbose_logging:
                         self.logger.warning(f"[VERBOSE] No RFC2833 sender available for DTMF")
