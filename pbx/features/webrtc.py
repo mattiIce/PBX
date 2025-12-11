@@ -895,29 +895,39 @@ class WebRTCGateway:
                     audio_file = aa_session.get('file')
                     
                     # Get caller's RTP endpoint from call
-                    if call.caller_rtp:
-                        from pbx.rtp.handler import RTPPlayer
+                    if call.caller_rtp and isinstance(call.caller_rtp, dict):
+                        # Validate RTP info has required fields
+                        caller_address = call.caller_rtp.get('address')
+                        caller_port = call.caller_rtp.get('port')
                         
-                        # Create RTP player to send audio to WebRTC client
-                        player = RTPPlayer(
-                            audio_file,
-                            call.caller_rtp['address'],
-                            call.caller_rtp['port'],
-                            call.rtp_ports[0] if rtp_ports else None
-                        )
-                        
-                        # Store player reference in call for cleanup
-                        call.rtp_player = player
-                        
-                        # Start playing audio
-                        player.play()
-                        
-                        self.logger.info(f"Auto attendant playing welcome message for call {call_id}")
+                        if caller_address and caller_port:
+                            from pbx.rtp.handler import RTPPlayer
+                            
+                            # Create RTP player to send audio to WebRTC client
+                            player = RTPPlayer(
+                                audio_file,
+                                caller_address,
+                                caller_port,
+                                call.rtp_ports[0] if call.rtp_ports else None
+                            )
+                            
+                            # Store player reference in call for cleanup
+                            call.rtp_player = player
+                            
+                            # Start playing audio
+                            player.play()
+                            
+                            self.logger.info(f"Auto attendant playing welcome message for call {call_id}")
+                        else:
+                            self.logger.warning(f"Incomplete caller RTP info (missing address or port) for call {call_id}")
                     else:
                         self.logger.warning(f"No caller RTP info available for auto attendant call {call_id}")
             
             # Check if target is voicemail access (*xxxx pattern)
-            elif target_extension.startswith('*') and len(target_extension) >= 4 and target_extension[1:].isdigit():
+            # Use regex to match dialplan pattern for consistency
+            import re
+            voicemail_pattern = r'^\*[0-9]{3,4}$'
+            if re.match(voicemail_pattern, target_extension):
                 if self.verbose_logging:
                     self.logger.info(f"[VERBOSE] Target is voicemail access: {target_extension}")
                 
@@ -926,13 +936,12 @@ class WebRTCGateway:
                 target_mailbox = target_extension[1:]  # Remove * prefix
                 call.voicemail_target = target_mailbox
                 
-                # Start voicemail access
-                if hasattr(self.pbx_core, 'voicemail_system'):
-                    # The voicemail system should play prompts
-                    self.logger.info(f"Voicemail access initiated for mailbox {target_mailbox} from call {call_id}")
-                    
-                    # TODO: Set up voicemail prompts and authentication
-                    # This would require similar RTP player setup as auto attendant
+                # Log that voicemail access was detected
+                # Note: Full voicemail access via WebRTC requires additional RTP setup
+                # similar to auto attendant. For now, the call is created and marked
+                # for voicemail, but audio playback is not yet implemented.
+                self.logger.info(f"Voicemail access pattern detected for mailbox {target_mailbox} from call {call_id}")
+                self.logger.warning(f"WebRTC voicemail access audio not yet implemented - call created but no prompts will play")
             
             # For regular extension calls, the call is set up
             # When the target extension answers, the CallManager will bridge the media
