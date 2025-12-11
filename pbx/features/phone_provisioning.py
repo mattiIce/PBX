@@ -938,7 +938,10 @@ P30 = 13   # GMT-8
             
             # Provide helpful guidance
             # Determine protocol based on actual API configuration
-            api_protocol = "http"  # Default to HTTP for provisioning
+            # Note: Provisioning typically uses HTTP even when API uses HTTPS
+            # because phones often cannot validate self-signed certificates
+            ssl_enabled = self.config.get('api.ssl.enabled', False)
+            api_protocol = 'https' if ssl_enabled else 'http'
             api_port = self.config.get('api.port', 8080)
             server_ip = self.config.get('server.external_ip', '192.168.1.14')
             
