@@ -98,49 +98,39 @@ class ExtensionRegistry:
         return Extension(number, name, ext_config)
 
     def _load_extensions(self):
-        """Load extensions from database or configuration"""
-        # Try to load from database first
-        if self.database and self.database.enabled:
-            try:
-                from pbx.utils.database import ExtensionDB
-                ext_db = ExtensionDB(self.database)
-                db_extensions = ext_db.get_all()
-                
-                if db_extensions:
-                    self.logger.info(f"Loading {len(db_extensions)} extensions from database")
-                    for ext_data in db_extensions:
-                        number = ext_data['number']
-                        name = ext_data['name']
-                        
-                        # Create Extension object from database data using helper method
-                        extension = self.create_extension_from_db(ext_data)
-                        self.extensions[number] = extension
-                        
-                        ad_marker = " [AD]" if ext_data.get('ad_synced') else ""
-                        self.logger.info(f"Loaded extension {number} ({name}){ad_marker}")
-                    
-                    return  # Successfully loaded from database
-                else:
-                    self.logger.info("No extensions found in database, loading from config.yml")
-            except Exception as e:
-                self.logger.error(f"Error loading extensions from database: {e}")
-                self.logger.info("Falling back to config.yml")
+        """Load extensions from database only (for security)"""
+        # SECURITY: Extensions must be loaded from database only.
+        # Loading from config.yml is insecure as it exposes passwords in plain text.
+        if not self.database or not self.database.enabled:
+            self.logger.error("Database is not enabled. Extensions can only be loaded from database.")
+            self.logger.error("Please enable database in config.yml and run: python scripts/init_database.py")
+            self.logger.error("Then add extensions using the admin panel or: python scripts/migrate_extensions_to_db.py")
+            return
         
-        # Fall back to loading from configuration file
-        extension_configs = self.config.get_extensions()
-
-        if extension_configs:
-            self.logger.info(f"Loading {len(extension_configs)} extensions from config.yml")
-            for ext_config in extension_configs:
-                number = ext_config.get('number')
-                name = ext_config.get('name', f"Extension {number}")
-
-                extension = Extension(number, name, ext_config)
-                self.extensions[number] = extension
-
-                self.logger.info(f"Loaded extension {number} ({name})")
-        else:
-            self.logger.warning("No extensions found in config.yml or database")
+        try:
+            from pbx.utils.database import ExtensionDB
+            ext_db = ExtensionDB(self.database)
+            db_extensions = ext_db.get_all()
+            
+            if db_extensions:
+                self.logger.info(f"Loading {len(db_extensions)} extensions from database")
+                for ext_data in db_extensions:
+                    number = ext_data['number']
+                    name = ext_data['name']
+                    
+                    # Create Extension object from database data using helper method
+                    extension = self.create_extension_from_db(ext_data)
+                    self.extensions[number] = extension
+                    
+                    ad_marker = " [AD]" if ext_data.get('ad_synced') else ""
+                    self.logger.info(f"Loaded extension {number} ({name}){ad_marker}")
+            else:
+                self.logger.warning("No extensions found in database")
+                self.logger.warning("Add extensions using the admin panel or run: python scripts/migrate_extensions_to_db.py")
+        except Exception as e:
+            self.logger.error(f"Error loading extensions from database: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
 
     def reload(self):
         """Reload extensions from database or configuration"""

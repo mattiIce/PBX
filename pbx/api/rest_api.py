@@ -1403,6 +1403,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Missing required fields'}, 400)
                 return
 
+            # SECURITY: Validate voicemail PIN is provided
+            if not voicemail_pin:
+                self._send_json({'error': 'Voicemail PIN is required for security'}, 400)
+                return
+
+            # Validate voicemail PIN format (4-6 digits)
+            if not str(voicemail_pin).isdigit() or len(str(voicemail_pin)) < 4 or len(str(voicemail_pin)) > 6:
+                self._send_json({'error': 'Voicemail PIN must be 4-6 digits'}, 400)
+                return
+
             # Validate extension number format (4 digits)
             if not str(number).isdigit() or len(str(number)) != 4:
                 self._send_json({'error': 'Extension number must be 4 digits'}, 400)
@@ -1476,6 +1486,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if password and len(password) < 8:
                 self._send_json({'error': 'Password must be at least 8 characters'}, 400)
                 return
+
+            # SECURITY: Validate voicemail PIN format if provided (4-6 digits)
+            if voicemail_pin is not None:
+                if not str(voicemail_pin).isdigit() or len(str(voicemail_pin)) < 4 or len(str(voicemail_pin)) > 6:
+                    self._send_json({'error': 'Voicemail PIN must be 4-6 digits'}, 400)
+                    return
 
             # Validate email format if provided
             if email and not Config.validate_email(email):

@@ -230,7 +230,7 @@ async function syncADUsers() {
 // Extensions Functions
 async function loadExtensions() {
     const tbody = document.getElementById('extensions-table-body');
-    tbody.innerHTML = '<tr><td colspan="6" class="loading">Loading extensions...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading extensions...</td></tr>';
     
     try {
         const response = await fetch(`${API_BASE}/api/extensions`);
@@ -241,7 +241,7 @@ async function loadExtensions() {
         currentExtensions = extensions;
         
         if (extensions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="loading">No extensions found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="loading">No extensions found</td></tr>';
             return;
         }
         
@@ -261,6 +261,7 @@ async function loadExtensions() {
                     ${ext.registered ? '● Online' : '○ Offline'}
                 </td>
                 <td>${ext.allow_external ? 'Yes' : 'No'}</td>
+                <td>${ext.voicemail_pin_hash ? '✓ Set' : '<span style="color: orange;">⚠ Not Set</span>'}</td>
                 <td>
                     <button class="btn btn-primary" onclick="editExtension('${escapeHtml(ext.number)}')">✏️ Edit</button>
                     ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${escapeHtml(ext.number)}')">🔄 Reboot</button>` : ''}
@@ -270,7 +271,7 @@ async function loadExtensions() {
         `).join('');
     } catch (error) {
         console.error('Error loading extensions:', error);
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">Error loading extensions</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="loading">Error loading extensions</td></tr>';
     }
 }
 
@@ -505,7 +506,8 @@ function initializeForms() {
             name: document.getElementById('new-ext-name').value,
             email: document.getElementById('new-ext-email').value,
             password: document.getElementById('new-ext-password').value,
-            allow_external: document.getElementById('new-ext-allow-external').checked
+            allow_external: document.getElementById('new-ext-allow-external').checked,
+            voicemail_pin: document.getElementById('new-ext-voicemail-pin').value
         };
         
         try {
@@ -545,6 +547,11 @@ function initializeForms() {
         const password = document.getElementById('edit-ext-password').value;
         if (password) {
             extensionData.password = password;
+        }
+        
+        const voicemailPin = document.getElementById('edit-ext-voicemail-pin').value;
+        if (voicemailPin) {
+            extensionData.voicemail_pin = voicemailPin;
         }
         
         try {

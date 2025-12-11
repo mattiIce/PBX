@@ -41,22 +41,28 @@ nano config.yml
 server:
   external_ip: "192.168.1.14"  # ✓ Already set correctly!
 
-extensions:
-  - number: "1001"
-    name: "Phone 1"
-    password: "CHANGE_THIS_PASSWORD"  # ← Change!
-  
-  - number: "1002"
-    name: "Phone 2"
-    password: "CHANGE_THIS_PASSWORD"  # ← Change!
-  
-  # Add more for each of your Zultys phones
+database:
+  type: sqlite  # SQLite for quick start (use postgresql for production)
+  path: pbx.db
 
 logging:
   level: "DEBUG"  # Use DEBUG for initial setup
 ```
 
 Save: `Ctrl+X`, `Y`, `Enter`
+
+**Initialize database and add extensions:**
+
+```bash
+# Seed initial extensions into database
+python3 scripts/seed_extensions.py
+
+# Verify extensions were added
+python3 scripts/list_extensions_from_db.py
+```
+
+**Note:** Extensions are now stored securely in the database, not in config.yml.
+This prevents exposing passwords in plain text configuration files.
 
 ## ☐ Step 3: Open Firewall Ports (2 minutes)
 
