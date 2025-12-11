@@ -335,10 +335,22 @@ def test_call_initiation():
         def get_call(self, call_id):
             return self.calls.get(call_id)
     
+    class MockRTPRelay:
+        def allocate_relay(self, call_id):
+            # Return mock RTP ports (local and remote)
+            return (10000, 10001)
+    
     class MockPBXCore:
         def __init__(self):
             self.extension_registry = MockExtensionRegistry()
             self.call_manager = MockCallManager()
+            self.rtp_relay = MockRTPRelay()
+            self.auto_attendant = None  # No auto attendant in test
+            self.voicemail_system = None  # No voicemail in test
+        
+        def _check_dialplan(self, extension):
+            # Simple dialplan check for test
+            return False
     
     class MockConfig:
         def get(self, key, default=None):
