@@ -1457,7 +1457,9 @@ class PBXCore:
         # Start CDR record for analytics
         self.cdr_system.start_record(call_id, from_ext, to_ext)
         
-        # Allocate RTP ports
+        # Allocate RTP ports for bidirectional audio communication
+        # These ports will be used by RTPPlayer (sending prompts) and RTPDTMFListener (receiving DTMF)
+        # in the auto attendant session thread. The RTP relay handler manages the socket binding.
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
         if rtp_ports:
             call.rtp_ports = rtp_ports
@@ -1533,8 +1535,17 @@ class PBXCore:
                 self.logger.warning(f"No caller RTP info for auto attendant {call_id}")
                 return
             
-            # Create RTP player for audio prompts
-            # Use the same port as allocated for the call for proper RTP communication
+            # ============================================================
+            # RTP SETUP FOR AUTO ATTENDANT - BIDIRECTIONAL AUDIO
+            # ============================================================
+            # This section sets up RTP for interactive auto attendant:
+            # 1. RTPPlayer: Sends audio prompts/menus to the caller (server -> client)
+            # 2. RTPDTMFListener: Receives audio and detects DTMF tones (client -> server)
+            # Both use the same local port (call.rtp_ports[0]) allocated by RTP relay.
+            # This creates a full-duplex audio channel for the auto attendant system.
+            # ============================================================
+            
+            # Create RTP player for sending audio prompts to the caller
             player = RTPPlayer(
                 local_port=call.rtp_ports[0],
                 remote_host=call.caller_rtp['address'],
@@ -1546,12 +1557,13 @@ class PBXCore:
                 self.logger.error(f"Failed to start RTP player for auto attendant {call_id}")
                 return
             
-            # Create DTMF listener
+            # Create DTMF listener for receiving and detecting user input
             dtmf_listener = RTPDTMFListener(call.rtp_ports[0])
             if not dtmf_listener.start():
                 self.logger.error(f"Failed to start DTMF listener for auto attendant {call_id}")
                 player.stop()
                 return
+            self.logger.info(f"Auto attendant RTP setup complete - bidirectional audio channel established")
             
             # Play welcome greeting
             action = session.get('session')
@@ -1770,7 +1782,9 @@ class PBXCore:
         self.logger.info(f"[VM Access] Step 5: Starting CDR record for analytics")
         self.cdr_system.start_record(call_id, from_ext, f"*{target_ext}")
 
-        # Allocate RTP ports
+        # Allocate RTP ports for bidirectional audio communication
+        # These ports will be used by RTPPlayer (sending prompts) and RTPRecorder (receiving DTMF)
+        # in the IVR session thread. The RTP relay handler manages the socket binding and packet forwarding.
         self.logger.info(f"[VM Access] Step 6: Allocating RTP relay ports")
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
         if rtp_ports:
@@ -2166,8 +2180,18 @@ class PBXCore:
                 return
             self.logger.info(f"[VM IVR] ✓ Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}")
             
-            # Create RTP player for sending audio prompts
-            # Use the same port as allocated for the call for proper RTP communication
+            # ============================================================
+            # RTP SETUP FOR VOICEMAIL IVR - BIDIRECTIONAL AUDIO
+            # ============================================================
+            # This section sets up RTP for interactive voicemail access:
+            # 1. RTPPlayer: Sends audio prompts to the caller (server -> client)
+            # 2. RTPRecorder: Receives audio from caller for DTMF detection (client -> server)
+            # Both use the same local port (call.rtp_ports[0]) allocated by RTP relay.
+            # This creates a full-duplex audio channel for the IVR system.
+            # ============================================================
+            
+            # Create RTP player for sending audio prompts to the caller
+            # This sends voicemail prompts, menus, and messages to the user
             self.logger.info(f"[VM IVR] Creating RTP player for audio prompts...")
             self.logger.info(f"[VM IVR]   Local port: {call.rtp_ports[0]}")
             self.logger.info(f"[VM IVR]   Remote: {call.caller_rtp['address']}:{call.caller_rtp['port']}")
@@ -2185,12 +2209,13 @@ class PBXCore:
                 return
             self.logger.info(f"[VM IVR] ✓ RTP player started successfully")
             
-            # Create DTMF detector for receiving menu selections
+            # Create DTMF detector for processing user input (menu selections, PIN, etc.)
             self.logger.info(f"[VM IVR] Creating DTMF detector (sample_rate=8000Hz)...")
             dtmf_detector = DTMFDetector(sample_rate=8000)
             self.logger.info(f"[VM IVR] ✓ DTMF detector created")
             
-            # Create RTP receiver for DTMF detection
+            # Create RTP recorder to receive audio from caller for DTMF detection
+            # This listens on the same port, captures incoming RTP packets, and extracts audio
             self.logger.info(f"[VM IVR] Creating RTP recorder for DTMF detection (port {call.rtp_ports[0]})...")
             recorder = RTPRecorder(call.rtp_ports[0], call_id)
             if not recorder.start():
@@ -2200,6 +2225,7 @@ class PBXCore:
                 self.end_call(call_id)
                 return
             self.logger.info(f"[VM IVR] ✓ RTP recorder started successfully")
+            self.logger.info(f"[VM IVR] ✓ RTP setup complete - bidirectional audio channel established")
             
             try:
                 # Start the IVR flow - transition from WELCOME to PIN_ENTRY state
