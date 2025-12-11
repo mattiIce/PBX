@@ -262,7 +262,7 @@ class RTPRelayHandler:
         # Start QoS monitoring if monitor is available
         if self.qos_monitor:
             self.qos_metrics = self.qos_monitor.start_monitoring(call_id)
-            self.logger.debug(f"QoS monitoring started for call {call_id}")
+            self.logger.debug("QoS monitoring started for call %s", call_id)
 
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
