@@ -762,20 +762,35 @@ class WebRTCGateway:
                 self.logger.info(f"  Session State: {session.state}")
                 self.logger.info(f"  Has Local SDP: {session.local_sdp is not None}")
             
-            # Verify target extension exists
+            # Verify target extension exists or is a valid dialplan pattern
+            # Check if it's a regular extension in the registry
             target_ext_obj = self.pbx_core.extension_registry.get_extension(target_extension)
+            
+            # If not in registry, check if it matches a valid dialplan pattern
+            # (voicemail, auto attendant, conference, etc.)
+            is_valid_dialplan = False
             if not target_ext_obj:
-                self.logger.error(f"Target extension {target_extension} not found")
+                is_valid_dialplan = self.pbx_core._check_dialplan(target_extension)
+            
+            if not target_ext_obj and not is_valid_dialplan:
+                self.logger.error(f"Target extension {target_extension} not found and doesn't match any dialplan pattern")
                 if self.verbose_logging:
-                    self.logger.error(f"[VERBOSE] Extension registry check failed:")
+                    self.logger.error(f"[VERBOSE] Extension validation failed:")
                     all_exts = list(self.pbx_core.extension_registry.extensions.keys()) if hasattr(self.pbx_core.extension_registry, 'extensions') else []
                     self.logger.error(f"  Available extensions: {all_exts[:10]}{'...' if len(all_exts) > 10 else ''}")
+                    self.logger.error(f"  Dialplan check result: {is_valid_dialplan}")
                 return None
             
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] Target extension verified:")
+                self.logger.info(f"[VERBOSE] Target extension validated:")
                 self.logger.info(f"  Extension: {target_extension}")
-                self.logger.info(f"  Extension Object: {target_ext_obj}")
+                if target_ext_obj:
+                    self.logger.info(f"  Extension Object: {target_ext_obj}")
+                    self.logger.info(f"  Found in registry: Yes")
+                else:
+                    self.logger.info(f"  Extension Object: None")
+                    self.logger.info(f"  Found in registry: No")
+                    self.logger.info(f"  Matches dialplan pattern: Yes")
             
             # 2. Create SIP call through CallManager
             call_id = str(uuid.uuid4())
