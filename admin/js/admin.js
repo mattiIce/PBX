@@ -252,9 +252,21 @@ async function loadExtensions() {
             return div.innerHTML;
         };
         
+        // Helper function to generate extension badges
+        const generateBadges = (ext) => {
+            let badges = '';
+            if (ext.ad_synced) {
+                badges += ' <span class="ad-badge" title="Synced from Active Directory">AD</span>';
+            }
+            if (ext.is_admin) {
+                badges += ' <span class="admin-badge" title="Admin Privileges">👑 Admin</span>';
+            }
+            return badges;
+        };
+        
         tbody.innerHTML = extensions.map(ext => `
             <tr>
-                <td><strong>${escapeHtml(ext.number)}</strong>${ext.ad_synced ? ' <span class="ad-badge" title="Synced from Active Directory">AD</span>' : ''}${ext.is_admin ? ' <span class="admin-badge" title="Admin Privileges">👑 Admin</span>' : ''}</td>
+                <td><strong>${escapeHtml(ext.number)}</strong>${generateBadges(ext)}</td>
                 <td>${escapeHtml(ext.name)}</td>
                 <td>${ext.email ? escapeHtml(ext.email) : 'Not set'}</td>
                 <td class="${ext.registered ? 'status-online' : 'status-offline'}">

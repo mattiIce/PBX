@@ -614,9 +614,9 @@ header h1 {
     border-radius: 4px;
 }
 
-/* AD Badge Styling */
-.ad-badge {
-    background: #10b981;
+/* Badge Base Styling */
+.ad-badge,
+.admin-badge {
     color: white;
     padding: 2px 6px;
     border-radius: 3px;
@@ -626,16 +626,14 @@ header h1 {
     vertical-align: super;
 }
 
-/* Admin Badge Styling */
+/* AD Badge - Active Directory synced */
+.ad-badge {
+    background: #10b981;
+}
+
+/* Admin Badge - Admin privileges */
 .admin-badge {
     background: #f59e0b;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    margin-left: 5px;
-    vertical-align: super;
 }
 
 /* AD Integration Status Section */
