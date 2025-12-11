@@ -232,10 +232,32 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- DTMF Keypad -->
+                        <div id="webrtc-keypad-section" style="margin-top: 25px; display: none;">
+                            <h3 style="text-align: center; margin-bottom: 15px;">📱 Dial Pad</h3>
+                            <div class="webrtc-keypad">
+                                <button class="keypad-btn" data-digit="1">1</button>
+                                <button class="keypad-btn" data-digit="2">2<span>ABC</span></button>
+                                <button class="keypad-btn" data-digit="3">3<span>DEF</span></button>
+                                <button class="keypad-btn" data-digit="4">4<span>GHI</span></button>
+                                <button class="keypad-btn" data-digit="5">5<span>JKL</span></button>
+                                <button class="keypad-btn" data-digit="6">6<span>MNO</span></button>
+                                <button class="keypad-btn" data-digit="7">7<span>PQRS</span></button>
+                                <button class="keypad-btn" data-digit="8">8<span>TUV</span></button>
+                                <button class="keypad-btn" data-digit="9">9<span>WXYZ</span></button>
+                                <button class="keypad-btn" data-digit="*">*</button>
+                                <button class="keypad-btn" data-digit="0">0<span>+</span></button>
+                                <button class="keypad-btn" data-digit="#">#</button>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #666;">
+                                Press buttons to send DTMF tones during call
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Hidden audio element for remote audio -->
-                    <audio id="webrtc-remote-audio" autoplay style="display: none;"></audio>
+                    <!-- Remote audio element for call audio -->
+                    <audio id="webrtc-remote-audio" autoplay playsinline></audio>
                 </div>
 
                 <div class="info-box" style="margin-top: 30px;">

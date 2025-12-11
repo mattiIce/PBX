@@ -187,6 +187,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_call()
             elif path == '/api/webrtc/hangup':
                 self._handle_webrtc_hangup()
+            elif path == '/api/webrtc/dtmf':
+                self._handle_webrtc_dtmf()
             elif path == '/api/emergency/contacts':
                 self._handle_add_emergency_contact()
             elif path == '/api/emergency/trigger':
@@ -2857,6 +2859,118 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             if verbose_logging:
                 self.logger.error(f"[VERBOSE] Exception in hangup handler: {e}")
+                import traceback
+                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+            self._send_json({'error': str(e)}, 500)
+    
+    def _handle_webrtc_dtmf(self):
+        """Handle DTMF tone sending from WebRTC client"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX core not available'}, 500)
+            return
+        
+        verbose_logging = False
+        if hasattr(self.pbx_core, 'webrtc_signaling'):
+            verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+        
+        try:
+            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            session_id = data.get('session_id')
+            digit = data.get('digit')
+            duration = data.get('duration', 160)  # Default 160ms
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] WebRTC DTMF request:")
+                self.logger.info(f"  Session ID: {session_id}")
+                self.logger.info(f"  Digit: {digit}")
+                self.logger.info(f"  Duration: {duration}ms")
+                self.logger.info(f"  Client IP: {self.client_address[0]}")
+            
+            if not session_id or digit is None:
+                self._send_json({'error': 'session_id and digit are required'}, 400)
+                return
+            
+            # Validate digit
+            if digit not in '0123456789*#':
+                self._send_json({'error': 'Invalid digit. Must be 0-9, *, or #'}, 400)
+                return
+            
+            # Get the session
+            if not hasattr(self.pbx_core, 'webrtc_signaling'):
+                self._send_json({'error': 'WebRTC signaling not available'}, 500)
+                return
+            
+            session = self.pbx_core.webrtc_signaling.get_session(session_id)
+            if not session:
+                self._send_json({'error': 'Session not found'}, 404)
+                return
+            
+            # Get the active call for this session
+            if not session.call_id:
+                self._send_json({'error': 'No active call for this session'}, 400)
+                return
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] Found call ID: {session.call_id}")
+            
+            # Get the call object
+            call = None
+            if hasattr(self.pbx_core, 'call_manager'):
+                call = self.pbx_core.call_manager.get_call(session.call_id)
+            
+            if not call:
+                self._send_json({'error': 'Call not found'}, 404)
+                return
+            
+            if verbose_logging:
+                self.logger.info(f"[VERBOSE] Found call object for {session.call_id}")
+                self.logger.info(f"  Caller: {call.caller_extension}")
+                self.logger.info(f"  Callee: {call.callee_extension}")
+            
+            # Send DTMF via the call's RTP handler
+            # WebRTC clients typically need to send DTMF to the remote end
+            # We'll send to the callee's RTP handler
+            if hasattr(call, 'rtp_handlers') and call.rtp_handlers:
+                # Find the RTP handler that's NOT for the WebRTC extension
+                target_handler = None
+                for ext, handler in call.rtp_handlers.items():
+                    if ext != session.extension:
+                        target_handler = handler
+                        break
+                
+                if target_handler and hasattr(target_handler, 'rfc2833_sender'):
+                    if verbose_logging:
+                        self.logger.info(f"[VERBOSE] Sending DTMF '{digit}' via RFC2833")
+                    
+                    # Send DTMF via RFC2833 and check return value
+                    success = target_handler.rfc2833_sender.send_dtmf(digit, duration_ms=duration)
+                    
+                    if success:
+                        self._send_json({
+                            'success': True,
+                            'message': f'DTMF tone "{digit}" sent successfully',
+                            'digit': digit,
+                            'duration': duration
+                        })
+                        
+                        if verbose_logging:
+                            self.logger.info(f"[VERBOSE] DTMF '{digit}' sent successfully")
+                    else:
+                        if verbose_logging:
+                            self.logger.error(f"[VERBOSE] Failed to send DTMF '{digit}'")
+                        self._send_json({'error': f'Failed to send DTMF tone "{digit}"'}, 500)
+                else:
+                    if verbose_logging:
+                        self.logger.warning(f"[VERBOSE] No RFC2833 sender available for DTMF")
+                    self._send_json({'error': 'DTMF sending not available for this call'}, 500)
+            else:
+                if verbose_logging:
+                    self.logger.warning(f"[VERBOSE] No RTP handlers found for call {session.call_id}")
+                self._send_json({'error': 'No RTP handlers available for this call'}, 500)
+            
+        except Exception as e:
+            if verbose_logging:
+                self.logger.error(f"[VERBOSE] Exception in DTMF handler: {e}")
                 import traceback
                 self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)

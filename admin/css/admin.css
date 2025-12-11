@@ -1095,6 +1095,108 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.1);
 }
 
+/* ========================================
+   WebRTC DTMF Keypad Styles
+   ======================================== */
+
+.webrtc-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf0 100%);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.keypad-btn {
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #dce3e9;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.keypad-btn:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
+.keypad-btn:active {
+    transform: translateY(0) scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.keypad-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #e9ecef;
+}
+
+.keypad-btn:disabled:hover {
+    transform: none;
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.keypad-btn span {
+    display: block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    opacity: 0.7;
+}
+
+.keypad-btn:hover span {
+    opacity: 0.9;
+}
+
+/* Keypad button animations */
+@keyframes keypad-press {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.9);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b4f9a 100%);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.keypad-btn.pressed {
+    animation: keypad-press 0.3s ease;
+}
+
+/* Audio element - keep accessible but visually hidden */
+#webrtc-remote-audio {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
 /* Responsive adjustments for phone widget */
 @media (max-width: 768px) {
     .webrtc-phone-widget {
