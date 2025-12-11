@@ -7,6 +7,7 @@ import struct
 import threading
 import time
 import traceback
+import uuid
 from datetime import datetime
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, PBXLogger
@@ -65,6 +66,9 @@ class PBXCore:
             self.extension_db = ExtensionDB(self.database)
             self.logger.info(f"Database backend initialized successfully ({self.database.db_type})")
             self.logger.info("Extensions, voicemail metadata, and phone registrations will be stored in database")
+            
+            # Auto-seed critical extensions if they don't exist
+            self._auto_seed_critical_extensions()
             
             # Clean up incomplete phone registrations at startup
             # Only phones with MAC, IP, and Extension should be retained
@@ -159,6 +163,28 @@ class PBXCore:
             self.ad_integration = ActiveDirectoryIntegration(ad_config)
             if self.ad_integration.enabled:
                 self.logger.info("Active Directory integration initialized")
+                
+                # Auto-sync users from AD at startup if auto_provision is enabled
+                if self.ad_integration.auto_provision:
+                    self.logger.info("Auto-provisioning enabled - syncing users from Active Directory...")
+                    try:
+                        sync_result = self.ad_integration.sync_users(
+                            extension_registry=self.extension_registry,
+                            extension_db=self.extension_db,
+                            phone_provisioning=None  # Will be set after provisioning init
+                        )
+                        
+                        # Handle both int and dict return types
+                        synced_count = sync_result if isinstance(sync_result, int) else sync_result.get('synced_count', 0)
+                        
+                        if synced_count > 0:
+                            self.logger.info(f"Auto-synced {synced_count} extension(s) from Active Directory at startup")
+                        else:
+                            self.logger.warning("AD auto-sync completed but no extensions were synced")
+                    except Exception as e:
+                        self.logger.error(f"Failed to auto-sync users from Active Directory at startup: {e}")
+                        import traceback
+                        self.logger.debug(traceback.format_exc())
             else:
                 self.logger.warning("Active Directory integration enabled in config but failed to initialize")
                 self.ad_integration = None
@@ -282,6 +308,94 @@ class PBXCore:
         self.running = False
 
         self.logger.info("PBX Core initialized with all features")
+
+    def _auto_seed_critical_extensions(self):
+        """
+        Auto-seed critical extensions at startup if they don't exist
+        
+        This ensures essential extensions (auto-attendant, webrtc-admin, operator)
+        are always available without manual setup.
+        """
+        if not self.extension_db:
+            return
+        
+        from pbx.utils.encryption import get_encryption
+        
+        # Initialize encryption for password hashing
+        fips_mode = self.config.get('security.fips_mode', False)
+        encryption = get_encryption(fips_mode)
+        
+        # Define critical extensions that should always exist
+        # These use secure default passwords that MUST be changed after first login
+        critical_extensions = [
+            {
+                'number': '0',
+                'name': 'Auto Attendant',
+                'email': 'autoattendant@pbx.local',
+                'password': 'ChangeMe-AutoAttendant-' + str(uuid.uuid4())[:8],  # Random secure default
+                'allow_external': True,
+                'voicemail_pin': '0000',
+                'description': 'Automated greeting and call routing system'
+            },
+            {
+                'number': '1001',
+                'name': 'Operator / WebAdmin Phone',
+                'email': 'operator@pbx.local',
+                'password': 'ChangeMe-Operator-' + str(uuid.uuid4())[:8],  # Random secure default
+                'allow_external': True,
+                'voicemail_pin': '1001',
+                'description': 'Primary operator extension and web-based admin phone'
+            }
+        ]
+        
+        seeded_count = 0
+        
+        for ext_config in critical_extensions:
+            number = ext_config['number']
+            
+            # Check if extension already exists
+            existing = self.extension_db.get(number)
+            if existing:
+                continue  # Skip if already exists
+            
+            try:
+                # Hash the password
+                password_hash, password_salt = encryption.hash_password(ext_config['password'])
+                
+                # Add extension to database
+                success = self.extension_db.add(
+                    number=number,
+                    name=ext_config['name'],
+                    password_hash=password_hash,
+                    email=ext_config.get('email'),
+                    allow_external=ext_config.get('allow_external', True),
+                    voicemail_pin=ext_config.get('voicemail_pin'),
+                    ad_synced=False,
+                    ad_username=None
+                )
+                
+                if success:
+                    self.logger.info(f"Auto-seeded critical extension {number}: {ext_config['name']}")
+                    seeded_count += 1
+                    
+                    # Log password for first-time setup
+                    if number == '1001':
+                        self.logger.warning("=" * 70)
+                        self.logger.warning("FIRST-TIME SETUP - EXTENSION 1001 CREDENTIALS")
+                        self.logger.warning("=" * 70)
+                        self.logger.warning(f"Extension: 1001")
+                        self.logger.warning(f"Password:  {ext_config['password']}")
+                        self.logger.warning(f"Voicemail PIN: {ext_config['voicemail_pin']}")
+                        self.logger.warning("")
+                        self.logger.warning("⚠️  CHANGE THIS PASSWORD IMMEDIATELY via admin panel!")
+                        self.logger.warning("   Access admin panel: https://<your-server-ip>:8080/admin/")
+                        self.logger.warning("=" * 70)
+                
+            except Exception as e:
+                self.logger.error(f"Failed to auto-seed extension {number}: {e}")
+        
+        if seeded_count > 0:
+            self.logger.info(f"Auto-seeded {seeded_count} critical extension(s) at startup")
 
     def _load_provisioning_devices(self):
         """Load provisioning devices from configuration"""
