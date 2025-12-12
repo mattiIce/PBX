@@ -3384,13 +3384,43 @@ async function loadDTMFConfig() {
 async function saveDTMFConfig(event) {
     event.preventDefault();
     
-    const mode = document.getElementById('dtmf-mode').value;
-    const payloadType = parseInt(document.getElementById('dtmf-payload-type').value);
-    const duration = parseInt(document.getElementById('dtmf-duration').value);
-    const sipInfoFallback = document.getElementById('dtmf-sip-info-fallback').checked;
-    const inbandFallback = document.getElementById('dtmf-inband-fallback').checked;
-    const detectionThreshold = parseFloat(document.getElementById('dtmf-detection-threshold').value);
-    const relayEnabled = document.getElementById('dtmf-relay-enabled').checked;
+    // Get and validate DOM elements
+    const modeEl = document.getElementById('dtmf-mode');
+    const payloadTypeEl = document.getElementById('dtmf-payload-type');
+    const durationEl = document.getElementById('dtmf-duration');
+    const sipInfoFallbackEl = document.getElementById('dtmf-sip-info-fallback');
+    const inbandFallbackEl = document.getElementById('dtmf-inband-fallback');
+    const detectionThresholdEl = document.getElementById('dtmf-detection-threshold');
+    const relayEnabledEl = document.getElementById('dtmf-relay-enabled');
+    
+    if (!modeEl || !payloadTypeEl || !durationEl || !sipInfoFallbackEl || 
+        !inbandFallbackEl || !detectionThresholdEl || !relayEnabledEl) {
+        showNotification('Error: DTMF configuration form elements not found', 'error');
+        return;
+    }
+    
+    // Get values from form
+    const mode = modeEl.value;
+    const payloadType = parseInt(payloadTypeEl.value, 10);
+    const duration = parseInt(durationEl.value, 10);
+    const sipInfoFallback = sipInfoFallbackEl.checked;
+    const inbandFallback = inbandFallbackEl.checked;
+    const detectionThreshold = parseFloat(detectionThresholdEl.value);
+    const relayEnabled = relayEnabledEl.checked;
+    
+    // Validate parsed numbers
+    if (isNaN(payloadType) || payloadType < 96 || payloadType > 127) {
+        showNotification('Error: Invalid payload type. Must be between 96 and 127', 'error');
+        return;
+    }
+    if (isNaN(duration) || duration < 80 || duration > 500) {
+        showNotification('Error: Invalid duration. Must be between 80 and 500ms', 'error');
+        return;
+    }
+    if (isNaN(detectionThreshold) || detectionThreshold < 0.1 || detectionThreshold > 0.9) {
+        showNotification('Error: Invalid detection threshold. Must be between 0.1 and 0.9', 'error');
+        return;
+    }
     
     const dtmfConfig = {
         dtmf: {
@@ -3414,15 +3444,9 @@ async function saveDTMFConfig(event) {
         
         console.log('DTMF configuration to save:', dtmfConfig);
         
+        // Use simple message for notification since it uses textContent
         showNotification(
-            '✅ DTMF configuration saved\n\n' +
-            '⚠️ PBX restart required for changes to take effect\n\n' +
-            'Configuration details:\n' +
-            `- Mode: ${mode}\n` +
-            `- Payload Type: ${payloadType}\n` +
-            `- Duration: ${duration}ms\n` +
-            `- SIP INFO Fallback: ${sipInfoFallback ? 'Enabled' : 'Disabled'}\n` +
-            `- In-Band Fallback: ${inbandFallback ? 'Enabled' : 'Disabled'}`,
+            `✅ DTMF configuration saved (Mode: ${mode}, Payload: ${payloadType}). ⚠️ PBX restart required.`,
             'success'
         );
         
