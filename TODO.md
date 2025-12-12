@@ -1,9 +1,19 @@
 # PBX System - Feature Implementation TODO List
 
-**Last Updated**: December 7, 2025  
-**Status**: Active Development
+**Last Updated**: December 12, 2025  
+**Status**: Active Development  
+**Deployment Context**: Automotive Manufacturing Plant
 
 This document tracks all features from the Executive Summary that are marked as **⏳ Planned** and need to be implemented.
+
+## Deployment-Specific Notes
+
+This PBX system is being developed for an **automotive manufacturing plant**. As such:
+
+- ❌ **HIPAA Compliance**: Not required (removed) - healthcare-specific regulations don't apply
+- ❌ **TCPA Compliance**: Not required (removed) - no outbound telemarketing operations
+- ✅ **E911 Support**: Critical for employee safety and regulatory compliance
+- ✅ **Manufacturing-Specific**: Focus on paging systems, emergency notifications, shift communications
 
 ## Legend
 - [x] **Completed** - Feature is fully implemented and production-ready
@@ -15,10 +25,10 @@ This document tracks all features from the Executive Summary that are marked as 
 ## Progress Summary
 
 ### Overall Status
-- **Total Features Tracked**: 79 features
-- **Completed** ✅: 20 features (25%)
+- **Total Features Tracked**: 77 features (removed 2 non-applicable: HIPAA, TCPA)
+- **Completed** ✅: 20 features (26%)
 - **Framework** ⚠️: 11 features (14%)
-- **Planned**: 48 features (61%)
+- **Planned**: 46 features (60%)
 
 ### Recently Completed (December 2025)
 1. **STIR/SHAKEN Support** (Dec 12) - Caller ID authentication, anti-spoofing, regulatory compliance
@@ -499,14 +509,11 @@ Note: CRM integration features have been removed as they are not required for th
   - Security: RSA-2048 and ECDSA support, signature verification, certificate validation
   - Impact: Caller ID trust, regulatory compliance (FCC TRACED Act, CRTC requirements)
 
-- [ ] **HIPAA Compliance Tools** - Healthcare industry compliance
-  - Requires: Enhanced encryption, detailed audit logging, access controls
-  - Note: Encryption and audit logging framework exists
-  - Impact: Healthcare sector support
-
 - [ ] **PCI DSS Compliance** - Payment card industry standards
   - Requires: Secure payment handling, compliance tools
   - Impact: Payment processing support
+
+**Note**: HIPAA compliance features have been removed as this system is for an automotive manufacturing plant, not healthcare.
 
 ---
 
@@ -540,9 +547,7 @@ Note: CRM integration features have been removed as they are not required for th
   - Requires: Multi-region storage management
   - Impact: GDPR compliance
 
-- [ ] **TCPA Compliance Tools** - Telemarketing regulations
-  - Requires: Do-not-call list integration
-  - Impact: Legal compliance for outbound calling
+**Note**: TCPA (telemarketing) compliance features have been removed as this system is for an automotive manufacturing plant with no outbound telemarketing operations.
 
 ---
 
