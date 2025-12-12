@@ -1,5 +1,19 @@
 # DTMF Payload Type Configuration Guide
 
+## Quick Start
+
+**Not sure which payload type to use?** Run the interactive selector tool:
+
+```bash
+python scripts/dtmf_payload_selector.py
+```
+
+This tool will ask a few questions and recommend the best payload type for your setup.
+
+**Or use the decision tree below** to choose manually.
+
+---
+
 ## Overview
 
 This guide explains how to configure the RFC2833 DTMF payload type for IP phones, particularly relevant for Zultys ZIP33G phones which may experience DTMF issues with the default payload type 101.
@@ -42,6 +56,109 @@ If you're experiencing DTMF problems, you may see:
 - Intermittent DTMF detection (works sometimes, fails other times)
 - One-way DTMF (phone can send, but PBX can't receive, or vice versa)
 - Phantom DTMF digits (digits detected that weren't pressed)
+
+## Configuration
+
+### Quick Payload Type Selector
+
+**Use this decision tree to choose the right payload type:**
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Is DTMF working with payload type 101?              │
+└────────────┬────────────────────────────────────────┘
+             │
+      ┌──────┴──────┐
+      │    YES      │                 NO
+      │             │                  │
+      │  Keep 101   │         ┌────────┴────────┐
+      │  (standard) │         │ Try these next: │
+      └─────────────┘         └────────┬────────┘
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    │                  │                  │
+              ┌─────▼─────┐      ┌────▼────┐      ┌─────▼─────┐
+              │ Step 1:   │      │ Step 2: │      │ Step 3:   │
+              │ Try 100   │──┬──>│ Try 102 │──┬──>│ Try 96    │
+              │ (Cisco)   │  │   │(Carrier)│  │   │(Generic)  │
+              └───────────┘  │   └─────────┘  │   └───────────┘
+                             │                │
+                      ┌──────▼────────────────▼───────┐
+                      │ Still not working?            │
+                      │ • Check SIP provider docs     │
+                      │ • Try 121 (Polycom)           │
+                      │ • Switch to SIP INFO method   │
+                      └───────────────────────────────┘
+```
+
+### Payload Type Reference Guide
+
+| Payload Type | Use Case | When to Use | Compatibility |
+|--------------|----------|-------------|---------------|
+| **101** | RFC2833 Standard | **Default - Start here** | Most phones, most providers |
+| **100** | Cisco/Alternative | Cisco systems, some providers | Cisco, Grandstream, some Yealink |
+| **102** | Carrier Alternative | Required by specific carriers | Verizon, AT&T, some SIP trunks |
+| **96** | Generic Fallback | When 100/101/102 don't work | Universal (first dynamic type) |
+| **121** | Polycom Specific | Polycom phones with issues | Polycom VVX series |
+
+### Step-by-Step Troubleshooting
+
+**Step 1: Verify the symptom**
+```bash
+# Test DTMF by calling voicemail
+# Dial *<extension> and try entering PIN
+# Note what happens:
+# - No response? → Try alternative payload type
+# - Wrong digits detected? → Try alternative payload type
+# - Works sometimes? → Network/timing issue (not payload type)
+```
+
+**Step 2: Try alternative payload types in this order**
+
+1. **Start with 100** (most common alternative)
+   ```yaml
+   features:
+     dtmf:
+       payload_type: 100
+   ```
+   Restart PBX, reprovision phones, test
+
+2. **If 100 fails, try 102** (carrier alternative)
+   ```yaml
+   features:
+     dtmf:
+       payload_type: 102
+   ```
+   Restart PBX, reprovision phones, test
+
+3. **If 102 fails, try 96** (generic fallback)
+   ```yaml
+   features:
+     dtmf:
+       payload_type: 96
+   ```
+   Restart PBX, reprovision phones, test
+
+**Step 3: Check SIP provider requirements**
+```bash
+# Contact your SIP provider and ask:
+# "What RFC2833 payload type do you require for DTMF?"
+# Common answers:
+# - "We support 101" → Use 101
+# - "Use 100" → Use 100
+# - "We don't support RFC2833" → Switch to SIP INFO method
+```
+
+**Step 4: Last resort - Switch to SIP INFO**
+
+If no payload type works, your provider may not support RFC2833:
+```bash
+# Edit phone template (e.g., zultys_zip33g.template)
+# Change:
+account.1.dtmf.type = 1          # Was 2, now 1 for RFC2833
+# To:
+account.1.dtmf.type = 2          # Back to SIP INFO (more compatible)
+```
 
 ## Configuration
 

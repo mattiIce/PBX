@@ -92,6 +92,62 @@ account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}
 
 ## How to Use
 
+### Interactive Payload Type Selector (Recommended)
+
+Not sure which payload type to use? Run the interactive tool:
+
+```bash
+python scripts/dtmf_payload_selector.py
+```
+
+The tool will:
+- Ask about your current setup and symptoms
+- Identify your equipment type
+- Recommend the best payload type to try
+- Show configuration instructions
+- Display troubleshooting steps
+
+**Example output:**
+```
+═══════════════════════════════════════════════════════════
+   DTMF RFC2833 Payload Type Selector
+═══════════════════════════════════════════════════════════
+
+Step 1: Current Status
+
+Is DTMF currently working with payload type 101?
+  1. Yes, it's working fine
+  2. No, DTMF is not working
+  3. I'm not sure / new setup
+
+Enter choice (1-3): 2
+
+Step 2: Equipment Information
+
+What type of equipment are you using?
+  1. Cisco phones or equipment
+  2. Polycom phones
+  3. Yealink, Zultys, or Grandstream phones
+  4. SIP trunk from major carrier (Verizon, AT&T, etc.)
+  5. Other / Not sure
+
+Enter choice (1-5): 1
+
+✓ Recommendation: Try payload type 100 first
+
+Payload Type 100: Cisco/Common Alternative
+  Description: Used by Cisco systems and many SIP providers
+  Use when: When 101 fails, or Cisco equipment in use
+  Compatibility: Cisco, Grandstream, some Yealink
+
+Cisco systems commonly use payload type 100.
+If 100 doesn't work, try: 101 → 102 → 96
+```
+
+### Manual Configuration
+
+If you prefer to configure manually or already know which payload type to use:
+
 ### Check if You Need This
 
 You may need to change the payload type if experiencing:

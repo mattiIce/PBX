@@ -80,10 +80,24 @@ features:
   
   # DTMF Configuration - Global settings for all devices
   # Note: Individual phone templates may override these for device-specific requirements
+  # 
+  # How to choose the right payload type:
+  # ------------------------------------------------------------------
+  # 1. START WITH: 101 (RFC2833 standard - works for most phones)
+  # 2. IF DTMF doesn't work with 101, try these alternatives in order:
+  #    - 100: Used by Cisco systems and some SIP providers
+  #    - 102: Alternative used by some carriers (Verizon, AT&T)
+  #    - 96:  First dynamic payload type, generic fallback
+  #    - 121: Used by some Polycom phones
+  # 3. Check your SIP provider's documentation for required payload type
+  # 4. See DTMF_PAYLOAD_TYPE_CONFIGURATION.md for detailed troubleshooting
+  # ------------------------------------------------------------------
   dtmf:
-    payload_type: 101          # RFC2833 payload type (standard is 101, but can be 96-127)
-                               # Some phones may require alternative payload types (e.g., 100, 102)
-                               # Change this if experiencing DTMF issues with specific phone models
+    payload_type: 101          # Options: 96-127 (dynamic RTP payload types)
+                               # 101 = Standard (recommended - try this first)
+                               # 100 = Cisco/common alternative
+                               # 102 = Carrier alternative
+                               # 96  = Generic fallback
   
   # Phone Book - Centralized directory for IP phones
   phone_book:
