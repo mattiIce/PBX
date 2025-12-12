@@ -29,17 +29,19 @@ class TestCompleteCallFlow(unittest.TestCase):
     """Test complete call flow from INVITE to call end"""
 
     def test_sdp_generation_includes_all_codecs(self):
-        """Test that SDP includes PCMU, PCMA, G722, and telephone-event"""
+        """Test that SDP includes PCMU, PCMA, G722, G729, G726-32, and telephone-event"""
         sdp = SDPBuilder.build_audio_sdp('192.168.1.1', 10000, '12345')
 
         # Verify SDP structure
         self.assertIn('m=audio 10000 RTP/AVP', sdp)
-        self.assertIn('0 8 9 101', sdp)  # All codecs
+        self.assertIn('0 8 9 18 2 101', sdp)  # All default codecs
 
         # Verify codec mappings
         self.assertIn('a=rtpmap:0 PCMU/8000', sdp)
         self.assertIn('a=rtpmap:8 PCMA/8000', sdp)
         self.assertIn('a=rtpmap:9 G722/8000', sdp)
+        self.assertIn('a=rtpmap:18 G729/8000', sdp)
+        self.assertIn('a=rtpmap:2 G726-32/8000', sdp)
         self.assertIn('a=rtpmap:101 telephone-event/8000', sdp)
         self.assertIn('a=fmtp:101 0-16', sdp)
         self.assertIn('a=sendrecv', sdp)
