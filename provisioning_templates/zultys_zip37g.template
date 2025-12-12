@@ -58,9 +58,19 @@ account.1.codec.3.payload_type = 9
 account.1.codec.3.priority = 3
 account.1.codec.3.name = G722
 
-# Codec 4-5: Disabled (reserved for future use)
-account.1.codec.4.enable = 0
-account.1.codec.5.enable = 0
+# Codec 4: G.729 - Low bandwidth codec (8 kbit/s)
+# Excellent for bandwidth-constrained scenarios
+account.1.codec.4.enable = 1
+account.1.codec.4.payload_type = 18
+account.1.codec.4.priority = 4
+account.1.codec.4.name = G729
+
+# Codec 5: G.726-32 - ADPCM codec (32 kbit/s)
+# Good balance of quality and bandwidth
+account.1.codec.5.enable = 1
+account.1.codec.5.payload_type = 2
+account.1.codec.5.priority = 5
+account.1.codec.5.name = G726-32
 
 # Codec 6: Explicitly disabled (was in original config)
 account.1.codec.6.enable = 0

@@ -13,14 +13,17 @@ account.1.sip_server.1.address = {{SIP_SERVER}}
 account.1.sip_server.1.port = {{SIP_PORT}}
 account.1.sip_server.1.expires = 3600
 
-# Codecs - Priority: PCMU > PCMA > G722 (G.711 preferred for reliability)
+# Codecs - Priority: PCMU > PCMA > G722 > G729 > G726-32 (G.711 preferred for reliability)
 account.1.codec.1.enable = 1
 account.1.codec.1.payload_type = PCMU
 account.1.codec.2.enable = 1
 account.1.codec.2.payload_type = PCMA
 account.1.codec.3.enable = 1
 account.1.codec.3.payload_type = G722
-account.1.codec.4.enable = 0
+account.1.codec.4.enable = 1
+account.1.codec.4.payload_type = G729
+account.1.codec.5.enable = 1
+account.1.codec.5.payload_type = G726-32
 
 # DTMF Settings - Using SIP INFO for reliable voicemail IVR
 account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
