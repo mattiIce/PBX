@@ -48,9 +48,7 @@ async function initializeUserContext() {
     // Verify token is still valid by making an authenticated request
     try {
         const response = await fetch(`${API_BASE}/api/extensions`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: getAuthHeaders()
         });
         
         if (response.status === 401 || response.status === 403) {
