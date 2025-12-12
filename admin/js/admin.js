@@ -48,9 +48,7 @@ async function initializeUserContext() {
     // Verify token is still valid by making an authenticated request
     try {
         const response = await fetch(`${API_BASE}/api/extensions`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: getAuthHeaders()
         });
         
         if (response.status === 401 || response.status === 403) {
@@ -253,10 +251,7 @@ function initializeLogout() {
             if (token) {
                 await fetch(`${API_BASE}/api/auth/logout`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: getAuthHeaders()
                 });
             }
         } catch (error) {
@@ -483,7 +478,9 @@ async function loadExtensions() {
     tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading extensions...</td></tr>';
     
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`);
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: getAuthHeaders()
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -573,7 +570,8 @@ async function deleteExtension(number) {
     
     try {
         const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
         
         if (response.ok) {
@@ -617,7 +615,9 @@ async function loadCalls() {
 // Configuration Functions
 async function loadConfig() {
     try {
-        const response = await fetch(`${API_BASE}/api/config/full`);
+        const response = await fetch(`${API_BASE}/api/config/full`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const config = await response.json();
             
@@ -735,9 +735,7 @@ async function saveConfigSection(section, data) {
     try {
         const response = await fetch(`${API_BASE}/api/config/section`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 section: section,
                 data: data
@@ -777,9 +775,7 @@ function initializeForms() {
         try {
             const response = await fetch(`${API_BASE}/api/extensions`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(extensionData)
             });
             
@@ -822,9 +818,7 @@ function initializeForms() {
         try {
             const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(extensionData)
             });
             
@@ -988,9 +982,7 @@ function initializeForms() {
             try {
                 const response = await fetch(`${API_BASE}/api/provisioning/devices`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({
                         mac_address: mac,
                         extension_number: extension,
@@ -1091,7 +1083,9 @@ document.head.appendChild(style);
 async function loadVoicemailTab() {
     try {
         // Load extensions into dropdown
-        const response = await fetch(`${API_BASE}/api/extensions`);
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: getAuthHeaders()
+        });
         const extensions = await response.json();
         
         const select = document.getElementById('vm-extension-select');
@@ -1344,9 +1338,7 @@ async function markVoicemailRead(extension, messageId, showMsg = true) {
     try {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}/${messageId}/mark-read`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: getAuthHeaders()
         });
         
         if (response.ok) {
@@ -1821,7 +1813,9 @@ async function showAddDeviceModal() {
     
     // Fetch extensions if not already loaded
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`);
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const extensions = await response.json();
             extensionSelect.innerHTML = '<option value="">Select Extension</option>';
