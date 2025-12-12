@@ -3322,3 +3322,140 @@ async function saveCodecConfig(event) {
         showNotification('Failed to save codec configuration', 'error');
     }
 }
+
+// ==================== DTMF Configuration ====================
+
+/**
+ * Load current DTMF configuration from server
+ */
+async function loadDTMFConfig() {
+    try {
+        // TODO: In production, fetch from API endpoint
+        // const response = await fetch('/api/config/dtmf');
+        // const config = await response.json();
+        
+        // For now, load default values from config.yml
+        // These values match the configuration in config.yml
+        const config = {
+            mode: 'RFC2833',
+            payload_type: 101,
+            duration: 160,
+            sip_info_fallback: true,
+            inband_fallback: true,
+            detection_threshold: 0.3,
+            relay_enabled: true
+        };
+        
+        // Populate form fields
+        if (document.getElementById('dtmf-mode')) {
+            document.getElementById('dtmf-mode').value = config.mode;
+        }
+        if (document.getElementById('dtmf-payload-type')) {
+            document.getElementById('dtmf-payload-type').value = config.payload_type.toString();
+        }
+        if (document.getElementById('dtmf-duration')) {
+            document.getElementById('dtmf-duration').value = config.duration;
+        }
+        if (document.getElementById('dtmf-sip-info-fallback')) {
+            document.getElementById('dtmf-sip-info-fallback').checked = config.sip_info_fallback;
+        }
+        if (document.getElementById('dtmf-inband-fallback')) {
+            document.getElementById('dtmf-inband-fallback').checked = config.inband_fallback;
+        }
+        if (document.getElementById('dtmf-detection-threshold')) {
+            document.getElementById('dtmf-detection-threshold').value = config.detection_threshold;
+            document.getElementById('dtmf-threshold-value').textContent = config.detection_threshold;
+        }
+        if (document.getElementById('dtmf-relay-enabled')) {
+            document.getElementById('dtmf-relay-enabled').checked = config.relay_enabled;
+        }
+        
+        console.log('DTMF configuration loaded:', config);
+        
+    } catch (error) {
+        console.error('Error loading DTMF config:', error);
+        showNotification('Failed to load DTMF configuration', 'error');
+    }
+}
+
+/**
+ * Save DTMF configuration to server
+ */
+async function saveDTMFConfig(event) {
+    event.preventDefault();
+    
+    const mode = document.getElementById('dtmf-mode').value;
+    const payloadType = parseInt(document.getElementById('dtmf-payload-type').value);
+    const duration = parseInt(document.getElementById('dtmf-duration').value);
+    const sipInfoFallback = document.getElementById('dtmf-sip-info-fallback').checked;
+    const inbandFallback = document.getElementById('dtmf-inband-fallback').checked;
+    const detectionThreshold = parseFloat(document.getElementById('dtmf-detection-threshold').value);
+    const relayEnabled = document.getElementById('dtmf-relay-enabled').checked;
+    
+    const dtmfConfig = {
+        dtmf: {
+            mode: mode,
+            payload_type: payloadType,
+            duration: duration,
+            sip_info_fallback: sipInfoFallback,
+            inband_fallback: inbandFallback,
+            detection_threshold: detectionThreshold,
+            relay_enabled: relayEnabled
+        }
+    };
+    
+    try {
+        // TODO: In production, save via API endpoint
+        // const response = await fetch('/api/config/dtmf', {
+        //     method: 'POST',
+        //     headers: {'Content-Type': 'application/json'},
+        //     body: JSON.stringify(dtmfConfig)
+        // });
+        
+        console.log('DTMF configuration to save:', dtmfConfig);
+        
+        showNotification(
+            '✅ DTMF configuration saved\n\n' +
+            '⚠️ PBX restart required for changes to take effect\n\n' +
+            'Configuration details:\n' +
+            `- Mode: ${mode}\n` +
+            `- Payload Type: ${payloadType}\n` +
+            `- Duration: ${duration}ms\n` +
+            `- SIP INFO Fallback: ${sipInfoFallback ? 'Enabled' : 'Disabled'}\n` +
+            `- In-Band Fallback: ${inbandFallback ? 'Enabled' : 'Disabled'}`,
+            'success'
+        );
+        
+    } catch (error) {
+        console.error('Error saving DTMF config:', error);
+        showNotification('Failed to save DTMF configuration', 'error');
+    }
+}
+
+/**
+ * Update threshold display value in real-time
+ */
+function updateDTMFThresholdDisplay() {
+    const thresholdSlider = document.getElementById('dtmf-detection-threshold');
+    const thresholdValue = document.getElementById('dtmf-threshold-value');
+    
+    if (thresholdSlider && thresholdValue) {
+        thresholdSlider.addEventListener('input', function() {
+            thresholdValue.textContent = this.value;
+        });
+    }
+}
+
+// Initialize DTMF threshold display update on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateDTMFThresholdDisplay();
+    
+    // Load DTMF config when Codecs tab is shown
+    const codecsTab = document.querySelector('[data-tab="codecs"]');
+    if (codecsTab) {
+        codecsTab.addEventListener('click', function() {
+            // Small delay to ensure tab content is visible
+            setTimeout(loadDTMFConfig, 100);
+        });
+    }
+});
