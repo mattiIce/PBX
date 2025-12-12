@@ -5,7 +5,7 @@
 // Override the original loadVoicemailForExtension to add new features
 const original_loadVoicemailForExtension = window.loadVoicemailForExtension;
 
-async function loadVoicemailForExtension() {
+window.loadVoicemailForExtension = async function() {
     // Call original function
     if (original_loadVoicemailForExtension) {
         await original_loadVoicemailForExtension();
@@ -45,9 +45,9 @@ async function loadVoicemailForExtension() {
         document.getElementById('vm-unread-messages').textContent = '0';
         document.getElementById('vm-has-greeting').textContent = 'Unknown';
     }
-}
+};
 
-async function exportVoicemailBox() {
+window.exportVoicemailBox = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -97,9 +97,9 @@ async function exportVoicemailBox() {
         console.error('Error exporting voicemail box:', error);
         showNotification(`Failed to export voicemail box: ${error.message}`, 'error');
     }
-}
+};
 
-async function clearVoicemailBox() {
+window.clearVoicemailBox = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -133,9 +133,9 @@ async function clearVoicemailBox() {
         console.error('Error clearing voicemail box:', error);
         showNotification('Failed to clear voicemail box', 'error');
     }
-}
+};
 
-async function uploadCustomGreeting() {
+window.uploadCustomGreeting = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -177,9 +177,9 @@ async function uploadCustomGreeting() {
     };
     
     input.click();
-}
+};
 
-async function downloadCustomGreeting() {
+window.downloadCustomGreeting = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -209,9 +209,9 @@ async function downloadCustomGreeting() {
         console.error('Error downloading greeting:', error);
         showNotification('No custom greeting found for this extension', 'error');
     }
-}
+};
 
-async function deleteCustomGreeting() {
+window.deleteCustomGreeting = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -239,10 +239,10 @@ async function deleteCustomGreeting() {
         console.error('Error deleting greeting:', error);
         showNotification('Failed to delete greeting', 'error');
     }
-}
+};
 
 // Show all voicemail boxes overview
-async function loadAllVoicemailBoxes() {
+window.loadAllVoicemailBoxes = async function() {
     try {
         const response = await fetch(`${API_BASE}/api/voicemail-boxes`);
         if (!response.ok) {
@@ -257,4 +257,4 @@ async function loadAllVoicemailBoxes() {
         console.error('Error loading voicemail boxes:', error);
         return [];
     }
-}
+};
