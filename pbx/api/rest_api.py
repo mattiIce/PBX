@@ -1665,28 +1665,34 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Invalid credentials'}, 401)
                 return
 
-            # Verify password
-            password_hash = ext.get('password_hash', '')
+            # Verify password using voicemail PIN
+            # For Phase 3 authentication, the login password is the user's voicemail PIN
+            # This provides a single credential for users to remember (their voicemail PIN)
+            voicemail_pin_hash = ext.get('voicemail_pin_hash', '')
             
-            # Check if password is hashed (contains salt) or plain text
+            # Check if voicemail PIN is hashed (contains salt) or plain text
             # For backwards compatibility, we support both
             from pbx.utils.encryption import get_encryption
             fips_mode = self.pbx_core.config.get('security.fips_mode', False)
             encryption = get_encryption(fips_mode)
             
-            password_salt = ext.get('password_salt')
-            if password_salt:
-                # Password is hashed - verify using encryption
-                if not encryption.verify_password(password, password_hash, password_salt):
+            voicemail_pin_salt = ext.get('voicemail_pin_salt')
+            if voicemail_pin_salt:
+                # Voicemail PIN is hashed - verify using encryption
+                if not encryption.verify_password(password, voicemail_pin_hash, voicemail_pin_salt):
                     self._send_json({'error': 'Invalid credentials'}, 401)
                     return
             else:
-                # Password is plain text (legacy) - use constant-time comparison
+                # Voicemail PIN is plain text (legacy) or not set
+                # If no voicemail PIN is configured, deny access for security
+                if not voicemail_pin_hash or voicemail_pin_hash == '':
+                    self._send_json({'error': 'Invalid credentials'}, 401)
+                    return
                 import secrets
                 # Ensure both values are strings before comparison
                 password_str = password if isinstance(password, str) else password.decode('utf-8')
-                password_hash_str = password_hash if isinstance(password_hash, str) else str(password_hash)
-                if not secrets.compare_digest(password_str.encode('utf-8'), password_hash_str.encode('utf-8')):
+                voicemail_pin_str = voicemail_pin_hash if isinstance(voicemail_pin_hash, str) else str(voicemail_pin_hash)
+                if not secrets.compare_digest(password_str.encode('utf-8'), voicemail_pin_str.encode('utf-8')):
                     self._send_json({'error': 'Invalid credentials'}, 401)
                     return
 

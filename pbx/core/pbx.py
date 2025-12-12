@@ -365,6 +365,7 @@ class PBXCore:
                 'password': 'ChangeMe-AutoAttendant-' + str(uuid.uuid4())[:8],
                 'allow_external': True,
                 'voicemail_pin': '0000',
+                'is_admin': False,
                 'description': 'Automated greeting and call routing system'
             },
             {
@@ -375,6 +376,7 @@ class PBXCore:
                 'password': 'ChangeMe-Operator-' + str(uuid.uuid4())[:8],
                 'allow_external': True,
                 'voicemail_pin': '1001',
+                'is_admin': True,
                 'description': 'Primary operator extension and web-based admin phone'
             }
         ]
@@ -403,7 +405,8 @@ class PBXCore:
                     allow_external=ext_config.get('allow_external', True),
                     voicemail_pin=ext_config.get('voicemail_pin'),
                     ad_synced=False,
-                    ad_username=None
+                    ad_username=None,
+                    is_admin=ext_config.get('is_admin', False)
                 )
 
                 if success:

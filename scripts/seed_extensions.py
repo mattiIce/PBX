@@ -100,7 +100,8 @@ def main():
             'email': 'admin@example.com',
             'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': '9999'  # Change after setup
+            'voicemail_pin': '9999',  # Change after setup
+            'is_admin': True
         },
         {
             'number': '1001',
@@ -108,7 +109,8 @@ def main():
             'email': 'ext1001@example.com',
             'password': 'CHANGE-THIS-PASSWORD-IMMEDIATELY',  # Will be hashed
             'allow_external': True,
-            'voicemail_pin': '1001'  # Change after setup
+            'voicemail_pin': '1001',  # Change after setup
+            'is_admin': True
         },
         {
             'number': '1002',
@@ -172,7 +174,8 @@ def main():
                 allow_external=ext.get('allow_external', True),
                 voicemail_pin=ext.get('voicemail_pin'),
                 ad_synced=False,
-                ad_username=None
+                ad_username=None,
+                is_admin=ext.get('is_admin', False)
             )
             
             if success:
