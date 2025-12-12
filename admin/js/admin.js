@@ -1109,12 +1109,14 @@ async function loadVoicemailForExtension() {
     if (!extension) {
         document.getElementById('voicemail-pin-section').style.display = 'none';
         document.getElementById('voicemail-messages-section').style.display = 'none';
+        document.getElementById('voicemail-box-overview').style.display = 'none';
         return;
     }
     
     // Show sections
     document.getElementById('voicemail-pin-section').style.display = 'block';
     document.getElementById('voicemail-messages-section').style.display = 'block';
+    document.getElementById('voicemail-box-overview').style.display = 'block';
     document.getElementById('vm-current-extension').textContent = extension;
     
     try {
