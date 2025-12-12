@@ -1400,6 +1400,119 @@ G.711</textarea>
                     <button type="submit" class="btn btn-success">💾 Save Codec Settings</button>
                 </form>
             </div>
+
+            <!-- DTMF Configuration -->
+            <div class="config-section">
+                <h3>📞 DTMF Configuration</h3>
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <p><strong>DTMF (Dual-Tone Multi-Frequency)</strong> - Configure how phone keypad tones are transmitted and detected.</p>
+                    <p>This system supports three DTMF methods:</p>
+                    <ul>
+                        <li><strong>RFC 2833</strong> - Out-of-band RTP events (most reliable, recommended)</li>
+                        <li><strong>SIP INFO</strong> - Out-of-band SIP signaling (fallback method)</li>
+                        <li><strong>In-Band Audio</strong> - Audio tone detection using Goertzel algorithm (universal fallback)</li>
+                    </ul>
+                </div>
+
+                <form id="dtmf-config-form" onsubmit="saveDTMFConfig(event)">
+                    <h4>Primary DTMF Method</h4>
+                    <div class="form-group">
+                        <label>DTMF Mode:</label>
+                        <select id="dtmf-mode">
+                            <option value="RFC2833" selected>RFC 2833 (Recommended)</option>
+                            <option value="SIP_INFO">SIP INFO</option>
+                            <option value="INBAND">In-Band Audio Detection</option>
+                            <option value="AUTO">Auto (Try all methods)</option>
+                        </select>
+                        <small>Primary method for DTMF transmission. RFC 2833 is the industry standard.</small>
+                    </div>
+
+                    <h4>RFC 2833 Settings</h4>
+                    <div class="form-group">
+                        <label>RTP Payload Type:</label>
+                        <select id="dtmf-payload-type">
+                            <option value="96">96 - Generic fallback</option>
+                            <option value="100">100 - Cisco/common alternative</option>
+                            <option value="101" selected>101 - Standard (RFC 2833)</option>
+                            <option value="102">102 - Carrier alternative</option>
+                            <option value="121">121 - Polycom alternative</option>
+                        </select>
+                        <small>RTP payload type for telephone-event (DTMF). Start with 101 (standard), try others if DTMF doesn't work.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>DTMF Duration (milliseconds):</label>
+                        <input type="number" id="dtmf-duration" min="80" max="500" value="160" step="10">
+                        <small>Duration of each DTMF tone (80-500ms). Standard is 160ms.</small>
+                    </div>
+
+                    <h4>Fallback Options</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="dtmf-sip-info-fallback" checked>
+                            Enable SIP INFO Fallback
+                        </label>
+                        <small>Use SIP INFO method if RFC 2833 fails</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="dtmf-inband-fallback" checked>
+                            Enable In-Band Audio Detection Fallback
+                        </label>
+                        <small>Always detect DTMF tones from audio stream as last resort</small>
+                    </div>
+
+                    <h4>Advanced Settings</h4>
+                    <div class="form-group">
+                        <label>In-Band Detection Threshold:</label>
+                        <input type="range" id="dtmf-detection-threshold" min="0.1" max="0.9" value="0.3" step="0.05">
+                        <span id="dtmf-threshold-value">0.3</span>
+                        <small>Sensitivity for in-band audio detection (0.1=very sensitive, 0.9=very strict). Default: 0.3</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="dtmf-relay-enabled" checked>
+                            Enable DTMF Relay
+                        </label>
+                        <small>Relay DTMF tones between call participants (required for IVR and auto-attendant)</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">💾 Save DTMF Configuration</button>
+                </form>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <h4>📚 Payload Type Selection Guide</h4>
+                    <p><strong>How to choose the right payload type:</strong></p>
+                    <ol>
+                        <li><strong>Start with 101</strong> - This is the RFC 2833 standard and works with most phones</li>
+                        <li><strong>If DTMF doesn't work</strong>, try these alternatives in order:
+                            <ul>
+                                <li><strong>100:</strong> Used by Cisco systems and some SIP providers</li>
+                                <li><strong>102:</strong> Alternative used by some carriers (Verizon, AT&T)</li>
+                                <li><strong>96:</strong> First dynamic payload type, generic fallback</li>
+                                <li><strong>121:</strong> Used by some Polycom phones</li>
+                            </ul>
+                        </li>
+                        <li><strong>Check your SIP provider's documentation</strong> for their required payload type</li>
+                        <li><strong>Phone-specific overrides:</strong> Individual phone templates can override these settings</li>
+                    </ol>
+                    
+                    <h4>🔧 Troubleshooting</h4>
+                    <ul>
+                        <li><strong>DTMF not detected in IVR/voicemail:</strong> Try changing payload type to 100 or 102</li>
+                        <li><strong>Wrong digits detected:</strong> Increase detection threshold or check for audio interference</li>
+                        <li><strong>DTMF works locally but not through trunk:</strong> Check SIP provider's required payload type</li>
+                        <li><strong>Delayed DTMF response:</strong> Reduce DTMF duration or check network latency</li>
+                    </ul>
+                    
+                    <p>📖 For detailed information, see: 
+                        <a href="https://github.com/mattiIce/PBX/blob/main/COMPLETE_DTMF_IMPLEMENTATION_SUMMARY.md" target="_blank">COMPLETE_DTMF_IMPLEMENTATION_SUMMARY.md</a>,
+                        <a href="https://github.com/mattiIce/PBX/blob/main/DTMF_PAYLOAD_TYPE_CONFIGURATION.md" target="_blank">DTMF_PAYLOAD_TYPE_CONFIGURATION.md</a>
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- Configuration Tab -->

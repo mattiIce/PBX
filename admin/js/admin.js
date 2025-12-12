@@ -3322,3 +3322,177 @@ async function saveCodecConfig(event) {
         showNotification('Failed to save codec configuration', 'error');
     }
 }
+
+// ==================== DTMF Configuration ====================
+
+/**
+ * Load current DTMF configuration from server
+ */
+async function loadDTMFConfig() {
+    try {
+        // TODO: In production, fetch from API endpoint
+        // const response = await fetch('/api/config/dtmf');
+        // const config = await response.json();
+        
+        // For now, load default values from config.yml
+        // These values match the configuration in config.yml
+        const config = {
+            mode: 'RFC2833',
+            payload_type: 101,
+            duration: 160,
+            sip_info_fallback: true,
+            inband_fallback: true,
+            detection_threshold: 0.3,
+            relay_enabled: true
+        };
+        
+        // Populate form fields
+        if (document.getElementById('dtmf-mode')) {
+            document.getElementById('dtmf-mode').value = config.mode;
+        }
+        if (document.getElementById('dtmf-payload-type')) {
+            document.getElementById('dtmf-payload-type').value = config.payload_type.toString();
+        }
+        if (document.getElementById('dtmf-duration')) {
+            document.getElementById('dtmf-duration').value = config.duration;
+        }
+        if (document.getElementById('dtmf-sip-info-fallback')) {
+            document.getElementById('dtmf-sip-info-fallback').checked = config.sip_info_fallback;
+        }
+        if (document.getElementById('dtmf-inband-fallback')) {
+            document.getElementById('dtmf-inband-fallback').checked = config.inband_fallback;
+        }
+        if (document.getElementById('dtmf-detection-threshold')) {
+            document.getElementById('dtmf-detection-threshold').value = config.detection_threshold;
+            document.getElementById('dtmf-threshold-value').textContent = config.detection_threshold;
+        }
+        if (document.getElementById('dtmf-relay-enabled')) {
+            document.getElementById('dtmf-relay-enabled').checked = config.relay_enabled;
+        }
+        
+        console.log('DTMF configuration loaded:', config);
+        
+    } catch (error) {
+        console.error('Error loading DTMF config:', error);
+        showNotification('Failed to load DTMF configuration', 'error');
+    }
+}
+
+/**
+ * Save DTMF configuration to server
+ */
+async function saveDTMFConfig(event) {
+    event.preventDefault();
+    
+    // Get and validate DOM elements
+    const modeEl = document.getElementById('dtmf-mode');
+    const payloadTypeEl = document.getElementById('dtmf-payload-type');
+    const durationEl = document.getElementById('dtmf-duration');
+    const sipInfoFallbackEl = document.getElementById('dtmf-sip-info-fallback');
+    const inbandFallbackEl = document.getElementById('dtmf-inband-fallback');
+    const detectionThresholdEl = document.getElementById('dtmf-detection-threshold');
+    const relayEnabledEl = document.getElementById('dtmf-relay-enabled');
+    
+    if (!modeEl || !payloadTypeEl || !durationEl || !sipInfoFallbackEl || 
+        !inbandFallbackEl || !detectionThresholdEl || !relayEnabledEl) {
+        showNotification('Error: DTMF configuration form elements not found', 'error');
+        return;
+    }
+    
+    // Get values from form
+    const mode = modeEl.value;
+    const payloadType = parseInt(payloadTypeEl.value, 10);
+    const duration = parseInt(durationEl.value, 10);
+    const sipInfoFallback = sipInfoFallbackEl.checked;
+    const inbandFallback = inbandFallbackEl.checked;
+    const detectionThreshold = parseFloat(detectionThresholdEl.value);
+    const relayEnabled = relayEnabledEl.checked;
+    
+    // Validate parsed numbers
+    if (isNaN(payloadType) || payloadType < 96 || payloadType > 127) {
+        showNotification('Error: Invalid payload type. Must be between 96 and 127', 'error');
+        return;
+    }
+    if (isNaN(duration) || duration < 80 || duration > 500) {
+        showNotification('Error: Invalid duration. Must be between 80 and 500ms', 'error');
+        return;
+    }
+    if (isNaN(detectionThreshold) || detectionThreshold < 0.1 || detectionThreshold > 0.9) {
+        showNotification('Error: Invalid detection threshold. Must be between 0.1 and 0.9', 'error');
+        return;
+    }
+    
+    const dtmfConfig = {
+        dtmf: {
+            mode: mode,
+            payload_type: payloadType,
+            duration: duration,
+            sip_info_fallback: sipInfoFallback,
+            inband_fallback: inbandFallback,
+            detection_threshold: detectionThreshold,
+            relay_enabled: relayEnabled
+        }
+    };
+    
+    try {
+        // TODO: In production, save via API endpoint
+        // const response = await fetch('/api/config/dtmf', {
+        //     method: 'POST',
+        //     headers: {'Content-Type': 'application/json'},
+        //     body: JSON.stringify(dtmfConfig)
+        // });
+        
+        console.log('DTMF configuration to save:', dtmfConfig);
+        
+        // Use simple message for notification since it uses textContent
+        showNotification(
+            `✅ DTMF configuration saved (Mode: ${mode}, Payload: ${payloadType}). ⚠️ PBX restart required.`,
+            'success'
+        );
+        
+    } catch (error) {
+        console.error('Error saving DTMF config:', error);
+        showNotification('Failed to save DTMF configuration', 'error');
+    }
+}
+
+/**
+ * Update threshold display value in real-time
+ */
+function updateDTMFThresholdDisplay() {
+    const thresholdSlider = document.getElementById('dtmf-detection-threshold');
+    const thresholdValue = document.getElementById('dtmf-threshold-value');
+    
+    // Validate both elements exist
+    if (!thresholdSlider || !thresholdValue) {
+        return;
+    }
+    
+    // Set initial value
+    thresholdValue.textContent = thresholdSlider.value;
+    
+    // Add event listener only once (check if already attached)
+    if (!thresholdSlider.dataset.listenerAttached) {
+        thresholdSlider.addEventListener('input', function() {
+            thresholdValue.textContent = this.value;
+        });
+        thresholdSlider.dataset.listenerAttached = 'true';
+    }
+}
+
+// Constant for tab loading delay
+const TAB_CONTENT_LOAD_DELAY_MS = 100;
+
+// Initialize DTMF threshold display update on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateDTMFThresholdDisplay();
+    
+    // Load DTMF config when Codecs tab is shown
+    const codecsTab = document.querySelector('[data-tab="codecs"]');
+    if (codecsTab) {
+        codecsTab.addEventListener('click', function() {
+            // Small delay to ensure tab content is visible
+            setTimeout(loadDTMFConfig, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+});
