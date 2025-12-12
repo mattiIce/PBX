@@ -251,10 +251,7 @@ function initializeLogout() {
             if (token) {
                 await fetch(`${API_BASE}/api/auth/logout`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: getAuthHeaders()
                 });
             }
         } catch (error) {
@@ -738,9 +735,7 @@ async function saveConfigSection(section, data) {
     try {
         const response = await fetch(`${API_BASE}/api/config/section`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 section: section,
                 data: data
@@ -1343,9 +1338,7 @@ async function markVoicemailRead(extension, messageId, showMsg = true) {
     try {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}/${messageId}/mark-read`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: getAuthHeaders()
         });
         
         if (response.ok) {
