@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // User Context Management
 async function initializeUserContext() {
-    // Get extension number from URL parameter or prompt user
+    // Get extension number from URL parameter or localStorage
     const urlParams = new URLSearchParams(window.location.search);
     let extensionNumber = urlParams.get('ext');
     
@@ -30,13 +30,10 @@ async function initializeUserContext() {
         extensionNumber = localStorage.getItem('pbx_current_extension');
     }
     
-    // If still no extension, prompt the user
+    // If still no extension, show extension selection instead of prompt
     if (!extensionNumber) {
-        extensionNumber = prompt('Please enter your extension number to continue:');
-        if (!extensionNumber) {
-            // Default to a demo mode or first available extension
-            extensionNumber = '1001';
-        }
+        showExtensionSelectionModal();
+        return; // Will continue after extension is selected
     }
     
     // Store extension number for future visits
@@ -50,7 +47,7 @@ async function initializeUserContext() {
             currentUser = extensions.find(ext => ext.number === extensionNumber);
             
             if (!currentUser) {
-                console.warn(`Extension ${extensionNumber} not found, defaulting to guest mode`);
+                console.warn(`[Security] Extension ${extensionNumber} not found, defaulting to guest mode`);
                 currentUser = { number: extensionNumber, is_admin: false, name: 'Guest' };
             }
         } else {
@@ -72,6 +69,64 @@ async function initializeUserContext() {
         // For regular users, show phone tab by default
         showTab('webrtc-phone');
     }
+}
+
+function showExtensionSelectionModal() {
+    // Create a simple modal for extension selection
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; text-align: center;">
+            <h2 style="margin-top: 0;">📞 Select Your Extension</h2>
+            <p>Please enter your extension number to continue:</p>
+            <input type="text" id="ext-input" placeholder="Extension (e.g., 1001)" 
+                   style="width: 100%; padding: 10px; font-size: 16px; margin: 10px 0; text-align: center; border: 2px solid #ddd; border-radius: 4px;"
+                   pattern="[0-9]+" maxlength="6">
+            <div style="margin-top: 20px;">
+                <button id="ext-submit" style="padding: 10px 30px; font-size: 16px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Continue
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const input = document.getElementById('ext-input');
+    const submitBtn = document.getElementById('ext-submit');
+    
+    // Focus on input
+    input.focus();
+    
+    // Handle submit
+    const handleSubmit = () => {
+        const extension = input.value.trim();
+        if (extension) {
+            // Update URL and reload
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('ext', extension);
+            window.location.href = newUrl.toString();
+        }
+    };
+    
+    submitBtn.addEventListener('click', handleSubmit);
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    });
 }
 
 function applyRoleBasedUI() {
