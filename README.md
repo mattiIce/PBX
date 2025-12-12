@@ -352,7 +352,7 @@ python tests/test_e911_protection.py
 - **Rate Limiting** - Protection against brute force attacks
 - **IP Banning** - Automatic blocking after failed attempts
 
-For detailed security information, see [SECURITY.md](SECURITY.md) and [FIPS_COMPLIANCE.md](FIPS_COMPLIANCE.md).
+For detailed security information, see [FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md), [SECURITY.md](SECURITY.md), and [FIPS_COMPLIANCE.md](FIPS_COMPLIANCE.md).
 
 ## 📊 Monitoring
 
