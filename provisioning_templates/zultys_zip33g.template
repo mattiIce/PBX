@@ -136,11 +136,17 @@ account.1.dnd.enable = 0
 # Note: Based on successful testing with Yealink T28G configuration,
 # SIP INFO (type 2) provides the most reliable DTMF performance for ZIP33G
 # phones, particularly for voicemail access and IVR systems.
+#
+# Payload Type Configuration:
+# The dtmf_payload parameter can be configured globally via config.yml
+# Default is 101 (RFC2833 standard), but can be changed if experiencing
+# DTMF issues with specific network environments or SIP providers.
+# Valid range: 96-127 (dynamic payload types)
 
 # DTMF Settings - Using SIP INFO for reliable voicemail IVR (from working T28G config)
 account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
 account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
-account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833
+account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}  # Payload type for RFC2833 (configurable)
 
 # ============================================================================
 # Network Settings
