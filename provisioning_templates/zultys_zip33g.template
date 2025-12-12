@@ -101,7 +101,9 @@ account.1.answered_calllog = 1
 
 # SIP Features
 account.1.earlymedia = 1
-account.1.session_timer = 1
+# Session timer disabled to prevent premature BYE on voicemail calls
+# ZIP33G firmware has issue where session timer expires during voicemail IVR
+account.1.session_timer = 0
 account.1.srtp_mode = 0
 account.1.auto_answer = 0
 

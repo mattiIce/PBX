@@ -90,7 +90,9 @@ account.1.answered_calllog = 1
 
 # SIP Features
 account.1.earlymedia = 1
-account.1.session_timer = 1
+# Session timer disabled to prevent premature BYE on voicemail calls
+# ZIP37G shares firmware base with ZIP33G - disable session timer for consistency
+account.1.session_timer = 0
 account.1.srtp_mode = 0
 account.1.auto_answer = 0
 
@@ -128,19 +130,13 @@ account.1.dnd.enable = 0
 # support. This configuration explicitly sets RFC2833 as the primary method
 # for better reliability.
 
-# DTMF method: RFC2833 (out-of-band RTP events)
-# Values: RFC2833, SIP-INFO, In-band
-account.1.dtmf_mode = RFC2833
-
-# RFC2833 payload type (standard is 101)
-account.1.dtmf_payload_type = 101
-
-# DTMF duration in milliseconds (standard is 100-250ms)
-account.1.dtmf_duration = 160
-
-# Enable SIP INFO as fallback if RFC2833 fails
-# Values: 0=disabled, 1=enabled
-account.1.dtmf_sip_info_fallback = 1
+# DTMF method: SIP INFO (most reliable for ZIP37G)
+# Changed from RFC2833 to SIP INFO to fix spurious DTMF detection issue
+# ZIP37G firmware has overly sensitive RFC2833 detection that triggers phantom keypresses
+# SIP INFO provides cleaner, more reliable DTMF signaling
+account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
+account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833 (if used as fallback)
 
 # ============================================================================
 # Network Settings
