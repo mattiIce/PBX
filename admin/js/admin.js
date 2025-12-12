@@ -6,17 +6,152 @@ const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart m
 
 // State
 let currentExtensions = [];
+let currentUser = null; // Stores current extension info including is_admin status
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    initializeUserContext();
     initializeTabs();
     initializeForms();
     checkConnection();
-    loadDashboard();
     
     // Auto-refresh every 10 seconds
     setInterval(checkConnection, 10000);
 });
+
+// User Context Management
+async function initializeUserContext() {
+    // Get extension number from URL parameter or prompt user
+    const urlParams = new URLSearchParams(window.location.search);
+    let extensionNumber = urlParams.get('ext');
+    
+    // If no extension in URL, check localStorage for last used
+    if (!extensionNumber) {
+        extensionNumber = localStorage.getItem('pbx_current_extension');
+    }
+    
+    // If still no extension, prompt the user
+    if (!extensionNumber) {
+        extensionNumber = prompt('Please enter your extension number to continue:');
+        if (!extensionNumber) {
+            // Default to a demo mode or first available extension
+            extensionNumber = '1001';
+        }
+    }
+    
+    // Store extension number for future visits
+    localStorage.setItem('pbx_current_extension', extensionNumber);
+    
+    // Fetch extension info including admin status
+    try {
+        const response = await fetch(`${API_BASE}/api/extensions`);
+        if (response.ok) {
+            const extensions = await response.json();
+            currentUser = extensions.find(ext => ext.number === extensionNumber);
+            
+            if (!currentUser) {
+                console.warn(`Extension ${extensionNumber} not found, defaulting to guest mode`);
+                currentUser = { number: extensionNumber, is_admin: false, name: 'Guest' };
+            }
+        } else {
+            // Fallback to non-admin mode if API fails
+            currentUser = { number: extensionNumber, is_admin: false, name: 'User' };
+        }
+    } catch (error) {
+        console.error('Error loading user context:', error);
+        currentUser = { number: extensionNumber, is_admin: false, name: 'User' };
+    }
+    
+    // Apply role-based UI filtering
+    applyRoleBasedUI();
+    
+    // Load initial content based on role
+    if (currentUser.is_admin) {
+        loadDashboard();
+    } else {
+        // For regular users, show phone tab by default
+        showTab('webrtc-phone');
+    }
+}
+
+function applyRoleBasedUI() {
+    const isAdmin = currentUser?.is_admin || false;
+    
+    // Define admin-only tabs
+    const adminOnlyTabs = [
+        'dashboard', 'analytics', 'extensions', 'phones',
+        'provisioning', 'auto-attendant', 'calls', 
+        'qos', 'emergency', 'codecs', 'config'
+    ];
+    
+    // Define user-accessible tabs (phone and voicemail)
+    const userTabs = ['webrtc-phone', 'voicemail'];
+    
+    if (!isAdmin) {
+        // Hide admin-only tabs for regular users
+        adminOnlyTabs.forEach(tabName => {
+            const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tabButton) {
+                tabButton.style.display = 'none';
+            }
+        });
+        
+        // Hide admin-only sidebar sections
+        const sidebarSections = document.querySelectorAll('.sidebar-section');
+        sidebarSections.forEach(section => {
+            const sectionTitle = section.querySelector('.sidebar-section-title');
+            // Hide sections that only contain admin tabs
+            const buttons = section.querySelectorAll('.tab-button');
+            const allHidden = Array.from(buttons).every(btn => btn.style.display === 'none');
+            if (allHidden && sectionTitle) {
+                section.style.display = 'none';
+            }
+        });
+        
+        // Update header to show non-admin status
+        const header = document.querySelector('header h1');
+        if (header) {
+            header.innerHTML = `📞 PBX User Panel - Extension ${currentUser.number}`;
+        }
+        
+        // Show info banner for non-admin users
+        showNonAdminBanner();
+    } else {
+        // Update header to show admin status
+        const header = document.querySelector('header h1');
+        if (header) {
+            header.innerHTML = `📞 PBX Admin Dashboard - ${currentUser.name} (${currentUser.number}) 👑`;
+        }
+    }
+}
+
+function showNonAdminBanner() {
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+    
+    // Check if banner already exists
+    if (document.getElementById('non-admin-info-banner')) return;
+    
+    const banner = document.createElement('div');
+    banner.id = 'non-admin-info-banner';
+    banner.className = 'info-box';
+    banner.style.cssText = 'margin-bottom: 20px; background: #e3f2fd; border-left: 4px solid #2196f3;';
+    banner.innerHTML = `
+        <p style="margin: 0; font-size: 14px;">
+            ℹ️ <strong>Welcome, ${currentUser.name || currentUser.number}!</strong> 
+            You have access to the <strong>📞 Phone</strong> and <strong>📧 Voicemail</strong> features.
+            ${currentUser.email ? `<br>Email: ${currentUser.email}` : ''}
+        </p>
+    `;
+    
+    // Insert banner at the top of main content, before the feature info banner
+    const featureBanner = document.getElementById('feature-info-banner');
+    if (featureBanner) {
+        featureBanner.parentNode.insertBefore(banner, featureBanner);
+    } else {
+        mainContent.insertBefore(banner, mainContent.firstChild);
+    }
+}
 
 // Tab Management
 function initializeTabs() {
