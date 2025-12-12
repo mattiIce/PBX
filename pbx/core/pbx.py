@@ -365,7 +365,7 @@ class PBXCore:
             message: The message to log
             level: Log level ('info', 'warning', 'error', 'debug')
         """
-        if self.quiet_startup and level == 'info':
+        if self.quiet_startup and level in ['info']:
             # In quiet mode, log INFO messages as DEBUG
             self.logger.debug(f"[STARTUP] {message}")
         else:

@@ -55,8 +55,8 @@ def parse_requirements_txt(requirements_path: str = 'requirements.txt') -> Dict[
                 line = line.split('#')[0].strip()
             
             # Parse package name and version spec
-            # Matches: package>=1.0.0, package==1.0, package, etc.
-            match = re.match(r'^([a-zA-Z0-9_-]+)([>=<!=]+.*)?', line)
+            # Matches: package>=1.0.0, package==1.0, package.subpackage>=1.0, etc.
+            match = re.match(r'^([a-zA-Z0-9_.-]+)([>=<!=]+.*)?', line)
             if match:
                 package_name = match.group(1)
                 version_spec = match.group(2) or ''
@@ -216,7 +216,7 @@ def check_and_report(verbose: bool = False, strict: bool = True, requirements_pa
 if __name__ == "__main__":
     # Run dependency check with verbose output
     verbose = '--verbose' in sys.argv or '-v' in sys.argv
-    strict = '--strict' not in sys.argv or '-s' not in sys.argv
+    strict = '--strict' in sys.argv or '-s' in sys.argv
     
     success = check_and_report(verbose=True, strict=strict)
     sys.exit(0 if success else 1)
