@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTMF Configuration Demo - PBX Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2563eb; margin-bottom: 10px; }
+        h2 { color: #1e40af; margin: 30px 0 15px 0; font-size: 1.5em; }
+        h3 { color: #1e40af; margin: 25px 0 10px 0; font-size: 1.3em; }
+        h4 { color: #1e40af; margin: 20px 0 10px 0; font-size: 1.1em; }
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .info-box ul, .info-box ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .info-box li { margin: 5px 0; }
+        .form-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        select, input[type="number"], input[type="range"] {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            max-width: 300px;
+        }
+        small {
+            display: block;
+            color: #6b7280;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+        .btn {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background: #059669;
+        }
+        #dtmf-threshold-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .demo-badge {
+            background: #fbbf24;
+            color: #78350f;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📞 DTMF Configuration <span class="demo-badge">DEMO</span></h1>
+        <p style="margin-bottom: 20px; color: #6b7280;">
+            This is a demonstration of the new DTMF configuration tool added to the PBX Admin Panel.
+        </p>
+
+        <div class="info-box" style="margin-bottom: 20px;">
+            <p><strong>DTMF (Dual-Tone Multi-Frequency)</strong> - Configure how phone keypad tones are transmitted and detected.</p>
+            <p>This system supports three DTMF methods:</p>
+            <ul>
+                <li><strong>RFC 2833</strong> - Out-of-band RTP events (most reliable, recommended)</li>
+                <li><strong>SIP INFO</strong> - Out-of-band SIP signaling (fallback method)</li>
+                <li><strong>In-Band Audio</strong> - Audio tone detection using Goertzel algorithm (universal fallback)</li>
+            </ul>
+        </div>
+
+        <form id="dtmf-config-form" onsubmit="saveDTMFConfig(event)">
+            <h4>Primary DTMF Method</h4>
+            <div class="form-group">
+                <label>DTMF Mode:</label>
+                <select id="dtmf-mode">
+                    <option value="RFC2833" selected>RFC 2833 (Recommended)</option>
+                    <option value="SIP_INFO">SIP INFO</option>
+                    <option value="INBAND">In-Band Audio Detection</option>
+                    <option value="AUTO">Auto (Try all methods)</option>
+                </select>
+                <small>Primary method for DTMF transmission. RFC 2833 is the industry standard.</small>
+            </div>
+
+            <h4>RFC 2833 Settings</h4>
+            <div class="form-group">
+                <label>RTP Payload Type:</label>
+                <select id="dtmf-payload-type">
+                    <option value="96">96 - Generic fallback</option>
+                    <option value="100">100 - Cisco/common alternative</option>
+                    <option value="101" selected>101 - Standard (RFC 2833)</option>
+                    <option value="102">102 - Carrier alternative</option>
+                    <option value="121">121 - Polycom alternative</option>
+                </select>
+                <small>RTP payload type for telephone-event (DTMF). Start with 101 (standard), try others if DTMF doesn't work.</small>
+            </div>
+
+            <div class="form-group">
+                <label>DTMF Duration (milliseconds):</label>
+                <input type="number" id="dtmf-duration" min="80" max="500" value="160" step="10">
+                <small>Duration of each DTMF tone (80-500ms). Standard is 160ms.</small>
+            </div>
+
+            <h4>Fallback Options</h4>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="dtmf-sip-info-fallback" checked>
+                    Enable SIP INFO Fallback
+                </label>
+                <small>Use SIP INFO method if RFC 2833 fails</small>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="dtmf-inband-fallback" checked>
+                    Enable In-Band Audio Detection Fallback
+                </label>
+                <small>Always detect DTMF tones from audio stream as last resort</small>
+            </div>
+
+            <h4>Advanced Settings</h4>
+            <div class="form-group">
+                <label>In-Band Detection Threshold:</label>
+                <input type="range" id="dtmf-detection-threshold" min="0.1" max="0.9" value="0.3" step="0.05">
+                <span id="dtmf-threshold-value">0.3</span>
+                <small>Sensitivity for in-band audio detection (0.1=very sensitive, 0.9=very strict). Default: 0.3</small>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="dtmf-relay-enabled" checked>
+                    Enable DTMF Relay
+                </label>
+                <small>Relay DTMF tones between call participants (required for IVR and auto-attendant)</small>
+            </div>
+
+            <button type="submit" class="btn">💾 Save DTMF Configuration</button>
+        </form>
+
+        <div class="info-box" style="margin-top: 30px;">
+            <h4>📚 Payload Type Selection Guide</h4>
+            <p><strong>How to choose the right payload type:</strong></p>
+            <ol>
+                <li><strong>Start with 101</strong> - This is the RFC 2833 standard and works with most phones</li>
+                <li><strong>If DTMF doesn't work</strong>, try these alternatives in order:
+                    <ul>
+                        <li><strong>100:</strong> Used by Cisco systems and some SIP providers</li>
+                        <li><strong>102:</strong> Alternative used by some carriers (Verizon, AT&T)</li>
+                        <li><strong>96:</strong> First dynamic payload type, generic fallback</li>
+                        <li><strong>121:</strong> Used by some Polycom phones</li>
+                    </ul>
+                </li>
+                <li><strong>Check your SIP provider's documentation</strong> for their required payload type</li>
+                <li><strong>Phone-specific overrides:</strong> Individual phone templates can override these settings</li>
+            </ol>
+            
+            <h4>🔧 Troubleshooting</h4>
+            <ul>
+                <li><strong>DTMF not detected in IVR/voicemail:</strong> Try changing payload type to 100 or 102</li>
+                <li><strong>Wrong digits detected:</strong> Increase detection threshold or check for audio interference</li>
+                <li><strong>DTMF works locally but not through trunk:</strong> Check SIP provider's required payload type</li>
+                <li><strong>Delayed DTMF response:</strong> Reduce DTMF duration or check network latency</li>
+            </ul>
+            
+            <p>📖 For detailed information, see: 
+                <a href="https://github.com/mattiIce/PBX/blob/main/COMPLETE_DTMF_IMPLEMENTATION_SUMMARY.md" target="_blank">COMPLETE_DTMF_IMPLEMENTATION_SUMMARY.md</a>,
+                <a href="https://github.com/mattiIce/PBX/blob/main/DTMF_PAYLOAD_TYPE_CONFIGURATION.md" target="_blank">DTMF_PAYLOAD_TYPE_CONFIGURATION.md</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Update threshold display
+        const thresholdSlider = document.getElementById('dtmf-detection-threshold');
+        const thresholdValue = document.getElementById('dtmf-threshold-value');
+        
+        thresholdSlider.addEventListener('input', function() {
+            thresholdValue.textContent = this.value;
+        });
+
+        // Handle form submission
+        function saveDTMFConfig(event) {
+            event.preventDefault();
+            
+            const mode = document.getElementById('dtmf-mode').value;
+            const payloadType = parseInt(document.getElementById('dtmf-payload-type').value);
+            const duration = parseInt(document.getElementById('dtmf-duration').value);
+            const sipInfoFallback = document.getElementById('dtmf-sip-info-fallback').checked;
+            const inbandFallback = document.getElementById('dtmf-inband-fallback').checked;
+            const detectionThreshold = parseFloat(document.getElementById('dtmf-detection-threshold').value);
+            const relayEnabled = document.getElementById('dtmf-relay-enabled').checked;
+            
+            const config = {
+                mode: mode,
+                payload_type: payloadType,
+                duration: duration,
+                sip_info_fallback: sipInfoFallback,
+                inband_fallback: inbandFallback,
+                detection_threshold: detectionThreshold,
+                relay_enabled: relayEnabled
+            };
+            
+            console.log('DTMF Configuration:', config);
+            
+            alert(
+                '✅ DTMF configuration saved (DEMO MODE)\n\n' +
+                'Configuration details:\n' +
+                `- Mode: ${mode}\n` +
+                `- Payload Type: ${payloadType}\n` +
+                `- Duration: ${duration}ms\n` +
+                `- SIP INFO Fallback: ${sipInfoFallback ? 'Enabled' : 'Disabled'}\n` +
+                `- In-Band Fallback: ${inbandFallback ? 'Enabled' : 'Disabled'}\n` +
+                `- Detection Threshold: ${detectionThreshold}\n` +
+                `- DTMF Relay: ${relayEnabled ? 'Enabled' : 'Disabled'}\n\n` +
+                'In production, this would be saved to config.yml and require a PBX restart.'
+            );
+            
+            return false;
+        }
+    </script>
+</body>
+</html>
