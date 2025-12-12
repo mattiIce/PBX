@@ -1666,7 +1666,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
 
             # Verify password using voicemail PIN
-            # Phase 3 uses voicemail PIN as the login password
+            # For Phase 3 authentication, the login password is the user's voicemail PIN
+            # This provides a single credential for users to remember (their voicemail PIN)
             voicemail_pin_hash = ext.get('voicemail_pin_hash', '')
             
             # Check if voicemail PIN is hashed (contains salt) or plain text
@@ -1682,9 +1683,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Invalid credentials'}, 401)
                     return
             else:
-                # Voicemail PIN is plain text (legacy) or not set - use constant-time comparison
-                # If no voicemail PIN is set, deny access
-                if not voicemail_pin_hash:
+                # Voicemail PIN is plain text (legacy) or not set
+                # If no voicemail PIN is configured, deny access for security
+                if not voicemail_pin_hash or voicemail_pin_hash == '':
                     self._send_json({'error': 'Invalid credentials'}, 401)
                     return
                 import secrets
