@@ -575,7 +575,8 @@ async function deleteExtension(number) {
     
     try {
         const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
         
         if (response.ok) {
@@ -619,7 +620,9 @@ async function loadCalls() {
 // Configuration Functions
 async function loadConfig() {
     try {
-        const response = await fetch(`${API_BASE}/api/config/full`);
+        const response = await fetch(`${API_BASE}/api/config/full`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const config = await response.json();
             
@@ -779,9 +782,7 @@ function initializeForms() {
         try {
             const response = await fetch(`${API_BASE}/api/extensions`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(extensionData)
             });
             
@@ -824,9 +825,7 @@ function initializeForms() {
         try {
             const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(extensionData)
             });
             
@@ -990,9 +989,7 @@ function initializeForms() {
             try {
                 const response = await fetch(`${API_BASE}/api/provisioning/devices`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({
                         mac_address: mac,
                         extension_number: extension,
