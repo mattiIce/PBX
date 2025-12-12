@@ -6,12 +6,13 @@ import json
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.phone_provisioning import PhoneProvisioning, normalize_mac_address
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
-# Add parent directory to path (consistent with other test files in this repo)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_mac_normalization():

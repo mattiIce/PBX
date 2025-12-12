@@ -6,10 +6,11 @@ import os
 import sys
 import time
 
-from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
+
 
 
 def test_hot_desk_session_creation():

@@ -6,6 +6,9 @@ import os
 import sys
 import time
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.mfa import (
     FIDO2Verifier,
     MFAManager,
@@ -15,8 +18,6 @@ from pbx.features.mfa import (
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_totp_generation():

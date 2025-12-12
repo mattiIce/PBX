@@ -5,12 +5,13 @@ Basic tests for PBX system
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.core.call import Call, CallManager, CallState
 from pbx.features.extensions import Extension
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_sip_message_parsing():

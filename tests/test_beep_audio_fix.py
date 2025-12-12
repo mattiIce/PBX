@@ -8,11 +8,12 @@ import os
 import struct
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def test_beep_generation():

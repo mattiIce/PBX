@@ -6,11 +6,12 @@ import os
 import sys
 import tempfile
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_emergency_contacts_table_creation():

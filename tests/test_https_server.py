@@ -9,11 +9,12 @@ import sys
 import time
 from pathlib import Path
 
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class MockPBXCore:

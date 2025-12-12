@@ -6,11 +6,12 @@ Ensures that emergency (911) calls are never placed during testing
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.sip_trunk import OutboundRule, SIPTrunk, SIPTrunkSystem
 from pbx.utils.e911_protection import E911Protection
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_e911_pattern_detection():

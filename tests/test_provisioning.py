@@ -5,6 +5,9 @@ Tests for phone provisioning system
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.extensions import ExtensionRegistry
 from pbx.features.phone_provisioning import (
     PhoneProvisioning,
@@ -13,8 +16,6 @@ from pbx.features.phone_provisioning import (
 )
 from pbx.utils.config import Config
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_device_mac_normalization():

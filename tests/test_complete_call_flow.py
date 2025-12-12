@@ -18,11 +18,13 @@ import time
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.rtp.handler import RTPRelayHandler
 from pbx.rtp.rfc2833 import RFC2833EventPacket
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 class TestCompleteCallFlow(unittest.TestCase):

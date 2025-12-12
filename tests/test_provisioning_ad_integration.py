@@ -6,11 +6,12 @@ Tests that AD credentials from .env are properly used for LDAP phonebook configu
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_ldap_config_from_ad_credentials():

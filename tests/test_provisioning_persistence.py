@@ -7,12 +7,13 @@ import shutil
 import sys
 import tempfile
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ProvisionedDevicesDB
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_provisioning_persistence():

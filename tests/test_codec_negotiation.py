@@ -6,10 +6,11 @@ Verifies that PBX correctly negotiates codecs to prevent "488 Not Acceptable Her
 import os
 import sys
 
-from pbx.sip.sdp import SDPBuilder, SDPSession
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.sip.sdp import SDPBuilder, SDPSession
+
 
 
 def test_codec_extraction_from_sdp():

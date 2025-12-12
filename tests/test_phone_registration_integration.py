@@ -7,11 +7,12 @@ import os
 import re
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.core.pbx import PBXCore
 from pbx.sip.message import SIPMessage
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_mac_extraction():

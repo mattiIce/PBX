@@ -7,12 +7,13 @@ import os
 import sys
 import time
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.voicemail import VoicemailBox, VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
 from pbx.utils.config import Config
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_voice_prompt_generation():

@@ -11,10 +11,11 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSystem
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSystem
+
 
 
 # Mock webhook receiver server

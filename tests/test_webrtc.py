@@ -6,10 +6,11 @@ import os
 import sys
 import time
 
-from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
+
 
 
 def test_webrtc_session_creation():

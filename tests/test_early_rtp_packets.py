@@ -10,10 +10,11 @@ import struct
 import sys
 import time
 
-from pbx.rtp.handler import RTPRelay
-
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from pbx.rtp.handler import RTPRelay
+
 
 
 def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):

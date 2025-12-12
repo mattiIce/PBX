@@ -7,12 +7,13 @@ import os
 import sys
 from datetime import datetime
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.api.rest_api import DateTimeEncoder
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_datetime_encoder():

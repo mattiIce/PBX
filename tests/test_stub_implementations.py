@@ -7,13 +7,14 @@ import os
 import sys
 import tempfile
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.operator_console import OperatorConsole
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 from pbx.utils.dtmf import DTMFDetector, DTMFGenerator
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 class MockPBXCore:

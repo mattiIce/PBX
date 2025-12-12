@@ -5,11 +5,12 @@ Tests for clearing registered phones on server boot
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_clear_all_phones():

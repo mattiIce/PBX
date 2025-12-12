@@ -9,13 +9,14 @@ import sys
 import tempfile
 import time
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.core.call import Call, CallState
 from pbx.core.pbx import PBXCore
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_complete_voicemail_flow():

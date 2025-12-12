@@ -9,11 +9,12 @@ import struct
 import sys
 import tempfile
 
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import WAV_FORMAT_PCM, pcm16_to_ulaw
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def create_test_pcm_wav(sample_rate=8000, duration_samples=800):
