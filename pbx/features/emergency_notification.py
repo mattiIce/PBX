@@ -95,6 +95,9 @@ class EmergencyNotificationSystem:
 
         # Thread-safe access
         self.lock = threading.Lock()
+        
+        # Pending emergency calls tracking
+        self._pending_emergency_calls = []
 
         # Load emergency contacts
         self._load_emergency_contacts()

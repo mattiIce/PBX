@@ -10,7 +10,7 @@ import base64
 import time
 import hashlib
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Optional, Dict, List, Tuple
 import logging
@@ -550,9 +550,9 @@ class STIRSHAKENManager:
         ).serial_number(
             x509.random_serial_number()
         ).not_valid_before(
-            datetime.utcnow()
+            datetime.now(timezone.utc)
         ).not_valid_after(
-            datetime.utcnow() + timedelta(days=365)
+            datetime.now(timezone.utc) + timedelta(days=365)
         ).sign(private_key, hashes.SHA256(), default_backend())
         
         # Write certificate
