@@ -88,8 +88,8 @@ def test_default_codecs_when_none_provided():
         session_id='test-session'
     )
 
-    # Should contain default codecs
-    assert 'm=audio 10000 RTP/AVP 0 8 9 101' in pbx_sdp, "SDP should contain default codec order"
+    # Should contain default codecs (PCMU, PCMA, G722, G729, G726-32, DTMF)
+    assert 'm=audio 10000 RTP/AVP 0 8 9 18 2 101' in pbx_sdp, "SDP should contain default codec order"
 
     print("  ✓ Default codecs used when none provided")
 
