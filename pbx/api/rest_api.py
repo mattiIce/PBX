@@ -157,7 +157,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path
 
         try:
-            if path == '/api/provisioning/devices':
+            if path == '/api/auth/login':
+                self._handle_login()
+            elif path == '/api/auth/logout':
+                self._handle_logout()
+            elif path == '/api/provisioning/devices':
                 self._handle_register_device()
             elif path.startswith('/api/provisioning/templates/') and path.endswith('/export'):
                 # /api/provisioning/templates/{vendor}/{model}/export
@@ -1575,6 +1579,122 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(content)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
+
+    def _get_auth_token(self):
+        """Extract authentication token from request headers"""
+        auth_header = self.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            return auth_header[7:]  # Remove 'Bearer ' prefix
+        return None
+
+    def _verify_authentication(self):
+        """
+        Verify authentication token and return payload
+        
+        Returns:
+            Tuple of (is_authenticated, payload)
+            - is_authenticated: True if token is valid
+            - payload: Token payload if valid, None otherwise
+        """
+        token = self._get_auth_token()
+        if not token:
+            return False, None
+        
+        from pbx.utils.session_token import get_session_token_manager
+        token_manager = get_session_token_manager()
+        return token_manager.verify_token(token)
+
+    def _require_admin(self):
+        """
+        Check if current user has admin privileges
+        
+        Returns:
+            Tuple of (is_admin, payload)
+            - is_admin: True if user is authenticated and has admin privileges
+            - payload: Token payload if authenticated, None otherwise
+        """
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            return False, None
+        
+        return payload.get('is_admin', False), payload
+
+    def _handle_login(self):
+        """Authenticate extension and return session token"""
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            body = self._get_body()
+            extension_number = body.get('extension')
+            password = body.get('password')
+
+            if not extension_number or not password:
+                self._send_json({'error': 'Extension and password required'}, 400)
+                return
+
+            # Get extension from database
+            if not self.pbx_core.extension_db:
+                self._send_json({'error': 'Database not available'}, 500)
+                return
+
+            ext = self.pbx_core.extension_db.get(extension_number)
+            if not ext:
+                self._send_json({'error': 'Invalid credentials'}, 401)
+                return
+
+            # Verify password
+            password_hash = ext.get('password_hash', '')
+            
+            # Check if password is hashed (contains salt) or plain text
+            # For backwards compatibility, we support both
+            from pbx.utils.encryption import get_encryption
+            fips_mode = self.pbx_core.config.get('security.fips_mode', False)
+            encryption = get_encryption(fips_mode)
+            
+            password_salt = ext.get('password_salt')
+            if password_salt:
+                # Password is hashed - verify using encryption
+                if not encryption.verify_password(password, password_hash, password_salt):
+                    self._send_json({'error': 'Invalid credentials'}, 401)
+                    return
+            else:
+                # Password is plain text (legacy) - simple comparison
+                if password != password_hash:
+                    self._send_json({'error': 'Invalid credentials'}, 401)
+                    return
+
+            # Generate session token
+            from pbx.utils.session_token import get_session_token_manager
+            token_manager = get_session_token_manager()
+            token = token_manager.generate_token(
+                extension=extension_number,
+                is_admin=ext.get('is_admin', False),
+                name=ext.get('name'),
+                email=ext.get('email')
+            )
+
+            self._send_json({
+                'success': True,
+                'token': token,
+                'extension': extension_number,
+                'is_admin': ext.get('is_admin', False),
+                'name': ext.get('name', 'User'),
+                'email': ext.get('email', '')
+            })
+
+        except Exception as e:
+            self.logger.error(f"Login error: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            self._send_json({'error': 'Authentication failed'}, 500)
+
+    def _handle_logout(self):
+        """Handle logout (client-side token removal)"""
+        # Logout is primarily handled client-side by removing the token
+        # This endpoint is here for completeness and future server-side token invalidation
+        self._send_json({'success': True, 'message': 'Logged out successfully'})
 
     def _handle_get_config(self):
         """Get current configuration"""

@@ -8,11 +8,26 @@ const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart m
 let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
 
+// Helper function to get authentication headers
+function getAuthHeaders() {
+    const token = localStorage.getItem('pbx_token');
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeUserContext();
     initializeTabs();
     initializeForms();
+    initializeLogout();
     checkConnection();
     
     // Auto-refresh every 10 seconds
@@ -21,43 +36,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // User Context Management
 async function initializeUserContext() {
-    // Get extension number from URL parameter or localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    let extensionNumber = urlParams.get('ext');
+    // Check for authentication token first
+    const token = localStorage.getItem('pbx_token');
     
-    // If no extension in URL, check localStorage for last used
-    if (!extensionNumber) {
-        extensionNumber = localStorage.getItem('pbx_current_extension');
+    if (!token) {
+        // No token - redirect to login page
+        window.location.href = '/admin/login.html';
+        return;
     }
     
-    // If still no extension, show extension selection instead of prompt
-    if (!extensionNumber) {
-        showExtensionSelectionModal();
-        return; // Will continue after extension is selected
-    }
-    
-    // Store extension number for future visits
-    localStorage.setItem('pbx_current_extension', extensionNumber);
-    
-    // Fetch extension info including admin status
+    // Verify token is still valid by making an authenticated request
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`);
-        if (response.ok) {
-            const extensions = await response.json();
-            currentUser = extensions.find(ext => ext.number === extensionNumber);
-            
-            if (!currentUser) {
-                console.warn(`[Security] Extension ${extensionNumber} not found, defaulting to guest mode`);
-                currentUser = { number: extensionNumber, is_admin: false, name: 'Guest' };
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
-        } else {
-            // Fallback to non-admin mode if API fails
-            currentUser = { number: extensionNumber, is_admin: false, name: 'User' };
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            // Token is invalid or expired - redirect to login
+            localStorage.removeItem('pbx_token');
+            localStorage.removeItem('pbx_extension');
+            localStorage.removeItem('pbx_is_admin');
+            localStorage.removeItem('pbx_name');
+            window.location.href = '/admin/login.html';
+            return;
         }
     } catch (error) {
-        console.error('Error loading user context:', error);
-        currentUser = { number: extensionNumber, is_admin: false, name: 'User' };
+        console.error('Error verifying authentication:', error);
     }
+    
+    // Get user info from localStorage (set during login)
+    const extensionNumber = localStorage.getItem('pbx_extension');
+    const isAdmin = localStorage.getItem('pbx_is_admin') === 'true';
+    const name = localStorage.getItem('pbx_name') || 'User';
+    
+    if (!extensionNumber) {
+        // No extension stored - redirect to login
+        window.location.href = '/admin/login.html';
+        return;
+    }
+    
+    // Set current user from stored data
+    currentUser = {
+        number: extensionNumber,
+        is_admin: isAdmin,
+        name: name
+    };
     
     // Apply role-based UI filtering
     applyRoleBasedUI();
@@ -206,6 +231,39 @@ function showNonAdminBanner() {
     } else {
         mainContent.insertBefore(banner, mainContent.firstChild);
     }
+}
+
+function initializeLogout() {
+    const logoutButton = document.getElementById('logout-button');
+    if (!logoutButton) return;
+    
+    logoutButton.addEventListener('click', async function() {
+        // Clear local storage
+        localStorage.removeItem('pbx_token');
+        localStorage.removeItem('pbx_extension');
+        localStorage.removeItem('pbx_is_admin');
+        localStorage.removeItem('pbx_name');
+        localStorage.removeItem('pbx_current_extension');
+        
+        // Optionally call logout endpoint
+        try {
+            const token = localStorage.getItem('pbx_token');
+            if (token) {
+                await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Logout API error:', error);
+        }
+        
+        // Redirect to login page
+        window.location.href = '/admin/login.html';
+    });
 }
 
 // Tab Management
