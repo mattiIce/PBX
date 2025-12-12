@@ -141,6 +141,13 @@ class PhoneTemplate:
                 remote_phonebook.get(
                     'refresh_interval', '60')))
 
+        # DTMF Configuration
+        dtmf_config = server_config.get('dtmf', {})
+        config = config.replace(
+            '{{DTMF_PAYLOAD_TYPE}}', str(
+                dtmf_config.get(
+                    'payload_type', '101')))
+
         return config
 
 

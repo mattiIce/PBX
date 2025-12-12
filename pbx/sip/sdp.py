@@ -174,7 +174,7 @@ class SDPBuilder:
     """Helper to build SDP messages"""
 
     @staticmethod
-    def build_audio_sdp(local_ip, local_port, session_id="0", codecs=None):
+    def build_audio_sdp(local_ip, local_port, session_id="0", codecs=None, dtmf_payload_type=101):
         """
         Build SDP for audio call
 
@@ -184,13 +184,16 @@ class SDPBuilder:
             session_id: Session ID (can be timestamp)
             codecs: List of codec payload types to offer (default: ['0', '8', '9', '101'])
                    When negotiating with a caller, pass their offered codecs to maintain compatibility
+            dtmf_payload_type: Payload type for RFC2833 telephone-event (default: 101)
+                   Can be configured to use alternative payload types (96-127) if needed
 
         Returns:
             SDP body as string
         """
         if codecs is None:
             # PCMU, PCMA, G722, telephone-event (default order)
-            codecs = ['0', '8', '9', '101']
+            # Use configured dtmf_payload_type instead of hardcoded '101'
+            codecs = ['0', '8', '9', str(dtmf_payload_type)]
 
         sdp = SDPSession()
         sdp.version = 0
@@ -221,9 +224,12 @@ class SDPBuilder:
             # G.722 uses 8000 in SDP even though actual rate is 16000 (RFC 3551
             # quirk)
             attributes.append('rtpmap:9 G722/8000')
-        if '101' in codecs:
-            attributes.append('rtpmap:101 telephone-event/8000')
-            attributes.append('fmtp:101 0-16')
+        
+        # Support configurable DTMF payload type (not just hardcoded 101)
+        dtmf_pt_str = str(dtmf_payload_type)
+        if dtmf_pt_str in codecs:
+            attributes.append(f'rtpmap:{dtmf_pt_str} telephone-event/8000')
+            attributes.append(f'fmtp:{dtmf_pt_str} 0-16')
 
         attributes.append('sendrecv')
 

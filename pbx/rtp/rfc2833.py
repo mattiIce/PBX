@@ -2,7 +2,7 @@
 RFC 2833 RTP Event Handler for DTMF Signaling
 
 Implements RFC 2833 (RTP Payload for DTMF Digits, Telephony Tones and Signals)
-using payload type 101 for out-of-band DTMF transmission over RTP.
+using configurable payload type (default 101) for out-of-band DTMF transmission over RTP.
 """
 import socket
 import struct
@@ -13,7 +13,7 @@ from pbx.utils.logger import get_logger
 
 # Constants
 SAMPLE_RATE_8KHZ = 8000  # Standard sample rate for telephony
-PAYLOAD_TYPE_TELEPHONE_EVENT = 101  # RFC 2833 payload type
+PAYLOAD_TYPE_TELEPHONE_EVENT = 101  # RFC 2833 default payload type (can be configured)
 
 # RFC 2833 Event Codes for DTMF digits
 RFC2833_EVENT_CODES = {
@@ -128,10 +128,10 @@ class RFC2833Receiver:
     """
     RFC 2833 RTP Event Receiver
 
-    Listens for RTP packets with payload type 101 and extracts DTMF events.
+    Listens for RTP packets with configurable payload type (default 101) and extracts DTMF events.
     """
 
-    def __init__(self, local_port, pbx_core=None, call_id=None):
+    def __init__(self, local_port, pbx_core=None, call_id=None, payload_type=101):
         """
         Initialize RFC 2833 receiver
 
@@ -139,10 +139,12 @@ class RFC2833Receiver:
             local_port: Local UDP port to listen on
             pbx_core: Reference to PBX core for DTMF delivery
             call_id: Call identifier for this receiver
+            payload_type: RTP payload type for telephone-event (default: 101)
         """
         self.local_port = local_port
         self.pbx_core = pbx_core
         self.call_id = call_id
+        self.payload_type = payload_type
         self.logger = get_logger()
         self.socket = None
         self.running = False
@@ -221,8 +223,8 @@ class RFC2833Receiver:
             timestamp = header[3]
             ssrc = header[4]
 
-            # Only process payload type 101 (telephone-event)
-            if payload_type != 101:
+            # Only process configured payload type for telephone-event
+            if payload_type != self.payload_type:
                 return
 
             # Extract payload (RFC 2833 event)
@@ -274,10 +276,10 @@ class RFC2833Sender:
     """
     RFC 2833 RTP Event Sender
 
-    Sends DTMF digits as RFC 2833 RTP events with payload type 101.
+    Sends DTMF digits as RFC 2833 RTP events with configurable payload type (default 101).
     """
 
-    def __init__(self, local_port, remote_host, remote_port):
+    def __init__(self, local_port, remote_host, remote_port, payload_type=101):
         """
         Initialize RFC 2833 sender
 
@@ -285,10 +287,12 @@ class RFC2833Sender:
             local_port: Local UDP port to send from
             remote_host: Remote host to send to
             remote_port: Remote port to send to
+            payload_type: RTP payload type for telephone-event (default: 101)
         """
         self.local_port = local_port
         self.remote_host = remote_host
         self.remote_port = remote_port
+        self.payload_type = payload_type
         self.logger = get_logger()
         self.socket = None
         self.sequence_number = 0
@@ -350,7 +354,7 @@ class RFC2833Sender:
                 event_code, end=False, volume=volume, duration=160)
             self._send_rtp_packet(
                 event_packet.pack(),
-                payload_type=101,
+                payload_type=self.payload_type,
                 marker=True)
             time.sleep(0.02)  # 20ms
 
@@ -359,7 +363,7 @@ class RFC2833Sender:
                 event_code, end=False, volume=volume, duration=320)
             self._send_rtp_packet(
                 event_packet.pack(),
-                payload_type=101,
+                payload_type=self.payload_type,
                 marker=False)
             time.sleep(0.02)  # 20ms
 
@@ -369,7 +373,7 @@ class RFC2833Sender:
             for _ in range(3):
                 self._send_rtp_packet(
                     event_packet.pack(),
-                    payload_type=101,
+                    payload_type=self.payload_type,
                     marker=False)
                 time.sleep(0.01)  # 10ms between end packets
 
@@ -380,15 +384,18 @@ class RFC2833Sender:
             self.logger.error(f"Error sending RFC 2833 DTMF: {e}")
             return False
 
-    def _send_rtp_packet(self, payload, payload_type=101, marker=False):
+    def _send_rtp_packet(self, payload, payload_type=None, marker=False):
         """
         Send RTP packet with RFC 2833 payload
 
         Args:
             payload: RFC 2833 event payload
-            payload_type: RTP payload type (default 101)
+            payload_type: RTP payload type (uses instance payload_type if not specified)
             marker: Marker bit
         """
+        if payload_type is None:
+            payload_type = self.payload_type
+            
         # Build RTP header
         version = 2
         padding = 0

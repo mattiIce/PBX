@@ -129,6 +129,12 @@ account.1.dnd.enable = 0
 # Zultys phones currently use SIP INFO for DTMF and also advertise RFC2833
 # support. This configuration explicitly sets RFC2833 as the primary method
 # for better reliability.
+#
+# Payload Type Configuration:
+# The dtmf_payload parameter can be configured globally via config.yml
+# Default is 101 (RFC2833 standard), but can be changed if experiencing
+# DTMF issues with specific network environments or SIP providers.
+# Valid range: 96-127 (dynamic payload types)
 
 # DTMF method: SIP INFO (most reliable for ZIP37G)
 # Changed from RFC2833 to SIP INFO to fix spurious DTMF detection issue
@@ -136,7 +142,7 @@ account.1.dnd.enable = 0
 # SIP INFO provides cleaner, more reliable DTMF signaling
 account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
 account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
-account.1.dtmf.dtmf_payload = 101  # Payload type for RFC2833 (if used as fallback)
+account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}  # Payload type for RFC2833 (configurable)
 
 # ============================================================================
 # Network Settings

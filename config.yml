@@ -78,6 +78,13 @@ features:
   auto_attendant: true
   max_call_duration: 7200
   
+  # DTMF Configuration - Global settings for all devices
+  # Note: Individual phone templates may override these for device-specific requirements
+  dtmf:
+    payload_type: 101          # RFC2833 payload type (standard is 101, but can be 96-127)
+                               # Some phones may require alternative payload types (e.g., 100, 102)
+                               # Change this if experiencing DTMF issues with specific phone models
+  
   # Phone Book - Centralized directory for IP phones
   phone_book:
     enabled: true              # Enable phone book feature (required for remote phone book URL)
