@@ -742,7 +742,7 @@ class PBXCore:
             List of codec payload types as strings
         """
         # Get DTMF payload type from config (default 101)
-        dtmf_payload_type = self.config.get('dtmf.payload_type', 101)
+        dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
         dtmf_pt_str = str(dtmf_payload_type)
         
         if phone_model == 'ZIP37G':
