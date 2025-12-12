@@ -144,14 +144,19 @@ class G729Codec:
         Returns:
             True if codec library is available
         """
-        # Check for codec library availability
-        # Try to import G.729 library (examples)
-        try:
-            # Example: import bcg729
-            # return True
-            pass
-        except ImportError:
-            pass
+        # Check for common G.729 codec libraries
+        codec_libraries = [
+            'bcg729',      # Open-source LGPL implementation
+            'g729',        # Python bindings if available
+            # Add other library names as needed
+        ]
+        
+        for lib in codec_libraries:
+            try:
+                __import__(lib)
+                return True
+            except ImportError:
+                continue
         
         return False
     

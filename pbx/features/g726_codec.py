@@ -3,8 +3,14 @@ G.726 Codec Support
 ITU-T G.726 is an ADPCM speech codec with multiple bitrate variants.
 
 This module provides framework support for G.726 codec negotiation and
-integration with the PBX system. The actual encoding/decoding can use
-Python's audioop module or external libraries.
+integration with the PBX system. The actual encoding/decoding uses
+Python's audioop module for G.726-32.
+
+Note: audioop is deprecated in Python 3.11+ and will be removed in Python 3.13.
+For future compatibility, plan to migrate to an alternative library such as:
+- pydub (uses ffmpeg)
+- pyaudio with codec plugins
+- Native codec library bindings
 
 Supports all G.726 bitrate variants:
 - G.726-16: 16 kbit/s (2 bits per sample)
@@ -14,6 +20,7 @@ Supports all G.726 bitrate variants:
 """
 from typing import Optional
 import warnings
+import logging
 
 from pbx.utils.logger import get_logger
 
@@ -90,6 +97,15 @@ class G726Codec:
             f"G.726 codec initialized at {self.bitrate_kbps} kbit/s "
             f"({self.bits_per_sample} bits/sample)"
         )
+        
+        # Log warning about audioop deprecation for G.726-32
+        if self.bitrate_kbps == 32:
+            # Note: This is logged once at initialization, not repeatedly
+            # Migration path: Replace audioop with alternative library before Python 3.13
+            self.logger.info(
+                "G.726-32 using audioop (deprecated in Python 3.11+). "
+                "Plan to migrate to alternative library for Python 3.13+ compatibility."
+            )
     
     def encode(self, pcm_data: bytes) -> Optional[bytes]:
         """
