@@ -253,7 +253,7 @@ class AICallRouting:
             export_data = []
             for data in self.training_data:
                 export_item = data.copy()
-                if 'timestamp' in export_item:
+                if 'timestamp' in export_item and isinstance(export_item['timestamp'], datetime):
                     export_item['timestamp'] = export_item['timestamp'].isoformat()
                 export_data.append(export_item)
             

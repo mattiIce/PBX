@@ -230,8 +230,12 @@ class RecordingRetentionManager:
                     try:
                         recording_file.unlink()
                         self.deleted_count += 1
+                    except PermissionError as e:
+                        self.logger.error(f"Permission denied deleting {recording_file}: {e}")
+                    except FileNotFoundError as e:
+                        self.logger.error(f"File not found (already deleted?) {recording_file}: {e}")
                     except Exception as e:
-                        self.logger.error(f"Error deleting {recording_file}: {e}")
+                        self.logger.error(f"Unexpected error deleting {recording_file}: {e}")
         
         if not dry_run:
             self.last_cleanup = now

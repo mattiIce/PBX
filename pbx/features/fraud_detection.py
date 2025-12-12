@@ -96,13 +96,15 @@ class FraudDetectionSystem:
         
         # Store alerts if fraud detected
         if fraud_score > 0.5:
+            # Store only essential info, not full call_data (avoid exposing sensitive info)
             self.alerts.append({
                 'extension': extension,
                 'destination': destination,
                 'fraud_score': fraud_score,
                 'alerts': alerts,
                 'timestamp': timestamp,
-                'call_data': call_data
+                'call_duration': call_data.get('duration', 0),
+                'call_cost': call_data.get('cost', 0.0)
             })
             
             self.logger.warning(f"Fraud detected for extension {extension}: score={fraud_score:.2f}")

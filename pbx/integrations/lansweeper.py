@@ -26,7 +26,7 @@ class LansweeperIntegration:
         # Configuration
         lansweeper_config = self.config.get('integrations', {}).get('lansweeper', {})
         self.enabled = lansweeper_config.get('enabled', False)
-        self.api_url = lansweeper_config.get('api_url', 'http://lansweeper-server:81/api')
+        self.api_url = lansweeper_config.get('api_url', 'https://lansweeper-server:81/api')
         self.api_token = lansweeper_config.get('api_token')
         self.username = lansweeper_config.get('username')
         self.password = lansweeper_config.get('password')
@@ -42,6 +42,8 @@ class LansweeperIntegration:
         elif self.enabled:
             self.logger.info("Lansweeper integration initialized")
             self.logger.info(f"  API URL: {self.api_url}")
+            if self.api_url.startswith('http://'):
+                self.logger.warning("  WARNING: Using HTTP (not HTTPS) - API credentials sent in plaintext!")
     
     def _make_request(self, endpoint: str, method: str = 'GET', 
                      data: Optional[Dict] = None) -> Optional[Dict]:

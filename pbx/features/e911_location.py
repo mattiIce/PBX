@@ -116,6 +116,9 @@ class E911LocationService:
             }
         
         building = self.buildings.get(location['building_id'])
+        if not building:
+            self.logger.error(f"Building {location['building_id']} not found in buildings database")
+            return {'error': 'Building not found', 'device_id': device_id}
         
         # Format full location
         full_location = {

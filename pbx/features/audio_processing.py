@@ -110,7 +110,8 @@ class AudioProcessor:
         if current_rms > 0:
             gain = target_level / current_rms
             gain = min(gain, 10.0)  # Limit maximum gain
-            audio = (audio * gain).astype(np.int16)
+            # Prevent overflow by clamping to int16 range
+            audio = np.clip(audio * gain, -32768, 32767).astype(np.int16)
         
         return audio
     
