@@ -52,7 +52,21 @@ if __name__ == "__main__":
     print("=" * 60)
     print("InHouse PBX System v1.0.0")
     print("=" * 60)
-    print()
+    
+    # Check dependencies first
+    print("\nChecking dependencies...")
+    try:
+        from pbx.utils.dependency_checker import check_and_report
+        
+        # Check with minimal verbosity by default
+        # Use --verbose flag to see detailed info
+        verbose = '--verbose' in sys.argv or '-v' in sys.argv
+        if not check_and_report(verbose=verbose, strict=True):
+            print("\n✗ Dependency check failed. Install missing packages and try again.")
+            sys.exit(1)
+    except Exception as e:
+        print(f"Warning: Could not check dependencies: {e}")
+        print("Continuing anyway...")
 
     # Startup tests disabled - can be re-enabled by uncommenting below
     # Run tests first
@@ -73,14 +87,12 @@ if __name__ == "__main__":
     #     print("\nServer start cancelled.")
     #     sys.exit(0)
 
-    print()
-    print("=" * 60)
+    print("\n" + "=" * 60)
     print("STARTING PBX SERVER")
     print("=" * 60)
-    print()
 
     # Verify FIPS compliance before starting
-    print("Performing security checks...")
+    print("\nPerforming security checks...")
     try:
         from pbx.utils.config import Config
         from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
@@ -91,8 +103,6 @@ if __name__ == "__main__":
         enforce_fips = config.get('security.enforce_fips', True)
 
         if fips_mode:
-            print("✓ FIPS 140-2 mode is ENABLED")
-
             if not CRYPTO_AVAILABLE:
                 error_msg = (
                     "\n✗ FIPS MODE ENFORCEMENT FAILED\n"
@@ -109,17 +119,14 @@ if __name__ == "__main__":
                     print(error_msg)
                     print("  WARNING: Continuing without FIPS compliance")
             else:
-                print("✓ Cryptography library available")
                 print("✓ FIPS 140-2 compliance verified")
 
                 # Test encryption initialization
                 enc = get_encryption(fips_mode=True, enforce_fips=enforce_fips)
-                print("✓ FIPS-compliant encryption initialized")
         else:
-            print("⚠ WARNING: FIPS 140-2 mode is DISABLED")
-            print("  This system is NOT FIPS compliant")
+            print("⚠ FIPS 140-2 mode: DISABLED")
             if enforce_fips:
-                print("  Ignoring enforce_fips since fips_mode is disabled")
+                print("  Note: enforce_fips ignored (fips_mode is disabled)")
 
     except ImportError as e:
         print(f"\n✗ FIPS Compliance Error: {e}")
@@ -128,8 +135,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n✗ Security check failed: {e}")
         sys.exit(1)
-
-    print()
 
     # Create PBX instance
     try:
