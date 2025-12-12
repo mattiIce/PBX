@@ -2,65 +2,64 @@
 Tests for phone model-specific codec selection
 """
 import unittest
+from unittest.mock import Mock
 from pbx.core.pbx import PBXCore
 
 
 class TestPhoneModelDetection(unittest.TestCase):
     """Test phone model detection from User-Agent"""
     
+    def setUp(self):
+        """Set up test fixtures"""
+        # Create a minimal test instance with just the needed method
+        self.pbx = Mock(spec=PBXCore)
+        # Copy the actual method from the class to our mock
+        self.pbx._detect_phone_model = PBXCore._detect_phone_model.__get__(self.pbx)
+    
     def test_detect_zip33g_uppercase(self):
         """Test detection of ZIP33G in uppercase"""
-        # Test the method directly without needing full PBX init
-        pbx = object.__new__(PBXCore)
         user_agent = "Zultys ZIP33G 47.80.0.132"
-        model = pbx._detect_phone_model(user_agent)
+        model = self.pbx._detect_phone_model(user_agent)
         self.assertEqual(model, 'ZIP33G')
     
     def test_detect_zip33g_with_space(self):
         """Test detection of ZIP 33G with space"""
-        pbx = object.__new__(PBXCore)
         user_agent = "Zultys ZIP 33G firmware 47.80"
-        model = pbx._detect_phone_model(user_agent)
+        model = self.pbx._detect_phone_model(user_agent)
         self.assertEqual(model, 'ZIP33G')
     
     def test_detect_zip37g_uppercase(self):
         """Test detection of ZIP37G in uppercase"""
-        pbx = object.__new__(PBXCore)
         user_agent = "Zultys ZIP37G 47.85.0.140"
-        model = pbx._detect_phone_model(user_agent)
+        model = self.pbx._detect_phone_model(user_agent)
         self.assertEqual(model, 'ZIP37G')
     
     def test_detect_zip37g_with_space(self):
         """Test detection of ZIP 37G with space"""
-        pbx = object.__new__(PBXCore)
         user_agent = "Zultys ZIP 37G firmware 47.85"
-        model = pbx._detect_phone_model(user_agent)
+        model = self.pbx._detect_phone_model(user_agent)
         self.assertEqual(model, 'ZIP37G')
     
     def test_detect_other_phone(self):
         """Test detection of non-Zultys phone"""
-        pbx = object.__new__(PBXCore)
         user_agent = "Yealink SIP-T46S 66.85.0.5"
-        model = pbx._detect_phone_model(user_agent)
+        model = self.pbx._detect_phone_model(user_agent)
         self.assertIsNone(model)
     
     def test_detect_none_user_agent(self):
         """Test detection with None user agent"""
-        pbx = object.__new__(PBXCore)
-        model = pbx._detect_phone_model(None)
+        model = self.pbx._detect_phone_model(None)
         self.assertIsNone(model)
     
     def test_detect_empty_user_agent(self):
         """Test detection with empty user agent"""
-        pbx = object.__new__(PBXCore)
-        model = pbx._detect_phone_model("")
+        model = self.pbx._detect_phone_model("")
         self.assertIsNone(model)
     
     def test_detect_zip33g_case_insensitive(self):
         """Test detection is case-insensitive"""
-        pbx = object.__new__(PBXCore)
         user_agent = "zultys zip33g firmware"
-        model = pbx._detect_phone_model(user_agent)
+        model = self.pbx._detect_phone_model(user_agent)
         self.assertEqual(model, 'ZIP33G')
 
 
@@ -68,13 +67,14 @@ class TestCodecSelection(unittest.TestCase):
     """Test codec selection based on phone model"""
     
     def setUp(self):
-        """Set up test fixtures - create minimal mock config"""
-        from unittest.mock import Mock
-        self.pbx = object.__new__(PBXCore)
-        # Add minimal attributes needed by _get_codecs_for_phone_model
+        """Set up test fixtures"""
+        # Create a minimal test instance with just the needed attributes and method
+        self.pbx = Mock(spec=PBXCore)
         self.pbx.config = Mock()
         self.pbx.config.get.return_value = 101  # DTMF payload type
         self.pbx.logger = Mock()  # Mock logger
+        # Copy the actual method from the class to our mock
+        self.pbx._get_codecs_for_phone_model = PBXCore._get_codecs_for_phone_model.__get__(self.pbx)
     
     def test_zip37g_codecs(self):
         """Test that ZIP37G gets PCMU/PCMA codecs"""

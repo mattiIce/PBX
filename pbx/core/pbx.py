@@ -778,19 +778,16 @@ class PBXCore:
         Returns:
             User-Agent string or None if not found
         """
-        if not self.registered_phones_db:
+        if not self.registered_phones_db or not self.database:
             return None
             
         try:
             # Query registered_phones table for this extension
-            query = """
+            # Use parameterized query appropriate for database type
+            placeholder = '%s' if self.database.db_type == 'postgresql' else '?'
+            query = f"""
             SELECT user_agent FROM registered_phones 
-            WHERE extension_number = %s
-            ORDER BY last_registered DESC
-            LIMIT 1
-            """ if self.database.db_type == 'postgresql' else """
-            SELECT user_agent FROM registered_phones 
-            WHERE extension_number = ?
+            WHERE extension_number = {placeholder}
             ORDER BY last_registered DESC
             LIMIT 1
             """
