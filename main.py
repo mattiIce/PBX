@@ -2,9 +2,10 @@
 """
 Main entry point for PBX system
 """
-import sys
 import signal
+import sys
 import time
+
 from pbx.core.pbx import PBXCore
 from pbx.utils.test_runner import run_all_tests
 
@@ -13,7 +14,7 @@ running = True
 pbx = None
 
 
-def signal_handler(sig, frame):
+def signal_handler(sig, frame):  # pylint: disable=unused-argument
     """Handle shutdown signal"""
     global running, pbx
     print("\nShutting down PBX system...")
@@ -28,17 +29,17 @@ def run_tests_before_start():
     print("RUNNING TESTS BEFORE SERVER START")
     print("=" * 70)
     print()
-    
+
     try:
-        passed, failed, skipped, _ = run_all_tests()
-        
+        _, failed, _, _ = run_all_tests()
+
         print()
         if failed > 0:
             print("⚠ WARNING: Some tests failed!")
             print("  You can still start the server, but there may be issues.")
         else:
             print("✓ All tests passed!")
-        
+
         return failed == 0
     except Exception as e:
         print(f"Error running tests: {e}")
@@ -52,11 +53,11 @@ if __name__ == "__main__":
     print("InHouse PBX System v1.0.0")
     print("=" * 60)
     print()
-    
+
     # Startup tests disabled - can be re-enabled by uncommenting below
     # Run tests first
     # tests_passed = run_tests_before_start()
-    # 
+    #
     # print()
     # print("=" * 70)
     # if tests_passed:
@@ -71,27 +72,27 @@ if __name__ == "__main__":
     # except (EOFError, KeyboardInterrupt):
     #     print("\nServer start cancelled.")
     #     sys.exit(0)
-    
+
     print()
     print("=" * 60)
     print("STARTING PBX SERVER")
     print("=" * 60)
     print()
-    
+
     # Verify FIPS compliance before starting
     print("Performing security checks...")
     try:
         from pbx.utils.config import Config
-        from pbx.utils.encryption import get_encryption, CRYPTO_AVAILABLE
-        
+        from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
+
         # Load config to check FIPS settings
         config = Config("config.yml")
         fips_mode = config.get('security.fips_mode', True)
         enforce_fips = config.get('security.enforce_fips', True)
-        
+
         if fips_mode:
             print("✓ FIPS 140-2 mode is ENABLED")
-            
+
             if not CRYPTO_AVAILABLE:
                 error_msg = (
                     "\n✗ FIPS MODE ENFORCEMENT FAILED\n"
@@ -99,7 +100,7 @@ if __name__ == "__main__":
                     "  FIPS 140-2 compliance requires this library.\n"
                     "  Install with: pip install cryptography\n"
                 )
-                
+
                 if enforce_fips:
                     print(error_msg)
                     print("  System cannot start with enforce_fips=true")
@@ -110,7 +111,7 @@ if __name__ == "__main__":
             else:
                 print("✓ Cryptography library available")
                 print("✓ FIPS 140-2 compliance verified")
-                
+
                 # Test encryption initialization
                 enc = get_encryption(fips_mode=True, enforce_fips=enforce_fips)
                 print("✓ FIPS-compliant encryption initialized")
@@ -119,7 +120,7 @@ if __name__ == "__main__":
             print("  This system is NOT FIPS compliant")
             if enforce_fips:
                 print("  Ignoring enforce_fips since fips_mode is disabled")
-    
+
     except ImportError as e:
         print(f"\n✗ FIPS Compliance Error: {e}")
         print("  System cannot start in FIPS mode")
@@ -127,7 +128,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n✗ Security check failed: {e}")
         sys.exit(1)
-    
+
     print()
 
     # Create PBX instance
@@ -151,8 +152,10 @@ if __name__ == "__main__":
                 current_time = time.time()
                 if current_time - last_status_time >= 10:
                     status = pbx.get_status()
-                    print(f"Status: {status['registered_extensions']} extensions registered, "
-                          f"{status['active_calls']} active calls")
+                    print(
+                        f"Status: {
+                            status['registered_extensions']} extensions registered, " f"{
+                            status['active_calls']} active calls")
                     last_status_time = current_time
 
             print("PBX system shutdown complete")

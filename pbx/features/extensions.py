@@ -2,8 +2,9 @@
 Extension management and registry
 """
 from datetime import datetime
-from pbx.utils.logger import get_logger
+
 from pbx.utils.encryption import get_encryption
+from pbx.utils.logger import get_logger
 
 
 class Extension:
@@ -74,16 +75,16 @@ class ExtensionRegistry:
     def create_extension_from_db(db_extension):
         """
         Create an Extension object from database data
-        
+
         Args:
             db_extension: Dictionary containing extension data from database
-            
+
         Returns:
             Extension object
         """
         number = db_extension['number']
         name = db_extension['name']
-        
+
         # Create config dict from database data
         ext_config = {
             'number': number,
@@ -95,39 +96,48 @@ class ExtensionRegistry:
             'ad_synced': db_extension.get('ad_synced', False),
             'is_admin': db_extension.get('is_admin', False),
         }
-        
+
         return Extension(number, name, ext_config)
 
     def _load_extensions(self):
         """Load extensions from database only (for security)"""
         # SECURITY: Extensions must be loaded from database only.
-        # Loading from config.yml is insecure as it exposes passwords in plain text.
+        # Loading from config.yml is insecure as it exposes passwords in plain
+        # text.
         if not self.database or not self.database.enabled:
-            self.logger.error("Database is not enabled. Extensions can only be loaded from database.")
-            self.logger.error("Please enable database in config.yml and run: python scripts/init_database.py")
-            self.logger.error("Then add extensions using the admin panel or: python scripts/migrate_extensions_to_db.py")
+            self.logger.error(
+                "Database is not enabled. Extensions can only be loaded from database.")
+            self.logger.error(
+                "Please enable database in config.yml and run: python scripts/init_database.py")
+            self.logger.error(
+                "Then add extensions using the admin panel or: python scripts/migrate_extensions_to_db.py")
             return
-        
+
         try:
             from pbx.utils.database import ExtensionDB
             ext_db = ExtensionDB(self.database)
             db_extensions = ext_db.get_all()
-            
+
             if db_extensions:
-                self.logger.info(f"Loading {len(db_extensions)} extensions from database")
+                self.logger.info(
+                    f"Loading {
+                        len(db_extensions)} extensions from database")
                 for ext_data in db_extensions:
                     number = ext_data['number']
                     name = ext_data['name']
-                    
-                    # Create Extension object from database data using helper method
+
+                    # Create Extension object from database data using helper
+                    # method
                     extension = self.create_extension_from_db(ext_data)
                     self.extensions[number] = extension
-                    
+
                     ad_marker = " [AD]" if ext_data.get('ad_synced') else ""
-                    self.logger.info(f"Loaded extension {number} ({name}){ad_marker}")
+                    self.logger.info(
+                        f"Loaded extension {number} ({name}){ad_marker}")
             else:
                 self.logger.warning("No extensions found in database")
-                self.logger.warning("Add extensions using the admin panel or run: python scripts/migrate_extensions_to_db.py")
+                self.logger.warning(
+                    "Add extensions using the admin panel or run: python scripts/migrate_extensions_to_db.py")
         except Exception as e:
             self.logger.error(f"Error loading extensions from database: {e}")
             import traceback
@@ -290,7 +300,8 @@ class ExtensionRegistry:
         """
         extension = self.get(number)
         if extension:
-            password_hash, password_salt = self.encryption.hash_password(password)
+            password_hash, password_salt = self.encryption.hash_password(
+                password)
             extension.config['password_hash'] = password_hash
             extension.config['password_salt'] = password_salt
             self.logger.info(f"Hashed password for extension {number}")

@@ -2,51 +2,57 @@
 REST API Server for PBX Management
 Provides HTTP/HTTPS API for managing PBX features
 """
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import ipaddress
 import json
-from datetime import datetime, date, timezone, timedelta
-from typing import Optional
-from pathlib import Path
-import socket
-import threading
-import os
 import mimetypes
+import os
+import shutil
+import socket
+import ssl
+import tempfile
+import threading
 import traceback
 import zipfile
-import tempfile
-import shutil
-import ssl
-import ipaddress
-from urllib.parse import urlparse, parse_qs
-from pbx.utils.logger import get_logger
-from pbx.utils.config import Config
-from pbx.utils.tts import text_to_wav_telephony, is_tts_available, get_tts_requirements
+from datetime import date, datetime, timedelta, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+from typing import Optional
+from urllib.parse import parse_qs, urlparse
+
 from pbx.features.phone_provisioning import normalize_mac_address
+from pbx.utils.config import Config
+from pbx.utils.logger import get_logger
+from pbx.utils.tts import get_tts_requirements, is_tts_available, text_to_wav_telephony
 
 # Optional imports for SSL certificate generation
 try:
     from cryptography import x509
-    from cryptography.x509.oid import NameOID
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.x509.oid import NameOID
     SSL_GENERATION_AVAILABLE = True
 except ImportError:
     SSL_GENERATION_AVAILABLE = False
 
 # Admin directory path
-ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'admin')
+ADMIN_DIR = os.path.join(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(__file__))),
+    'admin')
 
 # MAC address placeholders that indicate misconfiguration
 # These are literal strings that appear in URLs when phones are misconfigured
 # Note: $mac and $MA are CORRECT variables that phones should use - they should NOT be in this list
-# Only include literal placeholders like {mac} that indicate the phone didn't substitute its actual MAC
+# Only include literal placeholders like {mac} that indicate the phone
+# didn't substitute its actual MAC
 MAC_ADDRESS_PLACEHOLDERS = ['{mac}', '{MAC}', '{Ma}']
 
 
 class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder that handles datetime objects"""
+
     def default(self, obj):
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
@@ -63,43 +69,48 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Set response headers with security enhancements"""
         self.send_response(status)
         self.send_header('Content-type', content_type)
-        
+
         # CORS headers
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        
+        self.send_header(
+            'Access-Control-Allow-Methods',
+            'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header(
+            'Access-Control-Allow-Headers',
+            'Content-Type, Authorization')
+
         # Security headers
         # X-Content-Type-Options: Prevent MIME type sniffing
         self.send_header('X-Content-Type-Options', 'nosniff')
-        
+
         # X-Frame-Options: Prevent clickjacking
         self.send_header('X-Frame-Options', 'DENY')
-        
+
         # X-XSS-Protection: Enable XSS filter (for older browsers)
         self.send_header('X-XSS-Protection', '1; mode=block')
-        
+
         # Strict-Transport-Security: Enforce HTTPS (when using HTTPS)
         # Note: Only add this when actually using HTTPS
         # self.send_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-        
+
         # Content-Security-Policy: Restrict resource loading
         # Allow Chart.js from trusted CDNs for analytics visualization
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:;"
-        )
+            "img-src 'self' data:;")
         self.send_header('Content-Security-Policy', csp)
-        
+
         # Referrer-Policy: Control referrer information
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
-        
+
         # Permissions-Policy: Control browser features
-        # Allow microphone for WebRTC phone functionality, block camera and geolocation
-        self.send_header('Permissions-Policy', 'geolocation=(), microphone=(self), camera=()')
-        
+        # Allow microphone for WebRTC phone functionality, block camera and
+        # geolocation
+        self.send_header('Permissions-Policy',
+                         'geolocation=(), microphone=(self), camera=()')
+
         self.end_headers()
 
     def _send_json(self, data, status=200):
@@ -118,21 +129,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _get_provisioning_url_info(self):
         """
         Get provisioning URL information (protocol, server IP, port)
-        
+
         Returns:
             tuple: (protocol, server_ip, port, base_url)
         """
         if not self.pbx_core:
             return 'http', '192.168.1.14', 8080, 'http://192.168.1.14:8080'
-        
+
         # Note: Provisioning typically uses HTTP even when API uses HTTPS
         # because phones often cannot validate self-signed certificates
         ssl_enabled = self.pbx_core.config.get('api.ssl.enabled', False)
         protocol = 'https' if ssl_enabled else 'http'
-        server_ip = self.pbx_core.config.get('server.external_ip', '192.168.1.14')
+        server_ip = self.pbx_core.config.get(
+            'server.external_ip', '192.168.1.14')
         port = self.pbx_core.config.get('api.port', 8080)
         base_url = f"{protocol}://{server_ip}:{port}"
-        
+
         return protocol, server_ip, port, base_url
 
     def do_OPTIONS(self):
@@ -155,10 +167,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     model = parts[5]
                     # Validate vendor and model to prevent path traversal
                     import re
-                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                    if re.match(
+                            r'^[a-z0-9_-]+$',
+                            vendor.lower()) and re.match(
+                            r'^[a-z0-9_-]+$',
+                            model.lower()):
                         self._handle_export_template(vendor, model)
                     else:
-                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
+                        self._send_json(
+                            {'error': 'Invalid vendor or model name'}, 400)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/provisioning/reload-templates':
@@ -274,10 +291,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     model = parts[5]
                     # Validate vendor and model to prevent path traversal
                     import re
-                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                    if re.match(
+                            r'^[a-z0-9_-]+$',
+                            vendor.lower()) and re.match(
+                            r'^[a-z0-9_-]+$',
+                            model.lower()):
                         self._handle_update_template(vendor, model)
                     else:
-                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
+                        self._send_json(
+                            {'error': 'Invalid vendor or model name'}, 400)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path.startswith('/api/extensions/'):
@@ -341,7 +363,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if len(parts) >= 5:
                     agent_extension = parts[-2]
                     skill_id = parts[-1]
-                    self._handle_remove_skill_from_agent(agent_extension, skill_id)
+                    self._handle_remove_skill_from_agent(
+                        agent_extension, skill_id)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path.startswith('/api/auto-attendant/menu-options/'):
@@ -417,10 +440,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     model = parts[5]
                     # Validate vendor and model to prevent path traversal
                     import re
-                    if re.match(r'^[a-z0-9_-]+$', vendor.lower()) and re.match(r'^[a-z0-9_-]+$', model.lower()):
+                    if re.match(
+                            r'^[a-z0-9_-]+$',
+                            vendor.lower()) and re.match(
+                            r'^[a-z0-9_-]+$',
+                            model.lower()):
                         self._handle_get_template_content(vendor, model)
                     else:
-                        self._send_json({'error': 'Invalid vendor or model name'}, 400)
+                        self._send_json(
+                            {'error': 'Invalid vendor or model name'}, 400)
                 else:
                     self._send_json({'error': 'Invalid path'}, 400)
             elif path == '/api/provisioning/diagnostics':
@@ -569,11 +597,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Get extensions"""
         if self.pbx_core:
             extensions = self.pbx_core.extension_registry.get_all()
-            data = [{'number': e.number, 'name': e.name, 'email': e.config.get('email'),
-                    'registered': e.registered, 'allow_external': e.config.get('allow_external', True),
-                    'ad_synced': e.config.get('ad_synced', False), 'voicemail_pin_hash': e.config.get('voicemail_pin_hash'),
-                    'is_admin': e.config.get('is_admin', False)}
-                   for e in extensions]
+            data = [{'number': e.number,
+                     'name': e.name,
+                     'email': e.config.get('email'),
+                     'registered': e.registered,
+                     'allow_external': e.config.get('allow_external',
+                                                    True),
+                     'ad_synced': e.config.get('ad_synced',
+                                               False),
+                     'voicemail_pin_hash': e.config.get('voicemail_pin_hash'),
+                     'is_admin': e.config.get('is_admin',
+                                              False)} for e in extensions]
             self._send_json(data)
         else:
             self._send_json({'error': 'PBX not initialized'}, 500)
@@ -587,15 +621,19 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'PBX not initialized'}, 500)
 
-    def _validate_limit_parameter(self, params: dict, default: int, max_value: int) -> Optional[int]:
+    def _validate_limit_parameter(
+            self,
+            params: dict,
+            default: int,
+            max_value: int) -> Optional[int]:
         """
         Helper method to validate limit query parameters
-        
+
         Args:
             params: Parsed query parameters
             default: Default value if not provided
             max_value: Maximum allowed value
-            
+
         Returns:
             Validated limit value or None if invalid (error response will be sent)
         """
@@ -605,11 +643,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'limit must be at least 1'}, 400)
                 return None
             if limit > max_value:
-                self._send_json({'error': f'limit cannot exceed {max_value}'}, 400)
+                self._send_json(
+                    {'error': f'limit cannot exceed {max_value}'}, 400)
                 return None
             return limit
         except ValueError:
-            self._send_json({'error': 'Invalid limit parameter, must be an integer'}, 400)
+            self._send_json(
+                {'error': 'Invalid limit parameter, must be an integer'}, 400)
             return None
 
     def _handle_get_statistics(self):
@@ -620,22 +660,27 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
                 days = int(params.get('days', [7])[0])
-                
+
                 # Get dashboard statistics
-                stats = self.pbx_core.statistics_engine.get_dashboard_statistics(days)
-                
+                stats = self.pbx_core.statistics_engine.get_dashboard_statistics(
+                    days)
+
                 # Add call quality metrics (with QoS integration)
-                stats['call_quality'] = self.pbx_core.statistics_engine.get_call_quality_metrics(self.pbx_core)
-                
+                stats['call_quality'] = self.pbx_core.statistics_engine.get_call_quality_metrics(
+                    self.pbx_core)
+
                 # Add real-time metrics
-                stats['real_time'] = self.pbx_core.statistics_engine.get_real_time_metrics(self.pbx_core)
-                
+                stats['real_time'] = self.pbx_core.statistics_engine.get_real_time_metrics(
+                    self.pbx_core)
+
                 self._send_json(stats)
             except Exception as e:
                 self.logger.error(f"Error getting statistics: {e}")
-                self._send_json({'error': f'Error getting statistics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting statistics: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Statistics engine not initialized'}, 500)
+            self._send_json(
+                {'error': 'Statistics engine not initialized'}, 500)
 
     def _handle_get_qos_metrics(self):
         """Get QoS metrics for all active calls"""
@@ -648,7 +693,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             except Exception as e:
                 self.logger.error(f"Error getting QoS metrics: {e}")
-                self._send_json({'error': f'Error getting QoS metrics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting QoS metrics: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'QoS monitoring not enabled'}, 500)
 
@@ -659,7 +705,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                
+
                 # Validate limit parameter
                 limit = int(params.get('limit', [50])[0])
                 if limit < 1:
@@ -668,7 +714,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if limit > 1000:
                     self._send_json({'error': 'limit cannot exceed 1000'}, 400)
                     return
-                
+
                 alerts = self.pbx_core.qos_monitor.get_alerts(limit)
                 self._send_json({
                     'count': len(alerts),
@@ -676,10 +722,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             except ValueError as e:
                 self.logger.error(f"Invalid parameter for QoS alerts: {e}")
-                self._send_json({'error': 'Invalid limit parameter, must be an integer'}, 400)
+                self._send_json(
+                    {'error': 'Invalid limit parameter, must be an integer'}, 400)
             except Exception as e:
                 self.logger.error(f"Error getting QoS alerts: {e}")
-                self._send_json({'error': f'Error getting QoS alerts: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting QoS alerts: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'QoS monitoring not enabled'}, 500)
 
@@ -690,35 +738,40 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                
+
                 # Validate limit parameter
                 limit = int(params.get('limit', [100])[0])
                 if limit < 1:
                     self._send_json({'error': 'limit must be at least 1'}, 400)
                     return
                 if limit > 10000:
-                    self._send_json({'error': 'limit cannot exceed 10000'}, 400)
+                    self._send_json(
+                        {'error': 'limit cannot exceed 10000'}, 400)
                     return
-                
+
                 # Validate min_mos parameter
                 min_mos = params.get('min_mos', [None])[0]
                 if min_mos:
                     min_mos = float(min_mos)
                     if min_mos < 1.0 or min_mos > 5.0:
-                        self._send_json({'error': 'min_mos must be between 1.0 and 5.0'}, 400)
+                        self._send_json(
+                            {'error': 'min_mos must be between 1.0 and 5.0'}, 400)
                         return
-                
-                history = self.pbx_core.qos_monitor.get_historical_metrics(limit, min_mos)
+
+                history = self.pbx_core.qos_monitor.get_historical_metrics(
+                    limit, min_mos)
                 self._send_json({
                     'count': len(history),
                     'metrics': history
                 })
             except ValueError as e:
                 self.logger.error(f"Invalid parameter for QoS history: {e}")
-                self._send_json({'error': 'Invalid parameters, check limit (integer) and min_mos (float)'}, 400)
+                self._send_json(
+                    {'error': 'Invalid parameters, check limit (integer) and min_mos (float)'}, 400)
             except Exception as e:
                 self.logger.error(f"Error getting QoS history: {e}")
-                self._send_json({'error': f'Error getting QoS history: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting QoS history: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'QoS monitoring not enabled'}, 500)
 
@@ -730,7 +783,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(stats)
             except Exception as e:
                 self.logger.error(f"Error getting QoS statistics: {e}")
-                self._send_json({'error': f'Error getting QoS statistics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting QoS statistics: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'QoS monitoring not enabled'}, 500)
 
@@ -744,10 +798,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if metrics:
                     self._send_json(metrics)
                 else:
-                    self._send_json({'error': f'No QoS metrics found for call {call_id}'}, 404)
+                    self._send_json(
+                        {'error': f'No QoS metrics found for call {call_id}'}, 404)
             except Exception as e:
                 self.logger.error(f"Error getting call QoS metrics: {e}")
-                self._send_json({'error': f'Error getting call QoS metrics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting call QoS metrics: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'QoS monitoring not enabled'}, 500)
 
@@ -772,15 +828,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(data)
         else:
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
-    
+
     def _handle_get_provisioning_diagnostics(self):
         """Get provisioning system diagnostics"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
+
         provisioning = self.pbx_core.phone_provisioning
-        
+
         # Gather diagnostic information
         diagnostics = {
             'enabled': True,
@@ -804,57 +861,65 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             'models': provisioning.get_supported_models(),
             'recent_requests': provisioning.get_request_history(limit=20)
         }
-        
+
         # Add warnings for common issues
         warnings = []
         if diagnostics['configuration']['external_ip'] == 'Not configured':
-            warnings.append('server.external_ip is not configured - phones may not be able to reach the PBX')
+            warnings.append(
+                'server.external_ip is not configured - phones may not be able to reach the PBX')
         if diagnostics['statistics']['total_devices'] == 0:
-            warnings.append('No devices registered - use POST /api/provisioning/devices to register devices')
+            warnings.append(
+                'No devices registered - use POST /api/provisioning/devices to register devices')
         if diagnostics['statistics']['failed_requests'] > 0:
-            warnings.append(f"{diagnostics['statistics']['failed_requests']} provisioning requests failed - check recent_requests for details")
-        
+            warnings.append(
+                f"{diagnostics['statistics']['failed_requests']} provisioning requests failed - check recent_requests for details")
+
         diagnostics['warnings'] = warnings
-        
+
         self._send_json(diagnostics)
-    
+
     def _handle_get_provisioning_requests(self):
         """Get provisioning request history"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
+
         # Get limit from query parameter if provided
         parsed = urlparse(self.path)
         query_params = parse_qs(parsed.query)
         limit = int(query_params.get('limit', [50])[0])
-        
-        requests = self.pbx_core.phone_provisioning.get_request_history(limit=limit)
+
+        requests = self.pbx_core.phone_provisioning.get_request_history(
+            limit=limit)
         self._send_json({
             'total': len(self.pbx_core.phone_provisioning.provision_requests),
             'limit': limit,
             'requests': requests
         })
-    
+
     def _handle_get_provisioning_templates(self):
         """Get list of all provisioning templates"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
+
         templates = self.pbx_core.phone_provisioning.list_all_templates()
         self._send_json({
             'templates': templates,
             'total': len(templates)
         })
-    
+
     def _handle_get_template_content(self, vendor, model):
         """Get content of a specific template"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
-        content = self.pbx_core.phone_provisioning.get_template_content(vendor, model)
+
+        content = self.pbx_core.phone_provisioning.get_template_content(
+            vendor, model)
         if content:
             self._send_json({
                 'vendor': vendor,
@@ -870,15 +935,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 ]
             })
         else:
-            self._send_json({'error': f'Template not found for {vendor} {model}'}, 404)
-    
+            self._send_json(
+                {'error': f'Template not found for {vendor} {model}'}, 404)
+
     def _handle_export_template(self, vendor, model):
         """Export template to file"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
-        success, message, filepath = self.pbx_core.phone_provisioning.export_template_to_file(vendor, model)
+
+        success, message, filepath = self.pbx_core.phone_provisioning.export_template_to_file(
+            vendor, model)
         if success:
             self._send_json({
                 'success': True,
@@ -889,22 +957,24 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         else:
             self._send_json({'error': message}, 404)
-    
+
     def _handle_update_template(self, vendor, model):
         """Update template content"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
+
         try:
             body = self._get_body()
             content = body.get('content')
-            
+
             if not content:
                 self._send_json({'error': 'Missing template content'}, 400)
                 return
-            
-            success, message = self.pbx_core.phone_provisioning.update_template(vendor, model, content)
+
+            success, message = self.pbx_core.phone_provisioning.update_template(
+                vendor, model, content)
             if success:
                 self._send_json({
                     'success': True,
@@ -916,13 +986,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': message}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_reload_templates(self):
         """Reload all templates from disk"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
-        
+
         success, message, stats = self.pbx_core.phone_provisioning.reload_templates()
         if success:
             self._send_json({
@@ -936,24 +1007,44 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_registered_phones(self):
         """Get all registered phones from database"""
         logger = get_logger()
-        if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+        if self.pbx_core and hasattr(
+                self.pbx_core,
+                'registered_phones_db') and self.pbx_core.registered_phones_db:
             try:
                 phones = self.pbx_core.registered_phones_db.list_all()
                 self._send_json(phones)
             except Exception as e:
-                logger.error(f"Error loading registered phones from database: {e}")
-                logger.error(f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
-                logger.error(f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
+                logger.error(
+                    f"Error loading registered phones from database: {e}")
+                logger.error(
+                    f"  Database type: {
+                        self.pbx_core.registered_phones_db.db.db_type if hasattr(
+                            self.pbx_core.registered_phones_db,
+                            'db') else 'unknown'}")
+                logger.error(
+                    f"  Database enabled: {
+                        self.pbx_core.registered_phones_db.db.enabled if hasattr(
+                            self.pbx_core.registered_phones_db,
+                            'db') else 'unknown'}")
                 logger.error(f"  Traceback: {traceback.format_exc()}")
-                self._send_json({'error': str(e), 'details': 'Check server logs for full error details'}, 500)
+                self._send_json(
+                    {'error': str(e), 'details': 'Check server logs for full error details'}, 500)
         else:
-            # Return empty array when database is not available (graceful degradation)
-            logger.warning("Registered phones database not available - returning empty list")
+            # Return empty array when database is not available (graceful
+            # degradation)
+            logger.warning(
+                "Registered phones database not available - returning empty list")
             if self.pbx_core:
                 logger.warning(f"  pbx_core exists: True")
-                logger.warning(f"  has registered_phones_db attr: {hasattr(self.pbx_core, 'registered_phones_db')}")
+                logger.warning(
+                    f"  has registered_phones_db attr: {
+                        hasattr(
+                            self.pbx_core,
+                            'registered_phones_db')}")
                 if hasattr(self.pbx_core, 'registered_phones_db'):
-                    logger.warning(f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}")
+                    logger.warning(
+                        f"  registered_phones_db is None: {
+                            self.pbx_core.registered_phones_db is None}")
             self._send_json([])
 
     def _handle_get_registered_phones_with_mac(self):
@@ -962,15 +1053,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if not self.pbx_core:
             self._send_json({'error': 'PBX not initialized'}, 500)
             return
-        
+
         # Get registered phones (IP + Extension from SIP registrations)
         registered_phones = []
-        if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+        if hasattr(
+                self.pbx_core,
+                'registered_phones_db') and self.pbx_core.registered_phones_db:
             try:
                 registered_phones = self.pbx_core.registered_phones_db.list_all()
             except Exception as e:
                 logger.error(f"Error loading registered phones: {e}")
-        
+
         # Get provisioned devices (MAC + Extension from provisioning config)
         provisioned_devices = {}
         if hasattr(self.pbx_core, 'phone_provisioning'):
@@ -981,15 +1074,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     provisioned_devices[device.extension_number] = device
             except Exception as e:
                 logger.error(f"Error loading provisioned devices: {e}")
-        
+
         # Correlate the two data sources
         enhanced_phones = []
         for phone in registered_phones:
             enhanced = dict(phone)
             extension = phone.get('extension_number')
-            
+
             # Add MAC from provisioning if available and not already present
-            if extension and extension in provisioned_devices and not phone.get('mac_address'):
+            if extension and extension in provisioned_devices and not phone.get(
+                    'mac_address'):
                 device = provisioned_devices[extension]
                 enhanced['mac_address'] = device.mac_address
                 enhanced['vendor'] = device.vendor
@@ -998,9 +1092,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 enhanced['mac_source'] = 'provisioning'
             elif phone.get('mac_address'):
                 enhanced['mac_source'] = 'sip_registration'
-            
+
             enhanced_phones.append(enhanced)
-        
+
         self._send_json(enhanced_phones)
 
     def _handle_phone_lookup(self, identifier):
@@ -1009,7 +1103,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if not self.pbx_core:
             self._send_json({'error': 'PBX not initialized'}, 500)
             return
-        
+
         result = {
             'identifier': identifier,
             'type': None,
@@ -1017,57 +1111,71 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             'provisioned_device': None,
             'correlation': None
         }
-        
+
         # Normalize the identifier to detect if it's a MAC or IP
-        from pbx.features.phone_provisioning import normalize_mac_address
         import re
-        
+
+        from pbx.features.phone_provisioning import normalize_mac_address
+
         # Check if it looks like a MAC address using regex
         # Matches formats: XX:XX:XX:XX:XX:XX, XX-XX-XX-XX-XX-XX, XXXXXXXXXXXX
-        mac_pattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$')
+        mac_pattern = re.compile(
+            r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$')
         is_mac = bool(mac_pattern.match(identifier))
-        
+
         # Check if it looks like an IP address using regex
         # Matches valid IPv4 addresses
-        ip_pattern = re.compile(r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
+        ip_pattern = re.compile(
+            r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
         is_ip = bool(ip_pattern.match(identifier))
-        
+
         # Try MAC address lookup
         if is_mac:
             result['type'] = 'mac'
             normalized_mac = normalize_mac_address(identifier)
-            
+
             # Check provisioning system
             if hasattr(self.pbx_core, 'phone_provisioning'):
-                device = self.pbx_core.phone_provisioning.get_device(identifier)
+                device = self.pbx_core.phone_provisioning.get_device(
+                    identifier)
                 if device:
                     result['provisioned_device'] = device.to_dict()
-            
+
             # Check registered phones
-            if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+            if hasattr(
+                    self.pbx_core,
+                    'registered_phones_db') and self.pbx_core.registered_phones_db:
                 try:
-                    phone = self.pbx_core.registered_phones_db.get_by_mac(normalized_mac)
+                    phone = self.pbx_core.registered_phones_db.get_by_mac(
+                        normalized_mac)
                     if phone:
                         result['registered_phone'] = phone
                 except Exception as e:
-                    logger.error(f"Error looking up MAC in registered_phones: {e}")
-        
+                    logger.error(
+                        f"Error looking up MAC in registered_phones: {e}")
+
         # Try IP address lookup
         elif is_ip:
             result['type'] = 'ip'
-            
+
             # Check registered phones first
-            if hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+            if hasattr(
+                    self.pbx_core,
+                    'registered_phones_db') and self.pbx_core.registered_phones_db:
                 try:
-                    phone = self.pbx_core.registered_phones_db.get_by_ip(identifier)
+                    phone = self.pbx_core.registered_phones_db.get_by_ip(
+                        identifier)
                     if phone:
                         result['registered_phone'] = phone
-                        
-                        # Now try to find MAC from provisioning using the extension
+
+                        # Now try to find MAC from provisioning using the
+                        # extension
                         extension = phone.get('extension_number')
-                        if extension and hasattr(self.pbx_core, 'phone_provisioning'):
+                        if extension and hasattr(
+                                self.pbx_core, 'phone_provisioning'):
                             device = None
-                            # Search through provisioned devices for this extension
+                            # Search through provisioned devices for this
+                            # extension
                             for dev in self.pbx_core.phone_provisioning.get_all_devices():
                                 if dev.extension_number == extension:
                                     device = dev
@@ -1075,12 +1183,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                             if device:
                                 result['provisioned_device'] = device.to_dict()
                 except Exception as e:
-                    logger.error(f"Error looking up IP in registered_phones: {e}")
+                    logger.error(
+                        f"Error looking up IP in registered_phones: {e}")
         else:
             result['type'] = 'unknown'
-            self._send_json({'error': f'Could not determine if {identifier} is a MAC address or IP address'}, 400)
+            self._send_json(
+                {'error': f'Could not determine if {identifier} is a MAC address or IP address'}, 400)
             return
-        
+
         # Add correlation summary
         if result['registered_phone'] and result['provisioned_device']:
             result['correlation'] = {
@@ -1089,59 +1199,78 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'mac_address': result['provisioned_device'].get('mac_address'),
                 'ip_address': result['registered_phone'].get('ip_address'),
                 'vendor': result['provisioned_device'].get('vendor'),
-                'model': result['provisioned_device'].get('model')
-            }
+                'model': result['provisioned_device'].get('model')}
         elif result['registered_phone']:
             result['correlation'] = {
                 'matched': False,
                 'message': 'Phone is registered but not provisioned in the system',
                 'extension': result['registered_phone'].get('extension_number'),
-                'ip_address': result['registered_phone'].get('ip_address')
-            }
+                'ip_address': result['registered_phone'].get('ip_address')}
         elif result['provisioned_device']:
             result['correlation'] = {
                 'matched': False,
                 'message': 'Device is provisioned but not currently registered',
                 'extension': result['provisioned_device'].get('extension_number'),
-                'mac_address': result['provisioned_device'].get('mac_address')
-            }
+                'mac_address': result['provisioned_device'].get('mac_address')}
         else:
             result['correlation'] = {
                 'matched': False,
                 'message': 'No information found for this identifier'
             }
-        
+
         self._send_json(result)
 
     def _handle_get_registered_phones_by_extension(self, extension):
         """Get registered phones for a specific extension"""
         logger = get_logger()
-        if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+        if self.pbx_core and hasattr(
+                self.pbx_core,
+                'registered_phones_db') and self.pbx_core.registered_phones_db:
             try:
-                phones = self.pbx_core.registered_phones_db.get_by_extension(extension)
+                phones = self.pbx_core.registered_phones_db.get_by_extension(
+                    extension)
                 self._send_json(phones)
             except Exception as e:
-                logger.error(f"Error loading registered phones for extension {extension} from database: {e}")
+                logger.error(
+                    f"Error loading registered phones for extension {extension} from database: {e}")
                 logger.error(f"  Extension: {extension}")
-                logger.error(f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
-                logger.error(f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}")
+                logger.error(
+                    f"  Database type: {
+                        self.pbx_core.registered_phones_db.db.db_type if hasattr(
+                            self.pbx_core.registered_phones_db,
+                            'db') else 'unknown'}")
+                logger.error(
+                    f"  Database enabled: {
+                        self.pbx_core.registered_phones_db.db.enabled if hasattr(
+                            self.pbx_core.registered_phones_db,
+                            'db') else 'unknown'}")
                 logger.error(f"  Traceback: {traceback.format_exc()}")
-                self._send_json({'error': str(e), 'details': 'Check server logs for full error details'}, 500)
+                self._send_json(
+                    {'error': str(e), 'details': 'Check server logs for full error details'}, 500)
         else:
-            # Return empty array when database is not available (graceful degradation)
-            logger.warning(f"Registered phones database not available for extension {extension} - returning empty list")
+            # Return empty array when database is not available (graceful
+            # degradation)
+            logger.warning(
+                f"Registered phones database not available for extension {extension} - returning empty list")
             if self.pbx_core:
                 logger.warning(f"  pbx_core exists: True")
-                logger.warning(f"  has registered_phones_db attr: {hasattr(self.pbx_core, 'registered_phones_db')}")
+                logger.warning(
+                    f"  has registered_phones_db attr: {
+                        hasattr(
+                            self.pbx_core,
+                            'registered_phones_db')}")
                 if hasattr(self.pbx_core, 'registered_phones_db'):
-                    logger.warning(f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}")
+                    logger.warning(
+                        f"  registered_phones_db is None: {
+                            self.pbx_core.registered_phones_db is None}")
             self._send_json([])
 
     def _handle_register_device(self):
         """Register a device for provisioning"""
         logger = get_logger()
-        
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
@@ -1159,27 +1288,32 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             device = self.pbx_core.phone_provisioning.register_device(
                 mac, extension, vendor, model
             )
-            
+
             # Automatically trigger phone reboot after registration
-            # This ensures the phone fetches its fresh configuration immediately
+            # This ensures the phone fetches its fresh configuration
+            # immediately
             reboot_triggered = False
             try:
                 ext = self.pbx_core.extension_registry.get(extension)
                 if ext and ext.registered:
-                    logger.info(f"Auto-provisioning: Automatically rebooting phone for extension {extension} after device registration")
+                    logger.info(
+                        f"Auto-provisioning: Automatically rebooting phone for extension {extension} after device registration")
                     reboot_triggered = self.pbx_core.phone_provisioning.reboot_phone(
-                        extension, self.pbx_core.sip_server
-                    )
+                        extension, self.pbx_core.sip_server)
                     if reboot_triggered:
-                        logger.info(f"Auto-provisioning: Successfully triggered reboot for extension {extension}")
+                        logger.info(
+                            f"Auto-provisioning: Successfully triggered reboot for extension {extension}")
                     else:
-                        logger.info(f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
+                        logger.info(
+                            f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
                 else:
-                    logger.info(f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
+                    logger.info(
+                        f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot")
             except Exception as reboot_error:
-                logger.warning(f"Auto-provisioning: Could not auto-reboot phone for extension {extension}: {reboot_error}")
+                logger.warning(
+                    f"Auto-provisioning: Could not auto-reboot phone for extension {extension}: {reboot_error}")
                 # Don't fail the registration if reboot fails
-            
+
             response = {
                 'success': True,
                 'device': device.to_dict()
@@ -1190,21 +1324,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             else:
                 response['reboot_triggered'] = False
                 response['message'] = 'Device registered. Phone will fetch config on next boot.'
-            
+
             self._send_json(response)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
     def _handle_unregister_device(self, mac):
         """Unregister a device"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
         try:
             success = self.pbx_core.phone_provisioning.unregister_device(mac)
             if success:
-                self._send_json({'success': True, 'message': 'Device unregistered'})
+                self._send_json(
+                    {'success': True, 'message': 'Device unregistered'})
             else:
                 self._send_json({'error': 'Device not found'}, 404)
         except Exception as e:
@@ -1212,7 +1348,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_set_static_ip(self, mac):
         """Set static IP for a device"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
@@ -1224,7 +1361,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Missing static_ip field'}, 400)
                 return
 
-            success, message = self.pbx_core.phone_provisioning.set_static_ip(mac, static_ip)
+            success, message = self.pbx_core.phone_provisioning.set_static_ip(
+                mac, static_ip)
             if success:
                 self._send_json({'success': True, 'message': message})
             else:
@@ -1235,9 +1373,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_provisioning_request(self, path):
         """Handle phone provisioning config request"""
         logger = get_logger()
-        
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
-            logger.error("Phone provisioning not enabled but provisioning request received")
+
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
+            logger.error(
+                "Phone provisioning not enabled but provisioning request received")
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
@@ -1245,112 +1385,150 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Extract MAC address from path: /provision/{mac}.cfg
             filename = path.split('/')[-1]
             mac = filename.replace('.cfg', '')
-            
+
             # Gather request information for logging
             request_info = {
                 'ip': self.client_address[0] if self.client_address else 'Unknown',
-                'user_agent': self.headers.get('User-Agent', 'Unknown'),
-                'path': path
-            }
-            
-            logger.info(f"Provisioning config request: path={path}, IP={request_info['ip']}")
-            
+                'user_agent': self.headers.get(
+                    'User-Agent',
+                    'Unknown'),
+                'path': path}
+
+            logger.info(
+                f"Provisioning config request: path={path}, IP={
+                    request_info['ip']}")
+
             # Detect if MAC is a literal placeholder (misconfiguration)
             # Examples: {mac}, {MAC} - these indicate the phone didn't substitute its actual MAC
-            # Note: $mac and $MA are not checked here - those are the CORRECT variable formats
+            # Note: $mac and $MA are not checked here - those are the CORRECT
+            # variable formats
             if mac in MAC_ADDRESS_PLACEHOLDERS:
-                logger.error(f"CONFIGURATION ERROR: Phone requested provisioning with placeholder '{mac}' instead of actual MAC address")
+                logger.error(
+                    f"CONFIGURATION ERROR: Phone requested provisioning with placeholder '{mac}' instead of actual MAC address")
                 logger.error(f"  Request from IP: {request_info['ip']}")
                 logger.error(f"  User-Agent: {request_info['user_agent']}")
                 logger.error(f"")
-                logger.error(f"  ⚠️  ROOT CAUSE: Phone is configured with wrong MAC variable format")
+                logger.error(
+                    f"  ⚠️  ROOT CAUSE: Phone is configured with wrong MAC variable format")
                 logger.error(f"")
-                logger.error(f"  📋 SOLUTION: Update provisioning URL to use correct MAC variable for your phone:")
+                logger.error(
+                    f"  📋 SOLUTION: Update provisioning URL to use correct MAC variable for your phone:")
                 logger.error(f"")
-                
+
                 # Get provisioning URL information
                 protocol, server_ip, port, base_url = self._get_provisioning_url_info()
-                
+
                 # Detect vendor from User-Agent and provide specific guidance
                 user_agent = request_info['user_agent'].lower()
                 if 'zultys' in user_agent:
-                    logger.error(f"  ✓ Zultys Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
-                    logger.error(f"    Configure in: Phone Menu → Setup → Network → Provisioning")
-                    logger.error(f"    Or DHCP Option 66: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
+                    logger.error(
+                        f"  ✓ Zultys Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
+                    logger.error(
+                        f"    Configure in: Phone Menu → Setup → Network → Provisioning")
+                    logger.error(
+                        f"    Or DHCP Option 66: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
                 elif 'yealink' in user_agent:
-                    logger.error(f"  ✓ Yealink Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
-                    logger.error(f"    Configure in: Web Interface → Settings → Auto Provision")
+                    logger.error(
+                        f"  ✓ Yealink Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
+                    logger.error(
+                        f"    Configure in: Web Interface → Settings → Auto Provision")
                 elif 'polycom' in user_agent:
-                    logger.error(f"  ✓ Polycom Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
-                    logger.error(f"    Configure in: Web Interface → Settings → Provisioning Server")
+                    logger.error(
+                        f"  ✓ Polycom Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
+                    logger.error(
+                        f"    Configure in: Web Interface → Settings → Provisioning Server")
                 elif 'cisco' in user_agent:
-                    logger.error(f"  ✓ Cisco Phones - Use: {protocol}://{server_ip}:{port}/provision/$MA.cfg")
+                    logger.error(
+                        f"  ✓ Cisco Phones - Use: {protocol}://{server_ip}:{port}/provision/$MA.cfg")
                     logger.error(f"    Note: Cisco uses $MA instead of $mac")
-                    logger.error(f"    Configure in: Web Interface → Admin Login → Voice → Provisioning")
+                    logger.error(
+                        f"    Configure in: Web Interface → Admin Login → Voice → Provisioning")
                 elif 'grandstream' in user_agent:
-                    logger.error(f"  ✓ Grandstream Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
-                    logger.error(f"    Configure in: Web Interface → Maintenance → Upgrade and Provisioning")
+                    logger.error(
+                        f"  ✓ Grandstream Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg")
+                    logger.error(
+                        f"    Configure in: Web Interface → Maintenance → Upgrade and Provisioning")
                 else:
                     logger.error(f"  Common MAC variable formats by vendor:")
-                    logger.error(f"    • Zultys, Yealink, Polycom, Grandstream: $mac")
+                    logger.error(
+                        f"    • Zultys, Yealink, Polycom, Grandstream: $mac")
                     logger.error(f"    • Cisco: $MA")
                 logger.error(f"")
-                logger.error(f"  📖 See PHONE_PROVISIONING.md for detailed vendor-specific instructions")
-                
+                logger.error(
+                    f"  📖 See PHONE_PROVISIONING.md for detailed vendor-specific instructions")
+
                 self._send_json({
                     'error': 'Configuration error: MAC address placeholder detected',
                     'details': f'Phone is using placeholder "{mac}" instead of actual MAC. Update provisioning URL to use correct MAC variable format for your phone vendor.'
                 }, 400)
                 return
-            
+
             logger.info(f"  MAC address from request: {mac}")
 
             # Generate configuration
             config_content, content_type = self.pbx_core.phone_provisioning.generate_config(
-                mac, self.pbx_core.extension_registry, request_info
-            )
+                mac, self.pbx_core.extension_registry, request_info)
 
             if config_content:
                 self._set_headers(content_type=content_type)
                 self.wfile.write(config_content.encode())
-                logger.info(f"✓ Provisioning config delivered: {len(config_content)} bytes to {request_info['ip']}")
-                
+                logger.info(
+                    f"✓ Provisioning config delivered: {
+                        len(config_content)} bytes to {
+                        request_info['ip']}")
+
                 # Store IP to MAC mapping in database for admin panel tracking
-                # This allows correlation between provisioned devices and their network addresses
-                if self.pbx_core and hasattr(self.pbx_core, 'registered_phones_db') and self.pbx_core.registered_phones_db:
+                # This allows correlation between provisioned devices and their
+                # network addresses
+                if self.pbx_core and hasattr(
+                        self.pbx_core,
+                        'registered_phones_db') and self.pbx_core.registered_phones_db:
                     try:
                         # Get the device to find its extension number
-                        device = self.pbx_core.phone_provisioning.get_device(mac)
+                        device = self.pbx_core.phone_provisioning.get_device(
+                            mac)
                         if device:
                             # Store/update the IP-MAC-Extension mapping
                             normalized_mac = normalize_mac_address(mac)
-                            
+
                             # Store the mapping in the database
                             success, stored_mac = self.pbx_core.registered_phones_db.register_phone(
                                 extension_number=device.extension_number,
                                 ip_address=request_info['ip'],
                                 mac_address=normalized_mac,
-                                user_agent=request_info.get('user_agent', 'Unknown'),
+                                user_agent=request_info.get(
+                                    'user_agent', 'Unknown'),
                                 contact_uri=None  # Not available during provisioning request
                             )
                             if success:
-                                # stored_mac should equal normalized_mac since we're providing it
-                                logger.info(f"  Stored IP-MAC mapping: {request_info['ip']} → {stored_mac} (ext {device.extension_number})")
+                                # stored_mac should equal normalized_mac since
+                                # we're providing it
+                                logger.info(
+                                    f"  Stored IP-MAC mapping: {
+                                        request_info['ip']} → {stored_mac} (ext {
+                                        device.extension_number})")
                     except Exception as e:
                         # Don't fail provisioning if database storage fails
-                        logger.warning(f"  Could not store IP-MAC mapping in database: {e}")
+                        logger.warning(
+                            f"  Could not store IP-MAC mapping in database: {e}")
             else:
-                logger.warning(f"✗ Provisioning failed for MAC {mac} from IP {request_info['ip']}")
-                logger.warning(f"  Reason: Device not registered or template not found")
-                logger.warning(f"  See detailed error messages above for troubleshooting guidance")
-                
+                logger.warning(
+                    f"✗ Provisioning failed for MAC {mac} from IP {
+                        request_info['ip']}")
+                logger.warning(
+                    f"  Reason: Device not registered or template not found")
+                logger.warning(
+                    f"  See detailed error messages above for troubleshooting guidance")
+
                 # Get provisioning URL information
                 protocol, server_ip, port, base_url = self._get_provisioning_url_info()
-                
+
                 logger.warning(f"  To register this device:")
-                logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
+                logger.warning(
+                    f"    curl -X POST {base_url}/api/provisioning/devices \\")
                 logger.warning(f"      -H 'Content-Type: application/json' \\")
-                logger.warning(f"      -d '{{\"mac_address\":\"{mac}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
+                logger.warning(
+                    f"      -d '{{\"mac_address\":\"{mac}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
                 self._send_json({'error': 'Device or template not found'}, 404)
         except Exception as e:
             logger.error(f"Error handling provisioning request: {e}")
@@ -1371,7 +1549,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             file_path = path.replace('/admin/', '', 1)
             full_path = os.path.join(ADMIN_DIR, file_path)
 
-            # Prevent directory traversal attacks - ensure path stays within admin directory
+            # Prevent directory traversal attacks - ensure path stays within
+            # admin directory
             real_admin_dir = os.path.realpath(ADMIN_DIR)
             real_full_path = os.path.realpath(full_path)
 
@@ -1437,22 +1616,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             # SECURITY: Validate voicemail PIN is provided
             if not voicemail_pin:
-                self._send_json({'error': 'Voicemail PIN is required for security'}, 400)
+                self._send_json(
+                    {'error': 'Voicemail PIN is required for security'}, 400)
                 return
 
             # Validate voicemail PIN format (4-6 digits)
-            if not str(voicemail_pin).isdigit() or len(str(voicemail_pin)) < 4 or len(str(voicemail_pin)) > 6:
-                self._send_json({'error': 'Voicemail PIN must be 4-6 digits'}, 400)
+            if not str(voicemail_pin).isdigit() or len(
+                    str(voicemail_pin)) < 4 or len(
+                    str(voicemail_pin)) > 6:
+                self._send_json(
+                    {'error': 'Voicemail PIN must be 4-6 digits'}, 400)
                 return
 
             # Validate extension number format (4 digits)
             if not str(number).isdigit() or len(str(number)) != 4:
-                self._send_json({'error': 'Extension number must be 4 digits'}, 400)
+                self._send_json(
+                    {'error': 'Extension number must be 4 digits'}, 400)
                 return
 
             # Validate password strength (minimum 8 characters)
             if len(password) < 8:
-                self._send_json({'error': 'Password must be at least 8 characters'}, 400)
+                self._send_json(
+                    {'error': 'Password must be at least 8 characters'}, 400)
                 return
 
             # Validate email format if provided
@@ -1469,7 +1654,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if self.pbx_core.extension_db:
                 # Add to database
                 # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
-                # Currently storing plain password; system supports both plain and hashed passwords
+                # Currently storing plain password; system supports both plain
+                # and hashed passwords
                 password_hash = password
                 success = self.pbx_core.extension_db.add(
                     number=number,
@@ -1484,12 +1670,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 )
             else:
                 # Fall back to config.yml
-                success = self.pbx_core.config.add_extension(number, name, email, password, allow_external)
+                success = self.pbx_core.config.add_extension(
+                    number, name, email, password, allow_external)
 
             if success:
                 # Reload extensions
                 self.pbx_core.extension_registry.reload()
-                self._send_json({'success': True, 'message': 'Extension added successfully'})
+                self._send_json({'success': True,
+                                 'message': 'Extension added successfully'})
             else:
                 self._send_json({'error': 'Failed to add extension'}, 500)
         except Exception as e:
@@ -1518,13 +1706,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             # Validate password strength if provided (minimum 8 characters)
             if password and len(password) < 8:
-                self._send_json({'error': 'Password must be at least 8 characters'}, 400)
+                self._send_json(
+                    {'error': 'Password must be at least 8 characters'}, 400)
                 return
 
             # SECURITY: Validate voicemail PIN format if provided (4-6 digits)
             if voicemail_pin is not None:
-                if not str(voicemail_pin).isdigit() or len(str(voicemail_pin)) < 4 or len(str(voicemail_pin)) > 6:
-                    self._send_json({'error': 'Voicemail PIN must be 4-6 digits'}, 400)
+                if not str(voicemail_pin).isdigit() or len(
+                        str(voicemail_pin)) < 4 or len(
+                        str(voicemail_pin)) > 6:
+                    self._send_json(
+                        {'error': 'Voicemail PIN must be 4-6 digits'}, 400)
                     return
 
             # Validate email format if provided
@@ -1536,7 +1728,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if self.pbx_core.extension_db:
                 # Update in database
                 # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
-                # Currently storing plain password; system supports both plain and hashed passwords
+                # Currently storing plain password; system supports both plain
+                # and hashed passwords
                 password_hash = password if password else None
                 success = self.pbx_core.extension_db.update(
                     number=number,
@@ -1549,12 +1742,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 )
             else:
                 # Fall back to config.yml
-                success = self.pbx_core.config.update_extension(number, name, email, password, allow_external)
+                success = self.pbx_core.config.update_extension(
+                    number, name, email, password, allow_external)
 
             if success:
                 # Reload extensions
                 self.pbx_core.extension_registry.reload()
-                self._send_json({'success': True, 'message': 'Extension updated successfully'})
+                self._send_json({'success': True,
+                                 'message': 'Extension updated successfully'})
             else:
                 self._send_json({'error': 'Failed to update extension'}, 500)
         except Exception as e:
@@ -1584,7 +1779,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if success:
                 # Reload extensions
                 self.pbx_core.extension_registry.reload()
-                self._send_json({'success': True, 'message': 'Extension deleted successfully'})
+                self._send_json({'success': True,
+                                 'message': 'Extension deleted successfully'})
             else:
                 self._send_json({'error': 'Failed to delete extension'}, 500)
         except Exception as e:
@@ -1603,9 +1799,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             success = self.pbx_core.config.update_email_config(body)
 
             if success:
-                self._send_json({'success': True, 'message': 'Configuration updated successfully. Restart required.'})
+                self._send_json(
+                    {'success': True, 'message': 'Configuration updated successfully. Restart required.'})
             else:
-                self._send_json({'error': 'Failed to update configuration'}, 500)
+                self._send_json(
+                    {'error': 'Failed to update configuration'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
@@ -1700,7 +1898,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'record_conferences': self.pbx_core.config.get('conference.record_conferences', False)
                 }
             }
-            
+
             self._send_json(config_data)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -1723,26 +1921,33 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Update the configuration section
             # Use config.get() to safely retrieve section with defaults
             current_section = self.pbx_core.config.config.get(section, {})
-            
+
             # Deep merge the data into the section
             def deep_merge(target, source):
                 """Deep merge source dict into target dict"""
                 for key, value in source.items():
-                    if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                    if key in target and isinstance(
+                            target[key],
+                            dict) and isinstance(
+                            value,
+                            dict):
                         deep_merge(target[key], value)
                     else:
                         target[key] = value
                 return target
-            
+
             # Create merged section and update config
-            merged_section = deep_merge(current_section.copy() if isinstance(current_section, dict) else {}, data)
+            merged_section = deep_merge(
+                current_section.copy() if isinstance(
+                    current_section, dict) else {}, data)
             self.pbx_core.config.config[section] = merged_section
-            
+
             # Save configuration
             success = self.pbx_core.config.save()
 
             if success:
-                self._send_json({'success': True, 'message': 'Configuration updated successfully. Restart may be required for some changes.'})
+                self._send_json(
+                    {'success': True, 'message': 'Configuration updated successfully. Restart may be required for some changes.'})
             else:
                 self._send_json({'error': 'Failed to save configuration'}, 500)
         except Exception as e:
@@ -1758,19 +1963,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             ssl_config = self.pbx_core.config.get('api.ssl', {})
             cert_file = ssl_config.get('cert_file', 'certs/server.crt')
             key_file = ssl_config.get('key_file', 'certs/server.key')
-            
+
             # Check if certificate files exist
             cert_exists = os.path.exists(cert_file)
             key_exists = os.path.exists(key_file)
-            
+
             # Get certificate details if it exists
             cert_details = None
             if cert_exists and SSL_GENERATION_AVAILABLE:
                 try:
                     with open(cert_file, 'rb') as f:
                         cert_data = f.read()
-                        cert = x509.load_pem_x509_certificate(cert_data, default_backend())
-                        
+                        cert = x509.load_pem_x509_certificate(
+                            cert_data, default_backend())
+
                         now = datetime.now(timezone.utc)
                         cert_details = {
                             'subject': cert.subject.rfc4514_string(),
@@ -1778,25 +1984,34 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                             'valid_from': cert.not_valid_before.isoformat(),
                             'valid_until': cert.not_valid_after.isoformat(),
                             'is_expired': cert.not_valid_after < now,
-                            'days_until_expiry': (cert.not_valid_after - now).days,
-                            'serial_number': str(cert.serial_number)
-                        }
+                            'days_until_expiry': (
+                                cert.not_valid_after - now).days,
+                            'serial_number': str(
+                                cert.serial_number)}
                 except Exception as e:
                     self.logger.warning(f"Failed to parse certificate: {e}")
-            
+
             status_data = {
-                'enabled': ssl_config.get('enabled', False),
+                'enabled': ssl_config.get(
+                    'enabled',
+                    False),
                 'cert_file': cert_file,
                 'key_file': key_file,
                 'cert_exists': cert_exists,
                 'key_exists': key_exists,
                 'cert_details': cert_details,
                 'ca': {
-                    'enabled': ssl_config.get('ca', {}).get('enabled', False),
-                    'server_url': ssl_config.get('ca', {}).get('server_url', '')
-                }
-            }
-            
+                    'enabled': ssl_config.get(
+                        'ca',
+                        {}).get(
+                        'enabled',
+                        False),
+                    'server_url': ssl_config.get(
+                        'ca',
+                        {}).get(
+                            'server_url',
+                        '')}}
+
             self._send_json(status_data)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -1809,21 +2024,25 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         try:
             body = self._get_body() or {}
-            
+
             # Get parameters
-            hostname = body.get('hostname', self.pbx_core.config.get('server.external_ip', 'localhost'))
+            hostname = body.get(
+                'hostname', self.pbx_core.config.get(
+                    'server.external_ip', 'localhost'))
             days_valid = body.get('days_valid', 365)
             cert_dir = body.get('cert_dir', 'certs')
-            
+
             # Validate parameters
             if not hostname:
                 hostname = 'localhost'
-            
-            if not isinstance(days_valid, int) or days_valid < 1 or days_valid > 3650:
+
+            if not isinstance(days_valid,
+                              int) or days_valid < 1 or days_valid > 3650:
                 days_valid = 365
-            
-            self.logger.info(f"Generating self-signed SSL certificate for {hostname}")
-            
+
+            self.logger.info(
+                f"Generating self-signed SSL certificate for {hostname}")
+
             # Check if SSL generation is available
             if not SSL_GENERATION_AVAILABLE:
                 self._send_json({
@@ -1831,17 +2050,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'details': 'Install with: pip install cryptography'
                 }, 500)
                 return
-            
+
             # Create cert directory if it doesn't exist
             cert_path = Path(cert_dir)
             cert_path.mkdir(exist_ok=True)
-            
+
             # Generate private key
             private_key = rsa.generate_private_key(
                 public_exponent=65537,
                 key_size=2048,
             )
-            
+
             # Generate certificate
             subject = issuer = x509.Name([
                 x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
@@ -1850,14 +2069,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PBX System"),
                 x509.NameAttribute(NameOID.COMMON_NAME, hostname),
             ])
-            
+
             # Build list of Subject Alternative Names
             san_list = [
                 x509.DNSName(hostname),
                 x509.DNSName("localhost"),
                 x509.IPAddress(ipaddress.IPv4Address("127.0.0.1")),
             ]
-            
+
             # Try to add the hostname as an IP address if it's a valid IP
             try:
                 ip = ipaddress.ip_address(hostname)
@@ -1865,7 +2084,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             except ValueError:
                 # Not an IP address, it's a hostname
                 pass
-            
+
             cert = x509.CertificateBuilder().subject_name(
                 subject
             ).issuer_name(
@@ -1882,7 +2101,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 x509.SubjectAlternativeName(san_list),
                 critical=False,
             ).sign(private_key, hashes.SHA256())
-            
+
             # Write private key to file
             key_file = cert_path / "server.key"
             with open(key_file, "wb") as f:
@@ -1891,26 +2110,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     format=serialization.PrivateFormat.TraditionalOpenSSL,
                     encryption_algorithm=serialization.NoEncryption()
                 ))
-            
+
             # Set restrictive permissions on private key
             os.chmod(key_file, 0o600)
-            
+
             # Write certificate to file
             cert_file = cert_path / "server.crt"
             with open(cert_file, "wb") as f:
                 f.write(cert.public_bytes(serialization.Encoding.PEM))
-            
-            self.logger.info(f"SSL certificate generated successfully: {cert_file}")
-            
+
+            self.logger.info(
+                f"SSL certificate generated successfully: {cert_file}")
+
             # Update configuration to enable SSL
             ssl_config = self.pbx_core.config.get('api.ssl', {})
             ssl_config['enabled'] = True
             ssl_config['cert_file'] = str(cert_file)
             ssl_config['key_file'] = str(key_file)
-            
-            self.pbx_core.config.config.setdefault('api', {})['ssl'] = ssl_config
+
+            self.pbx_core.config.config.setdefault(
+                'api', {})['ssl'] = ssl_config
             self.pbx_core.config.save()
-            
+
             self._send_json({
                 'success': True,
                 'message': 'SSL certificate generated successfully. Server restart required to enable HTTPS.',
@@ -1932,7 +2153,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            # Parse path: /api/voicemail/{extension} or /api/voicemail/{extension}/{message_id}
+            # Parse path: /api/voicemail/{extension} or
+            # /api/voicemail/{extension}/{message_id}
             parts = path.split('/')
             if len(parts) < 4:
                 self._send_json({'error': 'Invalid path'}, 400)
@@ -1974,7 +2196,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Check if request is for metadata only (via query parameter)
                 # Use self.path to get the full request URL with query string
                 query_params = parse_qs(urlparse(self.path).query)
-                if query_params.get('metadata', [False])[0] in ['true', '1', True]:
+                if query_params.get('metadata', [False])[
+                        0] in ['true', '1', True]:
                     # Return message metadata as JSON
                     self._send_json({
                         'id': message['id'],
@@ -2002,7 +2225,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            # Parse path: /api/voicemail/{extension}/pin or /api/voicemail/{extension}/{message_id}/mark-read
+            # Parse path: /api/voicemail/{extension}/pin or
+            # /api/voicemail/{extension}/{message_id}/mark-read
             parts = path.split('/')
             if len(parts) < 4:
                 self._send_json({'error': 'Invalid path'}, 400)
@@ -2024,14 +2248,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if mailbox.set_pin(pin):
                     # Also update in config
                     self.pbx_core.config.update_voicemail_pin(extension, pin)
-                    self._send_json({'success': True, 'message': 'PIN updated successfully'})
+                    self._send_json(
+                        {'success': True, 'message': 'PIN updated successfully'})
                 else:
-                    self._send_json({'error': 'Invalid PIN format. Must be 4 digits.'}, 400)
+                    self._send_json(
+                        {'error': 'Invalid PIN format. Must be 4 digits.'}, 400)
             elif len(parts) == 6 and parts[5] == 'mark-read':
                 # Mark message as read
                 message_id = parts[4]
                 mailbox.mark_listened(message_id)
-                self._send_json({'success': True, 'message': 'Message marked as read'})
+                self._send_json(
+                    {'success': True, 'message': 'Message marked as read'})
             else:
                 self._send_json({'error': 'Invalid operation'}, 400)
         except Exception as e:
@@ -2058,7 +2285,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             # Delete message
             if mailbox.delete_message(message_id):
-                self._send_json({'success': True, 'message': 'Message deleted successfully'})
+                self._send_json({'success': True,
+                                 'message': 'Message deleted successfully'})
             else:
                 self._send_json({'error': 'Message not found'}, 404)
         except Exception as e:
@@ -2066,7 +2294,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_reboot_phone(self, extension):
         """Reboot a specific phone"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
@@ -2110,11 +2339,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             result = self.pbx_core.sync_ad_users()
             if result['success']:
-                self._send_json({
-                    'success': True,
-                    'message': f'Successfully synchronized {result["synced_count"]} users from Active Directory',
-                    'synced_count': result['synced_count']
-                })
+                self._send_json(
+                    {
+                        'success': True,
+                        'message': f'Successfully synchronized {
+                            result["synced_count"]} users from Active Directory',
+                        'synced_count': result['synced_count']})
             else:
                 self._send_json({
                     'success': False,
@@ -2129,34 +2359,42 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'PBX not initialized'}, 500)
             return
 
-        if not hasattr(self.pbx_core, 'ad_integration') or not self.pbx_core.ad_integration:
-            self._send_json({'error': 'Active Directory integration not enabled'}, 500)
+        if not hasattr(
+                self.pbx_core,
+                'ad_integration') or not self.pbx_core.ad_integration:
+            self._send_json(
+                {'error': 'Active Directory integration not enabled'}, 500)
             return
 
         try:
-            from urllib.parse import urlparse, parse_qs
-            
+            from urllib.parse import parse_qs, urlparse
+
             parsed = urlparse(self.path)
             query_params = parse_qs(parsed.query)
             query = query_params.get('q', [''])[0]
-            
+
             if not query:
-                self._send_json({'error': 'Query parameter "q" is required'}, 400)
+                self._send_json(
+                    {'error': 'Query parameter "q" is required'}, 400)
                 return
-            
+
             # Get max_results parameter (optional) with validation
             try:
                 max_results = int(query_params.get('max_results', ['50'])[0])
                 if max_results < 1 or max_results > 100:
-                    self._send_json({'error': 'max_results must be between 1 and 100'}, 400)
+                    self._send_json(
+                        {'error': 'max_results must be between 1 and 100'}, 400)
                     return
             except ValueError:
-                self._send_json({'error': 'max_results must be a valid integer'}, 400)
+                self._send_json(
+                    {'error': 'max_results must be a valid integer'}, 400)
                 return
-            
-            # Search AD users using the telephoneNumber attribute (and other attributes)
-            results = self.pbx_core.ad_integration.search_users(query, max_results)
-            
+
+            # Search AD users using the telephoneNumber attribute (and other
+            # attributes)
+            results = self.pbx_core.ad_integration.search_users(
+                query, max_results)
+
             self._send_json({
                 'success': True,
                 'count': len(results),
@@ -2167,7 +2405,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_reboot_phones(self):
         """Reboot all registered phones"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'phone_provisioning'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'phone_provisioning'):
             self._send_json({'error': 'Phone provisioning not enabled'}, 500)
             return
 
@@ -2198,154 +2437,170 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         try:
             entries = self.pbx_core.phone_book.get_all_entries()
             self._send_json(entries)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_export_phone_book_xml(self):
         """Export phone book as XML (Yealink format)"""
         try:
             # Try to use phone book feature if available
-            if (self.pbx_core and hasattr(self.pbx_core, 'phone_book') and 
-                self.pbx_core.phone_book and self.pbx_core.phone_book.enabled):
+            if (self.pbx_core and hasattr(self.pbx_core, 'phone_book') and
+                    self.pbx_core.phone_book and self.pbx_core.phone_book.enabled):
                 xml_content = self.pbx_core.phone_book.export_xml()
             else:
                 # Fallback: Generate from extension registry
                 xml_content = self._generate_xml_from_extensions()
-            
+
             self._set_headers(content_type='application/xml')
             self.wfile.write(xml_content.encode())
         except Exception as e:
             self.logger.error(f"Error exporting phone book XML: {e}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _generate_xml_from_extensions(self):
         """Generate phone book XML from extension registry (fallback)"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'extension_registry'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'extension_registry'):
             return '<?xml version="1.0" encoding="UTF-8"?><YealinkIPPhoneDirectory><Title>Directory</Title></YealinkIPPhoneDirectory>'
-        
+
         extensions = self.pbx_core.extension_registry.get_all()
-        
+
         xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
         xml_lines.append('<YealinkIPPhoneDirectory>')
         xml_lines.append('  <Title>Company Directory</Title>')
-        
+
         for ext in sorted(extensions, key=lambda x: x.name):
             xml_lines.append('  <DirectoryEntry>')
-            name = ext.name.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            name = ext.name.replace(
+                '&',
+                '&amp;').replace(
+                '<',
+                '&lt;').replace(
+                '>',
+                '&gt;')
             xml_lines.append(f'    <Name>{name}</Name>')
             xml_lines.append(f'    <Telephone>{ext.number}</Telephone>')
             xml_lines.append('  </DirectoryEntry>')
-        
+
         xml_lines.append('</YealinkIPPhoneDirectory>')
         return '\n'.join(xml_lines)
-    
+
     def _handle_export_phone_book_cisco_xml(self):
         """Export phone book as Cisco XML format"""
         try:
             # Try to use phone book feature if available
-            if (self.pbx_core and hasattr(self.pbx_core, 'phone_book') and 
-                self.pbx_core.phone_book and self.pbx_core.phone_book.enabled):
+            if (self.pbx_core and hasattr(self.pbx_core, 'phone_book') and
+                    self.pbx_core.phone_book and self.pbx_core.phone_book.enabled):
                 xml_content = self.pbx_core.phone_book.export_cisco_xml()
             else:
                 # Fallback: Generate from extension registry
                 xml_content = self._generate_cisco_xml_from_extensions()
-            
+
             self._set_headers(content_type='application/xml')
             self.wfile.write(xml_content.encode())
         except Exception as e:
             self.logger.error(f"Error exporting Cisco phone book XML: {e}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _generate_cisco_xml_from_extensions(self):
         """Generate Cisco phone book XML from extension registry (fallback)"""
-        if not self.pbx_core or not hasattr(self.pbx_core, 'extension_registry'):
+        if not self.pbx_core or not hasattr(
+                self.pbx_core, 'extension_registry'):
             return '<?xml version="1.0" encoding="UTF-8"?><CiscoIPPhoneDirectory><Title>Directory</Title></CiscoIPPhoneDirectory>'
-        
+
         extensions = self.pbx_core.extension_registry.get_all()
-        
+
         xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
         xml_lines.append('<CiscoIPPhoneDirectory>')
         xml_lines.append('  <Title>Company Directory</Title>')
         xml_lines.append('  <Prompt>Select a contact</Prompt>')
-        
+
         for ext in sorted(extensions, key=lambda x: x.name):
             xml_lines.append('  <DirectoryEntry>')
-            name = ext.name.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            name = ext.name.replace(
+                '&',
+                '&amp;').replace(
+                '<',
+                '&lt;').replace(
+                '>',
+                '&gt;')
             xml_lines.append(f'    <Name>{name}</Name>')
             xml_lines.append(f'    <Telephone>{ext.number}</Telephone>')
             xml_lines.append('  </DirectoryEntry>')
-        
+
         xml_lines.append('</CiscoIPPhoneDirectory>')
         return '\n'.join(xml_lines)
-    
+
     def _handle_export_phone_book_json(self):
         """Export phone book as JSON"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         try:
             json_content = self.pbx_core.phone_book.export_json()
             self._set_headers(content_type='application/json')
             self.wfile.write(json_content.encode())
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_search_phone_book(self):
         """Search phone book entries"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         try:
             parsed = urlparse(self.path)
             query_params = parse_qs(parsed.query)
             query = query_params.get('q', [''])[0]
-            
+
             if not query:
-                self._send_json({'error': 'Query parameter "q" is required'}, 400)
+                self._send_json(
+                    {'error': 'Query parameter "q" is required'}, 400)
                 return
-            
+
             results = self.pbx_core.phone_book.search(query)
             self._send_json(results)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_add_phone_book_entry(self):
         """Add or update a phone book entry"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         try:
             data = self._get_body()
             extension = data.get('extension')
             name = data.get('name')
-            
+
             if not extension or not name:
-                self._send_json({'error': 'Extension and name are required'}, 400)
+                self._send_json(
+                    {'error': 'Extension and name are required'}, 400)
                 return
-            
+
             success = self.pbx_core.phone_book.add_entry(
                 extension=extension,
                 name=name,
@@ -2355,60 +2610,65 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 office_location=data.get('office_location'),
                 ad_synced=data.get('ad_synced', False)
             )
-            
+
             if success:
                 self._send_json({
                     'success': True,
                     'message': f'Phone book entry added/updated: {extension}'
                 })
             else:
-                self._send_json({'error': 'Failed to add phone book entry'}, 500)
+                self._send_json(
+                    {'error': 'Failed to add phone book entry'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_delete_phone_book_entry(self, extension: str):
         """Delete a phone book entry"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         try:
             success = self.pbx_core.phone_book.remove_entry(extension)
-            
+
             if success:
                 self._send_json({
                     'success': True,
                     'message': f'Phone book entry deleted: {extension}'
                 })
             else:
-                self._send_json({'error': 'Failed to delete phone book entry'}, 500)
+                self._send_json(
+                    {'error': 'Failed to delete phone book entry'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_sync_phone_book(self):
         """Sync phone book from Active Directory"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'phone_book'):
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.phone_book or not self.pbx_core.phone_book.enabled:
             self._send_json({'error': 'Phone book feature not enabled'}, 500)
             return
-        
-        if not hasattr(self.pbx_core, 'ad_integration') or not self.pbx_core.ad_integration:
-            self._send_json({'error': 'Active Directory integration not enabled'}, 500)
+
+        if not hasattr(
+                self.pbx_core,
+                'ad_integration') or not self.pbx_core.ad_integration:
+            self._send_json(
+                {'error': 'Active Directory integration not enabled'}, 500)
             return
-        
+
         try:
             synced_count = self.pbx_core.phone_book.sync_from_ad(
                 self.pbx_core.ad_integration,
                 self.pbx_core.extension_registry
             )
-            
+
             self._send_json({
                 'success': True,
                 'message': f'Phone book synced from Active Directory',
@@ -2416,82 +2676,83 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     # Paging System API handlers
     def _handle_get_paging_zones(self):
         """Get all paging zones"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         try:
             zones = self.pbx_core.paging_system.get_zones()
             self._send_json(zones)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_paging_devices(self):
         """Get all paging DAC devices"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         try:
             devices = self.pbx_core.paging_system.get_dac_devices()
             self._send_json(devices)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_active_pages(self):
         """Get all active paging sessions"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         try:
             active_pages = self.pbx_core.paging_system.get_active_pages()
             self._send_json(active_pages)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_add_paging_zone(self):
         """Add a paging zone"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         try:
             data = self._get_body()
             extension = data.get('extension')
             name = data.get('name')
-            
+
             if not extension or not name:
-                self._send_json({'error': 'Extension and name are required'}, 400)
+                self._send_json(
+                    {'error': 'Extension and name are required'}, 400)
                 return
-            
+
             success = self.pbx_core.paging_system.add_zone(
                 extension=extension,
                 name=name,
                 description=data.get('description'),
                 dac_device=data.get('dac_device')
             )
-            
+
             if success:
                 self._send_json({
                     'success': True,
@@ -2501,20 +2762,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Failed to add paging zone'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_delete_paging_zone(self, extension: str):
         """Delete a paging zone"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         try:
             success = self.pbx_core.paging_system.remove_zone(extension)
-            
+
             if success:
                 self._send_json({
                     'success': True,
@@ -2524,26 +2785,27 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Failed to delete paging zone'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_configure_paging_device(self):
         """Configure a paging DAC device"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'paging_system'):
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
             self._send_json({'error': 'Paging system not enabled'}, 500)
             return
-        
+
         try:
             data = self._get_body()
             device_id = data.get('device_id')
             device_type = data.get('device_type')
-            
+
             if not device_id or not device_type:
-                self._send_json({'error': 'device_id and device_type are required'}, 400)
+                self._send_json(
+                    {'error': 'device_id and device_type are required'}, 400)
                 return
-            
+
             success = self.pbx_core.paging_system.configure_dac_device(
                 device_id=device_id,
                 device_type=device_type,
@@ -2551,53 +2813,54 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 ip_address=data.get('ip_address'),
                 port=data.get('port', 5060)
             )
-            
+
             if success:
                 self._send_json({
                     'success': True,
                     'message': f'DAC device configured: {device_id}'
                 })
             else:
-                self._send_json({'error': 'Failed to configure DAC device'}, 500)
+                self._send_json(
+                    {'error': 'Failed to configure DAC device'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_webhooks(self):
         """Get all webhook subscriptions"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webhook_system'):
             self._send_json({'error': 'Webhook system not available'}, 500)
             return
-        
+
         try:
             subscriptions = self.pbx_core.webhook_system.get_subscriptions()
             self._send_json(subscriptions)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_add_webhook(self):
         """Add a webhook subscription"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webhook_system'):
             self._send_json({'error': 'Webhook system not available'}, 500)
             return
-        
+
         try:
             data = self._get_body()
             url = data.get('url')
             events = data.get('events', ['*'])
             secret = data.get('secret')
             headers = data.get('headers')
-            
+
             if not url:
                 self._send_json({'error': 'URL is required'}, 400)
                 return
-            
+
             subscription = self.pbx_core.webhook_system.add_subscription(
                 url=url,
                 events=events,
                 secret=secret,
                 headers=headers
             )
-            
+
             self._send_json({
                 'success': True,
                 'message': f'Webhook subscription added: {url}',
@@ -2609,209 +2872,253 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_delete_webhook(self, url: str):
         """Delete a webhook subscription"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webhook_system'):
             self._send_json({'error': 'Webhook system not available'}, 500)
             return
-        
+
         try:
             success = self.pbx_core.webhook_system.remove_subscription(url)
-            
+
             if success:
                 self._send_json({
                     'success': True,
                     'message': f'Webhook subscription deleted: {url}'
                 })
             else:
-                self._send_json({'error': 'Webhook subscription not found'}, 404)
+                self._send_json(
+                    {'error': 'Webhook subscription not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     # ========== WebRTC Handlers ==========
-    
+
     def _handle_create_webrtc_session(self):
         """Create a new WebRTC session"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
-        verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
-        
+
+        verbose_logging = getattr(
+            self.pbx_core.webrtc_signaling,
+            'verbose_logging',
+            False)
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension = data.get('extension')
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] WebRTC session creation request:")
                 self.logger.info(f"  Extension: {extension}")
                 self.logger.info(f"  Client IP: {self.client_address[0]}")
-            
+
             if not extension:
                 self._send_json({'error': 'Extension is required'}, 400)
                 return
-            
-            # Verify extension exists (allow virtual extensions starting with 'webrtc-' for browser-based calling)
+
+            # Verify extension exists (allow virtual extensions starting with
+            # 'webrtc-' for browser-based calling)
             is_virtual_extension = extension.startswith('webrtc-')
-            if not is_virtual_extension and not self.pbx_core.extension_registry.get_extension(extension):
+            if not is_virtual_extension and not self.pbx_core.extension_registry.get_extension(
+                    extension):
                 if verbose_logging:
-                    self.logger.warning(f"[VERBOSE] Extension not found in registry: {extension}")
+                    self.logger.warning(
+                        f"[VERBOSE] Extension not found in registry: {extension}")
                 self._send_json({'error': 'Extension not found'}, 404)
                 return
-            
+
             session = self.pbx_core.webrtc_signaling.create_session(extension)
-            
+
             response_data = {
                 'success': True,
                 'session': session.to_dict(),
-                'ice_servers': self.pbx_core.webrtc_signaling.get_ice_servers_config()
-            }
-            
+                'ice_servers': self.pbx_core.webrtc_signaling.get_ice_servers_config()}
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] Session created successfully:")
                 self.logger.info(f"  Session ID: {session.session_id}")
-                self.logger.info(f"  ICE servers configured: {len(response_data['ice_servers'].get('iceServers', []))}")
-            
+                self.logger.info(
+                    f"  ICE servers configured: {len(response_data['ice_servers'].get('iceServers', []))}")
+
             self._send_json(response_data)
         except Exception as e:
             if verbose_logging:
-                self.logger.error(f"[VERBOSE] Error creating WebRTC session: {e}")
+                self.logger.error(
+                    f"[VERBOSE] Error creating WebRTC session: {e}")
                 import traceback
-                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+                self.logger.error(
+                    f"[VERBOSE] Traceback:\n{
+                        traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_webrtc_offer(self):
         """Handle WebRTC SDP offer"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
-        verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
-        
+
+        verbose_logging = getattr(
+            self.pbx_core.webrtc_signaling,
+            'verbose_logging',
+            False)
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             sdp = data.get('sdp')
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] WebRTC offer received:")
                 self.logger.info(f"  Session ID: {session_id}")
-                self.logger.info(f"  SDP length: {len(sdp) if sdp else 0} bytes")
+                self.logger.info(
+                    f"  SDP length: {
+                        len(sdp) if sdp else 0} bytes")
                 self.logger.info(f"  Client IP: {self.client_address[0]}")
-            
+
             if not session_id or not sdp:
-                self._send_json({'error': 'session_id and sdp are required'}, 400)
+                self._send_json(
+                    {'error': 'session_id and sdp are required'}, 400)
                 return
-            
-            success = self.pbx_core.webrtc_signaling.handle_offer(session_id, sdp)
-            
+
+            success = self.pbx_core.webrtc_signaling.handle_offer(
+                session_id, sdp)
+
             if success:
                 if verbose_logging:
                     self.logger.info(f"[VERBOSE] Offer handled successfully")
                 self._send_json({'success': True, 'message': 'Offer received'})
             else:
                 if verbose_logging:
-                    self.logger.warning(f"[VERBOSE] Session not found for offer")
+                    self.logger.warning(
+                        f"[VERBOSE] Session not found for offer")
                 self._send_json({'error': 'Session not found'}, 404)
         except Exception as e:
             if verbose_logging:
-                self.logger.error(f"[VERBOSE] Error handling WebRTC offer: {e}")
+                self.logger.error(
+                    f"[VERBOSE] Error handling WebRTC offer: {e}")
                 import traceback
-                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+                self.logger.error(
+                    f"[VERBOSE] Traceback:\n{
+                        traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_webrtc_answer(self):
         """Handle WebRTC SDP answer"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             sdp = data.get('sdp')
-            
+
             if not session_id or not sdp:
-                self._send_json({'error': 'session_id and sdp are required'}, 400)
+                self._send_json(
+                    {'error': 'session_id and sdp are required'}, 400)
                 return
-            
-            success = self.pbx_core.webrtc_signaling.handle_answer(session_id, sdp)
-            
+
+            success = self.pbx_core.webrtc_signaling.handle_answer(
+                session_id, sdp)
+
             if success:
-                self._send_json({'success': True, 'message': 'Answer received'})
+                self._send_json(
+                    {'success': True, 'message': 'Answer received'})
             else:
                 self._send_json({'error': 'Session not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_webrtc_ice_candidate(self):
         """Handle WebRTC ICE candidate"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
-        verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
-        
+
+        verbose_logging = getattr(
+            self.pbx_core.webrtc_signaling,
+            'verbose_logging',
+            False)
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             candidate = data.get('candidate')
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] ICE candidate received:")
                 self.logger.info(f"  Session ID: {session_id}")
                 if candidate:
-                    self.logger.info(f"  Candidate: {candidate.get('candidate', 'N/A')}")
-            
+                    self.logger.info(
+                        f"  Candidate: {
+                            candidate.get(
+                                'candidate',
+                                'N/A')}")
+
             if not session_id or not candidate:
-                self._send_json({'error': 'session_id and candidate are required'}, 400)
+                self._send_json(
+                    {'error': 'session_id and candidate are required'}, 400)
                 return
-            
-            success = self.pbx_core.webrtc_signaling.add_ice_candidate(session_id, candidate)
-            
+
+            success = self.pbx_core.webrtc_signaling.add_ice_candidate(
+                session_id, candidate)
+
             if success:
-                self._send_json({'success': True, 'message': 'ICE candidate added'})
+                self._send_json(
+                    {'success': True, 'message': 'ICE candidate added'})
             else:
                 if verbose_logging:
-                    self.logger.warning(f"[VERBOSE] Session not found for ICE candidate")
+                    self.logger.warning(
+                        f"[VERBOSE] Session not found for ICE candidate")
                 self._send_json({'error': 'Session not found'}, 404)
         except Exception as e:
             if verbose_logging:
-                self.logger.error(f"[VERBOSE] Error handling ICE candidate: {e}")
+                self.logger.error(
+                    f"[VERBOSE] Error handling ICE candidate: {e}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_webrtc_call(self):
         """Initiate a call from WebRTC client"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_gateway'):
             self._send_json({'error': 'WebRTC gateway not available'}, 500)
             return
-        
+
         verbose_logging = False
         if hasattr(self.pbx_core, 'webrtc_signaling'):
-            verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
-        
+            verbose_logging = getattr(
+                self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             target_extension = data.get('target_extension')
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] WebRTC call initiation request:")
                 self.logger.info(f"  Session ID: {session_id}")
                 self.logger.info(f"  Target Extension: {target_extension}")
                 self.logger.info(f"  Client IP: {self.client_address[0]}")
-            
+
             if not session_id or not target_extension:
-                self._send_json({'error': 'session_id and target_extension are required'}, 400)
+                self._send_json(
+                    {'error': 'session_id and target_extension are required'}, 400)
                 return
-            
+
             call_id = self.pbx_core.webrtc_gateway.initiate_call(
-                session_id, 
+                session_id,
                 target_extension,
-                webrtc_signaling=self.pbx_core.webrtc_signaling if hasattr(self.pbx_core, 'webrtc_signaling') else None
-            )
-            
+                webrtc_signaling=self.pbx_core.webrtc_signaling if hasattr(
+                    self.pbx_core,
+                    'webrtc_signaling') else None)
+
             if call_id:
                 if verbose_logging:
                     self.logger.info(f"[VERBOSE] Call initiated successfully:")
@@ -2823,141 +3130,162 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 if verbose_logging:
-                    self.logger.error(f"[VERBOSE] Call initiation failed - no call ID returned")
+                    self.logger.error(
+                        f"[VERBOSE] Call initiation failed - no call ID returned")
                 self._send_json({'error': 'Failed to initiate call'}, 500)
         except Exception as e:
             if verbose_logging:
                 self.logger.error(f"[VERBOSE] Exception in call handler: {e}")
                 import traceback
-                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+                self.logger.error(
+                    f"[VERBOSE] Traceback:\n{
+                        traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_webrtc_hangup(self):
         """Handle WebRTC call hangup/termination"""
         if not self.pbx_core:
             self._send_json({'error': 'PBX core not available'}, 500)
             return
-        
+
         verbose_logging = False
         if hasattr(self.pbx_core, 'webrtc_signaling'):
-            verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
-        
+            verbose_logging = getattr(
+                self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             call_id = data.get('call_id')
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] WebRTC hangup request:")
                 self.logger.info(f"  Session ID: {session_id}")
                 self.logger.info(f"  Call ID: {call_id}")
                 self.logger.info(f"  Client IP: {self.client_address[0]}")
-            
+
             if not session_id:
                 self._send_json({'error': 'session_id is required'}, 400)
                 return
-            
+
             # Terminate the call if call_id is provided
             if call_id and hasattr(self.pbx_core, 'call_manager'):
                 call = self.pbx_core.call_manager.get_call(call_id)
                 if call:
                     if verbose_logging:
-                        self.logger.info(f"[VERBOSE] Terminating call {call_id}")
-                    
+                        self.logger.info(
+                            f"[VERBOSE] Terminating call {call_id}")
+
                     # End the call through call manager
                     self.pbx_core.call_manager.end_call(call_id)
-                    
+
                     if verbose_logging:
-                        self.logger.info(f"[VERBOSE] Call {call_id} terminated successfully")
+                        self.logger.info(
+                            f"[VERBOSE] Call {call_id} terminated successfully")
                 else:
                     if verbose_logging:
-                        self.logger.warning(f"[VERBOSE] Call {call_id} not found in call manager")
-            
+                        self.logger.warning(
+                            f"[VERBOSE] Call {call_id} not found in call manager")
+
             # Clean up WebRTC session
             if hasattr(self.pbx_core, 'webrtc_signaling'):
-                session = self.pbx_core.webrtc_signaling.get_session(session_id)
+                session = self.pbx_core.webrtc_signaling.get_session(
+                    session_id)
                 if session:
                     # Close the session
                     self.pbx_core.webrtc_signaling.close_session(session_id)
                     if verbose_logging:
-                        self.logger.info(f"[VERBOSE] WebRTC session {session_id} closed")
-            
+                        self.logger.info(
+                            f"[VERBOSE] WebRTC session {session_id} closed")
+
             self._send_json({
                 'success': True,
                 'message': 'Call terminated successfully'
             })
-            
+
         except Exception as e:
             if verbose_logging:
-                self.logger.error(f"[VERBOSE] Exception in hangup handler: {e}")
+                self.logger.error(
+                    f"[VERBOSE] Exception in hangup handler: {e}")
                 import traceback
-                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+                self.logger.error(
+                    f"[VERBOSE] Traceback:\n{
+                        traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_webrtc_dtmf(self):
         """Handle DTMF tone sending from WebRTC client"""
         if not self.pbx_core:
             self._send_json({'error': 'PBX core not available'}, 500)
             return
-        
+
         verbose_logging = False
         if hasattr(self.pbx_core, 'webrtc_signaling'):
-            verbose_logging = getattr(self.pbx_core.webrtc_signaling, 'verbose_logging', False)
-        
+            verbose_logging = getattr(
+                self.pbx_core.webrtc_signaling, 'verbose_logging', False)
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             session_id = data.get('session_id')
             digit = data.get('digit')
             duration = data.get('duration', 160)  # Default 160ms
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] WebRTC DTMF request:")
                 self.logger.info(f"  Session ID: {session_id}")
                 self.logger.info(f"  Digit: {digit}")
                 self.logger.info(f"  Duration: {duration}ms")
                 self.logger.info(f"  Client IP: {self.client_address[0]}")
-            
+
             if not session_id or digit is None:
-                self._send_json({'error': 'session_id and digit are required'}, 400)
+                self._send_json(
+                    {'error': 'session_id and digit are required'}, 400)
                 return
-            
+
             # Validate digit
             if digit not in '0123456789*#':
-                self._send_json({'error': 'Invalid digit. Must be 0-9, *, or #'}, 400)
+                self._send_json(
+                    {'error': 'Invalid digit. Must be 0-9, *, or #'}, 400)
                 return
-            
+
             # Get the session
             if not hasattr(self.pbx_core, 'webrtc_signaling'):
-                self._send_json({'error': 'WebRTC signaling not available'}, 500)
+                self._send_json(
+                    {'error': 'WebRTC signaling not available'}, 500)
                 return
-            
+
             session = self.pbx_core.webrtc_signaling.get_session(session_id)
             if not session:
                 self._send_json({'error': 'Session not found'}, 404)
                 return
-            
+
             # Get the active call for this session
             if not session.call_id:
-                self._send_json({'error': 'No active call for this session'}, 400)
+                self._send_json(
+                    {'error': 'No active call for this session'}, 400)
                 return
-            
+
             if verbose_logging:
                 self.logger.info(f"[VERBOSE] Found call ID: {session.call_id}")
-            
+
             # Get the call object
             call = None
             if hasattr(self.pbx_core, 'call_manager'):
                 call = self.pbx_core.call_manager.get_call(session.call_id)
-            
+
             if not call:
                 self._send_json({'error': 'Call not found'}, 404)
                 return
-            
+
             if verbose_logging:
-                self.logger.info(f"[VERBOSE] Found call object for {session.call_id}")
+                self.logger.info(
+                    f"[VERBOSE] Found call object for {
+                        session.call_id}")
                 self.logger.info(f"  Caller: {call.caller_extension}")
                 self.logger.info(f"  Callee: {call.callee_extension}")
-            
+
             # Send DTMF via the call's RTP handler
             # WebRTC clients typically need to send DTMF to the remote end
             # We'll send to the callee's RTP handler
@@ -2968,14 +3296,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     if ext != session.extension:
                         target_handler = handler
                         break
-                
-                if target_handler and hasattr(target_handler, 'rfc2833_sender'):
+
+                if target_handler and hasattr(
+                        target_handler, 'rfc2833_sender'):
                     if verbose_logging:
-                        self.logger.info(f"[VERBOSE] Sending DTMF '{digit}' via RFC2833")
-                    
+                        self.logger.info(
+                            f"[VERBOSE] Sending DTMF '{digit}' via RFC2833")
+
                     # Send DTMF via RFC2833 and check return value
-                    success = target_handler.rfc2833_sender.send_dtmf(digit, duration_ms=duration)
-                    
+                    success = target_handler.rfc2833_sender.send_dtmf(
+                        digit, duration_ms=duration)
+
                     if success:
                         self._send_json({
                             'success': True,
@@ -2983,91 +3314,102 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                             'digit': digit,
                             'duration': duration
                         })
-                        
+
                         if verbose_logging:
-                            self.logger.info(f"[VERBOSE] DTMF '{digit}' sent successfully")
+                            self.logger.info(
+                                f"[VERBOSE] DTMF '{digit}' sent successfully")
                     else:
                         if verbose_logging:
-                            self.logger.error(f"[VERBOSE] Failed to send DTMF '{digit}'")
-                        self._send_json({'error': f'Failed to send DTMF tone "{digit}"'}, 500)
+                            self.logger.error(
+                                f"[VERBOSE] Failed to send DTMF '{digit}'")
+                        self._send_json(
+                            {'error': f'Failed to send DTMF tone "{digit}"'}, 500)
                 else:
                     if verbose_logging:
-                        self.logger.warning(f"[VERBOSE] No RFC2833 sender available for DTMF")
-                    self._send_json({'error': 'DTMF sending not available for this call'}, 500)
+                        self.logger.warning(
+                            f"[VERBOSE] No RFC2833 sender available for DTMF")
+                    self._send_json(
+                        {'error': 'DTMF sending not available for this call'}, 500)
             else:
                 if verbose_logging:
-                    self.logger.warning(f"[VERBOSE] No RTP handlers found for call {session.call_id}")
-                self._send_json({'error': 'No RTP handlers available for this call'}, 500)
-            
+                    self.logger.warning(
+                        f"[VERBOSE] No RTP handlers found for call {
+                            session.call_id}")
+                self._send_json(
+                    {'error': 'No RTP handlers available for this call'}, 500)
+
         except Exception as e:
             if verbose_logging:
                 self.logger.error(f"[VERBOSE] Exception in DTMF handler: {e}")
                 import traceback
-                self.logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
+                self.logger.error(
+                    f"[VERBOSE] Traceback:\n{
+                        traceback.format_exc()}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_webrtc_sessions(self):
         """Get all WebRTC sessions"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
+
         try:
             sessions = self.pbx_core.webrtc_signaling.get_sessions_info()
             self._send_json(sessions)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_webrtc_session(self, path: str):
         """Get specific WebRTC session"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
+
         try:
             session_id = path.split('/')[-1]
             session = self.pbx_core.webrtc_signaling.get_session(session_id)
-            
+
             if session:
                 self._send_json(session.to_dict())
             else:
                 self._send_json({'error': 'Session not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_ice_servers(self):
         """Get ICE servers configuration"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'webrtc_signaling'):
             self._send_json({'error': 'WebRTC not available'}, 500)
             return
-        
+
         try:
             config = self.pbx_core.webrtc_signaling.get_ice_servers_config()
             self._send_json(config)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     # ========== CRM Integration Handlers ==========
-    
+
     def _handle_crm_lookup(self):
         """Look up caller information"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
             self._send_json({'error': 'CRM integration not available'}, 500)
             return
-        
+
         try:
             # Get phone number from query string
             parsed_url = urlparse(self.path)
             query_params = parse_qs(parsed_url.query)
             phone_number = query_params.get('phone', [None])[0]
-            
+
             if not phone_number:
                 self._send_json({'error': 'phone parameter is required'}, 400)
                 return
-            
+
             # Look up caller info
-            caller_info = self.pbx_core.crm_integration.lookup_caller(phone_number)
-            
+            caller_info = self.pbx_core.crm_integration.lookup_caller(
+                phone_number)
+
             if caller_info:
                 self._send_json({
                     'found': True,
@@ -3080,13 +3422,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_crm_providers(self):
         """Get CRM provider status"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
             self._send_json({'error': 'CRM integration not available'}, 500)
             return
-        
+
         try:
             providers = self.pbx_core.crm_integration.get_provider_status()
             self._send_json({
@@ -3095,55 +3437,62 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_trigger_screen_pop(self):
         """Trigger screen pop for a call"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'crm_integration'):
             self._send_json({'error': 'CRM integration not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             phone_number = data.get('phone_number')
             call_id = data.get('call_id')
             extension = data.get('extension')
-            
+
             if not all([phone_number, call_id, extension]):
-                self._send_json({'error': 'phone_number, call_id, and extension are required'}, 400)
+                self._send_json(
+                    {'error': 'phone_number, call_id, and extension are required'}, 400)
                 return
-            
-            self.pbx_core.crm_integration.trigger_screen_pop(phone_number, call_id, extension)
-            
+
+            self.pbx_core.crm_integration.trigger_screen_pop(
+                phone_number, call_id, extension)
+
             self._send_json({
                 'success': True,
                 'message': 'Screen pop triggered'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     # ========== Hot-Desking Handlers ==========
-    
+
     def _handle_hot_desk_login(self):
         """Handle hot-desk login"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
             self._send_json({'error': 'Hot-desking not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension = data.get('extension')
             device_id = data.get('device_id')
             ip_address = data.get('ip_address', self.client_address[0])
             pin = data.get('pin')
-            
+
             if not all([extension, device_id]):
-                self._send_json({'error': 'extension and device_id are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and device_id are required'}, 400)
                 return
-            
-            success = self.pbx_core.hot_desking.login(extension, device_id, ip_address, pin)
-            
+
+            success = self.pbx_core.hot_desking.login(
+                extension, device_id, ip_address, pin)
+
             if success:
-                profile = self.pbx_core.hot_desking.get_extension_profile(extension)
+                profile = self.pbx_core.hot_desking.get_extension_profile(
+                    extension)
                 self._send_json({
                     'success': True,
                     'message': f'Extension {extension} logged in',
@@ -3153,18 +3502,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Login failed'}, 401)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_hot_desk_logout(self):
         """Handle hot-desk logout"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
             self._send_json({'error': 'Hot-desking not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             device_id = data.get('device_id')
-            extension = data.get('extension')  # Optional: logout specific extension
-            
+            # Optional: logout specific extension
+            extension = data.get('extension')
+
             if device_id:
                 success = self.pbx_core.hot_desking.logout(device_id)
                 if success:
@@ -3173,7 +3524,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         'message': f'Logged out from device {device_id}'
                     })
                 else:
-                    self._send_json({'error': 'No active session for device'}, 404)
+                    self._send_json(
+                        {'error': 'No active session for device'}, 404)
             elif extension:
                 count = self.pbx_core.hot_desking.logout_extension(extension)
                 self._send_json({
@@ -3181,26 +3533,29 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'message': f'Extension {extension} logged out from {count} device(s)'
                 })
             else:
-                self._send_json({'error': 'device_id or extension is required'}, 400)
+                self._send_json(
+                    {'error': 'device_id or extension is required'}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_mfa_enroll(self):
         """Handle MFA enrollment"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension_number = data.get('extension')
-            
+
             if not extension_number:
                 self._send_json({'error': 'extension is required'}, 400)
                 return
-            
-            success, provisioning_uri, backup_codes = self.pbx_core.mfa_manager.enroll_user(extension_number)
-            
+
+            success, provisioning_uri, backup_codes = self.pbx_core.mfa_manager.enroll_user(
+                extension_number)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3212,24 +3567,27 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'MFA enrollment failed'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_mfa_verify_enrollment(self):
         """Handle MFA enrollment verification"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension_number = data.get('extension')
             code = data.get('code')
-            
+
             if not extension_number or not code:
-                self._send_json({'error': 'extension and code are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and code are required'}, 400)
                 return
-            
-            success = self.pbx_core.mfa_manager.verify_enrollment(extension_number, code)
-            
+
+            success = self.pbx_core.mfa_manager.verify_enrollment(
+                extension_number, code)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3239,24 +3597,27 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Invalid code'}, 401)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_mfa_verify(self):
         """Handle MFA code verification"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension_number = data.get('extension')
             code = data.get('code')
-            
+
             if not extension_number or not code:
-                self._send_json({'error': 'extension and code are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and code are required'}, 400)
                 return
-            
-            success = self.pbx_core.mfa_manager.verify_code(extension_number, code)
-            
+
+            success = self.pbx_core.mfa_manager.verify_code(
+                extension_number, code)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3266,23 +3627,25 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Invalid code'}, 401)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_mfa_disable(self):
         """Handle MFA disable"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension_number = data.get('extension')
-            
+
             if not extension_number:
                 self._send_json({'error': 'extension is required'}, 400)
                 return
-            
-            success = self.pbx_core.mfa_manager.disable_for_user(extension_number)
-            
+
+            success = self.pbx_core.mfa_manager.disable_for_user(
+                extension_number)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3292,90 +3655,98 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Failed to disable MFA'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_mfa_enroll_yubikey(self):
         """Handle YubiKey enrollment"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension_number = data.get('extension')
             otp = data.get('otp')
             device_name = data.get('device_name', 'YubiKey')
-            
+
             if not extension_number or not otp:
-                self._send_json({'error': 'extension and otp are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and otp are required'}, 400)
                 return
-            
-            success, error = self.pbx_core.mfa_manager.enroll_yubikey(extension_number, otp, device_name)
-            
+
+            success, error = self.pbx_core.mfa_manager.enroll_yubikey(
+                extension_number, otp, device_name)
+
             if success:
                 self._send_json({
                     'success': True,
                     'message': 'YubiKey enrolled successfully'
                 })
             else:
-                self._send_json({'error': error or 'YubiKey enrollment failed'}, 400)
+                self._send_json(
+                    {'error': error or 'YubiKey enrollment failed'}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_mfa_enroll_fido2(self):
         """Handle FIDO2/WebAuthn credential enrollment"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension_number = data.get('extension')
             credential_data = data.get('credential_data')
             device_name = data.get('device_name', 'Security Key')
-            
+
             if not extension_number or not credential_data:
-                self._send_json({'error': 'extension and credential_data are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and credential_data are required'}, 400)
                 return
-            
-            success, error = self.pbx_core.mfa_manager.enroll_fido2(extension_number, credential_data, device_name)
-            
+
+            success, error = self.pbx_core.mfa_manager.enroll_fido2(
+                extension_number, credential_data, device_name)
+
             if success:
                 self._send_json({
                     'success': True,
                     'message': 'FIDO2 credential enrolled successfully'
                 })
             else:
-                self._send_json({'error': error or 'FIDO2 enrollment failed'}, 400)
+                self._send_json(
+                    {'error': error or 'FIDO2 enrollment failed'}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_mfa_methods(self, path: str):
         """Get enrolled MFA methods for extension"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
             extension = path.split('/')[-1]
             methods = self.pbx_core.mfa_manager.get_enrolled_methods(extension)
-            
+
             self._send_json({
                 'extension': extension,
                 'methods': methods
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_mfa_status(self, path: str):
         """Get MFA status for extension"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'mfa_manager'):
             self._send_json({'error': 'MFA not available'}, 500)
             return
-        
+
         try:
             extension = path.split('/')[-1]
             enabled = self.pbx_core.mfa_manager.is_enabled_for_user(extension)
-            
+
             self._send_json({
                 'extension': extension,
                 'mfa_enabled': enabled,
@@ -3383,83 +3754,87 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_block_ip(self):
         """Handle IP blocking"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
             self._send_json({'error': 'Threat detection not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             ip_address = data.get('ip_address')
             reason = data.get('reason', 'Manual block')
             duration = data.get('duration')  # Optional, in seconds
-            
+
             if not ip_address:
                 self._send_json({'error': 'ip_address is required'}, 400)
                 return
-            
-            self.pbx_core.threat_detector.block_ip(ip_address, reason, duration)
-            
+
+            self.pbx_core.threat_detector.block_ip(
+                ip_address, reason, duration)
+
             self._send_json({
                 'success': True,
                 'message': f'IP {ip_address} blocked successfully'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_unblock_ip(self):
         """Handle IP unblocking"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
             self._send_json({'error': 'Threat detection not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             ip_address = data.get('ip_address')
-            
+
             if not ip_address:
                 self._send_json({'error': 'ip_address is required'}, 400)
                 return
-            
+
             self.pbx_core.threat_detector.unblock_ip(ip_address)
-            
+
             self._send_json({
                 'success': True,
                 'message': f'IP {ip_address} unblocked successfully'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_threat_summary(self):
         """Get threat detection summary"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
             self._send_json({'error': 'Threat detection not available'}, 500)
             return
-        
+
         try:
             # Get hours parameter from query string
             parsed = urlparse(self.path)
             params = parse_qs(parsed.query)
             hours = int(params.get('hours', [24])[0])
-            
+
             summary = self.pbx_core.threat_detector.get_threat_summary(hours)
-            
+
             self._send_json(summary)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_check_ip(self, path: str):
         """Check if IP is blocked"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'threat_detector'):
             self._send_json({'error': 'Threat detection not available'}, 500)
             return
-        
+
         try:
             ip_address = path.split('/')[-1]
-            is_blocked, reason = self.pbx_core.threat_detector.is_ip_blocked(ip_address)
-            
+            is_blocked, reason = self.pbx_core.threat_detector.is_ip_blocked(
+                ip_address)
+
             self._send_json({
                 'ip_address': ip_address,
                 'is_blocked': is_blocked,
@@ -3467,25 +3842,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_add_dnd_rule(self):
         """Handle adding DND rule"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension = data.get('extension')
             rule_type = data.get('rule_type')  # 'calendar' or 'time_based'
             config = data.get('config', {})
-            
+
             if not extension or not rule_type:
-                self._send_json({'error': 'extension and rule_type are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and rule_type are required'}, 400)
                 return
-            
-            rule_id = self.pbx_core.dnd_scheduler.add_rule(extension, rule_type, config)
-            
+
+            rule_id = self.pbx_core.dnd_scheduler.add_rule(
+                extension, rule_type, config)
+
             self._send_json({
                 'success': True,
                 'rule_id': rule_id,
@@ -3493,16 +3871,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_delete_dnd_rule(self, rule_id: str):
         """Handle deleting DND rule"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
             success = self.pbx_core.dnd_scheduler.remove_rule(rule_id)
-            
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3512,47 +3890,52 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Rule not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_register_calendar_user(self):
         """Handle registering user for calendar-based DND"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension = data.get('extension')
             email = data.get('email')
-            
+
             if not extension or not email:
-                self._send_json({'error': 'extension and email are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and email are required'}, 400)
                 return
-            
-            self.pbx_core.dnd_scheduler.register_calendar_user(extension, email)
-            
+
+            self.pbx_core.dnd_scheduler.register_calendar_user(
+                extension, email)
+
             self._send_json({
                 'success': True,
                 'message': f'Calendar monitoring registered for {extension}'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_dnd_override(self):
         """Handle manual DND override"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             extension = data.get('extension')
             status = data.get('status')  # e.g., 'do_not_disturb', 'available'
             duration_minutes = data.get('duration_minutes')  # Optional
-            
+
             if not extension or not status:
-                self._send_json({'error': 'extension and status are required'}, 400)
+                self._send_json(
+                    {'error': 'extension and status are required'}, 400)
                 return
-            
+
             # Convert status string to PresenceStatus enum
             from pbx.features.presence import PresenceStatus
             try:
@@ -3560,81 +3943,85 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             except ValueError:
                 self._send_json({'error': f'Invalid status: {status}'}, 400)
                 return
-            
-            self.pbx_core.dnd_scheduler.set_manual_override(extension, status_enum, duration_minutes)
-            
+
+            self.pbx_core.dnd_scheduler.set_manual_override(
+                extension, status_enum, duration_minutes)
+
             self._send_json({
                 'success': True,
                 'message': f'Manual override set for {extension}'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_clear_dnd_override(self, extension: str):
         """Handle clearing DND override"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
             self.pbx_core.dnd_scheduler.clear_manual_override(extension)
-            
+
             self._send_json({
                 'success': True,
                 'message': f'Override cleared for {extension}'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_dnd_status(self, path: str):
         """Get DND status for extension"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
             extension = path.split('/')[-1]
             status = self.pbx_core.dnd_scheduler.get_status(extension)
-            
+
             self._send_json(status)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_dnd_rules(self, path: str):
         """Get DND rules for extension"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'dnd_scheduler'):
             self._send_json({'error': 'DND Scheduler not available'}, 500)
             return
-        
+
         try:
             extension = path.split('/')[-1]
             rules = self.pbx_core.dnd_scheduler.get_rules(extension)
-            
+
             self._send_json({
                 'extension': extension,
                 'rules': rules
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_add_skill(self):
         """Handle adding a new skill"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             skill_id = data.get('skill_id')
             name = data.get('name')
             description = data.get('description', '')
-            
+
             if not skill_id or not name:
-                self._send_json({'error': 'skill_id and name are required'}, 400)
+                self._send_json(
+                    {'error': 'skill_id and name are required'}, 400)
                 return
-            
-            success = self.pbx_core.skills_router.add_skill(skill_id, name, description)
-            
+
+            success = self.pbx_core.skills_router.add_skill(
+                skill_id, name, description)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3645,25 +4032,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Skill already exists'}, 409)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_assign_skill(self):
         """Handle assigning skill to agent"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             agent_extension = data.get('agent_extension')
             skill_id = data.get('skill_id')
             proficiency = data.get('proficiency', 5)
-            
+
             if not agent_extension or not skill_id:
-                self._send_json({'error': 'agent_extension and skill_id are required'}, 400)
+                self._send_json(
+                    {'error': 'agent_extension and skill_id are required'}, 400)
                 return
-            
-            success = self.pbx_core.skills_router.assign_skill_to_agent(agent_extension, skill_id, proficiency)
-            
+
+            success = self.pbx_core.skills_router.assign_skill_to_agent(
+                agent_extension, skill_id, proficiency)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3673,16 +4063,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Failed to assign skill'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
-    def _handle_remove_skill_from_agent(self, agent_extension: str, skill_id: str):
+
+    def _handle_remove_skill_from_agent(
+            self, agent_extension: str, skill_id: str):
         """Handle removing skill from agent"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
-            success = self.pbx_core.skills_router.remove_skill_from_agent(agent_extension, skill_id)
-            
+            success = self.pbx_core.skills_router.remove_skill_from_agent(
+                agent_extension, skill_id)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3692,24 +4084,26 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Skill not found for agent'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_set_queue_requirements(self):
         """Handle setting queue skill requirements"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             queue_number = data.get('queue_number')
             requirements = data.get('requirements', [])
-            
+
             if not queue_number:
                 self._send_json({'error': 'queue_number is required'}, 400)
                 return
-            
-            success = self.pbx_core.skills_router.set_queue_requirements(queue_number, requirements)
-            
+
+            success = self.pbx_core.skills_router.set_queue_requirements(
+                queue_number, requirements)
+
             if success:
                 self._send_json({
                     'success': True,
@@ -3719,13 +4113,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Failed to set requirements'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_clear_qos_alerts(self):
         """Handle clearing QoS alerts"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'qos_monitor'):
             self._send_json({'error': 'QoS monitoring not available'}, 500)
             return
-        
+
         try:
             count = self.pbx_core.qos_monitor.clear_alerts()
             self._send_json({
@@ -3734,52 +4128,58 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_update_qos_thresholds(self):
         """Handle updating QoS alert thresholds"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'qos_monitor'):
             self._send_json({'error': 'QoS monitoring not available'}, 500)
             return
-        
+
         try:
-            data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = json.loads(self.rfile.read(
+                int(self.headers['Content-Length'])))
             thresholds = {}
-            
+
             # Validate and convert threshold values with range checking
             if 'mos_min' in data:
                 mos_min = float(data['mos_min'])
                 if mos_min < 1.0 or mos_min > 5.0:
-                    self._send_json({'error': 'mos_min must be between 1.0 and 5.0'}, 400)
+                    self._send_json(
+                        {'error': 'mos_min must be between 1.0 and 5.0'}, 400)
                     return
                 thresholds['mos_min'] = mos_min
-            
+
             if 'packet_loss_max' in data:
                 packet_loss_max = float(data['packet_loss_max'])
                 if packet_loss_max < 0.0 or packet_loss_max > 100.0:
-                    self._send_json({'error': 'packet_loss_max must be between 0.0 and 100.0'}, 400)
+                    self._send_json(
+                        {'error': 'packet_loss_max must be between 0.0 and 100.0'}, 400)
                     return
                 thresholds['packet_loss_max'] = packet_loss_max
-            
+
             if 'jitter_max' in data:
                 jitter_max = float(data['jitter_max'])
                 if jitter_max < 0.0 or jitter_max > 1000.0:
-                    self._send_json({'error': 'jitter_max must be between 0.0 and 1000.0 ms'}, 400)
+                    self._send_json(
+                        {'error': 'jitter_max must be between 0.0 and 1000.0 ms'}, 400)
                     return
                 thresholds['jitter_max'] = jitter_max
-            
+
             if 'latency_max' in data:
                 latency_max = float(data['latency_max'])
                 if latency_max < 0.0 or latency_max > 5000.0:
-                    self._send_json({'error': 'latency_max must be between 0.0 and 5000.0 ms'}, 400)
+                    self._send_json(
+                        {'error': 'latency_max must be between 0.0 and 5000.0 ms'}, 400)
                     return
                 thresholds['latency_max'] = latency_max
-            
+
             if not thresholds:
-                self._send_json({'error': 'No valid threshold parameters provided'}, 400)
+                self._send_json(
+                    {'error': 'No valid threshold parameters provided'}, 400)
                 return
-            
+
             self.pbx_core.qos_monitor.update_alert_thresholds(thresholds)
-            
+
             self._send_json({
                 'success': True,
                 'message': 'QoS thresholds updated',
@@ -3787,62 +4187,65 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except ValueError as e:
             self.logger.error(f"Invalid threshold value: {e}")
-            self._send_json({'error': 'Invalid threshold values, must be valid numbers'}, 400)
+            self._send_json(
+                {'error': 'Invalid threshold values, must be valid numbers'}, 400)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_all_skills(self):
         """Get all skills"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
             skills = self.pbx_core.skills_router.get_all_skills()
             self._send_json({'skills': skills})
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_agent_skills(self, path: str):
         """Get agent skills"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
             agent_extension = path.split('/')[-1]
-            skills = self.pbx_core.skills_router.get_agent_skills(agent_extension)
-            
+            skills = self.pbx_core.skills_router.get_agent_skills(
+                agent_extension)
+
             self._send_json({
                 'agent_extension': agent_extension,
                 'skills': skills
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_queue_requirements(self, path: str):
         """Get queue skill requirements"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'skills_router'):
             self._send_json({'error': 'Skills routing not available'}, 500)
             return
-        
+
         try:
             queue_number = path.split('/')[-1]
-            requirements = self.pbx_core.skills_router.get_queue_requirements(queue_number)
-            
+            requirements = self.pbx_core.skills_router.get_queue_requirements(
+                queue_number)
+
             self._send_json({
                 'queue_number': queue_number,
                 'requirements': requirements
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_hot_desk_sessions(self):
         """Get all hot-desk sessions"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
             self._send_json({'error': 'Hot-desking not available'}, 500)
             return
-        
+
         try:
             sessions = self.pbx_core.hot_desking.get_active_sessions()
             self._send_json({
@@ -3851,40 +4254,41 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_hot_desk_session(self, path: str):
         """Get specific hot-desk session by device"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
             self._send_json({'error': 'Hot-desking not available'}, 500)
             return
-        
+
         try:
             device_id = path.split('/')[-1]
             session = self.pbx_core.hot_desking.get_session(device_id)
-            
+
             if session:
                 self._send_json(session.to_dict())
             else:
                 self._send_json({'error': 'No session found for device'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_hot_desk_extension(self, path: str):
         """Get hot-desk information for extension"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'hot_desking'):
             self._send_json({'error': 'Hot-desking not available'}, 500)
             return
-        
+
         try:
             extension = path.split('/')[-1]
-            devices = self.pbx_core.hot_desking.get_extension_devices(extension)
+            devices = self.pbx_core.hot_desking.get_extension_devices(
+                extension)
             sessions = []
-            
+
             for device_id in devices:
                 session = self.pbx_core.hot_desking.get_session(device_id)
                 if session:
                     sessions.append(session.to_dict())
-            
+
             self._send_json({
                 'extension': extension,
                 'logged_in': len(sessions) > 0,
@@ -3893,15 +4297,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     # ========== Auto Attendant Management Handlers ==========
-    
+
     def _handle_get_auto_attendant_config(self):
         """Get auto attendant configuration"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
             self._send_json({'error': 'Auto attendant not available'}, 500)
             return
-        
+
         try:
             aa = self.pbx_core.auto_attendant
             config = {
@@ -3914,17 +4318,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(config)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_update_auto_attendant_config(self):
         """Update auto attendant configuration"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
             self._send_json({'error': 'Auto attendant not available'}, 500)
             return
-        
+
         try:
             data = self._get_body()
             aa = self.pbx_core.auto_attendant
-            
+
             # Update configuration
             config_changed = False
             if 'enabled' in data:
@@ -3939,30 +4343,31 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if 'max_retries' in data:
                 aa.max_retries = int(data['max_retries'])
                 config_changed = True
-            
+
             # Check if prompts configuration was updated
             prompts_updated = 'prompts' in data
-            
+
             # Trigger voice regeneration if prompts or menu options changed
             if prompts_updated or config_changed:
                 try:
                     self._regenerate_voice_prompts(data.get('prompts', {}))
                 except Exception as e:
-                    self.logger.warning(f"Failed to regenerate voice prompts: {e}")
-            
+                    self.logger.warning(
+                        f"Failed to regenerate voice prompts: {e}")
+
             self._send_json({
                 'success': True,
                 'message': 'Auto attendant configuration updated successfully'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_auto_attendant_menu_options(self):
         """Get auto attendant menu options"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
             self._send_json({'error': 'Auto attendant not available'}, 500)
             return
-        
+
         try:
             aa = self.pbx_core.auto_attendant
             options = []
@@ -3975,81 +4380,83 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'menu_options': options})
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_add_auto_attendant_menu_option(self):
         """Add auto attendant menu option"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
             self._send_json({'error': 'Auto attendant not available'}, 500)
             return
-        
+
         try:
             data = self._get_body()
             digit = str(data.get('digit'))
             destination = data.get('destination')
             description = data.get('description', '')
-            
+
             if not digit or not destination:
-                self._send_json({'error': 'digit and destination are required'}, 400)
+                self._send_json(
+                    {'error': 'digit and destination are required'}, 400)
                 return
-            
+
             aa = self.pbx_core.auto_attendant
             aa.menu_options[digit] = {
                 'destination': destination,
                 'description': description
             }
-            
+
             # Trigger voice regeneration after menu option addition
             try:
                 self._regenerate_voice_prompts({})
             except Exception as e:
                 self.logger.warning(f"Failed to regenerate voice prompts: {e}")
-            
+
             self._send_json({
                 'success': True,
                 'message': f'Menu option {digit} added successfully'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_update_auto_attendant_menu_option(self, path: str):
         """Update auto attendant menu option"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
             self._send_json({'error': 'Auto attendant not available'}, 500)
             return
-        
+
         try:
             digit = path.split('/')[-1]
             data = self._get_body()
-            
+
             aa = self.pbx_core.auto_attendant
             if digit not in aa.menu_options:
-                self._send_json({'error': f'Menu option {digit} not found'}, 404)
+                self._send_json(
+                    {'error': f'Menu option {digit} not found'}, 404)
                 return
-            
+
             if 'destination' in data:
                 aa.menu_options[digit]['destination'] = data['destination']
             if 'description' in data:
                 aa.menu_options[digit]['description'] = data['description']
-            
+
             # Trigger voice regeneration after menu option update
             try:
                 self._regenerate_voice_prompts({})
             except Exception as e:
                 self.logger.warning(f"Failed to regenerate voice prompts: {e}")
-            
+
             self._send_json({
                 'success': True,
                 'message': f'Menu option {digit} updated successfully'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_delete_auto_attendant_menu_option(self, digit: str):
         """Delete auto attendant menu option"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'auto_attendant'):
             self._send_json({'error': 'Auto attendant not available'}, 500)
             return
-        
+
         try:
             aa = self.pbx_core.auto_attendant
             if digit in aa.menu_options:
@@ -4058,24 +4465,26 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 try:
                     self._regenerate_voice_prompts({})
                 except Exception as e:
-                    self.logger.warning(f"Failed to regenerate voice prompts: {e}")
-                
+                    self.logger.warning(
+                        f"Failed to regenerate voice prompts: {e}")
+
                 self._send_json({
                     'success': True,
                     'message': f'Menu option {digit} deleted successfully'
                 })
             else:
-                self._send_json({'error': f'Menu option {digit} not found'}, 404)
+                self._send_json(
+                    {'error': f'Menu option {digit} not found'}, 404)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_auto_attendant_prompts(self):
         """Get auto attendant prompt texts"""
         try:
             # Return current prompt configuration
             config = self.pbx_core.config if self.pbx_core else Config()
             aa_config = config.get('auto_attendant', {})
-            
+
             prompts = aa_config.get('prompts', {
                 'welcome': 'Thank you for calling {company_name}.',
                 'main_menu': 'For Sales, press 1. For Support, press 2. For Accounting, press 3. Or press 0 to speak with an operator.',
@@ -4083,46 +4492,46 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'timeout': 'We did not receive your selection. Please try again.',
                 'transferring': 'Please hold while we transfer your call.'
             })
-            
+
             company_name = config.get('company_name', 'your company')
-            
+
             self._send_json({
                 'prompts': prompts,
                 'company_name': company_name
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_update_auto_attendant_prompts(self):
         """Update auto attendant prompt texts and regenerate voices"""
         try:
             data = self._get_body()
             prompts = data.get('prompts', {})
             company_name = data.get('company_name')
-            
+
             # Update configuration
             config = self.pbx_core.config if self.pbx_core else Config()
-            
+
             # Ensure auto_attendant section exists
             if 'auto_attendant' not in config.config:
                 config.config['auto_attendant'] = {}
-            
+
             # Update prompts
             if prompts:
                 config.config['auto_attendant']['prompts'] = prompts
-            
+
             # Update company name
             if company_name:
                 config.config['company_name'] = company_name
-            
+
             # Save configuration
             success = config.save()
             if not success:
                 raise Exception("Failed to save configuration file")
-            
+
             # Trigger voice regeneration
             self._regenerate_voice_prompts(prompts, company_name)
-            
+
             self._send_json({
                 'success': True,
                 'message': 'Prompts updated and voices regenerated successfully'
@@ -4130,11 +4539,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self.logger.error(f"Error updating prompts: {e}")
             self._send_json({'error': str(e)}, 500)
-    
-    def _regenerate_voice_prompts(self, custom_prompts=None, company_name=None):
+
+    def _regenerate_voice_prompts(
+            self,
+            custom_prompts=None,
+            company_name=None):
         """
         Regenerate voice prompts using gTTS
-        
+
         Args:
             custom_prompts: Optional dict of custom prompt texts
             company_name: Optional company name override
@@ -4143,68 +4555,76 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Check if TTS is available
             if not is_tts_available():
                 raise ImportError(
-                    f"TTS dependencies not available. Install with: {get_tts_requirements()}"
-                )
-            
+                    f"TTS dependencies not available. Install with: {
+                        get_tts_requirements()}")
+
             # Get configuration
             config = self.pbx_core.config if self.pbx_core else Config()
             aa_config = config.get('auto_attendant', {})
-            
+
             if not company_name:
                 company_name = config.get('company_name', 'your company')
-            
+
             # Get prompt texts
             default_prompts = {
                 'welcome': f'Thank you for calling {company_name}.',
                 'main_menu': 'For Sales, press 1. For Support, press 2. For Accounting, press 3. Or press 0 to speak with an operator.',
                 'invalid': 'That is not a valid option. Please try again.',
                 'timeout': 'We did not receive your selection. Please try again.',
-                'transferring': 'Please hold while we transfer your call.'
-            }
-            
+                'transferring': 'Please hold while we transfer your call.'}
+
             # Merge custom prompts
             prompts = {**default_prompts}
             if custom_prompts:
                 prompts.update(custom_prompts)
-            
+
             # Get output directory
             audio_path = aa_config.get('audio_path', 'auto_attendant')
             if not os.path.exists(audio_path):
                 os.makedirs(audio_path)
-            
+
             # Generate each prompt using shared TTS utility
             self.logger.info("Regenerating voice prompts using gTTS...")
             for filename, text in prompts.items():
                 output_file = os.path.join(audio_path, f'{filename}.wav')
-                
+
                 try:
-                    # Use shared utility function for TTS generation with 8kHz for PCMU
-                    if text_to_wav_telephony(text, output_file, language='en', tld='com', slow=False, sample_rate=8000):
-                        self.logger.info(f"Generated {filename}.wav using gTTS")
+                    # Use shared utility function for TTS generation with 8kHz
+                    # for PCMU
+                    if text_to_wav_telephony(
+                            text,
+                            output_file,
+                            language='en',
+                            tld='com',
+                            slow=False,
+                            sample_rate=8000):
+                        self.logger.info(
+                            f"Generated {filename}.wav using gTTS")
                 except Exception as e:
-                    self.logger.error(f"Failed to generate {filename}.wav: {e}")
-            
+                    self.logger.error(
+                        f"Failed to generate {filename}.wav: {e}")
+
             self.logger.info("Voice prompt regeneration complete")
         except Exception as e:
             self.logger.error(f"Error regenerating voice prompts: {e}")
             raise
-    
+
     # ========== Voicemail Box Management Handlers ==========
-    
+
     def _handle_get_voicemail_boxes(self):
         """Get list of all voicemail boxes"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
             vm_system = self.pbx_core.voicemail_system
             boxes = []
-            
+
             for extension, mailbox in vm_system.mailboxes.items():
                 messages = mailbox.get_messages(unread_only=False)
                 unread_count = len(mailbox.get_messages(unread_only=True))
-                
+
                 boxes.append({
                     'extension': extension,
                     'total_messages': len(messages),
@@ -4212,30 +4632,30 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'has_custom_greeting': mailbox.has_custom_greeting(),
                     'storage_path': mailbox.storage_path
                 })
-            
+
             self._send_json({'voicemail_boxes': boxes})
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_voicemail_box_details(self, path: str):
         """Get details of a specific voicemail box"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
             # Extract extension from path, handling /export suffix
             parts = path.split('/')
             extension = parts[3] if len(parts) > 3 else None
-            
+
             if not extension:
                 self._send_json({'error': 'Invalid path'}, 400)
                 return
-            
+
             vm_system = self.pbx_core.voicemail_system
             mailbox = vm_system.get_mailbox(extension)
             messages = mailbox.get_messages(unread_only=False)
-            
+
             details = {
                 'extension': extension,
                 'total_messages': len(messages),
@@ -4244,119 +4664,139 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'storage_path': mailbox.storage_path,
                 'messages': []
             }
-            
+
             for msg in messages:
-                details['messages'].append({
-                    'id': msg['id'],
-                    'caller_id': msg['caller_id'],
-                    'timestamp': msg['timestamp'].isoformat() if hasattr(msg['timestamp'], 'isoformat') else str(msg['timestamp']),
-                    'listened': msg['listened'],
-                    'duration': msg.get('duration'),
-                    'file_path': msg['file_path']
-                })
-            
+                details['messages'].append(
+                    {
+                        'id': msg['id'],
+                        'caller_id': msg['caller_id'],
+                        'timestamp': msg['timestamp'].isoformat() if hasattr(
+                            msg['timestamp'],
+                            'isoformat') else str(
+                            msg['timestamp']),
+                        'listened': msg['listened'],
+                        'duration': msg.get('duration'),
+                        'file_path': msg['file_path']})
+
             self._send_json(details)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_export_voicemail_box(self, path: str):
         """Export all voicemails from a mailbox as a ZIP file"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
-            # Extract extension from path: /api/voicemail-boxes/{extension}/export
+            # Extract extension from path:
+            # /api/voicemail-boxes/{extension}/export
             parts = path.split('/')
             extension = parts[3] if len(parts) > 3 else None
-            
+
             if not extension:
                 self._send_json({'error': 'Invalid path'}, 400)
                 return
-            
+
             vm_system = self.pbx_core.voicemail_system
             mailbox = vm_system.get_mailbox(extension)
             messages = mailbox.get_messages(unread_only=False)
-            
+
             if not messages:
                 self._send_json({'error': 'No messages to export'}, 404)
                 return
-            
+
             # Create temporary directory for ZIP creation
             temp_dir = tempfile.mkdtemp()
-            zip_filename = f"voicemail_{extension}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+            zip_filename = f"voicemail_{extension}_{
+                datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
             zip_path = os.path.join(temp_dir, zip_filename)
-            
+
             try:
                 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                     # Add a manifest file with message details
                     manifest_lines = ['Voicemail Export Manifest\n']
                     manifest_lines.append(f'Extension: {extension}\n')
-                    manifest_lines.append(f'Export Date: {datetime.now().isoformat()}\n')
-                    manifest_lines.append(f'Total Messages: {len(messages)}\n\n')
+                    manifest_lines.append(
+                        f'Export Date: {
+                            datetime.now().isoformat()}\n')
+                    manifest_lines.append(
+                        f'Total Messages: {
+                            len(messages)}\n\n')
                     manifest_lines.append('Message Details:\n')
                     manifest_lines.append('-' * 80 + '\n')
-                    
+
                     for msg in messages:
                         # Add audio file to ZIP
                         if os.path.exists(msg['file_path']):
                             arcname = os.path.basename(msg['file_path'])
                             zipf.write(msg['file_path'], arcname)
-                            
+
                             # Add to manifest
                             manifest_lines.append(f"\nFile: {arcname}\n")
-                            manifest_lines.append(f"Caller ID: {msg['caller_id']}\n")
-                            manifest_lines.append(f"Timestamp: {msg['timestamp']}\n")
-                            manifest_lines.append(f"Duration: {msg.get('duration', 'Unknown')}s\n")
-                            manifest_lines.append(f"Status: {'Read' if msg['listened'] else 'Unread'}\n")
-                    
+                            manifest_lines.append(
+                                f"Caller ID: {msg['caller_id']}\n")
+                            manifest_lines.append(
+                                f"Timestamp: {msg['timestamp']}\n")
+                            manifest_lines.append(
+                                f"Duration: {
+                                    msg.get(
+                                        'duration',
+                                        'Unknown')}s\n")
+                            manifest_lines.append(
+                                f"Status: {
+                                    'Read' if msg['listened'] else 'Unread'}\n")
+
                     # Add manifest to ZIP
                     zipf.writestr('MANIFEST.txt', ''.join(manifest_lines))
-                
+
                 # Read ZIP file content
                 with open(zip_path, 'rb') as f:
                     zip_content = f.read()
-                
+
                 # Send ZIP file as response
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/zip')
-                self.send_header('Content-Disposition', f'attachment; filename="{zip_filename}"')
+                self.send_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{zip_filename}"')
                 self.send_header('Content-Length', str(len(zip_content)))
                 self.end_headers()
                 self.wfile.write(zip_content)
-                
+
             finally:
                 # Clean up temporary directory
                 shutil.rmtree(temp_dir, ignore_errors=True)
-                
+
         except Exception as e:
             self.logger.error(f"Error exporting voicemail box: {e}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_clear_voicemail_box(self, path: str):
         """Clear all messages from a voicemail box"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
-            # Extract extension from path: /api/voicemail-boxes/{extension}/clear
+            # Extract extension from path:
+            # /api/voicemail-boxes/{extension}/clear
             parts = path.split('/')
             extension = parts[3] if len(parts) > 3 else None
-            
+
             if not extension:
                 self._send_json({'error': 'Invalid path'}, 400)
                 return
-            
+
             vm_system = self.pbx_core.voicemail_system
             mailbox = vm_system.get_mailbox(extension)
             messages = mailbox.get_messages(unread_only=False)
-            
+
             deleted_count = 0
             for msg in messages[:]:  # Create a copy to iterate over
                 if mailbox.delete_message(msg['id']):
                     deleted_count += 1
-            
+
             self._send_json({
                 'success': True,
                 'message': f'Cleared {deleted_count} voicemail message(s) from extension {extension}',
@@ -4364,71 +4804,73 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_voicemail_greeting(self, path: str):
         """Get custom voicemail greeting"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
             # Extract extension from path
             parts = path.split('/')
             extension = parts[3] if len(parts) > 3 else None
-            
+
             if not extension:
                 self._send_json({'error': 'Invalid path'}, 400)
                 return
-            
+
             vm_system = self.pbx_core.voicemail_system
             mailbox = vm_system.get_mailbox(extension)
             greeting_path = mailbox.get_greeting_path()
-            
+
             if not greeting_path or not os.path.exists(greeting_path):
                 self._send_json({'error': 'No custom greeting found'}, 404)
                 return
-            
+
             # Serve greeting file
             with open(greeting_path, 'rb') as f:
                 greeting_data = f.read()
-            
+
             self.send_response(200)
             self.send_header('Content-Type', 'audio/wav')
-            self.send_header('Content-Disposition', f'attachment; filename="greeting_{extension}.wav"')
+            self.send_header(
+                'Content-Disposition',
+                f'attachment; filename="greeting_{extension}.wav"')
             self.send_header('Content-Length', str(len(greeting_data)))
             self.end_headers()
             self.wfile.write(greeting_data)
-            
+
         except Exception as e:
             self.logger.error(f"Error getting voicemail greeting: {e}")
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_upload_voicemail_greeting(self, path: str):
         """Upload/update custom voicemail greeting"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
             # Extract extension from path
             parts = path.split('/')
             extension = parts[3] if len(parts) > 3 else None
-            
+
             if not extension:
                 self._send_json({'error': 'Invalid path'}, 400)
                 return
-            
+
             # Get audio data from request body
             content_length = int(self.headers.get('Content-Length', 0))
             if content_length == 0:
                 self._send_json({'error': 'No audio data provided'}, 400)
                 return
-            
+
             audio_data = self.rfile.read(content_length)
-            
+
             vm_system = self.pbx_core.voicemail_system
             mailbox = vm_system.get_mailbox(extension)
-            
+
             if mailbox.save_greeting(audio_data):
                 self._send_json({
                     'success': True,
@@ -4436,28 +4878,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'Failed to save greeting'}, 500)
-                
+
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_delete_voicemail_greeting(self, path: str):
         """Delete custom voicemail greeting"""
         if not self.pbx_core or not hasattr(self.pbx_core, 'voicemail_system'):
             self._send_json({'error': 'Voicemail system not available'}, 500)
             return
-        
+
         try:
             # Extract extension from path
             parts = path.split('/')
             extension = parts[3] if len(parts) > 3 else None
-            
+
             if not extension:
                 self._send_json({'error': 'Invalid path'}, 400)
                 return
-            
+
             vm_system = self.pbx_core.voicemail_system
             mailbox = vm_system.get_mailbox(extension)
-            
+
             if mailbox.delete_greeting():
                 self._send_json({
                     'success': True,
@@ -4465,10 +4907,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 })
             else:
                 self._send_json({'error': 'No custom greeting found'}, 404)
-                
+
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
-    
+
     def _handle_get_advanced_analytics(self):
         """Get advanced analytics with date range and filters"""
         if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
@@ -4476,14 +4918,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                
+
                 start_date = params.get('start_date', [None])[0]
                 end_date = params.get('end_date', [None])[0]
-                
+
                 if not start_date or not end_date:
-                    self._send_json({'error': 'start_date and end_date parameters required'}, 400)
+                    self._send_json(
+                        {'error': 'start_date and end_date parameters required'}, 400)
                     return
-                
+
                 # Parse filters
                 filters = {}
                 if 'extension' in params:
@@ -4492,21 +4935,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     filters['disposition'] = params['disposition'][0]
                 if 'min_duration' in params:
                     filters['min_duration'] = int(params['min_duration'][0])
-                
+
                 analytics = self.pbx_core.statistics_engine.get_advanced_analytics(
-                    start_date, end_date, filters if filters else None
-                )
-                
+                    start_date, end_date, filters if filters else None)
+
                 self._send_json(analytics)
-                
+
             except ValueError as e:
-                self._send_json({'error': f'Invalid date format: {str(e)}'}, 400)
+                self._send_json(
+                    {'error': f'Invalid date format: {str(e)}'}, 400)
             except Exception as e:
                 self.logger.error(f"Error getting advanced analytics: {e}")
-                self._send_json({'error': f'Error getting advanced analytics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting advanced analytics: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Statistics engine not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Statistics engine not initialized'}, 500)
+
     def _handle_get_call_center_metrics(self):
         """Get call center performance metrics"""
         if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
@@ -4514,20 +4959,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                
+
                 days = int(params.get('days', [7])[0])
                 queue_name = params.get('queue', [None])[0]
-                
-                metrics = self.pbx_core.statistics_engine.get_call_center_metrics(days, queue_name)
-                
+
+                metrics = self.pbx_core.statistics_engine.get_call_center_metrics(
+                    days, queue_name)
+
                 self._send_json(metrics)
-                
+
             except Exception as e:
                 self.logger.error(f"Error getting call center metrics: {e}")
-                self._send_json({'error': f'Error getting call center metrics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting call center metrics: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Statistics engine not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Statistics engine not initialized'}, 500)
+
     def _handle_export_analytics(self):
         """Export analytics data to CSV"""
         if self.pbx_core and hasattr(self.pbx_core, 'statistics_engine'):
@@ -4535,48 +4983,53 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                
+
                 start_date = params.get('start_date', [None])[0]
                 end_date = params.get('end_date', [None])[0]
-                
+
                 if not start_date or not end_date:
-                    self._send_json({'error': 'start_date and end_date parameters required'}, 400)
+                    self._send_json(
+                        {'error': 'start_date and end_date parameters required'}, 400)
                     return
-                
+
                 # Get analytics data
                 analytics = self.pbx_core.statistics_engine.get_advanced_analytics(
-                    start_date, end_date, None
-                )
-                
+                    start_date, end_date, None)
+
                 # Export to CSV
-                import tempfile
                 import os
-                
-                temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv')
+                import tempfile
+
+                temp_file = tempfile.NamedTemporaryFile(
+                    mode='w', delete=False, suffix='.csv')
                 temp_file.close()
-                
-                if self.pbx_core.statistics_engine.export_to_csv(analytics['records'], temp_file.name):
+
+                if self.pbx_core.statistics_engine.export_to_csv(
+                        analytics['records'], temp_file.name):
                     # Send file
                     self.send_response(200)
                     self.send_header('Content-Type', 'text/csv')
-                    self.send_header('Content-Disposition', 
-                                    f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"')
+                    self.send_header(
+                        'Content-Disposition',
+                        f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"')
                     self.end_headers()
-                    
+
                     with open(temp_file.name, 'rb') as f:
                         self.wfile.write(f.read())
-                    
+
                     # Clean up temp file
                     os.unlink(temp_file.name)
                 else:
                     self._send_json({'error': 'Failed to export data'}, 500)
-                
+
             except Exception as e:
                 self.logger.error(f"Error exporting analytics: {e}")
-                self._send_json({'error': f'Error exporting analytics: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error exporting analytics: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Statistics engine not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Statistics engine not initialized'}, 500)
+
     def _handle_get_emergency_contacts(self):
         """Get emergency contacts"""
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
@@ -4584,21 +5037,29 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                priority_filter = int(params.get('priority', [None])[0]) if params.get('priority', [None])[0] else None
-                
-                contacts = self.pbx_core.emergency_notification.get_emergency_contacts(priority_filter)
-                
+                priority_filter = int(
+                    params.get(
+                        'priority',
+                        [None])[0]) if params.get(
+                    'priority',
+                    [None])[0] else None
+
+                contacts = self.pbx_core.emergency_notification.get_emergency_contacts(
+                    priority_filter)
+
                 self._send_json({
                     'contacts': contacts,
                     'total': len(contacts)
                 })
-                
+
             except Exception as e:
                 self.logger.error(f"Error getting emergency contacts: {e}")
-                self._send_json({'error': f'Error getting emergency contacts: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting emergency contacts: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Emergency notification system not initialized'}, 500)
+
     def _handle_add_emergency_contact(self):
         """Add emergency contact"""
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
@@ -4606,34 +5067,40 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 content_length = int(self.headers['Content-Length'])
                 body = self.rfile.read(content_length)
                 data = json.loads(body.decode('utf-8'))
-                
+
                 contact = self.pbx_core.emergency_notification.add_emergency_contact(
                     name=data.get('name'),
                     extension=data.get('extension'),
                     phone=data.get('phone'),
                     email=data.get('email'),
-                    priority=data.get('priority', 1),
-                    notification_methods=data.get('notification_methods', ['call'])
-                )
-                
+                    priority=data.get(
+                        'priority',
+                        1),
+                    notification_methods=data.get(
+                        'notification_methods',
+                        ['call']))
+
                 self._send_json({
                     'success': True,
                     'contact': contact.to_dict(),
                     'message': 'Emergency contact added successfully'
                 })
-                
+
             except Exception as e:
                 self.logger.error(f"Error adding emergency contact: {e}")
-                self._send_json({'error': f'Error adding emergency contact: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error adding emergency contact: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Emergency notification system not initialized'}, 500)
+
     def _handle_delete_emergency_contact(self, contact_id: str):
         """Delete emergency contact"""
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
             try:
-                success = self.pbx_core.emergency_notification.remove_emergency_contact(contact_id)
-                
+                success = self.pbx_core.emergency_notification.remove_emergency_contact(
+                    contact_id)
+
                 if success:
                     self._send_json({
                         'success': True,
@@ -4641,13 +5108,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     })
                 else:
                     self._send_json({'error': 'Contact not found'}, 404)
-                
+
             except Exception as e:
                 self.logger.error(f"Error deleting emergency contact: {e}")
-                self._send_json({'error': f'Error deleting emergency contact: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error deleting emergency contact: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Emergency notification system not initialized'}, 500)
+
     def _handle_trigger_emergency_notification(self):
         """Manually trigger emergency notification"""
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
@@ -4655,23 +5124,26 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 content_length = int(self.headers['Content-Length'])
                 body = self.rfile.read(content_length)
                 data = json.loads(body.decode('utf-8'))
-                
+
                 success = self.pbx_core.emergency_notification.trigger_emergency_notification(
                     trigger_type=data.get('trigger_type', 'manual'),
                     details=data.get('details', {})
                 )
-                
+
                 self._send_json({
                     'success': success,
                     'message': 'Emergency notification triggered'
                 })
-                
+
             except Exception as e:
-                self.logger.error(f"Error triggering emergency notification: {e}")
-                self._send_json({'error': f'Error triggering emergency notification: {str(e)}'}, 500)
+                self.logger.error(
+                    f"Error triggering emergency notification: {e}")
+                self._send_json(
+                    {'error': f'Error triggering emergency notification: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Emergency notification system not initialized'}, 500)
+
     def _handle_get_emergency_history(self):
         """Get emergency notification history"""
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
@@ -4680,32 +5152,37 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
                 limit = int(params.get('limit', [50])[0])
-                
-                history = self.pbx_core.emergency_notification.get_notification_history(limit)
-                
+
+                history = self.pbx_core.emergency_notification.get_notification_history(
+                    limit)
+
                 self._send_json({
                     'history': history,
                     'total': len(history)
                 })
-                
+
             except Exception as e:
                 self.logger.error(f"Error getting emergency history: {e}")
-                self._send_json({'error': f'Error getting emergency history: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error getting emergency history: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
-    
+            self._send_json(
+                {'error': 'Emergency notification system not initialized'}, 500)
+
     def _handle_test_emergency_notification(self):
         """Test emergency notification system"""
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
             try:
                 result = self.pbx_core.emergency_notification.test_emergency_notification()
                 self._send_json(result)
-                
+
             except Exception as e:
                 self.logger.error(f"Error testing emergency notification: {e}")
-                self._send_json({'error': f'Error testing emergency notification: {str(e)}'}, 500)
+                self._send_json(
+                    {'error': f'Error testing emergency notification: {str(e)}'}, 500)
         else:
-            self._send_json({'error': 'Emergency notification system not initialized'}, 500)
+            self._send_json(
+                {'error': 'Emergency notification system not initialized'}, 500)
 
 
 class PBXAPIServer:
@@ -4731,7 +5208,7 @@ class PBXAPIServer:
 
         # Set PBX core for handler
         PBXAPIHandler.pbx_core = pbx_core
-        
+
         # Configure SSL/TLS if enabled
         self._configure_ssl()
 
@@ -4739,116 +5216,139 @@ class PBXAPIServer:
         """Configure SSL context if SSL is enabled in config"""
         ssl_config = self.pbx_core.config.get('api.ssl', {})
         ssl_enabled = ssl_config.get('enabled', False)
-        
+
         if not ssl_enabled:
             self.logger.info("SSL/HTTPS is disabled - using HTTP")
             return
-        
+
         cert_file = ssl_config.get('cert_file')
         key_file = ssl_config.get('key_file')
-        
+
         # Check for in-house CA auto-request
         ca_config = ssl_config.get('ca', {})
         ca_enabled = ca_config.get('enabled', False)
-        
+
         if ca_enabled and (not cert_file or not os.path.exists(cert_file)):
-            self.logger.info("Certificate not found, attempting to request from in-house CA")
-            if self._request_certificate_from_ca(ca_config, cert_file, key_file):
-                self.logger.info("Certificate successfully obtained from in-house CA")
+            self.logger.info(
+                "Certificate not found, attempting to request from in-house CA")
+            if self._request_certificate_from_ca(
+                    ca_config, cert_file, key_file):
+                self.logger.info(
+                    "Certificate successfully obtained from in-house CA")
             else:
-                self.logger.error("Failed to obtain certificate from in-house CA")
-                self.logger.error("Falling back to manual certificate configuration")
-        
+                self.logger.error(
+                    "Failed to obtain certificate from in-house CA")
+                self.logger.error(
+                    "Falling back to manual certificate configuration")
+
         if not cert_file or not key_file:
             self.logger.error("=" * 80)
             self.logger.error("SSL CONFIGURATION ERROR")
             self.logger.error("=" * 80)
-            self.logger.error("SSL is enabled in config.yml but cert_file or key_file is not configured")
+            self.logger.error(
+                "SSL is enabled in config.yml but cert_file or key_file is not configured")
             self.logger.error("")
-            self.logger.error("To fix this issue, choose one of the following options:")
+            self.logger.error(
+                "To fix this issue, choose one of the following options:")
             self.logger.error("")
-            self.logger.error("Option 1: Generate a self-signed certificate (for development/testing)")
+            self.logger.error(
+                "Option 1: Generate a self-signed certificate (for development/testing)")
             self.logger.error("  Run: python scripts/generate_ssl_cert.py")
             self.logger.error("")
             self.logger.error("Option 2: Disable SSL temporarily")
-            self.logger.error("  Edit config.yml and set: api.ssl.enabled: false")
+            self.logger.error(
+                "  Edit config.yml and set: api.ssl.enabled: false")
             self.logger.error("")
             self.logger.error("Option 3: Enable auto-request from in-house CA")
-            self.logger.error("  Edit config.yml and set: api.ssl.ca.enabled: true")
+            self.logger.error(
+                "  Edit config.yml and set: api.ssl.ca.enabled: true")
             self.logger.error("")
-            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error(
+                "The server will continue to run on HTTP instead of HTTPS.")
             self.logger.error("=" * 80)
             return
-        
+
         if not os.path.exists(cert_file):
             self.logger.error("=" * 80)
             self.logger.error("SSL CERTIFICATE NOT FOUND")
             self.logger.error("=" * 80)
             self.logger.error(f"SSL certificate file not found: {cert_file}")
             self.logger.error("")
-            self.logger.error("To fix this issue, choose one of the following options:")
+            self.logger.error(
+                "To fix this issue, choose one of the following options:")
             self.logger.error("")
-            self.logger.error("Option 1: Generate a self-signed certificate (for development/testing)")
+            self.logger.error(
+                "Option 1: Generate a self-signed certificate (for development/testing)")
             self.logger.error("  Run: python scripts/generate_ssl_cert.py")
             self.logger.error("")
             self.logger.error("Option 2: Request a certificate from your CA")
             self.logger.error("  Run: python scripts/request_ca_cert.py")
             self.logger.error("")
             self.logger.error("Option 3: Enable auto-request from in-house CA")
-            self.logger.error("  Edit config.yml and set: api.ssl.ca.enabled: true")
+            self.logger.error(
+                "  Edit config.yml and set: api.ssl.ca.enabled: true")
             self.logger.error("")
             self.logger.error("Option 4: Disable SSL temporarily")
-            self.logger.error("  Edit config.yml and set: api.ssl.enabled: false")
+            self.logger.error(
+                "  Edit config.yml and set: api.ssl.enabled: false")
             self.logger.error("")
-            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error(
+                "The server will continue to run on HTTP instead of HTTPS.")
             self.logger.error("=" * 80)
             return
-        
+
         if not os.path.exists(key_file):
             self.logger.error("=" * 80)
             self.logger.error("SSL PRIVATE KEY NOT FOUND")
             self.logger.error("=" * 80)
             self.logger.error(f"SSL private key file not found: {key_file}")
             self.logger.error("")
-            self.logger.error("The private key file is missing. This usually means:")
+            self.logger.error(
+                "The private key file is missing. This usually means:")
             self.logger.error("  - The certificate was not generated properly")
             self.logger.error("  - The file was deleted or moved")
             self.logger.error("  - The path in config.yml is incorrect")
             self.logger.error("")
             self.logger.error("To fix this issue:")
-            self.logger.error("  1. Regenerate the certificate: python scripts/generate_ssl_cert.py")
-            self.logger.error("  2. Or disable SSL: Edit config.yml and set api.ssl.enabled: false")
+            self.logger.error(
+                "  1. Regenerate the certificate: python scripts/generate_ssl_cert.py")
+            self.logger.error(
+                "  2. Or disable SSL: Edit config.yml and set api.ssl.enabled: false")
             self.logger.error("")
-            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error(
+                "The server will continue to run on HTTP instead of HTTPS.")
             self.logger.error("=" * 80)
             return
-        
+
         try:
             # Create SSL context
             self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             self.ssl_context.load_cert_chain(cert_file, key_file)
-            
-            # Load CA certificate if provided (for client certificate validation)
+
+            # Load CA certificate if provided (for client certificate
+            # validation)
             ca_cert = ca_config.get('ca_cert')
             if ca_cert and os.path.exists(ca_cert):
                 self.ssl_context.load_verify_locations(cafile=ca_cert)
                 self.logger.info(f"Loaded CA certificate: {ca_cert}")
-            
+
             # Configure strong cipher suites
-            self.ssl_context.set_ciphers('HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4')
-            
+            self.ssl_context.set_ciphers(
+                'HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4')
+
             # Require TLS 1.2 or higher
             self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
-            
+
             # Additional security settings
             self.ssl_context.options |= ssl.OP_NO_SSLv2
             self.ssl_context.options |= ssl.OP_NO_SSLv3
             self.ssl_context.options |= ssl.OP_NO_TLSv1
             self.ssl_context.options |= ssl.OP_NO_TLSv1_1
-            
+
             self.ssl_enabled = True
-            self.logger.info(f"SSL/HTTPS enabled with certificate: {cert_file}")
-            
+            self.logger.info(
+                f"SSL/HTTPS enabled with certificate: {cert_file}")
+
         except Exception as e:
             self.logger.error("=" * 80)
             self.logger.error("SSL CONFIGURATION FAILED")
@@ -4862,10 +5362,13 @@ class PBXAPIServer:
             self.logger.error("  - Corrupted certificate files")
             self.logger.error("")
             self.logger.error("To fix this issue:")
-            self.logger.error("  1. Regenerate the certificate: python scripts/generate_ssl_cert.py")
-            self.logger.error("  2. Or disable SSL: Edit config.yml and set api.ssl.enabled: false")
+            self.logger.error(
+                "  1. Regenerate the certificate: python scripts/generate_ssl_cert.py")
+            self.logger.error(
+                "  2. Or disable SSL: Edit config.yml and set api.ssl.enabled: false")
             self.logger.error("")
-            self.logger.error("The server will continue to run on HTTP instead of HTTPS.")
+            self.logger.error(
+                "The server will continue to run on HTTP instead of HTTPS.")
             self.logger.error("=" * 80)
             import traceback
             traceback.print_exc()
@@ -4873,54 +5376,56 @@ class PBXAPIServer:
     def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
         """
         Request certificate from in-house CA
-        
+
         This generates a CSR (Certificate Signing Request) and submits it to
         the in-house CA for signing.
-        
+
         Args:
             ca_config: CA configuration dictionary
             cert_file: Path where to save the certificate
             key_file: Path where to save the private key
-            
+
         Returns:
             True if certificate was successfully obtained
         """
         try:
             import requests
             from cryptography import x509
-            from cryptography.x509.oid import NameOID
-            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives import hashes, serialization
             from cryptography.hazmat.primitives.asymmetric import rsa
-            from cryptography.hazmat.primitives import serialization
-            
+            from cryptography.x509.oid import NameOID
+
             ca_server = ca_config.get('server_url')
             ca_endpoint = ca_config.get('request_endpoint', '/api/sign-cert')
-            
+
             if not ca_server:
                 self.logger.error("CA server URL not configured")
                 return False
-            
+
             # Get server hostname/IP for certificate request
-            hostname = self.pbx_core.config.get('server.external_ip', 'localhost')
-            
-            self.logger.info(f"Requesting certificate for hostname: {hostname} from CA: {ca_server}")
-            
+            hostname = self.pbx_core.config.get(
+                'server.external_ip', 'localhost')
+
+            self.logger.info(
+                f"Requesting certificate for hostname: {hostname} from CA: {ca_server}")
+
             # Create certificate directory if it doesn't exist
             cert_dir = os.path.dirname(cert_file) or 'certs'
             os.makedirs(cert_dir, exist_ok=True)
-            
+
             # Check if we already have a private key, otherwise generate one
             if os.path.exists(key_file):
                 self.logger.info(f"Using existing private key: {key_file}")
                 with open(key_file, 'rb') as f:
-                    private_key = serialization.load_pem_private_key(f.read(), password=None)
+                    private_key = serialization.load_pem_private_key(
+                        f.read(), password=None)
             else:
                 self.logger.info("Generating new RSA private key (2048 bits)")
                 private_key = rsa.generate_private_key(
                     public_exponent=65537,
                     key_size=2048,
                 )
-                
+
                 # Save private key
                 with open(key_file, 'wb') as f:
                     f.write(private_key.private_bytes(
@@ -4928,11 +5433,11 @@ class PBXAPIServer:
                         format=serialization.PrivateFormat.TraditionalOpenSSL,
                         encryption_algorithm=serialization.NoEncryption()
                     ))
-                
+
                 # Set restrictive permissions on private key
                 os.chmod(key_file, 0o600)
                 self.logger.info(f"Private key saved to: {key_file}")
-            
+
             # Generate CSR (Certificate Signing Request)
             self.logger.info("Generating Certificate Signing Request (CSR)")
             csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
@@ -4948,17 +5453,18 @@ class PBXAPIServer:
                 ]),
                 critical=False,
             ).sign(private_key, hashes.SHA256())
-            
+
             # Convert CSR to PEM format
-            csr_pem = csr.public_bytes(serialization.Encoding.PEM).decode('utf-8')
-            
+            csr_pem = csr.public_bytes(
+                serialization.Encoding.PEM).decode('utf-8')
+
             # Submit CSR to CA
             self.logger.info(f"Submitting CSR to CA: {ca_server}{ca_endpoint}")
-            
+
             # Verify CA certificate if provided
             ca_cert = ca_config.get('ca_cert')
             verify = ca_cert if ca_cert and os.path.exists(ca_cert) else True
-            
+
             response = requests.post(
                 f"{ca_server}{ca_endpoint}",
                 json={
@@ -4968,26 +5474,28 @@ class PBXAPIServer:
                 timeout=30,
                 verify=verify
             )
-            
+
             if response.status_code != 200:
-                self.logger.error(f"CA server returned error: {response.status_code}")
+                self.logger.error(
+                    f"CA server returned error: {
+                        response.status_code}")
                 self.logger.error(f"Response: {response.text}")
                 return False
-            
+
             # Parse response
             cert_data = response.json()
             signed_cert = cert_data.get('certificate')
-            
+
             if not signed_cert:
                 self.logger.error("CA did not return a signed certificate")
                 return False
-            
+
             # Save certificate
             with open(cert_file, 'w') as f:
                 f.write(signed_cert)
-            
+
             self.logger.info(f"Certificate saved to: {cert_file}")
-            
+
             # Save CA certificate if returned
             ca_cert_data = cert_data.get('ca_certificate')
             if ca_cert_data and not ca_config.get('ca_cert'):
@@ -4995,15 +5503,17 @@ class PBXAPIServer:
                 with open(ca_cert_path, 'w') as f:
                     f.write(ca_cert_data)
                 self.logger.info(f"CA certificate saved to: {ca_cert_path}")
-            
+
             return True
-            
+
         except ImportError as e:
             self.logger.error(f"Required library not available: {e}")
-            self.logger.error("Install with: pip install requests cryptography")
+            self.logger.error(
+                "Install with: pip install requests cryptography")
             return False
         except Exception as e:
-            self.logger.error(f"Error requesting certificate from in-house CA: {e}")
+            self.logger.error(
+                f"Error requesting certificate from in-house CA: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -5012,31 +5522,32 @@ class PBXAPIServer:
         """Start API server"""
         try:
             self.server = HTTPServer((self.host, self.port), PBXAPIHandler)
-            
+
             # Wrap with SSL if enabled
             if self.ssl_enabled and self.ssl_context:
                 self.server.socket = self.ssl_context.wrap_socket(
                     self.server.socket,
                     server_side=True
                 )
-            
+
             # Set timeout on socket to allow periodic checking of running flag
             self.server.socket.settimeout(1.0)
             self.running = True
 
             protocol = "https" if self.ssl_enabled else "http"
-            
+
             # Check if there's a mismatch between config and actual state
             ssl_config = self.pbx_core.config.get('api.ssl', {})
             config_ssl_enabled = ssl_config.get('enabled', False)
-            
+
             if config_ssl_enabled and not self.ssl_enabled:
                 # SSL is enabled in config but not actually running
                 self.logger.warning("=" * 80)
                 self.logger.warning("SSL/HTTPS CONFIGURATION MISMATCH")
                 self.logger.warning("=" * 80)
                 self.logger.warning("config.yml has api.ssl.enabled: true")
-                self.logger.warning("However, SSL could not be configured (see errors above)")
+                self.logger.warning(
+                    "However, SSL could not be configured (see errors above)")
                 self.logger.warning("")
                 self.logger.warning("SERVER IS RUNNING ON HTTP (not HTTPS)")
                 self.logger.warning("")
@@ -5044,15 +5555,20 @@ class PBXAPIServer:
                 self.logger.warning(f"  http://{self.host}:{self.port}/admin/")
                 self.logger.warning("")
                 self.logger.warning("To fix this:")
-                self.logger.warning("  1. Generate SSL certificate: python scripts/generate_ssl_cert.py")
-                self.logger.warning("  2. Then restart the server: sudo systemctl restart pbx")
+                self.logger.warning(
+                    "  1. Generate SSL certificate: python scripts/generate_ssl_cert.py")
+                self.logger.warning(
+                    "  2. Then restart the server: sudo systemctl restart pbx")
                 self.logger.warning("  OR")
-                self.logger.warning("  3. Disable SSL in config.yml: set api.ssl.enabled: false")
+                self.logger.warning(
+                    "  3. Disable SSL in config.yml: set api.ssl.enabled: false")
                 self.logger.warning("=" * 80)
             else:
-                self.logger.info(f"API server started on {protocol}://{self.host}:{self.port}")
+                self.logger.info(
+                    f"API server started on {protocol}://{self.host}:{self.port}")
                 if self.ssl_enabled:
-                    self.logger.info(f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
+                    self.logger.info(
+                        f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
             # Start in separate thread
             server_thread = threading.Thread(target=self._run)

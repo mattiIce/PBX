@@ -6,6 +6,7 @@ import json
 import os
 from datetime import datetime
 from enum import Enum
+
 from pbx.utils.logger import get_logger
 
 
@@ -81,8 +82,7 @@ class CDRRecord:
             'billsec': self.billsec,
             'recording_file': self.recording_file,
             'hangup_cause': self.hangup_cause,
-            'user_agent': self.user_agent
-        }
+            'user_agent': self.user_agent}
 
 
 class CDRSystem:
@@ -219,14 +219,19 @@ class CDRSystem:
         records = self.get_records(date, limit=10000)
 
         total_calls = len(records)
-        answered_calls = sum(1 for r in records if r.get('disposition') == 'answered')
-        failed_calls = sum(1 for r in records if r.get('disposition') == 'failed')
+        answered_calls = sum(
+            1 for r in records if r.get('disposition') == 'answered')
+        failed_calls = sum(
+            1 for r in records if r.get('disposition') == 'failed')
 
         total_duration = sum(r.get('duration', 0) for r in records)
         total_billsec = sum(r.get('billsec', 0) for r in records)
 
         avg_duration = total_duration / total_calls if total_calls > 0 else 0
-        answer_rate = (answered_calls / total_calls * 100) if total_calls > 0 else 0
+        answer_rate = (
+            answered_calls /
+            total_calls *
+            100) if total_calls > 0 else 0
 
         return {
             'date': date or datetime.now().strftime("%Y-%m-%d"),
@@ -254,11 +259,13 @@ class CDRSystem:
 
         # Filter for this extension
         ext_records = [r for r in records
-                      if r.get('from_extension') == extension
-                      or r.get('to_extension') == extension]
+                       if r.get('from_extension') == extension
+                       or r.get('to_extension') == extension]
 
-        outbound = sum(1 for r in ext_records if r.get('from_extension') == extension)
-        inbound = sum(1 for r in ext_records if r.get('to_extension') == extension)
+        outbound = sum(1 for r in ext_records if r.get(
+            'from_extension') == extension)
+        inbound = sum(1 for r in ext_records if r.get(
+            'to_extension') == extension)
 
         return {
             'extension': extension,

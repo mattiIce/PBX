@@ -3,8 +3,9 @@ SIP Trunk Support
 Allows external calls through SIP providers
 """
 from enum import Enum
-from pbx.utils.logger import get_logger
+
 from pbx.utils.e911_protection import E911Protection
+from pbx.utils.logger import get_logger
 
 
 class TrunkStatus(Enum):
@@ -157,7 +158,7 @@ class SIPTrunkSystem:
 
     def __init__(self, config=None):
         """Initialize SIP trunk system
-        
+
         Args:
             config: Configuration object (optional)
         """
@@ -201,7 +202,8 @@ class SIPTrunkSystem:
             rule: OutboundRule object
         """
         self.outbound_rules.append(rule)
-        self.logger.info(f"Added outbound rule: {rule.pattern} -> trunk {rule.trunk_id}")
+        self.logger.info(
+            f"Added outbound rule: {rule.pattern} -> trunk {rule.trunk_id}")
 
     def route_outbound(self, number):
         """
@@ -214,17 +216,20 @@ class SIPTrunkSystem:
             Tuple of (trunk, transformed_number) or (None, None)
         """
         # Block E911 calls in test mode
-        if self.e911_protection.block_if_e911(number, context="route_outbound"):
-            self.logger.error(f"E911 call to {number} blocked by protection system")
+        if self.e911_protection.block_if_e911(
+                number, context="route_outbound"):
+            self.logger.error(
+                f"E911 call to {number} blocked by protection system")
             return (None, None)
-        
+
         for rule in self.outbound_rules:
             if rule.matches(number):
                 trunk = self.get_trunk(rule.trunk_id)
 
                 if trunk and trunk.can_make_call():
                     transformed = rule.transform_number(number)
-                    self.logger.info(f"Routing {number} -> {transformed} via trunk {trunk.name}")
+                    self.logger.info(
+                        f"Routing {number} -> {transformed} via trunk {trunk.name}")
                     return (trunk, transformed)
 
         self.logger.warning(f"No route found for outbound number {number}")
@@ -246,17 +251,20 @@ class SIPTrunkSystem:
             True if call initiated
         """
         # Block E911 calls in test mode
-        if self.e911_protection.block_if_e911(to_number, context="make_outbound_call"):
-            self.logger.error(f"E911 call from {from_extension} to {to_number} blocked by protection system")
+        if self.e911_protection.block_if_e911(
+                to_number, context="make_outbound_call"):
+            self.logger.error(
+                f"E911 call from {from_extension} to {to_number} blocked by protection system")
             return False
-        
+
         trunk, transformed_number = self.route_outbound(to_number)
 
         if not trunk:
             return False
 
         if trunk.allocate_channel():
-            self.logger.info(f"Making outbound call from {from_extension} to {transformed_number}")
+            self.logger.info(
+                f"Making outbound call from {from_extension} to {transformed_number}")
 
             # In a real implementation:
             # 1. Build SIP INVITE to trunk

@@ -2,12 +2,13 @@
 Operator Console / Receptionist Features
 Provides advanced call handling for receptionists and front desk staff
 """
-from pbx.utils.logger import get_logger
-from pbx.core.call import CallState
-from datetime import datetime
-from typing import Dict, List, Optional
 import json
 import os
+from datetime import datetime
+from typing import Dict, List, Optional
+
+from pbx.core.call import CallState
+from pbx.utils.logger import get_logger
 
 
 class OperatorConsole:
@@ -25,10 +26,14 @@ class OperatorConsole:
         self.config = config
         self.pbx_core = pbx_core
         self.enabled = config.get('features.operator_console.enabled', False)
-        self.operator_extensions = config.get('features.operator_console.operator_extensions', [])
-        self.enable_call_screening = config.get('features.operator_console.enable_call_screening', True)
-        self.enable_call_announce = config.get('features.operator_console.enable_call_announce', True)
-        self.blf_monitoring = config.get('features.operator_console.blf_monitoring', True)
+        self.operator_extensions = config.get(
+            'features.operator_console.operator_extensions', [])
+        self.enable_call_screening = config.get(
+            'features.operator_console.enable_call_screening', True)
+        self.enable_call_announce = config.get(
+            'features.operator_console.enable_call_announce', True)
+        self.blf_monitoring = config.get(
+            'features.operator_console.blf_monitoring', True)
 
         # Track BLF (Busy Lamp Field) status for all extensions
         self.blf_status = {}  # {extension: status}
@@ -37,11 +42,15 @@ class OperatorConsole:
         self.screening_queue = []  # List of calls waiting for screening
 
         # VIP caller database
-        self.vip_db_path = config.get('features.operator_console.vip_db_path', 'vip_callers.json')
+        self.vip_db_path = config.get(
+            'features.operator_console.vip_db_path',
+            'vip_callers.json')
         self.vip_callers = self._load_vip_database()
 
         if self.enabled:
-            self.logger.info(f"Operator console enabled for extensions: {self.operator_extensions}")
+            self.logger.info(
+                f"Operator console enabled for extensions: {
+                    self.operator_extensions}")
 
     def is_operator(self, extension: str) -> bool:
         """
@@ -127,7 +136,8 @@ class OperatorConsole:
             return False
 
         if not self.is_operator(operator_extension):
-            self.logger.warning(f"Extension {operator_extension} is not authorized as operator")
+            self.logger.warning(
+                f"Extension {operator_extension} is not authorized as operator")
             return False
 
         call = self.pbx_core.call_manager.get_call(call_id)
@@ -135,7 +145,8 @@ class OperatorConsole:
             self.logger.warning(f"Call {call_id} not found")
             return False
 
-        self.logger.info(f"Operator {operator_extension} screening call {call_id}")
+        self.logger.info(
+            f"Operator {operator_extension} screening call {call_id}")
 
         # Add call to screening queue
         self.screening_queue.append({
@@ -150,25 +161,31 @@ class OperatorConsole:
             # Call hasn't been answered yet, redirect to operator
             original_destination = call.to_extension
             call.to_extension = operator_extension
-            
+
             # Store original destination for later transfer
             if not hasattr(call, 'screening_info'):
                 call.screening_info = {}
             call.screening_info['original_destination'] = original_destination
             call.screening_info['operator'] = operator_extension
             call.screening_info['is_screening'] = True
-            
-            self.logger.info(f"Redirected call {call_id} from {original_destination} to operator {operator_extension}")
+
+            self.logger.info(
+                f"Redirected call {call_id} from {original_destination} to operator {operator_extension}")
             return True
         elif call.state == CallState.CONNECTED:
             # Call already connected, put it on hold and notify operator
             call.hold()
-            self.logger.info(f"Put call {call_id} on hold for operator screening")
+            self.logger.info(
+                f"Put call {call_id} on hold for operator screening")
             return True
 
         return False
 
-    def announce_and_transfer(self, call_id: str, announcement: str, target_extension: str) -> bool:
+    def announce_and_transfer(
+            self,
+            call_id: str,
+            announcement: str,
+            target_extension: str) -> bool:
         """
         Announce caller to recipient before transferring
 
@@ -185,24 +202,26 @@ class OperatorConsole:
 
         call = self.pbx_core.call_manager.get_call(call_id)
         if not call:
-            self.logger.warning(f"Call {call_id} not found for announced transfer")
+            self.logger.warning(
+                f"Call {call_id} not found for announced transfer")
             return False
 
-        self.logger.info(f"Announcing call {call_id} to {target_extension}: {announcement}")
+        self.logger.info(
+            f"Announcing call {call_id} to {target_extension}: {announcement}")
 
         # Step 1: Place original call on hold
         call.hold()
-        
+
         # Step 2: Store announcement for the target
         # In a real implementation, this would:
         # - Create a new call to the target extension
         # - Play the announcement (using TTS or pre-recorded message)
         # - Wait for target to accept or reject
         # - Complete the transfer if accepted, or return to operator if rejected
-        
+
         if not hasattr(call, 'transfer_info'):
             call.transfer_info = {}
-        
+
         call.transfer_info['announcement'] = announcement
         call.transfer_info['target_extension'] = target_extension
         call.transfer_info['transfer_type'] = 'announced'
@@ -211,23 +230,27 @@ class OperatorConsole:
         # Use the existing transfer mechanism
         # In a production system, this would wait for target acknowledgment
         # For now, we log the announcement and proceed with transfer
-        self.logger.info(f"Announcement logged: '{announcement}' for transfer to {target_extension}")
-        
-        # Attempt the transfer (the actual SIP transfer would happen in the call manager)
+        self.logger.info(
+            f"Announcement logged: '{announcement}' for transfer to {target_extension}")
+
+        # Attempt the transfer (the actual SIP transfer would happen in the
+        # call manager)
         try:
             # Resume the call and transfer it
             call.resume()
             # The actual transfer would be handled by the SIP server
             # This is a placeholder for the transfer mechanism
             call.transfer_target = target_extension
-            self.logger.info(f"Transfer initiated for call {call_id} to {target_extension}")
+            self.logger.info(
+                f"Transfer initiated for call {call_id} to {target_extension}")
             return True
         except Exception as e:
             self.logger.error(f"Failed to transfer call {call_id}: {e}")
             call.resume()  # Resume call with operator if transfer fails
             return False
 
-    def park_and_page(self, call_id: str, page_message: str, page_method: str = 'log') -> Optional[str]:
+    def park_and_page(self, call_id: str, page_message: str,
+                      page_method: str = 'log') -> Optional[str]:
         """
         Park call and page staff member
 
@@ -254,7 +277,11 @@ class OperatorConsole:
 
         return None
 
-    def _send_page_notification(self, message: str, park_slot: str, method: str = 'log'):
+    def _send_page_notification(
+            self,
+            message: str,
+            park_slot: str,
+            method: str = 'log'):
         """
         Send page notification via configured method
 
@@ -264,36 +291,42 @@ class OperatorConsole:
             method: Notification method
         """
         full_message = f"{message} - Retrieve call at {park_slot}"
-        
+
         if method == 'log':
             # Log-based paging (default)
             self.logger.info(f"PAGE: {full_message}")
-            
+
         elif method == 'multicast':
             # Multicast paging to speakers
             # In production, this would send RTP stream to multicast address
-            multicast_addr = self.config.get('features.operator_console.paging.multicast_address', '224.0.1.1')
-            multicast_port = self.config.get('features.operator_console.paging.multicast_port', 5004)
-            self.logger.info(f"Would send multicast page to {multicast_addr}:{multicast_port}: {full_message}")
-            
+            multicast_addr = self.config.get(
+                'features.operator_console.paging.multicast_address', '224.0.1.1')
+            multicast_port = self.config.get(
+                'features.operator_console.paging.multicast_port', 5004)
+            self.logger.info(
+                f"Would send multicast page to {multicast_addr}:{multicast_port}: {full_message}")
+
         elif method == 'sip':
             # SIP-based paging
-            paging_uri = self.config.get('features.operator_console.paging.sip_uri', 'sip:page-all@pbx.local')
-            self.logger.info(f"Would send SIP page to {paging_uri}: {full_message}")
-            
+            paging_uri = self.config.get(
+                'features.operator_console.paging.sip_uri',
+                'sip:page-all@pbx.local')
+            self.logger.info(
+                f"Would send SIP page to {paging_uri}: {full_message}")
+
         elif method == 'email':
             # Email notification (if voicemail system with email is configured)
             if hasattr(self.pbx_core, 'voicemail_system'):
                 # Would send email notification
                 self.logger.info(f"Would send email page: {full_message}")
-                
+
         else:
             self.logger.warning(f"Unknown paging method: {method}")
-        
+
         # Store page in history for tracking
         if not hasattr(self, 'page_history'):
             self.page_history = []
-        
+
         self.page_history.append({
             'message': full_message,
             'method': method,
@@ -362,7 +395,12 @@ class OperatorConsole:
             self.logger.error(f"Failed to save VIP database: {e}")
             return False
 
-    def mark_vip_caller(self, caller_id: str, priority_level: int = 1, name: str = None, notes: str = None):
+    def mark_vip_caller(
+            self,
+            caller_id: str,
+            priority_level: int = 1,
+            name: str = None,
+            notes: str = None):
         """
         Mark a caller as VIP for priority handling
 
@@ -379,7 +417,15 @@ class OperatorConsole:
             return False
 
         # Normalize caller ID (remove formatting)
-        caller_id = caller_id.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+        caller_id = caller_id.replace(
+            '-',
+            '').replace(
+            '(',
+            '').replace(
+            ')',
+            '').replace(
+                ' ',
+            '')
 
         vip_entry = {
             'caller_id': caller_id,
@@ -393,7 +439,8 @@ class OperatorConsole:
         self.vip_callers[caller_id] = vip_entry
         self._save_vip_database()
 
-        self.logger.info(f"Marked {caller_id} as VIP (priority {priority_level})")
+        self.logger.info(
+            f"Marked {caller_id} as VIP (priority {priority_level})")
         return True
 
     def unmark_vip_caller(self, caller_id: str) -> bool:
@@ -406,7 +453,15 @@ class OperatorConsole:
         Returns:
             bool: True if removed successfully
         """
-        caller_id = caller_id.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+        caller_id = caller_id.replace(
+            '-',
+            '').replace(
+            '(',
+            '').replace(
+            ')',
+            '').replace(
+                ' ',
+            '')
 
         if caller_id in self.vip_callers:
             del self.vip_callers[caller_id]
@@ -425,7 +480,15 @@ class OperatorConsole:
         Returns:
             dict: VIP caller information or None
         """
-        caller_id = caller_id.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+        caller_id = caller_id.replace(
+            '-',
+            '').replace(
+            '(',
+            '').replace(
+            ')',
+            '').replace(
+                ' ',
+            '')
         return self.vip_callers.get(caller_id)
 
     def is_vip_caller(self, caller_id: str) -> bool:
@@ -467,7 +530,7 @@ class OperatorConsole:
                 'name': queue.name,
                 'calls_waiting': queue.get_queue_depth(),
                 'available_agents': len([a for a in queue.agents.values()
-                                       if a.status == 'available']),
+                                         if a.status == 'available']),
                 'longest_wait': queue.get_longest_wait_time()
             }
 

@@ -4,9 +4,10 @@ Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 """
 import os
 import traceback
-from pbx.utils.logger import get_logger
-from typing import Optional, Dict, List
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from pbx.utils.logger import get_logger
 
 try:
     import psycopg2
@@ -42,7 +43,8 @@ class DatabaseBackend:
         self.enabled = False
 
         if self.db_type == 'postgresql' and not POSTGRES_AVAILABLE:
-            self.logger.error("PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary")
+            self.logger.error(
+                "PostgreSQL requested but psycopg2 not installed. Install with: pip install psycopg2-binary")
             self.db_type = 'sqlite'
 
         if self.db_type == 'sqlite' and not SQLITE_AVAILABLE:
@@ -58,7 +60,9 @@ class DatabaseBackend:
         Returns:
             bool: True if connected successfully
         """
-        self.logger.info(f"Initiating database connection (type: {self.db_type})...")
+        self.logger.info(
+            f"Initiating database connection (type: {
+                self.db_type})...")
         try:
             if self.db_type == 'postgresql':
                 return self._connect_postgresql()
@@ -81,7 +85,7 @@ class DatabaseBackend:
         port = self.config.get('database.port', 5432)
         database = self.config.get('database.name', 'pbx')
         user = self.config.get('database.user', 'pbx')
-        
+
         self.logger.info(f"Connecting to PostgreSQL database...")
         self.logger.info(f"  Host: {host}")
         self.logger.info(f"  Port: {port}")
@@ -102,18 +106,22 @@ class DatabaseBackend:
             self.connection.autocommit = True
             self.enabled = True
             self.logger.info("✓ Successfully connected to PostgreSQL database")
-            self.logger.info(f"  Connection established: {host}:{port}/{database}")
+            self.logger.info(
+                f"  Connection established: {host}:{port}/{database}")
             return True
         except Exception as e:
             self.logger.error(f"✗ PostgreSQL connection failed: {e}")
-            self.logger.warning("Voicemail and other data will be stored ONLY in file system")
-            self.logger.warning("To fix: Ensure PostgreSQL is running and accessible, or run 'python scripts/verify_database.py' for diagnostics")
+            self.logger.warning(
+                "Voicemail and other data will be stored ONLY in file system")
+            self.logger.warning(
+                "To fix: Ensure PostgreSQL is running and accessible, or run 'python scripts/verify_database.py' for diagnostics")
             return False
 
     def _connect_sqlite(self) -> bool:
         """Connect to SQLite database"""
         if not SQLITE_AVAILABLE:
-            self.logger.error("SQLite not available in this Python installation")
+            self.logger.error(
+                "SQLite not available in this Python installation")
             return False
 
         db_path = self.config.get('database.path', 'pbx.db')
@@ -124,7 +132,8 @@ class DatabaseBackend:
             self.connection = sqlite3.connect(db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
             # SQLite doesn't have autocommit attribute by default, so we set it explicitly
-            # This ensures consistent behavior when checking autocommit in other methods
+            # This ensures consistent behavior when checking autocommit in
+            # other methods
             self.connection.autocommit = False
             self.enabled = True
             self.logger.info(f"✓ Successfully connected to SQLite database")
@@ -142,7 +151,12 @@ class DatabaseBackend:
             self.enabled = False
             self.logger.info("Database disconnected")
 
-    def _execute_with_context(self, query: str, context: str = "query", params: tuple = None, critical: bool = True) -> bool:
+    def _execute_with_context(
+            self,
+            query: str,
+            context: str = "query",
+            params: tuple = None,
+            critical: bool = True) -> bool:
         """
         Execute a query with better error context
 
@@ -177,15 +191,16 @@ class DatabaseBackend:
                 "must be owner",           # PostgreSQL
                 "permission denied",       # PostgreSQL/SQLite
                 "access denied",           # MySQL
-                "insufficient privileges", # Oracle
+                "insufficient privileges",  # Oracle
             ]
             already_exists_errors = [
                 "already exists",
                 "duplicate",
                 "unique constraint",
             ]
-            
-            if not critical and any(pattern in error_msg for pattern in permission_errors):
+
+            if not critical and any(
+                    pattern in error_msg for pattern in permission_errors):
                 # This is expected when tables/indexes exist but user lacks ownership
                 # Log as debug instead of error to avoid alarming users
                 self.logger.debug(f"Skipping {context}: {e}")
@@ -194,7 +209,8 @@ class DatabaseBackend:
                 return True  # Return True since this is not a critical failure
             elif any(pattern in error_msg for pattern in already_exists_errors):
                 # Object already exists - this is fine
-                self.logger.debug(f"{context.capitalize()} already exists: {e}")
+                self.logger.debug(
+                    f"{context.capitalize()} already exists: {e}")
                 if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
                 return True
@@ -221,10 +237,15 @@ class DatabaseBackend:
             bool: True if successful
         """
         if not self.enabled or not self.connection:
-            self.logger.error("Execute called but database is not enabled or connected")
-            self.logger.error(f"  Enabled: {self.enabled}, Connection: {self.connection is not None}")
+            self.logger.error(
+                "Execute called but database is not enabled or connected")
+            self.logger.error(
+                f"  Enabled: {
+                    self.enabled}, Connection: {
+                    self.connection is not None}")
             return False
-        return self._execute_with_context(query, "query execution", params, critical=True)
+        return self._execute_with_context(
+            query, "query execution", params, critical=True)
 
     def fetch_one(self, query: str, params: tuple = None) -> Optional[Dict]:
         """
@@ -255,7 +276,8 @@ class DatabaseBackend:
             cursor.close()
 
             if row:
-                return dict(row) if self.db_type == 'postgresql' else {k: row[k] for k in row.keys()}
+                return dict(row) if self.db_type == 'postgresql' else {
+                    k: row[k] for k in row.keys()}
             return None
         except Exception as e:
             self.logger.error(f"Fetch one error: {e}")
@@ -407,7 +429,8 @@ class DatabaseBackend:
         )
         """
 
-        # Registered phones table - tracks phones by MAC (if available) or IP address
+        # Registered phones table - tracks phones by MAC (if available) or IP
+        # address
         registered_phones_table = """
         CREATE TABLE IF NOT EXISTS registered_phones (
             id SERIAL PRIMARY KEY,
@@ -587,13 +610,21 @@ class DatabaseBackend:
 
         # Execute table creation
         success = True
-        for table_sql in [vip_table, cdr_table, voicemail_table, registered_phones_table, 
-                         provisioned_devices_table, extensions_table, security_audit_table,
-                         emergency_contacts_table, emergency_notifications_table]:
+        for table_sql in [
+                vip_table,
+                cdr_table,
+                voicemail_table,
+                registered_phones_table,
+                provisioned_devices_table,
+                extensions_table,
+                security_audit_table,
+                emergency_contacts_table,
+                emergency_notifications_table]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
 
-        # Create indexes - use permissive execution that handles existing indexes gracefully
+        # Create indexes - use permissive execution that handles existing
+        # indexes gracefully
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_vip_caller_id ON vip_callers(caller_id)",
             "CREATE INDEX IF NOT EXISTS idx_vip_priority ON vip_callers(priority_level)",
@@ -616,13 +647,13 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_emergency_contacts_active ON emergency_contacts(active)",
             "CREATE INDEX IF NOT EXISTS idx_emergency_contacts_priority ON emergency_contacts(priority)",
             "CREATE INDEX IF NOT EXISTS idx_emergency_notifications_timestamp ON emergency_notifications(timestamp)",
-            "CREATE INDEX IF NOT EXISTS idx_emergency_notifications_trigger_type ON emergency_notifications(trigger_type)"
-        ]
+            "CREATE INDEX IF NOT EXISTS idx_emergency_notifications_trigger_type ON emergency_notifications(trigger_type)"]
 
         for index_sql in indexes:
             # Index creation failures are non-critical - indexes may already exist
             # or user may lack permissions on pre-existing tables
-            self._execute_with_context(index_sql, "index creation", critical=False)
+            self._execute_with_context(
+                index_sql, "index creation", critical=False)
 
         # Perform schema migrations for existing tables
         self._migrate_schema()
@@ -640,7 +671,7 @@ class DatabaseBackend:
         Safe migrations that handle existing columns gracefully
         """
         self.logger.info("Checking for schema migrations...")
-        
+
         # Migration: Add transcription columns to voicemail_messages
         transcription_columns = [
             ("transcription_text", "TEXT"),
@@ -649,35 +680,36 @@ class DatabaseBackend:
             ("transcription_provider", "VARCHAR(20)"),
             ("transcribed_at", "TIMESTAMP")
         ]
-        
+
         for column_name, column_type in transcription_columns:
             # Check if column exists
             check_query = """
-            SELECT column_name 
-            FROM information_schema.columns 
+            SELECT column_name
+            FROM information_schema.columns
             WHERE table_name='voicemail_messages' AND column_name=%s
             """ if self.db_type == 'postgresql' else """
             SELECT name FROM pragma_table_info('voicemail_messages') WHERE name=?
             """
-            
+
             try:
                 cursor = self.connection.cursor()
                 cursor.execute(check_query, (column_name,))
                 exists = cursor.fetchone() is not None
                 cursor.close()
-                
+
                 if not exists:
                     # Add column
                     alter_query = f"ALTER TABLE voicemail_messages ADD COLUMN {column_name} {column_type}"
                     self.logger.info(f"Adding column: {column_name}")
-                    self._execute_with_context(alter_query, f"add column {column_name}", critical=False)
+                    self._execute_with_context(
+                        alter_query, f"add column {column_name}", critical=False)
                 else:
                     self.logger.debug(f"Column {column_name} already exists")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
                 if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
-        
+
         # Migration: Add security columns to extensions table
         extensions_columns = [
             ("password_salt", "VARCHAR(255)"),
@@ -685,35 +717,39 @@ class DatabaseBackend:
             ("voicemail_pin_salt", "VARCHAR(255)"),
             ("is_admin", "BOOLEAN DEFAULT FALSE" if self.db_type == 'postgresql' else "BOOLEAN DEFAULT 0")
         ]
-        
+
         for column_name, column_type in extensions_columns:
             # Check if column exists
             check_query = """
-            SELECT column_name 
-            FROM information_schema.columns 
+            SELECT column_name
+            FROM information_schema.columns
             WHERE table_name='extensions' AND column_name=%s
             """ if self.db_type == 'postgresql' else """
             SELECT name FROM pragma_table_info('extensions') WHERE name=?
             """
-            
+
             try:
                 cursor = self.connection.cursor()
                 cursor.execute(check_query, (column_name,))
                 exists = cursor.fetchone() is not None
                 cursor.close()
-                
+
                 if not exists:
                     # Add column
                     alter_query = f"ALTER TABLE extensions ADD COLUMN {column_name} {column_type}"
-                    self.logger.info(f"Adding column to extensions: {column_name}")
-                    self._execute_with_context(alter_query, f"add column {column_name} to extensions", critical=False)
+                    self.logger.info(
+                        f"Adding column to extensions: {column_name}")
+                    self._execute_with_context(
+                        alter_query, f"add column {column_name} to extensions", critical=False)
                 else:
-                    self.logger.debug(f"Column {column_name} already exists in extensions")
+                    self.logger.debug(
+                        f"Column {column_name} already exists in extensions")
             except Exception as e:
-                self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
+                self.logger.debug(
+                    f"Column check/add for {column_name} in extensions: {e}")
                 if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
-        
+
         self.logger.info("Schema migration check complete")
 
 
@@ -730,7 +766,12 @@ class VIPCallerDB:
         self.db = db
         self.logger = get_logger()
 
-    def add_vip(self, caller_id: str, priority_level: int = 1, name: str = None, notes: str = None) -> bool:
+    def add_vip(
+            self,
+            caller_id: str,
+            priority_level: int = 1,
+            name: str = None,
+            notes: str = None) -> bool:
         """Add or update VIP caller"""
         query = """
         INSERT INTO vip_callers (caller_id, priority_level, name, notes, updated_at)
@@ -788,40 +829,46 @@ class RegisteredPhonesDB:
         self.db = db
         self.logger = get_logger()
 
-    def register_phone(self, extension_number: str, ip_address: str, 
-                      mac_address: str = None, user_agent: str = None, 
-                      contact_uri: str = None) -> tuple[bool, Optional[str]]:
+    def register_phone(self, extension_number: str, ip_address: str,
+                       mac_address: str = None, user_agent: str = None,
+                       contact_uri: str = None) -> tuple[bool, Optional[str]]:
         """
         Register or update a phone registration
-        
+
         Args:
             extension_number: Extension number
             ip_address: IP address of the phone
             mac_address: MAC address (optional, can be None)
             user_agent: User-Agent header from SIP message
             contact_uri: Contact URI from SIP message
-            
+
         Returns:
             tuple[bool, Optional[str]]: Success status and the actual MAC address stored (or None)
         """
         # First, check if this MAC or IP is registered to a DIFFERENT extension
-        # This handles reprovisioning: when a phone is moved from one extension to another
+        # This handles reprovisioning: when a phone is moved from one extension
+        # to another
         old_registrations = []
         if mac_address:
             # Check if this MAC is registered to a different extension
             old_by_mac = self.get_by_mac(mac_address)
             if old_by_mac and old_by_mac['extension_number'] != extension_number:
                 old_registrations.append(old_by_mac)
-                self.logger.info(f"Phone MAC {mac_address} was registered to extension {old_by_mac['extension_number']}, will update to {extension_number}")
-        
+                self.logger.info(
+                    f"Phone MAC {mac_address} was registered to extension {
+                        old_by_mac['extension_number']}, will update to {extension_number}")
+
         # Check if this IP is registered to a different extension
         old_by_ip = self.get_by_ip(ip_address)
         if old_by_ip and old_by_ip['extension_number'] != extension_number:
-            # Only add if it's not already in the list (avoid duplicates if MAC and IP point to same record)
+            # Only add if it's not already in the list (avoid duplicates if MAC
+            # and IP point to same record)
             if not any(r['id'] == old_by_ip['id'] for r in old_registrations):
                 old_registrations.append(old_by_ip)
-                self.logger.info(f"Phone IP {ip_address} was registered to extension {old_by_ip['extension_number']}, will update to {extension_number}")
-        
+                self.logger.info(
+                    f"Phone IP {ip_address} was registered to extension {
+                        old_by_ip['extension_number']}, will update to {extension_number}")
+
         # Delete old registrations to different extensions
         for old_reg in old_registrations:
             delete_query = """
@@ -830,74 +877,92 @@ class RegisteredPhonesDB:
             DELETE FROM registered_phones WHERE id = ?
             """
             self.db.execute(delete_query, (old_reg['id'],))
-            self.logger.info(f"Removed old registration: ext={old_reg['extension_number']}, ip={old_reg.get('ip_address')}, mac={old_reg.get('mac_address')}")
-        
-        # Now check if this phone is already registered to THIS extension (by MAC or IP)
+            self.logger.info(
+                f"Removed old registration: ext={
+                    old_reg['extension_number']}, ip={
+                    old_reg.get('ip_address')}, mac={
+                    old_reg.get('mac_address')}")
+
+        # Now check if this phone is already registered to THIS extension (by
+        # MAC or IP)
         existing = None
         if mac_address:
             existing = self.get_by_mac(mac_address, extension_number)
         if not existing:
             existing = self.get_by_ip(ip_address, extension_number)
-        
+
         if existing:
             # Update existing registration
-            # Preserve existing values if new values are None (device didn't send them)
-            updated_mac = mac_address if mac_address is not None else existing.get('mac_address')
-            updated_ip = ip_address if ip_address is not None else existing.get('ip_address')
-            updated_user_agent = user_agent if user_agent is not None else existing.get('user_agent')
-            updated_contact_uri = contact_uri if contact_uri is not None else existing.get('contact_uri')
-            
+            # Preserve existing values if new values are None (device didn't
+            # send them)
+            updated_mac = mac_address if mac_address is not None else existing.get(
+                'mac_address')
+            updated_ip = ip_address if ip_address is not None else existing.get(
+                'ip_address')
+            updated_user_agent = user_agent if user_agent is not None else existing.get(
+                'user_agent')
+            updated_contact_uri = contact_uri if contact_uri is not None else existing.get(
+                'contact_uri')
+
             query = """
-            UPDATE registered_phones 
-            SET mac_address = %s, ip_address = %s, user_agent = %s, 
+            UPDATE registered_phones
+            SET mac_address = %s, ip_address = %s, user_agent = %s,
                 contact_uri = %s, last_registered = %s
             WHERE id = %s
             """ if self.db.db_type == 'postgresql' else """
-            UPDATE registered_phones 
-            SET mac_address = ?, ip_address = ?, user_agent = ?, 
+            UPDATE registered_phones
+            SET mac_address = ?, ip_address = ?, user_agent = ?,
                 contact_uri = ?, last_registered = ?
             WHERE id = ?
             """
-            params = (updated_mac, updated_ip, updated_user_agent, updated_contact_uri, 
-                     datetime.now(), existing['id'])
+            params = (
+                updated_mac,
+                updated_ip,
+                updated_user_agent,
+                updated_contact_uri,
+                datetime.now(),
+                existing['id'])
             success = self.db.execute(query, params)
             return (success, updated_mac)
         else:
             # Insert new registration
             query = """
-            INSERT INTO registered_phones 
-            (mac_address, extension_number, ip_address, user_agent, contact_uri, 
+            INSERT INTO registered_phones
+            (mac_address, extension_number, ip_address, user_agent, contact_uri,
              first_registered, last_registered)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             """ if self.db.db_type == 'postgresql' else """
-            INSERT INTO registered_phones 
-            (mac_address, extension_number, ip_address, user_agent, contact_uri, 
+            INSERT INTO registered_phones
+            (mac_address, extension_number, ip_address, user_agent, contact_uri,
              first_registered, last_registered)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             now = datetime.now()
-            params = (mac_address, extension_number, ip_address, user_agent, 
-                     contact_uri, now, now)
+            params = (mac_address, extension_number, ip_address, user_agent,
+                      contact_uri, now, now)
             success = self.db.execute(query, params)
             return (success, mac_address)
 
-    def get_by_mac(self, mac_address: str, extension_number: str = None) -> Optional[Dict]:
+    def get_by_mac(
+            self,
+            mac_address: str,
+            extension_number: str = None) -> Optional[Dict]:
         """
         Get phone registration by MAC address
-        
+
         Args:
             mac_address: MAC address
             extension_number: Optional extension filter
-            
+
         Returns:
             dict: Phone registration data or None
         """
         if extension_number:
             query = """
-            SELECT * FROM registered_phones 
+            SELECT * FROM registered_phones
             WHERE mac_address = %s AND extension_number = %s
             """ if self.db.db_type == 'postgresql' else """
-            SELECT * FROM registered_phones 
+            SELECT * FROM registered_phones
             WHERE mac_address = ? AND extension_number = ?
             """
             return self.db.fetch_one(query, (mac_address, extension_number))
@@ -909,23 +974,26 @@ class RegisteredPhonesDB:
             """
             return self.db.fetch_one(query, (mac_address,))
 
-    def get_by_ip(self, ip_address: str, extension_number: str = None) -> Optional[Dict]:
+    def get_by_ip(
+            self,
+            ip_address: str,
+            extension_number: str = None) -> Optional[Dict]:
         """
         Get phone registration by IP address
-        
+
         Args:
             ip_address: IP address
             extension_number: Optional extension filter
-            
+
         Returns:
             dict: Phone registration data or None
         """
         if extension_number:
             query = """
-            SELECT * FROM registered_phones 
+            SELECT * FROM registered_phones
             WHERE ip_address = %s AND extension_number = %s
             """ if self.db.db_type == 'postgresql' else """
-            SELECT * FROM registered_phones 
+            SELECT * FROM registered_phones
             WHERE ip_address = ? AND extension_number = ?
             """
             return self.db.fetch_one(query, (ip_address, extension_number))
@@ -940,19 +1008,19 @@ class RegisteredPhonesDB:
     def get_by_extension(self, extension_number: str) -> List[Dict]:
         """
         Get all phone registrations for an extension
-        
+
         Args:
             extension_number: Extension number
-            
+
         Returns:
             list: List of phone registration data
         """
         query = """
-        SELECT * FROM registered_phones 
+        SELECT * FROM registered_phones
         WHERE extension_number = %s
         ORDER BY last_registered DESC
         """ if self.db.db_type == 'postgresql' else """
-        SELECT * FROM registered_phones 
+        SELECT * FROM registered_phones
         WHERE extension_number = ?
         ORDER BY last_registered DESC
         """
@@ -961,12 +1029,12 @@ class RegisteredPhonesDB:
     def list_all(self) -> List[Dict]:
         """
         List all registered phones
-        
+
         Returns:
             list: List of all phone registrations
         """
         query = """
-        SELECT * FROM registered_phones 
+        SELECT * FROM registered_phones
         ORDER BY last_registered DESC
         """
         return self.db.fetch_all(query)
@@ -974,10 +1042,10 @@ class RegisteredPhonesDB:
     def remove_phone(self, phone_id: int) -> bool:
         """
         Remove a phone registration
-        
+
         Args:
             phone_id: Phone registration ID
-            
+
         Returns:
             bool: True if successful
         """
@@ -988,42 +1056,47 @@ class RegisteredPhonesDB:
         """
         return self.db.execute(query, (phone_id,))
 
-    def update_phone_extension(self, mac_address: str, new_extension_number: str) -> bool:
+    def update_phone_extension(
+            self,
+            mac_address: str,
+            new_extension_number: str) -> bool:
         """
         Update the extension number for a phone identified by MAC address.
         This is useful when reprovisioning a phone to a different extension.
-        
+
         Note: This will update ALL registrations with the given MAC address,
         effectively moving the phone to the new extension.
-        
+
         Args:
             mac_address: MAC address of the phone to update
             new_extension_number: New extension number to assign
-            
+
         Returns:
-            bool: True if the SQL execution succeeded, False on error. 
+            bool: True if the SQL execution succeeded, False on error.
             Note: Returns True even if no matching rows were found to update.
         """
         if not mac_address:
-            self.logger.error("Cannot update phone extension: MAC address is required")
+            self.logger.error(
+                "Cannot update phone extension: MAC address is required")
             return False
-            
+
         query = """
-        UPDATE registered_phones 
+        UPDATE registered_phones
         SET extension_number = %s, last_registered = %s
         WHERE mac_address = %s
         """ if self.db.db_type == 'postgresql' else """
-        UPDATE registered_phones 
+        UPDATE registered_phones
         SET extension_number = ?, last_registered = ?
         WHERE mac_address = ?
         """
-        
+
         params = (new_extension_number, datetime.now(), mac_address)
         success = self.db.execute(query, params)
-        
+
         if success:
-            self.logger.info(f"Updated phone {mac_address} to extension {new_extension_number}")
-        
+            self.logger.info(
+                f"Updated phone {mac_address} to extension {new_extension_number}")
+
         return success
 
     def cleanup_incomplete_registrations(self) -> tuple[bool, int]:
@@ -1031,50 +1104,54 @@ class RegisteredPhonesDB:
         Remove phone registrations that are missing MAC address, IP address, or extension number.
         Only phones with all three fields (MAC, IP, and Extension) should be retained.
         This is called at startup to ensure data integrity.
-        
+
         Returns:
             tuple[bool, int]: Success status and count of removed registrations
         """
         try:
             # First, count how many incomplete registrations exist
             count_query = """
-            SELECT COUNT(*) as count FROM registered_phones 
-            WHERE mac_address IS NULL OR mac_address = '' 
+            SELECT COUNT(*) as count FROM registered_phones
+            WHERE mac_address IS NULL OR mac_address = ''
                OR ip_address IS NULL OR ip_address = ''
                OR extension_number IS NULL OR extension_number = ''
             """
             result = self.db.fetch_one(count_query)
             count = result['count'] if result else 0
-            
+
             if count == 0:
                 self.logger.info("No incomplete phone registrations found")
                 return (True, 0)
-            
+
             # Delete incomplete registrations
             delete_query = """
-            DELETE FROM registered_phones 
-            WHERE mac_address IS NULL OR mac_address = '' 
+            DELETE FROM registered_phones
+            WHERE mac_address IS NULL OR mac_address = ''
                OR ip_address IS NULL OR ip_address = ''
                OR extension_number IS NULL OR extension_number = ''
             """
             success = self.db.execute(delete_query)
-            
+
             if success:
-                self.logger.info(f"Cleaned up {count} incomplete phone registration(s) from database")
-                self.logger.info("Only phones with MAC, IP, and Extension are retained")
+                self.logger.info(
+                    f"Cleaned up {count} incomplete phone registration(s) from database")
+                self.logger.info(
+                    "Only phones with MAC, IP, and Extension are retained")
             else:
-                self.logger.error("Failed to cleanup incomplete phone registrations")
-            
+                self.logger.error(
+                    "Failed to cleanup incomplete phone registrations")
+
             return (success, count)
         except Exception as e:
-            self.logger.error(f"Error cleaning up incomplete phone registrations: {e}")
+            self.logger.error(
+                f"Error cleaning up incomplete phone registrations: {e}")
             return (False, 0)
 
     def clear_all(self) -> bool:
         """
         Clear all phone registrations from the table.
         This is typically called on server boot to remove stale registrations.
-        
+
         Returns:
             bool: True if successful
         """
@@ -1091,26 +1168,26 @@ class ExtensionDB:
     def __init__(self, db: DatabaseBackend):
         """
         Initialize extension database
-        
+
         Args:
             db: Database backend instance
         """
         self.db = db
         self.logger = get_logger()
-    
+
     def _hash_voicemail_pin(self, pin: str) -> tuple:
         """
         Hash a voicemail PIN using FIPS-compliant encryption
-        
+
         Args:
             pin: Voicemail PIN to hash
-            
+
         Returns:
             tuple: (pin_hash, pin_salt) or (None, None) if hashing fails
         """
         if not pin:
             return None, None
-            
+
         try:
             from pbx.utils.encryption import get_encryption
             enc = get_encryption()
@@ -1120,12 +1197,20 @@ class ExtensionDB:
             self.logger.error(f"Failed to hash voicemail PIN: {e}")
             return None, None
 
-    def add(self, number: str, name: str, password_hash: str, email: str = None, 
-            allow_external: bool = True, voicemail_pin: str = None, 
-            ad_synced: bool = False, ad_username: str = None, is_admin: bool = False) -> bool:
+    def add(
+            self,
+            number: str,
+            name: str,
+            password_hash: str,
+            email: str = None,
+            allow_external: bool = True,
+            voicemail_pin: str = None,
+            ad_synced: bool = False,
+            ad_username: str = None,
+            is_admin: bool = False) -> bool:
         """
         Add a new extension
-        
+
         Args:
             number: Extension number
             name: Display name
@@ -1136,18 +1221,20 @@ class ExtensionDB:
             ad_synced: Whether synced from Active Directory
             ad_username: Active Directory username (optional)
             is_admin: Whether extension has admin privileges (optional)
-            
+
         Returns:
             bool: True if successful
         """
         # Hash the voicemail PIN if provided
-        voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(voicemail_pin)
-        
+        voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(
+            voicemail_pin)
+
         # If PIN was provided but hashing failed, return False
         if voicemail_pin and not voicemail_pin_hash:
-            self.logger.error(f"Cannot add extension {number}: voicemail PIN hashing failed")
+            self.logger.error(
+                f"Cannot add extension {number}: voicemail PIN hashing failed")
             return False
-                
+
         query = """
         INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -1155,16 +1242,27 @@ class ExtensionDB:
         INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        
-        return self.db.execute(query, (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin))
+
+        return self.db.execute(
+            query,
+            (number,
+             name,
+             email,
+             password_hash,
+             allow_external,
+             voicemail_pin_hash,
+             voicemail_pin_salt,
+             ad_synced,
+             ad_username,
+             is_admin))
 
     def get(self, number: str) -> Optional[Dict]:
         """
         Get extension by number
-        
+
         Args:
             number: Extension number
-            
+
         Returns:
             dict: Extension data or None
         """
@@ -1178,7 +1276,7 @@ class ExtensionDB:
     def get_all(self) -> List[Dict]:
         """
         Get all extensions
-        
+
         Returns:
             list: List of all extensions
         """
@@ -1190,7 +1288,7 @@ class ExtensionDB:
     def get_ad_synced(self) -> List[Dict]:
         """
         Get all AD-synced extensions
-        
+
         Returns:
             list: List of AD-synced extensions
         """
@@ -1199,15 +1297,16 @@ class ExtensionDB:
         """ if self.db.db_type == 'postgresql' else """
         SELECT * FROM extensions WHERE ad_synced = 1 ORDER BY number
         """
-        return self.db.fetch_all(query, (True,)) if self.db.db_type == 'postgresql' else self.db.fetch_all(query)
+        return self.db.fetch_all(
+            query, (True,)) if self.db.db_type == 'postgresql' else self.db.fetch_all(query)
 
-    def update(self, number: str, name: str = None, email: str = None, 
+    def update(self, number: str, name: str = None, email: str = None,
                password_hash: str = None, allow_external: bool = None,
-               voicemail_pin: str = None, ad_synced: bool = None, 
+               voicemail_pin: str = None, ad_synced: bool = None,
                ad_username: str = None, is_admin: bool = None) -> bool:
         """
         Update an extension
-        
+
         Args:
             number: Extension number
             name: Display name (optional)
@@ -1218,80 +1317,91 @@ class ExtensionDB:
             ad_synced: Whether synced from Active Directory (optional)
             ad_username: Active Directory username (optional)
             is_admin: Whether extension has admin privileges (optional)
-            
+
         Returns:
             bool: True if successful
         """
         # Build update query dynamically based on provided fields
         updates = []
         params = []
-        
+
         if name is not None:
-            updates.append("name = %s" if self.db.db_type == 'postgresql' else "name = ?")
+            updates.append("name = %s" if self.db.db_type ==
+                           'postgresql' else "name = ?")
             params.append(name)
-        
+
         if email is not None:
-            updates.append("email = %s" if self.db.db_type == 'postgresql' else "email = ?")
+            updates.append("email = %s" if self.db.db_type ==
+                           'postgresql' else "email = ?")
             params.append(email)
-        
+
         if password_hash is not None:
-            updates.append("password_hash = %s" if self.db.db_type == 'postgresql' else "password_hash = ?")
+            updates.append("password_hash = %s" if self.db.db_type ==
+                           'postgresql' else "password_hash = ?")
             params.append(password_hash)
-        
+
         if allow_external is not None:
-            updates.append("allow_external = %s" if self.db.db_type == 'postgresql' else "allow_external = ?")
+            updates.append("allow_external = %s" if self.db.db_type ==
+                           'postgresql' else "allow_external = ?")
             params.append(allow_external)
-        
+
         if voicemail_pin is not None:
             # Hash the voicemail PIN before storing
-            voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(voicemail_pin)
-            
+            voicemail_pin_hash, voicemail_pin_salt = self._hash_voicemail_pin(
+                voicemail_pin)
+
             # If PIN was provided but hashing failed, return False
             if voicemail_pin and not voicemail_pin_hash:
-                self.logger.error(f"Cannot update extension {number}: voicemail PIN hashing failed")
+                self.logger.error(
+                    f"Cannot update extension {number}: voicemail PIN hashing failed")
                 return False
-                
-            updates.append("voicemail_pin_hash = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_hash = ?")
+
+            updates.append("voicemail_pin_hash = %s" if self.db.db_type ==
+                           'postgresql' else "voicemail_pin_hash = ?")
             params.append(voicemail_pin_hash)
-            updates.append("voicemail_pin_salt = %s" if self.db.db_type == 'postgresql' else "voicemail_pin_salt = ?")
+            updates.append("voicemail_pin_salt = %s" if self.db.db_type ==
+                           'postgresql' else "voicemail_pin_salt = ?")
             params.append(voicemail_pin_salt)
-        
+
         if ad_synced is not None:
-            updates.append("ad_synced = %s" if self.db.db_type == 'postgresql' else "ad_synced = ?")
+            updates.append("ad_synced = %s" if self.db.db_type ==
+                           'postgresql' else "ad_synced = ?")
             params.append(ad_synced)
-        
+
         if ad_username is not None:
-            updates.append("ad_username = %s" if self.db.db_type == 'postgresql' else "ad_username = ?")
+            updates.append("ad_username = %s" if self.db.db_type ==
+                           'postgresql' else "ad_username = ?")
             params.append(ad_username)
-        
+
         if is_admin is not None:
-            updates.append("is_admin = %s" if self.db.db_type == 'postgresql' else "is_admin = ?")
+            updates.append("is_admin = %s" if self.db.db_type ==
+                           'postgresql' else "is_admin = ?")
             params.append(is_admin)
-        
+
         if not updates:
             return True  # Nothing to update
-        
+
         # Add updated_at timestamp
         updates.append("updated_at = CURRENT_TIMESTAMP")
-        
+
         # Add number to params for WHERE clause
         params.append(number)
-        
+
         query = f"""
-        UPDATE extensions 
+        UPDATE extensions
         SET {', '.join(updates)}
         WHERE number = {'%s' if self.db.db_type == 'postgresql' else '?'}
         """
-        
+
         return self.db.execute(query, tuple(params))
 
     def delete(self, number: str) -> bool:
         """
         Delete an extension
-        
+
         Args:
             number: Extension number
-            
+
         Returns:
             bool: True if successful
         """
@@ -1305,24 +1415,25 @@ class ExtensionDB:
     def search(self, query_str: str) -> List[Dict]:
         """
         Search extensions by number, name, or email
-        
+
         Args:
             query_str: Search query
-            
+
         Returns:
             list: List of matching extensions
         """
         search_pattern = f"%{query_str}%"
         query = """
-        SELECT * FROM extensions 
+        SELECT * FROM extensions
         WHERE number LIKE %s OR name LIKE %s OR email LIKE %s
         ORDER BY number
         """ if self.db.db_type == 'postgresql' else """
-        SELECT * FROM extensions 
+        SELECT * FROM extensions
         WHERE number LIKE ? OR name LIKE ? OR email LIKE ?
         ORDER BY number
         """
-        return self.db.fetch_all(query, (search_pattern, search_pattern, search_pattern))
+        return self.db.fetch_all(
+            query, (search_pattern, search_pattern, search_pattern))
 
 
 class ProvisionedDevicesDB:
@@ -1331,18 +1442,24 @@ class ProvisionedDevicesDB:
     def __init__(self, db: DatabaseBackend):
         """
         Initialize provisioned devices database
-        
+
         Args:
             db: Database backend instance
         """
         self.db = db
         self.logger = get_logger()
 
-    def add_device(self, mac_address: str, extension_number: str, vendor: str, 
-                   model: str, static_ip: str = None, config_url: str = None) -> bool:
+    def add_device(
+            self,
+            mac_address: str,
+            extension_number: str,
+            vendor: str,
+            model: str,
+            static_ip: str = None,
+            config_url: str = None) -> bool:
         """
         Add or update a provisioned device
-        
+
         Args:
             mac_address: MAC address (normalized format)
             extension_number: Extension number
@@ -1350,54 +1467,54 @@ class ProvisionedDevicesDB:
             model: Phone model
             static_ip: Static IP address (optional)
             config_url: Configuration URL (optional)
-            
+
         Returns:
             bool: True if successful
         """
         # Check if device already exists
         existing = self.get_device(mac_address)
-        
+
         if existing:
             # Update existing device
             query = """
-            UPDATE provisioned_devices 
+            UPDATE provisioned_devices
             SET extension_number = %s, vendor = %s, model = %s, static_ip = %s,
                 config_url = %s, updated_at = %s
             WHERE mac_address = %s
             """ if self.db.db_type == 'postgresql' else """
-            UPDATE provisioned_devices 
+            UPDATE provisioned_devices
             SET extension_number = ?, vendor = ?, model = ?, static_ip = ?,
                 config_url = ?, updated_at = ?
             WHERE mac_address = ?
             """
-            params = (extension_number, vendor, model, static_ip, config_url, 
-                     datetime.now(), mac_address)
+            params = (extension_number, vendor, model, static_ip, config_url,
+                      datetime.now(), mac_address)
         else:
             # Insert new device
             query = """
-            INSERT INTO provisioned_devices 
-            (mac_address, extension_number, vendor, model, static_ip, config_url, 
+            INSERT INTO provisioned_devices
+            (mac_address, extension_number, vendor, model, static_ip, config_url,
              created_at, updated_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """ if self.db.db_type == 'postgresql' else """
-            INSERT INTO provisioned_devices 
-            (mac_address, extension_number, vendor, model, static_ip, config_url, 
+            INSERT INTO provisioned_devices
+            (mac_address, extension_number, vendor, model, static_ip, config_url,
              created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """
             now = datetime.now()
-            params = (mac_address, extension_number, vendor, model, static_ip, 
-                     config_url, now, now)
-        
+            params = (mac_address, extension_number, vendor, model, static_ip,
+                      config_url, now, now)
+
         return self.db.execute(query, params)
 
     def get_device(self, mac_address: str) -> Optional[Dict]:
         """
         Get provisioned device by MAC address
-        
+
         Args:
             mac_address: MAC address (normalized format)
-            
+
         Returns:
             dict: Device data or None
         """
@@ -1411,10 +1528,10 @@ class ProvisionedDevicesDB:
     def get_device_by_extension(self, extension_number: str) -> Optional[Dict]:
         """
         Get provisioned device by extension number
-        
+
         Args:
             extension_number: Extension number
-            
+
         Returns:
             dict: Device data or None
         """
@@ -1428,10 +1545,10 @@ class ProvisionedDevicesDB:
     def get_device_by_ip(self, static_ip: str) -> Optional[Dict]:
         """
         Get provisioned device by static IP address
-        
+
         Args:
             static_ip: Static IP address
-            
+
         Returns:
             dict: Device data or None
         """
@@ -1445,12 +1562,12 @@ class ProvisionedDevicesDB:
     def list_all(self) -> List[Dict]:
         """
         List all provisioned devices
-        
+
         Returns:
             list: List of all provisioned devices
         """
         query = """
-        SELECT * FROM provisioned_devices 
+        SELECT * FROM provisioned_devices
         ORDER BY extension_number
         """
         return self.db.fetch_all(query)
@@ -1458,10 +1575,10 @@ class ProvisionedDevicesDB:
     def remove_device(self, mac_address: str) -> bool:
         """
         Remove a provisioned device
-        
+
         Args:
             mac_address: MAC address
-            
+
         Returns:
             bool: True if successful
         """
@@ -1475,19 +1592,19 @@ class ProvisionedDevicesDB:
     def mark_provisioned(self, mac_address: str) -> bool:
         """
         Mark device as provisioned (update last_provisioned timestamp)
-        
+
         Args:
             mac_address: MAC address
-            
+
         Returns:
             bool: True if successful
         """
         query = """
-        UPDATE provisioned_devices 
+        UPDATE provisioned_devices
         SET last_provisioned = %s
         WHERE mac_address = %s
         """ if self.db.db_type == 'postgresql' else """
-        UPDATE provisioned_devices 
+        UPDATE provisioned_devices
         SET last_provisioned = ?
         WHERE mac_address = ?
         """
@@ -1496,20 +1613,20 @@ class ProvisionedDevicesDB:
     def set_static_ip(self, mac_address: str, static_ip: str) -> bool:
         """
         Set or update static IP for a device
-        
+
         Args:
             mac_address: MAC address
             static_ip: Static IP address
-            
+
         Returns:
             bool: True if successful
         """
         query = """
-        UPDATE provisioned_devices 
+        UPDATE provisioned_devices
         SET static_ip = %s, updated_at = %s
         WHERE mac_address = %s
         """ if self.db.db_type == 'postgresql' else """
-        UPDATE provisioned_devices 
+        UPDATE provisioned_devices
         SET static_ip = ?, updated_at = ?
         WHERE mac_address = ?
         """
