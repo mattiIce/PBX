@@ -1103,7 +1103,7 @@ async function loadVoicemailTab() {
     }
 }
 
-async function loadVoicemailForExtension() {
+window.loadVoicemailForExtension = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -1132,7 +1132,7 @@ async function loadVoicemailForExtension() {
         console.error('Error loading voicemail:', error);
         showNotification('Failed to load voicemail messages', 'error');
     }
-}
+};
 
 function updateVoicemailCardsView(messages, extension) {
     const cardsContainer = document.getElementById('voicemail-cards-view');
