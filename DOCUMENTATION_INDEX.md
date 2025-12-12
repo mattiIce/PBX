@@ -55,7 +55,11 @@ Secure your PBX deployment:
 
 - **[SECURITY.md](SECURITY.md)** - Security summary and CodeQL analysis results
 - **[SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md)** - Comprehensive security guide for production
+- **[FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md)** - ⭐ **Current FIPS compliance status and quick reference**
 - **[FIPS_COMPLIANCE.md](FIPS_COMPLIANCE.md)** - FIPS 140-2 compliance guide for regulated industries
+- **[FIPS_QUICK_REFERENCE.md](FIPS_QUICK_REFERENCE.md)** - Quick reference for FIPS operations
+- **[FIPS_VERIFICATION_SUMMARY.md](FIPS_VERIFICATION_SUMMARY.md)** - FIPS verification and testing summary
+- **[UBUNTU_FIPS_GUIDE.md](UBUNTU_FIPS_GUIDE.md)** - Ubuntu FIPS deployment guide
 
 ## Development Documentation
 
@@ -138,9 +142,10 @@ Must read:
 ### Security Officer
 
 Must read:
-1. SECURITY.md
-2. SECURITY_BEST_PRACTICES.md
-3. FIPS_COMPLIANCE.md
+1. FIPS_COMPLIANCE_STATUS.md (current compliance status)
+2. SECURITY.md
+3. SECURITY_BEST_PRACTICES.md
+4. FIPS_COMPLIANCE.md (detailed guide)
 
 ### Project Manager
 

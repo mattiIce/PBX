@@ -106,6 +106,11 @@ def generate_health_report():
     
     health_score = (weighted_score / total_weight) * 100
     
+    # Count passed checks
+    checks_list = [kernel_fips, python_fips, crypto_fips, fips_mode, encryption_ok]
+    passed_checks = sum(1 for c in checks_list if c)
+    total_checks = len(checks_list)
+    
     # Determine status
     if health_score == 100:
         status = "HEALTHY"
