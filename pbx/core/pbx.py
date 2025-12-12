@@ -807,6 +807,15 @@ class PBXCore:
             
         return None
 
+    def _get_dtmf_payload_type(self):
+        """
+        Get DTMF payload type from configuration
+        
+        Returns:
+            DTMF payload type as integer (default: 101)
+        """
+        return self.config.get('features.dtmf.payload_type', 101)
+
     def route_call(self, from_header, to_header, call_id, message, from_addr):
         """
         Route call from one extension to another
@@ -1007,7 +1016,7 @@ class PBXCore:
             
             # Create new INVITE with PBX's RTP endpoint in SDP
             # Get DTMF payload type from config
-            dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
+            dtmf_payload_type = self._get_dtmf_payload_type()
             callee_sdp_body = SDPBuilder.build_audio_sdp(
                 server_ip,
                 rtp_ports[0],
@@ -1176,7 +1185,7 @@ class PBXCore:
 
             # Build SDP for caller (with PBX RTP endpoint)
             # Get DTMF payload type from config
-            dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
+            dtmf_payload_type = self._get_dtmf_payload_type()
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
@@ -1544,7 +1553,7 @@ class PBXCore:
 
             # Build SDP for the voicemail recording endpoint
             # Get DTMF payload type from config
-            dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
+            dtmf_payload_type = self._get_dtmf_payload_type()
             voicemail_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
@@ -1922,7 +1931,7 @@ class PBXCore:
 
         # Build SDP for answering, using phone-model-specific codecs
         # Get DTMF payload type from config
-        dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
+        dtmf_payload_type = self._get_dtmf_payload_type()
         aa_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
@@ -2374,7 +2383,7 @@ class PBXCore:
 
         # Build SDP for answering, using phone-model-specific codecs
         # Get DTMF payload type from config
-        dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
+        dtmf_payload_type = self._get_dtmf_payload_type()
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
@@ -2568,7 +2577,7 @@ class PBXCore:
 
         # Build SDP for answering, using phone-model-specific codecs
         # Get DTMF payload type from config
-        dtmf_payload_type = self.config.get('features.dtmf.payload_type', 101)
+        dtmf_payload_type = self._get_dtmf_payload_type()
         paging_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
