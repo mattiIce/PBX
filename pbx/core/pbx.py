@@ -704,6 +704,109 @@ class PBXCore:
 
         return mac_address
 
+    def _detect_phone_model(self, user_agent):
+        """
+        Detect phone model from User-Agent string
+        
+        Args:
+            user_agent: User-Agent header string
+            
+        Returns:
+            Phone model identifier string or None
+            Possible values: 'ZIP33G', 'ZIP37G', or None for unknown/other
+        """
+        if not user_agent:
+            return None
+            
+        user_agent_upper = user_agent.upper()
+        
+        # Check for Zultys ZIP33G
+        if 'ZIP33G' in user_agent_upper or 'ZIP 33G' in user_agent_upper:
+            return 'ZIP33G'
+            
+        # Check for Zultys ZIP37G
+        if 'ZIP37G' in user_agent_upper or 'ZIP 37G' in user_agent_upper:
+            return 'ZIP37G'
+            
+        return None
+
+    def _get_codecs_for_phone_model(self, phone_model, default_codecs=None):
+        """
+        Get appropriate codec list for a specific phone model
+        
+        Args:
+            phone_model: Phone model identifier (from _detect_phone_model)
+            default_codecs: Default codecs to use if no specific requirement
+            
+        Returns:
+            List of codec payload types as strings
+        """
+        # Get DTMF payload type from config (default 101)
+        dtmf_payload_type = self.config.get('dtmf.payload_type', 101)
+        dtmf_pt_str = str(dtmf_payload_type)
+        
+        if phone_model == 'ZIP37G':
+            # ZIP37G: Use PCMU/PCMA only
+            # Payload types: 0=PCMU, 8=PCMA
+            codecs = ['0', '8', dtmf_pt_str]
+            self.logger.debug(f"Using ZIP37G codec set: PCMU/PCMA ({codecs})")
+            return codecs
+            
+        elif phone_model == 'ZIP33G':
+            # ZIP33G: Use G726, G729, G722
+            # Payload types: 2=G726-32, 18=G729, 9=G722
+            # Also include G726 variants: 112=G726-16, 113=G726-24, 114=G726-40
+            codecs = ['2', '18', '9', '114', '113', '112', dtmf_pt_str]
+            self.logger.debug(f"Using ZIP33G codec set: G726/G729/G722 ({codecs})")
+            return codecs
+            
+        # For unknown or other phones, use default behavior
+        if default_codecs:
+            self.logger.debug(f"Using default codec set for unknown phone: {default_codecs}")
+            return default_codecs
+            
+        # Ultimate fallback - standard codec list
+        return ['0', '8', '9', '18', '2', dtmf_pt_str]
+
+    def _get_phone_user_agent(self, extension_number):
+        """
+        Get User-Agent string for a registered phone by extension number
+        
+        Args:
+            extension_number: Extension number string
+            
+        Returns:
+            User-Agent string or None if not found
+        """
+        if not self.registered_phones_db or not self.database:
+            return None
+            
+        try:
+            # Query registered_phones table for this extension
+            # Build query with appropriate placeholder for database type
+            if self.database.db_type == 'postgresql':
+                query = """
+                SELECT user_agent FROM registered_phones 
+                WHERE extension_number = %s
+                ORDER BY last_registered DESC
+                LIMIT 1
+                """
+            else:
+                query = """
+                SELECT user_agent FROM registered_phones 
+                WHERE extension_number = ?
+                ORDER BY last_registered DESC
+                LIMIT 1
+                """
+            
+            result = self.database.fetch_one(query, (extension_number,))
+            if result and result.get('user_agent'):
+                return result['user_agent']
+        except Exception as e:
+            self.logger.debug(f"Error retrieving User-Agent for extension {extension_number}: {e}")
+            
+        return None
+
     def route_call(self, from_header, to_header, call_id, message, from_addr):
         """
         Route call from one extension to another
@@ -882,13 +985,32 @@ class PBXCore:
         server_ip = self._get_server_ip()
 
         if rtp_ports:
+            # Determine which codecs to offer based on callee's phone model
+            # Get callee's User-Agent to detect phone model
+            callee_user_agent = self._get_phone_user_agent(to_ext)
+            callee_phone_model = self._detect_phone_model(callee_user_agent)
+            
+            # Select appropriate codecs for the callee's phone
+            # - ZIP37G: PCMU/PCMA only
+            # - ZIP33G: G726/G729/G722 only
+            # - Other phones: use caller's codecs (existing behavior)
+            codecs_for_callee = self._get_codecs_for_phone_model(
+                callee_phone_model, 
+                default_codecs=caller_codecs
+            )
+            
+            if callee_phone_model:
+                self.logger.info(
+                    f"Detected callee phone model: {callee_phone_model}, "
+                    f"offering codecs: {codecs_for_callee}"
+                )
+            
             # Create new INVITE with PBX's RTP endpoint in SDP
-            # Use caller's codecs to ensure compatibility
             callee_sdp_body = SDPBuilder.build_audio_sdp(
                 server_ip,
                 rtp_ports[0],
                 session_id=call_id,
-                codecs=caller_codecs  # Pass caller's codecs for proper negotiation
+                codecs=codecs_for_callee
             )
 
             # Forward INVITE to callee
@@ -1025,16 +1147,36 @@ class PBXCore:
         server_ip = self._get_server_ip()
 
         if call.rtp_ports and call.caller_addr:
-            # Extract caller's codecs for compatibility
+            # Determine which codecs to offer based on caller's phone model
+            # Get caller's User-Agent to detect phone model
+            caller_user_agent = self._get_phone_user_agent(call.from_extension)
+            caller_phone_model = self._detect_phone_model(caller_user_agent)
+            
+            # Extract caller's codecs from the original INVITE
             caller_codecs = call.caller_rtp.get(
                 'formats', None) if call.caller_rtp else None
+            
+            # Select appropriate codecs for the caller's phone
+            # - ZIP37G: PCMU/PCMA only
+            # - ZIP33G: G726/G729/G722 only
+            # - Other phones: use caller's codecs (existing behavior)
+            codecs_for_caller = self._get_codecs_for_phone_model(
+                caller_phone_model,
+                default_codecs=caller_codecs
+            )
+            
+            if caller_phone_model:
+                self.logger.info(
+                    f"Detected caller phone model: {caller_phone_model}, "
+                    f"offering codecs in 200 OK: {codecs_for_caller}"
+                )
 
             # Build SDP for caller (with PBX RTP endpoint)
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
                 session_id=call_id,
-                codecs=caller_codecs  # Use caller's codecs
+                codecs=codecs_for_caller
             )
 
             # Build 200 OK for caller using original INVITE
@@ -1373,17 +1515,33 @@ class PBXCore:
         if call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports:
             server_ip = self._get_server_ip()
 
-            # Extract caller's codecs from the stored RTP info for
-            # compatibility
+            # Determine which codecs to offer based on caller's phone model
+            # Get caller's User-Agent to detect phone model
+            caller_user_agent = self._get_phone_user_agent(call.from_extension)
+            caller_phone_model = self._detect_phone_model(caller_user_agent)
+            
+            # Extract caller's codecs from the stored RTP info
             caller_codecs = call.caller_rtp.get(
                 'formats', None) if call.caller_rtp else None
+            
+            # Select appropriate codecs for the caller's phone
+            codecs_for_caller = self._get_codecs_for_phone_model(
+                caller_phone_model,
+                default_codecs=caller_codecs
+            )
+            
+            if caller_phone_model:
+                self.logger.info(
+                    f"Voicemail: Detected caller phone model: {caller_phone_model}, "
+                    f"offering codecs: {codecs_for_caller}"
+                )
 
             # Build SDP for the voicemail recording endpoint
             voicemail_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
                 session_id=call_id,
-                codecs=caller_codecs  # Use caller's codecs
+                codecs=codecs_for_caller
             )
 
             # Send 200 OK to answer the call for voicemail recording
@@ -1736,12 +1894,29 @@ class PBXCore:
 
         # Answer the call
 
-        # Build SDP for answering, using caller's codecs for compatibility
+        # Determine which codecs to offer based on caller's phone model
+        # Get caller's User-Agent to detect phone model
+        caller_user_agent = self._get_phone_user_agent(from_ext)
+        caller_phone_model = self._detect_phone_model(caller_user_agent)
+        
+        # Select appropriate codecs for the caller's phone
+        codecs_for_caller = self._get_codecs_for_phone_model(
+            caller_phone_model,
+            default_codecs=caller_codecs
+        )
+        
+        if caller_phone_model:
+            self.logger.info(
+                f"Auto attendant: Detected caller phone model: {caller_phone_model}, "
+                f"offering codecs: {codecs_for_caller}"
+            )
+
+        # Build SDP for answering, using phone-model-specific codecs
         aa_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
             session_id=call_id,
-            codecs=caller_codecs  # Use caller's codecs
+            codecs=codecs_for_caller
         )
 
         # Send 200 OK to answer the call
@@ -2168,12 +2343,29 @@ class PBXCore:
         server_ip = self._get_server_ip()
         self.logger.info(f"[VM Access] Server IP: {server_ip}")
 
-        # Build SDP for answering, using caller's codecs for compatibility
+        # Determine which codecs to offer based on caller's phone model
+        # Get caller's User-Agent to detect phone model
+        caller_user_agent = self._get_phone_user_agent(from_ext)
+        caller_phone_model = self._detect_phone_model(caller_user_agent)
+        
+        # Select appropriate codecs for the caller's phone
+        codecs_for_caller = self._get_codecs_for_phone_model(
+            caller_phone_model,
+            default_codecs=caller_codecs
+        )
+        
+        if caller_phone_model:
+            self.logger.info(
+                f"[VM Access] Detected caller phone model: {caller_phone_model}, "
+                f"offering codecs: {codecs_for_caller}"
+            )
+
+        # Build SDP for answering, using phone-model-specific codecs
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
             session_id=call_id,
-            codecs=caller_codecs  # Use caller's codecs
+            codecs=codecs_for_caller
         )
         self.logger.info(
             f"[VM Access] ✓ SDP built for response (RTP port: {
@@ -2342,12 +2534,29 @@ class PBXCore:
         # Answer the call immediately (auto-answer for paging)
         server_ip = self._get_server_ip()
 
-        # Build SDP for answering, using caller's codecs for compatibility
+        # Determine which codecs to offer based on caller's phone model
+        # Get caller's User-Agent to detect phone model
+        caller_user_agent = self._get_phone_user_agent(from_ext)
+        caller_phone_model = self._detect_phone_model(caller_user_agent)
+        
+        # Select appropriate codecs for the caller's phone
+        codecs_for_caller = self._get_codecs_for_phone_model(
+            caller_phone_model,
+            default_codecs=caller_codecs
+        )
+        
+        if caller_phone_model:
+            self.logger.info(
+                f"Paging: Detected caller phone model: {caller_phone_model}, "
+                f"offering codecs: {codecs_for_caller}"
+            )
+
+        # Build SDP for answering, using phone-model-specific codecs
         paging_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
             session_id=call_id,
-            codecs=caller_codecs  # Use caller's codecs
+            codecs=codecs_for_caller
         )
 
         # Send 200 OK to answer the call
