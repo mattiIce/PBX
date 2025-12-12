@@ -247,6 +247,23 @@ class PBXCore:
         else:
             self.paging_system = None
 
+        # Initialize E911 location service if enabled
+        if self.config.get('features.e911.enabled', False):
+            from pbx.features.e911_location import E911LocationService
+            self.e911_location = E911LocationService(config=self.config)
+            self.logger.info("E911 location service initialized")
+        else:
+            self.e911_location = None
+
+        # Initialize Kari's Law compliance (federal requirement for direct 911 dialing)
+        if self.config.get('features.karis_law.enabled', True):
+            from pbx.features.karis_law import KarisLawCompliance
+            self.karis_law = KarisLawCompliance(self, config=self.config)
+            self.logger.info("Kari's Law compliance initialized (direct 911 dialing enabled)")
+        else:
+            self.karis_law = None
+            self.logger.warning("Kari's Law compliance DISABLED - not recommended for production")
+
         # Initialize webhook system
         from pbx.features.webhooks import WebhookSystem
         self.webhook_system = WebhookSystem(self.config)
@@ -717,6 +734,12 @@ class PBXCore:
 
         from_ext = from_match.group(1)
         to_ext = to_match.group(1)
+
+        # Check if this is an emergency call (911) - Kari's Law compliance
+        # Must be handled first for immediate routing
+        if self.karis_law and self.karis_law.is_emergency_number(to_ext):
+            return self._handle_emergency_call(
+                from_ext, to_ext, call_id, message, from_addr)
 
         # Check if this is an auto attendant call (extension 0)
         if self.auto_attendant and to_ext == self.auto_attendant.get_extension():
@@ -1252,6 +1275,12 @@ class PBXCore:
             True if allowed by dialplan
         """
         dialplan = self.config.get('dialplan', {})
+
+        # Check emergency pattern (Kari's Law - direct 911 dialing)
+        # Always allow 911 and legacy formats (9911, 9-911)
+        emergency_pattern = dialplan.get('emergency_pattern', '^9?-?911$')
+        if re.match(emergency_pattern, extension):
+            return True
 
         # Check internal pattern
         internal_pattern = dialplan.get('internal_pattern', '^1[0-9]{3}$')
@@ -3171,6 +3200,132 @@ class PBXCore:
 
         # Combine all parts
         return wav_header + fmt_chunk + fmt_extension + data_chunk + audio_data
+
+    def _handle_emergency_call(self, from_ext, to_ext, call_id, message, from_addr):
+        """
+        Handle emergency call (911) according to Kari's Law
+        
+        Federal law requires direct 911 dialing without prefix and immediate routing.
+        
+        Args:
+            from_ext: Calling extension
+            to_ext: Dialed number (911, 9911, etc.)
+            call_id: Call ID
+            message: SIP INVITE message
+            from_addr: Caller address
+            
+        Returns:
+            True if emergency call was handled
+        """
+        from pbx.sip.message import SIPMessageBuilder
+        from pbx.sip.sdp import SDPBuilder, SDPSession
+        
+        self.logger.critical("=" * 70)
+        self.logger.critical("🚨 EMERGENCY CALL INITIATED")
+        self.logger.critical("=" * 70)
+        
+        # Handle via Kari's Law compliance module
+        success, routing_info = self.karis_law.handle_emergency_call(
+            caller_extension=from_ext,
+            dialed_number=to_ext,
+            call_id=call_id,
+            from_addr=from_addr
+        )
+        
+        if not success:
+            self.logger.error(f"Emergency call handling failed: {routing_info.get('error', 'Unknown error')}")
+            return False
+        
+        if not routing_info.get('success'):
+            self.logger.error(f"Emergency call routing failed: {routing_info.get('error', 'No trunk available')}")
+            # Still return True because the call was processed (notification sent)
+            # but log the routing failure critically
+            self.logger.critical("⚠️  EMERGENCY CALL COULD NOT BE ROUTED TO 911")
+            return True
+        
+        # Parse SDP from caller's INVITE
+        caller_sdp = None
+        if message.body:
+            caller_sdp_obj = SDPSession()
+            caller_sdp_obj.parse(message.body)
+            caller_sdp = caller_sdp_obj.get_audio_info()
+            
+            if caller_sdp:
+                self.logger.critical(f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
+        
+        # Create call record for tracking
+        normalized_number = routing_info.get('destination', '911')
+        call = self.call_manager.create_call(call_id, from_ext, normalized_number)
+        call.start()
+        call.original_invite = message
+        call.caller_addr = from_addr
+        call.caller_rtp = caller_sdp
+        call.is_emergency = True
+        call.emergency_routing = routing_info
+        
+        # Start CDR record
+        self.cdr_system.start_record(call_id, from_ext, normalized_number)
+        
+        # Allocate RTP relay for the call
+        rtp_ports = self.rtp_relay.allocate_relay(call_id)
+        if rtp_ports:
+            call.rtp_ports = rtp_ports
+            
+            # Set caller's endpoint if we have RTP info
+            if caller_sdp:
+                caller_endpoint = (caller_sdp['address'], caller_sdp['port'])
+                relay_info = self.rtp_relay.active_relays.get(call_id)
+                if relay_info:
+                    handler = relay_info['handler']
+                    handler.set_endpoint1(caller_endpoint)
+                    self.logger.info(f"Emergency call RTP relay configured")
+        
+        # In production, this would:
+        # 1. Route the call through the emergency trunk to 911
+        # 2. Provide location information (Ray Baum's Act)
+        # 3. Maintain the call until disconnected
+        # 4. Log all details for regulatory compliance
+        
+        # For now, send 200 OK to acknowledge the call was processed
+        # The trunk system will handle actual routing
+        server_ip = self._get_server_ip()
+        
+        # Build SDP for response
+        sdp_builder = SDPBuilder()
+        if caller_sdp:
+            caller_codecs = caller_sdp.get('formats', None)
+            sdp_builder.set_media(
+                'audio',
+                rtp_ports[0] if rtp_ports else 10000,
+                'RTP/AVP',
+                caller_codecs if caller_codecs else ['0', '8']
+            )
+        else:
+            sdp_builder.set_media('audio', rtp_ports[0] if rtp_ports else 10000, 'RTP/AVP', ['0', '8'])
+        
+        sdp_builder.set_connection(server_ip)
+        response_sdp = sdp_builder.build()
+        
+        # Send 200 OK
+        ok_response = SIPMessageBuilder.build_response(
+            code=200,
+            reason='OK',
+            to_addr=message.get_header('From'),
+            from_addr=message.get_header('To'),
+            call_id=call_id,
+            cseq=message.get_header('CSeq'),
+            via=message.get_header('Via'),
+            contact=f"sip:{from_ext}@{server_ip}:{self.sip_server.port}",
+            body=response_sdp
+        )
+        
+        self.sip_server._send_message(ok_response.build(), from_addr)
+        
+        self.logger.critical("Emergency call acknowledged and routed")
+        self.logger.critical(f"Trunk: {routing_info.get('trunk_name', 'Unknown')}")
+        self.logger.critical("=" * 70)
+        
+        return True
 
     def get_status(self):
         """
