@@ -56,8 +56,11 @@ class SessionToken:
     
     def _sign(self, message: str) -> str:
         """Create HMAC-SHA256 signature"""
-        signature = hashlib.sha256(
-            self.secret_key + message.encode('utf-8')
+        import hmac
+        signature = hmac.new(
+            self.secret_key,
+            message.encode('utf-8'),
+            hashlib.sha256
         ).digest()
         return self._base64_encode(signature)
     
@@ -177,7 +180,7 @@ class SessionToken:
             payload_json = self._base64_decode(parts[1])
             payload = json.loads(payload_json)
             return payload.get('extension')
-        except:
+        except Exception:
             return None
 
 

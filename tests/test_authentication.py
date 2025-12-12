@@ -106,6 +106,18 @@ class TestSessionToken(unittest.TestCase):
         # Should be the same instance
         self.assertIs(manager1, manager2)
 
+    def test_auto_generated_key_entropy(self):
+        """Test that auto-generated secret keys have sufficient entropy"""
+        # Create a token manager with auto-generated key
+        manager = SessionToken()
+        
+        # Verify key has sufficient length (32 bytes minimum for security)
+        self.assertGreaterEqual(len(manager.secret_key), 32)
+        
+        # Create multiple managers and verify they generate different keys
+        manager2 = SessionToken()
+        self.assertNotEqual(manager.secret_key, manager2.secret_key)
+
 
 class TestAuthenticationEndpoint(unittest.TestCase):
     """Test authentication API endpoint"""

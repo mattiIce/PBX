@@ -270,7 +270,7 @@
                     // Store authentication data
                     localStorage.setItem('pbx_token', data.token);
                     localStorage.setItem('pbx_extension', data.extension);
-                    localStorage.setItem('pbx_is_admin', data.is_admin);
+                    localStorage.setItem('pbx_is_admin', data.is_admin.toString());
                     localStorage.setItem('pbx_name', data.name || 'User');
                     
                     // Redirect to admin panel
