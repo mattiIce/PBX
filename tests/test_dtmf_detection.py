@@ -7,10 +7,10 @@ import os
 import sys
 import unittest
 
-from pbx.utils.dtmf import DTMF_FREQUENCIES, DTMFDetector, DTMFGenerator
-
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from pbx.utils.dtmf import DTMF_FREQUENCIES, DTMFDetector, DTMFGenerator
 
 
 class TestDTMFDetection(unittest.TestCase):
