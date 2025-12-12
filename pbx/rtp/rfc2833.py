@@ -390,11 +390,11 @@ class RFC2833Sender:
 
         Args:
             payload: RFC 2833 event payload
-            payload_type: RTP payload type (uses instance payload_type if not specified)
+            payload_type: RTP payload type (defaults to instance payload_type)
             marker: Marker bit
         """
-        if payload_type is None:
-            payload_type = self.payload_type
+        # Use instance payload_type if not specified
+        pt = payload_type if payload_type is not None else self.payload_type
             
         # Build RTP header
         version = 2
@@ -403,7 +403,7 @@ class RFC2833Sender:
         csrc_count = 0
 
         byte0 = (version << 6) | (padding << 5) | (extension << 4) | csrc_count
-        byte1 = (int(marker) << 7) | (payload_type & 0x7F)
+        byte1 = (int(marker) << 7) | (pt & 0x7F)
 
         header = struct.pack('!BBHII',
                              byte0,

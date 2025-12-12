@@ -192,7 +192,7 @@ class SDPBuilder:
         """
         if codecs is None:
             # PCMU, PCMA, G722, telephone-event (default order)
-            # Use configured dtmf_payload_type instead of hardcoded '101'
+            # Use configured dtmf_payload_type for telephone-event codec
             codecs = ['0', '8', '9', str(dtmf_payload_type)]
 
         sdp = SDPSession()
