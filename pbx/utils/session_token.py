@@ -36,7 +36,12 @@ class SessionToken:
         
         # Generate or use provided secret key
         if secret_key:
-            self.secret_key = secret_key.encode('utf-8') if isinstance(secret_key, str) else secret_key
+            if isinstance(secret_key, str):
+                self.secret_key = secret_key.encode('utf-8')
+            elif isinstance(secret_key, bytes):
+                self.secret_key = secret_key
+            else:
+                raise TypeError(f"secret_key must be str or bytes, got {type(secret_key)}")
         else:
             # Generate a cryptographically secure random secret key
             self.secret_key = secrets.token_bytes(32)

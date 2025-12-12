@@ -1683,7 +1683,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             else:
                 # Password is plain text (legacy) - use constant-time comparison
                 import secrets
-                if not secrets.compare_digest(password.encode('utf-8'), password_hash.encode('utf-8')):
+                # Ensure both values are strings before comparison
+                password_str = password if isinstance(password, str) else password.decode('utf-8')
+                password_hash_str = password_hash if isinstance(password_hash, str) else str(password_hash)
+                if not secrets.compare_digest(password_str.encode('utf-8'), password_hash_str.encode('utf-8')):
                     self._send_json({'error': 'Invalid credentials'}, 401)
                     return
 

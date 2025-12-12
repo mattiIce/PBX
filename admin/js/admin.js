@@ -238,6 +238,9 @@ function initializeLogout() {
     if (!logoutButton) return;
     
     logoutButton.addEventListener('click', async function() {
+        // Get token before clearing it
+        const token = localStorage.getItem('pbx_token');
+        
         // Clear local storage
         localStorage.removeItem('pbx_token');
         localStorage.removeItem('pbx_extension');
@@ -247,7 +250,6 @@ function initializeLogout() {
         
         // Optionally call logout endpoint
         try {
-            const token = localStorage.getItem('pbx_token');
             if (token) {
                 await fetch(`${API_BASE}/api/auth/logout`, {
                     method: 'POST',
