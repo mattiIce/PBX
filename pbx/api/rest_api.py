@@ -599,8 +599,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_extensions(self):
         """Get extensions"""
+        # SECURITY: Require authentication (but not necessarily admin)
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({'error': 'Authentication required'}, 401)
+            return
+        
         if self.pbx_core:
             extensions = self.pbx_core.extension_registry.get_all()
+            
+            # Check if user is admin
+            is_admin = payload.get('is_admin', False)
+            current_extension = payload.get('extension')
+            
+            # Non-admin users should only see their own extension
+            if not is_admin:
+                extensions = [e for e in extensions if e.number == current_extension]
+            
             data = [{'number': e.number,
                      'name': e.name,
                      'email': e.config.get('email'),
@@ -1271,6 +1286,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_register_device(self):
         """Register a device for provisioning"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
         logger = get_logger()
 
         if not self.pbx_core or not hasattr(
@@ -1698,6 +1719,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_config(self):
         """Get current configuration"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
         if self.pbx_core:
             config_data = {
                 'smtp': {
@@ -1716,6 +1743,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_add_extension(self):
         """Add a new extension"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
         if not self.pbx_core:
             self._send_json({'error': 'PBX not initialized'}, 500)
             return
@@ -1805,6 +1838,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_update_extension(self, number):
         """Update an existing extension"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
         if not self.pbx_core:
             self._send_json({'error': 'PBX not initialized'}, 500)
             return
@@ -1877,6 +1916,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_delete_extension(self, number):
         """Delete an extension"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
         if not self.pbx_core:
             self._send_json({'error': 'PBX not initialized'}, 500)
             return
@@ -5182,6 +5227,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_add_emergency_contact(self):
         """Add emergency contact"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
         if self.pbx_core and hasattr(self.pbx_core, 'emergency_notification'):
             try:
                 content_length = int(self.headers['Content-Length'])
