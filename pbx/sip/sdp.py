@@ -182,8 +182,9 @@ class SDPBuilder:
             local_ip: Local IP address for RTP
             local_port: Local RTP port
             session_id: Session ID (can be timestamp)
-            codecs: List of codec payload types to offer (default: ['0', '8', '9', '101'])
+            codecs: List of codec payload types to offer (default: ['0', '8', '9', '18', '2', '101'])
                    When negotiating with a caller, pass their offered codecs to maintain compatibility
+                   Standard payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
             dtmf_payload_type: Payload type for RFC2833 telephone-event (default: 101)
                    Can be configured to use alternative payload types (96-127) if needed
 
@@ -191,9 +192,9 @@ class SDPBuilder:
             SDP body as string
         """
         if codecs is None:
-            # PCMU, PCMA, G722, telephone-event (default order)
+            # Default codec order: PCMU, PCMA, G722, G729, G726-32, telephone-event
             # Use configured dtmf_payload_type for telephone-event codec
-            codecs = ['0', '8', '9', str(dtmf_payload_type)]
+            codecs = ['0', '8', '9', '18', '2', str(dtmf_payload_type)]
 
         sdp = SDPSession()
         sdp.version = 0
@@ -224,6 +225,25 @@ class SDPBuilder:
             # G.722 uses 8000 in SDP even though actual rate is 16000 (RFC 3551
             # quirk)
             attributes.append('rtpmap:9 G722/8000')
+        if '18' in codecs:
+            # G.729 (8 kbit/s low-bitrate codec)
+            attributes.append('rtpmap:18 G729/8000')
+            # Optionally disable Annex B (VAD/CNG) if needed
+            # attributes.append('fmtp:18 annexb=no')
+        if '2' in codecs:
+            # G.726-32 (also known as G721) - 32 kbit/s ADPCM
+            attributes.append('rtpmap:2 G726-32/8000')
+        
+        # Support for G.726 variants with dynamic payload types
+        # G.726-40 (typically uses dynamic PT 114)
+        if '114' in codecs:
+            attributes.append('rtpmap:114 G726-40/8000')
+        # G.726-24 (typically uses dynamic PT 113)
+        if '113' in codecs:
+            attributes.append('rtpmap:113 G726-24/8000')
+        # G.726-16 (typically uses dynamic PT 112)
+        if '112' in codecs:
+            attributes.append('rtpmap:112 G726-16/8000')
         
         # Support configurable DTMF payload type (not just hardcoded 101)
         dtmf_pt_str = str(dtmf_payload_type)

@@ -65,6 +65,18 @@ codecs:
     enabled: false  # Enable when opuslib is installed
     sample_rate: 48000
     bitrate: 32000
+  # G.729 Codec - Low-bitrate speech codec (8 kbit/s) for bandwidth-constrained scenarios
+  # Note: G.729 may require patent licensing depending on your jurisdiction
+  # Encoding/decoding requires additional codec library (e.g., bcg729, Intel IPP)
+  g729:
+    enabled: true   # Enable for codec negotiation support
+    variant: G729AB  # Options: G729, G729A, G729B, G729AB (most common)
+  # G.726 ADPCM Codec - Variable-rate codec with multiple bitrate options
+  # G.726-32 is fully supported via Python's audioop module
+  # Other bitrates (16/24/40) provide framework support for codec negotiation
+  g726:
+    enabled: true
+    bitrate: 32000  # Options: 16000, 24000, 32000 (recommended), 40000
 features:
   call_recording: true
   call_transfer: true
