@@ -1103,7 +1103,7 @@ async function loadVoicemailTab() {
     }
 }
 
-async function loadVoicemailForExtension() {
+window.loadVoicemailForExtension = async function() {
     const extension = document.getElementById('vm-extension-select').value;
     
     if (!extension) {
@@ -1132,7 +1132,7 @@ async function loadVoicemailForExtension() {
         console.error('Error loading voicemail:', error);
         showNotification('Failed to load voicemail messages', 'error');
     }
-}
+};
 
 function updateVoicemailCardsView(messages, extension) {
     const cardsContainer = document.getElementById('voicemail-cards-view');
@@ -1230,7 +1230,7 @@ function updateVoicemailTableView(messages, extension) {
     });
 }
 
-function toggleVoicemailView() {
+window.toggleVoicemailView = function() {
     const cardsView = document.getElementById('voicemail-cards-view');
     const tableView = document.getElementById('voicemail-table-view');
     const toggleText = document.getElementById('view-toggle-text');
@@ -1246,9 +1246,9 @@ function toggleVoicemailView() {
         tableView.style.display = 'block';
         toggleText.textContent = '🎴 Switch to Card View';
     }
-}
+};
 
-async function openVoicemailPlayer(extension, messageId) {
+window.openVoicemailPlayer = async function(extension, messageId) {
     try {
         // Fetch message details
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
@@ -1300,9 +1300,9 @@ async function openVoicemailPlayer(extension, messageId) {
         console.error('Error opening voicemail player:', error);
         showNotification('Failed to open voicemail player', 'error');
     }
-}
+};
 
-function closeVoicemailPlayer() {
+window.closeVoicemailPlayer = function() {
     const modal = document.getElementById('voicemail-player-modal');
     const audioPlayer = document.getElementById('vm-audio-player');
     
@@ -1312,15 +1312,15 @@ function closeVoicemailPlayer() {
     
     // Reload messages to update read status
     loadVoicemailForExtension();
-}
+};
 
 // Legacy function - maintained for backward compatibility
 // Redirects to new modal player
-async function playVoicemail(extension, messageId) {
+window.playVoicemail = async function(extension, messageId) {
     openVoicemailPlayer(extension, messageId);
-}
+};
 
-async function downloadVoicemail(extension, messageId) {
+window.downloadVoicemail = async function(extension, messageId) {
     try {
         const url = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
         const link = document.createElement('a');
@@ -1334,9 +1334,9 @@ async function downloadVoicemail(extension, messageId) {
         console.error('Error downloading voicemail:', error);
         showNotification('Failed to download voicemail', 'error');
     }
-}
+};
 
-async function markVoicemailRead(extension, messageId, showMsg = true) {
+window.markVoicemailRead = async function(extension, messageId, showMsg = true) {
     try {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}/${messageId}/mark-read`, {
             method: 'PUT',
@@ -1357,9 +1357,9 @@ async function markVoicemailRead(extension, messageId, showMsg = true) {
             showNotification('Failed to mark message as read', 'error');
         }
     }
-}
+};
 
-async function deleteVoicemail(extension, messageId) {
+window.deleteVoicemail = async function(extension, messageId) {
     if (!confirm('Are you sure you want to delete this voicemail message?')) {
         return;
     }
@@ -1379,7 +1379,7 @@ async function deleteVoicemail(extension, messageId) {
         console.error('Error deleting voicemail:', error);
         showNotification('Failed to delete voicemail', 'error');
     }
-}
+};
 
 // Initialize voicemail PIN form
 document.addEventListener('DOMContentLoaded', function() {
