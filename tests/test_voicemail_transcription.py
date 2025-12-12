@@ -10,6 +10,9 @@ import wave
 from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.voicemail_transcription import VoicemailTranscriptionService
 
 # Mock the optional dependencies before importing the module

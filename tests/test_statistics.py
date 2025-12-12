@@ -9,6 +9,9 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.cdr import CallDisposition, CDRRecord, CDRSystem
 from pbx.features.statistics import StatisticsEngine
 

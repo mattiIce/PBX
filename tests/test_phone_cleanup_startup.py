@@ -1,8 +1,13 @@
 """
 Tests for phone registration cleanup at startup
 """
+import os
+import sys
 import unittest
 from unittest.mock import MagicMock, Mock
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
