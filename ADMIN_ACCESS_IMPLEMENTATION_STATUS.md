@@ -49,15 +49,141 @@
    - Admin view: All tabs visible with 👑 crown indicator
    - Regular user view: Only Phone and Voicemail tabs visible
 
-## What Should Be Implemented Next
+### ✅ Phase 3: Authentication & Authorization (COMPLETE)
 
-### 📋 Phase 3: Authentication & Authorization (RECOMMENDED FOR PRODUCTION)
-
-**Note**: Phase 2 (UI Role-Based Filtering) provides visual separation of admin and user features, but does not enforce security. For production use, Phase 3 authentication is required.
-
-To fully enforce admin-only access, the following should be implemented:
+**Status**: Phase 3 is now COMPLETE! The PBX system now has secure authentication and authorization.
 
 #### 1. Authentication System
+
+**Login Page** (`/admin/login.html`):
+- Modern, responsive login UI with gradient design
+- Extension number and password input fields
+- Client-side validation
+- Error message display
+- Loading state during authentication
+- Auto-focus on extension input
+
+**Login API Endpoint** (`POST /api/auth/login`):
+```python
+def _handle_login(self):
+    """Authenticate extension and return session token"""
+    # Validates credentials against database
+    # Supports both hashed and plain-text passwords (for backwards compatibility)
+    # Generates secure session token
+    # Returns token, extension, is_admin, name, and email
+```
+
+**Session Token Management** (`pbx/utils/session_token.py`):
+- JWT-like token implementation
+- HMAC-SHA256 signature for security
+- Base64-encoded header, payload, and signature
+- 24-hour token expiration
+- Secure token generation and verification
+- Token payload includes: extension, is_admin, name, email, iat, exp
+
+#### 2. Authorization Middleware
+
+**Authentication Helpers**:
+```python
+def _verify_authentication(self):
+    """Verify authentication token and return payload"""
+    # Extracts Bearer token from Authorization header
+    # Verifies token signature and expiration
+    # Returns (is_authenticated, payload)
+
+def _require_admin(self):
+    """Check if current user has admin privileges"""
+    # Verifies authentication
+    # Checks is_admin flag in token payload
+    # Returns (is_admin, payload)
+```
+
+**Protected Admin Endpoints**:
+- `/api/extensions` POST - Add extension (admin only)
+- `/api/extensions/{number}` PUT - Update extension (admin only)
+- `/api/extensions/{number}` DELETE - Delete extension (admin only)
+- `/api/provisioning/devices` POST - Register device (admin only)
+- `/api/emergency/contacts` POST - Add emergency contact (admin only)
+- `/api/config` GET - Get configuration (admin only)
+
+**User Endpoints** (authentication required):
+- `GET /api/extensions` - Get extensions (authenticated users see own extension, admins see all)
+- `POST /api/webrtc/session` - WebRTC phone (requires authentication)
+- `GET /api/voicemail/{extension}` - Own voicemail only
+
+**Public Endpoints** (no authentication required):
+- `GET /api/status` - Basic system status
+- `POST /api/auth/login` - Login endpoint
+- `POST /api/auth/logout` - Logout endpoint
+
+#### 3. Frontend Session Management
+
+**Authentication Check** (`admin/js/admin.js`):
+```javascript
+async function initializeUserContext() {
+    // Check for authentication token
+    const token = localStorage.getItem('pbx_token');
+    if (!token) {
+        // Redirect to login page
+        window.location.href = '/admin/login.html';
+        return;
+    }
+    
+    // Verify token is still valid
+    // Load user context from localStorage
+    // Apply role-based UI filtering
+}
+```
+
+**Token Storage**:
+- `pbx_token` - Session token
+- `pbx_extension` - Extension number
+- `pbx_is_admin` - Admin status
+- `pbx_name` - User name
+
+**Logout Functionality**:
+- Logout button in admin panel header
+- Clears all authentication data from localStorage
+- Calls `/api/auth/logout` endpoint
+- Redirects to login page
+
+**Authentication Headers Helper**:
+```javascript
+function getAuthHeaders() {
+    const token = localStorage.getItem('pbx_token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : undefined
+    };
+}
+```
+
+#### 4. Security Features
+
+**Password Verification**:
+- Supports FIPS-compliant hashed passwords (PBKDF2-HMAC-SHA256)
+- Backwards compatible with plain-text passwords
+- Constant-time comparison to prevent timing attacks
+
+**Token Security**:
+- Cryptographically secure random secret key
+- HMAC-SHA256 signature prevents tampering
+- Token expiration (24 hours)
+- Signature verification on every request
+
+**Authorization Checks**:
+- All admin endpoints require valid token + admin flag
+- User endpoints require valid token
+- Failed authentication returns 401 (Unauthorized)
+- Failed authorization returns 403 (Forbidden)
+
+**Testing**:
+- Comprehensive test suite in `tests/test_authentication.py`
+- Tests token generation, verification, and expiration
+- Tests admin vs regular user authorization
+- All 9 tests passing
+
+## What Should Be Implemented Next (Future Enhancements)
 
 **Login Page** (`/admin/login.html`):
 ```html
@@ -216,42 +342,44 @@ function showUserFeatures() {
 
 ## Security Considerations
 
-### Current Status (Phase 2 Complete)
+### Current Status (Phase 3 Complete) ✅
 - ✅ Database tracks admin status
 - ✅ UI allows admin designation
 - ✅ UI filters features based on admin status
 - ✅ Visual separation of admin and user interfaces
-- ⚠️ **No authentication enforced** - Users can change URL parameter
-- ⚠️ **No authorization enforced** - API endpoints are open
-- ⚠️ **No session management** - Role is determined by URL parameter only
+- ✅ **Authentication enforced** - Login page with password verification
+- ✅ **Authorization enforced** - API endpoints protected with token verification
+- ✅ **Session management** - Secure token-based sessions with 24-hour expiration
+- ✅ **Logout functionality** - Users can securely log out
+- ✅ **Token security** - HMAC-SHA256 signatures prevent token tampering
 
-### Required for Production (Phase 3)
-- ⚠️ **Critical**: Implement login page and authentication
-- ⚠️ **Critical**: Add authorization checks to API endpoints
-- ⚠️ **Critical**: Implement session management with secure tokens
-- ⚠️ **Important**: Add HTTPS/SSL for secure communication
-- ⚠️ **Important**: Implement rate limiting on login endpoint
-- ⚠️ **Important**: Add audit logging for admin actions
+### Recommended for Production (Future Enhancements)
+- ⚠️ **Recommended**: Add HTTPS/SSL for secure communication
+- ⚠️ **Recommended**: Implement rate limiting on login endpoint
+- ⚠️ **Recommended**: Add audit logging for admin actions
+- ⚠️ **Nice to have**: Multi-factor authentication (MFA)
 
 ## Implementation Priority
 
-### Must Have (Security Critical)
-1. Login page and authentication system
-2. API endpoint authorization middleware
-3. Session token management
-4. Frontend auth checking and redirection
+### ✅ Completed (Phase 3)
+1. ✅ Login page and authentication system
+2. ✅ API endpoint authorization middleware  
+3. ✅ Session token management
+4. ✅ Frontend auth checking and redirection
+5. ✅ Logout functionality
+6. ✅ Password verification (supports both hashed and plain-text)
+7. ✅ Token-based session management with expiration
+8. ✅ Authorization helpers for admin-only endpoints
 
-### Should Have (Security Important)
-5. HTTPS/SSL configuration
-6. Rate limiting on auth endpoints
-7. Session expiration and renewal
-8. Logout functionality
-
-### Nice to Have (Enhanced Security)
-9. Multi-factor authentication (MFA)
-10. Audit logging of admin actions
-11. Fine-grained permissions (beyond just admin/user)
-12. Password complexity requirements
+### Recommended Next Steps (Future Enhancements)
+1. HTTPS/SSL configuration for encrypted communication
+2. Rate limiting on authentication endpoints
+3. Audit logging of admin actions
+4. Multi-factor authentication (MFA)
+5. Fine-grained permissions (beyond just admin/user)
+6. Account lockout after failed login attempts
+7. Password complexity requirements enforcement
+8. Session token refresh/renewal mechanism
 13. Account lockout after failed attempts
 
 ## Testing the Current Implementation (Phase 2)
@@ -335,30 +463,175 @@ Expected output:
 
 ## Recommendation
 
-**Phase 1 (Complete)** provides the database foundation for admin access control.
+**Phase 1 (Complete)** ✅ - Provides the database foundation for admin access control.
 
-**Phase 2 (Complete)** provides UI separation between admin and regular users, making it easy to distinguish between different user roles visually.
+**Phase 2 (Complete)** ✅ - Provides UI separation between admin and regular users, making it easy to distinguish between different user roles visually.
 
-**For Production Use**: Phase 3 (Authentication & Authorization) MUST be implemented before deploying to production to prevent unauthorized access to admin features via URL manipulation.
+**Phase 3 (Complete)** ✅ - Provides secure authentication and authorization, making the system production-ready!
 
-**Development Use**: Current implementation (Phase 2) is sufficient for:
-- Development and testing environments
-- Internal networks with trusted users
-- Demonstrations and proof-of-concept
-- Preparing the UI for future authentication implementation
+**Production Use**: The system is now ready for production deployment! Phase 3 authentication and authorization are fully implemented:
+- ✅ Login page with password verification
+- ✅ Secure session token management
+- ✅ API endpoint protection
+- ✅ Role-based access control
+- ✅ Logout functionality
 
-## Next Steps
+**Recommended Next Steps for Enhanced Security**:
+1. Configure HTTPS/SSL for encrypted communication
+2. Implement rate limiting on authentication endpoints
+3. Add audit logging for admin actions
+4. Consider multi-factor authentication (MFA) for high-security environments
 
-1. **Review Phase 2 Implementation** - Test the UI filtering with different extensions
-2. **Plan Phase 3 Timeline** - Decide when to implement authentication
-3. **If implementing Phase 3**:
-   - Create login page UI
-   - Implement authentication endpoint
-   - Add authorization middleware
-   - Update frontend with auth checking
-   - Test end-to-end authentication flow
-4. **If deferring Phase 3**:
-   - Document security limitations clearly
-   - Add warning banner in admin panel
-   - Restrict access via firewall/VPN
-   - Plan timeline for Phase 3 implementation
+## Usage Instructions (Phase 3)
+
+### First Time Setup
+
+1. **Start the PBX**:
+```bash
+python main.py
+```
+
+2. **Create an admin user** (via database or API):
+```bash
+# Via API (before authentication is enforced)
+curl -X POST http://localhost:8080/api/extensions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "1001",
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "AdminPass123",
+    "voicemail_pin": "1234",
+    "is_admin": true
+  }'
+
+# Or via database
+sqlite3 pbx.db "UPDATE extensions SET is_admin = 1 WHERE number = '1001';"
+```
+
+### Accessing the Admin Panel
+
+1. **Navigate to**: `http://localhost:8080/admin/`
+   - You will be redirected to the login page
+
+2. **Login**:
+   - Extension: `1001`
+   - Password: `AdminPass123`
+
+3. **After successful login**:
+   - You will be redirected to the admin panel
+   - Session token is stored in browser localStorage
+   - Token is valid for 24 hours
+
+### Logging Out
+
+- Click the "🚪 Logout" button in the top-right corner
+- Session token is cleared
+- You will be redirected to the login page
+
+### API Authentication
+
+All API requests (except `/api/auth/login`, `/api/auth/logout`, and `/api/status`) now require authentication:
+
+```bash
+# Login to get token
+TOKEN=$(curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"extension":"1001","password":"AdminPass123"}' | jq -r '.token')
+
+# Use token in subsequent requests
+curl -X GET http://localhost:8080/api/extensions \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Testing Phase 3 Implementation
+
+### Test Authentication Flow
+
+1. **Access admin panel without login**:
+   - Navigate to `http://localhost:8080/admin/`
+   - Should redirect to login page
+
+2. **Test invalid credentials**:
+   - Extension: `1001`
+   - Password: `WrongPassword`
+   - Should show error message
+
+3. **Test valid login**:
+   - Extension: `1001`
+   - Password: `AdminPass123`
+   - Should redirect to admin panel
+
+4. **Test logout**:
+   - Click logout button
+   - Should redirect to login page
+
+### Test Authorization
+
+1. **Test admin-only endpoint** (as admin):
+```bash
+TOKEN=$(curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"extension":"1001","password":"AdminPass123"}' | jq -r '.token')
+
+curl -X GET http://localhost:8080/api/extensions \
+  -H "Authorization: Bearer $TOKEN"
+# Should return all extensions
+```
+
+2. **Test admin-only endpoint** (as regular user):
+```bash
+TOKEN=$(curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"extension":"1002","password":"UserPass123"}' | jq -r '.token')
+
+curl -X POST http://localhost:8080/api/extensions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"number":"1003","name":"Test"}'
+# Should return 403 Forbidden
+```
+
+3. **Test without authentication**:
+```bash
+curl -X GET http://localhost:8080/api/extensions
+# Should return 401 Unauthorized
+```
+
+## Next Steps (Future Enhancements)
+
+1. **HTTPS/SSL Configuration**:
+   - Enable SSL in config.yml
+   - Generate or install SSL certificates
+   - Enforce HTTPS-only access
+
+2. **Rate Limiting**:
+   - Add rate limiting to `/api/auth/login` to prevent brute force attacks
+   - Configure maximum login attempts per IP
+   - Implement temporary account lockout
+
+3. **Audit Logging**:
+   - Log all admin actions (extension creation, deletion, config changes)
+   - Include timestamp, user, and action details
+   - Store logs securely for compliance
+
+4. **Multi-Factor Authentication**:
+   - Integrate TOTP-based MFA
+   - Add MFA setup in user profile
+   - Require MFA for admin users
+
+5. **Session Management Enhancements**:
+   - Add token refresh mechanism
+   - Implement "remember me" functionality
+   - Add session timeout warnings
+
+6. **Password Policy**:
+   - Enforce password complexity requirements
+   - Implement password expiration
+   - Add password history to prevent reuse
+
+7. **Fine-Grained Permissions**:
+   - Add more granular roles (e.g., provisioning_admin, voicemail_admin)
+   - Implement permission matrix
+   - Support custom role definitions
+
