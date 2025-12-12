@@ -817,13 +817,23 @@ class VoicemailIVR:
         """Handle PIN entry state"""
         if digit == '#':
             # PIN entry complete - verify the entered PIN
+            self.logger.info(
+                f"[VM IVR PIN] # pressed, entered_pin length: {len(self.entered_pin)}")
+            self.logger.debug(
+                f"[VM IVR PIN] Verifying PIN for extension {self.extension_number}")
+            
             pin_valid = self.mailbox.verify_pin(self.entered_pin)
+            self.logger.info(
+                f"[VM IVR PIN] PIN verification result: {'VALID' if pin_valid else 'INVALID'}")
+            
             # Clear PIN immediately after verification for security
             self.entered_pin = ''
 
             if pin_valid:
                 self.state = self.STATE_MAIN_MENU
                 unread_count = len(self.mailbox.get_messages(unread_only=True))
+                self.logger.info(
+                    f"[VM IVR PIN] ✓ PIN accepted, transitioning to main menu")
                 return {
                     'action': 'play_prompt',
                     'prompt': 'main_menu',
@@ -831,8 +841,12 @@ class VoicemailIVR:
                 }
             else:
                 self.pin_attempts += 1
+                self.logger.warning(
+                    f"[VM IVR PIN] ✗ Invalid PIN attempt {self.pin_attempts}/{self.max_pin_attempts}")
                 if self.pin_attempts >= self.max_pin_attempts:
                     self.state = self.STATE_GOODBYE
+                    self.logger.warning(
+                        f"[VM IVR PIN] Maximum PIN attempts reached, hanging up")
                     return {
                         'action': 'hangup',
                         'prompt': 'goodbye',
@@ -847,12 +861,16 @@ class VoicemailIVR:
             # Collect PIN digit (limit length to prevent abuse)
             if len(self.entered_pin) < 10:  # Max 10 digits
                 self.entered_pin += digit
+                self.logger.debug(
+                    f"[VM IVR PIN] Collected digit, entered_pin length now: {len(self.entered_pin)}")
             return {
                 'action': 'collect_digit',
                 'prompt': 'continue'
             }
         else:
             # Invalid input, ignore
+            self.logger.debug(
+                f"[VM IVR PIN] Ignoring invalid digit: {digit}")
             return {
                 'action': 'collect_digit',
                 'prompt': 'continue'

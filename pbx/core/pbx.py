@@ -3100,6 +3100,11 @@ class PBXCore:
                             self.logger.debug(
                                 f"[VM IVR] Collecting digit, waiting for more input...")
 
+                        else:
+                            # Unknown action type
+                            self.logger.warning(
+                                f"[VM IVR] Unknown action type: {action.get('action')} - continuing")
+
                         # Clear audio buffer after processing DTMF
                         # Note: Directly modifying internal state - consider
                         # adding clear() method to RTPRecorder
