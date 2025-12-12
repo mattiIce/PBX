@@ -8,6 +8,9 @@ to the build_audio_sdp function.
 """
 
 import unittest
+from unittest.mock import Mock, MagicMock, call
+
+from pbx.core.pbx import PBXCore
 from pbx.sip.sdp import SDPBuilder
 
 
@@ -127,9 +130,6 @@ class TestDTMFPayloadTypeIntegration(unittest.TestCase):
 
     def test_get_dtmf_payload_type_from_config(self):
         """Test that _get_dtmf_payload_type() correctly reads from config"""
-        from unittest.mock import Mock
-        from pbx.core.pbx import PBXCore
-        
         # Create a mock config
         mock_config = Mock()
         mock_config.get.return_value = 100  # Return custom payload type
@@ -150,9 +150,6 @@ class TestDTMFPayloadTypeIntegration(unittest.TestCase):
 
     def test_get_dtmf_payload_type_default(self):
         """Test that _get_dtmf_payload_type() returns default when not configured"""
-        from unittest.mock import Mock
-        from pbx.core.pbx import PBXCore
-        
         # Create a mock config that returns the default
         mock_config = Mock()
         mock_config.get.return_value = 101  # Return default payload type
@@ -169,11 +166,7 @@ class TestDTMFPayloadTypeIntegration(unittest.TestCase):
         self.assertEqual(payload_type, 101)
 
     def test_get_codecs_for_phone_model_uses_same_config_key(self):
-        """Test that _get_codecs_for_phone_model() uses the same config key as _get_dtmf_payload_type()"""
-        from unittest.mock import Mock
-        from pbx.core.pbx import PBXCore
-        from unittest.mock import MagicMock
-        
+        """Test that _get_codecs_for_phone_model() uses same config key"""
         # Create a mock config
         mock_config = Mock()
         mock_config.get.return_value = 100  # Custom DTMF payload type
@@ -199,10 +192,6 @@ class TestDTMFPayloadTypeIntegration(unittest.TestCase):
 
     def test_dtmf_payload_type_end_to_end(self):
         """Test end-to-end flow from config to SDP generation through _get_dtmf_payload_type()"""
-        from unittest.mock import Mock, MagicMock
-        from pbx.core.pbx import PBXCore
-        from pbx.sip.sdp import SDPBuilder
-        
         # Create a mock config with custom DTMF payload type
         mock_config = Mock()
         
@@ -241,9 +230,6 @@ class TestDTMFPayloadTypeIntegration(unittest.TestCase):
 
     def test_config_key_consistency(self):
         """Test that both methods use 'features.dtmf.payload_type' config key"""
-        from unittest.mock import Mock, MagicMock, call
-        from pbx.core.pbx import PBXCore
-        
         # Create a mock config that tracks all get() calls
         mock_config = Mock()
         mock_config.get.return_value = 102
