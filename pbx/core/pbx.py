@@ -783,14 +783,21 @@ class PBXCore:
             
         try:
             # Query registered_phones table for this extension
-            # Use parameterized query appropriate for database type
-            placeholder = '%s' if self.database.db_type == 'postgresql' else '?'
-            query = f"""
-            SELECT user_agent FROM registered_phones 
-            WHERE extension_number = {placeholder}
-            ORDER BY last_registered DESC
-            LIMIT 1
-            """
+            # Build query with appropriate placeholder for database type
+            if self.database.db_type == 'postgresql':
+                query = """
+                SELECT user_agent FROM registered_phones 
+                WHERE extension_number = %s
+                ORDER BY last_registered DESC
+                LIMIT 1
+                """
+            else:
+                query = """
+                SELECT user_agent FROM registered_phones 
+                WHERE extension_number = ?
+                ORDER BY last_registered DESC
+                LIMIT 1
+                """
             
             result = self.database.fetch_one(query, (extension_number,))
             if result and result.get('user_agent'):
