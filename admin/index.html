@@ -1283,7 +1283,7 @@
                                 <td>Compressed</td>
                                 <td>3.1 kHz</td>
                                 <td><span class="badge" style="background: #10b981;">✅ Available</span></td>
-                                <td>Low bandwidth codec (framework ready)</td>
+                                <td>Framework ready (requires codec library for encode/decode)</td>
                             </tr>
                             <tr>
                                 <td><strong>G.726-32 (ADPCM)</strong></td>
@@ -1464,11 +1464,11 @@
                     </div>
                     <div class="form-group">
                         <label>Codec Preference Order:</label>
-                        <textarea id="codec-preference-order" rows="6" placeholder="Opus&#10;G.722&#10;G.711&#10;G.729&#10;G.726">Opus
+                        <textarea id="codec-preference-order" rows="6" placeholder="Opus&#10;G.722&#10;G.711 (PCMU/PCMA)&#10;G.729&#10;G.726-32">Opus
 G.722
-G.711
+G.711 (PCMU/PCMA)
 G.729
-G.726</textarea>
+G.726-32</textarea>
                         <small>Codecs will be negotiated in this order (one per line)</small>
                     </div>
                     <button type="submit" class="btn btn-success">💾 Save Codec Settings</button>
