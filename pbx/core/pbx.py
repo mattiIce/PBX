@@ -52,6 +52,9 @@ class PBXCore:
             console=log_config.get('console', True)
         )
         self.logger = get_logger()
+        
+        # Check if quiet startup is enabled
+        self.quiet_startup = self.config.get('logging.quiet_startup', False)
 
         # Track system start time for uptime calculation
         self.start_time = datetime.now()
@@ -65,10 +68,10 @@ class PBXCore:
             from pbx.utils.database import ExtensionDB
             self.registered_phones_db = RegisteredPhonesDB(self.database)
             self.extension_db = ExtensionDB(self.database)
-            self.logger.info(
+            self._log_startup(
                 f"Database backend initialized successfully ({
                     self.database.db_type})")
-            self.logger.info(
+            self._log_startup(
                 "Extensions, voicemail metadata, and phone registrations will be stored in database")
 
             # Auto-seed critical extensions if they don't exist
@@ -78,7 +81,7 @@ class PBXCore:
             # Only phones with MAC, IP, and Extension should be retained
             success, count = self.registered_phones_db.cleanup_incomplete_registrations()
             if success and count > 0:
-                self.logger.info(
+                self._log_startup(
                     f"Startup cleanup: Removed {count} incomplete phone registration(s)")
         else:
             self.logger.warning(
@@ -134,7 +137,7 @@ class PBXCore:
         # Initialize statistics engine for analytics
         from pbx.features.statistics import StatisticsEngine
         self.statistics_engine = StatisticsEngine(self.cdr_system)
-        self.logger.info("Statistics and analytics engine initialized")
+        self._log_startup("Statistics and analytics engine initialized")
         self.logger.info(
             "QoS monitoring system initialized and integrated with RTP relay")
 
@@ -180,7 +183,7 @@ class PBXCore:
                 'config_file': config_file}
             self.ad_integration = ActiveDirectoryIntegration(ad_config)
             if self.ad_integration.enabled:
-                self.logger.info("Active Directory integration initialized")
+                self._log_startup("Active Directory integration initialized")
 
                 # Auto-sync users from AD at startup if auto_provision is
                 # enabled
@@ -243,7 +246,7 @@ class PBXCore:
             from pbx.features.paging import PagingSystem
             self.paging_system = PagingSystem(
                 self.config, database=self.database if self.database.enabled else None)
-            self.logger.info("Paging system initialized")
+            self._log_startup("Paging system initialized")
         else:
             self.paging_system = None
 
@@ -332,7 +335,7 @@ class PBXCore:
                     'presence_system') else None,
                 outlook_integration=outlook,
                 config=self.config)
-            self.logger.info("DND Scheduler initialized")
+            self._log_startup("DND Scheduler initialized")
         else:
             self.dnd_scheduler = None
 
@@ -353,6 +356,22 @@ class PBXCore:
         self.running = False
 
         self.logger.info("PBX Core initialized with all features")
+    
+    def _log_startup(self, message: str, level: str = 'info'):
+        """
+        Log a startup message, respecting quiet_startup setting
+        
+        Args:
+            message: The message to log
+            level: Log level ('info', 'warning', 'error', 'debug')
+        """
+        if self.quiet_startup and level == 'info':
+            # In quiet mode, log INFO messages as DEBUG
+            self.logger.debug(f"[STARTUP] {message}")
+        else:
+            # Normal logging
+            log_method = getattr(self.logger, level, self.logger.info)
+            log_method(message)
 
     def _auto_seed_critical_extensions(self):
         """
