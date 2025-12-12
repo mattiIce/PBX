@@ -483,7 +483,9 @@ async function loadExtensions() {
     tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading extensions...</td></tr>';
     
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`);
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: getAuthHeaders()
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -1091,7 +1093,9 @@ document.head.appendChild(style);
 async function loadVoicemailTab() {
     try {
         // Load extensions into dropdown
-        const response = await fetch(`${API_BASE}/api/extensions`);
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: getAuthHeaders()
+        });
         const extensions = await response.json();
         
         const select = document.getElementById('vm-extension-select');
@@ -1821,7 +1825,9 @@ async function showAddDeviceModal() {
     
     // Fetch extensions if not already loaded
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`);
+        const response = await fetch(`${API_BASE}/api/extensions`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const extensions = await response.json();
             extensionSelect.innerHTML = '<option value="">Select Extension</option>';
