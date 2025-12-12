@@ -1,8 +1,13 @@
 """
 Tests for QoS (Quality of Service) Monitoring System
 """
+import os
+import sys
 import time
 import unittest
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.features.qos_monitoring import QoSMetrics, QoSMonitor
 

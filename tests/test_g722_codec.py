@@ -1,8 +1,13 @@
 """
 Tests for G.722 HD Audio Codec
 """
+import os
+import sys
 import struct
 import unittest
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.features.g722_codec import G722Codec, G722CodecManager
 

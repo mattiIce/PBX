@@ -10,14 +10,14 @@ import time
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, Mock, patch
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.integrations.outlook import OutlookIntegration
 from pbx.integrations.teams import TeamsIntegration
 from pbx.integrations.zoom import ZoomIntegration
 from pbx.utils.config import Config
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 class MockConfig:

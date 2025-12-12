@@ -333,6 +333,7 @@ logging:
   level: INFO
   file: logs/pbx.log
   console: true
+  quiet_startup: false  # Reduce verbosity during startup (moves initialization logs to DEBUG level)
 security:
   # Authentication
   require_authentication: true

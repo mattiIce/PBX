@@ -1,7 +1,12 @@
 """
 Tests for Opus Codec Support
 """
+import os
+import sys
 import unittest
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.features.opus_codec import OpusCodec, OpusCodecManager
 

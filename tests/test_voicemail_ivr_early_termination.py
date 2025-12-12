@@ -13,11 +13,11 @@ import time
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from pbx.core.call import Call, CallState
-from pbx.utils.config import Config
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.core.call import Call, CallState
+from pbx.utils.config import Config
 
 
 class TestVoicemailIVREarlyTermination(unittest.TestCase):
