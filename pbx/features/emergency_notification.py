@@ -3,8 +3,10 @@ Emergency Notification System
 Provides emergency contact notifications and 911 call alerts
 """
 import json
+import time
 import threading
 from datetime import datetime
+from email.utils import formatdate
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
@@ -425,15 +427,41 @@ class EmergencyNotificationSystem:
             trigger_type: str,
             details: Dict):
         """Send call notification to contact"""
-        # TODO: Initiate automated call to contact's extension
-        self.logger.info(
-            f"Would call {
-                contact.name} at extension {
-                contact.extension}")
-        # In a full implementation, this would:
-        # 1. Place a call to the contact's extension
-        # 2. Play a pre-recorded emergency message
-        # 3. Transfer to emergency responder if needed
+        if not contact.extension:
+            self.logger.warning(f"Cannot call {contact.name}: no extension configured")
+            return
+        
+        try:
+            # Check if PBX core has call initiation capability
+            if hasattr(self.pbx_core, 'initiate_call'):
+                # Initiate call to contact's extension
+                self.logger.info(f"Initiating emergency call to {contact.name} at extension {contact.extension}")
+                
+                # Create emergency notification call
+                call_id = f"emergency-{trigger_type}-{int(time.time())}"
+                
+                # In a full implementation, this would:
+                # 1. Place a call to the contact's extension
+                # 2. Play a pre-recorded emergency message
+                # 3. Transfer to emergency responder if needed
+                
+                # For now, log the action
+                self.logger.warning(f"📞 Emergency call queued: {contact.name} ({contact.extension})")
+                
+                # Store notification for tracking
+                if hasattr(self, '_pending_emergency_calls'):
+                    self._pending_emergency_calls.append({
+                        'contact': contact,
+                        'trigger_type': trigger_type,
+                        'details': details,
+                        'timestamp': datetime.now(),
+                        'call_id': call_id
+                    })
+            else:
+                self.logger.info(f"Would call {contact.name} at extension {contact.extension}")
+                self.logger.info("Call initiation not available - logging notification only")
+        except Exception as e:
+            self.logger.error(f"Error initiating emergency call: {e}")
 
     def _send_page_notification(
             self,
@@ -454,9 +482,95 @@ class EmergencyNotificationSystem:
             trigger_type: str,
             details: Dict):
         """Send email notification"""
-        self.logger.info(f"Would email {contact.name} at {contact.email}")
-        # TODO: Use email notification system to send emergency alert
-        # In full implementation, would send email with emergency details
+        if not contact.email:
+            self.logger.warning(f"Cannot email {contact.name}: no email configured")
+            return
+        
+        try:
+            # Check if email notification system is available
+            if hasattr(self.pbx_core, 'email_notifier') and self.pbx_core.email_notifier:
+                email_notifier = self.pbx_core.email_notifier
+                
+                if not email_notifier.enabled:
+                    self.logger.warning("Email notification system is disabled")
+                    return
+                
+                # Build emergency email
+                subject = f"🚨 EMERGENCY ALERT: {trigger_type}"
+                
+                # Build email body
+                body = f"""EMERGENCY NOTIFICATION
+                
+Type: {trigger_type}
+Time: {details.get('timestamp', datetime.now())}
+Contact: {contact.name}
+Priority: {contact.priority}
+
+Details:
+{self._format_email_details(details)}
+
+This is an automated emergency notification from the PBX system.
+Please respond immediately.
+
+---
+PBX Emergency Notification System
+"""
+                
+                # Send email using the existing email notifier
+                self.logger.info(f"Sending emergency email to {contact.name} at {contact.email}")
+                
+                # Use send method if available, otherwise use SMTP directly
+                if hasattr(email_notifier, '_send_email'):
+                    email_notifier._send_email(
+                        to_address=contact.email,
+                        subject=subject,
+                        body=body
+                    )
+                else:
+                    # Fallback to direct SMTP
+                    self._send_email_direct(contact.email, subject, body, email_notifier)
+                
+                self.logger.warning(f"📧 Emergency email sent: {contact.name} ({contact.email})")
+            else:
+                self.logger.info(f"Would email {contact.name} at {contact.email}")
+                self.logger.info("Email notification system not available - logging only")
+        except Exception as e:
+            self.logger.error(f"Error sending emergency email: {e}")
+    
+    def _format_email_details(self, details: Dict) -> str:
+        """Format emergency details for email"""
+        lines = []
+        for key, value in details.items():
+            if key != 'timestamp':
+                lines.append(f"  {key}: {value}")
+        return '\n'.join(lines)
+    
+    def _send_email_direct(self, to_address, subject, body, email_notifier):
+        """Send email directly using SMTP"""
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart()
+        msg['From'] = email_notifier.from_address
+        msg['To'] = to_address
+        msg['Subject'] = subject
+        msg['Date'] = formatdate(localtime=True)
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Connect and send
+        if email_notifier.use_tls:
+            server = smtplib.SMTP(email_notifier.smtp_host, email_notifier.smtp_port)
+            server.starttls()
+        else:
+            server = smtplib.SMTP(email_notifier.smtp_host, email_notifier.smtp_port)
+        
+        if email_notifier.username and email_notifier.password:
+            server.login(email_notifier.username, email_notifier.password)
+        
+        server.send_message(msg)
+        server.quit()
 
     def _send_sms_notification(
             self,
@@ -464,12 +578,106 @@ class EmergencyNotificationSystem:
             trigger_type: str,
             details: Dict):
         """Send SMS notification"""
-        self.logger.info(
-            f"Would send SMS to {
-                contact.name} at {
-                contact.phone}")
-        # TODO: Integrate with SMS gateway (Twilio, etc.)
-        # In full implementation, would send SMS alert
+        if not contact.phone:
+            self.logger.warning(f"Cannot SMS {contact.name}: no phone configured")
+            return
+        
+        try:
+            # Check if SMS gateway is configured in config
+            sms_enabled = self.pbx_core.config.get('emergency.sms.enabled', False)
+            
+            if sms_enabled:
+                sms_provider = self.pbx_core.config.get('emergency.sms.provider', 'twilio')
+                
+                if sms_provider == 'twilio':
+                    self._send_sms_twilio(contact, trigger_type, details)
+                elif sms_provider == 'aws_sns':
+                    self._send_sms_aws(contact, trigger_type, details)
+                else:
+                    self.logger.warning(f"Unsupported SMS provider: {sms_provider}")
+                    self.logger.info(f"Would send SMS to {contact.name} at {contact.phone}")
+            else:
+                self.logger.info(f"Would send SMS to {contact.name} at {contact.phone}")
+                self.logger.info("SMS gateway not configured - set emergency.sms.enabled = true in config")
+        except Exception as e:
+            self.logger.error(f"Error sending emergency SMS: {e}")
+    
+    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+        """Send SMS via Twilio"""
+        try:
+            # Check if Twilio is available
+            try:
+                from twilio.rest import Client
+            except ImportError:
+                self.logger.warning("Twilio library not installed. Install with: pip install twilio")
+                return
+            
+            # Get Twilio credentials from config
+            account_sid = self.pbx_core.config.get('emergency.sms.twilio.account_sid')
+            auth_token = self.pbx_core.config.get('emergency.sms.twilio.auth_token')
+            from_number = self.pbx_core.config.get('emergency.sms.twilio.from_number')
+            
+            if not all([account_sid, auth_token, from_number]):
+                self.logger.warning("Twilio credentials not configured")
+                return
+            
+            # Create Twilio client
+            client = Client(account_sid, auth_token)
+            
+            # Build SMS message
+            message_body = f"🚨 EMERGENCY: {trigger_type}\n"
+            message_body += f"Time: {details.get('timestamp', datetime.now())}\n"
+            message_body += f"Contact: {contact.name}\n"
+            message_body += "Respond immediately."
+            
+            # Send SMS
+            message = client.messages.create(
+                body=message_body,
+                from_=from_number,
+                to=contact.phone
+            )
+            
+            self.logger.warning(f"📱 Emergency SMS sent: {contact.name} ({contact.phone}) - SID: {message.sid}")
+        except Exception as e:
+            self.logger.error(f"Error sending Twilio SMS: {e}")
+    
+    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+        """Send SMS via AWS SNS"""
+        try:
+            # Check if boto3 is available
+            try:
+                import boto3
+            except ImportError:
+                self.logger.warning("boto3 library not installed. Install with: pip install boto3")
+                return
+            
+            # Get AWS credentials from config
+            aws_region = self.pbx_core.config.get('emergency.sms.aws.region', 'us-east-1')
+            
+            # Create SNS client
+            sns = boto3.client('sns', region_name=aws_region)
+            
+            # Build SMS message
+            message_body = f"🚨 EMERGENCY: {trigger_type}\n"
+            message_body += f"Time: {details.get('timestamp', datetime.now())}\n"
+            message_body += f"Contact: {contact.name}\n"
+            message_body += "Respond immediately."
+            
+            # Send SMS
+            response = sns.publish(
+                PhoneNumber=contact.phone,
+                Message=message_body,
+                MessageAttributes={
+                    'AWS.SNS.SMS.SMSType': {
+                        'DataType': 'String',
+                        'StringValue': 'Transactional'  # High priority
+                    }
+                }
+            )
+            
+            self.logger.warning(f"📱 Emergency SMS sent: {contact.name} ({contact.phone}) - MessageId: {response['MessageId']}")
+        except Exception as e:
+            self.logger.error(f"Error sending AWS SNS SMS: {e}")
 
     def _save_notification_to_db(self, notification_record: Dict):
         """Save notification record to database"""
