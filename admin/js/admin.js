@@ -3463,12 +3463,25 @@ function updateDTMFThresholdDisplay() {
     const thresholdSlider = document.getElementById('dtmf-detection-threshold');
     const thresholdValue = document.getElementById('dtmf-threshold-value');
     
-    if (thresholdSlider && thresholdValue) {
+    // Validate both elements exist
+    if (!thresholdSlider || !thresholdValue) {
+        return;
+    }
+    
+    // Set initial value
+    thresholdValue.textContent = thresholdSlider.value;
+    
+    // Add event listener only once (check if already attached)
+    if (!thresholdSlider.dataset.listenerAttached) {
         thresholdSlider.addEventListener('input', function() {
             thresholdValue.textContent = this.value;
         });
+        thresholdSlider.dataset.listenerAttached = 'true';
     }
 }
+
+// Constant for tab loading delay
+const TAB_CONTENT_LOAD_DELAY_MS = 100;
 
 // Initialize DTMF threshold display update on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -3479,7 +3492,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (codecsTab) {
         codecsTab.addEventListener('click', function() {
             // Small delay to ensure tab content is visible
-            setTimeout(loadDTMFConfig, 100);
+            setTimeout(loadDTMFConfig, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
 });
