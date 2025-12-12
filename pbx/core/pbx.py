@@ -3099,7 +3099,6 @@ class PBXCore:
                             # Just continue the loop to wait for more digits
                             self.logger.debug(
                                 f"[VM IVR] Collecting digit, waiting for more input...")
-                            pass
 
                         # Clear audio buffer after processing DTMF
                         # Note: Directly modifying internal state - consider
