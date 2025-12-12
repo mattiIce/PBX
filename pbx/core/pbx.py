@@ -2842,7 +2842,7 @@ class PBXCore:
                         # Process IVR action
                         if action['action'] == 'play_message':
                             # Check if call is still active before playing
-                            if call.state.value == 'ended':
+                            if call.state == CallState.ENDED:
                                 self.logger.info(
                                     f"[VM IVR] Call {call_id} ended, skipping message playback")
                                 break
@@ -2864,7 +2864,7 @@ class PBXCore:
 
                         elif action['action'] == 'play_prompt':
                             # Check if call is still active before playing
-                            if call.state.value == 'ended':
+                            if call.state == CallState.ENDED:
                                 self.logger.info(
                                     f"[VM IVR] Call {call_id} ended, skipping prompt playback")
                                 break
@@ -2895,7 +2895,7 @@ class PBXCore:
                         elif action['action'] == 'hangup':
                             # Check if call is still active before playing
                             # goodbye
-                            if call.state.value == 'ended':
+                            if call.state == CallState.ENDED:
                                 self.logger.info(
                                     f"[VM IVR] Call {call_id} already ended, skipping goodbye prompt")
                                 ivr_active = False
@@ -2923,7 +2923,7 @@ class PBXCore:
 
                         elif action['action'] == 'start_recording':
                             # Start recording greeting
-                            if call.state.value == 'ended':
+                            if call.state == CallState.ENDED:
                                 self.logger.info(
                                     f"Call {call_id} ended, cannot start recording")
                                 break
@@ -2956,7 +2956,7 @@ class PBXCore:
                             # Wait for # to stop recording or timeout
                             recording = True
                             while recording and ivr_active:
-                                if call.state.value == 'ended':
+                                if call.state == CallState.ENDED:
                                     self.logger.info(
                                         f"Call {call_id} ended during recording")
                                     recording = False
@@ -3046,7 +3046,7 @@ class PBXCore:
 
                         elif action['action'] == 'play_greeting':
                             # Play back the recorded greeting for review
-                            if call.state.value == 'ended':
+                            if call.state == CallState.ENDED:
                                 self.logger.info(
                                     f"Call {call_id} ended, cannot play greeting")
                                 break
