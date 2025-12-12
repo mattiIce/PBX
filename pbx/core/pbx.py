@@ -3093,6 +3093,14 @@ class PBXCore:
                                 self.logger.warning(
                                     f"No recorded greeting data available for playback")
 
+                        elif action['action'] == 'collect_digit':
+                            # Digit is being collected (e.g., PIN entry)
+                            # No additional action needed - digit is already stored in IVR state
+                            # Just continue the loop to wait for more digits
+                            self.logger.debug(
+                                f"[VM IVR] Collecting digit, waiting for more input...")
+                            pass
+
                         # Clear audio buffer after processing DTMF
                         # Note: Directly modifying internal state - consider
                         # adding clear() method to RTPRecorder
