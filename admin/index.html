@@ -1282,8 +1282,44 @@
                                 <td>8 kbps</td>
                                 <td>Compressed</td>
                                 <td>3.1 kHz</td>
-                                <td><span class="badge" style="background: #6b7280;">⚠️ Not Implemented</span></td>
-                                <td>Low bandwidth codec (patent-encumbered)</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Available</span></td>
+                                <td>Framework ready (requires codec library for encode/decode)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.726-32 (ADPCM)</strong></td>
+                                <td>Narrowband</td>
+                                <td>32 kbps</td>
+                                <td>Standard</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #10b981;">✅ Available</span></td>
+                                <td>ADPCM codec, built-in support via audioop</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.726-40 (ADPCM)</strong></td>
+                                <td>Narrowband</td>
+                                <td>40 kbps</td>
+                                <td>Standard</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #3b82f6;">📋 Framework</span></td>
+                                <td>ADPCM variant, framework support</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.726-24 (ADPCM)</strong></td>
+                                <td>Narrowband</td>
+                                <td>24 kbps</td>
+                                <td>Compressed</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #3b82f6;">📋 Framework</span></td>
+                                <td>ADPCM variant, framework support</td>
+                            </tr>
+                            <tr>
+                                <td><strong>G.726-16 (ADPCM)</strong></td>
+                                <td>Narrowband</td>
+                                <td>16 kbps</td>
+                                <td>Compressed</td>
+                                <td>3.1 kHz</td>
+                                <td><span class="badge" style="background: #3b82f6;">📋 Framework</span></td>
+                                <td>ADPCM variant, framework support</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1344,12 +1380,13 @@
                         <li><strong>G.711:</strong> Uncompressed PCM. Standard quality (3.1 kHz), high bandwidth. Universal compatibility.</li>
                         <li><strong>G.722:</strong> Wideband (7 kHz). HD audio quality with moderate bandwidth. Better clarity than G.711.</li>
                         <li><strong>Opus:</strong> Modern adaptive codec. Best quality with variable bitrate. Includes FEC, PLC, and DTX. Recommended for WebRTC.</li>
-                        <li><strong>G.729:</strong> Low bandwidth (8 kbps). Compressed quality. Good for limited bandwidth scenarios.</li>
+                        <li><strong>G.729:</strong> Low bandwidth (8 kbps). Compressed quality. Good for limited bandwidth scenarios. Framework ready for codec library integration.</li>
+                        <li><strong>G.726:</strong> ADPCM codec family. Multiple bitrates (16/24/32/40 kbps). G.726-32 has built-in support, others have framework support.</li>
                     </ul>
                     
                     <h4>Audio Quality Levels</h4>
                     <ul>
-                        <li><strong>Narrowband (3.1 kHz):</strong> Standard telephone quality - G.711, G.729</li>
+                        <li><strong>Narrowband (3.1 kHz):</strong> Standard telephone quality - G.711, G.729, G.726</li>
                         <li><strong>Wideband (7 kHz):</strong> HD audio quality - G.722</li>
                         <li><strong>Superwideband (12-20 kHz):</strong> Best audio quality - Opus</li>
                     </ul>
@@ -1358,8 +1395,9 @@
                     <ul>
                         <li><strong>Internal calls:</strong> Use G.722 or Opus for best quality</li>
                         <li><strong>External/trunk calls:</strong> G.711 for compatibility, G.722 if supported</li>
-                        <li><strong>Low bandwidth:</strong> G.729 or Opus at low bitrate</li>
+                        <li><strong>Low bandwidth:</strong> G.729, G.726-24, G.726-16, or Opus at low bitrate</li>
                         <li><strong>WebRTC:</strong> Opus (required), VP8/H.264 for video</li>
+                        <li><strong>Legacy systems:</strong> G.726-32 for compatibility with older ADPCM equipment</li>
                     </ul>
                 </div>
             </div>
@@ -1391,10 +1429,46 @@
                         <small>Modern adaptive codec with best quality</small>
                     </div>
                     <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="codec-g729-enabled" checked>
+                            Enable G.729 Codec
+                        </label>
+                        <small>Low bandwidth codec for limited bandwidth scenarios</small>
+                    </div>
+                    <div class="form-group">
+                        <label>G.729 Variant:</label>
+                        <select id="codec-g729-variant">
+                            <option value="G729">G.729 (Basic)</option>
+                            <option value="G729A">G.729 Annex A</option>
+                            <option value="G729B">G.729 Annex B (VAD)</option>
+                            <option value="G729AB" selected>G.729 Annex A+B (Recommended)</option>
+                        </select>
+                        <small>Annex A: Reduced complexity, Annex B: Voice Activity Detection</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="codec-g726-enabled" checked>
+                            Enable G.726 ADPCM Codec
+                        </label>
+                        <small>ADPCM codec family for legacy compatibility</small>
+                    </div>
+                    <div class="form-group">
+                        <label>G.726 Default Bitrate:</label>
+                        <select id="codec-g726-bitrate">
+                            <option value="16000">16 kbps (Very Low)</option>
+                            <option value="24000">24 kbps (Low)</option>
+                            <option value="32000" selected>32 kbps (Standard - Recommended)</option>
+                            <option value="40000">40 kbps (High)</option>
+                        </select>
+                        <small>32 kbps has built-in support, others are framework ready</small>
+                    </div>
+                    <div class="form-group">
                         <label>Codec Preference Order:</label>
-                        <textarea id="codec-preference-order" rows="4" placeholder="Opus&#10;G.722&#10;G.711">Opus
+                        <textarea id="codec-preference-order" rows="6" placeholder="Opus&#10;G.722&#10;G.711 (PCMU/PCMA)&#10;G.729&#10;G.726-32">Opus
 G.722
-G.711</textarea>
+G.711 (PCMU/PCMA)
+G.729
+G.726-32</textarea>
                         <small>Codecs will be negotiated in this order (one per line)</small>
                     </div>
                     <button type="submit" class="btn btn-success">💾 Save Codec Settings</button>
