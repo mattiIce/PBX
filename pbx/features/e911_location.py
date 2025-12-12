@@ -1,6 +1,6 @@
 """
-Nomadic E911 Support
-Location-based emergency routing with custom implementation
+E911 Support for Single Site with Multiple Buildings
+Simplified location-based emergency routing for one site with 3 buildings
 """
 from datetime import datetime
 from typing import Dict, Optional, List
@@ -8,7 +8,7 @@ from pbx.utils.logger import get_logger
 
 
 class E911LocationService:
-    """Service for managing E911 locations and routing"""
+    """Service for managing E911 locations and routing (single site, 3 buildings)"""
     
     def __init__(self, config=None):
         """Initialize E911 location service"""
@@ -16,39 +16,44 @@ class E911LocationService:
         self.config = config or {}
         self.enabled = self.config.get('features', {}).get('e911', {}).get('enabled', False)
         
-        # Location database (in production, would use external PSAP database)
-        self.locations = {}  # extension/device -> location info
-        self.psap_database = {}  # zip_code -> PSAP info
+        # Single site with 3 buildings
+        self.site_address = self.config.get('features', {}).get('e911', {}).get('site_address', {})
+        self.buildings = {}  # building_id -> building info
+        self.device_locations = {}  # device_id -> (building_id, floor, room)
         self.emergency_calls = []  # Log of emergency calls
         
         if self.enabled:
-            self.logger.info("E911 location service initialized")
-            self._load_psap_database()
+            self.logger.info("E911 location service initialized (single site, multi-building)")
+            self._load_buildings()
     
-    def _load_psap_database(self):
-        """Load PSAP (Public Safety Answering Point) database"""
-        # Stub - in production would load from external database
-        # Format: zip_code -> PSAP contact info
-        self.psap_database = {
-            '12345': {
-                'name': 'City Emergency Services',
-                'phone': '911',
-                'address': '123 Main St',
-                'city': 'Anytown',
-                'state': 'ST'
-            }
-        }
-        self.logger.info(f"Loaded {len(self.psap_database)} PSAP entries")
+    def _load_buildings(self):
+        """Load building configurations for the site"""
+        # Load from config or create defaults
+        buildings_config = self.config.get('features', {}).get('e911', {}).get('buildings', [])
+        
+        if not buildings_config:
+            # Default 3 buildings
+            buildings_config = [
+                {'id': 'building_a', 'name': 'Building A', 'floors': 2},
+                {'id': 'building_b', 'name': 'Building B', 'floors': 2},
+                {'id': 'building_c', 'name': 'Building C', 'floors': 1}
+            ]
+        
+        for building in buildings_config:
+            self.buildings[building['id']] = building
+        
+        self.logger.info(f"Loaded {len(self.buildings)} buildings for E911")
     
-    def register_location(self, device_id: str, location: Dict) -> bool:
+    def register_location(self, device_id: str, building_id: str, 
+                         floor: Optional[str] = None, room: Optional[str] = None) -> bool:
         """
-        Register a location for a device/extension
+        Register a location for a device/extension (simplified for single site)
         
         Args:
             device_id: Device or extension identifier
-            location: Location information dictionary
-                Required fields: address, city, state, zip_code
-                Optional: building, floor, room, latitude, longitude
+            building_id: Building identifier (building_a, building_b, building_c)
+            floor: Floor number/name (optional)
+            room: Room number/name (optional)
                 
         Returns:
             True if successful
@@ -56,37 +61,37 @@ class E911LocationService:
         if not self.enabled:
             return False
         
-        required_fields = ['address', 'city', 'state', 'zip_code']
-        if not all(field in location for field in required_fields):
-            self.logger.error(f"Missing required location fields for {device_id}")
+        if building_id not in self.buildings:
+            self.logger.error(f"Invalid building ID: {building_id}")
             return False
         
-        self.locations[device_id] = {
-            **location,
-            'registered_at': datetime.now(),
-            'last_updated': datetime.now()
+        self.device_locations[device_id] = {
+            'building_id': building_id,
+            'floor': floor,
+            'room': room,
+            'registered_at': datetime.now()
         }
         
         self.logger.info(f"Registered E911 location for {device_id}: "
-                        f"{location['address']}, {location['city']}, {location['state']}")
+                        f"{self.buildings[building_id]['name']}" +
+                        (f", Floor {floor}" if floor else "") +
+                        (f", Room {room}" if room else ""))
         return True
-    
-    def update_location(self, device_id: str, location: Dict) -> bool:
-        """Update location for a device (for nomadic users)"""
-        if device_id in self.locations:
-            self.locations[device_id].update(location)
-            self.locations[device_id]['last_updated'] = datetime.now()
-            self.logger.info(f"Updated E911 location for {device_id}")
-            return True
-        return False
     
     def get_location(self, device_id: str) -> Optional[Dict]:
         """Get registered location for a device"""
-        return self.locations.get(device_id)
+        return self.device_locations.get(device_id)
     
-    def get_psap_for_location(self, zip_code: str) -> Optional[Dict]:
-        """Get PSAP information for a zip code"""
-        return self.psap_database.get(zip_code)
+    def list_buildings(self) -> List[Dict]:
+        """List all buildings"""
+        return [
+            {
+                'id': bid,
+                'name': binfo['name'],
+                'floors': binfo.get('floors', 1)
+            }
+            for bid, binfo in self.buildings.items()
+        ]
     
     def route_emergency_call(self, device_id: str, caller_info: Dict) -> Dict:
         """
@@ -97,7 +102,7 @@ class E911LocationService:
             caller_info: Caller information
             
         Returns:
-            Routing information with PSAP and location
+            Routing information with location
         """
         if not self.enabled:
             return {'error': 'E911 not enabled'}
@@ -110,53 +115,67 @@ class E911LocationService:
                 'device_id': device_id
             }
         
-        psap = self.get_psap_for_location(location['zip_code'])
-        if not psap:
-            self.logger.warning(f"No PSAP found for zip {location['zip_code']}")
+        building = self.buildings.get(location['building_id'])
+        
+        # Format full location
+        full_location = {
+            'building': building['name'],
+            'building_id': location['building_id'],
+            'floor': location.get('floor'),
+            'room': location.get('room'),
+            'site_address': self.site_address
+        }
         
         # Log emergency call
         call_record = {
             'device_id': device_id,
             'caller_info': caller_info,
-            'location': location,
-            'psap': psap,
+            'location': full_location,
             'timestamp': datetime.now()
         }
         self.emergency_calls.append(call_record)
         
         self.logger.critical(f"EMERGENCY CALL from {device_id}")
-        self.logger.critical(f"  Location: {location['address']}, {location['city']}, {location['state']}")
-        if 'building' in location:
-            self.logger.critical(f"  Building: {location['building']}")
-        if 'floor' in location:
+        self.logger.critical(f"  Site: {self.site_address.get('address', 'N/A')}")
+        self.logger.critical(f"  Building: {building['name']}")
+        if location.get('floor'):
             self.logger.critical(f"  Floor: {location['floor']}")
-        if 'room' in location:
+        if location.get('room'):
             self.logger.critical(f"  Room: {location['room']}")
         
         return {
             'device_id': device_id,
-            'location': location,
-            'psap': psap,
-            'dispatchable_location': self._format_dispatchable_location(location),
+            'location': full_location,
+            'dispatchable_location': self._format_dispatchable_location(full_location),
             'routing': 'emergency_trunk'
         }
     
     def _format_dispatchable_location(self, location: Dict) -> str:
         """Format location as dispatchable location string (Ray Baum's Act)"""
-        parts = [location['address']]
+        site = location.get('site_address', {})
+        parts = []
         
-        if 'building' in location:
-            parts.append(f"Building {location['building']}")
-        if 'floor' in location:
+        # Site address
+        if site.get('address'):
+            parts.append(site['address'])
+        
+        # Building
+        if location.get('building'):
+            parts.append(f"Building: {location['building']}")
+        
+        # Floor and room
+        if location.get('floor'):
             parts.append(f"Floor {location['floor']}")
-        if 'room' in location:
+        if location.get('room'):
             parts.append(f"Room {location['room']}")
         
-        parts.extend([
-            location['city'],
-            location['state'],
-            location['zip_code']
-        ])
+        # City, state, zip
+        if site.get('city'):
+            parts.append(site['city'])
+        if site.get('state'):
+            parts.append(site['state'])
+        if site.get('zip_code'):
+            parts.append(site['zip_code'])
         
         return ', '.join(parts)
     
@@ -170,7 +189,7 @@ class E911LocationService:
         """Get E911 service statistics"""
         return {
             'enabled': self.enabled,
-            'registered_locations': len(self.locations),
-            'psap_entries': len(self.psap_database),
+            'buildings': len(self.buildings),
+            'registered_devices': len(self.device_locations),
             'emergency_calls': len(self.emergency_calls)
         }
