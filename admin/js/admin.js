@@ -4443,7 +4443,7 @@ function addRetentionPolicy(event) {
     const tagsInput = document.getElementById('retention-tags').value;
     
     // Validate input
-    if (!name.match(/^[a-zA-Z0-9_\-\s]+$/)) {
+    if (!name.match(/^[a-zA-Z0-9_\s-]+$/)) {
         showNotification('Policy name contains invalid characters', 'error');
         return;
     }

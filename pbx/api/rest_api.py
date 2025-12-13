@@ -430,14 +430,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/recording-retention/policy/'):
                 # Extract policy ID from path - sanitize to prevent path traversal
                 policy_id = path.split('/')[-1]
-                if policy_id and not any(c in policy_id for c in ['/', '\\', '..']):
+                # Validate: alphanumeric, underscore, hyphen only (no dots, slashes)
+                import re
+                if policy_id and re.match(r'^[a-zA-Z0-9_-]+$', policy_id):
                     self._handle_delete_retention_policy(policy_id)
                 else:
                     self._send_json({'error': 'Invalid policy ID'}, 400)
             elif path.startswith('/api/fraud-detection/blocked-pattern/'):
                 # Extract pattern ID from path - sanitize
                 pattern_id = path.split('/')[-1]
-                if pattern_id and not any(c in pattern_id for c in ['/', '\\', '..']):
+                # Validate: numeric only for array index
+                if pattern_id and pattern_id.isdigit():
                     self._handle_delete_blocked_pattern(pattern_id)
                 else:
                     self._send_json({'error': 'Invalid pattern ID'}, 400)
@@ -5983,7 +5986,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Transform to match frontend expectations
                 result = {
                     'total_alerts': stats.get('total_alerts', 0),
-                    'high_risk_alerts': len([a for a in self.pbx_core.fraud_detection.alerts if a.get('fraud_score', 0) > 0.7]),
+                    'high_risk_alerts': sum(1 for a in self.pbx_core.fraud_detection.alerts if a.get('fraud_score', 0) > 0.7),
                     'blocked_patterns_count': stats.get('blocked_patterns', 0),
                     'extensions_flagged': stats.get('total_extensions_tracked', 0),
                     'alerts_24h': stats.get('alerts_24h', 0),
