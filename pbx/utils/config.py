@@ -385,13 +385,13 @@ class Config:
             if 'payload_type' in dtmf:
                 payload_type = int(dtmf['payload_type'])
                 if payload_type < 96 or payload_type > 127:
-                    print("Error updating DTMF config: Invalid payload type. Must be between 96 and 127")
+                    print(f"Error updating DTMF config: Invalid payload type {payload_type}. Must be between 96 and 127")
                     return False
                 self.config['features']['webrtc']['dtmf']['payload_type'] = payload_type
             if 'duration' in dtmf:
                 duration = int(dtmf['duration'])
                 if duration < 80 or duration > 500:
-                    print("Error updating DTMF config: Invalid duration. Must be between 80 and 500ms")
+                    print(f"Error updating DTMF config: Invalid duration {duration}ms. Must be between 80 and 500ms")
                     return False
                 self.config['features']['webrtc']['dtmf']['duration'] = duration
             if 'sip_info_fallback' in dtmf:
@@ -401,7 +401,7 @@ class Config:
             if 'detection_threshold' in dtmf:
                 threshold = float(dtmf['detection_threshold'])
                 if threshold < 0.1 or threshold > 0.9:
-                    print("Error updating DTMF config: Invalid detection threshold. Must be between 0.1 and 0.9")
+                    print(f"Error updating DTMF config: Invalid detection threshold {threshold}. Must be between 0.1 and 0.9")
                     return False
                 self.config['features']['webrtc']['dtmf']['detection_threshold'] = threshold
             if 'relay_enabled' in dtmf:

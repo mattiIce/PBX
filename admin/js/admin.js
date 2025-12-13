@@ -3331,6 +3331,13 @@ async function saveCodecConfig(event) {
 async function loadDTMFConfig() {
     try {
         const response = await fetch('/api/config/dtmf');
+        
+        if (!response.ok) {
+            console.error('Failed to load DTMF config:', response.status);
+            showNotification('Failed to load DTMF configuration', 'error');
+            return;
+        }
+        
         const config = await response.json();
         
         // Populate form fields
