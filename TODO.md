@@ -58,9 +58,9 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 25. **Multi-Factor Authentication** - TOTP, YubiKey, FIDO2 support with backup codes
 26. **Enhanced Threat Detection** - IP blocking, pattern analysis, anomaly detection
 27. **DND Scheduling** - Auto-DND based on calendar and time rules
-23. **Skills-Based Routing** - Intelligent agent selection based on skill profiles
-24. **Voicemail Transcription** - Speech-to-text conversion with OpenAI/Google support
-25. **Enhanced Dashboard UI** - Interactive analytics with charts and comprehensive statistics
+28. **Skills-Based Routing** - Intelligent agent selection based on skill profiles
+29. **Voicemail Transcription** - Speech-to-text conversion with OpenAI/Google support
+30. **Enhanced Dashboard UI** - Interactive analytics with charts and comprehensive statistics
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
