@@ -219,7 +219,6 @@ PBX/
 | Least-Cost Routing | ✅ Complete | Automatic carrier cost optimization |
 | E911 Location Service | ✅ Complete | Ray Baum's Act dispatchable location |
 | Advanced Audio Processing | ✅ Complete | Noise suppression & echo cancellation |
-| Click-to-Dial | ✅ Complete | Web/app-based one-click dialing |
 | Callback Queuing | ✅ Complete | Scheduled callbacks vs hold time |
 | Find Me/Follow Me | ✅ Complete | Sequential & simultaneous ring |
 | Time-Based Routing | ✅ Complete | Business hours & holiday routing |

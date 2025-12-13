@@ -48,16 +48,16 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 15. **STIR/SHAKEN Support** (Dec 12) - Caller ID authentication, anti-spoofing, regulatory compliance
 16. **QoS Monitoring System** (Dec 8/10) - Real-time call quality with MOS scoring, full integration
 17. **Opus Codec Support** (Dec 8) - Modern adaptive codec with FEC/PLC/DTX
-13. **WebRTC Browser Calling** - Full browser-based calling with WebRTC signaling
-14. **Visual Voicemail Web UI** (Dec 10) - Modern card-based interface with transcription
-15. **Enhanced Historical Analytics** (Dec 10) - Advanced queries, call center metrics, CSV export
-16. **Emergency Notification System** (Dec 10) - Auto-alert on 911 calls, contact management
-17. **Hot-Desking** - Dynamic extension assignment for flexible workspace
-18. **Presence Integration** - Real-time availability with Teams sync
-19. **Calendar Integration** - Outlook calendar sync for availability
-20. **Multi-Factor Authentication** - TOTP, YubiKey, FIDO2 support with backup codes
-21. **Enhanced Threat Detection** - IP blocking, pattern analysis, anomaly detection
-22. **DND Scheduling** - Auto-DND based on calendar and time rules
+18. **WebRTC Browser Calling** - Full browser-based calling with WebRTC signaling
+19. **Visual Voicemail Web UI** (Dec 10) - Modern card-based interface with transcription
+20. **Enhanced Historical Analytics** (Dec 10) - Advanced queries, call center metrics, CSV export
+21. **Emergency Notification System** (Dec 10) - Auto-alert on 911 calls, contact management
+22. **Hot-Desking** - Dynamic extension assignment for flexible workspace
+23. **Presence Integration** - Real-time availability with Teams sync
+24. **Calendar Integration** - Outlook calendar sync for availability
+25. **Multi-Factor Authentication** - TOTP, YubiKey, FIDO2 support with backup codes
+26. **Enhanced Threat Detection** - IP blocking, pattern analysis, anomaly detection
+27. **DND Scheduling** - Auto-DND based on calendar and time rules
 23. **Skills-Based Routing** - Intelligent agent selection based on skill profiles
 24. **Voicemail Transcription** - Speech-to-text conversion with OpenAI/Google support
 25. **Enhanced Dashboard UI** - Interactive analytics with charts and comprehensive statistics
