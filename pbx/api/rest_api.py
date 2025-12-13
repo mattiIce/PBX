@@ -290,6 +290,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_retention_policy()
             elif path == '/api/fraud-detection/blocked-pattern':
                 self._handle_add_blocked_pattern()
+            elif path == '/api/callback-queue/request':
+                self._handle_request_callback()
+            elif path == '/api/callback-queue/start':
+                self._handle_start_callback()
+            elif path == '/api/callback-queue/complete':
+                self._handle_complete_callback()
+            elif path == '/api/callback-queue/cancel':
+                self._handle_cancel_callback()
+            elif path == '/api/mobile-push/register':
+                self._handle_register_device()
+            elif path == '/api/mobile-push/unregister':
+                self._handle_unregister_device()
+            elif path == '/api/mobile-push/test':
+                self._handle_test_push_notification()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -594,6 +608,32 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension from path
                 extension = path.split('/')[-1]
                 self._handle_get_fraud_extension_stats(extension)
+            elif path == '/api/callback-queue/statistics':
+                self._handle_get_callback_statistics()
+            elif path == '/api/callback-queue/list':
+                self._handle_get_callback_list()
+            elif path.startswith('/api/callback-queue/queue/'):
+                # Extract queue_id from path
+                queue_id = path.split('/')[-1]
+                self._handle_get_queue_callbacks(queue_id)
+            elif path.startswith('/api/callback-queue/info/'):
+                # Extract callback_id from path
+                callback_id = path.split('/')[-1]
+                self._handle_get_callback_info(callback_id)
+            elif path == '/api/mobile-push/devices':
+                self._handle_get_all_devices()
+            elif path.startswith('/api/mobile-push/devices/'):
+                # Extract user_id from path
+                user_id = path.split('/')[-1]
+                self._handle_get_user_devices(user_id)
+            elif path == '/api/mobile-push/statistics':
+                self._handle_get_push_statistics()
+            elif path == '/api/mobile-push/history':
+                self._handle_get_push_history()
+            elif path == '/api/recording-announcements/statistics':
+                self._handle_get_announcement_statistics()
+            elif path == '/api/recording-announcements/config':
+                self._handle_get_announcement_config()
             elif path == '/api/skills/all':
                 self._handle_get_all_skills()
             elif path.startswith('/api/skills/agent/'):
@@ -6091,6 +6131,462 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Error deleting blocked pattern'}, 500)
         else:
             self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    # Callback Queue Handlers
+    def _handle_request_callback(self):
+        """Request a callback from queue"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                if 'queue_id' not in data or 'caller_number' not in data:
+                    self._send_json({'error': 'Missing required fields: queue_id, caller_number'}, 400)
+                    return
+
+                # Sanitize inputs
+                queue_id = str(data['queue_id'])[:50]
+                caller_number = str(data['caller_number'])[:50]
+                caller_name = str(data.get('caller_name', ''))[:100] if data.get('caller_name') else None
+                
+                # Parse preferred_time if provided
+                preferred_time = None
+                if 'preferred_time' in data:
+                    try:
+                        from datetime import datetime
+                        preferred_time = datetime.fromisoformat(data['preferred_time'])
+                    except (ValueError, TypeError):
+                        self._send_json({'error': 'Invalid preferred_time format. Use ISO 8601 format.'}, 400)
+                        return
+                
+                result = self.pbx_core.callback_queue.request_callback(
+                    queue_id, caller_number, caller_name, preferred_time
+                )
+                
+                if 'error' in result:
+                    self._send_json(result, 400)
+                else:
+                    self._send_json({'success': True, **result})
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error requesting callback: {e}")
+                self._send_json({'error': 'Error requesting callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_start_callback(self):
+        """Start processing a callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 2048:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'callback_id' not in data or 'agent_id' not in data:
+                    self._send_json({'error': 'Missing required fields: callback_id, agent_id'}, 400)
+                    return
+
+                callback_id = str(data['callback_id'])[:100]
+                agent_id = str(data['agent_id'])[:50]
+                
+                result = self.pbx_core.callback_queue.start_callback(callback_id, agent_id)
+                
+                if 'error' in result:
+                    self._send_json(result, 404)
+                else:
+                    self._send_json({'success': True, **result})
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error starting callback: {e}")
+                self._send_json({'error': 'Error starting callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_complete_callback(self):
+        """Complete a callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'callback_id' not in data or 'success' not in data:
+                    self._send_json({'error': 'Missing required fields: callback_id, success'}, 400)
+                    return
+
+                callback_id = str(data['callback_id'])[:100]
+                success = bool(data['success'])
+                notes = str(data.get('notes', ''))[:500] if data.get('notes') else None
+                
+                result = self.pbx_core.callback_queue.complete_callback(callback_id, success, notes)
+                
+                if result:
+                    self._send_json({'success': True, 'message': 'Callback completed'})
+                else:
+                    self._send_json({'error': 'Callback not found'}, 404)
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error completing callback: {e}")
+                self._send_json({'error': 'Error completing callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_cancel_callback(self):
+        """Cancel a pending callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 2048:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'callback_id' not in data:
+                    self._send_json({'error': 'Missing required field: callback_id'}, 400)
+                    return
+
+                callback_id = str(data['callback_id'])[:100]
+                
+                result = self.pbx_core.callback_queue.cancel_callback(callback_id)
+                
+                if result:
+                    self._send_json({'success': True, 'message': 'Callback cancelled'})
+                else:
+                    self._send_json({'error': 'Callback not found'}, 404)
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error cancelling callback: {e}")
+                self._send_json({'error': 'Error cancelling callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_callback_statistics(self):
+        """Get callback queue statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                stats = self.pbx_core.callback_queue.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting callback statistics: {e}")
+                self._send_json({'error': 'Error getting callback statistics'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_callback_list(self):
+        """Get list of all callbacks"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                callbacks = []
+                for callback_id in self.pbx_core.callback_queue.callbacks:
+                    info = self.pbx_core.callback_queue.get_callback_info(callback_id)
+                    if info:
+                        callbacks.append(info)
+                
+                # Sort by requested_at descending (most recent first)
+                callbacks.sort(key=lambda x: x.get('requested_at', ''), reverse=True)
+                
+                self._send_json({'callbacks': callbacks})
+            except Exception as e:
+                self.logger.error(f"Error getting callback list: {e}")
+                self._send_json({'error': 'Error getting callback list'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_queue_callbacks(self, queue_id: str):
+        """Get callbacks for a specific queue"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                # Sanitize queue_id
+                import re
+                if not re.match(r'^[\w-]{1,50}$', queue_id):
+                    self._send_json({'error': 'Invalid queue_id format'}, 400)
+                    return
+                
+                callbacks = self.pbx_core.callback_queue.list_queue_callbacks(queue_id)
+                stats = self.pbx_core.callback_queue.get_queue_statistics(queue_id)
+                
+                self._send_json({
+                    'queue_id': queue_id,
+                    'callbacks': callbacks,
+                    'statistics': stats
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting queue callbacks: {e}")
+                self._send_json({'error': 'Error getting queue callbacks'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_callback_info(self, callback_id: str):
+        """Get information about a specific callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                # Sanitize callback_id
+                import re
+                if not re.match(r'^cb_[\w]{1,100}$', callback_id):
+                    self._send_json({'error': 'Invalid callback_id format'}, 400)
+                    return
+                
+                info = self.pbx_core.callback_queue.get_callback_info(callback_id)
+                
+                if info:
+                    self._send_json(info)
+                else:
+                    self._send_json({'error': 'Callback not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting callback info: {e}")
+                self._send_json({'error': 'Error getting callback info'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    # Mobile Push Notification Handlers
+    def _handle_register_device(self):
+        """Register a mobile device for push notifications"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'user_id' not in data or 'device_token' not in data:
+                    self._send_json({'error': 'Missing required fields: user_id, device_token'}, 400)
+                    return
+
+                user_id = str(data['user_id'])[:50]
+                device_token = str(data['device_token'])[:255]
+                platform = str(data.get('platform', 'unknown'))[:20]
+                
+                success = self.pbx_core.mobile_push.register_device(user_id, device_token, platform)
+                
+                if success:
+                    self._send_json({'success': True, 'message': 'Device registered successfully'})
+                else:
+                    self._send_json({'error': 'Failed to register device'}, 500)
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error registering device: {e}")
+                self._send_json({'error': 'Error registering device'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    def _handle_unregister_device(self):
+        """Unregister a mobile device"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'user_id' not in data or 'device_token' not in data:
+                    self._send_json({'error': 'Missing required fields: user_id, device_token'}, 400)
+                    return
+
+                user_id = str(data['user_id'])[:50]
+                device_token = str(data['device_token'])[:255]
+                
+                success = self.pbx_core.mobile_push.unregister_device(user_id, device_token)
+                
+                if success:
+                    self._send_json({'success': True, 'message': 'Device unregistered successfully'})
+                else:
+                    self._send_json({'error': 'Device not found'}, 404)
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error unregistering device: {e}")
+                self._send_json({'error': 'Error unregistering device'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    def _handle_test_push_notification(self):
+        """Send a test push notification"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'user_id' not in data:
+                    self._send_json({'error': 'Missing required field: user_id'}, 400)
+                    return
+
+                user_id = str(data['user_id'])[:50]
+                
+                result = self.pbx_core.mobile_push.send_test_notification(user_id)
+                
+                if 'error' in result:
+                    self._send_json(result, 400)
+                else:
+                    self._send_json({'success': True, **result})
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error sending test notification: {e}")
+                self._send_json({'error': 'Error sending test notification'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    def _handle_get_all_devices(self):
+        """Get all registered mobile devices"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                all_devices = []
+                for user_id, devices in self.pbx_core.mobile_push.device_tokens.items():
+                    for device in devices:
+                        all_devices.append({
+                            'user_id': user_id,
+                            'platform': device['platform'],
+                            'registered_at': device['registered_at'].isoformat(),
+                            'last_seen': device['last_seen'].isoformat()
+                        })
+                
+                # Sort by last_seen descending
+                all_devices.sort(key=lambda x: x['last_seen'], reverse=True)
+                
+                self._send_json({'devices': all_devices, 'total': len(all_devices)})
+            except Exception as e:
+                self.logger.error(f"Error getting all devices: {e}")
+                self._send_json({'error': 'Error getting devices'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    def _handle_get_user_devices(self, user_id: str):
+        """Get devices for a specific user"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                # Sanitize user_id
+                import re
+                if not re.match(r'^[\w]{1,50}$', user_id):
+                    self._send_json({'error': 'Invalid user_id format'}, 400)
+                    return
+                
+                devices = self.pbx_core.mobile_push.get_user_devices(user_id)
+                self._send_json({'user_id': user_id, 'devices': devices, 'count': len(devices)})
+            except Exception as e:
+                self.logger.error(f"Error getting user devices: {e}")
+                self._send_json({'error': 'Error getting user devices'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    def _handle_get_push_statistics(self):
+        """Get push notification statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                # Count devices
+                total_devices = sum(len(devices) for devices in self.pbx_core.mobile_push.device_tokens.values())
+                total_users = len(self.pbx_core.mobile_push.device_tokens)
+                
+                # Count by platform
+                platform_counts = {}
+                for devices in self.pbx_core.mobile_push.device_tokens.values():
+                    for device in devices:
+                        platform = device['platform']
+                        platform_counts[platform] = platform_counts.get(platform, 0) + 1
+                
+                # Recent notifications
+                recent_notifications = len(self.pbx_core.mobile_push.notification_history)
+                
+                self._send_json({
+                    'total_devices': total_devices,
+                    'total_users': total_users,
+                    'platforms': platform_counts,
+                    'recent_notifications': recent_notifications
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting push statistics: {e}")
+                self._send_json({'error': 'Error getting push statistics'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    def _handle_get_push_history(self):
+        """Get push notification history"""
+        if self.pbx_core and hasattr(self.pbx_core, 'mobile_push'):
+            try:
+                # Get recent notification history
+                history = []
+                for notif in self.pbx_core.mobile_push.notification_history[-100:]:  # Last 100
+                    history.append({
+                        'user_id': notif['user_id'],
+                        'title': notif['title'],
+                        'body': notif['body'],
+                        'sent_at': notif['sent_at'].isoformat(),
+                        'success_count': notif.get('success_count', 0),
+                        'failure_count': notif.get('failure_count', 0)
+                    })
+                
+                # Sort by sent_at descending
+                history.sort(key=lambda x: x['sent_at'], reverse=True)
+                
+                self._send_json({'history': history})
+            except Exception as e:
+                self.logger.error(f"Error getting push history: {e}")
+                self._send_json({'error': 'Error getting push history'}, 500)
+        else:
+            self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    # Recording Announcements Handlers
+    def _handle_get_announcement_statistics(self):
+        """Get recording announcements statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_announcements'):
+            try:
+                stats = {
+                    'enabled': self.pbx_core.recording_announcements.enabled,
+                    'announcements_played': self.pbx_core.recording_announcements.announcements_played,
+                    'consent_accepted': self.pbx_core.recording_announcements.consent_accepted,
+                    'consent_declined': self.pbx_core.recording_announcements.consent_declined,
+                    'announcement_type': self.pbx_core.recording_announcements.announcement_type,
+                    'require_consent': self.pbx_core.recording_announcements.require_consent
+                }
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting announcement statistics: {e}")
+                self._send_json({'error': 'Error getting announcement statistics'}, 500)
+        else:
+            self._send_json({'error': 'Recording announcements not initialized'}, 500)
+
+    def _handle_get_announcement_config(self):
+        """Get recording announcements configuration"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_announcements'):
+            try:
+                config = self.pbx_core.recording_announcements.get_announcement_config()
+                self._send_json(config)
+            except Exception as e:
+                self.logger.error(f"Error getting announcement config: {e}")
+                self._send_json({'error': 'Error getting announcement config'}, 500)
+        else:
+            self._send_json({'error': 'Recording announcements not initialized'}, 500)
 
 
 class PBXAPIServer:

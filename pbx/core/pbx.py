@@ -324,6 +324,24 @@ class PBXCore:
         if self.fraud_detection.enabled:
             self.logger.info("Fraud detection system initialized")
 
+        # Initialize Callback Queue
+        from pbx.features.callback_queue import CallbackQueue
+        self.callback_queue = CallbackQueue(config=self.config, database=self.database)
+        if self.callback_queue.enabled:
+            self.logger.info("Callback queue system initialized")
+
+        # Initialize Mobile Push Notifications
+        from pbx.features.mobile_push import MobilePushNotifications
+        self.mobile_push = MobilePushNotifications(config=self.config, database=self.database)
+        if self.mobile_push.enabled:
+            self.logger.info("Mobile push notifications initialized")
+
+        # Initialize Recording Announcements
+        from pbx.features.recording_announcements import RecordingAnnouncements
+        self.recording_announcements = RecordingAnnouncements(config=self.config, database=self.database)
+        if self.recording_announcements.enabled:
+            self.logger.info("Recording announcements initialized")
+
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):
             from pbx.features.mfa import MFAManager

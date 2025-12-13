@@ -4653,3 +4653,516 @@ function deleteBlockedPattern(patternIndex, pattern) {
         showNotification('Error removing blocked pattern', 'error');
     });
 }
+
+// Callback Queue Functions
+function loadCallbackQueue() {
+    Promise.all([
+        fetch('/api/callback-queue/list'),
+        fetch('/api/callback-queue/statistics')
+    ])
+    .then(([listRes, statsRes]) => Promise.all([listRes.json(), statsRes.json()]))
+    .then(([listData, statsData]) => {
+        // Update statistics
+        if (statsData) {
+            document.getElementById('callback-total').textContent = statsData.total_callbacks || 0;
+            
+            const statusBreakdown = statsData.status_breakdown || {};
+            document.getElementById('callback-scheduled').textContent = statusBreakdown.scheduled || 0;
+            document.getElementById('callback-in-progress').textContent = statusBreakdown.in_progress || 0;
+            document.getElementById('callback-completed').textContent = statusBreakdown.completed || 0;
+            document.getElementById('callback-failed').textContent = statusBreakdown.failed || 0;
+        }
+        
+        // Update callback list table
+        if (listData && listData.callbacks) {
+            const tbody = document.getElementById('callback-list');
+            if (listData.callbacks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No callbacks in queue</td></tr>';
+            } else {
+                tbody.innerHTML = listData.callbacks.map(callback => {
+                    const requestedTime = new Date(callback.requested_at).toLocaleString();
+                    const callbackTime = new Date(callback.callback_time).toLocaleString();
+                    
+                    // Status badge color
+                    let statusClass = '';
+                    switch(callback.status) {
+                        case 'scheduled': statusClass = 'badge-info'; break;
+                        case 'in_progress': statusClass = 'badge-warning'; break;
+                        case 'completed': statusClass = 'badge-success'; break;
+                        case 'failed': statusClass = 'badge-danger'; break;
+                        case 'cancelled': statusClass = 'badge-secondary'; break;
+                        default: statusClass = 'badge-info';
+                    }
+                    
+                    return `
+                        <tr>
+                            <td><code>${escapeHtml(callback.callback_id)}</code></td>
+                            <td>${escapeHtml(callback.queue_id)}</td>
+                            <td>
+                                <strong>${escapeHtml(callback.caller_number)}</strong><br>
+                                <small>${escapeHtml(callback.caller_name || 'N/A')}</small>
+                            </td>
+                            <td><small>${requestedTime}</small></td>
+                            <td><small>${callbackTime}</small></td>
+                            <td><span class="badge ${statusClass}">${escapeHtml(callback.status)}</span></td>
+                            <td>${callback.attempts}</td>
+                            <td>
+                                ${callback.status === 'scheduled' ? `
+                                    <button class="btn-small btn-primary" onclick="startCallback('${escapeHtml(callback.callback_id)}')">▶️ Start</button>
+                                    <button class="btn-small btn-danger" onclick="cancelCallback('${escapeHtml(callback.callback_id)}')">❌</button>
+                                ` : callback.status === 'in_progress' ? `
+                                    <button class="btn-small btn-success" onclick="completeCallback('${escapeHtml(callback.callback_id)}', true)">✅ Done</button>
+                                    <button class="btn-small btn-warning" onclick="completeCallback('${escapeHtml(callback.callback_id)}', false)">🔄 Retry</button>
+                                ` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading callback queue:', error);
+        showNotification('Error loading callback queue', 'error');
+    });
+}
+
+function showRequestCallbackModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'request-callback-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeRequestCallbackModal()">&times;</span>
+            <h2>📞 Request Callback</h2>
+            <form id="request-callback-form" onsubmit="requestCallback(event)">
+                <div class="form-group">
+                    <label for="callback-queue-id">Queue ID: *</label>
+                    <input type="text" id="callback-queue-id" required 
+                           placeholder="e.g., sales, support, general">
+                </div>
+                <div class="form-group">
+                    <label for="callback-caller-number">Caller Number: *</label>
+                    <input type="tel" id="callback-caller-number" required 
+                           placeholder="e.g., +1234567890">
+                </div>
+                <div class="form-group">
+                    <label for="callback-caller-name">Caller Name:</label>
+                    <input type="text" id="callback-caller-name" 
+                           placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label for="callback-preferred-time">Preferred Time:</label>
+                    <input type="datetime-local" id="callback-preferred-time">
+                    <small>Leave empty for ASAP callback</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRequestCallbackModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Request Callback</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function closeRequestCallbackModal() {
+    const modal = document.getElementById('request-callback-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function requestCallback(event) {
+    event.preventDefault();
+    
+    const queueId = document.getElementById('callback-queue-id').value;
+    const callerNumber = document.getElementById('callback-caller-number').value;
+    const callerName = document.getElementById('callback-caller-name').value;
+    const preferredTime = document.getElementById('callback-preferred-time').value;
+    
+    const callbackData = {
+        queue_id: queueId,
+        caller_number: callerNumber
+    };
+    
+    if (callerName) {
+        callbackData.caller_name = callerName;
+    }
+    
+    if (preferredTime) {
+        // Convert to ISO format
+        callbackData.preferred_time = new Date(preferredTime).toISOString();
+    }
+    
+    fetch('/api/callback-queue/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(callbackData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Callback requested successfully', 'success');
+            closeRequestCallbackModal();
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error requesting callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error requesting callback:', error);
+        showNotification('Error requesting callback', 'error');
+    });
+}
+
+function startCallback(callbackId) {
+    // Prompt for agent ID
+    const agentId = prompt('Enter your agent ID/extension:');
+    if (!agentId) {
+        return;
+    }
+    
+    fetch('/api/callback-queue/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            callback_id: callbackId,
+            agent_id: agentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Started callback to ${data.caller_number}`, 'success');
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error starting callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error starting callback:', error);
+        showNotification('Error starting callback', 'error');
+    });
+}
+
+function completeCallback(callbackId, success) {
+    let notes = '';
+    if (!success) {
+        notes = prompt('Enter reason for failure (optional):') || '';
+    }
+    
+    fetch('/api/callback-queue/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            callback_id: callbackId,
+            success: success,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(success ? 'Callback completed' : 'Callback will be retried', 'success');
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error completing callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error completing callback:', error);
+        showNotification('Error completing callback', 'error');
+    });
+}
+
+function cancelCallback(callbackId) {
+    if (!confirm('Are you sure you want to cancel this callback request?')) {
+        return;
+    }
+    
+    fetch('/api/callback-queue/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            callback_id: callbackId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Callback cancelled', 'success');
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error cancelling callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling callback:', error);
+        showNotification('Error cancelling callback', 'error');
+    });
+}
+
+// Mobile Push Notification Functions
+function loadMobilePushDevices() {
+    Promise.all([
+        fetch('/api/mobile-push/devices'),
+        fetch('/api/mobile-push/statistics'),
+        fetch('/api/mobile-push/history')
+    ])
+    .then(([devicesRes, statsRes, historyRes]) => Promise.all([devicesRes.json(), statsRes.json(), historyRes.json()]))
+    .then(([devicesData, statsData, historyData]) => {
+        // Update statistics
+        if (statsData) {
+            document.getElementById('push-total-devices').textContent = statsData.total_devices || 0;
+            document.getElementById('push-total-users').textContent = statsData.total_users || 0;
+            
+            const platforms = statsData.platforms || {};
+            document.getElementById('push-ios-devices').textContent = platforms.ios || 0;
+            document.getElementById('push-android-devices').textContent = platforms.android || 0;
+            document.getElementById('push-recent-notifications').textContent = statsData.recent_notifications || 0;
+        }
+        
+        // Update devices table
+        if (devicesData && devicesData.devices) {
+            const tbody = document.getElementById('mobile-devices-list');
+            if (devicesData.devices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No devices registered</td></tr>';
+            } else {
+                tbody.innerHTML = devicesData.devices.map(device => {
+                    const registeredTime = new Date(device.registered_at).toLocaleString();
+                    const lastSeenTime = new Date(device.last_seen).toLocaleString();
+                    
+                    let platformBadge = '';
+                    if (device.platform === 'ios') {
+                        platformBadge = '<span class="badge badge-info">📱 iOS</span>';
+                    } else if (device.platform === 'android') {
+                        platformBadge = '<span class="badge badge-success">🤖 Android</span>';
+                    } else {
+                        platformBadge = `<span class="badge badge-secondary">${escapeHtml(device.platform)}</span>`;
+                    }
+                    
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(device.user_id)}</strong></td>
+                            <td>${platformBadge}</td>
+                            <td><small>${registeredTime}</small></td>
+                            <td><small>${lastSeenTime}</small></td>
+                            <td>
+                                <button class="btn-small btn-primary" onclick="sendTestNotification('${escapeHtml(device.user_id)}')">🧪 Test</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+        
+        // Update history table
+        if (historyData && historyData.history) {
+            const tbody = document.getElementById('push-history-list');
+            if (historyData.history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No notifications sent</td></tr>';
+            } else {
+                tbody.innerHTML = historyData.history.slice(0, 50).map(notif => {
+                    const sentTime = new Date(notif.sent_at).toLocaleString();
+                    const successCount = notif.success_count || 0;
+                    const failureCount = notif.failure_count || 0;
+                    
+                    return `
+                        <tr>
+                            <td>${escapeHtml(notif.user_id)}</td>
+                            <td><strong>${escapeHtml(notif.title)}</strong></td>
+                            <td><small>${escapeHtml(notif.body)}</small></td>
+                            <td><small>${sentTime}</small></td>
+                            <td>
+                                <span class="badge badge-success">${successCount} ✓</span>
+                                ${failureCount > 0 ? `<span class="badge badge-danger">${failureCount} ✗</span>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading mobile push data:', error);
+        showNotification('Error loading mobile push data', 'error');
+    });
+}
+
+function showRegisterDeviceModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'register-device-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeRegisterDeviceModal()">&times;</span>
+            <h2>📱 Register Mobile Device</h2>
+            <form id="register-device-form" onsubmit="registerDevice(event)">
+                <div class="form-group">
+                    <label for="device-user-id">User ID / Extension: *</label>
+                    <input type="text" id="device-user-id" required 
+                           placeholder="e.g., 1001 or user@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="device-token">Device Token: *</label>
+                    <textarea id="device-token" required rows="4"
+                              placeholder="FCM device registration token"></textarea>
+                    <small>Obtain from mobile app after FCM SDK initialization</small>
+                </div>
+                <div class="form-group">
+                    <label for="device-platform">Platform: *</label>
+                    <select id="device-platform" required>
+                        <option value="">Select Platform</option>
+                        <option value="ios">iOS</option>
+                        <option value="android">Android</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRegisterDeviceModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Register Device</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function closeRegisterDeviceModal() {
+    const modal = document.getElementById('register-device-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function registerDevice(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById('device-user-id').value;
+    const deviceToken = document.getElementById('device-token').value.trim();
+    const platform = document.getElementById('device-platform').value;
+    
+    const deviceData = {
+        user_id: userId,
+        device_token: deviceToken,
+        platform: platform
+    };
+    
+    fetch('/api/mobile-push/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deviceData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Device registered successfully', 'success');
+            closeRegisterDeviceModal();
+            loadMobilePushDevices();
+        } else {
+            showNotification(data.error || 'Error registering device', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error registering device:', error);
+        showNotification('Error registering device', 'error');
+    });
+}
+
+function showTestNotificationModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'test-notification-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeTestNotificationModal()">&times;</span>
+            <h2>🧪 Send Test Notification</h2>
+            <form id="test-notification-form" onsubmit="sendTestNotificationForm(event)">
+                <div class="form-group">
+                    <label for="test-user-id">User ID / Extension: *</label>
+                    <input type="text" id="test-user-id" required 
+                           placeholder="e.g., 1001 or user@example.com">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTestNotificationModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Test</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function closeTestNotificationModal() {
+    const modal = document.getElementById('test-notification-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function sendTestNotificationForm(event) {
+    event.preventDefault();
+    const userId = document.getElementById('test-user-id').value;
+    sendTestNotification(userId);
+    closeTestNotificationModal();
+}
+
+function sendTestNotification(userId) {
+    fetch('/api/mobile-push/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.stub_mode) {
+            if (data.stub_mode) {
+                showNotification('Test notification logged (Firebase not configured)', 'warning');
+            } else {
+                showNotification(`Test notification sent: ${data.success_count} succeeded, ${data.failure_count} failed`, 'success');
+            }
+            loadMobilePushDevices();
+        } else {
+            showNotification(data.error || 'Error sending test notification', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending test notification:', error);
+        showNotification('Error sending test notification', 'error');
+    });
+}
+
+// Recording Announcements Functions
+function loadRecordingAnnouncementsStats() {
+    Promise.all([
+        fetch('/api/recording-announcements/statistics'),
+        fetch('/api/recording-announcements/config')
+    ])
+    .then(([statsRes, configRes]) => Promise.all([statsRes.json(), configRes.json()]))
+    .then(([statsData, configData]) => {
+        // Update statistics
+        if (statsData) {
+            document.getElementById('announcements-enabled').textContent = statsData.enabled ? '✅ Enabled' : '❌ Disabled';
+            document.getElementById('announcements-played').textContent = statsData.announcements_played || 0;
+            document.getElementById('consent-accepted').textContent = statsData.consent_accepted || 0;
+            document.getElementById('consent-declined').textContent = statsData.consent_declined || 0;
+            
+            document.getElementById('announcement-type').textContent = statsData.announcement_type || 'N/A';
+            document.getElementById('require-consent').textContent = statsData.require_consent ? 'Yes' : 'No';
+        }
+        
+        // Update configuration
+        if (configData) {
+            document.getElementById('audio-file-path').textContent = configData.audio_path || 'N/A';
+            document.getElementById('announcement-text').textContent = configData.announcement_text || 'N/A';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading recording announcements data:', error);
+        showNotification('Error loading recording announcements data', 'error');
+    });
+}

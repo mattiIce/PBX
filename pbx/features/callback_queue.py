@@ -21,10 +21,11 @@ class CallbackStatus(Enum):
 class CallbackQueue:
     """System for managing callback requests"""
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, database=None):
         """Initialize callback queue"""
         self.logger = get_logger()
         self.config = config or {}
+        self.database = database
         self.enabled = self.config.get('features', {}).get('callback_queue', {}).get('enabled', False)
         
         # Configuration
@@ -36,10 +37,216 @@ class CallbackQueue:
         self.callbacks = {}  # callback_id -> callback info
         self.queue_callbacks = {}  # queue_id -> list of callback_ids
         
+        # Initialize database schema if database is available
+        if self.database and self.database.enabled:
+            self._initialize_schema()
+            self._load_callbacks_from_database()
+        
         if self.enabled:
             self.logger.info("Callback queue system initialized")
             self.logger.info(f"  Max wait time: {self.max_wait_time} minutes")
             self.logger.info(f"  Retry attempts: {self.retry_attempts}")
+    
+    def _initialize_schema(self):
+        """Initialize database schema for callback queue"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        # Callback requests table
+        callback_table = """
+        CREATE TABLE IF NOT EXISTS callback_requests (
+            callback_id VARCHAR(100) PRIMARY KEY,
+            queue_id VARCHAR(50) NOT NULL,
+            caller_number VARCHAR(50) NOT NULL,
+            caller_name VARCHAR(100),
+            requested_at TIMESTAMP NOT NULL,
+            callback_time TIMESTAMP NOT NULL,
+            status VARCHAR(20) NOT NULL,
+            attempts INTEGER DEFAULT 0,
+            max_attempts INTEGER DEFAULT 3,
+            agent_id VARCHAR(50),
+            started_at TIMESTAMP,
+            completed_at TIMESTAMP,
+            failed_at TIMESTAMP,
+            cancelled_at TIMESTAMP,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute(callback_table)
+            
+            # Create index on queue_id for faster lookups
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_callback_queue_id 
+                ON callback_requests(queue_id)
+            """)
+            
+            # Create index on status for filtering
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_callback_status 
+                ON callback_requests(status)
+            """)
+            
+            # Create index on callback_time for scheduling
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_callback_time 
+                ON callback_requests(callback_time)
+            """)
+            
+            self.database.connection.commit()
+            cursor.close()
+            self.logger.debug("Callback queue database schema initialized")
+        except Exception as e:
+            self.logger.error(f"Error initializing callback queue schema: {e}")
+    
+    def _load_callbacks_from_database(self):
+        """Load active callbacks from database"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            cursor = self.database.connection.cursor()
+            
+            # Load callbacks that are not completed, failed, or cancelled
+            cursor.execute("""
+                SELECT callback_id, queue_id, caller_number, caller_name,
+                       requested_at, callback_time, status, attempts, max_attempts,
+                       agent_id, started_at
+                FROM callback_requests
+                WHERE status IN ('scheduled', 'in_progress', 'pending')
+                ORDER BY callback_time ASC
+            """)
+            
+            rows = cursor.fetchall()
+            for row in rows:
+                callback_id, queue_id, caller_number, caller_name, requested_at, \
+                callback_time, status, attempts, max_attempts, agent_id, started_at = row
+                
+                # Convert status string to enum
+                try:
+                    status_enum = CallbackStatus(status)
+                except ValueError:
+                    status_enum = CallbackStatus.SCHEDULED
+                
+                callback_info = {
+                    'callback_id': callback_id,
+                    'queue_id': queue_id,
+                    'caller_number': caller_number,
+                    'caller_name': caller_name,
+                    'requested_at': requested_at,
+                    'callback_time': callback_time,
+                    'status': status_enum,
+                    'attempts': attempts,
+                    'max_attempts': max_attempts
+                }
+                
+                if agent_id:
+                    callback_info['agent_id'] = agent_id
+                if started_at:
+                    callback_info['started_at'] = started_at
+                
+                self.callbacks[callback_id] = callback_info
+                
+                # Add to queue
+                if queue_id not in self.queue_callbacks:
+                    self.queue_callbacks[queue_id] = []
+                self.queue_callbacks[queue_id].append(callback_id)
+            
+            cursor.close()
+            if rows:
+                self.logger.info(f"Loaded {len(rows)} active callbacks from database")
+        except Exception as e:
+            self.logger.error(f"Error loading callbacks from database: {e}")
+    
+    def _save_callback_to_database(self, callback_id: str):
+        """Save callback to database"""
+        if not self.database or not self.database.enabled:
+            return False
+        
+        if callback_id not in self.callbacks:
+            return False
+        
+        callback = self.callbacks[callback_id]
+        
+        try:
+            cursor = self.database.connection.cursor()
+            
+            # Prepare values
+            status_value = callback['status'].value
+            
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    INSERT INTO callback_requests (
+                        callback_id, queue_id, caller_number, caller_name,
+                        requested_at, callback_time, status, attempts, max_attempts,
+                        agent_id, started_at, completed_at, failed_at, cancelled_at,
+                        notes, updated_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (callback_id) DO UPDATE SET
+                        status = EXCLUDED.status,
+                        attempts = EXCLUDED.attempts,
+                        agent_id = EXCLUDED.agent_id,
+                        started_at = EXCLUDED.started_at,
+                        completed_at = EXCLUDED.completed_at,
+                        failed_at = EXCLUDED.failed_at,
+                        cancelled_at = EXCLUDED.cancelled_at,
+                        notes = EXCLUDED.notes,
+                        updated_at = EXCLUDED.updated_at
+                """, (
+                    callback_id,
+                    callback['queue_id'],
+                    callback['caller_number'],
+                    callback.get('caller_name'),
+                    callback['requested_at'],
+                    callback['callback_time'],
+                    status_value,
+                    callback['attempts'],
+                    callback['max_attempts'],
+                    callback.get('agent_id'),
+                    callback.get('started_at'),
+                    callback.get('completed_at'),
+                    callback.get('failed_at'),
+                    callback.get('cancelled_at'),
+                    callback.get('notes'),
+                    datetime.now()
+                ))
+            else:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO callback_requests (
+                        callback_id, queue_id, caller_number, caller_name,
+                        requested_at, callback_time, status, attempts, max_attempts,
+                        agent_id, started_at, completed_at, failed_at, cancelled_at,
+                        notes, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    callback_id,
+                    callback['queue_id'],
+                    callback['caller_number'],
+                    callback.get('caller_name'),
+                    callback['requested_at'],
+                    callback['callback_time'],
+                    status_value,
+                    callback['attempts'],
+                    callback['max_attempts'],
+                    callback.get('agent_id'),
+                    callback.get('started_at'),
+                    callback.get('completed_at'),
+                    callback.get('failed_at'),
+                    callback.get('cancelled_at'),
+                    callback.get('notes'),
+                    datetime.now()
+                ))
+            
+            self.database.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving callback to database: {e}")
+            return False
     
     def request_callback(self, queue_id: str, caller_number: str, 
                         caller_name: Optional[str] = None,
@@ -89,6 +296,9 @@ class CallbackQueue:
             self.queue_callbacks[queue_id] = []
         self.queue_callbacks[queue_id].append(callback_id)
         
+        # Save to database
+        self._save_callback_to_database(callback_id)
+        
         self.logger.info(f"Callback requested: {callback_id} for {caller_number} in queue {queue_id}")
         self.logger.info(f"  Estimated callback time: {callback_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
@@ -130,6 +340,9 @@ class CallbackQueue:
         callback['started_at'] = datetime.now()
         callback['attempts'] += 1
         
+        # Save to database
+        self._save_callback_to_database(callback_id)
+        
         self.logger.info(f"Starting callback {callback_id} (attempt {callback['attempts']})")
         
         return {
@@ -152,6 +365,9 @@ class CallbackQueue:
             callback['completed_at'] = datetime.now()
             callback['notes'] = notes
             
+            # Save to database
+            self._save_callback_to_database(callback_id)
+            
             # Remove from queue
             queue_id = callback['queue_id']
             if queue_id in self.queue_callbacks:
@@ -163,11 +379,18 @@ class CallbackQueue:
             if callback['attempts'] < callback['max_attempts']:
                 callback['status'] = CallbackStatus.SCHEDULED
                 callback['callback_time'] = datetime.now() + timedelta(minutes=self.retry_interval)
+                
+                # Save to database
+                self._save_callback_to_database(callback_id)
+                
                 self.logger.info(f"Callback {callback_id} failed, will retry at {callback['callback_time']}")
             else:
                 callback['status'] = CallbackStatus.FAILED
                 callback['failed_at'] = datetime.now()
                 callback['notes'] = notes
+                
+                # Save to database
+                self._save_callback_to_database(callback_id)
                 
                 # Remove from queue
                 queue_id = callback['queue_id']
@@ -186,6 +409,9 @@ class CallbackQueue:
         callback = self.callbacks[callback_id]
         callback['status'] = CallbackStatus.CANCELLED
         callback['cancelled_at'] = datetime.now()
+        
+        # Save to database
+        self._save_callback_to_database(callback_id)
         
         # Remove from queue
         queue_id = callback['queue_id']

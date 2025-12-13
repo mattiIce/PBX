@@ -131,6 +131,10 @@
                         <span class="tab-icon">⏰</span>
                         <span class="tab-text">Time-Based Routing</span>
                     </button>
+                    <button class="tab-button" data-tab="callback-queue">
+                        <span class="tab-icon">📞</span>
+                        <span class="tab-text">Callback Queue</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -154,6 +158,14 @@
                     <button class="tab-button" data-tab="recording-retention">
                         <span class="tab-icon">📁</span>
                         <span class="tab-text">Recording Retention</span>
+                    </button>
+                    <button class="tab-button" data-tab="mobile-push">
+                        <span class="tab-icon">📱</span>
+                        <span class="tab-text">Mobile Push</span>
+                    </button>
+                    <button class="tab-button" data-tab="recording-announcements">
+                        <span class="tab-icon">📢</span>
+                        <span class="tab-text">Recording Announcements</span>
                     </button>
                 </div>
 
@@ -2098,6 +2110,267 @@ G.726-32</textarea>
                     <li><strong>Blocked Patterns:</strong> Prevent calls to specific number patterns</li>
                 </ul>
                 <p><strong>Default Thresholds:</strong> 100 calls/hour, 20 international calls/day, 2-hour max duration</p>
+            </div>
+        </div>
+
+        <!-- Callback Queue Tab -->
+        <div id="callback-queue" class="tab-content">
+            <h2>📞 Callback Queue Management</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadCallbackQueue()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showRequestCallbackModal()">➕ Request Callback</button>
+            </div>
+
+            <!-- Callback Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-total">-</div>
+                    <div class="stat-label">Total Callbacks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-scheduled">-</div>
+                    <div class="stat-label">Scheduled</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-in-progress">-</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-completed">-</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-failed">-</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+
+            <!-- Callback Requests List -->
+            <div class="config-section">
+                <h3>📋 Active Callbacks</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Callback ID</th>
+                                <th>Queue</th>
+                                <th>Caller</th>
+                                <th>Requested</th>
+                                <th>Callback Time</th>
+                                <th>Status</th>
+                                <th>Attempts</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="callback-list">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">Loading callbacks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Callback Queue</h3>
+                <p><strong>Callback Queue</strong> allows callers to request a callback instead of waiting on hold, improving customer satisfaction.</p>
+                <ul>
+                    <li><strong>Scheduled Callbacks:</strong> Callers can choose immediate callback (ASAP) or schedule for a specific time</li>
+                    <li><strong>Queue Integration:</strong> Works with call queues to manage callback requests</li>
+                    <li><strong>Auto-Retry:</strong> Failed callbacks are automatically retried with configurable intervals</li>
+                    <li><strong>Status Tracking:</strong> Monitor callback status from request to completion</li>
+                </ul>
+                <p><strong>Callback Status:</strong></p>
+                <ul>
+                    <li>Pending: Callback request received, waiting to be scheduled</li>
+                    <li>Scheduled: Callback scheduled for a specific time</li>
+                    <li>In Progress: Agent is currently calling back the customer</li>
+                    <li>Completed: Callback successfully completed</li>
+                    <li>Failed: Callback failed after maximum retry attempts</li>
+                    <li>Cancelled: Callback request cancelled by customer or admin</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Mobile Push Notifications Tab -->
+        <div id="mobile-push" class="tab-content">
+            <h2>📱 Mobile Push Notifications</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadMobilePushDevices()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showRegisterDeviceModal()">➕ Register Device</button>
+                <button class="btn btn-secondary" onclick="showTestNotificationModal()">🧪 Test Notification</button>
+            </div>
+
+            <!-- Push Notification Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="push-total-devices">-</div>
+                    <div class="stat-label">Total Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="push-total-users">-</div>
+                    <div class="stat-label">Users with Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="push-ios-devices">-</div>
+                    <div class="stat-label">iOS Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="push-android-devices">-</div>
+                    <div class="stat-label">Android Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="push-recent-notifications">-</div>
+                    <div class="stat-label">Recent Notifications</div>
+                </div>
+            </div>
+
+            <!-- Registered Devices List -->
+            <div class="config-section">
+                <h3>📋 Registered Devices</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Platform</th>
+                                <th>Registered</th>
+                                <th>Last Seen</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mobile-devices-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading devices...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Notifications -->
+            <div class="config-section">
+                <h3>📨 Recent Notifications</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Title</th>
+                                <th>Body</th>
+                                <th>Sent At</th>
+                                <th>Success/Failed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="push-history-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Mobile Push Notifications</h3>
+                <p><strong>Mobile Push Notifications</strong> provide real-time alerts to mobile devices for calls and voicemail messages.</p>
+                <ul>
+                    <li><strong>Firebase Cloud Messaging (FCM):</strong> Free push notification service for iOS and Android</li>
+                    <li><strong>Multi-Device Support:</strong> Users can register multiple devices (phone, tablet, etc.)</li>
+                    <li><strong>Notification Types:</strong> Incoming calls, missed calls, new voicemail messages</li>
+                    <li><strong>Platform Support:</strong> iOS (via APNs through FCM) and Android (native FCM)</li>
+                </ul>
+                <p><strong>Setup Requirements:</strong></p>
+                <ul>
+                    <li>Firebase project with FCM enabled</li>
+                    <li>Service account credentials JSON file</li>
+                    <li>Mobile app with FCM SDK integrated</li>
+                    <li>Device token registration from mobile app</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recording Announcements Tab -->
+        <div id="recording-announcements" class="tab-content">
+            <h2>📢 Recording Announcements</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadRecordingAnnouncementsStats()">🔄 Refresh</button>
+            </div>
+
+            <!-- Announcement Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="announcements-enabled">-</div>
+                    <div class="stat-label">Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="announcements-played">-</div>
+                    <div class="stat-label">Announcements Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="consent-accepted">-</div>
+                    <div class="stat-label">Consent Accepted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="consent-declined">-</div>
+                    <div class="stat-label">Consent Declined</div>
+                </div>
+            </div>
+
+            <!-- Current Configuration -->
+            <div class="config-section">
+                <h3>⚙️ Current Configuration</h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <strong>Announcement Type:</strong>
+                        <span id="announcement-type">-</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Require Consent:</strong>
+                        <span id="require-consent">-</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Audio File:</strong>
+                        <span id="audio-file-path">-</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Announcement Text:</strong>
+                        <span id="announcement-text">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Recording Announcements</h3>
+                <p><strong>Recording Announcements</strong> automatically inform call participants that the call may be recorded, ensuring legal compliance.</p>
+                <ul>
+                    <li><strong>Legal Compliance:</strong> Meets requirements for recording disclosure in various jurisdictions</li>
+                    <li><strong>Announcement Types:</strong>
+                        <ul>
+                            <li><code>caller</code> - Play to incoming callers only</li>
+                            <li><code>callee</code> - Play to outbound call recipients only</li>
+                            <li><code>both</code> - Play to all parties</li>
+                        </ul>
+                    </li>
+                    <li><strong>Consent Management:</strong> Optional consent requirement with DTMF response capture</li>
+                    <li><strong>Audio Options:</strong> Use pre-recorded WAV file or text-to-speech</li>
+                </ul>
+                <p><strong>Configuration:</strong></p>
+                <p>Edit <code>config.yml</code> under <code>features.recording_announcements</code> to customize:</p>
+                <ul>
+                    <li><code>enabled</code> - Enable/disable announcements</li>
+                    <li><code>type</code> - Announcement type (caller/callee/both)</li>
+                    <li><code>audio_path</code> - Path to audio file</li>
+                    <li><code>text</code> - TTS text (if no audio file)</li>
+                    <li><code>require_consent</code> - Enable consent requirement</li>
+                    <li><code>consent_timeout_seconds</code> - Timeout for consent response</li>
+                </ul>
             </div>
         </div>
 
