@@ -284,6 +284,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_set_fmfm_config()
             elif path == '/api/fmfm/destination':
                 self._handle_add_fmfm_destination()
+            elif path == '/api/time-routing/rule':
+                self._handle_add_time_routing_rule()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -409,6 +411,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension from path
                 extension = path.split('/')[-1]
                 self._handle_disable_fmfm(extension)
+            elif path.startswith('/api/time-routing/rule/'):
+                # Extract rule ID from path
+                rule_id = path.split('/')[-1]
+                self._handle_delete_time_routing_rule(rule_id)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -579,6 +585,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_fmfm_config(extension)
             elif path == '/api/fmfm/statistics':
                 self._handle_get_fmfm_statistics()
+            elif path == '/api/time-routing/rules':
+                self._handle_get_time_routing_rules()
+            elif path == '/api/time-routing/statistics':
+                self._handle_get_time_routing_statistics()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -5684,6 +5694,90 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Error disabling FMFM: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    # Time-Based Routing Handlers
+    def _handle_get_time_routing_rules(self):
+        """Get all time-based routing rules"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                # Parse query parameters for filtering
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                destination = params.get('destination', [None])[0]
+                
+                rules = self.pbx_core.time_based_routing.list_rules(destination=destination)
+                self._send_json({
+                    'rules': rules,
+                    'count': len(rules)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting time routing rules: {e}")
+                self._send_json({'error': f'Error getting time routing rules: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    def _handle_get_time_routing_statistics(self):
+        """Get time-based routing statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                stats = self.pbx_core.time_based_routing.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting time routing statistics: {e}")
+                self._send_json({'error': f'Error getting time routing statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    def _handle_add_time_routing_rule(self):
+        """Add a time-based routing rule"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                required_fields = ['name', 'destination', 'route_to', 'time_conditions']
+                if not all(field in data for field in required_fields):
+                    self._send_json({'error': 'Missing required fields'}, 400)
+                    return
+
+                rule_id = self.pbx_core.time_based_routing.add_rule(data)
+                
+                if rule_id:
+                    self._send_json({
+                        'success': True,
+                        'rule_id': rule_id,
+                        'message': f'Time routing rule "{data["name"]}" added successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add time routing rule'}, 500)
+
+            except Exception as e:
+                self.logger.error(f"Error adding time routing rule: {e}")
+                self._send_json({'error': f'Error adding time routing rule: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    def _handle_delete_time_routing_rule(self, rule_id: str):
+        """Delete a time-based routing rule"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                success = self.pbx_core.time_based_routing.delete_rule(rule_id)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Time routing rule {rule_id} deleted'
+                    })
+                else:
+                    self._send_json({'error': 'Rule not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting time routing rule: {e}")
+                self._send_json({'error': f'Error deleting time routing rule: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
 
 
 class PBXAPIServer:

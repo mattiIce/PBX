@@ -23,6 +23,7 @@ from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.features.presence import PresenceSystem
 from pbx.features.sip_trunk import SIPTrunkSystem
+from pbx.features.time_based_routing import TimeBasedRouting
 from pbx.features.voicemail import VoicemailSystem
 from pbx.features.webhooks import WebhookEvent
 from pbx.rtp.handler import RTPRelay
@@ -302,6 +303,11 @@ class PBXCore:
         self.find_me_follow_me = FindMeFollowMe(config=self.config)
         if self.find_me_follow_me.enabled:
             self.logger.info("Find Me/Follow Me initialized")
+
+        # Initialize Time-Based Routing
+        self.time_based_routing = TimeBasedRouting(config=self.config)
+        if self.time_based_routing.enabled:
+            self.logger.info("Time-based routing initialized")
 
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):

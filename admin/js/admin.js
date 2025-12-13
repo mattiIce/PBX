@@ -3511,6 +3511,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadFMFMExtensions, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load time routing when Time-Based Routing tab is shown
+    const timeRoutingTab = document.querySelector('[data-tab="time-routing"]');
+    if (timeRoutingTab) {
+        timeRoutingTab.addEventListener('click', function() {
+            setTimeout(loadTimeRoutingRules, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
 
 // ============================================================================
@@ -3946,5 +3954,174 @@ function deleteFMFMConfig(extension) {
     .catch(error => {
         console.error('Error deleting FMFM config:', error);
         showNotification('Error deleting FMFM configuration', 'error');
+    });
+}
+
+// ============================================================================
+// Time-Based Routing Functions
+// ============================================================================
+
+function loadTimeRoutingRules() {
+    fetch('/api/time-routing/rules')
+        .then(response => response.json())
+        .then(data => {
+            if (data.rules) {
+                // Update stats
+                document.getElementById('time-routing-total').textContent = data.count || 0;
+                
+                const activeCount = data.rules.filter(r => r.enabled !== false).length;
+                const businessCount = data.rules.filter(r => 
+                    r.name && (r.name.toLowerCase().includes('business') || r.name.toLowerCase().includes('hours'))
+                ).length;
+                const afterCount = data.rules.filter(r => 
+                    r.name && (r.name.toLowerCase().includes('after') || r.name.toLowerCase().includes('closed'))
+                ).length;
+                
+                document.getElementById('time-routing-active').textContent = activeCount;
+                document.getElementById('time-routing-business').textContent = businessCount;
+                document.getElementById('time-routing-after').textContent = afterCount;
+                
+                // Update table
+                const tbody = document.getElementById('time-routing-list');
+                if (data.rules.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No time-based routing rules</td></tr>';
+                } else {
+                    tbody.innerHTML = data.rules.map(rule => {
+                        const enabled = rule.enabled !== false;
+                        const statusBadge = enabled
+                            ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
+                            : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+                        
+                        const conditions = rule.time_conditions || {};
+                        const schedule = getScheduleDescription(conditions);
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(rule.name)}</strong></td>
+                                <td>${escapeHtml(rule.destination)}</td>
+                                <td>${escapeHtml(rule.route_to)}</td>
+                                <td><small>${escapeHtml(schedule)}</small></td>
+                                <td>${rule.priority || 100}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn-small btn-danger" onclick="deleteTimeRoutingRule('${escapeHtml(rule.rule_id)}', '${escapeHtml(rule.name)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading time routing rules:', error);
+            showNotification('Error loading time routing rules', 'error');
+        });
+}
+
+function getScheduleDescription(conditions) {
+    const parts = [];
+    
+    if (conditions.days_of_week) {
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const days = conditions.days_of_week.map(d => dayNames[d]).join(', ');
+        parts.push(days);
+    }
+    
+    if (conditions.start_time && conditions.end_time) {
+        parts.push(`${conditions.start_time}-${conditions.end_time}`);
+    }
+    
+    if (conditions.holidays === true) {
+        parts.push('Holidays');
+    } else if (conditions.holidays === false) {
+        parts.push('Non-holidays');
+    }
+    
+    return parts.length > 0 ? parts.join(' | ') : 'Always';
+}
+
+function showAddTimeRuleModal() {
+    document.getElementById('add-time-rule-modal').style.display = 'block';
+}
+
+function closeAddTimeRuleModal() {
+    document.getElementById('add-time-rule-modal').style.display = 'none';
+    document.getElementById('add-time-rule-form').reset();
+}
+
+function saveTimeRoutingRule(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('time-rule-name').value;
+    const destination = document.getElementById('time-rule-destination').value;
+    const routeTo = document.getElementById('time-rule-route-to').value;
+    const startTime = document.getElementById('time-rule-start').value;
+    const endTime = document.getElementById('time-rule-end').value;
+    const priority = parseInt(document.getElementById('time-rule-priority').value);
+    const enabled = document.getElementById('time-rule-enabled').checked;
+    
+    // Collect selected days
+    const selectedDays = Array.from(document.querySelectorAll('input[name="time-rule-days"]:checked'))
+        .map(cb => parseInt(cb.value));
+    
+    if (selectedDays.length === 0) {
+        showNotification('Please select at least one day of the week', 'error');
+        return;
+    }
+    
+    const ruleData = {
+        name: name,
+        destination: destination,
+        route_to: routeTo,
+        priority: priority,
+        enabled: enabled,
+        time_conditions: {
+            days_of_week: selectedDays,
+            start_time: startTime,
+            end_time: endTime
+        }
+    };
+    
+    fetch('/api/time-routing/rule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ruleData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Time routing rule "${name}" added successfully`, 'success');
+            closeAddTimeRuleModal();
+            loadTimeRoutingRules();
+        } else {
+            showNotification(data.error || 'Error adding time routing rule', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving time routing rule:', error);
+        showNotification('Error saving time routing rule', 'error');
+    });
+}
+
+function deleteTimeRoutingRule(ruleId, ruleName) {
+    if (!confirm(`Are you sure you want to delete time routing rule "${ruleName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/time-routing/rule/${ruleId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Time routing rule "${ruleName}" deleted`, 'success');
+            loadTimeRoutingRules();
+        } else {
+            showNotification(data.error || 'Error deleting time routing rule', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting time routing rule:', error);
+        showNotification('Error deleting time routing rule', 'error');
     });
 }

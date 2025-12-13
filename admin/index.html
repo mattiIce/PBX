@@ -123,6 +123,10 @@
                         <span class="tab-icon">🔄</span>
                         <span class="tab-text">Find Me/Follow Me</span>
                     </button>
+                    <button class="tab-button" data-tab="time-routing">
+                        <span class="tab-icon">⏰</span>
+                        <span class="tab-text">Time-Based Routing</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -1283,6 +1287,73 @@
                     <li><strong>Simultaneous Mode:</strong> Rings all destinations at the same time</li>
                     <li><strong>Ring Time:</strong> How long to ring each destination before moving to the next (sequential mode)</li>
                     <li><strong>Use Cases:</strong> Mobile forwarding, team hunt groups, executive assistants</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Time-Based Routing Tab -->
+        <div id="time-routing" class="tab-content">
+            <h2>⏰ Time-Based Routing</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadTimeRoutingRules()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddTimeRuleModal()">➕ Add Rule</button>
+            </div>
+
+            <!-- Time Routing Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-total">-</div>
+                    <div class="stat-label">Total Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-active">-</div>
+                    <div class="stat-label">Active Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-business">-</div>
+                    <div class="stat-label">Business Hours Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-after">-</div>
+                    <div class="stat-label">After Hours Rules</div>
+                </div>
+            </div>
+
+            <!-- Time Routing Rules List -->
+            <div class="config-section">
+                <h3>📋 Routing Rules</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Destination</th>
+                                <th>Route To</th>
+                                <th>Schedule</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="time-routing-list">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Loading rules...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Time-Based Routing</h3>
+                <p><strong>Time-Based Routing</strong> directs calls differently based on the time of day, day of week, or holidays.</p>
+                <ul>
+                    <li><strong>Business Hours:</strong> Route to extensions or queues during business hours</li>
+                    <li><strong>After Hours:</strong> Route to voicemail or answering service outside business hours</li>
+                    <li><strong>Holidays:</strong> Special routing for holidays and special dates</li>
+                    <li><strong>Priority:</strong> Lower number = higher priority when multiple rules apply</li>
                 </ul>
             </div>
         </div>
@@ -2611,6 +2682,78 @@ G.726-32</textarea>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeAddFMFMModal()">Cancel</button>
                     <button type="submit" class="btn btn-success">Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Time Routing Rule Modal -->
+    <div id="add-time-rule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⏰ Add Time-Based Routing Rule</h3>
+                <span class="close" onclick="closeAddTimeRuleModal()">&times;</span>
+            </div>
+            <form id="add-time-rule-form" onsubmit="saveTimeRoutingRule(event)">
+                <div class="form-group">
+                    <label>Rule Name:</label>
+                    <input type="text" id="time-rule-name" required placeholder="Business Hours to Sales">
+                    <small>Descriptive name for this rule</small>
+                </div>
+                <div class="form-group">
+                    <label>Original Destination:</label>
+                    <input type="text" id="time-rule-destination" required pattern="[0-9]+" placeholder="1000">
+                    <small>Extension or queue to apply time-based routing to</small>
+                </div>
+                <div class="form-group">
+                    <label>Route To:</label>
+                    <input type="text" id="time-rule-route-to" required pattern="[0-9]+" placeholder="1001">
+                    <small>Where to route calls (extension, voicemail, queue)</small>
+                </div>
+
+                <div class="config-section">
+                    <h4>Time Conditions</h4>
+                    
+                    <div class="form-group">
+                        <label>Days of Week:</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 5px; margin-top: 8px;">
+                            <label><input type="checkbox" name="time-rule-days" value="0" checked> Monday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="1" checked> Tuesday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="2" checked> Wednesday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="3" checked> Thursday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="4" checked> Friday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="5"> Saturday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="6"> Sunday</label>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Start Time:</label>
+                            <input type="time" id="time-rule-start" value="09:00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Time:</label>
+                            <input type="time" id="time-rule-end" value="17:00" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Priority:</label>
+                    <input type="number" id="time-rule-priority" value="100" min="1" max="999">
+                    <small>Lower number = higher priority</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Enabled:</label>
+                    <input type="checkbox" id="time-rule-enabled" checked style="width: auto; margin-left: 10px;">
+                    <small style="display: block; margin-top: 5px;">Enable this rule immediately</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddTimeRuleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Rule</button>
                 </div>
             </form>
         </div>
