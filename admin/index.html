@@ -107,6 +107,10 @@
                         <span class="tab-icon">⚙️</span>
                         <span class="tab-text">Phone Provisioning</span>
                     </button>
+                    <button class="tab-button" data-tab="hot-desking">
+                        <span class="tab-icon">🔄</span>
+                        <span class="tab-text">Hot Desking</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -1225,6 +1229,63 @@
                 <div id="calls-list" class="calls-list">
                     <div class="loading">Loading calls...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Hot Desking Tab -->
+        <div id="hot-desking" class="tab-content">
+            <h2>🔄 Hot Desking</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadHotDeskSessions()">🔄 Refresh Sessions</button>
+            </div>
+
+            <!-- Hot Desk Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="hotdesk-active">-</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="hotdesk-total">-</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+            </div>
+
+            <!-- Active Sessions List -->
+            <div class="config-section">
+                <h3>📋 Active Hot Desk Sessions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Device MAC</th>
+                                <th>IP Address</th>
+                                <th>Login Time</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotdesk-sessions-list">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Loading sessions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Hot Desking</h3>
+                <p><strong>Hot Desking</strong> allows users to log into any phone with their extension credentials, making their settings and contacts available.</p>
+                <ul>
+                    <li><strong>Flexible Workspace:</strong> Log in from any desk or phone</li>
+                    <li><strong>Settings Migration:</strong> Personal settings follow the user</li>
+                    <li><strong>Auto-Logout:</strong> Configurable timeout for security</li>
+                    <li><strong>Session Tracking:</strong> Monitor active sessions</li>
+                </ul>
             </div>
         </div>
 

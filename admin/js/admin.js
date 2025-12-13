@@ -3527,6 +3527,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadWebhooks, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load hot desk sessions when Hot Desking tab is shown
+    const hotDeskTab = document.querySelector('[data-tab="hot-desking"]');
+    if (hotDeskTab) {
+        hotDeskTab.addEventListener('click', function() {
+            setTimeout(loadHotDeskSessions, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
 
 // ============================================================================
@@ -4265,5 +4273,88 @@ function deleteWebhook(url) {
     .catch(error => {
         console.error('Error deleting webhook:', error);
         showNotification('Error deleting webhook', 'error');
+    });
+}
+
+// ============================================================================
+// Hot Desking Functions
+// ============================================================================
+
+function loadHotDeskSessions() {
+    fetch('/api/hot-desk/sessions')
+        .then(response => response.json())
+        .then(data => {
+            if (data.sessions) {
+                // Update stats
+                const activeSessions = data.sessions.filter(s => s.active !== false);
+                document.getElementById('hotdesk-active').textContent = activeSessions.length;
+                document.getElementById('hotdesk-total').textContent = data.sessions.length;
+                
+                // Update table
+                const tbody = document.getElementById('hotdesk-sessions-list');
+                if (activeSessions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active hot desk sessions</td></tr>';
+                } else {
+                    tbody.innerHTML = activeSessions.map(session => {
+                        const loginTime = session.login_time ? new Date(session.login_time).toLocaleString() : 'N/A';
+                        const duration = session.login_time ? getDuration(new Date(session.login_time)) : 'N/A';
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(session.extension)}</strong></td>
+                                <td>${escapeHtml(session.device_mac || 'N/A')}</td>
+                                <td>${escapeHtml(session.device_ip || 'N/A')}</td>
+                                <td><small>${loginTime}</small></td>
+                                <td>${duration}</td>
+                                <td>
+                                    <button class="btn-small btn-warning" onclick="logoutHotDesk('${escapeHtml(session.extension)}')">🚪 Logout</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading hot desk sessions:', error);
+            showNotification('Error loading hot desk sessions', 'error');
+        });
+}
+
+function getDuration(startTime) {
+    const now = new Date();
+    const diff = now - startTime;
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+}
+
+function logoutHotDesk(extension) {
+    if (!confirm(`Are you sure you want to log out extension ${extension} from hot desk?`)) {
+        return;
+    }
+    
+    fetch('/api/hot-desk/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ extension: extension })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Extension ${extension} logged out`, 'success');
+            loadHotDeskSessions();
+        } else {
+            showNotification(data.error || 'Error logging out', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error logging out hot desk:', error);
+        showNotification('Error logging out hot desk', 'error');
     });
 }
