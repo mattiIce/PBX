@@ -1,7 +1,10 @@
 """
 Tests for Least-Cost Routing (LCR) System
 """
+import os
 import unittest
+import tempfile
+import sqlite3
 from datetime import time
 from pbx.features.least_cost_routing import (
     DialPattern, RateEntry, TimeBasedRate, LeastCostRouting
@@ -10,8 +13,20 @@ from pbx.features.least_cost_routing import (
 
 class MockPBX:
     """Mock PBX for testing"""
-    def __init__(self):
+    def __init__(self, db_path=None):
         self.trunk_manager = MockTrunkManager()
+        self.config = MockConfig(db_path) if db_path else None
+
+
+class MockConfig:
+    """Mock config for testing"""
+    def __init__(self, db_path):
+        self.db_path = db_path
+    
+    def get(self, key, default=None):
+        if key == 'database':
+            return {'path': self.db_path}
+        return default
 
 
 class MockTrunkManager:
@@ -155,8 +170,16 @@ class TestLeastCostRouting(unittest.TestCase):
     
     def setUp(self):
         """Set up test environment"""
-        self.pbx = MockPBX()
+        # Create temporary database
+        self.db_fd, self.db_path = tempfile.mkstemp(suffix='.db')
+        self.pbx = MockPBX(self.db_path)
         self.lcr = LeastCostRouting(self.pbx)
+    
+    def tearDown(self):
+        """Clean up test environment"""
+        # Close and remove temporary database
+        os.close(self.db_fd)
+        os.unlink(self.db_path)
     
     def test_add_rate(self):
         """Test adding a rate"""
@@ -263,6 +286,88 @@ class TestLeastCostRouting(unittest.TestCase):
         
         selected = self.lcr.select_trunk('2125551234', ['trunk1'])
         self.assertIsNone(selected)
+    
+    def test_rate_persists_to_database(self):
+        """Test that rates are saved to database"""
+        self.lcr.add_rate('trunk1', r'^\d{10}$', 0.01, 'US Local')
+        
+        # Verify in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('SELECT trunk_id, pattern, rate_per_minute FROM lcr_rates')
+        row = cursor.fetchone()
+        conn.close()
+        
+        self.assertIsNotNone(row)
+        self.assertEqual(row[0], 'trunk1')
+        self.assertEqual(row[1], r'^\d{10}$')
+        self.assertEqual(row[2], 0.01)
+    
+    def test_time_rate_persists_to_database(self):
+        """Test that time-based rates are saved to database"""
+        self.lcr.add_time_based_rate('Peak Hours', 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
+        
+        # Verify in database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('SELECT name, start_hour, rate_multiplier FROM lcr_time_rates')
+        row = cursor.fetchone()
+        conn.close()
+        
+        self.assertIsNotNone(row)
+        self.assertEqual(row[0], 'Peak Hours')
+        self.assertEqual(row[1], 9)
+        self.assertEqual(row[2], 1.2)
+    
+    def test_rates_load_from_database(self):
+        """Test that rates are loaded from database on initialization"""
+        # Add rate and create new LCR instance (simulating restart)
+        self.lcr.add_rate('trunk1', r'^\d{10}$', 0.01, 'US Local')
+        
+        # Create new instance
+        lcr2 = LeastCostRouting(self.pbx)
+        
+        # Verify rate was loaded
+        self.assertEqual(len(lcr2.rate_entries), 1)
+        self.assertEqual(lcr2.rate_entries[0].trunk_id, 'trunk1')
+    
+    def test_time_rates_load_from_database(self):
+        """Test that time-based rates are loaded from database"""
+        self.lcr.add_time_based_rate('Peak Hours', 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
+        
+        # Create new instance (simulating restart)
+        lcr2 = LeastCostRouting(self.pbx)
+        
+        # Verify time rate was loaded
+        self.assertEqual(len(lcr2.time_based_rates), 1)
+        self.assertEqual(lcr2.time_based_rates[0].name, 'Peak Hours')
+    
+    def test_clear_rates_deletes_from_database(self):
+        """Test that clearing rates deletes from database"""
+        self.lcr.add_rate('trunk1', r'^\d{10}$', 0.01, 'US Local')
+        self.lcr.clear_rates()
+        
+        # Verify database is empty
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM lcr_rates')
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        self.assertEqual(count, 0)
+    
+    def test_multiple_rates_persist(self):
+        """Test that multiple rates persist across restarts"""
+        self.lcr.add_rate('trunk1', r'^\d{10}$', 0.01, 'US Local')
+        self.lcr.add_rate('trunk2', r'^011', 0.20, 'International')
+        self.lcr.add_time_based_rate('Peak', 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
+        
+        # Create new instance
+        lcr2 = LeastCostRouting(self.pbx)
+        
+        # Verify all persisted
+        self.assertEqual(len(lcr2.rate_entries), 2)
+        self.assertEqual(len(lcr2.time_based_rates), 1)
 
 
 if __name__ == '__main__':
