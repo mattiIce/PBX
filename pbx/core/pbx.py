@@ -330,6 +330,12 @@ class PBXCore:
         if self.callback_queue.enabled:
             self.logger.info("Callback queue system initialized")
 
+        # Initialize Mobile Push Notifications
+        from pbx.features.mobile_push import MobilePushNotifications
+        self.mobile_push = MobilePushNotifications(config=self.config, database=self.database)
+        if self.mobile_push.enabled:
+            self.logger.info("Mobile push notifications initialized")
+
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):
             from pbx.features.mfa import MFAManager

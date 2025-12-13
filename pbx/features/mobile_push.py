@@ -19,10 +19,11 @@ except ImportError:
 class MobilePushNotifications:
     """Mobile push notification service using Firebase (free)"""
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, database=None):
         """Initialize mobile push notifications"""
         self.logger = get_logger()
         self.config = config or {}
+        self.database = database
         
         # Configuration
         push_config = self.config.get('features', {}).get('mobile_push', {})
@@ -32,6 +33,11 @@ class MobilePushNotifications:
         # Device registrations
         self.device_tokens = {}  # user_id -> list of device tokens
         self.notification_history = []
+        
+        # Initialize database schema if database is available
+        if self.database and self.database.enabled:
+            self._initialize_schema()
+            self._load_devices_from_database()
         
         # Initialize Firebase
         self.firebase_app = None
@@ -45,6 +51,214 @@ class MobilePushNotifications:
         elif self.enabled and not FIREBASE_AVAILABLE:
             self.logger.warning("Mobile push enabled but firebase-admin not installed")
             self.logger.info("  Install with: pip install firebase-admin")
+    
+    def _initialize_schema(self):
+        """Initialize database schema for mobile push notifications"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        # Device registrations table
+        device_table = """
+        CREATE TABLE IF NOT EXISTS mobile_devices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id VARCHAR(50) NOT NULL,
+            device_token VARCHAR(255) NOT NULL UNIQUE,
+            platform VARCHAR(20) NOT NULL,
+            registered_at TIMESTAMP NOT NULL,
+            last_seen TIMESTAMP NOT NULL,
+            enabled BOOLEAN DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        if self.database.db_type == 'postgresql':
+            device_table = """
+            CREATE TABLE IF NOT EXISTS mobile_devices (
+                id SERIAL PRIMARY KEY,
+                user_id VARCHAR(50) NOT NULL,
+                device_token VARCHAR(255) NOT NULL UNIQUE,
+                platform VARCHAR(20) NOT NULL,
+                registered_at TIMESTAMP NOT NULL,
+                last_seen TIMESTAMP NOT NULL,
+                enabled BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        
+        # Notification history table
+        notification_table = """
+        CREATE TABLE IF NOT EXISTS push_notifications (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(50) NOT NULL,
+            notification_type VARCHAR(50) NOT NULL,
+            title VARCHAR(200),
+            body TEXT,
+            data TEXT,
+            sent_at TIMESTAMP NOT NULL,
+            success BOOLEAN DEFAULT TRUE,
+            error_message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        if self.database.db_type != 'postgresql':
+            notification_table = """
+            CREATE TABLE IF NOT EXISTS push_notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id VARCHAR(50) NOT NULL,
+                notification_type VARCHAR(50) NOT NULL,
+                title VARCHAR(200),
+                body TEXT,
+                data TEXT,
+                sent_at TIMESTAMP NOT NULL,
+                success BOOLEAN DEFAULT 1,
+                error_message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute(device_table)
+            cursor.execute(notification_table)
+            
+            # Create indexes
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_mobile_devices_user_id 
+                ON mobile_devices(user_id)
+            """)
+            
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_push_notifications_user_id 
+                ON push_notifications(user_id)
+            """)
+            
+            self.database.connection.commit()
+            cursor.close()
+            self.logger.debug("Mobile push notifications database schema initialized")
+        except Exception as e:
+            self.logger.error(f"Error initializing mobile push schema: {e}")
+    
+    def _load_devices_from_database(self):
+        """Load device registrations from database"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute("""
+                SELECT user_id, device_token, platform, registered_at, last_seen
+                FROM mobile_devices
+                WHERE enabled = TRUE OR enabled = 1
+                ORDER BY last_seen DESC
+            """)
+            
+            rows = cursor.fetchall()
+            for row in rows:
+                user_id, device_token, platform, registered_at, last_seen = row
+                
+                if user_id not in self.device_tokens:
+                    self.device_tokens[user_id] = []
+                
+                self.device_tokens[user_id].append({
+                    'token': device_token,
+                    'platform': platform,
+                    'registered_at': registered_at,
+                    'last_seen': last_seen
+                })
+            
+            cursor.close()
+            if rows:
+                self.logger.info(f"Loaded {len(rows)} mobile devices from database")
+        except Exception as e:
+            self.logger.error(f"Error loading mobile devices from database: {e}")
+    
+    def _save_device_to_database(self, user_id: str, device_token: str, platform: str):
+        """Save device registration to database"""
+        if not self.database or not self.database.enabled:
+            return False
+        
+        try:
+            cursor = self.database.connection.cursor()
+            now = datetime.now()
+            
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    INSERT INTO mobile_devices (user_id, device_token, platform, registered_at, last_seen, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (device_token) DO UPDATE SET
+                        last_seen = EXCLUDED.last_seen,
+                        updated_at = EXCLUDED.updated_at,
+                        enabled = TRUE
+                """, (user_id, device_token, platform, now, now, now))
+            else:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO mobile_devices (user_id, device_token, platform, registered_at, last_seen, enabled, updated_at)
+                    VALUES (?, ?, ?, ?, ?, 1, ?)
+                """, (user_id, device_token, platform, now, now, now))
+            
+            self.database.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving device to database: {e}")
+            return False
+    
+    def _remove_device_from_database(self, user_id: str, device_token: str):
+        """Remove device from database (soft delete)"""
+        if not self.database or not self.database.enabled:
+            return False
+        
+        try:
+            cursor = self.database.connection.cursor()
+            
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    UPDATE mobile_devices 
+                    SET enabled = FALSE, updated_at = %s
+                    WHERE user_id = %s AND device_token = %s
+                """, (datetime.now(), user_id, device_token))
+            else:
+                cursor.execute("""
+                    UPDATE mobile_devices 
+                    SET enabled = 0, updated_at = ?
+                    WHERE user_id = ? AND device_token = ?
+                """, (datetime.now(), user_id, device_token))
+            
+            self.database.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            self.logger.error(f"Error removing device from database: {e}")
+            return False
+    
+    def _save_notification_to_database(self, user_id: str, notification_type: str, 
+                                       title: str, body: str, data: dict, success: bool, error_message: str = None):
+        """Save notification history to database"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            cursor = self.database.connection.cursor()
+            data_json = json.dumps(data) if data else None
+            
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    INSERT INTO push_notifications (user_id, notification_type, title, body, data, sent_at, success, error_message)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (user_id, notification_type, title, body, data_json, datetime.now(), success, error_message))
+            else:
+                cursor.execute("""
+                    INSERT INTO push_notifications (user_id, notification_type, title, body, data, sent_at, success, error_message)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (user_id, notification_type, title, body, data_json, datetime.now(), 1 if success else 0, error_message))
+            
+            self.database.connection.commit()
+            cursor.close()
+        except Exception as e:
+            self.logger.error(f"Error saving notification to database: {e}")
     
     def register_device(self, user_id: str, device_token: str, 
                        platform: str = 'unknown') -> bool:
@@ -80,6 +294,9 @@ class MobilePushNotifications:
             'last_seen': datetime.now()
         })
         
+        # Save to database
+        self._save_device_to_database(user_id, device_token, platform)
+        
         self.logger.info(f"Registered device for user {user_id} ({platform})")
         return True
     
@@ -96,6 +313,9 @@ class MobilePushNotifications:
         
         removed = original_count - len(self.device_tokens[user_id])
         if removed > 0:
+            # Remove from database
+            self._remove_device_from_database(user_id, device_token)
+            
             self.logger.info(f"Unregistered device for user {user_id}")
             return True
         
@@ -228,6 +448,10 @@ class MobilePushNotifications:
                 'failure_count': response.failure_count
             })
             
+            # Save to database
+            notification_type = data.get('type', 'unknown') if data else 'unknown'
+            self._save_notification_to_database(user_id, notification_type, title, body, data, True)
+            
             return {
                 'success': True,
                 'success_count': response.success_count,
@@ -236,6 +460,11 @@ class MobilePushNotifications:
             
         except Exception as e:
             self.logger.error(f"Error sending push notification: {e}")
+            
+            # Save error to database
+            notification_type = data.get('type', 'unknown') if data else 'unknown'
+            self._save_notification_to_database(user_id, notification_type, title, body, data, False, str(e))
+            
             return {'error': str(e)}
     
     def get_user_devices(self, user_id: str) -> List[Dict]:
