@@ -334,3 +334,80 @@ class Config:
         except Exception as e:
             print(f"Error updating voicemail PIN: {e}")
             return False
+
+    def get_dtmf_config(self):
+        """
+        Get DTMF configuration
+
+        Returns:
+            Dictionary with DTMF configuration
+        """
+        try:
+            # Get DTMF config from features.webrtc.dtmf section
+            dtmf_config = {
+                'mode': self.get('features.webrtc.dtmf.mode', 'RFC2833'),
+                'payload_type': self.get('features.webrtc.dtmf.payload_type', 101),
+                'duration': self.get('features.webrtc.dtmf.duration', 160),
+                'sip_info_fallback': self.get('features.webrtc.dtmf.sip_info_fallback', True),
+                'inband_fallback': self.get('features.webrtc.dtmf.inband_fallback', True),
+                'detection_threshold': self.get('features.webrtc.dtmf.detection_threshold', 0.3),
+                'relay_enabled': self.get('features.webrtc.dtmf.relay_enabled', True)
+            }
+            return dtmf_config
+        except Exception as e:
+            print(f"Error getting DTMF config: {e}")
+            return None
+
+    def update_dtmf_config(self, config_data):
+        """
+        Update DTMF configuration
+
+        Args:
+            config_data: Dictionary with DTMF configuration
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Ensure the structure exists
+            if 'features' not in self.config:
+                self.config['features'] = {}
+            if 'webrtc' not in self.config['features']:
+                self.config['features']['webrtc'] = {}
+            if 'dtmf' not in self.config['features']['webrtc']:
+                self.config['features']['webrtc']['dtmf'] = {}
+
+            # Update DTMF settings
+            dtmf = config_data.get('dtmf', config_data)
+            
+            if 'mode' in dtmf:
+                self.config['features']['webrtc']['dtmf']['mode'] = dtmf['mode']
+            if 'payload_type' in dtmf:
+                payload_type = int(dtmf['payload_type'])
+                if payload_type < 96 or payload_type > 127:
+                    print("Error updating DTMF config: Invalid payload type. Must be between 96 and 127")
+                    return False
+                self.config['features']['webrtc']['dtmf']['payload_type'] = payload_type
+            if 'duration' in dtmf:
+                duration = int(dtmf['duration'])
+                if duration < 80 or duration > 500:
+                    print("Error updating DTMF config: Invalid duration. Must be between 80 and 500ms")
+                    return False
+                self.config['features']['webrtc']['dtmf']['duration'] = duration
+            if 'sip_info_fallback' in dtmf:
+                self.config['features']['webrtc']['dtmf']['sip_info_fallback'] = bool(dtmf['sip_info_fallback'])
+            if 'inband_fallback' in dtmf:
+                self.config['features']['webrtc']['dtmf']['inband_fallback'] = bool(dtmf['inband_fallback'])
+            if 'detection_threshold' in dtmf:
+                threshold = float(dtmf['detection_threshold'])
+                if threshold < 0.1 or threshold > 0.9:
+                    print("Error updating DTMF config: Invalid detection threshold. Must be between 0.1 and 0.9")
+                    return False
+                self.config['features']['webrtc']['dtmf']['detection_threshold'] = threshold
+            if 'relay_enabled' in dtmf:
+                self.config['features']['webrtc']['dtmf']['relay_enabled'] = bool(dtmf['relay_enabled'])
+
+            return self.save()
+        except Exception as e:
+            print(f"Error updating DTMF config: {e}")
+            return False

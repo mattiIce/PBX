@@ -3330,21 +3330,8 @@ async function saveCodecConfig(event) {
  */
 async function loadDTMFConfig() {
     try {
-        // TODO: In production, fetch from API endpoint
-        // const response = await fetch('/api/config/dtmf');
-        // const config = await response.json();
-        
-        // For now, load default values from config.yml
-        // These values match the configuration in config.yml
-        const config = {
-            mode: 'RFC2833',
-            payload_type: 101,
-            duration: 160,
-            sip_info_fallback: true,
-            inband_fallback: true,
-            detection_threshold: 0.3,
-            relay_enabled: true
-        };
+        const response = await fetch('/api/config/dtmf');
+        const config = await response.json();
         
         // Populate form fields
         if (document.getElementById('dtmf-mode')) {
@@ -3435,20 +3422,23 @@ async function saveDTMFConfig(event) {
     };
     
     try {
-        // TODO: In production, save via API endpoint
-        // const response = await fetch('/api/config/dtmf', {
-        //     method: 'POST',
-        //     headers: {'Content-Type': 'application/json'},
-        //     body: JSON.stringify(dtmfConfig)
-        // });
+        const response = await fetch('/api/config/dtmf', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(dtmfConfig)
+        });
         
-        console.log('DTMF configuration to save:', dtmfConfig);
+        const result = await response.json();
         
-        // Use simple message for notification since it uses textContent
-        showNotification(
-            `✅ DTMF configuration saved (Mode: ${mode}, Payload: ${payloadType}). ⚠️ PBX restart required.`,
-            'success'
-        );
+        if (response.ok && result.success) {
+            // Use simple message for notification since it uses textContent
+            showNotification(
+                `✅ DTMF configuration saved (Mode: ${mode}, Payload: ${payloadType}). ⚠️ PBX restart required.`,
+                'success'
+            );
+        } else {
+            showNotification(result.error || 'Failed to save DTMF configuration', 'error');
+        }
         
     } catch (error) {
         console.error('Error saving DTMF config:', error);

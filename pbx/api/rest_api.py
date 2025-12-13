@@ -350,6 +350,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_config()
             elif path == '/api/config/section':
                 self._handle_update_config_section()
+            elif path == '/api/config/dtmf':
+                self._handle_update_dtmf_config()
             elif path.startswith('/api/voicemail/'):
                 self._handle_update_voicemail(path)
             elif path == '/api/auto-attendant/config':
@@ -511,6 +513,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_config()
             elif path == '/api/config/full':
                 self._handle_get_full_config()
+            elif path == '/api/config/dtmf':
+                self._handle_get_dtmf_config()
             elif path == '/api/ssl/status':
                 self._handle_get_ssl_status()
             elif path == '/api/provisioning/devices':
@@ -2266,6 +2270,54 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     {'success': True, 'message': 'Configuration updated successfully. Restart may be required for some changes.'})
             else:
                 self._send_json({'error': 'Failed to save configuration'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_dtmf_config(self):
+        """Get DTMF configuration"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+        
+        try:
+            dtmf_config = self.pbx_core.config.get_dtmf_config()
+            if dtmf_config is not None:
+                self._send_json(dtmf_config)
+            else:
+                self._send_json({'error': 'Failed to get DTMF configuration'}, 500)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_update_dtmf_config(self):
+        """Update DTMF configuration"""
+        # SECURITY: Require admin authentication
+        is_admin, payload = self._require_admin()
+        if not is_admin:
+            self._send_json({'error': 'Admin privileges required'}, 403)
+            return
+        
+        if not self.pbx_core:
+            self._send_json({'error': 'PBX not initialized'}, 500)
+            return
+
+        try:
+            body = self._get_body()
+
+            # Update DTMF configuration
+            success = self.pbx_core.config.update_dtmf_config(body)
+
+            if success:
+                self._send_json(
+                    {'success': True, 'message': 'DTMF configuration updated successfully. PBX restart required for changes to take effect.'})
+            else:
+                self._send_json(
+                    {'error': 'Failed to update DTMF configuration'}, 500)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
