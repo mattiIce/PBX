@@ -4903,3 +4903,235 @@ function cancelCallback(callbackId) {
         showNotification('Error cancelling callback', 'error');
     });
 }
+
+// Mobile Push Notification Functions
+function loadMobilePushDevices() {
+    Promise.all([
+        fetch('/api/mobile-push/devices'),
+        fetch('/api/mobile-push/statistics'),
+        fetch('/api/mobile-push/history')
+    ])
+    .then(([devicesRes, statsRes, historyRes]) => Promise.all([devicesRes.json(), statsRes.json(), historyRes.json()]))
+    .then(([devicesData, statsData, historyData]) => {
+        // Update statistics
+        if (statsData) {
+            document.getElementById('push-total-devices').textContent = statsData.total_devices || 0;
+            document.getElementById('push-total-users').textContent = statsData.total_users || 0;
+            
+            const platforms = statsData.platforms || {};
+            document.getElementById('push-ios-devices').textContent = platforms.ios || 0;
+            document.getElementById('push-android-devices').textContent = platforms.android || 0;
+            document.getElementById('push-recent-notifications').textContent = statsData.recent_notifications || 0;
+        }
+        
+        // Update devices table
+        if (devicesData && devicesData.devices) {
+            const tbody = document.getElementById('mobile-devices-list');
+            if (devicesData.devices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No devices registered</td></tr>';
+            } else {
+                tbody.innerHTML = devicesData.devices.map(device => {
+                    const registeredTime = new Date(device.registered_at).toLocaleString();
+                    const lastSeenTime = new Date(device.last_seen).toLocaleString();
+                    
+                    let platformBadge = '';
+                    if (device.platform === 'ios') {
+                        platformBadge = '<span class="badge badge-info">📱 iOS</span>';
+                    } else if (device.platform === 'android') {
+                        platformBadge = '<span class="badge badge-success">🤖 Android</span>';
+                    } else {
+                        platformBadge = `<span class="badge badge-secondary">${escapeHtml(device.platform)}</span>`;
+                    }
+                    
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(device.user_id)}</strong></td>
+                            <td>${platformBadge}</td>
+                            <td><small>${registeredTime}</small></td>
+                            <td><small>${lastSeenTime}</small></td>
+                            <td>
+                                <button class="btn-small btn-primary" onclick="sendTestNotification('${escapeHtml(device.user_id)}')">🧪 Test</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+        
+        // Update history table
+        if (historyData && historyData.history) {
+            const tbody = document.getElementById('push-history-list');
+            if (historyData.history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No notifications sent</td></tr>';
+            } else {
+                tbody.innerHTML = historyData.history.slice(0, 50).map(notif => {
+                    const sentTime = new Date(notif.sent_at).toLocaleString();
+                    const successCount = notif.success_count || 0;
+                    const failureCount = notif.failure_count || 0;
+                    
+                    return `
+                        <tr>
+                            <td>${escapeHtml(notif.user_id)}</td>
+                            <td><strong>${escapeHtml(notif.title)}</strong></td>
+                            <td><small>${escapeHtml(notif.body)}</small></td>
+                            <td><small>${sentTime}</small></td>
+                            <td>
+                                <span class="badge badge-success">${successCount} ✓</span>
+                                ${failureCount > 0 ? `<span class="badge badge-danger">${failureCount} ✗</span>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading mobile push data:', error);
+        showNotification('Error loading mobile push data', 'error');
+    });
+}
+
+function showRegisterDeviceModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'register-device-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeRegisterDeviceModal()">&times;</span>
+            <h2>📱 Register Mobile Device</h2>
+            <form id="register-device-form" onsubmit="registerDevice(event)">
+                <div class="form-group">
+                    <label for="device-user-id">User ID / Extension: *</label>
+                    <input type="text" id="device-user-id" required 
+                           placeholder="e.g., 1001 or user@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="device-token">Device Token: *</label>
+                    <textarea id="device-token" required rows="4"
+                              placeholder="FCM device registration token"></textarea>
+                    <small>Obtain from mobile app after FCM SDK initialization</small>
+                </div>
+                <div class="form-group">
+                    <label for="device-platform">Platform: *</label>
+                    <select id="device-platform" required>
+                        <option value="">Select Platform</option>
+                        <option value="ios">iOS</option>
+                        <option value="android">Android</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRegisterDeviceModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Register Device</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function closeRegisterDeviceModal() {
+    const modal = document.getElementById('register-device-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function registerDevice(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById('device-user-id').value;
+    const deviceToken = document.getElementById('device-token').value.trim();
+    const platform = document.getElementById('device-platform').value;
+    
+    const deviceData = {
+        user_id: userId,
+        device_token: deviceToken,
+        platform: platform
+    };
+    
+    fetch('/api/mobile-push/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deviceData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Device registered successfully', 'success');
+            closeRegisterDeviceModal();
+            loadMobilePushDevices();
+        } else {
+            showNotification(data.error || 'Error registering device', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error registering device:', error);
+        showNotification('Error registering device', 'error');
+    });
+}
+
+function showTestNotificationModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'test-notification-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeTestNotificationModal()">&times;</span>
+            <h2>🧪 Send Test Notification</h2>
+            <form id="test-notification-form" onsubmit="sendTestNotificationForm(event)">
+                <div class="form-group">
+                    <label for="test-user-id">User ID / Extension: *</label>
+                    <input type="text" id="test-user-id" required 
+                           placeholder="e.g., 1001 or user@example.com">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTestNotificationModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Test</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function closeTestNotificationModal() {
+    const modal = document.getElementById('test-notification-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function sendTestNotificationForm(event) {
+    event.preventDefault();
+    const userId = document.getElementById('test-user-id').value;
+    sendTestNotification(userId);
+    closeTestNotificationModal();
+}
+
+function sendTestNotification(userId) {
+    fetch('/api/mobile-push/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.stub_mode) {
+            if (data.stub_mode) {
+                showNotification('Test notification logged (Firebase not configured)', 'warning');
+            } else {
+                showNotification(`Test notification sent: ${data.success_count} succeeded, ${data.failure_count} failed`, 'success');
+            }
+            loadMobilePushDevices();
+        } else {
+            showNotification(data.error || 'Error sending test notification', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending test notification:', error);
+        showNotification('Error sending test notification', 'error');
+    });
+}
