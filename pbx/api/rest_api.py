@@ -415,6 +415,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract rule ID from path
                 rule_id = path.split('/')[-1]
                 self._handle_delete_time_routing_rule(rule_id)
+            elif path.startswith('/api/webhooks/'):
+                # Extract URL from path (URL-encoded)
+                from urllib.parse import unquote
+                url = unquote(path.split('/', 3)[-1])
+                self._handle_delete_webhook(url)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:

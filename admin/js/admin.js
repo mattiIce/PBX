@@ -3519,6 +3519,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadTimeRoutingRules, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load webhooks when Webhooks tab is shown
+    const webhooksTab = document.querySelector('[data-tab="webhooks"]');
+    if (webhooksTab) {
+        webhooksTab.addEventListener('click', function() {
+            setTimeout(loadWebhooks, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
 
 // ============================================================================
@@ -4123,5 +4131,139 @@ function deleteTimeRoutingRule(ruleId, ruleName) {
     .catch(error => {
         console.error('Error deleting time routing rule:', error);
         showNotification('Error deleting time routing rule', 'error');
+    });
+}
+
+// ============================================================================
+// Webhook Functions
+// ============================================================================
+
+function loadWebhooks() {
+    fetch('/api/webhooks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.subscriptions) {
+                const tbody = document.getElementById('webhooks-list');
+                if (data.subscriptions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No webhooks configured</td></tr>';
+                } else {
+                    tbody.innerHTML = data.subscriptions.map(webhook => {
+                        const enabled = webhook.enabled !== false;
+                        const statusBadge = enabled
+                            ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
+                            : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+                        
+                        const events = webhook.event_types || [];
+                        const eventList = events.join(', ');
+                        const hasSecret = webhook.secret ? '🔒 Yes' : '🔓 No';
+                        
+                        return `
+                            <tr>
+                                <td>
+                                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(webhook.url)}">
+                                        ${escapeHtml(webhook.url)}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(eventList)}">
+                                        <small>${escapeHtml(eventList)}</small>
+                                    </div>
+                                </td>
+                                <td>${hasSecret}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn-small btn-danger" onclick="deleteWebhook('${escapeHtml(webhook.url)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading webhooks:', error);
+            showNotification('Error loading webhooks', 'error');
+        });
+}
+
+function showAddWebhookModal() {
+    document.getElementById('add-webhook-modal').style.display = 'block';
+}
+
+function closeAddWebhookModal() {
+    document.getElementById('add-webhook-modal').style.display = 'none';
+    document.getElementById('add-webhook-form').reset();
+}
+
+function addWebhook(event) {
+    event.preventDefault();
+    
+    const url = document.getElementById('webhook-url').value;
+    const secret = document.getElementById('webhook-secret').value;
+    const enabled = document.getElementById('webhook-enabled').checked;
+    
+    // Collect selected events
+    const selectedEvents = Array.from(document.querySelectorAll('input[name="webhook-events"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedEvents.length === 0) {
+        showNotification('Please select at least one event type', 'error');
+        return;
+    }
+    
+    const webhookData = {
+        url: url,
+        event_types: selectedEvents,
+        enabled: enabled
+    };
+    
+    if (secret) {
+        webhookData.secret = secret;
+    }
+    
+    fetch('/api/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Webhook added successfully', 'success');
+            closeAddWebhookModal();
+            loadWebhooks();
+        } else {
+            showNotification(data.error || 'Error adding webhook', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding webhook:', error);
+        showNotification('Error adding webhook', 'error');
+    });
+}
+
+function deleteWebhook(url) {
+    if (!confirm(`Are you sure you want to delete webhook for ${url}?`)) {
+        return;
+    }
+    
+    // URL encode the webhook URL for the path
+    const encodedUrl = encodeURIComponent(url);
+    
+    fetch(`/api/webhooks/${encodedUrl}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Webhook deleted', 'success');
+            loadWebhooks();
+        } else {
+            showNotification(data.error || 'Error deleting webhook', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting webhook:', error);
+        showNotification('Error deleting webhook', 'error');
     });
 }

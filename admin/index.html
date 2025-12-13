@@ -143,6 +143,10 @@
                         <span class="tab-icon">🎵</span>
                         <span class="tab-text">Codecs</span>
                     </button>
+                    <button class="tab-button" data-tab="webhooks">
+                        <span class="tab-icon">🔔</span>
+                        <span class="tab-text">Webhooks</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -1818,6 +1822,53 @@ G.726-32</textarea>
             </div>
         </div>
 
+        <!-- Webhooks Tab -->
+        <div id="webhooks" class="tab-content">
+            <h2>🔔 Webhooks</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadWebhooks()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddWebhookModal()">➕ Add Webhook</button>
+            </div>
+
+            <!-- Webhooks List -->
+            <div class="config-section">
+                <h3>📋 Webhook Subscriptions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Events</th>
+                                <th>Secret</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="webhooks-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading webhooks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Webhooks</h3>
+                <p><strong>Webhooks</strong> allow the PBX to send real-time notifications to external systems when events occur.</p>
+                <ul>
+                    <li><strong>Events:</strong> Call events, registrations, voicemail, and more</li>
+                    <li><strong>HTTP POST:</strong> JSON data sent via HTTP POST request</li>
+                    <li><strong>Secret:</strong> Optional HMAC signature for verification</li>
+                    <li><strong>Use Cases:</strong> CRM integration, logging, monitoring, automation</li>
+                </ul>
+                <h4>Available Event Types:</h4>
+                <p><small>call_started, call_ended, call_answered, extension_registered, extension_unregistered, voicemail_new, voicemail_deleted</small></p>
+            </div>
+        </div>
+
         <!-- Configuration Tab -->
         <div id="config" class="tab-content">
             <h2>System Configuration</h2>
@@ -2754,6 +2805,55 @@ G.726-32</textarea>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeAddTimeRuleModal()">Cancel</button>
                     <button type="submit" class="btn btn-success">Add Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Webhook Modal -->
+    <div id="add-webhook-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 Add Webhook</h3>
+                <span class="close" onclick="closeAddWebhookModal()">&times;</span>
+            </div>
+            <form id="add-webhook-form" onsubmit="addWebhook(event)">
+                <div class="form-group">
+                    <label>Webhook URL:</label>
+                    <input type="url" id="webhook-url" required placeholder="https://example.com/webhook">
+                    <small>The URL to send webhook notifications to</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Event Types:</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 8px;">
+                        <label><input type="checkbox" name="webhook-events" value="call_started"> Call Started</label>
+                        <label><input type="checkbox" name="webhook-events" value="call_ended"> Call Ended</label>
+                        <label><input type="checkbox" name="webhook-events" value="call_answered"> Call Answered</label>
+                        <label><input type="checkbox" name="webhook-events" value="extension_registered"> Extension Registered</label>
+                        <label><input type="checkbox" name="webhook-events" value="extension_unregistered"> Extension Unregistered</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_new"> New Voicemail</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_deleted"> Voicemail Deleted</label>
+                        <label><input type="checkbox" name="webhook-events" value="*"> All Events</label>
+                    </div>
+                    <small>Select which events should trigger this webhook</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Secret (Optional):</label>
+                    <input type="text" id="webhook-secret" placeholder="your-secret-key">
+                    <small>Used for HMAC signature verification (recommended for security)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Enabled:</label>
+                    <input type="checkbox" id="webhook-enabled" checked style="width: auto; margin-left: 10px;">
+                    <small style="display: block; margin-top: 5px;">Enable this webhook immediately</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddWebhookModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Webhook</button>
                 </div>
             </form>
         </div>
