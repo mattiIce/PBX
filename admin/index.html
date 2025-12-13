@@ -119,6 +119,10 @@
                         <span class="tab-icon">🌐</span>
                         <span class="tab-text">SIP Trunks</span>
                     </button>
+                    <button class="tab-button" data-tab="least-cost-routing">
+                        <span class="tab-icon">💰</span>
+                        <span class="tab-text">Least-Cost Routing</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -1518,6 +1522,130 @@
                     <li><strong>Health Monitoring:</strong> Automatic monitoring detects trunk failures</li>
                     <li><strong>Failover:</strong> Calls automatically route to backup trunks on failure</li>
                     <li><strong>Channels:</strong> Maximum concurrent calls per trunk</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Least-Cost Routing Tab -->
+        <div id="least-cost-routing" class="tab-content">
+            <h2>💰 Least-Cost Routing (LCR)</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadLCRRates()">🔄 Refresh Rates</button>
+                <button class="btn btn-success" onclick="showAddLCRRateModal()">➕ Add Rate</button>
+                <button class="btn btn-success" onclick="showAddTimeRateModal()">⏰ Add Time-Based Rate</button>
+                <button class="btn btn-danger" onclick="clearLCRRates()">🗑️ Clear All Rates</button>
+            </div>
+
+            <!-- LCR Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="lcr-total-rates">-</div>
+                    <div class="stat-label">Rate Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lcr-total-routes">-</div>
+                    <div class="stat-label">Total Routes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lcr-time-rates">-</div>
+                    <div class="stat-label">Time-Based Rates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="lcr-status">-</div>
+                    <div class="stat-label">Status</div>
+                </div>
+            </div>
+
+            <!-- Rate Entries -->
+            <div class="config-section">
+                <h3>📋 Rate Database</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Trunk</th>
+                                <th>Pattern</th>
+                                <th>Description</th>
+                                <th>Rate/Min</th>
+                                <th>Connection Fee</th>
+                                <th>Min Seconds</th>
+                                <th>Billing Inc</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lcr-rates-list">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Loading rates...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Time-Based Rates -->
+            <div class="config-section">
+                <h3>⏰ Time-Based Rate Modifiers</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Period Name</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Days of Week</th>
+                                <th>Rate Multiplier</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lcr-time-rates-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">No time-based rates configured</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Routing Decisions -->
+            <div class="config-section">
+                <h3>📊 Recent Routing Decisions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Number</th>
+                                <th>Selected Trunk</th>
+                                <th>Est. Cost</th>
+                                <th>Alternatives</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lcr-decisions-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">No recent decisions</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Least-Cost Routing</h3>
+                <p><strong>Least-Cost Routing (LCR)</strong> automatically selects the most cost-effective trunk for outbound calls based on destination patterns and carrier rates.</p>
+                <ul>
+                    <li><strong>Rate Database:</strong> Define per-minute rates for different dial patterns</li>
+                    <li><strong>Time-Based Rates:</strong> Apply multipliers for peak/off-peak hours</li>
+                    <li><strong>Dial Patterns:</strong> Use regex patterns to match destinations (e.g., ^\d{10}$ for US local)</li>
+                    <li><strong>Quality Aware:</strong> Optionally consider trunk quality metrics in addition to cost</li>
+                    <li><strong>Cost Savings:</strong> Reduce telecom expenses by routing to cheapest available carriers</li>
+                </ul>
+                <h4>Example Patterns:</h4>
+                <ul>
+                    <li><code>^\d{10}$</code> - US Local (10 digits)</li>
+                    <li><code>^1[2-9]\d{9}$</code> - US Long Distance</li>
+                    <li><code>^1(800|888|877|866)\d{7}$</code> - US Toll-Free</li>
+                    <li><code>^011</code> - International (011 prefix)</li>
+                    <li><code>^01144</code> - UK (011 + 44 country code)</li>
                 </ul>
             </div>
         </div>
