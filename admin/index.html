@@ -163,6 +163,10 @@
                         <span class="tab-icon">📱</span>
                         <span class="tab-text">Mobile Push</span>
                     </button>
+                    <button class="tab-button" data-tab="recording-announcements">
+                        <span class="tab-icon">📢</span>
+                        <span class="tab-text">Recording Announcements</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -2286,6 +2290,86 @@ G.726-32</textarea>
                     <li>Service account credentials JSON file</li>
                     <li>Mobile app with FCM SDK integrated</li>
                     <li>Device token registration from mobile app</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recording Announcements Tab -->
+        <div id="recording-announcements" class="tab-content">
+            <h2>📢 Recording Announcements</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadRecordingAnnouncementsStats()">🔄 Refresh</button>
+            </div>
+
+            <!-- Announcement Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="announcements-enabled">-</div>
+                    <div class="stat-label">Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="announcements-played">-</div>
+                    <div class="stat-label">Announcements Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="consent-accepted">-</div>
+                    <div class="stat-label">Consent Accepted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="consent-declined">-</div>
+                    <div class="stat-label">Consent Declined</div>
+                </div>
+            </div>
+
+            <!-- Current Configuration -->
+            <div class="config-section">
+                <h3>⚙️ Current Configuration</h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <strong>Announcement Type:</strong>
+                        <span id="announcement-type">-</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Require Consent:</strong>
+                        <span id="require-consent">-</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Audio File:</strong>
+                        <span id="audio-file-path">-</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Announcement Text:</strong>
+                        <span id="announcement-text">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Recording Announcements</h3>
+                <p><strong>Recording Announcements</strong> automatically inform call participants that the call may be recorded, ensuring legal compliance.</p>
+                <ul>
+                    <li><strong>Legal Compliance:</strong> Meets requirements for recording disclosure in various jurisdictions</li>
+                    <li><strong>Announcement Types:</strong>
+                        <ul>
+                            <li><code>caller</code> - Play to incoming callers only</li>
+                            <li><code>callee</code> - Play to outbound call recipients only</li>
+                            <li><code>both</code> - Play to all parties</li>
+                        </ul>
+                    </li>
+                    <li><strong>Consent Management:</strong> Optional consent requirement with DTMF response capture</li>
+                    <li><strong>Audio Options:</strong> Use pre-recorded WAV file or text-to-speech</li>
+                </ul>
+                <p><strong>Configuration:</strong></p>
+                <p>Edit <code>config.yml</code> under <code>features.recording_announcements</code> to customize:</p>
+                <ul>
+                    <li><code>enabled</code> - Enable/disable announcements</li>
+                    <li><code>type</code> - Announcement type (caller/callee/both)</li>
+                    <li><code>audio_path</code> - Path to audio file</li>
+                    <li><code>text</code> - TTS text (if no audio file)</li>
+                    <li><code>require_consent</code> - Enable consent requirement</li>
+                    <li><code>consent_timeout_seconds</code> - Timeout for consent response</li>
                 </ul>
             </div>
         </div>

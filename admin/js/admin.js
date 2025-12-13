@@ -5135,3 +5135,34 @@ function sendTestNotification(userId) {
         showNotification('Error sending test notification', 'error');
     });
 }
+
+// Recording Announcements Functions
+function loadRecordingAnnouncementsStats() {
+    Promise.all([
+        fetch('/api/recording-announcements/statistics'),
+        fetch('/api/recording-announcements/config')
+    ])
+    .then(([statsRes, configRes]) => Promise.all([statsRes.json(), configRes.json()]))
+    .then(([statsData, configData]) => {
+        // Update statistics
+        if (statsData) {
+            document.getElementById('announcements-enabled').textContent = statsData.enabled ? '✅ Enabled' : '❌ Disabled';
+            document.getElementById('announcements-played').textContent = statsData.announcements_played || 0;
+            document.getElementById('consent-accepted').textContent = statsData.consent_accepted || 0;
+            document.getElementById('consent-declined').textContent = statsData.consent_declined || 0;
+            
+            document.getElementById('announcement-type').textContent = statsData.announcement_type || 'N/A';
+            document.getElementById('require-consent').textContent = statsData.require_consent ? 'Yes' : 'No';
+        }
+        
+        // Update configuration
+        if (configData) {
+            document.getElementById('audio-file-path').textContent = configData.audio_path || 'N/A';
+            document.getElementById('announcement-text').textContent = configData.announcement_text || 'N/A';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading recording announcements data:', error);
+        showNotification('Error loading recording announcements data', 'error');
+    });
+}
