@@ -26,8 +26,8 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 
 ### Overall Status
 - **Total Features Tracked**: 77 features (removed 2 non-applicable: HIPAA, TCPA)
-- **Completed** ✅: 40 features (52%)
-- **Framework** ⚠️: 3 features (4%)
+- **Completed** ✅: 39 features (51%)
+- **Framework** ⚠️: 4 features (5%)
 - **Planned**: 34 features (44%)
 
 ### Recently Completed (December 2025)
@@ -64,6 +64,7 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
+- Click-to-Dial (WebRTC API exists, needs web UI component)
 - Multi-Factor Authentication (security infrastructure exists, can add more auth methods)
 - GDPR/SOC 2 Compliance (audit logging framework, needs compliance reports)
 - Dashboard & Analytics (REST APIs available, can add more visualizations)
@@ -337,12 +338,12 @@ Note: CRM integration features have been removed as they are not required for th
   - Device Management: Multi-device support per user
   - Impact: Instant mobile notifications for calls and voicemail
 
-- [x] **Click-to-Dial** - Web/app-based dialing
-  - Status: ✅ COMPLETED - Available via WebRTC implementation
+- [⚠️] **Click-to-Dial** - Web/app-based dialing
+  - Status: Framework exists (WebRTC call initiation API)
   - Features: WebRTC session API can initiate calls programmatically
   - Integration: REST API endpoints for call initiation
-  - Use Cases: CRM integration, web UI dialing, mobile app dialing
-  - Impact: One-click dialing from any web interface or application
+  - Current: Backend API complete, web UI component can be added
+  - Impact: API-based dialing from any web interface or application
 
 - [x] **Visual Voicemail** - Enhanced voicemail interface
   - Status: ✅ FULLY IMPLEMENTED (December 10, 2025)

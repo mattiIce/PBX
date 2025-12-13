@@ -1102,7 +1102,7 @@ The PBX system has a solid E911 framework in place with location database struct
 | Mobile Push Notifications | ⏳ Planned | Call/voicemail alerts on mobile |
 | Visual Voicemail | ⚠️ Framework | Enhanced voicemail interface |
 | Voicemail Transcription | ✅ Complete | Speech-to-text with OpenAI/Google support |
-| Click-to-Dial | ✅ Complete | Web/app-based dialing via WebRTC API |
+| Click-to-Dial | ⚠️ Framework | Web/app-based dialing API (WebRTC backend) |
 | Mobile Number Portability | ⏳ Planned | Use business number on mobile |
 
 ### Advanced Call Features (Next Generation)
