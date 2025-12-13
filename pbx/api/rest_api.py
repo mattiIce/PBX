@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Optional
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
@@ -417,9 +417,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_delete_time_routing_rule(rule_id)
             elif path.startswith('/api/webhooks/'):
                 # Extract URL from path (URL-encoded)
-                from urllib.parse import unquote
                 url = unquote(path.split('/', 3)[-1])
-                self._handle_delete_webhook(url)
+                # Validate URL format
+                if url.startswith('http://') or url.startswith('https://'):
+                    self._handle_delete_webhook(url)
+                else:
+                    self._send_json({'error': 'Invalid webhook URL format'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:

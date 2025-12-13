@@ -3823,7 +3823,7 @@ function loadFMFMExtensions() {
                                 <td>${statusBadge}</td>
                                 <td><small>${updated}</small></td>
                                 <td>
-                                    <button class="btn-small btn-primary" onclick='editFMFMConfig(${JSON.stringify(config)})'>✏️ Edit</button>
+                                    <button class="btn-small btn-primary" data-config='${escapeHtml(JSON.stringify(config))}' onclick="editFMFMConfig(JSON.parse(this.getAttribute('data-config')))">✏️ Edit</button>
                                     <button class="btn-small btn-danger" onclick="deleteFMFMConfig('${escapeHtml(config.extension)}')">🗑️</button>
                                 </td>
                             </tr>
