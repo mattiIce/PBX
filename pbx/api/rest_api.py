@@ -280,6 +280,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_sip_trunk()
             elif path == '/api/sip-trunks/test':
                 self._handle_test_sip_trunk()
+            elif path == '/api/lcr/rate':
+                self._handle_add_lcr_rate()
+            elif path == '/api/lcr/time-rate':
+                self._handle_add_lcr_time_rate()
+            elif path == '/api/lcr/clear-rates':
+                self._handle_clear_lcr_rates()
+            elif path == '/api/lcr/clear-time-rates':
+                self._handle_clear_lcr_time_rates()
             elif path == '/api/fmfm/config':
                 self._handle_set_fmfm_config()
             elif path == '/api/fmfm/destination':
@@ -658,6 +666,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_sip_trunks()
             elif path == '/api/sip-trunks/health':
                 self._handle_get_trunk_health()
+            elif path == '/api/lcr/rates':
+                self._handle_get_lcr_rates()
+            elif path == '/api/lcr/statistics':
+                self._handle_get_lcr_statistics()
             elif path == '/api/fmfm/extensions':
                 self._handle_get_fmfm_extensions()
             elif path.startswith('/api/fmfm/config/'):
@@ -4633,20 +4645,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             data = self._get_body()
             aa = self.pbx_core.auto_attendant
 
-            # Update configuration
-            config_changed = False
+            # Update configuration using the new update_config method
+            config_updates = {}
             if 'enabled' in data:
-                aa.enabled = bool(data['enabled'])
-                config_changed = True
+                config_updates['enabled'] = bool(data['enabled'])
             if 'extension' in data:
-                aa.extension = str(data['extension'])
-                config_changed = True
+                config_updates['extension'] = str(data['extension'])
             if 'timeout' in data:
-                aa.timeout = int(data['timeout'])
-                config_changed = True
+                config_updates['timeout'] = int(data['timeout'])
             if 'max_retries' in data:
-                aa.max_retries = int(data['max_retries'])
+                config_updates['max_retries'] = int(data['max_retries'])
+            
+            # Apply updates and persist to database
+            if config_updates:
+                aa.update_config(**config_updates)
                 config_changed = True
+            else:
+                config_changed = False
 
             # Check if prompts configuration was updated
             prompts_updated = 'prompts' in data
@@ -4661,7 +4676,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             self._send_json({
                 'success': True,
-                'message': 'Auto attendant configuration updated successfully'
+                'message': 'Auto attendant configuration updated and persisted to database'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -4703,10 +4718,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
 
             aa = self.pbx_core.auto_attendant
-            aa.menu_options[digit] = {
-                'destination': destination,
-                'description': description
-            }
+            # Use the new add_menu_option method which persists to database
+            aa.add_menu_option(digit, destination, description)
 
             # Trigger voice regeneration after menu option addition
             try:
@@ -4716,7 +4729,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             self._send_json({
                 'success': True,
-                'message': f'Menu option {digit} added successfully'
+                'message': f'Menu option {digit} added and persisted to database'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -4737,10 +4750,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     {'error': f'Menu option {digit} not found'}, 404)
                 return
 
+            # Get current values
+            destination = aa.menu_options[digit]['destination']
+            description = aa.menu_options[digit]['description']
+            
+            # Update with new values if provided
             if 'destination' in data:
-                aa.menu_options[digit]['destination'] = data['destination']
+                destination = data['destination']
             if 'description' in data:
-                aa.menu_options[digit]['description'] = data['description']
+                description = data['description']
+            
+            # Use add_menu_option which will update and persist to database
+            aa.add_menu_option(digit, destination, description)
 
             # Trigger voice regeneration after menu option update
             try:
@@ -4750,7 +4771,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             self._send_json({
                 'success': True,
-                'message': f'Menu option {digit} updated successfully'
+                'message': f'Menu option {digit} updated and persisted to database'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -4764,7 +4785,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             aa = self.pbx_core.auto_attendant
             if digit in aa.menu_options:
-                del aa.menu_options[digit]
+                # Use the new remove_menu_option method which deletes from database
+                aa.remove_menu_option(digit)
+                
                 # Trigger voice regeneration after menu option deletion
                 try:
                     self._regenerate_voice_prompts({})
@@ -4774,7 +4797,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
                 self._send_json({
                     'success': True,
-                    'message': f'Menu option {digit} deleted successfully'
+                    'message': f'Menu option {digit} deleted and removed from database'
                 })
             else:
                 self._send_json(
@@ -5619,6 +5642,148 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Error testing SIP trunk: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    # Least-Cost Routing Handlers
+    def _handle_add_lcr_rate(self):
+        """Add a new LCR rate"""
+        if self.pbx_core and hasattr(self.pbx_core, 'lcr'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                self.pbx_core.lcr.add_rate(
+                    trunk_id=data['trunk_id'],
+                    pattern=data['pattern'],
+                    rate_per_minute=float(data['rate_per_minute']),
+                    description=data.get('description', ''),
+                    connection_fee=float(data.get('connection_fee', 0.0)),
+                    minimum_seconds=int(data.get('minimum_seconds', 0)),
+                    billing_increment=int(data.get('billing_increment', 1))
+                )
+
+                self._send_json({
+                    'success': True,
+                    'message': 'LCR rate added successfully'
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error adding LCR rate: {e}")
+                self._send_json({'error': f'Error adding LCR rate: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'LCR system not initialized'}, 500)
+
+    def _handle_add_lcr_time_rate(self):
+        """Add a time-based rate modifier"""
+        if self.pbx_core and hasattr(self.pbx_core, 'lcr'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                self.pbx_core.lcr.add_time_based_rate(
+                    name=data['name'],
+                    start_hour=int(data['start_hour']),
+                    start_minute=int(data['start_minute']),
+                    end_hour=int(data['end_hour']),
+                    end_minute=int(data['end_minute']),
+                    days=data['days'],  # List of day indices
+                    multiplier=float(data['multiplier'])
+                )
+
+                self._send_json({
+                    'success': True,
+                    'message': 'Time-based rate added successfully'
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error adding time-based rate: {e}")
+                self._send_json({'error': f'Error adding time-based rate: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'LCR system not initialized'}, 500)
+
+    def _handle_get_lcr_rates(self):
+        """Get all LCR rates"""
+        if self.pbx_core and hasattr(self.pbx_core, 'lcr'):
+            try:
+                rates = []
+                for rate_entry in self.pbx_core.lcr.rate_entries:
+                    rates.append({
+                        'trunk_id': rate_entry.trunk_id,
+                        'pattern': rate_entry.pattern.pattern,
+                        'description': rate_entry.pattern.description,
+                        'rate_per_minute': rate_entry.rate_per_minute,
+                        'connection_fee': rate_entry.connection_fee,
+                        'minimum_seconds': rate_entry.minimum_seconds,
+                        'billing_increment': rate_entry.billing_increment
+                    })
+                
+                time_rates = []
+                for time_rate in self.pbx_core.lcr.time_based_rates:
+                    time_rates.append({
+                        'name': time_rate.name,
+                        'start_time': time_rate.start_time.strftime('%H:%M'),
+                        'end_time': time_rate.end_time.strftime('%H:%M'),
+                        'days_of_week': time_rate.days_of_week,
+                        'rate_multiplier': time_rate.rate_multiplier
+                    })
+
+                self._send_json({
+                    'rates': rates,
+                    'time_rates': time_rates,
+                    'count': len(rates)
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error getting LCR rates: {e}")
+                self._send_json({'error': f'Error getting LCR rates: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'LCR system not initialized'}, 500)
+
+    def _handle_get_lcr_statistics(self):
+        """Get LCR statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'lcr'):
+            try:
+                stats = self.pbx_core.lcr.get_statistics()
+                self._send_json(stats)
+
+            except Exception as e:
+                self.logger.error(f"Error getting LCR statistics: {e}")
+                self._send_json({'error': f'Error getting LCR statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'LCR system not initialized'}, 500)
+
+    def _handle_clear_lcr_rates(self):
+        """Clear all LCR rates"""
+        if self.pbx_core and hasattr(self.pbx_core, 'lcr'):
+            try:
+                self.pbx_core.lcr.clear_rates()
+                self._send_json({
+                    'success': True,
+                    'message': 'All LCR rates cleared successfully'
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error clearing LCR rates: {e}")
+                self._send_json({'error': f'Error clearing LCR rates: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'LCR system not initialized'}, 500)
+
+    def _handle_clear_lcr_time_rates(self):
+        """Clear all time-based rates"""
+        if self.pbx_core and hasattr(self.pbx_core, 'lcr'):
+            try:
+                self.pbx_core.lcr.clear_time_rates()
+                self._send_json({
+                    'success': True,
+                    'message': 'All time-based rates cleared successfully'
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error clearing time-based rates: {e}")
+                self._send_json({'error': f'Error clearing time-based rates: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'LCR system not initialized'}, 500)
 
     # Find Me/Follow Me Handlers
     def _handle_get_fmfm_extensions(self):

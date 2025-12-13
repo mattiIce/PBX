@@ -3787,6 +3787,326 @@ function testTrunk(trunkId) {
 }
 
 // ============================================================================
+// Least-Cost Routing (LCR) Functions
+// ============================================================================
+
+function loadLCRRates() {
+    fetch('/api/lcr/rates')
+        .then(response => response.json())
+        .then(data => {
+            if (data.rates !== undefined) {
+                // Update stats
+                document.getElementById('lcr-total-rates').textContent = data.count || 0;
+                document.getElementById('lcr-time-rates').textContent = data.time_rates ? data.time_rates.length : 0;
+                
+                // Update rate entries table
+                const ratesBody = document.getElementById('lcr-rates-list');
+                if (data.rates.length === 0) {
+                    ratesBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No rates configured</td></tr>';
+                } else {
+                    ratesBody.innerHTML = data.rates.map(rate => `
+                        <tr>
+                            <td><strong>${escapeHtml(rate.trunk_id)}</strong></td>
+                            <td><code>${escapeHtml(rate.pattern)}</code></td>
+                            <td>${escapeHtml(rate.description)}</td>
+                            <td>$${rate.rate_per_minute.toFixed(4)}</td>
+                            <td>$${rate.connection_fee.toFixed(4)}</td>
+                            <td>${rate.minimum_seconds}s</td>
+                            <td>${rate.billing_increment}s</td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // Update time-based rates table
+                const timeRatesBody = document.getElementById('lcr-time-rates-list');
+                if (!data.time_rates || data.time_rates.length === 0) {
+                    timeRatesBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No time-based rates configured</td></tr>';
+                } else {
+                    timeRatesBody.innerHTML = data.time_rates.map(tr => {
+                        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                        const days = tr.days_of_week.map(d => dayNames[d]).join(', ');
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(tr.name)}</strong></td>
+                                <td>${tr.start_time}</td>
+                                <td>${tr.end_time}</td>
+                                <td>${days}</td>
+                                <td>${tr.rate_multiplier}x</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+            
+            // Load statistics
+            loadLCRStatistics();
+        })
+        .catch(error => {
+            console.error('Error loading LCR rates:', error);
+            showNotification('Error loading LCR rates', 'error');
+        });
+}
+
+function loadLCRStatistics() {
+    fetch('/api/lcr/statistics')
+        .then(response => response.json())
+        .then(data => {
+            // Update stats
+            document.getElementById('lcr-total-routes').textContent = data.total_routes || 0;
+            document.getElementById('lcr-status').innerHTML = data.enabled ? 
+                '<span class="badge" style="background: #10b981;">✅ Enabled</span>' : 
+                '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+            
+            // Update recent decisions table
+            const decisionsBody = document.getElementById('lcr-decisions-list');
+            if (!data.recent_decisions || data.recent_decisions.length === 0) {
+                decisionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No recent decisions</td></tr>';
+            } else {
+                decisionsBody.innerHTML = data.recent_decisions.map(d => {
+                    const timestamp = new Date(d.timestamp).toLocaleString();
+                    return `
+                        <tr>
+                            <td>${timestamp}</td>
+                            <td>${escapeHtml(d.number)}</td>
+                            <td><strong>${escapeHtml(d.selected_trunk)}</strong></td>
+                            <td>$${d.estimated_cost.toFixed(4)}</td>
+                            <td>${d.alternatives}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading LCR statistics:', error);
+        });
+}
+
+function showAddLCRRateModal() {
+    const modal = `
+        <div id="lcr-rate-modal" class="modal" style="display: block;">
+            <div class="modal-content" style="max-width: 600px;">
+                <h2>➕ Add LCR Rate</h2>
+                <form id="add-lcr-rate-form" onsubmit="addLCRRate(event)">
+                    <div class="form-group">
+                        <label for="lcr-trunk-id">Trunk ID:</label>
+                        <input type="text" id="lcr-trunk-id" required>
+                        <small>The SIP trunk ID this rate applies to</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lcr-pattern">Dial Pattern (Regex):</label>
+                        <input type="text" id="lcr-pattern" required placeholder="^\\d{10}$">
+                        <small>Regex pattern to match dialed numbers (e.g., ^\\d{10}$ for US local)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lcr-description">Description:</label>
+                        <input type="text" id="lcr-description" placeholder="US Local Calls">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lcr-rate-per-minute">Rate per Minute ($):</label>
+                        <input type="number" id="lcr-rate-per-minute" step="0.0001" min="0" required placeholder="0.0100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lcr-connection-fee">Connection Fee ($):</label>
+                        <input type="number" id="lcr-connection-fee" step="0.0001" min="0" value="0.0000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lcr-minimum-seconds">Minimum Billable Seconds:</label>
+                        <input type="number" id="lcr-minimum-seconds" min="0" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lcr-billing-increment">Billing Increment (seconds):</label>
+                        <input type="number" id="lcr-billing-increment" min="1" value="1">
+                        <small>Round up billing to this increment (e.g., 6 for 6-second increments)</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Rate</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeLCRRateModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modal);
+}
+
+function closeLCRRateModal() {
+    const modal = document.getElementById('lcr-rate-modal');
+    if (modal) modal.remove();
+}
+
+function addLCRRate(event) {
+    event.preventDefault();
+    
+    const rateData = {
+        trunk_id: document.getElementById('lcr-trunk-id').value,
+        pattern: document.getElementById('lcr-pattern').value,
+        description: document.getElementById('lcr-description').value,
+        rate_per_minute: parseFloat(document.getElementById('lcr-rate-per-minute').value),
+        connection_fee: parseFloat(document.getElementById('lcr-connection-fee').value),
+        minimum_seconds: parseInt(document.getElementById('lcr-minimum-seconds').value),
+        billing_increment: parseInt(document.getElementById('lcr-billing-increment').value)
+    };
+    
+    fetch('/api/lcr/rate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('LCR rate added successfully', 'success');
+            closeLCRRateModal();
+            loadLCRRates();
+        } else {
+            showNotification(data.error || 'Error adding LCR rate', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding LCR rate:', error);
+        showNotification('Error adding LCR rate', 'error');
+    });
+}
+
+function showAddTimeRateModal() {
+    const modal = `
+        <div id="lcr-time-rate-modal" class="modal" style="display: block;">
+            <div class="modal-content" style="max-width: 600px;">
+                <h2>⏰ Add Time-Based Rate Modifier</h2>
+                <form id="add-time-rate-form" onsubmit="addTimeRate(event)">
+                    <div class="form-group">
+                        <label for="time-rate-name">Period Name:</label>
+                        <input type="text" id="time-rate-name" required placeholder="Peak Hours">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="time-rate-start-hour">Start Hour (0-23):</label>
+                            <input type="number" id="time-rate-start-hour" min="0" max="23" required value="9">
+                        </div>
+                        <div class="form-group">
+                            <label for="time-rate-start-minute">Start Minute:</label>
+                            <input type="number" id="time-rate-start-minute" min="0" max="59" required value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="time-rate-end-hour">End Hour (0-23):</label>
+                            <input type="number" id="time-rate-end-hour" min="0" max="23" required value="17">
+                        </div>
+                        <div class="form-group">
+                            <label for="time-rate-end-minute">End Minute:</label>
+                            <input type="number" id="time-rate-end-minute" min="0" max="59" required value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Days of Week:</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <label><input type="checkbox" name="time-days" value="0" checked> Mon</label>
+                            <label><input type="checkbox" name="time-days" value="1" checked> Tue</label>
+                            <label><input type="checkbox" name="time-days" value="2" checked> Wed</label>
+                            <label><input type="checkbox" name="time-days" value="3" checked> Thu</label>
+                            <label><input type="checkbox" name="time-days" value="4" checked> Fri</label>
+                            <label><input type="checkbox" name="time-days" value="5"> Sat</label>
+                            <label><input type="checkbox" name="time-days" value="6"> Sun</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="time-rate-multiplier">Rate Multiplier:</label>
+                        <input type="number" id="time-rate-multiplier" step="0.1" min="0.1" required value="1.0">
+                        <small>Multiply rates by this factor during this period (e.g., 1.2 for 20% increase)</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Time Rate</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeTimeRateModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modal);
+}
+
+function closeTimeRateModal() {
+    const modal = document.getElementById('lcr-time-rate-modal');
+    if (modal) modal.remove();
+}
+
+function addTimeRate(event) {
+    event.preventDefault();
+    
+    const selectedDays = Array.from(document.querySelectorAll('input[name="time-days"]:checked'))
+        .map(cb => parseInt(cb.value));
+    
+    const timeRateData = {
+        name: document.getElementById('time-rate-name').value,
+        start_hour: parseInt(document.getElementById('time-rate-start-hour').value),
+        start_minute: parseInt(document.getElementById('time-rate-start-minute').value),
+        end_hour: parseInt(document.getElementById('time-rate-end-hour').value),
+        end_minute: parseInt(document.getElementById('time-rate-end-minute').value),
+        days: selectedDays,
+        multiplier: parseFloat(document.getElementById('time-rate-multiplier').value)
+    };
+    
+    fetch('/api/lcr/time-rate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(timeRateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Time-based rate added successfully', 'success');
+            closeTimeRateModal();
+            loadLCRRates();
+        } else {
+            showNotification(data.error || 'Error adding time-based rate', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding time-based rate:', error);
+        showNotification('Error adding time-based rate', 'error');
+    });
+}
+
+function clearLCRRates() {
+    if (!confirm('Are you sure you want to clear all LCR rates? This cannot be undone.')) {
+        return;
+    }
+    
+    fetch('/api/lcr/clear-rates', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('All LCR rates cleared', 'success');
+            loadLCRRates();
+        } else {
+            showNotification(data.error || 'Error clearing LCR rates', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error clearing LCR rates:', error);
+        showNotification('Error clearing LCR rates', 'error');
+    });
+}
+
+// ============================================================================
 // Find Me/Follow Me Functions
 // ============================================================================
 
