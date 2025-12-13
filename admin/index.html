@@ -110,6 +110,14 @@
                 </div>
 
                 <div class="sidebar-section">
+                    <div class="sidebar-section-title">Connectivity</div>
+                    <button class="tab-button" data-tab="sip-trunks">
+                        <span class="tab-icon">🌐</span>
+                        <span class="tab-text">SIP Trunks</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
                     <div class="sidebar-section-title">Features</div>
                     <button class="tab-button" data-tab="auto-attendant">
                         <span class="tab-icon">🤖</span>
@@ -1201,6 +1209,82 @@
                 <div id="calls-list" class="calls-list">
                     <div class="loading">Loading calls...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Codecs Tab -->
+        <!-- SIP Trunks Tab -->
+        <div id="sip-trunks" class="tab-content">
+            <h2>🌐 SIP Trunk Management</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadSIPTrunks()">🔄 Refresh Trunks</button>
+                <button class="btn btn-success" onclick="showAddTrunkModal()">➕ Add Trunk</button>
+                <button class="btn btn-secondary" onclick="loadTrunkHealth()">📊 View Health</button>
+            </div>
+
+            <!-- Trunk Overview Stats -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-total">-</div>
+                    <div class="stat-label">Total Trunks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-healthy">-</div>
+                    <div class="stat-label">Healthy Trunks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-registered">-</div>
+                    <div class="stat-label">Registered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-channels">-</div>
+                    <div class="stat-label">Available Channels</div>
+                </div>
+            </div>
+
+            <!-- Active Trunks List -->
+            <div class="config-section">
+                <h3>📋 SIP Trunks</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Host</th>
+                                <th>Status</th>
+                                <th>Health</th>
+                                <th>Priority</th>
+                                <th>Channels</th>
+                                <th>Success Rate</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trunks-list">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">Loading trunks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trunk Health Monitoring -->
+            <div class="config-section" id="trunk-health-section" style="display: none;">
+                <h3>📊 Trunk Health Monitoring</h3>
+                <div id="trunk-health-container"></div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About SIP Trunks</h3>
+                <p><strong>SIP Trunks</strong> provide external connectivity for making and receiving calls outside the PBX system.</p>
+                <ul>
+                    <li><strong>Priority:</strong> Lower numbers = higher priority for call routing</li>
+                    <li><strong>Health Monitoring:</strong> Automatic monitoring detects trunk failures</li>
+                    <li><strong>Failover:</strong> Calls automatically route to backup trunks on failure</li>
+                    <li><strong>Channels:</strong> Maximum concurrent calls per trunk</li>
+                </ul>
             </div>
         </div>
 
@@ -2333,6 +2417,79 @@ G.726-32</textarea>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeTriggerEmergencyModal()">Cancel</button>
                     <button type="submit" class="btn btn-danger">🚨 Send Emergency Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add SIP Trunk Modal -->
+    <div id="add-trunk-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Add SIP Trunk</h3>
+                <span class="close" onclick="closeAddTrunkModal()">&times;</span>
+            </div>
+            <form id="add-trunk-form" onsubmit="addSIPTrunk(event)">
+                <div class="form-group">
+                    <label>Trunk ID:</label>
+                    <input type="text" id="trunk-id" required pattern="[a-zA-Z0-9_-]+" placeholder="trunk_primary">
+                    <small>Unique identifier (letters, numbers, underscore, dash)</small>
+                </div>
+                <div class="form-group">
+                    <label>Trunk Name:</label>
+                    <input type="text" id="trunk-name" required placeholder="Primary SIP Provider">
+                    <small>Descriptive name for this trunk</small>
+                </div>
+                <div class="form-group">
+                    <label>Host/Server:</label>
+                    <input type="text" id="trunk-host" required placeholder="sip.provider.com">
+                    <small>SIP provider's server address</small>
+                </div>
+                <div class="form-group">
+                    <label>Port:</label>
+                    <input type="number" id="trunk-port" value="5060" min="1" max="65535">
+                    <small>SIP port (default: 5060)</small>
+                </div>
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="trunk-username" required placeholder="account123">
+                    <small>SIP authentication username</small>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="trunk-password" required placeholder="********">
+                    <small>SIP authentication password</small>
+                </div>
+                <div class="form-group">
+                    <label>Priority:</label>
+                    <input type="number" id="trunk-priority" value="100" min="1" max="999">
+                    <small>Lower number = higher priority (for failover)</small>
+                </div>
+                <div class="form-group">
+                    <label>Max Channels:</label>
+                    <input type="number" id="trunk-channels" value="10" min="1" max="999">
+                    <small>Maximum concurrent calls</small>
+                </div>
+                <div class="form-group">
+                    <label>Codec Preferences:</label>
+                    <div style="margin-top: 8px;">
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.722"> G.722 HD Audio
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="Opus"> Opus
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.729"> G.729
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddTrunkModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Trunk</button>
                 </div>
             </form>
         </div>

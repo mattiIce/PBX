@@ -276,6 +276,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_export_voicemail_box(path)
             elif path == '/api/ssl/generate-certificate':
                 self._handle_generate_ssl_certificate()
+            elif path == '/api/sip-trunks':
+                self._handle_add_sip_trunk()
+            elif path == '/api/sip-trunks/test':
+                self._handle_test_sip_trunk()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -383,6 +387,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract contact ID from path
                 contact_id = path.split('/')[-1]
                 self._handle_delete_emergency_contact(contact_id)
+            elif path.startswith('/api/sip-trunks/'):
+                # Extract trunk ID from path
+                trunk_id = path.split('/')[-1]
+                self._handle_delete_sip_trunk(trunk_id)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -541,6 +549,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_voicemail_greeting(path)
             elif path.startswith('/api/voicemail-boxes/'):
                 self._handle_get_voicemail_box_details(path)
+            elif path == '/api/sip-trunks':
+                self._handle_get_sip_trunks()
+            elif path == '/api/sip-trunks/health':
+                self._handle_get_trunk_health()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -5364,6 +5376,132 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json(
                 {'error': 'Emergency notification system not initialized'}, 500)
+
+    # SIP Trunk Management Handlers
+    def _handle_get_sip_trunks(self):
+        """Get all SIP trunks"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                trunks = self.pbx_core.trunk_system.get_trunk_status()
+                self._send_json({
+                    'trunks': trunks,
+                    'count': len(trunks)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting SIP trunks: {e}")
+                self._send_json({'error': f'Error getting SIP trunks: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_get_trunk_health(self):
+        """Get health status of all trunks"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                health_data = []
+                for trunk in self.pbx_core.trunk_system.trunks.values():
+                    health_metrics = trunk.get_health_metrics()
+                    health_metrics['trunk_id'] = trunk.trunk_id
+                    health_metrics['name'] = trunk.name
+                    health_data.append(health_metrics)
+                
+                self._send_json({
+                    'health': health_data,
+                    'monitoring_active': self.pbx_core.trunk_system.monitoring_active,
+                    'failover_enabled': self.pbx_core.trunk_system.failover_enabled
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting trunk health: {e}")
+                self._send_json({'error': f'Error getting trunk health: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_add_sip_trunk(self):
+        """Add a new SIP trunk"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                from pbx.features.sip_trunk import SIPTrunk
+
+                trunk = SIPTrunk(
+                    trunk_id=data['trunk_id'],
+                    name=data['name'],
+                    host=data['host'],
+                    username=data['username'],
+                    password=data['password'],
+                    port=data.get('port', 5060),
+                    codec_preferences=data.get('codec_preferences', ['G.711', 'G.729']),
+                    priority=data.get('priority', 100),
+                    max_channels=data.get('max_channels', 10),
+                    health_check_interval=data.get('health_check_interval', 60)
+                )
+
+                self.pbx_core.trunk_system.add_trunk(trunk)
+                trunk.register()
+
+                self._send_json({
+                    'success': True,
+                    'message': f'Trunk {trunk.name} added successfully',
+                    'trunk': trunk.to_dict()
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error adding SIP trunk: {e}")
+                self._send_json({'error': f'Error adding SIP trunk: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_delete_sip_trunk(self, trunk_id: str):
+        """Delete a SIP trunk"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                trunk = self.pbx_core.trunk_system.get_trunk(trunk_id)
+                if trunk:
+                    self.pbx_core.trunk_system.remove_trunk(trunk_id)
+                    self._send_json({
+                        'success': True,
+                        'message': f'Trunk {trunk_id} removed successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Trunk not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting SIP trunk: {e}")
+                self._send_json({'error': f'Error deleting SIP trunk: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_test_sip_trunk(self):
+        """Test a SIP trunk connection"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                trunk_id = data.get('trunk_id')
+                trunk = self.pbx_core.trunk_system.get_trunk(trunk_id)
+                
+                if trunk:
+                    # Perform health check
+                    health_status = trunk.check_health()
+                    
+                    self._send_json({
+                        'success': True,
+                        'trunk_id': trunk_id,
+                        'health_status': health_status.value,
+                        'metrics': trunk.get_health_metrics()
+                    })
+                else:
+                    self._send_json({'error': 'Trunk not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error testing SIP trunk: {e}")
+                self._send_json({'error': f'Error testing SIP trunk: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
 
 
 class PBXAPIServer:

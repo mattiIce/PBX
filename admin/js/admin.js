@@ -3495,4 +3495,245 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadDTMFConfig, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load SIP trunks when SIP Trunks tab is shown
+    const trunksTab = document.querySelector('[data-tab="sip-trunks"]');
+    if (trunksTab) {
+        trunksTab.addEventListener('click', function() {
+            setTimeout(loadSIPTrunks, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
+
+// ============================================================================
+// SIP Trunk Management Functions
+// ============================================================================
+
+function loadSIPTrunks() {
+    fetch('/api/sip-trunks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.trunks) {
+                // Update stats
+                document.getElementById('trunk-total').textContent = data.count || 0;
+                
+                const healthyCount = data.trunks.filter(t => t.health_status === 'healthy').length;
+                const registeredCount = data.trunks.filter(t => t.status === 'registered').length;
+                const totalChannels = data.trunks.reduce((sum, t) => sum + t.channels_available, 0);
+                
+                document.getElementById('trunk-healthy').textContent = healthyCount;
+                document.getElementById('trunk-registered').textContent = registeredCount;
+                document.getElementById('trunk-channels').textContent = totalChannels;
+                
+                // Update table
+                const tbody = document.getElementById('trunks-list');
+                if (data.trunks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No SIP trunks configured</td></tr>';
+                } else {
+                    tbody.innerHTML = data.trunks.map(trunk => {
+                        const statusBadge = getStatusBadge(trunk.status);
+                        const healthBadge = getHealthBadge(trunk.health_status);
+                        const successRate = (trunk.success_rate * 100).toFixed(1);
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(trunk.name)}</strong><br/><small>${escapeHtml(trunk.trunk_id)}</small></td>
+                                <td>${escapeHtml(trunk.host)}:${trunk.port}</td>
+                                <td>${statusBadge}</td>
+                                <td>${healthBadge}</td>
+                                <td>${trunk.priority}</td>
+                                <td>${trunk.channels_in_use}/${trunk.max_channels}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
+                                            <div style="background: ${successRate >= 95 ? '#10b981' : successRate >= 80 ? '#f59e0b' : '#ef4444'}; height: 100%; width: ${successRate}%;"></div>
+                                        </div>
+                                        <span>${successRate}%</span>
+                                    </div>
+                                    <small>${trunk.successful_calls}/${trunk.total_calls} calls</small>
+                                </td>
+                                <td>
+                                    <button class="btn-small btn-primary" onclick="testTrunk('${escapeHtml(trunk.trunk_id)}')">🧪 Test</button>
+                                    <button class="btn-small btn-danger" onclick="deleteTrunk('${escapeHtml(trunk.trunk_id)}', '${escapeHtml(trunk.name)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading SIP trunks:', error);
+            showNotification('Error loading SIP trunks', 'error');
+        });
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'registered': '<span class="badge" style="background: #10b981;">✅ Registered</span>',
+        'unregistered': '<span class="badge" style="background: #6b7280;">⚪ Unregistered</span>',
+        'failed': '<span class="badge" style="background: #ef4444;">❌ Failed</span>',
+        'disabled': '<span class="badge" style="background: #9ca3af;">⏸️ Disabled</span>',
+        'degraded': '<span class="badge" style="background: #f59e0b;">⚠️ Degraded</span>'
+    };
+    return badges[status] || status;
+}
+
+function getHealthBadge(health) {
+    const badges = {
+        'healthy': '<span class="badge" style="background: #10b981;">💚 Healthy</span>',
+        'warning': '<span class="badge" style="background: #f59e0b;">⚠️ Warning</span>',
+        'critical': '<span class="badge" style="background: #f59e0b;">🔴 Critical</span>',
+        'down': '<span class="badge" style="background: #ef4444;">💀 Down</span>'
+    };
+    return badges[health] || health;
+}
+
+function loadTrunkHealth() {
+    fetch('/api/sip-trunks/health')
+        .then(response => response.json())
+        .then(data => {
+            if (data.health) {
+                const section = document.getElementById('trunk-health-section');
+                const container = document.getElementById('trunk-health-container');
+                
+                section.style.display = 'block';
+                
+                container.innerHTML = data.health.map(h => `
+                    <div class="config-section" style="margin-bottom: 15px;">
+                        <h4>${escapeHtml(h.name)} (${escapeHtml(h.trunk_id)})</h4>
+                        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                            <div class="stat-card">
+                                <div class="stat-value">${getHealthBadge(h.health_status)}</div>
+                                <div class="stat-label">Health Status</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${(h.success_rate * 100).toFixed(1)}%</div>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${h.consecutive_failures}</div>
+                                <div class="stat-label">Consecutive Failures</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${h.average_setup_time.toFixed(2)}s</div>
+                                <div class="stat-label">Avg Setup Time</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${h.failover_count}</div>
+                                <div class="stat-label">Failover Count</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <p><strong>Total Calls:</strong> ${h.total_calls} (${h.successful_calls} successful, ${h.failed_calls} failed)</p>
+                            ${h.last_successful_call ? `<p><strong>Last Success:</strong> ${new Date(h.last_successful_call).toLocaleString()}</p>` : ''}
+                            ${h.last_failed_call ? `<p><strong>Last Failure:</strong> ${new Date(h.last_failed_call).toLocaleString()}</p>` : ''}
+                            ${h.last_health_check ? `<p><strong>Last Check:</strong> ${new Date(h.last_health_check).toLocaleString()}</p>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                showNotification('Health metrics loaded', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading trunk health:', error);
+            showNotification('Error loading trunk health', 'error');
+        });
+}
+
+function showAddTrunkModal() {
+    document.getElementById('add-trunk-modal').style.display = 'block';
+}
+
+function closeAddTrunkModal() {
+    document.getElementById('add-trunk-modal').style.display = 'none';
+    document.getElementById('add-trunk-form').reset();
+}
+
+function addSIPTrunk(event) {
+    event.preventDefault();
+    
+    const selectedCodecs = Array.from(document.querySelectorAll('input[name="trunk-codecs"]:checked'))
+        .map(cb => cb.value);
+    
+    const trunkData = {
+        trunk_id: document.getElementById('trunk-id').value,
+        name: document.getElementById('trunk-name').value,
+        host: document.getElementById('trunk-host').value,
+        port: parseInt(document.getElementById('trunk-port').value),
+        username: document.getElementById('trunk-username').value,
+        password: document.getElementById('trunk-password').value,
+        priority: parseInt(document.getElementById('trunk-priority').value),
+        max_channels: parseInt(document.getElementById('trunk-channels').value),
+        codec_preferences: selectedCodecs.length > 0 ? selectedCodecs : ['G.711', 'G.729']
+    };
+    
+    fetch('/api/sip-trunks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trunkData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Trunk ${trunkData.name} added successfully`, 'success');
+            closeAddTrunkModal();
+            loadSIPTrunks();
+        } else {
+            showNotification(data.error || 'Error adding trunk', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding trunk:', error);
+        showNotification('Error adding trunk', 'error');
+    });
+}
+
+function deleteTrunk(trunkId, trunkName) {
+    if (!confirm(`Are you sure you want to delete trunk "${trunkName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/sip-trunks/${trunkId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Trunk ${trunkName} deleted`, 'success');
+            loadSIPTrunks();
+        } else {
+            showNotification(data.error || 'Error deleting trunk', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting trunk:', error);
+        showNotification('Error deleting trunk', 'error');
+    });
+}
+
+function testTrunk(trunkId) {
+    showNotification('Testing trunk...', 'info');
+    
+    fetch('/api/sip-trunks/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trunk_id: trunkId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const health = data.health_status;
+            showNotification(`Trunk test complete: ${health}`, health === 'healthy' ? 'success' : 'warning');
+            loadSIPTrunks();
+            loadTrunkHealth();
+        } else {
+            showNotification(data.error || 'Error testing trunk', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error testing trunk:', error);
+        showNotification('Error testing trunk', 'error');
+    });
+}
