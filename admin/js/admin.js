@@ -4513,7 +4513,7 @@ function deleteRetentionPolicy(policyId, policyName) {
 
 function loadFraudAlerts() {
     Promise.all([
-        fetch('/api/fraud-detection/alerts?limit=50'),
+        fetch('/api/fraud-detection/alerts?hours=24'),
         fetch('/api/fraud-detection/statistics')
     ])
     .then(([alertsRes, statsRes]) => Promise.all([alertsRes.json(), statsRes.json()]))
@@ -4558,7 +4558,7 @@ function loadFraudAlerts() {
             }
         }
         
-        // Load blocked patterns if available from stats
+        // Load blocked patterns from statistics response
         if (statsData && statsData.blocked_patterns) {
             const tbody = document.getElementById('blocked-patterns-list');
             if (statsData.blocked_patterns.length === 0) {

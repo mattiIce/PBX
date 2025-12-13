@@ -5830,8 +5830,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         'name': policy.get('name', policy_id),
                         'retention_days': policy.get('retention_days', 0),
                         'tags': policy.get('tags', []),
-                        'created_at': policy.get('created_at').isoformat() if policy.get('created_at') else None
+                        'created_at': None
                     }
+                    
+                    # Safely handle created_at datetime
+                    created_at = policy.get('created_at')
+                    if created_at and hasattr(created_at, 'isoformat'):
+                        safe_policy['created_at'] = created_at.isoformat()
+                    
                     policies.append(safe_policy)
                 
                 self._send_json({
@@ -5849,7 +5855,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
             try:
                 stats = self.pbx_core.recording_retention.get_statistics()
-                self._send_json(stats)
+                
+                # Transform to match frontend expectations
+                result = {
+                    'total_policies': stats.get('policies', 0),
+                    'total_recordings': stats.get('total_recordings', 0),
+                    'deleted_count': stats.get('lifetime_deleted', 0),
+                    'last_cleanup': stats.get('last_cleanup')
+                }
+                
+                self._send_json(result)
             except Exception as e:
                 self.logger.error(f"Error getting retention statistics: {e}")
                 self._send_json({'error': 'Error getting retention statistics'}, 500)
@@ -5938,14 +5953,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
                 extension = params.get('extension', [None])[0]
-                limit = int(params.get('limit', [100])[0])
+                # Note: backend get_alerts uses 'hours' parameter, not 'limit'
+                hours = int(params.get('hours', [24])[0])
                 
-                # Validate limit
-                limit = min(limit, 1000)  # Max 1000 alerts
+                # Validate hours
+                hours = min(hours, 720)  # Max 30 days
                 
                 alerts = self.pbx_core.fraud_detection.get_alerts(
                     extension=extension,
-                    limit=limit
+                    hours=hours
                 )
                 
                 self._send_json({
@@ -5963,7 +5979,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
             try:
                 stats = self.pbx_core.fraud_detection.get_statistics()
-                self._send_json(stats)
+                
+                # Transform to match frontend expectations
+                result = {
+                    'total_alerts': stats.get('total_alerts', 0),
+                    'high_risk_alerts': len([a for a in self.pbx_core.fraud_detection.alerts if a.get('fraud_score', 0) > 0.7]),
+                    'blocked_patterns_count': stats.get('blocked_patterns', 0),
+                    'extensions_flagged': stats.get('total_extensions_tracked', 0),
+                    'alerts_24h': stats.get('alerts_24h', 0),
+                    'blocked_patterns': self.pbx_core.fraud_detection.blocked_patterns
+                }
+                
+                self._send_json(result)
             except Exception as e:
                 self.logger.error(f"Error getting fraud statistics: {e}")
                 self._send_json({'error': 'Error getting fraud statistics'}, 500)
