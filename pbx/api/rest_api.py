@@ -630,6 +630,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_push_statistics()
             elif path == '/api/mobile-push/history':
                 self._handle_get_push_history()
+            elif path == '/api/recording-announcements/statistics':
+                self._handle_get_announcement_statistics()
+            elif path == '/api/recording-announcements/config':
+                self._handle_get_announcement_config()
             elif path == '/api/skills/all':
                 self._handle_get_all_skills()
             elif path.startswith('/api/skills/agent/'):
@@ -6556,6 +6560,38 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Error getting push history'}, 500)
         else:
             self._send_json({'error': 'Mobile push notifications not initialized'}, 500)
+
+    # Recording Announcements Handlers
+    def _handle_get_announcement_statistics(self):
+        """Get recording announcements statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_announcements'):
+            try:
+                stats = {
+                    'enabled': self.pbx_core.recording_announcements.enabled,
+                    'announcements_played': self.pbx_core.recording_announcements.announcements_played,
+                    'consent_accepted': self.pbx_core.recording_announcements.consent_accepted,
+                    'consent_declined': self.pbx_core.recording_announcements.consent_declined,
+                    'announcement_type': self.pbx_core.recording_announcements.announcement_type,
+                    'require_consent': self.pbx_core.recording_announcements.require_consent
+                }
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting announcement statistics: {e}")
+                self._send_json({'error': 'Error getting announcement statistics'}, 500)
+        else:
+            self._send_json({'error': 'Recording announcements not initialized'}, 500)
+
+    def _handle_get_announcement_config(self):
+        """Get recording announcements configuration"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_announcements'):
+            try:
+                config = self.pbx_core.recording_announcements.get_announcement_config()
+                self._send_json(config)
+            except Exception as e:
+                self.logger.error(f"Error getting announcement config: {e}")
+                self._send_json({'error': 'Error getting announcement config'}, 500)
+        else:
+            self._send_json({'error': 'Recording announcements not initialized'}, 500)
 
 
 class PBXAPIServer:

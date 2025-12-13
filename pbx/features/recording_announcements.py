@@ -11,10 +11,11 @@ import os
 class RecordingAnnouncements:
     """System for playing recording disclosure announcements"""
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, database=None):
         """Initialize recording announcements"""
         self.logger = get_logger()
         self.config = config or {}
+        self.database = database
         
         # Configuration
         announcement_config = self.config.get('features', {}).get('recording_announcements', {})
@@ -33,11 +34,92 @@ class RecordingAnnouncements:
         self.consent_accepted = 0
         self.consent_declined = 0
         
+        # Initialize database schema if database is available
+        if self.database and self.database.enabled:
+            self._initialize_schema()
+        
         if self.enabled:
             self.logger.info("Recording announcements initialized")
             self.logger.info(f"  Type: {self.announcement_type}")
             self.logger.info(f"  Require consent: {self.require_consent}")
             self._check_audio_file()
+    
+    def _initialize_schema(self):
+        """Initialize database schema for recording announcements"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        # Announcement logs table
+        announcement_table = """
+        CREATE TABLE IF NOT EXISTS recording_announcements_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            call_id VARCHAR(100) NOT NULL,
+            party VARCHAR(20) NOT NULL,
+            announcement_played BOOLEAN DEFAULT 1,
+            consent_required BOOLEAN DEFAULT 0,
+            consent_given BOOLEAN,
+            consent_timeout BOOLEAN DEFAULT 0,
+            played_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        if self.database.db_type == 'postgresql':
+            announcement_table = """
+            CREATE TABLE IF NOT EXISTS recording_announcements_log (
+                id SERIAL PRIMARY KEY,
+                call_id VARCHAR(100) NOT NULL,
+                party VARCHAR(20) NOT NULL,
+                announcement_played BOOLEAN DEFAULT TRUE,
+                consent_required BOOLEAN DEFAULT FALSE,
+                consent_given BOOLEAN,
+                consent_timeout BOOLEAN DEFAULT FALSE,
+                played_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute(announcement_table)
+            
+            # Create index on call_id
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_recording_announcements_call_id 
+                ON recording_announcements_log(call_id)
+            """)
+            
+            self.database.connection.commit()
+            cursor.close()
+            self.logger.debug("Recording announcements database schema initialized")
+        except Exception as e:
+            self.logger.error(f"Error initializing recording announcements schema: {e}")
+    
+    def _log_announcement(self, call_id: str, party: str, announcement_played: bool, 
+                          consent_required: bool, consent_given: Optional[bool], consent_timeout: bool):
+        """Log announcement to database"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            cursor = self.database.connection.cursor()
+            
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    INSERT INTO recording_announcements_log (call_id, party, announcement_played, consent_required, consent_given, consent_timeout, played_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (call_id, party, announcement_played, consent_required, consent_given, consent_timeout, datetime.now()))
+            else:
+                cursor.execute("""
+                    INSERT INTO recording_announcements_log (call_id, party, announcement_played, consent_required, consent_given, consent_timeout, played_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (call_id, party, 1 if announcement_played else 0, 1 if consent_required else 0, 
+                     1 if consent_given else (0 if consent_given is False else None), 1 if consent_timeout else 0, datetime.now()))
+            
+            self.database.connection.commit()
+            cursor.close()
+        except Exception as e:
+            self.logger.error(f"Error logging announcement: {e}")
     
     def _check_audio_file(self):
         """Check if announcement audio file exists"""
@@ -103,6 +185,9 @@ class RecordingAnnouncements:
         
         self.announcements_played += 1
         
+        # Log to database
+        self._log_announcement(call_id, party, True, self.require_consent, None, False)
+        
         return result
     
     def request_consent(self, call_id: str) -> Dict:
@@ -153,6 +238,9 @@ class RecordingAnnouncements:
         else:
             self.consent_declined += 1
             self.logger.info(f"Call {call_id}: Recording consent declined")
+        
+        # Log to database
+        self._log_announcement(call_id, 'caller', True, True, accepted, False)
         
         return True
     

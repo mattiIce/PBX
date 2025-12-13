@@ -336,6 +336,12 @@ class PBXCore:
         if self.mobile_push.enabled:
             self.logger.info("Mobile push notifications initialized")
 
+        # Initialize Recording Announcements
+        from pbx.features.recording_announcements import RecordingAnnouncements
+        self.recording_announcements = RecordingAnnouncements(config=self.config, database=self.database)
+        if self.recording_announcements.enabled:
+            self.logger.info("Recording announcements initialized")
+
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):
             from pbx.features.mfa import MFAManager
