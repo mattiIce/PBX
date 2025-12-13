@@ -2,6 +2,7 @@
 Find Me/Follow Me Call Routing
 Ring multiple devices sequentially or simultaneously
 """
+import json
 from datetime import datetime
 from typing import Dict, List, Optional
 from pbx.utils.logger import get_logger
@@ -10,24 +11,182 @@ from pbx.utils.logger import get_logger
 class FindMeFollowMe:
     """Find Me/Follow Me call routing system"""
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, database=None):
         """Initialize Find Me/Follow Me"""
         self.logger = get_logger()
         self.config = config or {}
+        self.database = database
         self.enabled = self.config.get('features', {}).get('find_me_follow_me', {}).get('enabled', False)
         
         # User configurations
         self.user_configs = {}  # extension -> FMFM config
         
+        # Initialize database schema if database is available
+        if self.database and self.database.enabled:
+            self._initialize_schema()
+        
         if self.enabled:
             self.logger.info("Find Me/Follow Me system initialized")
             self._load_configs()
     
+    def _initialize_schema(self):
+        """Initialize database schema for FMFM"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        # Boolean default value varies by database type
+        bool_default = "TRUE" if self.database.db_type == 'postgresql' else "1"
+        
+        # FMFM configurations table
+        fmfm_table = f"""
+        CREATE TABLE IF NOT EXISTS fmfm_configs (
+            extension VARCHAR(20) PRIMARY KEY,
+            mode VARCHAR(20) NOT NULL CHECK (mode IN ('sequential', 'simultaneous')),
+            enabled BOOLEAN DEFAULT {bool_default},
+            destinations TEXT NOT NULL,
+            no_answer_destination VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute(fmfm_table)
+            self.database.connection.commit()
+            cursor.close()
+            self.logger.debug("FMFM database schema initialized")
+        except Exception as e:
+            self.logger.error(f"Error initializing FMFM schema: {e}")
+    
     def _load_configs(self):
-        """Load FMFM configurations from config"""
+        """Load FMFM configurations from database or config file"""
+        # First try to load from database
+        if self.database and self.database.enabled:
+            self._load_from_database()
+        
+        # Also load from config file (for backward compatibility)
         configs = self.config.get('features', {}).get('find_me_follow_me', {}).get('users', [])
         for cfg in configs:
-            self.user_configs[cfg['extension']] = cfg
+            # Only add if not already in database
+            if cfg['extension'] not in self.user_configs:
+                self.user_configs[cfg['extension']] = cfg
+    
+    def _load_from_database(self):
+        """Load FMFM configurations from database"""
+        if not self.database or not self.database.enabled:
+            return
+        
+        try:
+            cursor = self.database.connection.cursor()
+            cursor.execute("""
+                SELECT extension, mode, enabled, destinations, no_answer_destination, updated_at
+                FROM fmfm_configs
+            """)
+            
+            rows = cursor.fetchall()
+            for row in rows:
+                extension, mode, enabled, destinations_json, no_answer, updated_at = row
+                
+                # Parse destinations from JSON
+                try:
+                    destinations = json.loads(destinations_json)
+                except json.JSONDecodeError:
+                    self.logger.warning(f"Invalid JSON in destinations for extension {extension}, skipping")
+                    destinations = []
+                
+                config = {
+                    'extension': extension,
+                    'mode': mode,
+                    'enabled': bool(enabled),
+                    'destinations': destinations,
+                    'updated_at': updated_at
+                }
+                
+                if no_answer:
+                    config['no_answer_destination'] = no_answer
+                
+                self.user_configs[extension] = config
+            
+            cursor.close()
+            self.logger.info(f"Loaded {len(rows)} FMFM configurations from database")
+        except Exception as e:
+            self.logger.error(f"Error loading FMFM configs from database: {e}")
+    
+    def _save_to_database(self, extension: str):
+        """Save FMFM configuration to database"""
+        if not self.database or not self.database.enabled:
+            return False
+        
+        if extension not in self.user_configs:
+            return False
+        
+        config = self.user_configs[extension]
+        
+        try:
+            cursor = self.database.connection.cursor()
+            
+            # Convert destinations to JSON
+            destinations_json = json.dumps(config.get('destinations', []))
+            
+            # Upsert (insert or update)
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    INSERT INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (extension) DO UPDATE SET
+                        mode = EXCLUDED.mode,
+                        enabled = EXCLUDED.enabled,
+                        destinations = EXCLUDED.destinations,
+                        no_answer_destination = EXCLUDED.no_answer_destination,
+                        updated_at = EXCLUDED.updated_at
+                """, (
+                    extension,
+                    config.get('mode', 'sequential'),
+                    config.get('enabled', True),
+                    destinations_json,
+                    config.get('no_answer_destination'),
+                    datetime.now()
+                ))
+            else:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    extension,
+                    config.get('mode', 'sequential'),
+                    1 if config.get('enabled', True) else 0,
+                    destinations_json,
+                    config.get('no_answer_destination'),
+                    datetime.now()
+                ))
+            
+            self.database.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving FMFM config to database: {e}")
+            return False
+    
+    def _delete_from_database(self, extension: str):
+        """Delete FMFM configuration from database"""
+        if not self.database or not self.database.enabled:
+            return False
+        
+        try:
+            cursor = self.database.connection.cursor()
+            
+            if self.database.db_type == 'postgresql':
+                cursor.execute("DELETE FROM fmfm_configs WHERE extension = %s", (extension,))
+            else:
+                cursor.execute("DELETE FROM fmfm_configs WHERE extension = ?", (extension,))
+            
+            self.database.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            self.logger.error(f"Error deleting FMFM config from database: {e}")
+            return False
     
     def set_config(self, extension: str, config: Dict) -> bool:
         """
@@ -60,6 +219,9 @@ class FindMeFollowMe:
             'extension': extension,
             'updated_at': datetime.now()
         }
+        
+        # Save to database
+        self._save_to_database(extension)
         
         self.logger.info(f"Set FMFM config for {extension}: {config['mode']} mode with {len(config['destinations'])} destinations")
         return True
@@ -145,6 +307,9 @@ class FindMeFollowMe:
             'ring_time': ring_time
         })
         
+        # Save to database
+        self._save_to_database(extension)
+        
         self.logger.info(f"Added FMFM destination for {extension}: {number}")
         return True
     
@@ -162,6 +327,9 @@ class FindMeFollowMe:
         
         removed = original_count - len(config['destinations'])
         if removed > 0:
+            # Save to database
+            self._save_to_database(extension)
+            
             self.logger.info(f"Removed {removed} FMFM destination(s) for {extension}: {number}")
             return True
         
@@ -171,6 +339,10 @@ class FindMeFollowMe:
         """Enable FMFM for an extension"""
         if extension in self.user_configs:
             self.user_configs[extension]['enabled'] = True
+            
+            # Save to database
+            self._save_to_database(extension)
+            
             self.logger.info(f"Enabled FMFM for {extension}")
             return True
         return False
@@ -179,7 +351,23 @@ class FindMeFollowMe:
         """Disable FMFM for an extension"""
         if extension in self.user_configs:
             self.user_configs[extension]['enabled'] = False
+            
+            # Save to database
+            self._save_to_database(extension)
+            
             self.logger.info(f"Disabled FMFM for {extension}")
+            return True
+        return False
+    
+    def delete_config(self, extension: str) -> bool:
+        """Delete FMFM configuration for an extension"""
+        if extension in self.user_configs:
+            del self.user_configs[extension]
+            
+            # Delete from database
+            self._delete_from_database(extension)
+            
+            self.logger.info(f"Deleted FMFM config for {extension}")
             return True
         return False
     

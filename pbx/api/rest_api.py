@@ -5717,22 +5717,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
 
     def _handle_disable_fmfm(self, extension: str):
-        """Disable FMFM for an extension"""
+        """Delete FMFM configuration for an extension"""
         if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
             try:
-                success = self.pbx_core.find_me_follow_me.disable_fmfm(extension)
+                success = self.pbx_core.find_me_follow_me.delete_config(extension)
                 
                 if success:
                     self._send_json({
                         'success': True,
-                        'message': f'FMFM disabled for extension {extension}'
+                        'message': f'FMFM configuration deleted for extension {extension}'
                     })
                 else:
-                    self._send_json({'error': 'Failed to disable FMFM'}, 404)
+                    self._send_json({'error': 'FMFM configuration not found'}, 404)
 
             except Exception as e:
-                self.logger.error(f"Error disabling FMFM: {e}")
-                self._send_json({'error': f'Error disabling FMFM: {str(e)}'}, 500)
+                self.logger.error(f"Error deleting FMFM config: {e}")
+                self._send_json({'error': f'Error deleting FMFM config: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
 

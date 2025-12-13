@@ -302,7 +302,10 @@ class PBXCore:
             self.hot_desking = None
 
         # Initialize Find Me/Follow Me
-        self.find_me_follow_me = FindMeFollowMe(config=self.config)
+        self.find_me_follow_me = FindMeFollowMe(
+            config=self.config,
+            database=self.database if self.database.enabled else None
+        )
         if self.find_me_follow_me.enabled:
             self.logger.info("Find Me/Follow Me initialized")
 
