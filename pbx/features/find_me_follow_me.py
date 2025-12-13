@@ -34,22 +34,15 @@ class FindMeFollowMe:
         if not self.database or not self.database.enabled:
             return
         
+        # Boolean default value varies by database type
+        bool_default = "TRUE" if self.database.db_type == 'postgresql' else "1"
+        
         # FMFM configurations table
-        fmfm_table = """
+        fmfm_table = f"""
         CREATE TABLE IF NOT EXISTS fmfm_configs (
             extension VARCHAR(20) PRIMARY KEY,
             mode VARCHAR(20) NOT NULL CHECK (mode IN ('sequential', 'simultaneous')),
-            enabled BOOLEAN DEFAULT TRUE,
-            destinations TEXT NOT NULL,
-            no_answer_destination VARCHAR(50),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """ if self.database.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS fmfm_configs (
-            extension VARCHAR(20) PRIMARY KEY,
-            mode VARCHAR(20) NOT NULL CHECK (mode IN ('sequential', 'simultaneous')),
-            enabled BOOLEAN DEFAULT 1,
+            enabled BOOLEAN DEFAULT {bool_default},
             destinations TEXT NOT NULL,
             no_answer_destination VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -93,15 +86,13 @@ class FindMeFollowMe:
             
             rows = cursor.fetchall()
             for row in rows:
-                if self.database.db_type == 'postgresql':
-                    extension, mode, enabled, destinations_json, no_answer, updated_at = row
-                else:
-                    extension, mode, enabled, destinations_json, no_answer, updated_at = row
+                extension, mode, enabled, destinations_json, no_answer, updated_at = row
                 
                 # Parse destinations from JSON
                 try:
                     destinations = json.loads(destinations_json)
-                except:
+                except json.JSONDecodeError:
+                    self.logger.warning(f"Invalid JSON in destinations for extension {extension}, skipping")
                     destinations = []
                 
                 config = {
