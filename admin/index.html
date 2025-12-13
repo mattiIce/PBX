@@ -118,6 +118,14 @@
                 </div>
 
                 <div class="sidebar-section">
+                    <div class="sidebar-section-title">Call Routing</div>
+                    <button class="tab-button" data-tab="find-me-follow-me">
+                        <span class="tab-icon">🔄</span>
+                        <span class="tab-text">Find Me/Follow Me</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
                     <div class="sidebar-section-title">Features</div>
                     <button class="tab-button" data-tab="auto-attendant">
                         <span class="tab-icon">🤖</span>
@@ -1213,6 +1221,72 @@
         </div>
 
         <!-- Codecs Tab -->
+        <!-- Find Me/Follow Me Tab -->
+        <div id="find-me-follow-me" class="tab-content">
+            <h2>🔄 Find Me/Follow Me</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadFMFMExtensions()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddFMFMModal()">➕ Configure Extension</button>
+            </div>
+
+            <!-- FMFM Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-total-extensions">-</div>
+                    <div class="stat-label">Extensions with FMFM</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-sequential">-</div>
+                    <div class="stat-label">Sequential Mode</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-simultaneous">-</div>
+                    <div class="stat-label">Simultaneous Mode</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-enabled">-</div>
+                    <div class="stat-label">Active Configurations</div>
+                </div>
+            </div>
+
+            <!-- FMFM Configurations List -->
+            <div class="config-section">
+                <h3>📋 Configured Extensions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Mode</th>
+                                <th>Destinations</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fmfm-list">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Loading configurations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Find Me/Follow Me</h3>
+                <p><strong>Find Me/Follow Me (FMFM)</strong> allows calls to ring multiple numbers to ensure you never miss important calls.</p>
+                <ul>
+                    <li><strong>Sequential Mode:</strong> Rings destinations one at a time in order</li>
+                    <li><strong>Simultaneous Mode:</strong> Rings all destinations at the same time</li>
+                    <li><strong>Ring Time:</strong> How long to ring each destination before moving to the next (sequential mode)</li>
+                    <li><strong>Use Cases:</strong> Mobile forwarding, team hunt groups, executive assistants</li>
+                </ul>
+            </div>
+        </div>
+
         <!-- SIP Trunks Tab -->
         <div id="sip-trunks" class="tab-content">
             <h2>🌐 SIP Trunk Management</h2>
@@ -2490,6 +2564,53 @@ G.726-32</textarea>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeAddTrunkModal()">Cancel</button>
                     <button type="submit" class="btn btn-success">Add Trunk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit FMFM Configuration Modal -->
+    <div id="add-fmfm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔄 Configure Find Me/Follow Me</h3>
+                <span class="close" onclick="closeAddFMFMModal()">&times;</span>
+            </div>
+            <form id="add-fmfm-form" onsubmit="saveFMFMConfig(event)">
+                <div class="form-group">
+                    <label>Extension:</label>
+                    <input type="text" id="fmfm-extension" required pattern="[0-9]+" placeholder="1001">
+                    <small>Extension number to configure FMFM for</small>
+                </div>
+                <div class="form-group">
+                    <label>Mode:</label>
+                    <select id="fmfm-mode" required>
+                        <option value="sequential">Sequential - Ring one at a time</option>
+                        <option value="simultaneous">Simultaneous - Ring all at once</option>
+                    </select>
+                    <small>How destinations should ring</small>
+                </div>
+                <div class="form-group">
+                    <label>Enabled:</label>
+                    <input type="checkbox" id="fmfm-enabled" checked style="width: auto; margin-left: 10px;">
+                    <small style="display: block; margin-top: 5px;">Enable FMFM for this extension</small>
+                </div>
+
+                <div class="config-section">
+                    <h4>Destinations</h4>
+                    <div id="fmfm-destinations-list"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addFMFMDestinationRow()">➕ Add Destination</button>
+                </div>
+
+                <div class="form-group">
+                    <label>No Answer Destination (Optional):</label>
+                    <input type="text" id="fmfm-no-answer" pattern="[0-9]+" placeholder="Extension or voicemail">
+                    <small>Where to send the call if no one answers</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddFMFMModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Configuration</button>
                 </div>
             </form>
         </div>

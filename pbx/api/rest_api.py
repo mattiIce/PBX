@@ -280,6 +280,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_sip_trunk()
             elif path == '/api/sip-trunks/test':
                 self._handle_test_sip_trunk()
+            elif path == '/api/fmfm/config':
+                self._handle_set_fmfm_config()
+            elif path == '/api/fmfm/destination':
+                self._handle_add_fmfm_destination()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -391,6 +395,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract trunk ID from path
                 trunk_id = path.split('/')[-1]
                 self._handle_delete_sip_trunk(trunk_id)
+            elif path.startswith('/api/fmfm/destination/'):
+                # Extract extension and number from path
+                # Path: /api/fmfm/destination/{extension}/{number}
+                parts = path.split('/')
+                if len(parts) >= 5:
+                    extension = parts[-2]
+                    number = parts[-1]
+                    self._handle_remove_fmfm_destination(extension, number)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
+            elif path.startswith('/api/fmfm/config/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_disable_fmfm(extension)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -553,6 +571,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_sip_trunks()
             elif path == '/api/sip-trunks/health':
                 self._handle_get_trunk_health()
+            elif path == '/api/fmfm/extensions':
+                self._handle_get_fmfm_extensions()
+            elif path.startswith('/api/fmfm/config/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_get_fmfm_config(extension)
+            elif path == '/api/fmfm/statistics':
+                self._handle_get_fmfm_statistics()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -5502,6 +5528,162 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Error testing SIP trunk: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    # Find Me/Follow Me Handlers
+    def _handle_get_fmfm_extensions(self):
+        """Get all extensions with FMFM configured"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                extensions = self.pbx_core.find_me_follow_me.list_extensions_with_fmfm()
+                configs = []
+                for ext in extensions:
+                    config = self.pbx_core.find_me_follow_me.get_config(ext)
+                    if config:
+                        configs.append(config)
+                
+                self._send_json({
+                    'extensions': configs,
+                    'count': len(configs)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting FMFM extensions: {e}")
+                self._send_json({'error': f'Error getting FMFM extensions: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_get_fmfm_config(self, extension: str):
+        """Get FMFM configuration for an extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                config = self.pbx_core.find_me_follow_me.get_config(extension)
+                if config:
+                    self._send_json(config)
+                else:
+                    self._send_json({
+                        'extension': extension,
+                        'enabled': False,
+                        'message': 'No FMFM configuration found'
+                    })
+            except Exception as e:
+                self.logger.error(f"Error getting FMFM config for {extension}: {e}")
+                self._send_json({'error': f'Error getting FMFM config: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_get_fmfm_statistics(self):
+        """Get FMFM statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                stats = self.pbx_core.find_me_follow_me.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting FMFM statistics: {e}")
+                self._send_json({'error': f'Error getting FMFM statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_set_fmfm_config(self):
+        """Set FMFM configuration for an extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                extension = data.get('extension')
+                if not extension:
+                    self._send_json({'error': 'Extension required'}, 400)
+                    return
+
+                success = self.pbx_core.find_me_follow_me.set_config(extension, data)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'FMFM configured for extension {extension}',
+                        'config': self.pbx_core.find_me_follow_me.get_config(extension)
+                    })
+                else:
+                    self._send_json({'error': 'Failed to set FMFM configuration'}, 500)
+
+            except Exception as e:
+                self.logger.error(f"Error setting FMFM config: {e}")
+                self._send_json({'error': f'Error setting FMFM config: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_add_fmfm_destination(self):
+        """Add a destination to FMFM config"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                extension = data.get('extension')
+                number = data.get('number')
+                ring_time = data.get('ring_time', 20)
+
+                if not extension or not number:
+                    self._send_json({'error': 'Extension and number required'}, 400)
+                    return
+
+                success = self.pbx_core.find_me_follow_me.add_destination(extension, number, ring_time)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Destination {number} added to {extension}',
+                        'config': self.pbx_core.find_me_follow_me.get_config(extension)
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add destination'}, 500)
+
+            except Exception as e:
+                self.logger.error(f"Error adding FMFM destination: {e}")
+                self._send_json({'error': f'Error adding FMFM destination: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_remove_fmfm_destination(self, extension: str, number: str):
+        """Remove a destination from FMFM config"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                success = self.pbx_core.find_me_follow_me.remove_destination(extension, number)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Destination {number} removed from {extension}'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to remove destination'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error removing FMFM destination: {e}")
+                self._send_json({'error': f'Error removing FMFM destination: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_disable_fmfm(self, extension: str):
+        """Disable FMFM for an extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                success = self.pbx_core.find_me_follow_me.disable_fmfm(extension)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'FMFM disabled for extension {extension}'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to disable FMFM'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error disabling FMFM: {e}")
+                self._send_json({'error': f'Error disabling FMFM: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
 
 
 class PBXAPIServer:

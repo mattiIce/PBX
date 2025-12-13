@@ -3503,6 +3503,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadSIPTrunks, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load FMFM when Find Me/Follow Me tab is shown
+    const fmfmTab = document.querySelector('[data-tab="find-me-follow-me"]');
+    if (fmfmTab) {
+        fmfmTab.addEventListener('click', function() {
+            setTimeout(loadFMFMExtensions, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
 
 // ============================================================================
@@ -3735,5 +3743,208 @@ function testTrunk(trunkId) {
     .catch(error => {
         console.error('Error testing trunk:', error);
         showNotification('Error testing trunk', 'error');
+    });
+}
+
+// ============================================================================
+// Find Me/Follow Me Functions
+// ============================================================================
+
+function loadFMFMExtensions() {
+    fetch('/api/fmfm/extensions')
+        .then(response => response.json())
+        .then(data => {
+            if (data.extensions) {
+                // Update stats
+                document.getElementById('fmfm-total-extensions').textContent = data.count || 0;
+                
+                const sequentialCount = data.extensions.filter(e => e.mode === 'sequential').length;
+                const simultaneousCount = data.extensions.filter(e => e.mode === 'simultaneous').length;
+                const enabledCount = data.extensions.filter(e => e.enabled !== false).length;
+                
+                document.getElementById('fmfm-sequential').textContent = sequentialCount;
+                document.getElementById('fmfm-simultaneous').textContent = simultaneousCount;
+                document.getElementById('fmfm-enabled').textContent = enabledCount;
+                
+                // Update table
+                const tbody = document.getElementById('fmfm-list');
+                if (data.extensions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No Find Me/Follow Me configurations</td></tr>';
+                } else {
+                    tbody.innerHTML = data.extensions.map(config => {
+                        const enabled = config.enabled !== false;
+                        const modeBadge = config.mode === 'sequential' 
+                            ? '<span class="badge" style="background: #3b82f6;">⏩ Sequential</span>'
+                            : '<span class="badge" style="background: #10b981;">🔀 Simultaneous</span>';
+                        const statusBadge = enabled
+                            ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
+                            : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+                        
+                        const destinations = config.destinations || [];
+                        const destList = destinations.map(d => 
+                            `${escapeHtml(d.number)}${d.ring_time ? ` (${d.ring_time}s)` : ''}`
+                        ).join(', ');
+                        
+                        const updated = config.updated_at ? new Date(config.updated_at).toLocaleString() : 'N/A';
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(config.extension)}</strong></td>
+                                <td>${modeBadge}</td>
+                                <td>
+                                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(destList)}">
+                                        ${destinations.length} destination(s): ${escapeHtml(destList) || 'None'}
+                                    </div>
+                                </td>
+                                <td>${statusBadge}</td>
+                                <td><small>${updated}</small></td>
+                                <td>
+                                    <button class="btn-small btn-primary" onclick='editFMFMConfig(${JSON.stringify(config)})'>✏️ Edit</button>
+                                    <button class="btn-small btn-danger" onclick="deleteFMFMConfig('${escapeHtml(config.extension)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading FMFM extensions:', error);
+            showNotification('Error loading FMFM configurations', 'error');
+        });
+}
+
+function showAddFMFMModal() {
+    document.getElementById('add-fmfm-modal').style.display = 'block';
+    document.getElementById('fmfm-extension').value = '';
+    document.getElementById('fmfm-mode').value = 'sequential';
+    document.getElementById('fmfm-enabled').checked = true;
+    document.getElementById('fmfm-no-answer').value = '';
+    document.getElementById('fmfm-destinations-list').innerHTML = '';
+    addFMFMDestinationRow();  // Add one empty row
+}
+
+function closeAddFMFMModal() {
+    document.getElementById('add-fmfm-modal').style.display = 'none';
+    document.getElementById('add-fmfm-form').reset();
+}
+
+let fmfmDestinationCounter = 0;
+
+function addFMFMDestinationRow() {
+    const container = document.getElementById('fmfm-destinations-list');
+    const rowId = `fmfm-dest-${fmfmDestinationCounter++}`;
+    
+    const row = document.createElement('div');
+    row.id = rowId;
+    row.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+    row.innerHTML = `
+        <input type="text" class="fmfm-dest-number" placeholder="Phone number or extension" required style="flex: 2;">
+        <input type="number" class="fmfm-dest-ringtime" placeholder="Ring time (s)" value="20" min="5" max="120" style="flex: 1;">
+        <button type="button" class="btn-small btn-danger" onclick="document.getElementById('${rowId}').remove()">🗑️</button>
+    `;
+    container.appendChild(row);
+}
+
+function saveFMFMConfig(event) {
+    event.preventDefault();
+    
+    const extension = document.getElementById('fmfm-extension').value;
+    const mode = document.getElementById('fmfm-mode').value;
+    const enabled = document.getElementById('fmfm-enabled').checked;
+    const noAnswer = document.getElementById('fmfm-no-answer').value;
+    
+    // Collect destinations
+    const destNumbers = Array.from(document.querySelectorAll('.fmfm-dest-number'));
+    const destRingTimes = Array.from(document.querySelectorAll('.fmfm-dest-ringtime'));
+    
+    const destinations = destNumbers.map((input, idx) => ({
+        number: input.value,
+        ring_time: parseInt(destRingTimes[idx].value) || 20
+    })).filter(d => d.number);
+    
+    if (destinations.length === 0) {
+        showNotification('At least one destination is required', 'error');
+        return;
+    }
+    
+    const configData = {
+        extension: extension,
+        mode: mode,
+        enabled: enabled,
+        destinations: destinations
+    };
+    
+    if (noAnswer) {
+        configData.no_answer_destination = noAnswer;
+    }
+    
+    fetch('/api/fmfm/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`FMFM configured for extension ${extension}`, 'success');
+            closeAddFMFMModal();
+            loadFMFMExtensions();
+        } else {
+            showNotification(data.error || 'Error configuring FMFM', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving FMFM config:', error);
+        showNotification('Error saving FMFM configuration', 'error');
+    });
+}
+
+function editFMFMConfig(config) {
+    showAddFMFMModal();
+    
+    document.getElementById('fmfm-extension').value = config.extension;
+    document.getElementById('fmfm-extension').readOnly = true;  // Don't allow changing extension
+    document.getElementById('fmfm-mode').value = config.mode;
+    document.getElementById('fmfm-enabled').checked = config.enabled !== false;
+    document.getElementById('fmfm-no-answer').value = config.no_answer_destination || '';
+    
+    // Clear and add destination rows
+    const container = document.getElementById('fmfm-destinations-list');
+    container.innerHTML = '';
+    
+    if (config.destinations && config.destinations.length > 0) {
+        config.destinations.forEach(dest => {
+            addFMFMDestinationRow();
+            const rows = container.children;
+            const lastRow = rows[rows.length - 1];
+            lastRow.querySelector('.fmfm-dest-number').value = dest.number;
+            lastRow.querySelector('.fmfm-dest-ringtime').value = dest.ring_time || 20;
+        });
+    } else {
+        addFMFMDestinationRow();
+    }
+}
+
+function deleteFMFMConfig(extension) {
+    if (!confirm(`Are you sure you want to delete FMFM configuration for extension ${extension}?`)) {
+        return;
+    }
+    
+    fetch(`/api/fmfm/config/${extension}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`FMFM configuration deleted for ${extension}`, 'success');
+            loadFMFMExtensions();
+        } else {
+            showNotification(data.error || 'Error deleting FMFM configuration', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting FMFM config:', error);
+        showNotification('Error deleting FMFM configuration', 'error');
     });
 }

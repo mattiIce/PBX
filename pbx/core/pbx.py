@@ -18,6 +18,7 @@ from pbx.features.call_recording import CallRecordingSystem
 from pbx.features.cdr import CDRSystem
 from pbx.features.conference import ConferenceSystem
 from pbx.features.extensions import ExtensionRegistry
+from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.features.presence import PresenceSystem
@@ -296,6 +297,11 @@ class PBXCore:
             self.logger.info("Hot-desking system initialized")
         else:
             self.hot_desking = None
+
+        # Initialize Find Me/Follow Me
+        self.find_me_follow_me = FindMeFollowMe(config=self.config)
+        if self.find_me_follow_me.enabled:
+            self.logger.info("Find Me/Follow Me initialized")
 
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):
