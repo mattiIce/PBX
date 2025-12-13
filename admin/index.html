@@ -151,6 +151,18 @@
                         <span class="tab-icon">🔔</span>
                         <span class="tab-text">Webhooks</span>
                     </button>
+                    <button class="tab-button" data-tab="recording-retention">
+                        <span class="tab-icon">📁</span>
+                        <span class="tab-text">Recording Retention</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Security</div>
+                    <button class="tab-button" data-tab="fraud-detection">
+                        <span class="tab-icon">🛡️</span>
+                        <span class="tab-text">Fraud Detection</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -1930,6 +1942,165 @@ G.726-32</textarea>
             </div>
         </div>
 
+        <!-- Recording Retention Tab -->
+        <div id="recording-retention" class="tab-content">
+            <h2>📁 Recording Retention Policies</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadRetentionPolicies()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddRetentionPolicyModal()">➕ Add Policy</button>
+            </div>
+
+            <!-- Retention Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-policies-count">-</div>
+                    <div class="stat-label">Total Policies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-recordings">-</div>
+                    <div class="stat-label">Managed Recordings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-deleted">-</div>
+                    <div class="stat-label">Deleted (All Time)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-last-cleanup">-</div>
+                    <div class="stat-label">Last Cleanup</div>
+                </div>
+            </div>
+
+            <!-- Retention Policies List -->
+            <div class="config-section">
+                <h3>📋 Retention Policies</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Policy Name</th>
+                                <th>Retention Period</th>
+                                <th>Tags</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="retention-policies-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading policies...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Recording Retention</h3>
+                <p><strong>Recording Retention Policies</strong> automatically manage call recording lifecycle based on compliance and business needs.</p>
+                <ul>
+                    <li><strong>Automated Cleanup:</strong> Remove old recordings based on retention period</li>
+                    <li><strong>Compliance:</strong> Meet regulatory requirements (e.g., 7 years for some industries)</li>
+                    <li><strong>Tags:</strong> Apply special retention to critical or training recordings</li>
+                    <li><strong>Storage Management:</strong> Free up disk space automatically</li>
+                </ul>
+                <p><strong>Default Retention Periods:</strong></p>
+                <ul>
+                    <li>Standard: 90 days</li>
+                    <li>Critical: 365 days (1 year)</li>
+                    <li>Compliance: 2555 days (7 years)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fraud Detection Tab -->
+        <div id="fraud-detection" class="tab-content">
+            <h2>🛡️ Fraud Detection</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadFraudAlerts()">🔄 Refresh Alerts</button>
+                <button class="btn btn-success" onclick="showAddBlockedPatternModal()">➕ Block Pattern</button>
+            </div>
+
+            <!-- Fraud Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-total-alerts">-</div>
+                    <div class="stat-label">Total Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-high-risk">-</div>
+                    <div class="stat-label">High Risk Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-blocked-patterns">-</div>
+                    <div class="stat-label">Blocked Patterns</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-extensions-flagged">-</div>
+                    <div class="stat-label">Extensions Flagged</div>
+                </div>
+            </div>
+
+            <!-- Recent Fraud Alerts -->
+            <div class="config-section">
+                <h3>🚨 Recent Fraud Alerts</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Extension</th>
+                                <th>Alert Type</th>
+                                <th>Fraud Score</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fraud-alerts-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading alerts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Blocked Patterns -->
+            <div class="config-section">
+                <h3>🚫 Blocked Number Patterns</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blocked-patterns-list">
+                            <tr>
+                                <td colspan="3" style="text-align: center;">No blocked patterns</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Fraud Detection</h3>
+                <p><strong>Fraud Detection</strong> monitors call patterns to identify and prevent unauthorized usage and toll fraud.</p>
+                <ul>
+                    <li><strong>Pattern Analysis:</strong> Detects unusual call frequency, destinations, and timing</li>
+                    <li><strong>International Calls:</strong> Monitors excessive international dialing</li>
+                    <li><strong>Cost Monitoring:</strong> Alerts on high-cost calling patterns</li>
+                    <li><strong>Unusual Hours:</strong> Flags calls during off-hours (11 PM - 6 AM)</li>
+                    <li><strong>Blocked Patterns:</strong> Prevent calls to specific number patterns</li>
+                </ul>
+                <p><strong>Default Thresholds:</strong> 100 calls/hour, 20 international calls/day, 2-hour max duration</p>
+            </div>
+        </div>
+
         <!-- Configuration Tab -->
         <div id="config" class="tab-content">
             <h2>System Configuration</h2>
@@ -2915,6 +3086,78 @@ G.726-32</textarea>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeAddWebhookModal()">Cancel</button>
                     <button type="submit" class="btn btn-success">Add Webhook</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Retention Policy Modal -->
+    <div id="add-retention-policy-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 Add Retention Policy</h3>
+                <span class="close" onclick="closeAddRetentionPolicyModal()">&times;</span>
+            </div>
+            <form id="add-retention-policy-form" onsubmit="addRetentionPolicy(event)">
+                <div class="form-group">
+                    <label>Policy Name:</label>
+                    <input type="text" id="retention-policy-name" required pattern="[a-zA-Z0-9_\-\s]+" maxlength="50" placeholder="Standard Policy">
+                    <small>Alphanumeric, underscore, hyphen, and spaces only</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Retention Period (Days):</label>
+                    <input type="number" id="retention-days" required min="1" max="3650" value="90" placeholder="90">
+                    <small>Number of days to retain recordings (1-3650 days, max 10 years)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Tags (Optional):</label>
+                    <input type="text" id="retention-tags" placeholder="critical, compliance, training">
+                    <small>Comma-separated tags for special handling</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddRetentionPolicyModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Blocked Pattern Modal -->
+    <div id="add-blocked-pattern-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚫 Block Number Pattern</h3>
+                <span class="close" onclick="closeAddBlockedPatternModal()">&times;</span>
+            </div>
+            <form id="add-blocked-pattern-form" onsubmit="addBlockedPattern(event)">
+                <div class="form-group">
+                    <label>Number Pattern (Regex):</label>
+                    <input type="text" id="blocked-pattern" required maxlength="100" placeholder="^900.*">
+                    <small>Regular expression to match numbers to block (e.g., ^900.* for 900 numbers)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Reason:</label>
+                    <input type="text" id="blocked-reason" required maxlength="200" placeholder="Premium rate numbers">
+                    <small>Explanation for blocking this pattern</small>
+                </div>
+
+                <div class="info-box" style="margin-top: 15px;">
+                    <h4>Common Patterns:</h4>
+                    <ul>
+                        <li><code>^900.*</code> - Block all 900 premium numbers</li>
+                        <li><code>^011.*</code> - Block all international calls</li>
+                        <li><code>^1900.*</code> - Block specific premium range</li>
+                        <li><code>^.*5551234$</code> - Block specific number</li>
+                    </ul>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddBlockedPatternModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Block Pattern</button>
                 </div>
             </form>
         </div>

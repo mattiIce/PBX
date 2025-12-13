@@ -286,6 +286,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_fmfm_destination()
             elif path == '/api/time-routing/rule':
                 self._handle_add_time_routing_rule()
+            elif path == '/api/recording-retention/policy':
+                self._handle_add_retention_policy()
+            elif path == '/api/fraud-detection/blocked-pattern':
+                self._handle_add_blocked_pattern()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -423,6 +427,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._handle_delete_webhook(url)
                 else:
                     self._send_json({'error': 'Invalid webhook URL format'}, 400)
+            elif path.startswith('/api/recording-retention/policy/'):
+                # Extract policy ID from path - sanitize to prevent path traversal
+                policy_id = path.split('/')[-1]
+                if policy_id and not any(c in policy_id for c in ['/', '\\', '..']):
+                    self._handle_delete_retention_policy(policy_id)
+                else:
+                    self._send_json({'error': 'Invalid policy ID'}, 400)
+            elif path.startswith('/api/fraud-detection/blocked-pattern/'):
+                # Extract pattern ID from path - sanitize
+                pattern_id = path.split('/')[-1]
+                if pattern_id and not any(c in pattern_id for c in ['/', '\\', '..']):
+                    self._handle_delete_blocked_pattern(pattern_id)
+                else:
+                    self._send_json({'error': 'Invalid pattern ID'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -561,6 +579,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_dnd_status(path)
             elif path.startswith('/api/dnd/rules/'):
                 self._handle_get_dnd_rules(path)
+            elif path == '/api/recording-retention/policies':
+                self._handle_get_retention_policies()
+            elif path == '/api/recording-retention/statistics':
+                self._handle_get_retention_statistics()
+            elif path == '/api/fraud-detection/alerts':
+                self._handle_get_fraud_alerts()
+            elif path == '/api/fraud-detection/statistics':
+                self._handle_get_fraud_statistics()
+            elif path.startswith('/api/fraud-detection/extension/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_get_fraud_extension_stats(extension)
             elif path == '/api/skills/all':
                 self._handle_get_all_skills()
             elif path.startswith('/api/skills/agent/'):
@@ -5786,6 +5816,251 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': f'Error deleting time routing rule: {str(e)}'}, 500)
         else:
             self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    # Recording Retention Handlers
+    def _handle_get_retention_policies(self):
+        """Get all recording retention policies"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                policies = []
+                for policy_id, policy in self.pbx_core.recording_retention.retention_policies.items():
+                    # Sanitize output - don't expose sensitive paths
+                    safe_policy = {
+                        'policy_id': policy_id,
+                        'name': policy.get('name', policy_id),
+                        'retention_days': policy.get('retention_days', 0),
+                        'tags': policy.get('tags', []),
+                        'created_at': policy.get('created_at').isoformat() if policy.get('created_at') else None
+                    }
+                    policies.append(safe_policy)
+                
+                self._send_json({
+                    'policies': policies,
+                    'count': len(policies)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting retention policies: {e}")
+                self._send_json({'error': 'Error getting retention policies'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    def _handle_get_retention_statistics(self):
+        """Get recording retention statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                stats = self.pbx_core.recording_retention.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting retention statistics: {e}")
+                self._send_json({'error': 'Error getting retention statistics'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    def _handle_add_retention_policy(self):
+        """Add a recording retention policy"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                # Limit request size to prevent DoS
+                if content_length > 10240:  # 10KB limit
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                required_fields = ['name', 'retention_days']
+                if not all(field in data for field in required_fields):
+                    self._send_json({'error': 'Missing required fields: name, retention_days'}, 400)
+                    return
+
+                # Validate retention_days is a positive integer
+                try:
+                    retention_days = int(data['retention_days'])
+                    if retention_days < 1 or retention_days > 3650:  # Max 10 years
+                        self._send_json({'error': 'retention_days must be between 1 and 3650'}, 400)
+                        return
+                except (ValueError, TypeError):
+                    self._send_json({'error': 'retention_days must be a valid integer'}, 400)
+                    return
+
+                # Sanitize name to prevent injection
+                import re
+                if not re.match(r'^[a-zA-Z0-9_\-\s]+$', data['name']):
+                    self._send_json({'error': 'Policy name contains invalid characters'}, 400)
+                    return
+
+                policy_id = self.pbx_core.recording_retention.add_policy(data)
+                
+                if policy_id:
+                    self._send_json({
+                        'success': True,
+                        'policy_id': policy_id,
+                        'message': f'Retention policy "{data["name"]}" added successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add retention policy'}, 500)
+
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error adding retention policy: {e}")
+                self._send_json({'error': 'Error adding retention policy'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    def _handle_delete_retention_policy(self, policy_id: str):
+        """Delete a retention policy"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                if policy_id in self.pbx_core.recording_retention.retention_policies:
+                    del self.pbx_core.recording_retention.retention_policies[policy_id]
+                    self._send_json({
+                        'success': True,
+                        'message': f'Retention policy {policy_id} deleted'
+                    })
+                else:
+                    self._send_json({'error': 'Policy not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting retention policy: {e}")
+                self._send_json({'error': 'Error deleting retention policy'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    # Fraud Detection Handlers
+    def _handle_get_fraud_alerts(self):
+        """Get fraud detection alerts"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                extension = params.get('extension', [None])[0]
+                limit = int(params.get('limit', [100])[0])
+                
+                # Validate limit
+                limit = min(limit, 1000)  # Max 1000 alerts
+                
+                alerts = self.pbx_core.fraud_detection.get_alerts(
+                    extension=extension,
+                    limit=limit
+                )
+                
+                self._send_json({
+                    'alerts': alerts,
+                    'count': len(alerts)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting fraud alerts: {e}")
+                self._send_json({'error': 'Error getting fraud alerts'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_get_fraud_statistics(self):
+        """Get fraud detection statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                stats = self.pbx_core.fraud_detection.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting fraud statistics: {e}")
+                self._send_json({'error': 'Error getting fraud statistics'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_get_fraud_extension_stats(self, extension: str):
+        """Get fraud statistics for a specific extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                # Validate extension format
+                import re
+                if not re.match(r'^\d{3,5}$', extension):
+                    self._send_json({'error': 'Invalid extension format'}, 400)
+                    return
+                
+                stats = self.pbx_core.fraud_detection.get_extension_statistics(extension)
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting extension fraud stats: {e}")
+                self._send_json({'error': 'Error getting extension statistics'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_add_blocked_pattern(self):
+        """Add a blocked number pattern"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                # Limit request size
+                if content_length > 2048:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                if 'pattern' not in data or 'reason' not in data:
+                    self._send_json({'error': 'Missing required fields: pattern, reason'}, 400)
+                    return
+
+                # Validate pattern is a valid regex (prevent ReDoS)
+                import re
+                try:
+                    re.compile(data['pattern'])
+                except re.error:
+                    self._send_json({'error': 'Invalid regex pattern'}, 400)
+                    return
+
+                # Sanitize reason
+                reason = str(data['reason'])[:200]  # Limit length
+                
+                success = self.pbx_core.fraud_detection.add_blocked_pattern(
+                    data['pattern'],
+                    reason
+                )
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': 'Blocked pattern added successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add blocked pattern'}, 500)
+
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error adding blocked pattern: {e}")
+                self._send_json({'error': 'Error adding blocked pattern'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_delete_blocked_pattern(self, pattern_id: str):
+        """Delete a blocked pattern"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                # Find and remove pattern by ID/index
+                try:
+                    index = int(pattern_id)
+                    if 0 <= index < len(self.pbx_core.fraud_detection.blocked_patterns):
+                        del self.pbx_core.fraud_detection.blocked_patterns[index]
+                        self._send_json({
+                            'success': True,
+                            'message': 'Blocked pattern deleted'
+                        })
+                    else:
+                        self._send_json({'error': 'Pattern not found'}, 404)
+                except (ValueError, IndexError):
+                    self._send_json({'error': 'Invalid pattern ID'}, 400)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting blocked pattern: {e}")
+                self._send_json({'error': 'Error deleting blocked pattern'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
 
 
 class PBXAPIServer:

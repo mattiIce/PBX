@@ -3535,6 +3535,22 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadHotDeskSessions, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load retention policies when Recording Retention tab is shown
+    const retentionTab = document.querySelector('[data-tab="recording-retention"]');
+    if (retentionTab) {
+        retentionTab.addEventListener('click', function() {
+            setTimeout(loadRetentionPolicies, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load fraud alerts when Fraud Detection tab is shown
+    const fraudTab = document.querySelector('[data-tab="fraud-detection"]');
+    if (fraudTab) {
+        fraudTab.addEventListener('click', function() {
+            setTimeout(loadFraudAlerts, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
 
 // ============================================================================
@@ -4356,5 +4372,284 @@ function logoutHotDesk(extension) {
     .catch(error => {
         console.error('Error logging out hot desk:', error);
         showNotification('Error logging out hot desk', 'error');
+    });
+}
+
+// ============================================================================
+// Recording Retention Functions
+// ============================================================================
+
+function loadRetentionPolicies() {
+    Promise.all([
+        fetch('/api/recording-retention/policies'),
+        fetch('/api/recording-retention/statistics')
+    ])
+    .then(([policiesRes, statsRes]) => Promise.all([policiesRes.json(), statsRes.json()]))
+    .then(([policiesData, statsData]) => {
+        // Update stats
+        if (statsData) {
+            document.getElementById('retention-policies-count').textContent = statsData.total_policies || 0;
+            document.getElementById('retention-recordings').textContent = statsData.total_recordings || 0;
+            document.getElementById('retention-deleted').textContent = statsData.deleted_count || 0;
+            const lastCleanup = statsData.last_cleanup ? new Date(statsData.last_cleanup).toLocaleDateString() : 'Never';
+            document.getElementById('retention-last-cleanup').textContent = lastCleanup;
+        }
+        
+        // Update policies table
+        if (policiesData && policiesData.policies) {
+            const tbody = document.getElementById('retention-policies-list');
+            if (policiesData.policies.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No retention policies configured</td></tr>';
+            } else {
+                tbody.innerHTML = policiesData.policies.map(policy => {
+                    const created = policy.created_at ? new Date(policy.created_at).toLocaleDateString() : 'N/A';
+                    const tags = policy.tags ? policy.tags.join(', ') : 'None';
+                    
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(policy.name)}</strong></td>
+                            <td>${policy.retention_days} days</td>
+                            <td><small>${escapeHtml(tags)}</small></td>
+                            <td><small>${created}</small></td>
+                            <td>
+                                <button class="btn-small btn-danger" onclick="deleteRetentionPolicy('${escapeHtml(policy.policy_id)}', '${escapeHtml(policy.name)}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading retention policies:', error);
+        showNotification('Error loading retention policies', 'error');
+    });
+}
+
+function showAddRetentionPolicyModal() {
+    document.getElementById('add-retention-policy-modal').style.display = 'block';
+}
+
+function closeAddRetentionPolicyModal() {
+    document.getElementById('add-retention-policy-modal').style.display = 'none';
+    document.getElementById('add-retention-policy-form').reset();
+}
+
+function addRetentionPolicy(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('retention-policy-name').value;
+    const retentionDays = parseInt(document.getElementById('retention-days').value);
+    const tagsInput = document.getElementById('retention-tags').value;
+    
+    // Validate input
+    if (!name.match(/^[a-zA-Z0-9_\-\s]+$/)) {
+        showNotification('Policy name contains invalid characters', 'error');
+        return;
+    }
+    
+    if (retentionDays < 1 || retentionDays > 3650) {
+        showNotification('Retention days must be between 1 and 3650', 'error');
+        return;
+    }
+    
+    const policyData = {
+        name: name,
+        retention_days: retentionDays
+    };
+    
+    // Parse tags if provided
+    if (tagsInput.trim()) {
+        policyData.tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+    }
+    
+    fetch('/api/recording-retention/policy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(policyData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Retention policy "${name}" added successfully`, 'success');
+            closeAddRetentionPolicyModal();
+            loadRetentionPolicies();
+        } else {
+            showNotification(data.error || 'Error adding retention policy', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding retention policy:', error);
+        showNotification('Error adding retention policy', 'error');
+    });
+}
+
+function deleteRetentionPolicy(policyId, policyName) {
+    if (!confirm(`Are you sure you want to delete retention policy "${policyName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/recording-retention/policy/${encodeURIComponent(policyId)}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Retention policy "${policyName}" deleted`, 'success');
+            loadRetentionPolicies();
+        } else {
+            showNotification(data.error || 'Error deleting retention policy', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting retention policy:', error);
+        showNotification('Error deleting retention policy', 'error');
+    });
+}
+
+// ============================================================================
+// Fraud Detection Functions
+// ============================================================================
+
+function loadFraudAlerts() {
+    Promise.all([
+        fetch('/api/fraud-detection/alerts?limit=50'),
+        fetch('/api/fraud-detection/statistics')
+    ])
+    .then(([alertsRes, statsRes]) => Promise.all([alertsRes.json(), statsRes.json()]))
+    .then(([alertsData, statsData]) => {
+        // Update stats
+        if (statsData) {
+            document.getElementById('fraud-total-alerts').textContent = statsData.total_alerts || 0;
+            document.getElementById('fraud-high-risk').textContent = statsData.high_risk_alerts || 0;
+            document.getElementById('fraud-blocked-patterns').textContent = statsData.blocked_patterns_count || 0;
+            document.getElementById('fraud-extensions-flagged').textContent = statsData.extensions_flagged || 0;
+        }
+        
+        // Update alerts table
+        if (alertsData && alertsData.alerts) {
+            const tbody = document.getElementById('fraud-alerts-list');
+            if (alertsData.alerts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No fraud alerts detected</td></tr>';
+            } else {
+                tbody.innerHTML = alertsData.alerts.map(alert => {
+                    const timestamp = new Date(alert.timestamp).toLocaleString();
+                    const scoreColor = alert.fraud_score > 0.8 ? '#ef4444' : alert.fraud_score > 0.5 ? '#f59e0b' : '#10b981';
+                    const scorePercent = (alert.fraud_score * 100).toFixed(0);
+                    const alertTypes = (alert.alert_types || []).join(', ');
+                    
+                    return `
+                        <tr>
+                            <td><small>${timestamp}</small></td>
+                            <td><strong>${escapeHtml(alert.extension)}</strong></td>
+                            <td><small>${escapeHtml(alertTypes)}</small></td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
+                                        <div style="background: ${scoreColor}; height: 100%; width: ${scorePercent}%;"></div>
+                                    </div>
+                                    <span>${scorePercent}%</span>
+                                </div>
+                            </td>
+                            <td><small>${escapeHtml(alert.details || 'No details')}</small></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+        
+        // Load blocked patterns if available from stats
+        if (statsData && statsData.blocked_patterns) {
+            const tbody = document.getElementById('blocked-patterns-list');
+            if (statsData.blocked_patterns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No blocked patterns</td></tr>';
+            } else {
+                tbody.innerHTML = statsData.blocked_patterns.map((pattern, index) => `
+                    <tr>
+                        <td><code>${escapeHtml(pattern.pattern)}</code></td>
+                        <td>${escapeHtml(pattern.reason)}</td>
+                        <td>
+                            <button class="btn-small btn-danger" onclick="deleteBlockedPattern(${index}, '${escapeHtml(pattern.pattern)}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading fraud detection data:', error);
+        showNotification('Error loading fraud detection data', 'error');
+    });
+}
+
+function showAddBlockedPatternModal() {
+    document.getElementById('add-blocked-pattern-modal').style.display = 'block';
+}
+
+function closeAddBlockedPatternModal() {
+    document.getElementById('add-blocked-pattern-modal').style.display = 'none';
+    document.getElementById('add-blocked-pattern-form').reset();
+}
+
+function addBlockedPattern(event) {
+    event.preventDefault();
+    
+    const pattern = document.getElementById('blocked-pattern').value;
+    const reason = document.getElementById('blocked-reason').value;
+    
+    // Client-side validation: test if pattern is a valid regex
+    try {
+        new RegExp(pattern);
+    } catch (e) {
+        showNotification('Invalid regex pattern: ' + e.message, 'error');
+        return;
+    }
+    
+    const patternData = {
+        pattern: pattern,
+        reason: reason
+    };
+    
+    fetch('/api/fraud-detection/blocked-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patternData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Blocked pattern added successfully', 'success');
+            closeAddBlockedPatternModal();
+            loadFraudAlerts();
+        } else {
+            showNotification(data.error || 'Error adding blocked pattern', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding blocked pattern:', error);
+        showNotification('Error adding blocked pattern', 'error');
+    });
+}
+
+function deleteBlockedPattern(patternIndex, pattern) {
+    if (!confirm(`Are you sure you want to unblock pattern "${pattern}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/fraud-detection/blocked-pattern/${patternIndex}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Blocked pattern removed', 'success');
+            loadFraudAlerts();
+        } else {
+            showNotification(data.error || 'Error removing blocked pattern', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing blocked pattern:', error);
+        showNotification('Error removing blocked pattern', 'error');
     });
 }
