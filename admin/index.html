@@ -107,6 +107,30 @@
                         <span class="tab-icon">⚙️</span>
                         <span class="tab-text">Phone Provisioning</span>
                     </button>
+                    <button class="tab-button" data-tab="hot-desking">
+                        <span class="tab-icon">🔄</span>
+                        <span class="tab-text">Hot Desking</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Connectivity</div>
+                    <button class="tab-button" data-tab="sip-trunks">
+                        <span class="tab-icon">🌐</span>
+                        <span class="tab-text">SIP Trunks</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Call Routing</div>
+                    <button class="tab-button" data-tab="find-me-follow-me">
+                        <span class="tab-icon">🔄</span>
+                        <span class="tab-text">Find Me/Follow Me</span>
+                    </button>
+                    <button class="tab-button" data-tab="time-routing">
+                        <span class="tab-icon">⏰</span>
+                        <span class="tab-text">Time-Based Routing</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -122,6 +146,22 @@
                     <button class="tab-button" data-tab="codecs">
                         <span class="tab-icon">🎵</span>
                         <span class="tab-text">Codecs</span>
+                    </button>
+                    <button class="tab-button" data-tab="webhooks">
+                        <span class="tab-icon">🔔</span>
+                        <span class="tab-text">Webhooks</span>
+                    </button>
+                    <button class="tab-button" data-tab="recording-retention">
+                        <span class="tab-icon">📁</span>
+                        <span class="tab-text">Recording Retention</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Security</div>
+                    <button class="tab-button" data-tab="fraud-detection">
+                        <span class="tab-icon">🛡️</span>
+                        <span class="tab-text">Fraud Detection</span>
                     </button>
                 </div>
 
@@ -1204,6 +1244,272 @@
             </div>
         </div>
 
+        <!-- Hot Desking Tab -->
+        <div id="hot-desking" class="tab-content">
+            <h2>🔄 Hot Desking</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadHotDeskSessions()">🔄 Refresh Sessions</button>
+            </div>
+
+            <!-- Hot Desk Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="hotdesk-active">-</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="hotdesk-total">-</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+            </div>
+
+            <!-- Active Sessions List -->
+            <div class="config-section">
+                <h3>📋 Active Hot Desk Sessions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Device MAC</th>
+                                <th>IP Address</th>
+                                <th>Login Time</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotdesk-sessions-list">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Loading sessions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Hot Desking</h3>
+                <p><strong>Hot Desking</strong> allows users to log into any phone with their extension credentials, making their settings and contacts available.</p>
+                <ul>
+                    <li><strong>Flexible Workspace:</strong> Log in from any desk or phone</li>
+                    <li><strong>Settings Migration:</strong> Personal settings follow the user</li>
+                    <li><strong>Auto-Logout:</strong> Configurable timeout for security</li>
+                    <li><strong>Session Tracking:</strong> Monitor active sessions</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Codecs Tab -->
+        <!-- Find Me/Follow Me Tab -->
+        <div id="find-me-follow-me" class="tab-content">
+            <h2>🔄 Find Me/Follow Me</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadFMFMExtensions()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddFMFMModal()">➕ Configure Extension</button>
+            </div>
+
+            <!-- FMFM Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-total-extensions">-</div>
+                    <div class="stat-label">Extensions with FMFM</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-sequential">-</div>
+                    <div class="stat-label">Sequential Mode</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-simultaneous">-</div>
+                    <div class="stat-label">Simultaneous Mode</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fmfm-enabled">-</div>
+                    <div class="stat-label">Active Configurations</div>
+                </div>
+            </div>
+
+            <!-- FMFM Configurations List -->
+            <div class="config-section">
+                <h3>📋 Configured Extensions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Mode</th>
+                                <th>Destinations</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fmfm-list">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">Loading configurations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Find Me/Follow Me</h3>
+                <p><strong>Find Me/Follow Me (FMFM)</strong> allows calls to ring multiple numbers to ensure you never miss important calls.</p>
+                <ul>
+                    <li><strong>Sequential Mode:</strong> Rings destinations one at a time in order</li>
+                    <li><strong>Simultaneous Mode:</strong> Rings all destinations at the same time</li>
+                    <li><strong>Ring Time:</strong> How long to ring each destination before moving to the next (sequential mode)</li>
+                    <li><strong>Use Cases:</strong> Mobile forwarding, team hunt groups, executive assistants</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Time-Based Routing Tab -->
+        <div id="time-routing" class="tab-content">
+            <h2>⏰ Time-Based Routing</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadTimeRoutingRules()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddTimeRuleModal()">➕ Add Rule</button>
+            </div>
+
+            <!-- Time Routing Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-total">-</div>
+                    <div class="stat-label">Total Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-active">-</div>
+                    <div class="stat-label">Active Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-business">-</div>
+                    <div class="stat-label">Business Hours Rules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-routing-after">-</div>
+                    <div class="stat-label">After Hours Rules</div>
+                </div>
+            </div>
+
+            <!-- Time Routing Rules List -->
+            <div class="config-section">
+                <h3>📋 Routing Rules</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Destination</th>
+                                <th>Route To</th>
+                                <th>Schedule</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="time-routing-list">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Loading rules...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Time-Based Routing</h3>
+                <p><strong>Time-Based Routing</strong> directs calls differently based on the time of day, day of week, or holidays.</p>
+                <ul>
+                    <li><strong>Business Hours:</strong> Route to extensions or queues during business hours</li>
+                    <li><strong>After Hours:</strong> Route to voicemail or answering service outside business hours</li>
+                    <li><strong>Holidays:</strong> Special routing for holidays and special dates</li>
+                    <li><strong>Priority:</strong> Lower number = higher priority when multiple rules apply</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SIP Trunks Tab -->
+        <div id="sip-trunks" class="tab-content">
+            <h2>🌐 SIP Trunk Management</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadSIPTrunks()">🔄 Refresh Trunks</button>
+                <button class="btn btn-success" onclick="showAddTrunkModal()">➕ Add Trunk</button>
+                <button class="btn btn-secondary" onclick="loadTrunkHealth()">📊 View Health</button>
+            </div>
+
+            <!-- Trunk Overview Stats -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-total">-</div>
+                    <div class="stat-label">Total Trunks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-healthy">-</div>
+                    <div class="stat-label">Healthy Trunks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-registered">-</div>
+                    <div class="stat-label">Registered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="trunk-channels">-</div>
+                    <div class="stat-label">Available Channels</div>
+                </div>
+            </div>
+
+            <!-- Active Trunks List -->
+            <div class="config-section">
+                <h3>📋 SIP Trunks</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Host</th>
+                                <th>Status</th>
+                                <th>Health</th>
+                                <th>Priority</th>
+                                <th>Channels</th>
+                                <th>Success Rate</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trunks-list">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">Loading trunks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trunk Health Monitoring -->
+            <div class="config-section" id="trunk-health-section" style="display: none;">
+                <h3>📊 Trunk Health Monitoring</h3>
+                <div id="trunk-health-container"></div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About SIP Trunks</h3>
+                <p><strong>SIP Trunks</strong> provide external connectivity for making and receiving calls outside the PBX system.</p>
+                <ul>
+                    <li><strong>Priority:</strong> Lower numbers = higher priority for call routing</li>
+                    <li><strong>Health Monitoring:</strong> Automatic monitoring detects trunk failures</li>
+                    <li><strong>Failover:</strong> Calls automatically route to backup trunks on failure</li>
+                    <li><strong>Channels:</strong> Maximum concurrent calls per trunk</li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Codecs Tab -->
         <div id="codecs" class="tab-content">
             <h2>🎵 Audio & Video Codecs</h2>
@@ -1586,6 +1892,212 @@ G.726-32</textarea>
                         <a href="https://github.com/mattiIce/PBX/blob/main/DTMF_PAYLOAD_TYPE_CONFIGURATION.md" target="_blank">DTMF_PAYLOAD_TYPE_CONFIGURATION.md</a>
                     </p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Webhooks Tab -->
+        <div id="webhooks" class="tab-content">
+            <h2>🔔 Webhooks</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadWebhooks()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddWebhookModal()">➕ Add Webhook</button>
+            </div>
+
+            <!-- Webhooks List -->
+            <div class="config-section">
+                <h3>📋 Webhook Subscriptions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Events</th>
+                                <th>Secret</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="webhooks-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading webhooks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Webhooks</h3>
+                <p><strong>Webhooks</strong> allow the PBX to send real-time notifications to external systems when events occur.</p>
+                <ul>
+                    <li><strong>Events:</strong> Call events, registrations, voicemail, and more</li>
+                    <li><strong>HTTP POST:</strong> JSON data sent via HTTP POST request</li>
+                    <li><strong>Secret:</strong> Optional HMAC signature for verification</li>
+                    <li><strong>Use Cases:</strong> CRM integration, logging, monitoring, automation</li>
+                </ul>
+                <h4>Available Event Types:</h4>
+                <p><small>call_started, call_ended, call_answered, extension_registered, extension_unregistered, voicemail_new, voicemail_deleted</small></p>
+            </div>
+        </div>
+
+        <!-- Recording Retention Tab -->
+        <div id="recording-retention" class="tab-content">
+            <h2>📁 Recording Retention Policies</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadRetentionPolicies()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showAddRetentionPolicyModal()">➕ Add Policy</button>
+            </div>
+
+            <!-- Retention Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-policies-count">-</div>
+                    <div class="stat-label">Total Policies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-recordings">-</div>
+                    <div class="stat-label">Managed Recordings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-deleted">-</div>
+                    <div class="stat-label">Deleted (All Time)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="retention-last-cleanup">-</div>
+                    <div class="stat-label">Last Cleanup</div>
+                </div>
+            </div>
+
+            <!-- Retention Policies List -->
+            <div class="config-section">
+                <h3>📋 Retention Policies</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Policy Name</th>
+                                <th>Retention Period</th>
+                                <th>Tags</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="retention-policies-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading policies...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Recording Retention</h3>
+                <p><strong>Recording Retention Policies</strong> automatically manage call recording lifecycle based on compliance and business needs.</p>
+                <ul>
+                    <li><strong>Automated Cleanup:</strong> Remove old recordings based on retention period</li>
+                    <li><strong>Compliance:</strong> Meet regulatory requirements (e.g., 7 years for some industries)</li>
+                    <li><strong>Tags:</strong> Apply special retention to critical or training recordings</li>
+                    <li><strong>Storage Management:</strong> Free up disk space automatically</li>
+                </ul>
+                <p><strong>Default Retention Periods:</strong></p>
+                <ul>
+                    <li>Standard: 90 days</li>
+                    <li>Critical: 365 days (1 year)</li>
+                    <li>Compliance: 2555 days (7 years)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fraud Detection Tab -->
+        <div id="fraud-detection" class="tab-content">
+            <h2>🛡️ Fraud Detection</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadFraudAlerts()">🔄 Refresh Alerts</button>
+                <button class="btn btn-success" onclick="showAddBlockedPatternModal()">➕ Block Pattern</button>
+            </div>
+
+            <!-- Fraud Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-total-alerts">-</div>
+                    <div class="stat-label">Total Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-high-risk">-</div>
+                    <div class="stat-label">High Risk Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-blocked-patterns">-</div>
+                    <div class="stat-label">Blocked Patterns</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fraud-extensions-flagged">-</div>
+                    <div class="stat-label">Extensions Flagged</div>
+                </div>
+            </div>
+
+            <!-- Recent Fraud Alerts -->
+            <div class="config-section">
+                <h3>🚨 Recent Fraud Alerts</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Extension</th>
+                                <th>Alert Type</th>
+                                <th>Fraud Score</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fraud-alerts-list">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Loading alerts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Blocked Patterns -->
+            <div class="config-section">
+                <h3>🚫 Blocked Number Patterns</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blocked-patterns-list">
+                            <tr>
+                                <td colspan="3" style="text-align: center;">No blocked patterns</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Fraud Detection</h3>
+                <p><strong>Fraud Detection</strong> monitors call patterns to identify and prevent unauthorized usage and toll fraud.</p>
+                <ul>
+                    <li><strong>Pattern Analysis:</strong> Detects unusual call frequency, destinations, and timing</li>
+                    <li><strong>International Calls:</strong> Monitors excessive international dialing</li>
+                    <li><strong>Cost Monitoring:</strong> Alerts on high-cost calling patterns</li>
+                    <li><strong>Unusual Hours:</strong> Flags calls during off-hours (11 PM - 6 AM)</li>
+                    <li><strong>Blocked Patterns:</strong> Prevent calls to specific number patterns</li>
+                </ul>
+                <p><strong>Default Thresholds:</strong> 100 calls/hour, 20 international calls/day, 2-hour max duration</p>
             </div>
         </div>
 
@@ -2333,6 +2845,319 @@ G.726-32</textarea>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeTriggerEmergencyModal()">Cancel</button>
                     <button type="submit" class="btn btn-danger">🚨 Send Emergency Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add SIP Trunk Modal -->
+    <div id="add-trunk-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Add SIP Trunk</h3>
+                <span class="close" onclick="closeAddTrunkModal()">&times;</span>
+            </div>
+            <form id="add-trunk-form" onsubmit="addSIPTrunk(event)">
+                <div class="form-group">
+                    <label>Trunk ID:</label>
+                    <input type="text" id="trunk-id" required pattern="[a-zA-Z0-9_-]+" placeholder="trunk_primary">
+                    <small>Unique identifier (letters, numbers, underscore, dash)</small>
+                </div>
+                <div class="form-group">
+                    <label>Trunk Name:</label>
+                    <input type="text" id="trunk-name" required placeholder="Primary SIP Provider">
+                    <small>Descriptive name for this trunk</small>
+                </div>
+                <div class="form-group">
+                    <label>Host/Server:</label>
+                    <input type="text" id="trunk-host" required placeholder="sip.provider.com">
+                    <small>SIP provider's server address</small>
+                </div>
+                <div class="form-group">
+                    <label>Port:</label>
+                    <input type="number" id="trunk-port" value="5060" min="1" max="65535">
+                    <small>SIP port (default: 5060)</small>
+                </div>
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="trunk-username" required placeholder="account123">
+                    <small>SIP authentication username</small>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="trunk-password" required placeholder="********">
+                    <small>SIP authentication password</small>
+                </div>
+                <div class="form-group">
+                    <label>Priority:</label>
+                    <input type="number" id="trunk-priority" value="100" min="1" max="999">
+                    <small>Lower number = higher priority (for failover)</small>
+                </div>
+                <div class="form-group">
+                    <label>Max Channels:</label>
+                    <input type="number" id="trunk-channels" value="10" min="1" max="999">
+                    <small>Maximum concurrent calls</small>
+                </div>
+                <div class="form-group">
+                    <label>Codec Preferences:</label>
+                    <div style="margin-top: 8px;">
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.722"> G.722 HD Audio
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="Opus"> Opus
+                        </label>
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.729"> G.729
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddTrunkModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Trunk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit FMFM Configuration Modal -->
+    <div id="add-fmfm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔄 Configure Find Me/Follow Me</h3>
+                <span class="close" onclick="closeAddFMFMModal()">&times;</span>
+            </div>
+            <form id="add-fmfm-form" onsubmit="saveFMFMConfig(event)">
+                <div class="form-group">
+                    <label>Extension:</label>
+                    <input type="text" id="fmfm-extension" required pattern="[0-9]+" placeholder="1001">
+                    <small>Extension number to configure FMFM for</small>
+                </div>
+                <div class="form-group">
+                    <label>Mode:</label>
+                    <select id="fmfm-mode" required>
+                        <option value="sequential">Sequential - Ring one at a time</option>
+                        <option value="simultaneous">Simultaneous - Ring all at once</option>
+                    </select>
+                    <small>How destinations should ring</small>
+                </div>
+                <div class="form-group">
+                    <label>Enabled:</label>
+                    <input type="checkbox" id="fmfm-enabled" checked style="width: auto; margin-left: 10px;">
+                    <small style="display: block; margin-top: 5px;">Enable FMFM for this extension</small>
+                </div>
+
+                <div class="config-section">
+                    <h4>Destinations</h4>
+                    <div id="fmfm-destinations-list"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addFMFMDestinationRow()">➕ Add Destination</button>
+                </div>
+
+                <div class="form-group">
+                    <label>No Answer Destination (Optional):</label>
+                    <input type="text" id="fmfm-no-answer" pattern="[0-9]+" placeholder="Extension or voicemail">
+                    <small>Where to send the call if no one answers</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddFMFMModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Time Routing Rule Modal -->
+    <div id="add-time-rule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⏰ Add Time-Based Routing Rule</h3>
+                <span class="close" onclick="closeAddTimeRuleModal()">&times;</span>
+            </div>
+            <form id="add-time-rule-form" onsubmit="saveTimeRoutingRule(event)">
+                <div class="form-group">
+                    <label>Rule Name:</label>
+                    <input type="text" id="time-rule-name" required placeholder="Business Hours to Sales">
+                    <small>Descriptive name for this rule</small>
+                </div>
+                <div class="form-group">
+                    <label>Original Destination:</label>
+                    <input type="text" id="time-rule-destination" required pattern="[0-9]+" placeholder="1000">
+                    <small>Extension or queue to apply time-based routing to</small>
+                </div>
+                <div class="form-group">
+                    <label>Route To:</label>
+                    <input type="text" id="time-rule-route-to" required pattern="[0-9]+" placeholder="1001">
+                    <small>Where to route calls (extension, voicemail, queue)</small>
+                </div>
+
+                <div class="config-section">
+                    <h4>Time Conditions</h4>
+                    
+                    <div class="form-group">
+                        <label>Days of Week:</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 5px; margin-top: 8px;">
+                            <label><input type="checkbox" name="time-rule-days" value="0" checked> Monday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="1" checked> Tuesday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="2" checked> Wednesday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="3" checked> Thursday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="4" checked> Friday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="5"> Saturday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="6"> Sunday</label>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Start Time:</label>
+                            <input type="time" id="time-rule-start" value="09:00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Time:</label>
+                            <input type="time" id="time-rule-end" value="17:00" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Priority:</label>
+                    <input type="number" id="time-rule-priority" value="100" min="1" max="999">
+                    <small>Lower number = higher priority</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Enabled:</label>
+                    <input type="checkbox" id="time-rule-enabled" checked style="width: auto; margin-left: 10px;">
+                    <small style="display: block; margin-top: 5px;">Enable this rule immediately</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddTimeRuleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Webhook Modal -->
+    <div id="add-webhook-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 Add Webhook</h3>
+                <span class="close" onclick="closeAddWebhookModal()">&times;</span>
+            </div>
+            <form id="add-webhook-form" onsubmit="addWebhook(event)">
+                <div class="form-group">
+                    <label>Webhook URL:</label>
+                    <input type="url" id="webhook-url" required placeholder="https://example.com/webhook">
+                    <small>The URL to send webhook notifications to</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Event Types:</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 8px;">
+                        <label><input type="checkbox" name="webhook-events" value="call_started"> Call Started</label>
+                        <label><input type="checkbox" name="webhook-events" value="call_ended"> Call Ended</label>
+                        <label><input type="checkbox" name="webhook-events" value="call_answered"> Call Answered</label>
+                        <label><input type="checkbox" name="webhook-events" value="extension_registered"> Extension Registered</label>
+                        <label><input type="checkbox" name="webhook-events" value="extension_unregistered"> Extension Unregistered</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_new"> New Voicemail</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_deleted"> Voicemail Deleted</label>
+                        <label><input type="checkbox" name="webhook-events" value="*"> All Events</label>
+                    </div>
+                    <small>Select which events should trigger this webhook</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Secret (Optional):</label>
+                    <input type="text" id="webhook-secret" placeholder="your-secret-key">
+                    <small>Used for HMAC signature verification (recommended for security)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Enabled:</label>
+                    <input type="checkbox" id="webhook-enabled" checked style="width: auto; margin-left: 10px;">
+                    <small style="display: block; margin-top: 5px;">Enable this webhook immediately</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddWebhookModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Webhook</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Retention Policy Modal -->
+    <div id="add-retention-policy-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 Add Retention Policy</h3>
+                <span class="close" onclick="closeAddRetentionPolicyModal()">&times;</span>
+            </div>
+            <form id="add-retention-policy-form" onsubmit="addRetentionPolicy(event)">
+                <div class="form-group">
+                    <label>Policy Name:</label>
+                    <input type="text" id="retention-policy-name" required pattern="[a-zA-Z0-9_\s-]+" maxlength="50" placeholder="Standard Policy">
+                    <small>Alphanumeric, underscore, hyphen, and spaces only</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Retention Period (Days):</label>
+                    <input type="number" id="retention-days" required min="1" max="3650" value="90" placeholder="90">
+                    <small>Number of days to retain recordings (1-3650 days, max 10 years)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Tags (Optional):</label>
+                    <input type="text" id="retention-tags" placeholder="critical, compliance, training">
+                    <small>Comma-separated tags for special handling</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddRetentionPolicyModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Blocked Pattern Modal -->
+    <div id="add-blocked-pattern-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚫 Block Number Pattern</h3>
+                <span class="close" onclick="closeAddBlockedPatternModal()">&times;</span>
+            </div>
+            <form id="add-blocked-pattern-form" onsubmit="addBlockedPattern(event)">
+                <div class="form-group">
+                    <label>Number Pattern (Regex):</label>
+                    <input type="text" id="blocked-pattern" required maxlength="100" placeholder="^900.*">
+                    <small>Regular expression to match numbers to block (e.g., ^900.* for 900 numbers)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Reason:</label>
+                    <input type="text" id="blocked-reason" required maxlength="200" placeholder="Premium rate numbers">
+                    <small>Explanation for blocking this pattern</small>
+                </div>
+
+                <div class="info-box" style="margin-top: 15px;">
+                    <h4>Common Patterns:</h4>
+                    <ul>
+                        <li><code>^900.*</code> - Block all 900 premium numbers</li>
+                        <li><code>^011.*</code> - Block all international calls</li>
+                        <li><code>^1900.*</code> - Block specific premium range</li>
+                        <li><code>^.*5551234$</code> - Block specific number</li>
+                    </ul>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddBlockedPatternModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Block Pattern</button>
                 </div>
             </form>
         </div>

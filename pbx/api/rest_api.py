@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Optional
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
@@ -276,6 +276,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_export_voicemail_box(path)
             elif path == '/api/ssl/generate-certificate':
                 self._handle_generate_ssl_certificate()
+            elif path == '/api/sip-trunks':
+                self._handle_add_sip_trunk()
+            elif path == '/api/sip-trunks/test':
+                self._handle_test_sip_trunk()
+            elif path == '/api/fmfm/config':
+                self._handle_set_fmfm_config()
+            elif path == '/api/fmfm/destination':
+                self._handle_add_fmfm_destination()
+            elif path == '/api/time-routing/rule':
+                self._handle_add_time_routing_rule()
+            elif path == '/api/recording-retention/policy':
+                self._handle_add_retention_policy()
+            elif path == '/api/fraud-detection/blocked-pattern':
+                self._handle_add_blocked_pattern()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -383,6 +397,53 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract contact ID from path
                 contact_id = path.split('/')[-1]
                 self._handle_delete_emergency_contact(contact_id)
+            elif path.startswith('/api/sip-trunks/'):
+                # Extract trunk ID from path
+                trunk_id = path.split('/')[-1]
+                self._handle_delete_sip_trunk(trunk_id)
+            elif path.startswith('/api/fmfm/destination/'):
+                # Extract extension and number from path
+                # Path: /api/fmfm/destination/{extension}/{number}
+                parts = path.split('/')
+                if len(parts) >= 5:
+                    extension = parts[-2]
+                    number = parts[-1]
+                    self._handle_remove_fmfm_destination(extension, number)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
+            elif path.startswith('/api/fmfm/config/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_disable_fmfm(extension)
+            elif path.startswith('/api/time-routing/rule/'):
+                # Extract rule ID from path
+                rule_id = path.split('/')[-1]
+                self._handle_delete_time_routing_rule(rule_id)
+            elif path.startswith('/api/webhooks/'):
+                # Extract URL from path (URL-encoded)
+                url = unquote(path.split('/', 3)[-1])
+                # Validate URL format
+                if url.startswith('http://') or url.startswith('https://'):
+                    self._handle_delete_webhook(url)
+                else:
+                    self._send_json({'error': 'Invalid webhook URL format'}, 400)
+            elif path.startswith('/api/recording-retention/policy/'):
+                # Extract policy ID from path - sanitize to prevent path traversal
+                policy_id = path.split('/')[-1]
+                # Validate: alphanumeric, underscore, hyphen only (no dots, slashes)
+                import re
+                if policy_id and re.match(r'^[a-zA-Z0-9_-]+$', policy_id):
+                    self._handle_delete_retention_policy(policy_id)
+                else:
+                    self._send_json({'error': 'Invalid policy ID'}, 400)
+            elif path.startswith('/api/fraud-detection/blocked-pattern/'):
+                # Extract pattern ID from path - sanitize
+                pattern_id = path.split('/')[-1]
+                # Validate: numeric only for array index
+                if pattern_id and pattern_id.isdigit():
+                    self._handle_delete_blocked_pattern(pattern_id)
+                else:
+                    self._send_json({'error': 'Invalid pattern ID'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -521,6 +582,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_dnd_status(path)
             elif path.startswith('/api/dnd/rules/'):
                 self._handle_get_dnd_rules(path)
+            elif path == '/api/recording-retention/policies':
+                self._handle_get_retention_policies()
+            elif path == '/api/recording-retention/statistics':
+                self._handle_get_retention_statistics()
+            elif path == '/api/fraud-detection/alerts':
+                self._handle_get_fraud_alerts()
+            elif path == '/api/fraud-detection/statistics':
+                self._handle_get_fraud_statistics()
+            elif path.startswith('/api/fraud-detection/extension/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_get_fraud_extension_stats(extension)
             elif path == '/api/skills/all':
                 self._handle_get_all_skills()
             elif path.startswith('/api/skills/agent/'):
@@ -541,6 +614,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_voicemail_greeting(path)
             elif path.startswith('/api/voicemail-boxes/'):
                 self._handle_get_voicemail_box_details(path)
+            elif path == '/api/sip-trunks':
+                self._handle_get_sip_trunks()
+            elif path == '/api/sip-trunks/health':
+                self._handle_get_trunk_health()
+            elif path == '/api/fmfm/extensions':
+                self._handle_get_fmfm_extensions()
+            elif path.startswith('/api/fmfm/config/'):
+                # Extract extension from path
+                extension = path.split('/')[-1]
+                self._handle_get_fmfm_config(extension)
+            elif path == '/api/fmfm/statistics':
+                self._handle_get_fmfm_statistics()
+            elif path == '/api/time-routing/rules':
+                self._handle_get_time_routing_rules()
+            elif path == '/api/time-routing/statistics':
+                self._handle_get_time_routing_statistics()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -5364,6 +5453,644 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json(
                 {'error': 'Emergency notification system not initialized'}, 500)
+
+    # SIP Trunk Management Handlers
+    def _handle_get_sip_trunks(self):
+        """Get all SIP trunks"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                trunks = self.pbx_core.trunk_system.get_trunk_status()
+                self._send_json({
+                    'trunks': trunks,
+                    'count': len(trunks)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting SIP trunks: {e}")
+                self._send_json({'error': f'Error getting SIP trunks: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_get_trunk_health(self):
+        """Get health status of all trunks"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                health_data = []
+                for trunk in self.pbx_core.trunk_system.trunks.values():
+                    health_metrics = trunk.get_health_metrics()
+                    health_metrics['trunk_id'] = trunk.trunk_id
+                    health_metrics['name'] = trunk.name
+                    health_data.append(health_metrics)
+                
+                self._send_json({
+                    'health': health_data,
+                    'monitoring_active': self.pbx_core.trunk_system.monitoring_active,
+                    'failover_enabled': self.pbx_core.trunk_system.failover_enabled
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting trunk health: {e}")
+                self._send_json({'error': f'Error getting trunk health: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_add_sip_trunk(self):
+        """Add a new SIP trunk"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                from pbx.features.sip_trunk import SIPTrunk
+
+                trunk = SIPTrunk(
+                    trunk_id=data['trunk_id'],
+                    name=data['name'],
+                    host=data['host'],
+                    username=data['username'],
+                    password=data['password'],
+                    port=data.get('port', 5060),
+                    codec_preferences=data.get('codec_preferences', ['G.711', 'G.729']),
+                    priority=data.get('priority', 100),
+                    max_channels=data.get('max_channels', 10),
+                    health_check_interval=data.get('health_check_interval', 60)
+                )
+
+                self.pbx_core.trunk_system.add_trunk(trunk)
+                trunk.register()
+
+                self._send_json({
+                    'success': True,
+                    'message': f'Trunk {trunk.name} added successfully',
+                    'trunk': trunk.to_dict()
+                })
+
+            except Exception as e:
+                self.logger.error(f"Error adding SIP trunk: {e}")
+                self._send_json({'error': f'Error adding SIP trunk: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_delete_sip_trunk(self, trunk_id: str):
+        """Delete a SIP trunk"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                trunk = self.pbx_core.trunk_system.get_trunk(trunk_id)
+                if trunk:
+                    self.pbx_core.trunk_system.remove_trunk(trunk_id)
+                    self._send_json({
+                        'success': True,
+                        'message': f'Trunk {trunk_id} removed successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Trunk not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting SIP trunk: {e}")
+                self._send_json({'error': f'Error deleting SIP trunk: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    def _handle_test_sip_trunk(self):
+        """Test a SIP trunk connection"""
+        if self.pbx_core and hasattr(self.pbx_core, 'trunk_system'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                trunk_id = data.get('trunk_id')
+                trunk = self.pbx_core.trunk_system.get_trunk(trunk_id)
+                
+                if trunk:
+                    # Perform health check
+                    health_status = trunk.check_health()
+                    
+                    self._send_json({
+                        'success': True,
+                        'trunk_id': trunk_id,
+                        'health_status': health_status.value,
+                        'metrics': trunk.get_health_metrics()
+                    })
+                else:
+                    self._send_json({'error': 'Trunk not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error testing SIP trunk: {e}")
+                self._send_json({'error': f'Error testing SIP trunk: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'SIP trunk system not initialized'}, 500)
+
+    # Find Me/Follow Me Handlers
+    def _handle_get_fmfm_extensions(self):
+        """Get all extensions with FMFM configured"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                extensions = self.pbx_core.find_me_follow_me.list_extensions_with_fmfm()
+                configs = []
+                for ext in extensions:
+                    config = self.pbx_core.find_me_follow_me.get_config(ext)
+                    if config:
+                        configs.append(config)
+                
+                self._send_json({
+                    'extensions': configs,
+                    'count': len(configs)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting FMFM extensions: {e}")
+                self._send_json({'error': f'Error getting FMFM extensions: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_get_fmfm_config(self, extension: str):
+        """Get FMFM configuration for an extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                config = self.pbx_core.find_me_follow_me.get_config(extension)
+                if config:
+                    self._send_json(config)
+                else:
+                    self._send_json({
+                        'extension': extension,
+                        'enabled': False,
+                        'message': 'No FMFM configuration found'
+                    })
+            except Exception as e:
+                self.logger.error(f"Error getting FMFM config for {extension}: {e}")
+                self._send_json({'error': f'Error getting FMFM config: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_get_fmfm_statistics(self):
+        """Get FMFM statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                stats = self.pbx_core.find_me_follow_me.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting FMFM statistics: {e}")
+                self._send_json({'error': f'Error getting FMFM statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_set_fmfm_config(self):
+        """Set FMFM configuration for an extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                extension = data.get('extension')
+                if not extension:
+                    self._send_json({'error': 'Extension required'}, 400)
+                    return
+
+                success = self.pbx_core.find_me_follow_me.set_config(extension, data)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'FMFM configured for extension {extension}',
+                        'config': self.pbx_core.find_me_follow_me.get_config(extension)
+                    })
+                else:
+                    self._send_json({'error': 'Failed to set FMFM configuration'}, 500)
+
+            except Exception as e:
+                self.logger.error(f"Error setting FMFM config: {e}")
+                self._send_json({'error': f'Error setting FMFM config: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_add_fmfm_destination(self):
+        """Add a destination to FMFM config"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                extension = data.get('extension')
+                number = data.get('number')
+                ring_time = data.get('ring_time', 20)
+
+                if not extension or not number:
+                    self._send_json({'error': 'Extension and number required'}, 400)
+                    return
+
+                success = self.pbx_core.find_me_follow_me.add_destination(extension, number, ring_time)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Destination {number} added to {extension}',
+                        'config': self.pbx_core.find_me_follow_me.get_config(extension)
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add destination'}, 500)
+
+            except Exception as e:
+                self.logger.error(f"Error adding FMFM destination: {e}")
+                self._send_json({'error': f'Error adding FMFM destination: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_remove_fmfm_destination(self, extension: str, number: str):
+        """Remove a destination from FMFM config"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                success = self.pbx_core.find_me_follow_me.remove_destination(extension, number)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Destination {number} removed from {extension}'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to remove destination'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error removing FMFM destination: {e}")
+                self._send_json({'error': f'Error removing FMFM destination: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    def _handle_disable_fmfm(self, extension: str):
+        """Disable FMFM for an extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
+            try:
+                success = self.pbx_core.find_me_follow_me.disable_fmfm(extension)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'FMFM disabled for extension {extension}'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to disable FMFM'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error disabling FMFM: {e}")
+                self._send_json({'error': f'Error disabling FMFM: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
+
+    # Time-Based Routing Handlers
+    def _handle_get_time_routing_rules(self):
+        """Get all time-based routing rules"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                # Parse query parameters for filtering
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                destination = params.get('destination', [None])[0]
+                
+                rules = self.pbx_core.time_based_routing.list_rules(destination=destination)
+                self._send_json({
+                    'rules': rules,
+                    'count': len(rules)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting time routing rules: {e}")
+                self._send_json({'error': f'Error getting time routing rules: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    def _handle_get_time_routing_statistics(self):
+        """Get time-based routing statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                stats = self.pbx_core.time_based_routing.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting time routing statistics: {e}")
+                self._send_json({'error': f'Error getting time routing statistics: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    def _handle_add_time_routing_rule(self):
+        """Add a time-based routing rule"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                required_fields = ['name', 'destination', 'route_to', 'time_conditions']
+                if not all(field in data for field in required_fields):
+                    self._send_json({'error': 'Missing required fields'}, 400)
+                    return
+
+                rule_id = self.pbx_core.time_based_routing.add_rule(data)
+                
+                if rule_id:
+                    self._send_json({
+                        'success': True,
+                        'rule_id': rule_id,
+                        'message': f'Time routing rule "{data["name"]}" added successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add time routing rule'}, 500)
+
+            except Exception as e:
+                self.logger.error(f"Error adding time routing rule: {e}")
+                self._send_json({'error': f'Error adding time routing rule: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    def _handle_delete_time_routing_rule(self, rule_id: str):
+        """Delete a time-based routing rule"""
+        if self.pbx_core and hasattr(self.pbx_core, 'time_based_routing'):
+            try:
+                success = self.pbx_core.time_based_routing.delete_rule(rule_id)
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': f'Time routing rule {rule_id} deleted'
+                    })
+                else:
+                    self._send_json({'error': 'Rule not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting time routing rule: {e}")
+                self._send_json({'error': f'Error deleting time routing rule: {str(e)}'}, 500)
+        else:
+            self._send_json({'error': 'Time-based routing not initialized'}, 500)
+
+    # Recording Retention Handlers
+    def _handle_get_retention_policies(self):
+        """Get all recording retention policies"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                policies = []
+                for policy_id, policy in self.pbx_core.recording_retention.retention_policies.items():
+                    # Sanitize output - don't expose sensitive paths
+                    safe_policy = {
+                        'policy_id': policy_id,
+                        'name': policy.get('name', policy_id),
+                        'retention_days': policy.get('retention_days', 0),
+                        'tags': policy.get('tags', []),
+                        'created_at': None
+                    }
+                    
+                    # Safely handle created_at datetime
+                    created_at = policy.get('created_at')
+                    if created_at and hasattr(created_at, 'isoformat'):
+                        safe_policy['created_at'] = created_at.isoformat()
+                    
+                    policies.append(safe_policy)
+                
+                self._send_json({
+                    'policies': policies,
+                    'count': len(policies)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting retention policies: {e}")
+                self._send_json({'error': 'Error getting retention policies'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    def _handle_get_retention_statistics(self):
+        """Get recording retention statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                stats = self.pbx_core.recording_retention.get_statistics()
+                
+                # Transform to match frontend expectations
+                result = {
+                    'total_policies': stats.get('policies', 0),
+                    'total_recordings': stats.get('total_recordings', 0),
+                    'deleted_count': stats.get('lifetime_deleted', 0),
+                    'last_cleanup': stats.get('last_cleanup')
+                }
+                
+                self._send_json(result)
+            except Exception as e:
+                self.logger.error(f"Error getting retention statistics: {e}")
+                self._send_json({'error': 'Error getting retention statistics'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    def _handle_add_retention_policy(self):
+        """Add a recording retention policy"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                # Limit request size to prevent DoS
+                if content_length > 10240:  # 10KB limit
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                required_fields = ['name', 'retention_days']
+                if not all(field in data for field in required_fields):
+                    self._send_json({'error': 'Missing required fields: name, retention_days'}, 400)
+                    return
+
+                # Validate retention_days is a positive integer
+                try:
+                    retention_days = int(data['retention_days'])
+                    if retention_days < 1 or retention_days > 3650:  # Max 10 years
+                        self._send_json({'error': 'retention_days must be between 1 and 3650'}, 400)
+                        return
+                except (ValueError, TypeError):
+                    self._send_json({'error': 'retention_days must be a valid integer'}, 400)
+                    return
+
+                # Sanitize name to prevent injection
+                import re
+                if not re.match(r'^[a-zA-Z0-9_\-\s]+$', data['name']):
+                    self._send_json({'error': 'Policy name contains invalid characters'}, 400)
+                    return
+
+                policy_id = self.pbx_core.recording_retention.add_policy(data)
+                
+                if policy_id:
+                    self._send_json({
+                        'success': True,
+                        'policy_id': policy_id,
+                        'message': f'Retention policy "{data["name"]}" added successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add retention policy'}, 500)
+
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error adding retention policy: {e}")
+                self._send_json({'error': 'Error adding retention policy'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    def _handle_delete_retention_policy(self, policy_id: str):
+        """Delete a retention policy"""
+        if self.pbx_core and hasattr(self.pbx_core, 'recording_retention'):
+            try:
+                if policy_id in self.pbx_core.recording_retention.retention_policies:
+                    del self.pbx_core.recording_retention.retention_policies[policy_id]
+                    self._send_json({
+                        'success': True,
+                        'message': f'Retention policy {policy_id} deleted'
+                    })
+                else:
+                    self._send_json({'error': 'Policy not found'}, 404)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting retention policy: {e}")
+                self._send_json({'error': 'Error deleting retention policy'}, 500)
+        else:
+            self._send_json({'error': 'Recording retention not initialized'}, 500)
+
+    # Fraud Detection Handlers
+    def _handle_get_fraud_alerts(self):
+        """Get fraud detection alerts"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                # Parse query parameters
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                extension = params.get('extension', [None])[0]
+                # Note: backend get_alerts uses 'hours' parameter, not 'limit'
+                hours = int(params.get('hours', [24])[0])
+                
+                # Validate hours
+                hours = min(hours, 720)  # Max 30 days
+                
+                alerts = self.pbx_core.fraud_detection.get_alerts(
+                    extension=extension,
+                    hours=hours
+                )
+                
+                self._send_json({
+                    'alerts': alerts,
+                    'count': len(alerts)
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting fraud alerts: {e}")
+                self._send_json({'error': 'Error getting fraud alerts'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_get_fraud_statistics(self):
+        """Get fraud detection statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                stats = self.pbx_core.fraud_detection.get_statistics()
+                
+                # Transform to match frontend expectations
+                result = {
+                    'total_alerts': stats.get('total_alerts', 0),
+                    'high_risk_alerts': sum(1 for a in self.pbx_core.fraud_detection.alerts if a.get('fraud_score', 0) > 0.7),
+                    'blocked_patterns_count': stats.get('blocked_patterns', 0),
+                    'extensions_flagged': stats.get('total_extensions_tracked', 0),
+                    'alerts_24h': stats.get('alerts_24h', 0),
+                    'blocked_patterns': self.pbx_core.fraud_detection.blocked_patterns
+                }
+                
+                self._send_json(result)
+            except Exception as e:
+                self.logger.error(f"Error getting fraud statistics: {e}")
+                self._send_json({'error': 'Error getting fraud statistics'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_get_fraud_extension_stats(self, extension: str):
+        """Get fraud statistics for a specific extension"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                # Validate extension format
+                import re
+                if not re.match(r'^\d{3,5}$', extension):
+                    self._send_json({'error': 'Invalid extension format'}, 400)
+                    return
+                
+                stats = self.pbx_core.fraud_detection.get_extension_statistics(extension)
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting extension fraud stats: {e}")
+                self._send_json({'error': 'Error getting extension statistics'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_add_blocked_pattern(self):
+        """Add a blocked number pattern"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                # Limit request size
+                if content_length > 2048:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                if 'pattern' not in data or 'reason' not in data:
+                    self._send_json({'error': 'Missing required fields: pattern, reason'}, 400)
+                    return
+
+                # Validate pattern is a valid regex (prevent ReDoS)
+                import re
+                try:
+                    re.compile(data['pattern'])
+                except re.error:
+                    self._send_json({'error': 'Invalid regex pattern'}, 400)
+                    return
+
+                # Sanitize reason
+                reason = str(data['reason'])[:200]  # Limit length
+                
+                success = self.pbx_core.fraud_detection.add_blocked_pattern(
+                    data['pattern'],
+                    reason
+                )
+                
+                if success:
+                    self._send_json({
+                        'success': True,
+                        'message': 'Blocked pattern added successfully'
+                    })
+                else:
+                    self._send_json({'error': 'Failed to add blocked pattern'}, 500)
+
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error adding blocked pattern: {e}")
+                self._send_json({'error': 'Error adding blocked pattern'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    def _handle_delete_blocked_pattern(self, pattern_id: str):
+        """Delete a blocked pattern"""
+        if self.pbx_core and hasattr(self.pbx_core, 'fraud_detection'):
+            try:
+                # Find and remove pattern by ID/index
+                try:
+                    index = int(pattern_id)
+                    if 0 <= index < len(self.pbx_core.fraud_detection.blocked_patterns):
+                        del self.pbx_core.fraud_detection.blocked_patterns[index]
+                        self._send_json({
+                            'success': True,
+                            'message': 'Blocked pattern deleted'
+                        })
+                    else:
+                        self._send_json({'error': 'Pattern not found'}, 404)
+                except (ValueError, IndexError):
+                    self._send_json({'error': 'Invalid pattern ID'}, 400)
+
+            except Exception as e:
+                self.logger.error(f"Error deleting blocked pattern: {e}")
+                self._send_json({'error': 'Error deleting blocked pattern'}, 500)
+        else:
+            self._send_json({'error': 'Fraud detection not initialized'}, 500)
 
 
 class PBXAPIServer:

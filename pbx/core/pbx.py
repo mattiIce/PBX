@@ -18,10 +18,14 @@ from pbx.features.call_recording import CallRecordingSystem
 from pbx.features.cdr import CDRSystem
 from pbx.features.conference import ConferenceSystem
 from pbx.features.extensions import ExtensionRegistry
+from pbx.features.find_me_follow_me import FindMeFollowMe
+from pbx.features.fraud_detection import FraudDetectionSystem
 from pbx.features.music_on_hold import MusicOnHold
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.features.presence import PresenceSystem
+from pbx.features.recording_retention import RecordingRetentionManager
 from pbx.features.sip_trunk import SIPTrunkSystem
+from pbx.features.time_based_routing import TimeBasedRouting
 from pbx.features.voicemail import VoicemailSystem
 from pbx.features.webhooks import WebhookEvent
 from pbx.rtp.handler import RTPRelay
@@ -296,6 +300,26 @@ class PBXCore:
             self.logger.info("Hot-desking system initialized")
         else:
             self.hot_desking = None
+
+        # Initialize Find Me/Follow Me
+        self.find_me_follow_me = FindMeFollowMe(config=self.config)
+        if self.find_me_follow_me.enabled:
+            self.logger.info("Find Me/Follow Me initialized")
+
+        # Initialize Time-Based Routing
+        self.time_based_routing = TimeBasedRouting(config=self.config)
+        if self.time_based_routing.enabled:
+            self.logger.info("Time-based routing initialized")
+
+        # Initialize Recording Retention Manager
+        self.recording_retention = RecordingRetentionManager(config=self.config)
+        if self.recording_retention.enabled:
+            self.logger.info("Recording retention manager initialized")
+
+        # Initialize Fraud Detection System
+        self.fraud_detection = FraudDetectionSystem(config=self.config)
+        if self.fraud_detection.enabled:
+            self.logger.info("Fraud detection system initialized")
 
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):

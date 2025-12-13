@@ -3495,4 +3495,1161 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadDTMFConfig, TAB_CONTENT_LOAD_DELAY_MS);
         });
     }
+
+    // Load SIP trunks when SIP Trunks tab is shown
+    const trunksTab = document.querySelector('[data-tab="sip-trunks"]');
+    if (trunksTab) {
+        trunksTab.addEventListener('click', function() {
+            setTimeout(loadSIPTrunks, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load FMFM when Find Me/Follow Me tab is shown
+    const fmfmTab = document.querySelector('[data-tab="find-me-follow-me"]');
+    if (fmfmTab) {
+        fmfmTab.addEventListener('click', function() {
+            setTimeout(loadFMFMExtensions, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load time routing when Time-Based Routing tab is shown
+    const timeRoutingTab = document.querySelector('[data-tab="time-routing"]');
+    if (timeRoutingTab) {
+        timeRoutingTab.addEventListener('click', function() {
+            setTimeout(loadTimeRoutingRules, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load webhooks when Webhooks tab is shown
+    const webhooksTab = document.querySelector('[data-tab="webhooks"]');
+    if (webhooksTab) {
+        webhooksTab.addEventListener('click', function() {
+            setTimeout(loadWebhooks, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load hot desk sessions when Hot Desking tab is shown
+    const hotDeskTab = document.querySelector('[data-tab="hot-desking"]');
+    if (hotDeskTab) {
+        hotDeskTab.addEventListener('click', function() {
+            setTimeout(loadHotDeskSessions, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load retention policies when Recording Retention tab is shown
+    const retentionTab = document.querySelector('[data-tab="recording-retention"]');
+    if (retentionTab) {
+        retentionTab.addEventListener('click', function() {
+            setTimeout(loadRetentionPolicies, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
+
+    // Load fraud alerts when Fraud Detection tab is shown
+    const fraudTab = document.querySelector('[data-tab="fraud-detection"]');
+    if (fraudTab) {
+        fraudTab.addEventListener('click', function() {
+            setTimeout(loadFraudAlerts, TAB_CONTENT_LOAD_DELAY_MS);
+        });
+    }
 });
+
+// ============================================================================
+// SIP Trunk Management Functions
+// ============================================================================
+
+function loadSIPTrunks() {
+    fetch('/api/sip-trunks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.trunks) {
+                // Update stats
+                document.getElementById('trunk-total').textContent = data.count || 0;
+                
+                const healthyCount = data.trunks.filter(t => t.health_status === 'healthy').length;
+                const registeredCount = data.trunks.filter(t => t.status === 'registered').length;
+                const totalChannels = data.trunks.reduce((sum, t) => sum + t.channels_available, 0);
+                
+                document.getElementById('trunk-healthy').textContent = healthyCount;
+                document.getElementById('trunk-registered').textContent = registeredCount;
+                document.getElementById('trunk-channels').textContent = totalChannels;
+                
+                // Update table
+                const tbody = document.getElementById('trunks-list');
+                if (data.trunks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No SIP trunks configured</td></tr>';
+                } else {
+                    tbody.innerHTML = data.trunks.map(trunk => {
+                        const statusBadge = getStatusBadge(trunk.status);
+                        const healthBadge = getHealthBadge(trunk.health_status);
+                        const successRate = (trunk.success_rate * 100).toFixed(1);
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(trunk.name)}</strong><br/><small>${escapeHtml(trunk.trunk_id)}</small></td>
+                                <td>${escapeHtml(trunk.host)}:${trunk.port}</td>
+                                <td>${statusBadge}</td>
+                                <td>${healthBadge}</td>
+                                <td>${trunk.priority}</td>
+                                <td>${trunk.channels_in_use}/${trunk.max_channels}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
+                                            <div style="background: ${successRate >= 95 ? '#10b981' : successRate >= 80 ? '#f59e0b' : '#ef4444'}; height: 100%; width: ${successRate}%;"></div>
+                                        </div>
+                                        <span>${successRate}%</span>
+                                    </div>
+                                    <small>${trunk.successful_calls}/${trunk.total_calls} calls</small>
+                                </td>
+                                <td>
+                                    <button class="btn-small btn-primary" onclick="testTrunk('${escapeHtml(trunk.trunk_id)}')">🧪 Test</button>
+                                    <button class="btn-small btn-danger" onclick="deleteTrunk('${escapeHtml(trunk.trunk_id)}', '${escapeHtml(trunk.name)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading SIP trunks:', error);
+            showNotification('Error loading SIP trunks', 'error');
+        });
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'registered': '<span class="badge" style="background: #10b981;">✅ Registered</span>',
+        'unregistered': '<span class="badge" style="background: #6b7280;">⚪ Unregistered</span>',
+        'failed': '<span class="badge" style="background: #ef4444;">❌ Failed</span>',
+        'disabled': '<span class="badge" style="background: #9ca3af;">⏸️ Disabled</span>',
+        'degraded': '<span class="badge" style="background: #f59e0b;">⚠️ Degraded</span>'
+    };
+    return badges[status] || status;
+}
+
+function getHealthBadge(health) {
+    const badges = {
+        'healthy': '<span class="badge" style="background: #10b981;">💚 Healthy</span>',
+        'warning': '<span class="badge" style="background: #f59e0b;">⚠️ Warning</span>',
+        'critical': '<span class="badge" style="background: #f59e0b;">🔴 Critical</span>',
+        'down': '<span class="badge" style="background: #ef4444;">💀 Down</span>'
+    };
+    return badges[health] || health;
+}
+
+function loadTrunkHealth() {
+    fetch('/api/sip-trunks/health')
+        .then(response => response.json())
+        .then(data => {
+            if (data.health) {
+                const section = document.getElementById('trunk-health-section');
+                const container = document.getElementById('trunk-health-container');
+                
+                section.style.display = 'block';
+                
+                container.innerHTML = data.health.map(h => `
+                    <div class="config-section" style="margin-bottom: 15px;">
+                        <h4>${escapeHtml(h.name)} (${escapeHtml(h.trunk_id)})</h4>
+                        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                            <div class="stat-card">
+                                <div class="stat-value">${getHealthBadge(h.health_status)}</div>
+                                <div class="stat-label">Health Status</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${(h.success_rate * 100).toFixed(1)}%</div>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${h.consecutive_failures}</div>
+                                <div class="stat-label">Consecutive Failures</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${h.average_setup_time.toFixed(2)}s</div>
+                                <div class="stat-label">Avg Setup Time</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${h.failover_count}</div>
+                                <div class="stat-label">Failover Count</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <p><strong>Total Calls:</strong> ${h.total_calls} (${h.successful_calls} successful, ${h.failed_calls} failed)</p>
+                            ${h.last_successful_call ? `<p><strong>Last Success:</strong> ${new Date(h.last_successful_call).toLocaleString()}</p>` : ''}
+                            ${h.last_failed_call ? `<p><strong>Last Failure:</strong> ${new Date(h.last_failed_call).toLocaleString()}</p>` : ''}
+                            ${h.last_health_check ? `<p><strong>Last Check:</strong> ${new Date(h.last_health_check).toLocaleString()}</p>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                showNotification('Health metrics loaded', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading trunk health:', error);
+            showNotification('Error loading trunk health', 'error');
+        });
+}
+
+function showAddTrunkModal() {
+    document.getElementById('add-trunk-modal').style.display = 'block';
+}
+
+function closeAddTrunkModal() {
+    document.getElementById('add-trunk-modal').style.display = 'none';
+    document.getElementById('add-trunk-form').reset();
+}
+
+function addSIPTrunk(event) {
+    event.preventDefault();
+    
+    const selectedCodecs = Array.from(document.querySelectorAll('input[name="trunk-codecs"]:checked'))
+        .map(cb => cb.value);
+    
+    const trunkData = {
+        trunk_id: document.getElementById('trunk-id').value,
+        name: document.getElementById('trunk-name').value,
+        host: document.getElementById('trunk-host').value,
+        port: parseInt(document.getElementById('trunk-port').value),
+        username: document.getElementById('trunk-username').value,
+        password: document.getElementById('trunk-password').value,
+        priority: parseInt(document.getElementById('trunk-priority').value),
+        max_channels: parseInt(document.getElementById('trunk-channels').value),
+        codec_preferences: selectedCodecs.length > 0 ? selectedCodecs : ['G.711', 'G.729']
+    };
+    
+    fetch('/api/sip-trunks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trunkData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Trunk ${trunkData.name} added successfully`, 'success');
+            closeAddTrunkModal();
+            loadSIPTrunks();
+        } else {
+            showNotification(data.error || 'Error adding trunk', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding trunk:', error);
+        showNotification('Error adding trunk', 'error');
+    });
+}
+
+function deleteTrunk(trunkId, trunkName) {
+    if (!confirm(`Are you sure you want to delete trunk "${trunkName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/sip-trunks/${trunkId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Trunk ${trunkName} deleted`, 'success');
+            loadSIPTrunks();
+        } else {
+            showNotification(data.error || 'Error deleting trunk', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting trunk:', error);
+        showNotification('Error deleting trunk', 'error');
+    });
+}
+
+function testTrunk(trunkId) {
+    showNotification('Testing trunk...', 'info');
+    
+    fetch('/api/sip-trunks/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trunk_id: trunkId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const health = data.health_status;
+            showNotification(`Trunk test complete: ${health}`, health === 'healthy' ? 'success' : 'warning');
+            loadSIPTrunks();
+            loadTrunkHealth();
+        } else {
+            showNotification(data.error || 'Error testing trunk', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error testing trunk:', error);
+        showNotification('Error testing trunk', 'error');
+    });
+}
+
+// ============================================================================
+// Find Me/Follow Me Functions
+// ============================================================================
+
+function loadFMFMExtensions() {
+    fetch('/api/fmfm/extensions')
+        .then(response => response.json())
+        .then(data => {
+            if (data.extensions) {
+                // Update stats
+                document.getElementById('fmfm-total-extensions').textContent = data.count || 0;
+                
+                const sequentialCount = data.extensions.filter(e => e.mode === 'sequential').length;
+                const simultaneousCount = data.extensions.filter(e => e.mode === 'simultaneous').length;
+                const enabledCount = data.extensions.filter(e => e.enabled !== false).length;
+                
+                document.getElementById('fmfm-sequential').textContent = sequentialCount;
+                document.getElementById('fmfm-simultaneous').textContent = simultaneousCount;
+                document.getElementById('fmfm-enabled').textContent = enabledCount;
+                
+                // Update table
+                const tbody = document.getElementById('fmfm-list');
+                if (data.extensions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No Find Me/Follow Me configurations</td></tr>';
+                } else {
+                    tbody.innerHTML = data.extensions.map(config => {
+                        const enabled = config.enabled !== false;
+                        const modeBadge = config.mode === 'sequential' 
+                            ? '<span class="badge" style="background: #3b82f6;">⏩ Sequential</span>'
+                            : '<span class="badge" style="background: #10b981;">🔀 Simultaneous</span>';
+                        const statusBadge = enabled
+                            ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
+                            : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+                        
+                        const destinations = config.destinations || [];
+                        const destList = destinations.map(d => 
+                            `${escapeHtml(d.number)}${d.ring_time ? ` (${d.ring_time}s)` : ''}`
+                        ).join(', ');
+                        
+                        const updated = config.updated_at ? new Date(config.updated_at).toLocaleString() : 'N/A';
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(config.extension)}</strong></td>
+                                <td>${modeBadge}</td>
+                                <td>
+                                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(destList)}">
+                                        ${destinations.length} destination(s): ${escapeHtml(destList) || 'None'}
+                                    </div>
+                                </td>
+                                <td>${statusBadge}</td>
+                                <td><small>${updated}</small></td>
+                                <td>
+                                    <button class="btn-small btn-primary" data-config='${escapeHtml(JSON.stringify(config))}' onclick="editFMFMConfig(JSON.parse(this.getAttribute('data-config')))">✏️ Edit</button>
+                                    <button class="btn-small btn-danger" onclick="deleteFMFMConfig('${escapeHtml(config.extension)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading FMFM extensions:', error);
+            showNotification('Error loading FMFM configurations', 'error');
+        });
+}
+
+function showAddFMFMModal() {
+    document.getElementById('add-fmfm-modal').style.display = 'block';
+    document.getElementById('fmfm-extension').value = '';
+    document.getElementById('fmfm-mode').value = 'sequential';
+    document.getElementById('fmfm-enabled').checked = true;
+    document.getElementById('fmfm-no-answer').value = '';
+    document.getElementById('fmfm-destinations-list').innerHTML = '';
+    addFMFMDestinationRow();  // Add one empty row
+}
+
+function closeAddFMFMModal() {
+    document.getElementById('add-fmfm-modal').style.display = 'none';
+    document.getElementById('add-fmfm-form').reset();
+}
+
+let fmfmDestinationCounter = 0;
+
+function addFMFMDestinationRow() {
+    const container = document.getElementById('fmfm-destinations-list');
+    const rowId = `fmfm-dest-${fmfmDestinationCounter++}`;
+    
+    const row = document.createElement('div');
+    row.id = rowId;
+    row.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+    row.innerHTML = `
+        <input type="text" class="fmfm-dest-number" placeholder="Phone number or extension" required style="flex: 2;">
+        <input type="number" class="fmfm-dest-ringtime" placeholder="Ring time (s)" value="20" min="5" max="120" style="flex: 1;">
+        <button type="button" class="btn-small btn-danger" onclick="document.getElementById('${rowId}').remove()">🗑️</button>
+    `;
+    container.appendChild(row);
+}
+
+function saveFMFMConfig(event) {
+    event.preventDefault();
+    
+    const extension = document.getElementById('fmfm-extension').value;
+    const mode = document.getElementById('fmfm-mode').value;
+    const enabled = document.getElementById('fmfm-enabled').checked;
+    const noAnswer = document.getElementById('fmfm-no-answer').value;
+    
+    // Collect destinations
+    const destNumbers = Array.from(document.querySelectorAll('.fmfm-dest-number'));
+    const destRingTimes = Array.from(document.querySelectorAll('.fmfm-dest-ringtime'));
+    
+    const destinations = destNumbers.map((input, idx) => ({
+        number: input.value,
+        ring_time: parseInt(destRingTimes[idx].value) || 20
+    })).filter(d => d.number);
+    
+    if (destinations.length === 0) {
+        showNotification('At least one destination is required', 'error');
+        return;
+    }
+    
+    const configData = {
+        extension: extension,
+        mode: mode,
+        enabled: enabled,
+        destinations: destinations
+    };
+    
+    if (noAnswer) {
+        configData.no_answer_destination = noAnswer;
+    }
+    
+    fetch('/api/fmfm/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`FMFM configured for extension ${extension}`, 'success');
+            closeAddFMFMModal();
+            loadFMFMExtensions();
+        } else {
+            showNotification(data.error || 'Error configuring FMFM', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving FMFM config:', error);
+        showNotification('Error saving FMFM configuration', 'error');
+    });
+}
+
+function editFMFMConfig(config) {
+    showAddFMFMModal();
+    
+    document.getElementById('fmfm-extension').value = config.extension;
+    document.getElementById('fmfm-extension').readOnly = true;  // Don't allow changing extension
+    document.getElementById('fmfm-mode').value = config.mode;
+    document.getElementById('fmfm-enabled').checked = config.enabled !== false;
+    document.getElementById('fmfm-no-answer').value = config.no_answer_destination || '';
+    
+    // Clear and add destination rows
+    const container = document.getElementById('fmfm-destinations-list');
+    container.innerHTML = '';
+    
+    if (config.destinations && config.destinations.length > 0) {
+        config.destinations.forEach(dest => {
+            addFMFMDestinationRow();
+            const rows = container.children;
+            const lastRow = rows[rows.length - 1];
+            lastRow.querySelector('.fmfm-dest-number').value = dest.number;
+            lastRow.querySelector('.fmfm-dest-ringtime').value = dest.ring_time || 20;
+        });
+    } else {
+        addFMFMDestinationRow();
+    }
+}
+
+function deleteFMFMConfig(extension) {
+    if (!confirm(`Are you sure you want to delete FMFM configuration for extension ${extension}?`)) {
+        return;
+    }
+    
+    fetch(`/api/fmfm/config/${extension}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`FMFM configuration deleted for ${extension}`, 'success');
+            loadFMFMExtensions();
+        } else {
+            showNotification(data.error || 'Error deleting FMFM configuration', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting FMFM config:', error);
+        showNotification('Error deleting FMFM configuration', 'error');
+    });
+}
+
+// ============================================================================
+// Time-Based Routing Functions
+// ============================================================================
+
+function loadTimeRoutingRules() {
+    fetch('/api/time-routing/rules')
+        .then(response => response.json())
+        .then(data => {
+            if (data.rules) {
+                // Update stats
+                document.getElementById('time-routing-total').textContent = data.count || 0;
+                
+                const activeCount = data.rules.filter(r => r.enabled !== false).length;
+                const businessCount = data.rules.filter(r => 
+                    r.name && (r.name.toLowerCase().includes('business') || r.name.toLowerCase().includes('hours'))
+                ).length;
+                const afterCount = data.rules.filter(r => 
+                    r.name && (r.name.toLowerCase().includes('after') || r.name.toLowerCase().includes('closed'))
+                ).length;
+                
+                document.getElementById('time-routing-active').textContent = activeCount;
+                document.getElementById('time-routing-business').textContent = businessCount;
+                document.getElementById('time-routing-after').textContent = afterCount;
+                
+                // Update table
+                const tbody = document.getElementById('time-routing-list');
+                if (data.rules.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No time-based routing rules</td></tr>';
+                } else {
+                    tbody.innerHTML = data.rules.map(rule => {
+                        const enabled = rule.enabled !== false;
+                        const statusBadge = enabled
+                            ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
+                            : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+                        
+                        const conditions = rule.time_conditions || {};
+                        const schedule = getScheduleDescription(conditions);
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(rule.name)}</strong></td>
+                                <td>${escapeHtml(rule.destination)}</td>
+                                <td>${escapeHtml(rule.route_to)}</td>
+                                <td><small>${escapeHtml(schedule)}</small></td>
+                                <td>${rule.priority || 100}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn-small btn-danger" onclick="deleteTimeRoutingRule('${escapeHtml(rule.rule_id)}', '${escapeHtml(rule.name)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading time routing rules:', error);
+            showNotification('Error loading time routing rules', 'error');
+        });
+}
+
+function getScheduleDescription(conditions) {
+    const parts = [];
+    
+    if (conditions.days_of_week) {
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const days = conditions.days_of_week.map(d => dayNames[d]).join(', ');
+        parts.push(days);
+    }
+    
+    if (conditions.start_time && conditions.end_time) {
+        parts.push(`${conditions.start_time}-${conditions.end_time}`);
+    }
+    
+    if (conditions.holidays === true) {
+        parts.push('Holidays');
+    } else if (conditions.holidays === false) {
+        parts.push('Non-holidays');
+    }
+    
+    return parts.length > 0 ? parts.join(' | ') : 'Always';
+}
+
+function showAddTimeRuleModal() {
+    document.getElementById('add-time-rule-modal').style.display = 'block';
+}
+
+function closeAddTimeRuleModal() {
+    document.getElementById('add-time-rule-modal').style.display = 'none';
+    document.getElementById('add-time-rule-form').reset();
+}
+
+function saveTimeRoutingRule(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('time-rule-name').value;
+    const destination = document.getElementById('time-rule-destination').value;
+    const routeTo = document.getElementById('time-rule-route-to').value;
+    const startTime = document.getElementById('time-rule-start').value;
+    const endTime = document.getElementById('time-rule-end').value;
+    const priority = parseInt(document.getElementById('time-rule-priority').value);
+    const enabled = document.getElementById('time-rule-enabled').checked;
+    
+    // Collect selected days
+    const selectedDays = Array.from(document.querySelectorAll('input[name="time-rule-days"]:checked'))
+        .map(cb => parseInt(cb.value));
+    
+    if (selectedDays.length === 0) {
+        showNotification('Please select at least one day of the week', 'error');
+        return;
+    }
+    
+    const ruleData = {
+        name: name,
+        destination: destination,
+        route_to: routeTo,
+        priority: priority,
+        enabled: enabled,
+        time_conditions: {
+            days_of_week: selectedDays,
+            start_time: startTime,
+            end_time: endTime
+        }
+    };
+    
+    fetch('/api/time-routing/rule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ruleData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Time routing rule "${name}" added successfully`, 'success');
+            closeAddTimeRuleModal();
+            loadTimeRoutingRules();
+        } else {
+            showNotification(data.error || 'Error adding time routing rule', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving time routing rule:', error);
+        showNotification('Error saving time routing rule', 'error');
+    });
+}
+
+function deleteTimeRoutingRule(ruleId, ruleName) {
+    if (!confirm(`Are you sure you want to delete time routing rule "${ruleName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/time-routing/rule/${ruleId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Time routing rule "${ruleName}" deleted`, 'success');
+            loadTimeRoutingRules();
+        } else {
+            showNotification(data.error || 'Error deleting time routing rule', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting time routing rule:', error);
+        showNotification('Error deleting time routing rule', 'error');
+    });
+}
+
+// ============================================================================
+// Webhook Functions
+// ============================================================================
+
+function loadWebhooks() {
+    fetch('/api/webhooks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.subscriptions) {
+                const tbody = document.getElementById('webhooks-list');
+                if (data.subscriptions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No webhooks configured</td></tr>';
+                } else {
+                    tbody.innerHTML = data.subscriptions.map(webhook => {
+                        const enabled = webhook.enabled !== false;
+                        const statusBadge = enabled
+                            ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
+                            : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
+                        
+                        const events = webhook.event_types || [];
+                        const eventList = events.join(', ');
+                        const hasSecret = webhook.secret ? '🔒 Yes' : '🔓 No';
+                        
+                        return `
+                            <tr>
+                                <td>
+                                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(webhook.url)}">
+                                        ${escapeHtml(webhook.url)}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(eventList)}">
+                                        <small>${escapeHtml(eventList)}</small>
+                                    </div>
+                                </td>
+                                <td>${hasSecret}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn-small btn-danger" onclick="deleteWebhook('${escapeHtml(webhook.url)}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading webhooks:', error);
+            showNotification('Error loading webhooks', 'error');
+        });
+}
+
+function showAddWebhookModal() {
+    document.getElementById('add-webhook-modal').style.display = 'block';
+}
+
+function closeAddWebhookModal() {
+    document.getElementById('add-webhook-modal').style.display = 'none';
+    document.getElementById('add-webhook-form').reset();
+}
+
+function addWebhook(event) {
+    event.preventDefault();
+    
+    const url = document.getElementById('webhook-url').value;
+    const secret = document.getElementById('webhook-secret').value;
+    const enabled = document.getElementById('webhook-enabled').checked;
+    
+    // Collect selected events
+    const selectedEvents = Array.from(document.querySelectorAll('input[name="webhook-events"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedEvents.length === 0) {
+        showNotification('Please select at least one event type', 'error');
+        return;
+    }
+    
+    const webhookData = {
+        url: url,
+        event_types: selectedEvents,
+        enabled: enabled
+    };
+    
+    if (secret) {
+        webhookData.secret = secret;
+    }
+    
+    fetch('/api/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Webhook added successfully', 'success');
+            closeAddWebhookModal();
+            loadWebhooks();
+        } else {
+            showNotification(data.error || 'Error adding webhook', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding webhook:', error);
+        showNotification('Error adding webhook', 'error');
+    });
+}
+
+function deleteWebhook(url) {
+    if (!confirm(`Are you sure you want to delete webhook for ${url}?`)) {
+        return;
+    }
+    
+    // URL encode the webhook URL for the path
+    const encodedUrl = encodeURIComponent(url);
+    
+    fetch(`/api/webhooks/${encodedUrl}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Webhook deleted', 'success');
+            loadWebhooks();
+        } else {
+            showNotification(data.error || 'Error deleting webhook', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting webhook:', error);
+        showNotification('Error deleting webhook', 'error');
+    });
+}
+
+// ============================================================================
+// Hot Desking Functions
+// ============================================================================
+
+function loadHotDeskSessions() {
+    fetch('/api/hot-desk/sessions')
+        .then(response => response.json())
+        .then(data => {
+            if (data.sessions) {
+                // Update stats
+                const activeSessions = data.sessions.filter(s => s.active !== false);
+                document.getElementById('hotdesk-active').textContent = activeSessions.length;
+                document.getElementById('hotdesk-total').textContent = data.sessions.length;
+                
+                // Update table
+                const tbody = document.getElementById('hotdesk-sessions-list');
+                if (activeSessions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active hot desk sessions</td></tr>';
+                } else {
+                    tbody.innerHTML = activeSessions.map(session => {
+                        const loginTime = session.login_time ? new Date(session.login_time).toLocaleString() : 'N/A';
+                        const duration = session.login_time ? getDuration(new Date(session.login_time)) : 'N/A';
+                        
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(session.extension)}</strong></td>
+                                <td>${escapeHtml(session.device_mac || 'N/A')}</td>
+                                <td>${escapeHtml(session.device_ip || 'N/A')}</td>
+                                <td><small>${loginTime}</small></td>
+                                <td>${duration}</td>
+                                <td>
+                                    <button class="btn-small btn-warning" onclick="logoutHotDesk('${escapeHtml(session.extension)}')">🚪 Logout</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading hot desk sessions:', error);
+            showNotification('Error loading hot desk sessions', 'error');
+        });
+}
+
+function getDuration(startTime) {
+    const now = new Date();
+    const diff = now - startTime;
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+}
+
+function logoutHotDesk(extension) {
+    if (!confirm(`Are you sure you want to log out extension ${extension} from hot desk?`)) {
+        return;
+    }
+    
+    fetch('/api/hot-desk/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ extension: extension })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Extension ${extension} logged out`, 'success');
+            loadHotDeskSessions();
+        } else {
+            showNotification(data.error || 'Error logging out', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error logging out hot desk:', error);
+        showNotification('Error logging out hot desk', 'error');
+    });
+}
+
+// ============================================================================
+// Recording Retention Functions
+// ============================================================================
+
+function loadRetentionPolicies() {
+    Promise.all([
+        fetch('/api/recording-retention/policies'),
+        fetch('/api/recording-retention/statistics')
+    ])
+    .then(([policiesRes, statsRes]) => Promise.all([policiesRes.json(), statsRes.json()]))
+    .then(([policiesData, statsData]) => {
+        // Update stats
+        if (statsData) {
+            document.getElementById('retention-policies-count').textContent = statsData.total_policies || 0;
+            document.getElementById('retention-recordings').textContent = statsData.total_recordings || 0;
+            document.getElementById('retention-deleted').textContent = statsData.deleted_count || 0;
+            const lastCleanup = statsData.last_cleanup ? new Date(statsData.last_cleanup).toLocaleDateString() : 'Never';
+            document.getElementById('retention-last-cleanup').textContent = lastCleanup;
+        }
+        
+        // Update policies table
+        if (policiesData && policiesData.policies) {
+            const tbody = document.getElementById('retention-policies-list');
+            if (policiesData.policies.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No retention policies configured</td></tr>';
+            } else {
+                tbody.innerHTML = policiesData.policies.map(policy => {
+                    const created = policy.created_at ? new Date(policy.created_at).toLocaleDateString() : 'N/A';
+                    const tags = policy.tags ? policy.tags.join(', ') : 'None';
+                    
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(policy.name)}</strong></td>
+                            <td>${policy.retention_days} days</td>
+                            <td><small>${escapeHtml(tags)}</small></td>
+                            <td><small>${created}</small></td>
+                            <td>
+                                <button class="btn-small btn-danger" onclick="deleteRetentionPolicy('${escapeHtml(policy.policy_id)}', '${escapeHtml(policy.name)}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading retention policies:', error);
+        showNotification('Error loading retention policies', 'error');
+    });
+}
+
+function showAddRetentionPolicyModal() {
+    document.getElementById('add-retention-policy-modal').style.display = 'block';
+}
+
+function closeAddRetentionPolicyModal() {
+    document.getElementById('add-retention-policy-modal').style.display = 'none';
+    document.getElementById('add-retention-policy-form').reset();
+}
+
+function addRetentionPolicy(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('retention-policy-name').value;
+    const retentionDays = parseInt(document.getElementById('retention-days').value);
+    const tagsInput = document.getElementById('retention-tags').value;
+    
+    // Validate input
+    if (!name.match(/^[a-zA-Z0-9_\s-]+$/)) {
+        showNotification('Policy name contains invalid characters', 'error');
+        return;
+    }
+    
+    if (retentionDays < 1 || retentionDays > 3650) {
+        showNotification('Retention days must be between 1 and 3650', 'error');
+        return;
+    }
+    
+    const policyData = {
+        name: name,
+        retention_days: retentionDays
+    };
+    
+    // Parse tags if provided
+    if (tagsInput.trim()) {
+        policyData.tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+    }
+    
+    fetch('/api/recording-retention/policy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(policyData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Retention policy "${name}" added successfully`, 'success');
+            closeAddRetentionPolicyModal();
+            loadRetentionPolicies();
+        } else {
+            showNotification(data.error || 'Error adding retention policy', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding retention policy:', error);
+        showNotification('Error adding retention policy', 'error');
+    });
+}
+
+function deleteRetentionPolicy(policyId, policyName) {
+    if (!confirm(`Are you sure you want to delete retention policy "${policyName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/recording-retention/policy/${encodeURIComponent(policyId)}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Retention policy "${policyName}" deleted`, 'success');
+            loadRetentionPolicies();
+        } else {
+            showNotification(data.error || 'Error deleting retention policy', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting retention policy:', error);
+        showNotification('Error deleting retention policy', 'error');
+    });
+}
+
+// ============================================================================
+// Fraud Detection Functions
+// ============================================================================
+
+function loadFraudAlerts() {
+    Promise.all([
+        fetch('/api/fraud-detection/alerts?hours=24'),
+        fetch('/api/fraud-detection/statistics')
+    ])
+    .then(([alertsRes, statsRes]) => Promise.all([alertsRes.json(), statsRes.json()]))
+    .then(([alertsData, statsData]) => {
+        // Update stats
+        if (statsData) {
+            document.getElementById('fraud-total-alerts').textContent = statsData.total_alerts || 0;
+            document.getElementById('fraud-high-risk').textContent = statsData.high_risk_alerts || 0;
+            document.getElementById('fraud-blocked-patterns').textContent = statsData.blocked_patterns_count || 0;
+            document.getElementById('fraud-extensions-flagged').textContent = statsData.extensions_flagged || 0;
+        }
+        
+        // Update alerts table
+        if (alertsData && alertsData.alerts) {
+            const tbody = document.getElementById('fraud-alerts-list');
+            if (alertsData.alerts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No fraud alerts detected</td></tr>';
+            } else {
+                tbody.innerHTML = alertsData.alerts.map(alert => {
+                    const timestamp = new Date(alert.timestamp).toLocaleString();
+                    const scoreColor = alert.fraud_score > 0.8 ? '#ef4444' : alert.fraud_score > 0.5 ? '#f59e0b' : '#10b981';
+                    const scorePercent = (alert.fraud_score * 100).toFixed(0);
+                    const alertTypes = (alert.alert_types || []).join(', ');
+                    
+                    return `
+                        <tr>
+                            <td><small>${timestamp}</small></td>
+                            <td><strong>${escapeHtml(alert.extension)}</strong></td>
+                            <td><small>${escapeHtml(alertTypes)}</small></td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
+                                        <div style="background: ${scoreColor}; height: 100%; width: ${scorePercent}%;"></div>
+                                    </div>
+                                    <span>${scorePercent}%</span>
+                                </div>
+                            </td>
+                            <td><small>${escapeHtml(alert.details || 'No details')}</small></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+        
+        // Load blocked patterns from statistics response
+        if (statsData && statsData.blocked_patterns) {
+            const tbody = document.getElementById('blocked-patterns-list');
+            if (statsData.blocked_patterns.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No blocked patterns</td></tr>';
+            } else {
+                tbody.innerHTML = statsData.blocked_patterns.map((pattern, index) => `
+                    <tr>
+                        <td><code>${escapeHtml(pattern.pattern)}</code></td>
+                        <td>${escapeHtml(pattern.reason)}</td>
+                        <td>
+                            <button class="btn-small btn-danger" onclick="deleteBlockedPattern(${index}, '${escapeHtml(pattern.pattern)}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading fraud detection data:', error);
+        showNotification('Error loading fraud detection data', 'error');
+    });
+}
+
+function showAddBlockedPatternModal() {
+    document.getElementById('add-blocked-pattern-modal').style.display = 'block';
+}
+
+function closeAddBlockedPatternModal() {
+    document.getElementById('add-blocked-pattern-modal').style.display = 'none';
+    document.getElementById('add-blocked-pattern-form').reset();
+}
+
+function addBlockedPattern(event) {
+    event.preventDefault();
+    
+    const pattern = document.getElementById('blocked-pattern').value;
+    const reason = document.getElementById('blocked-reason').value;
+    
+    // Client-side validation: test if pattern is a valid regex
+    try {
+        new RegExp(pattern);
+    } catch (e) {
+        showNotification('Invalid regex pattern: ' + e.message, 'error');
+        return;
+    }
+    
+    const patternData = {
+        pattern: pattern,
+        reason: reason
+    };
+    
+    fetch('/api/fraud-detection/blocked-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patternData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Blocked pattern added successfully', 'success');
+            closeAddBlockedPatternModal();
+            loadFraudAlerts();
+        } else {
+            showNotification(data.error || 'Error adding blocked pattern', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding blocked pattern:', error);
+        showNotification('Error adding blocked pattern', 'error');
+    });
+}
+
+function deleteBlockedPattern(patternIndex, pattern) {
+    if (!confirm(`Are you sure you want to unblock pattern "${pattern}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/fraud-detection/blocked-pattern/${patternIndex}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Blocked pattern removed', 'success');
+            loadFraudAlerts();
+        } else {
+            showNotification(data.error || 'Error removing blocked pattern', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing blocked pattern:', error);
+        showNotification('Error removing blocked pattern', 'error');
+    });
+}
