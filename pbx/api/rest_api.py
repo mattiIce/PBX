@@ -6444,12 +6444,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
                 user_id = str(data['user_id'])[:50]
                 
-                result = self.pbx_core.mobile_push._send_notification(
-                    user_id,
-                    "Test Notification",
-                    "This is a test push notification from PBX Admin Panel",
-                    {'type': 'test', 'timestamp': datetime.now().isoformat()}
-                )
+                result = self.pbx_core.mobile_push.send_test_notification(user_id)
                 
                 if 'error' in result:
                     self._send_json(result, 400)

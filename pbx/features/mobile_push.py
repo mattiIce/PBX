@@ -88,22 +88,22 @@ class MobilePushNotifications:
             """
         
         # Notification history table
-        notification_table = """
-        CREATE TABLE IF NOT EXISTS push_notifications (
-            id SERIAL PRIMARY KEY,
-            user_id VARCHAR(50) NOT NULL,
-            notification_type VARCHAR(50) NOT NULL,
-            title VARCHAR(200),
-            body TEXT,
-            data TEXT,
-            sent_at TIMESTAMP NOT NULL,
-            success BOOLEAN DEFAULT TRUE,
-            error_message TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        
-        if self.database.db_type != 'postgresql':
+        if self.database.db_type == 'postgresql':
+            notification_table = """
+            CREATE TABLE IF NOT EXISTS push_notifications (
+                id SERIAL PRIMARY KEY,
+                user_id VARCHAR(50) NOT NULL,
+                notification_type VARCHAR(50) NOT NULL,
+                title VARCHAR(200),
+                body TEXT,
+                data TEXT,
+                sent_at TIMESTAMP NOT NULL,
+                success BOOLEAN DEFAULT TRUE,
+                error_message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        else:
             notification_table = """
             CREATE TABLE IF NOT EXISTS push_notifications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,12 +148,22 @@ class MobilePushNotifications:
         
         try:
             cursor = self.database.connection.cursor()
-            cursor.execute("""
-                SELECT user_id, device_token, platform, registered_at, last_seen
-                FROM mobile_devices
-                WHERE enabled = TRUE OR enabled = 1
-                ORDER BY last_seen DESC
-            """)
+            
+            # Handle boolean enabled field for both database types
+            if self.database.db_type == 'postgresql':
+                cursor.execute("""
+                    SELECT user_id, device_token, platform, registered_at, last_seen
+                    FROM mobile_devices
+                    WHERE enabled = TRUE
+                    ORDER BY last_seen DESC
+                """)
+            else:
+                cursor.execute("""
+                    SELECT user_id, device_token, platform, registered_at, last_seen
+                    FROM mobile_devices
+                    WHERE enabled = 1
+                    ORDER BY last_seen DESC
+                """)
             
             rows = cursor.fetchall()
             for row in rows:
@@ -515,3 +525,20 @@ class MobilePushNotifications:
             'total_devices': total_devices,
             'notifications_24h': recent_notifications
         }
+    
+    def send_test_notification(self, user_id: str) -> Dict:
+        """
+        Send a test push notification to a user
+        
+        Args:
+            user_id: User to send test notification to
+            
+        Returns:
+            Notification result
+        """
+        return self._send_notification(
+            user_id,
+            "Test Notification",
+            "This is a test push notification from PBX Admin Panel",
+            {'type': 'test', 'timestamp': datetime.now().isoformat()}
+        )
