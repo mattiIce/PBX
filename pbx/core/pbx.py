@@ -324,6 +324,12 @@ class PBXCore:
         if self.fraud_detection.enabled:
             self.logger.info("Fraud detection system initialized")
 
+        # Initialize Callback Queue
+        from pbx.features.callback_queue import CallbackQueue
+        self.callback_queue = CallbackQueue(config=self.config, database=self.database)
+        if self.callback_queue.enabled:
+            self.logger.info("Callback queue system initialized")
+
         # Initialize MFA if enabled
         if self.config.get('security.mfa.enabled', False):
             from pbx.features.mfa import MFAManager

@@ -290,6 +290,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_retention_policy()
             elif path == '/api/fraud-detection/blocked-pattern':
                 self._handle_add_blocked_pattern()
+            elif path == '/api/callback-queue/request':
+                self._handle_request_callback()
+            elif path == '/api/callback-queue/start':
+                self._handle_start_callback()
+            elif path == '/api/callback-queue/complete':
+                self._handle_complete_callback()
+            elif path == '/api/callback-queue/cancel':
+                self._handle_cancel_callback()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -594,6 +602,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract extension from path
                 extension = path.split('/')[-1]
                 self._handle_get_fraud_extension_stats(extension)
+            elif path == '/api/callback-queue/statistics':
+                self._handle_get_callback_statistics()
+            elif path == '/api/callback-queue/list':
+                self._handle_get_callback_list()
+            elif path.startswith('/api/callback-queue/queue/'):
+                # Extract queue_id from path
+                queue_id = path.split('/')[-1]
+                self._handle_get_queue_callbacks(queue_id)
+            elif path.startswith('/api/callback-queue/info/'):
+                # Extract callback_id from path
+                callback_id = path.split('/')[-1]
+                self._handle_get_callback_info(callback_id)
             elif path == '/api/skills/all':
                 self._handle_get_all_skills()
             elif path.startswith('/api/skills/agent/'):
@@ -6091,6 +6111,232 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Error deleting blocked pattern'}, 500)
         else:
             self._send_json({'error': 'Fraud detection not initialized'}, 500)
+
+    # Callback Queue Handlers
+    def _handle_request_callback(self):
+        """Request a callback from queue"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                # Validate required fields
+                if 'queue_id' not in data or 'caller_number' not in data:
+                    self._send_json({'error': 'Missing required fields: queue_id, caller_number'}, 400)
+                    return
+
+                # Sanitize inputs
+                queue_id = str(data['queue_id'])[:50]
+                caller_number = str(data['caller_number'])[:50]
+                caller_name = str(data.get('caller_name', ''))[:100] if data.get('caller_name') else None
+                
+                # Parse preferred_time if provided
+                preferred_time = None
+                if 'preferred_time' in data:
+                    try:
+                        from datetime import datetime
+                        preferred_time = datetime.fromisoformat(data['preferred_time'])
+                    except (ValueError, TypeError):
+                        self._send_json({'error': 'Invalid preferred_time format. Use ISO 8601 format.'}, 400)
+                        return
+                
+                result = self.pbx_core.callback_queue.request_callback(
+                    queue_id, caller_number, caller_name, preferred_time
+                )
+                
+                if 'error' in result:
+                    self._send_json(result, 400)
+                else:
+                    self._send_json({'success': True, **result})
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error requesting callback: {e}")
+                self._send_json({'error': 'Error requesting callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_start_callback(self):
+        """Start processing a callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 2048:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'callback_id' not in data or 'agent_id' not in data:
+                    self._send_json({'error': 'Missing required fields: callback_id, agent_id'}, 400)
+                    return
+
+                callback_id = str(data['callback_id'])[:100]
+                agent_id = str(data['agent_id'])[:50]
+                
+                result = self.pbx_core.callback_queue.start_callback(callback_id, agent_id)
+                
+                if 'error' in result:
+                    self._send_json(result, 404)
+                else:
+                    self._send_json({'success': True, **result})
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error starting callback: {e}")
+                self._send_json({'error': 'Error starting callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_complete_callback(self):
+        """Complete a callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 4096:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'callback_id' not in data or 'success' not in data:
+                    self._send_json({'error': 'Missing required fields: callback_id, success'}, 400)
+                    return
+
+                callback_id = str(data['callback_id'])[:100]
+                success = bool(data['success'])
+                notes = str(data.get('notes', ''))[:500] if data.get('notes') else None
+                
+                result = self.pbx_core.callback_queue.complete_callback(callback_id, success, notes)
+                
+                if result:
+                    self._send_json({'success': True, 'message': 'Callback completed'})
+                else:
+                    self._send_json({'error': 'Callback not found'}, 404)
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error completing callback: {e}")
+                self._send_json({'error': 'Error completing callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_cancel_callback(self):
+        """Cancel a pending callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                content_length = int(self.headers['Content-Length'])
+                if content_length > 2048:
+                    self._send_json({'error': 'Request too large'}, 413)
+                    return
+                
+                body = self.rfile.read(content_length)
+                data = json.loads(body.decode('utf-8'))
+
+                if 'callback_id' not in data:
+                    self._send_json({'error': 'Missing required field: callback_id'}, 400)
+                    return
+
+                callback_id = str(data['callback_id'])[:100]
+                
+                result = self.pbx_core.callback_queue.cancel_callback(callback_id)
+                
+                if result:
+                    self._send_json({'success': True, 'message': 'Callback cancelled'})
+                else:
+                    self._send_json({'error': 'Callback not found'}, 404)
+            except json.JSONDecodeError:
+                self._send_json({'error': 'Invalid JSON'}, 400)
+            except Exception as e:
+                self.logger.error(f"Error cancelling callback: {e}")
+                self._send_json({'error': 'Error cancelling callback'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_callback_statistics(self):
+        """Get callback queue statistics"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                stats = self.pbx_core.callback_queue.get_statistics()
+                self._send_json(stats)
+            except Exception as e:
+                self.logger.error(f"Error getting callback statistics: {e}")
+                self._send_json({'error': 'Error getting callback statistics'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_callback_list(self):
+        """Get list of all callbacks"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                callbacks = []
+                for callback_id in self.pbx_core.callback_queue.callbacks:
+                    info = self.pbx_core.callback_queue.get_callback_info(callback_id)
+                    if info:
+                        callbacks.append(info)
+                
+                # Sort by requested_at descending (most recent first)
+                callbacks.sort(key=lambda x: x.get('requested_at', ''), reverse=True)
+                
+                self._send_json({'callbacks': callbacks})
+            except Exception as e:
+                self.logger.error(f"Error getting callback list: {e}")
+                self._send_json({'error': 'Error getting callback list'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_queue_callbacks(self, queue_id: str):
+        """Get callbacks for a specific queue"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                # Sanitize queue_id
+                import re
+                if not re.match(r'^[\w-]{1,50}$', queue_id):
+                    self._send_json({'error': 'Invalid queue_id format'}, 400)
+                    return
+                
+                callbacks = self.pbx_core.callback_queue.list_queue_callbacks(queue_id)
+                stats = self.pbx_core.callback_queue.get_queue_statistics(queue_id)
+                
+                self._send_json({
+                    'queue_id': queue_id,
+                    'callbacks': callbacks,
+                    'statistics': stats
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting queue callbacks: {e}")
+                self._send_json({'error': 'Error getting queue callbacks'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
+
+    def _handle_get_callback_info(self, callback_id: str):
+        """Get information about a specific callback"""
+        if self.pbx_core and hasattr(self.pbx_core, 'callback_queue'):
+            try:
+                # Sanitize callback_id
+                import re
+                if not re.match(r'^cb_[\w]{1,100}$', callback_id):
+                    self._send_json({'error': 'Invalid callback_id format'}, 400)
+                    return
+                
+                info = self.pbx_core.callback_queue.get_callback_info(callback_id)
+                
+                if info:
+                    self._send_json(info)
+                else:
+                    self._send_json({'error': 'Callback not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting callback info: {e}")
+                self._send_json({'error': 'Error getting callback info'}, 500)
+        else:
+            self._send_json({'error': 'Callback queue not initialized'}, 500)
 
 
 class PBXAPIServer:
