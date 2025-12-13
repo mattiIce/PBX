@@ -4645,20 +4645,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             data = self._get_body()
             aa = self.pbx_core.auto_attendant
 
-            # Update configuration
-            config_changed = False
+            # Update configuration using the new update_config method
+            config_updates = {}
             if 'enabled' in data:
-                aa.enabled = bool(data['enabled'])
-                config_changed = True
+                config_updates['enabled'] = bool(data['enabled'])
             if 'extension' in data:
-                aa.extension = str(data['extension'])
-                config_changed = True
+                config_updates['extension'] = str(data['extension'])
             if 'timeout' in data:
-                aa.timeout = int(data['timeout'])
-                config_changed = True
+                config_updates['timeout'] = int(data['timeout'])
             if 'max_retries' in data:
-                aa.max_retries = int(data['max_retries'])
+                config_updates['max_retries'] = int(data['max_retries'])
+            
+            # Apply updates and persist to database
+            if config_updates:
+                aa.update_config(**config_updates)
                 config_changed = True
+            else:
+                config_changed = False
 
             # Check if prompts configuration was updated
             prompts_updated = 'prompts' in data
@@ -4673,7 +4676,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             self._send_json({
                 'success': True,
-                'message': 'Auto attendant configuration updated successfully'
+                'message': 'Auto attendant configuration updated and persisted to database'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -4715,10 +4718,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
 
             aa = self.pbx_core.auto_attendant
-            aa.menu_options[digit] = {
-                'destination': destination,
-                'description': description
-            }
+            # Use the new add_menu_option method which persists to database
+            aa.add_menu_option(digit, destination, description)
 
             # Trigger voice regeneration after menu option addition
             try:
@@ -4728,7 +4729,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             self._send_json({
                 'success': True,
-                'message': f'Menu option {digit} added successfully'
+                'message': f'Menu option {digit} added and persisted to database'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -4749,10 +4750,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     {'error': f'Menu option {digit} not found'}, 404)
                 return
 
+            # Get current values
+            destination = aa.menu_options[digit]['destination']
+            description = aa.menu_options[digit]['description']
+            
+            # Update with new values if provided
             if 'destination' in data:
-                aa.menu_options[digit]['destination'] = data['destination']
+                destination = data['destination']
             if 'description' in data:
-                aa.menu_options[digit]['description'] = data['description']
+                description = data['description']
+            
+            # Use add_menu_option which will update and persist to database
+            aa.add_menu_option(digit, destination, description)
 
             # Trigger voice regeneration after menu option update
             try:
@@ -4762,7 +4771,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             self._send_json({
                 'success': True,
-                'message': f'Menu option {digit} updated successfully'
+                'message': f'Menu option {digit} updated and persisted to database'
             })
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
@@ -4776,7 +4785,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             aa = self.pbx_core.auto_attendant
             if digit in aa.menu_options:
-                del aa.menu_options[digit]
+                # Use the new remove_menu_option method which deletes from database
+                aa.remove_menu_option(digit)
+                
                 # Trigger voice regeneration after menu option deletion
                 try:
                     self._regenerate_voice_prompts({})
@@ -4786,7 +4797,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
                 self._send_json({
                     'success': True,
-                    'message': f'Menu option {digit} deleted successfully'
+                    'message': f'Menu option {digit} deleted and removed from database'
                 })
             else:
                 self._send_json(

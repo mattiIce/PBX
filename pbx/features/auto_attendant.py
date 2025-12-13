@@ -3,6 +3,7 @@ Auto Attendant (IVR) System for PBX
 Provides automated call answering and menu navigation
 """
 import os
+import sqlite3
 import threading
 import time
 from enum import Enum
@@ -30,6 +31,7 @@ class AutoAttendant:
     - DTMF input handling
     - Call transfer to extensions/queues
     - Timeout handling
+    - Database persistence for configuration
     """
 
     def __init__(self, config=None, pbx_core=None):
@@ -44,27 +46,49 @@ class AutoAttendant:
         self.config = config
         self.pbx_core = pbx_core
 
-        # Get auto attendant configuration
-        aa_config = config.get('auto_attendant', {}) if config else {}
-        self.enabled = aa_config.get('enabled', True)
-        self.extension = aa_config.get('extension', '0')
-        self.timeout = aa_config.get(
-            'timeout', 10)  # seconds to wait for input
-        self.max_retries = aa_config.get('max_retries', 3)
-        self.audio_path = aa_config.get('audio_path', 'auto_attendant')
+        # Database connection
+        self.db_path = config.get('database', {}).get('path', 'pbx.db') if config else 'pbx.db'
+        self._init_database()
 
-        # Menu options mapping
-        # Key: DTMF digit, Value: (destination, description)
+        # Get auto attendant configuration - try database first, then config file
+        aa_config = config.get('auto_attendant', {}) if config else {}
+        
+        # Load from database if available, otherwise use config defaults
+        db_config = self._load_config_from_db()
+        if db_config:
+            self.enabled = db_config.get('enabled', True)
+            self.extension = db_config.get('extension', '0')
+            self.timeout = db_config.get('timeout', 10)
+            self.max_retries = db_config.get('max_retries', 3)
+            self.audio_path = db_config.get('audio_path', 'auto_attendant')
+        else:
+            # Use config file defaults and save to database
+            self.enabled = aa_config.get('enabled', True)
+            self.extension = aa_config.get('extension', '0')
+            self.timeout = aa_config.get('timeout', 10)
+            self.max_retries = aa_config.get('max_retries', 3)
+            self.audio_path = aa_config.get('audio_path', 'auto_attendant')
+            self._save_config_to_db()
+
+        # Menu options mapping - load from database
         self.menu_options = {}
-        menu_items = aa_config.get('menu_options', [])
-        for item in menu_items:
-            digit = str(item.get('digit'))
-            destination = item.get('destination')
-            description = item.get('description', '')
-            self.menu_options[digit] = {
-                'destination': destination,
-                'description': description
-            }
+        self._load_menu_options_from_db()
+        
+        # If no menu options in database, load from config and save
+        if not self.menu_options:
+            menu_items = aa_config.get('menu_options', [])
+            for item in menu_items:
+                digit = str(item.get('digit'))
+                destination = item.get('destination')
+                description = item.get('description', '')
+                self.menu_options[digit] = {
+                    'destination': destination,
+                    'description': description
+                }
+            # Save to database
+            if self.menu_options:
+                for digit, option in self.menu_options.items():
+                    self._save_menu_option_to_db(digit, option['destination'], option['description'])
 
         # Create audio directory if it doesn't exist
         if not os.path.exists(self.audio_path):
@@ -77,6 +101,161 @@ class AutoAttendant:
             f"Auto Attendant initialized on extension {
                 self.extension}")
         self.logger.info(f"Menu options: {len(self.menu_options)}")
+
+    def _init_database(self):
+        """Initialize database tables for auto attendant persistence"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Create auto_attendant_config table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS auto_attendant_config (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    enabled BOOLEAN DEFAULT 1,
+                    extension TEXT DEFAULT '0',
+                    timeout INTEGER DEFAULT 10,
+                    max_retries INTEGER DEFAULT 3,
+                    audio_path TEXT DEFAULT 'auto_attendant',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Create auto_attendant_menu_options table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS auto_attendant_menu_options (
+                    digit TEXT PRIMARY KEY,
+                    destination TEXT NOT NULL,
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            conn.commit()
+            conn.close()
+            self.logger.info("Auto attendant database tables initialized")
+        except Exception as e:
+            self.logger.error(f"Error initializing auto attendant database: {e}")
+
+    def _load_config_from_db(self):
+        """Load configuration from database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute('SELECT enabled, extension, timeout, max_retries, audio_path FROM auto_attendant_config WHERE id = 1')
+            row = cursor.fetchone()
+            conn.close()
+            
+            if row:
+                return {
+                    'enabled': bool(row[0]),
+                    'extension': row[1],
+                    'timeout': row[2],
+                    'max_retries': row[3],
+                    'audio_path': row[4]
+                }
+            return None
+        except Exception as e:
+            self.logger.error(f"Error loading auto attendant config from database: {e}")
+            return None
+
+    def _save_config_to_db(self):
+        """Save configuration to database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Use INSERT OR REPLACE to handle both insert and update
+            cursor.execute('''
+                INSERT OR REPLACE INTO auto_attendant_config (id, enabled, extension, timeout, max_retries, audio_path, updated_at)
+                VALUES (1, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (self.enabled, self.extension, self.timeout, self.max_retries, self.audio_path))
+            
+            conn.commit()
+            conn.close()
+            self.logger.info("Auto attendant config saved to database")
+        except Exception as e:
+            self.logger.error(f"Error saving auto attendant config to database: {e}")
+
+    def _load_menu_options_from_db(self):
+        """Load menu options from database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute('SELECT digit, destination, description FROM auto_attendant_menu_options')
+            rows = cursor.fetchall()
+            conn.close()
+            
+            for row in rows:
+                self.menu_options[row[0]] = {
+                    'destination': row[1],
+                    'description': row[2] or ''
+                }
+            
+            if rows:
+                self.logger.info(f"Loaded {len(rows)} menu options from database")
+        except Exception as e:
+            self.logger.error(f"Error loading menu options from database: {e}")
+
+    def _save_menu_option_to_db(self, digit, destination, description=''):
+        """Save a menu option to database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO auto_attendant_menu_options (digit, destination, description, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (digit, destination, description))
+            
+            conn.commit()
+            conn.close()
+            self.logger.info(f"Menu option {digit} saved to database")
+        except Exception as e:
+            self.logger.error(f"Error saving menu option to database: {e}")
+
+    def _delete_menu_option_from_db(self, digit):
+        """Delete a menu option from database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM auto_attendant_menu_options WHERE digit = ?', (digit,))
+            conn.commit()
+            conn.close()
+            self.logger.info(f"Menu option {digit} deleted from database")
+        except Exception as e:
+            self.logger.error(f"Error deleting menu option from database: {e}")
+
+    def update_config(self, **kwargs):
+        """Update configuration and persist to database"""
+        if 'enabled' in kwargs:
+            self.enabled = bool(kwargs['enabled'])
+        if 'extension' in kwargs:
+            self.extension = str(kwargs['extension'])
+        if 'timeout' in kwargs:
+            self.timeout = int(kwargs['timeout'])
+        if 'max_retries' in kwargs:
+            self.max_retries = int(kwargs['max_retries'])
+        if 'audio_path' in kwargs:
+            self.audio_path = str(kwargs['audio_path'])
+        
+        # Save to database
+        self._save_config_to_db()
+
+    def add_menu_option(self, digit, destination, description=''):
+        """Add or update a menu option and persist to database"""
+        self.menu_options[digit] = {
+            'destination': destination,
+            'description': description
+        }
+        self._save_menu_option_to_db(digit, destination, description)
+
+    def remove_menu_option(self, digit):
+        """Remove a menu option and delete from database"""
+        if digit in self.menu_options:
+            del self.menu_options[digit]
+            self._delete_menu_option_from_db(digit)
 
     def is_enabled(self):
         """Check if auto attendant is enabled"""
