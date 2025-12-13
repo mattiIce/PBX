@@ -6,11 +6,12 @@ import os
 import sys
 import time
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.paging import PagingSystem
 from pbx.utils.config import Config
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_paging_system_initialization():

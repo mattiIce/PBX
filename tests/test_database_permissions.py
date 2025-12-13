@@ -7,11 +7,12 @@ import sys
 import tempfile
 from unittest.mock import MagicMock, patch
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_index_creation_with_permission_error():

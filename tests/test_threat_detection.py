@@ -6,11 +6,12 @@ import os
 import sys
 import time
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import ThreatDetector
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_threat_detector_initialization():

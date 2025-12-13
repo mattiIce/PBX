@@ -7,10 +7,11 @@ import struct
 import sys
 import tempfile
 
-from pbx.rtp.handler import RTPPlayer
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.rtp.handler import RTPPlayer
+
 
 
 def test_wav_file_playback():

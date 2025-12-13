@@ -202,7 +202,7 @@ def check_and_report(verbose: bool = False, strict: bool = True, requirements_pa
     Returns:
         True if all required dependencies are satisfied (or strict=False)
     """
-    all_core_ok, report = check_dependencies(verbose=False, requirements_path=requirements_path)
+    all_core_ok, report = check_dependencies(verbose=verbose, requirements_path=requirements_path)
     
     print_dependency_report(report, verbose=verbose)
     
@@ -214,9 +214,9 @@ def check_and_report(verbose: bool = False, strict: bool = True, requirements_pa
 
 
 if __name__ == "__main__":
-    # Run dependency check with verbose output
+    # Run dependency check
     verbose = '--verbose' in sys.argv or '-v' in sys.argv
     strict = '--strict' in sys.argv or '-s' in sys.argv
     
-    success = check_and_report(verbose=True, strict=strict)
+    success = check_and_report(verbose=verbose, strict=strict)
     sys.exit(0 if success else 1)

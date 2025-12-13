@@ -7,6 +7,9 @@ import sys
 import tempfile
 import time
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import (
     PasswordPolicy,
@@ -16,8 +19,6 @@ from pbx.utils.security import (
     get_password_manager,
 )
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_password_policy():

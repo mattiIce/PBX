@@ -6,6 +6,9 @@ import os
 import sys
 from datetime import datetime
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.crm_integration import (
     ActiveDirectoryLookupProvider,
     CallerInfo,
@@ -15,8 +18,6 @@ from pbx.features.crm_integration import (
     PhoneBookLookupProvider,
 )
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_caller_info_creation():

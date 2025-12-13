@@ -11,10 +11,11 @@ import time
 
 import yaml
 
-from pbx.core.pbx import PBXCore
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.core.pbx import PBXCore
+
 
 
 def test_pbx_shutdown():

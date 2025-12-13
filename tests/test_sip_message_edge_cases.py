@@ -5,10 +5,11 @@ Test edge cases for SIP message parsing to prevent list index out of range error
 import os
 import sys
 
-from pbx.sip.message import SIPMessage, SIPMessageBuilder
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.sip.message import SIPMessage, SIPMessageBuilder
+
 
 
 def test_empty_message():

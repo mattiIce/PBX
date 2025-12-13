@@ -7,10 +7,11 @@ import os
 import sys
 from io import StringIO
 
-from pbx.features.webrtc import WebRTCGateway, WebRTCSignalingServer
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.features.webrtc import WebRTCGateway, WebRTCSignalingServer
+
 
 
 def test_verbose_logging_disabled():

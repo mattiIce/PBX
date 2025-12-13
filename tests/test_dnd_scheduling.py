@@ -7,11 +7,12 @@ import sys
 import time
 from datetime import datetime, timedelta
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.dnd_scheduling import CalendarMonitor, DNDRule, DNDScheduler
 from pbx.features.presence import PresenceStatus, PresenceSystem
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_dnd_rule_creation():

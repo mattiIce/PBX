@@ -7,11 +7,12 @@ import shutil
 import sys
 import tempfile
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.core.pbx import PBXCore
 from pbx.utils.database import RegisteredPhonesDB
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_pbx_preserves_phones_on_boot():

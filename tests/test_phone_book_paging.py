@@ -5,11 +5,12 @@ Tests for Phone Book and Paging features
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.paging import PagingSystem
 from pbx.features.phone_book import PhoneBook
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_phone_book_basic():

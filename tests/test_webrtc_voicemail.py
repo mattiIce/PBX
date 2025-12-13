@@ -8,11 +8,12 @@ import sys
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.core.call import Call, CallState
 from pbx.features.webrtc import WebRTCGateway
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 class TestWebRTCVoicemailAccess(unittest.TestCase):

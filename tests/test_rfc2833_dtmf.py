@@ -8,6 +8,9 @@ import sys
 import time
 import unittest
 
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pbx.rtp.rfc2833 import (
     RFC2833_CODE_TO_DIGIT,
     RFC2833_EVENT_CODES,
@@ -16,8 +19,6 @@ from pbx.rtp.rfc2833 import (
     RFC2833Sender,
 )
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TestRFC2833EventPacket(unittest.TestCase):

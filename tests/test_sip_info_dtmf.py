@@ -6,13 +6,14 @@ import os
 import sys
 import unittest
 
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pbx.core.call import Call, CallState
 from pbx.core.pbx import PBXCore
 from pbx.sip.message import SIPMessage
 from pbx.sip.server import VALID_DTMF_DIGITS, SIPServer
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class MockPBXCore:

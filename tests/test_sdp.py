@@ -5,10 +5,11 @@ Test SDP parsing and building
 import os
 import sys
 
-from pbx.sip.sdp import SDPBuilder, SDPSession
-
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from pbx.sip.sdp import SDPBuilder, SDPSession
+
 
 
 def test_sdp_parsing():

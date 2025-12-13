@@ -6,12 +6,13 @@ Verifies that extensions in the database can register even if not in config.yml
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.core.pbx import PBXCore
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB, RegisteredPhonesDB
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_database_extension_registration():

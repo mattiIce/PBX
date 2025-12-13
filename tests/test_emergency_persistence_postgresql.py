@@ -6,12 +6,13 @@ This test requires PostgreSQL to be available and configured
 import os
 import sys
 
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def test_emergency_contact_persistence_postgresql():
