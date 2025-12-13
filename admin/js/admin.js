@@ -4653,3 +4653,253 @@ function deleteBlockedPattern(patternIndex, pattern) {
         showNotification('Error removing blocked pattern', 'error');
     });
 }
+
+// Callback Queue Functions
+function loadCallbackQueue() {
+    Promise.all([
+        fetch('/api/callback-queue/list'),
+        fetch('/api/callback-queue/statistics')
+    ])
+    .then(([listRes, statsRes]) => Promise.all([listRes.json(), statsRes.json()]))
+    .then(([listData, statsData]) => {
+        // Update statistics
+        if (statsData) {
+            document.getElementById('callback-total').textContent = statsData.total_callbacks || 0;
+            
+            const statusBreakdown = statsData.status_breakdown || {};
+            document.getElementById('callback-scheduled').textContent = statusBreakdown.scheduled || 0;
+            document.getElementById('callback-in-progress').textContent = statusBreakdown.in_progress || 0;
+            document.getElementById('callback-completed').textContent = statusBreakdown.completed || 0;
+            document.getElementById('callback-failed').textContent = statusBreakdown.failed || 0;
+        }
+        
+        // Update callback list table
+        if (listData && listData.callbacks) {
+            const tbody = document.getElementById('callback-list');
+            if (listData.callbacks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No callbacks in queue</td></tr>';
+            } else {
+                tbody.innerHTML = listData.callbacks.map(callback => {
+                    const requestedTime = new Date(callback.requested_at).toLocaleString();
+                    const callbackTime = new Date(callback.callback_time).toLocaleString();
+                    
+                    // Status badge color
+                    let statusClass = '';
+                    switch(callback.status) {
+                        case 'scheduled': statusClass = 'badge-info'; break;
+                        case 'in_progress': statusClass = 'badge-warning'; break;
+                        case 'completed': statusClass = 'badge-success'; break;
+                        case 'failed': statusClass = 'badge-danger'; break;
+                        case 'cancelled': statusClass = 'badge-secondary'; break;
+                        default: statusClass = 'badge-info';
+                    }
+                    
+                    return `
+                        <tr>
+                            <td><code>${escapeHtml(callback.callback_id)}</code></td>
+                            <td>${escapeHtml(callback.queue_id)}</td>
+                            <td>
+                                <strong>${escapeHtml(callback.caller_number)}</strong><br>
+                                <small>${escapeHtml(callback.caller_name || 'N/A')}</small>
+                            </td>
+                            <td><small>${requestedTime}</small></td>
+                            <td><small>${callbackTime}</small></td>
+                            <td><span class="badge ${statusClass}">${escapeHtml(callback.status)}</span></td>
+                            <td>${callback.attempts}</td>
+                            <td>
+                                ${callback.status === 'scheduled' ? `
+                                    <button class="btn-small btn-primary" onclick="startCallback('${escapeHtml(callback.callback_id)}')">▶️ Start</button>
+                                    <button class="btn-small btn-danger" onclick="cancelCallback('${escapeHtml(callback.callback_id)}')">❌</button>
+                                ` : callback.status === 'in_progress' ? `
+                                    <button class="btn-small btn-success" onclick="completeCallback('${escapeHtml(callback.callback_id)}', true)">✅ Done</button>
+                                    <button class="btn-small btn-warning" onclick="completeCallback('${escapeHtml(callback.callback_id)}', false)">🔄 Retry</button>
+                                ` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading callback queue:', error);
+        showNotification('Error loading callback queue', 'error');
+    });
+}
+
+function showRequestCallbackModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'request-callback-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="closeRequestCallbackModal()">&times;</span>
+            <h2>📞 Request Callback</h2>
+            <form id="request-callback-form" onsubmit="requestCallback(event)">
+                <div class="form-group">
+                    <label for="callback-queue-id">Queue ID: *</label>
+                    <input type="text" id="callback-queue-id" required 
+                           placeholder="e.g., sales, support, general">
+                </div>
+                <div class="form-group">
+                    <label for="callback-caller-number">Caller Number: *</label>
+                    <input type="tel" id="callback-caller-number" required 
+                           placeholder="e.g., +1234567890">
+                </div>
+                <div class="form-group">
+                    <label for="callback-caller-name">Caller Name:</label>
+                    <input type="text" id="callback-caller-name" 
+                           placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label for="callback-preferred-time">Preferred Time:</label>
+                    <input type="datetime-local" id="callback-preferred-time">
+                    <small>Leave empty for ASAP callback</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRequestCallbackModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Request Callback</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function closeRequestCallbackModal() {
+    const modal = document.getElementById('request-callback-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function requestCallback(event) {
+    event.preventDefault();
+    
+    const queueId = document.getElementById('callback-queue-id').value;
+    const callerNumber = document.getElementById('callback-caller-number').value;
+    const callerName = document.getElementById('callback-caller-name').value;
+    const preferredTime = document.getElementById('callback-preferred-time').value;
+    
+    const callbackData = {
+        queue_id: queueId,
+        caller_number: callerNumber
+    };
+    
+    if (callerName) {
+        callbackData.caller_name = callerName;
+    }
+    
+    if (preferredTime) {
+        // Convert to ISO format
+        callbackData.preferred_time = new Date(preferredTime).toISOString();
+    }
+    
+    fetch('/api/callback-queue/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(callbackData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Callback requested successfully', 'success');
+            closeRequestCallbackModal();
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error requesting callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error requesting callback:', error);
+        showNotification('Error requesting callback', 'error');
+    });
+}
+
+function startCallback(callbackId) {
+    // Prompt for agent ID
+    const agentId = prompt('Enter your agent ID/extension:');
+    if (!agentId) {
+        return;
+    }
+    
+    fetch('/api/callback-queue/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            callback_id: callbackId,
+            agent_id: agentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Started callback to ${data.caller_number}`, 'success');
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error starting callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error starting callback:', error);
+        showNotification('Error starting callback', 'error');
+    });
+}
+
+function completeCallback(callbackId, success) {
+    let notes = '';
+    if (!success) {
+        notes = prompt('Enter reason for failure (optional):') || '';
+    }
+    
+    fetch('/api/callback-queue/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            callback_id: callbackId,
+            success: success,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(success ? 'Callback completed' : 'Callback will be retried', 'success');
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error completing callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error completing callback:', error);
+        showNotification('Error completing callback', 'error');
+    });
+}
+
+function cancelCallback(callbackId) {
+    if (!confirm('Are you sure you want to cancel this callback request?')) {
+        return;
+    }
+    
+    fetch('/api/callback-queue/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            callback_id: callbackId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Callback cancelled', 'success');
+            loadCallbackQueue();
+        } else {
+            showNotification(data.error || 'Error cancelling callback', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling callback:', error);
+        showNotification('Error cancelling callback', 'error');
+    });
+}

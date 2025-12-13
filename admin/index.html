@@ -131,6 +131,10 @@
                         <span class="tab-icon">⏰</span>
                         <span class="tab-text">Time-Based Routing</span>
                     </button>
+                    <button class="tab-button" data-tab="callback-queue">
+                        <span class="tab-icon">📞</span>
+                        <span class="tab-text">Callback Queue</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -2098,6 +2102,87 @@ G.726-32</textarea>
                     <li><strong>Blocked Patterns:</strong> Prevent calls to specific number patterns</li>
                 </ul>
                 <p><strong>Default Thresholds:</strong> 100 calls/hour, 20 international calls/day, 2-hour max duration</p>
+            </div>
+        </div>
+
+        <!-- Callback Queue Tab -->
+        <div id="callback-queue" class="tab-content">
+            <h2>📞 Callback Queue Management</h2>
+            
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadCallbackQueue()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="showRequestCallbackModal()">➕ Request Callback</button>
+            </div>
+
+            <!-- Callback Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-total">-</div>
+                    <div class="stat-label">Total Callbacks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-scheduled">-</div>
+                    <div class="stat-label">Scheduled</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-in-progress">-</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-completed">-</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="callback-failed">-</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+
+            <!-- Callback Requests List -->
+            <div class="config-section">
+                <h3>📋 Active Callbacks</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Callback ID</th>
+                                <th>Queue</th>
+                                <th>Caller</th>
+                                <th>Requested</th>
+                                <th>Callback Time</th>
+                                <th>Status</th>
+                                <th>Attempts</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="callback-list">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">Loading callbacks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Callback Queue</h3>
+                <p><strong>Callback Queue</strong> allows callers to request a callback instead of waiting on hold, improving customer satisfaction.</p>
+                <ul>
+                    <li><strong>Scheduled Callbacks:</strong> Callers can choose immediate callback (ASAP) or schedule for a specific time</li>
+                    <li><strong>Queue Integration:</strong> Works with call queues to manage callback requests</li>
+                    <li><strong>Auto-Retry:</strong> Failed callbacks are automatically retried with configurable intervals</li>
+                    <li><strong>Status Tracking:</strong> Monitor callback status from request to completion</li>
+                </ul>
+                <p><strong>Callback Status:</strong></p>
+                <ul>
+                    <li>Pending: Callback request received, waiting to be scheduled</li>
+                    <li>Scheduled: Callback scheduled for a specific time</li>
+                    <li>In Progress: Agent is currently calling back the customer</li>
+                    <li>Completed: Callback successfully completed</li>
+                    <li>Failed: Callback failed after maximum retry attempts</li>
+                    <li>Cancelled: Callback request cancelled by customer or admin</li>
+                </ul>
             </div>
         </div>
 

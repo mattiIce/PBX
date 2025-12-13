@@ -747,6 +747,16 @@ header h1 {
     color: white;
 }
 
+.badge-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.badge-danger {
+    background: #ef4444;
+    color: white;
+}
+
 @media (max-width: 1200px) {
     .charts-container {
         grid-template-columns: 1fr;
