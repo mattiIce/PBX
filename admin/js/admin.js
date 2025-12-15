@@ -5793,39 +5793,39 @@ function loadLocationHistory() {
 // ============================================================================
 
 function showAddSpeechAnalyticsConfigModal() {
-    showNotification('Speech Analytics per-extension configuration coming soon', 'info');
+    // Coming soon
 }
 
 function editSpeechAnalyticsConfig(extension) {
-    showNotification(`Edit config for extension ${extension} - coming soon`, 'info');
+    // Coming soon
 }
 
 function deleteSpeechAnalyticsConfig(extension) {
     if (!confirm(`Delete speech analytics config for extension ${extension}?`)) {
         return;
     }
-    showNotification('Delete functionality coming soon', 'info');
+    // Coming soon
 }
 
 function showAddE911SiteModal() {
-    showNotification('E911 site creation modal coming soon', 'info');
+    // Coming soon
 }
 
 function editE911Site(siteId) {
-    showNotification(`Edit E911 site ${siteId} - coming soon`, 'info');
+    // Coming soon
 }
 
 function deleteE911Site(siteId) {
     if (!confirm(`Delete E911 site ${siteId}?`)) {
         return;
     }
-    showNotification('Delete functionality coming soon', 'info');
+    // Coming soon
 }
 
 function showUpdateLocationModal() {
-    showNotification('Manual location update modal coming soon', 'info');
+    // Coming soon
 }
 
 function updateExtensionLocation(extension) {
-    showNotification(`Update location for ${extension} - coming soon`, 'info');
+    // Coming soon
 }

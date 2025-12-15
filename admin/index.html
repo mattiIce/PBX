@@ -233,14 +233,6 @@
             <!-- Main Content Area -->
             <div class="main-content">
                 <!-- Feature Requirements Info Banner -->
-                <div id="feature-info-banner" class="info-box" style="margin-bottom: 20px; background: #f0f9ff; border-left: 4px solid #3b82f6;">
-                    <p style="margin: 0; font-size: 14px;">
-                        ℹ️ <strong>Most features work without a phone or microphone!</strong> 
-                        Only the <strong>📞 Phone</strong> tab requires microphone access for making calls. 
-                        All other features (management, configuration, analytics) are fully accessible.
-                    </p>
-                </div>
-
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">
             <h2>System Overview</h2>
@@ -309,25 +301,7 @@
             <h2>📞 WebRTC Browser Phone</h2>
             
             <!-- Microphone Requirement Alert -->
-            <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                <p style="margin: 0 0 10px 0;">
-                    <strong>⚠️ Microphone Access Required</strong>
-                </p>
-                <p style="margin: 0;">
-                    This feature requires microphone access to make calls. If your OS or browser blocks microphone access, 
-                    you can still use all other admin panel features (Extensions, Voicemail, Analytics, Configuration, etc.) 
-                    which don't require a phone or microphone.
-                </p>
-            </div>
             
-            <div class="info-box" style="margin-bottom: 20px;">
-                <p>🎯 <strong>Make calls directly from your browser without a physical phone!</strong></p>
-                <p>This WebRTC-based phone allows you to make calls to any extension from your computer. Perfect for working from home!</p>
-                <p><strong>Supported Codecs:</strong> PCMU (G.711 μ-law), PCMA (G.711 A-law), G.722 HD Audio, Opus</p>
-                <p>⚠️ <strong>Note:</strong> Please allow microphone access when prompted by your browser.</p>
-                <p>🎧 <strong>Tip:</strong> Use headphones to prevent echo and feedback during calls.</p>
-            </div>
-
             <div class="config-section" style="max-width: 600px; margin: 0 auto;">
                 <div class="webrtc-phone-widget">
                     <div class="phone-display">
@@ -2981,37 +2955,15 @@ G.726-32</textarea>
 
         <div id="team-messaging" class="tab-content">
             <h2>💬 Team Messaging</h2>
-            <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span class="status-badge status-framework-only">⚙️ Framework Only</span>
-                    <strong>Backend Ready - UI Integration Needed</strong>
-                </div>
-                <p>Team messaging framework for internal communication and collaboration.</p>
-                <p><strong>Available:</strong> Database schema, REST APIs for channels, messages, and file sharing</p>
-                <p><strong>Next Steps:</strong> Integrate with messaging frontend or build custom UI</p>
-            </div>
             
             <div class="section-card">
-                <h3>Framework Capabilities</h3>
-                <ul>
-                    <li>✅ Database schema for channels, members, and messages</li>
-                    <li>✅ REST API endpoints for CRUD operations</li>
-                    <li>✅ File sharing support</li>
-                    <li>⚠️ Frontend UI required (can integrate with Slack, Mattermost, or custom)</li>
-                </ul>
+                <h3>Team Messaging</h3>
+                <p>Configure team messaging features.</p>
             </div>
         </div>
 
         <div id="nomadic-e911" class="tab-content">
             <h2>📍 Nomadic E911</h2>
-            <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                    <strong>Production Ready</strong>
-                </div>
-                <p>Location-based emergency routing for remote and mobile workers with automatic IP-based detection.</p>
-                <p><strong>Features:</strong> IP-based location tracking, multi-site support, location history, manual updates, automatic detection</p>
-            </div>
             
             <div class="config-section">
                 <h3>🏢 E911 Site Configuration</h3>
@@ -3134,14 +3086,6 @@ G.726-32</textarea>
 
         <div id="crm-integrations" class="tab-content">
             <h2>🔗 CRM Integrations</h2>
-            <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                    <strong>Production Ready</strong>
-                </div>
-                <p>Fully integrated HubSpot and Zendesk support with contact sync, deal management, and ticket creation.</p>
-                <p><strong>Features:</strong> Contact syncing, activity logging, webhook support, REST API integration</p>
-            </div>
             
             <div class="config-section">
                 <h3>📊 HubSpot Integration</h3>
@@ -3298,22 +3242,11 @@ G.726-32</textarea>
 
         <div id="compliance" class="tab-content">
             <h2>✅ Compliance Frameworks</h2>
-            <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span class="status-badge status-fully-implemented">✅ SOC 2 Type II - Fully Implemented</span>
-                </div>
-                <p>Compliance management framework with full SOC 2 Type II support.</p>
-                <p><strong>Operational:</strong> Control tracking, test evidence, audit logging, compliance reporting</p>
-                <p><strong>Note:</strong> GDPR and PCI DSS frameworks are disabled (not required for US-only operations)</p>
-            </div>
             
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>SOC 2 Type II</h3>
-                    <div style="margin: 10px 0;">
-                        <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                    </div>
-                    <p>Security compliance controls - Production Ready</p>
+                    <p>Security compliance controls</p>
                     <ul style="text-align: left; font-size: 14px;">
                         <li>✅ Control tracking and documentation</li>
                         <li>✅ Test evidence recording</li>
@@ -3324,41 +3257,17 @@ G.726-32</textarea>
                 </div>
                 <div class="stat-card">
                     <h3>GDPR Compliance</h3>
-                    <div style="margin: 10px 0;">
-                        <span class="status-badge status-disabled">❌ Disabled</span>
-                    </div>
                     <p>Data privacy and protection framework</p>
-                    <ul style="text-align: left; font-size: 14px;">
-                        <li>⚠️ Framework available but disabled</li>
-                        <li>⚠️ Not required for US-only operations</li>
-                        <li>⚠️ Can be enabled if needed</li>
-                    </ul>
                 </div>
                 <div class="stat-card">
                     <h3>PCI DSS</h3>
-                    <div style="margin: 10px 0;">
-                        <span class="status-badge status-disabled">❌ Disabled</span>
-                    </div>
                     <p>Payment card industry standards</p>
-                    <ul style="text-align: left; font-size: 14px;">
-                        <li>⚠️ Framework available but disabled</li>
-                        <li>⚠️ Not required (no card processing)</li>
-                        <li>⚠️ Can be enabled if needed</li>
-                    </ul>
                 </div>
             </div>
         </div>
 
         <div id="speech-analytics" class="tab-content">
             <h2>🎙️ Speech Analytics</h2>
-            <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                    <strong>Production Ready</strong>
-                </div>
-                <p>Real-time speech analytics with live transcription, sentiment analysis, and call summarization using Vosk offline engine.</p>
-                <p><strong>Features:</strong> Offline transcription (Vosk), rule-based sentiment analysis, extractive summarization, call quality insights</p>
-            </div>
             
             <div class="config-section">
                 <h3>⚙️ System Configuration</h3>
