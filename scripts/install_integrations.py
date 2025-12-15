@@ -251,9 +251,6 @@ class IntegrationInstaller:
             except subprocess.CalledProcessError:
                 self.log("Failed to install Jitsi Meet", "ERROR")
                 return False
-            else:
-                self.log("Failed to install Jitsi Meet", "ERROR")
-                return False
         else:
             self.log("Automatic Jitsi installation only supported on Debian/Ubuntu", "ERROR")
             self.log("Please install manually: https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart", "INFO")
@@ -445,44 +442,40 @@ class IntegrationInstaller:
             
             # Create MySQL option file to avoid password in process list
             mysql_config_fd, mysql_config_path = tempfile.mkstemp(prefix='mysql_', suffix='.cnf')
+            mysql_sql_fd, mysql_sql_path = tempfile.mkstemp(prefix='mysql_', suffix='.sql')
             try:
                 if not self.dry_run:
                     with os.fdopen(mysql_config_fd, 'w') as f:
                         f.write('[client]\n')
                         f.write('user=root\n')
-                        # Note: For security, password should not be here either in production
-                        # This is just for local dev setup
                     os.chmod(mysql_config_path, 0o600)
-                
-                # Execute MySQL commands safely
-                mysql_commands = [
-                    "CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
-                    f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';",
-                    "GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';",
-                    "FLUSH PRIVILEGES;"
-                ]
-                
-                for cmd in mysql_commands:
-                    try:
-                        if not self.dry_run:
-                            # Show command being executed (without password for security)
-                            if 'IDENTIFIED BY' in cmd:
-                                self.log("Creating database user with secure password...", "STEP")
-                            else:
-                                self.log(f"Executing: {cmd[:50]}...", "STEP")
-                            
-                            subprocess.run(
-                                ['mysql', f'--defaults-file={mysql_config_path}', '-e', cmd],
-                                check=True
-                                # No capture_output - let it display to terminal
-                            )
-                    except subprocess.CalledProcessError as e:
-                        self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
-                        return False
+                    
+                    # Write SQL commands to temp file with password
+                    with os.fdopen(mysql_sql_fd, 'w') as f:
+                        f.write("CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
+                        # Use IDENTIFIED BY in SQL file rather than command line
+                        f.write(f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';\n")
+                        f.write("GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';\n")
+                        f.write("FLUSH PRIVILEGES;\n")
+                    os.chmod(mysql_sql_path, 0o600)
+                    
+                    # Execute SQL file - password is in file, not command line or process args
+                    self.log("Setting up database and user with secure password...", "STEP")
+                    subprocess.run(
+                        ['mysql', f'--defaults-file={mysql_config_path}'],
+                        stdin=open(mysql_sql_path, 'r'),
+                        check=True
+                    )
+            except subprocess.CalledProcessError as e:
+                self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
+                return False
             finally:
-                # Clean up temp file
-                if not self.dry_run and os.path.exists(mysql_config_path):
-                    os.remove(mysql_config_path)
+                # Clean up temp files
+                if not self.dry_run:
+                    if os.path.exists(mysql_config_path):
+                        os.remove(mysql_config_path)
+                    if os.path.exists(mysql_sql_path):
+                        os.remove(mysql_sql_path)
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
