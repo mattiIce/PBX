@@ -7325,9 +7325,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'Database not available'}, 500)
 
-    # Framework Feature Handlers - Compliance
+    # Framework Feature Handlers - Compliance (SOC 2 Type 2 only)
+    # GDPR and PCI DSS handlers commented out - not required for US-only operations
+    
+    # GDPR Handlers - COMMENTED OUT
+    """
     def _handle_get_gdpr_consents(self, extension: str):
-        """Get GDPR consent records"""
+        \"\"\"Get GDPR consent records\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.compliance_framework import GDPRComplianceEngine
@@ -7341,7 +7345,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_record_gdpr_consent(self):
-        """Record GDPR consent"""
+        \"\"\"Record GDPR consent\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 body = self._get_body()
@@ -7358,7 +7362,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_withdraw_gdpr_consent(self):
-        """Withdraw GDPR consent"""
+        \"\"\"Withdraw GDPR consent\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 body = self._get_body()
@@ -7375,7 +7379,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_create_gdpr_request(self):
-        """Create GDPR data request"""
+        \"\"\"Create GDPR data request\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 body = self._get_body()
@@ -7393,7 +7397,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_get_gdpr_requests(self):
-        """Get pending GDPR data requests"""
+        \"\"\"Get pending GDPR data requests\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.compliance_framework import GDPRComplianceEngine
@@ -7405,9 +7409,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': str(e)}, 500)
         else:
             self._send_json({'error': 'Database not available'}, 500)
+    """
 
     def _handle_get_soc2_controls(self):
-        """Get SOC 2 controls"""
+        """Get SOC 2 Type 2 controls"""
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.compliance_framework import SOC2ComplianceEngine
@@ -7421,7 +7426,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_register_soc2_control(self):
-        """Register SOC 2 control"""
+        """Register SOC 2 Type 2 control"""
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 body = self._get_body()
@@ -7437,8 +7442,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'Database not available'}, 500)
 
+    # PCI DSS Handlers - COMMENTED OUT
+    """
     def _handle_get_pci_audit_log(self):
-        """Get PCI DSS audit log"""
+        \"\"\"Get PCI DSS audit log\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.compliance_framework import PCIDSSComplianceEngine
@@ -7452,7 +7459,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': 'Database not available'}, 500)
 
     def _handle_log_pci_event(self):
-        """Log PCI DSS event"""
+        \"\"\"Log PCI DSS event\"\"\"
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 body = self._get_body()
@@ -7467,6 +7474,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': str(e)}, 500)
         else:
             self._send_json({'error': 'Database not available'}, 500)
+    """
 
 
 class PBXAPIServer:

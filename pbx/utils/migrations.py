@@ -839,50 +839,10 @@ def register_all_migrations(manager: MigrationManager):
         );
     """)
 
-    # Migration 1009: Compliance Framework
+    # Migration 1009: Compliance Framework (SOC 2 Type 2 only)
+    # Note: PCI DSS and GDPR tables commented out as not required
     manager.register_migration(1009, "Compliance Framework", """
-        -- PCI DSS compliance
-        CREATE TABLE IF NOT EXISTS pci_dss_audit_log (
-            id SERIAL PRIMARY KEY,
-            event_type VARCHAR(50),
-            user_id VARCHAR(50),
-            ip_address VARCHAR(45),
-            action VARCHAR(255),
-            result VARCHAR(20),
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        -- Data residency
-        CREATE TABLE IF NOT EXISTS data_residency_configs (
-            id SERIAL PRIMARY KEY,
-            data_type VARCHAR(50),
-            region VARCHAR(50),
-            storage_location VARCHAR(255),
-            encryption_required BOOLEAN DEFAULT TRUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        -- GDPR enhanced
-        CREATE TABLE IF NOT EXISTS gdpr_consent_records (
-            id SERIAL PRIMARY KEY,
-            extension VARCHAR(20),
-            consent_type VARCHAR(50),
-            consent_given BOOLEAN,
-            consent_date TIMESTAMP,
-            withdrawn_date TIMESTAMP,
-            ip_address VARCHAR(45)
-        );
-
-        CREATE TABLE IF NOT EXISTS gdpr_data_requests (
-            id SERIAL PRIMARY KEY,
-            extension VARCHAR(20),
-            request_type VARCHAR(50),
-            status VARCHAR(20) DEFAULT 'pending',
-            requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP
-        );
-
-        -- SOC 2 enhanced
+        -- SOC 2 Type 2 enhanced
         CREATE TABLE IF NOT EXISTS soc2_controls (
             id SERIAL PRIMARY KEY,
             control_id VARCHAR(50) NOT NULL,
@@ -892,15 +852,25 @@ def register_all_migrations(manager: MigrationManager):
             last_tested TIMESTAMP,
             test_results TEXT
         );
+
+        -- Data residency (used by SOC 2)
+        CREATE TABLE IF NOT EXISTS data_residency_configs (
+            id SERIAL PRIMARY KEY,
+            data_type VARCHAR(50),
+            region VARCHAR(50),
+            storage_location VARCHAR(255),
+            encryption_required BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS pci_dss_audit_log (
+        CREATE TABLE IF NOT EXISTS soc2_controls (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_type TEXT,
-            user_id TEXT,
-            ip_address TEXT,
-            action TEXT,
-            result TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            control_id TEXT NOT NULL,
+            control_category TEXT,
+            description TEXT,
+            implementation_status TEXT,
+            last_tested TIMESTAMP,
+            test_results TEXT
         );
 
         CREATE TABLE IF NOT EXISTS data_residency_configs (
@@ -910,35 +880,6 @@ def register_all_migrations(manager: MigrationManager):
             storage_location TEXT,
             encryption_required INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS gdpr_consent_records (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT,
-            consent_type TEXT,
-            consent_given INTEGER,
-            consent_date TIMESTAMP,
-            withdrawn_date TIMESTAMP,
-            ip_address TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS gdpr_data_requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT,
-            request_type TEXT,
-            status TEXT DEFAULT 'pending',
-            requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS soc2_controls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            control_id TEXT NOT NULL,
-            control_category TEXT,
-            description TEXT,
-            implementation_status TEXT,
-            last_tested TIMESTAMP,
-            test_results TEXT
         );
     """)
 

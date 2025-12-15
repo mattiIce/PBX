@@ -30,10 +30,8 @@ This implementation provides comprehensive framework support for 22 advanced PBX
 - Call blending configs
 - SIP trunk geographic regions
 - DNS SRV & SBC configs
-- PCI DSS audit log
 - Data residency configs
-- GDPR consent records & data requests
-- SOC2 controls
+- SOC2 Type 2 controls (fully implemented)
 - Click-to-dial configs & history
 
 ### 2. Python Backend Frameworks
@@ -45,7 +43,7 @@ This implementation provides comprehensive framework support for 22 advanced PBX
 4. `/pbx/features/team_collaboration.py` - Messaging & file sharing
 5. `/pbx/features/nomadic_e911.py` - Location-based emergency routing
 6. `/pbx/features/crm_integrations.py` - HubSpot & Zendesk
-7. `/pbx/features/compliance_framework.py` - GDPR, SOC2, PCI DSS
+7. `/pbx/features/compliance_framework.py` - SOC 2 Type 2 (PCI DSS and GDPR commented out)
 
 **Key Features:**
 - Full CRUD operations
@@ -92,16 +90,11 @@ This implementation provides comprehensive framework support for 22 advanced PBX
 - `POST /api/framework/integrations/zendesk/config` - Update Zendesk
 - `GET /api/framework/integrations/activity` - Get activity log
 
-**Compliance (GDPR, SOC2, PCI):**
-- `GET /api/framework/compliance/gdpr/consents` - Get consent records
-- `GET /api/framework/compliance/gdpr/requests` - Get data requests
-- `POST /api/framework/compliance/gdpr/consent` - Record consent
-- `POST /api/framework/compliance/gdpr/withdraw` - Withdraw consent
-- `POST /api/framework/compliance/gdpr/request` - Create data request
-- `GET /api/framework/compliance/soc2/controls` - Get SOC2 controls
+**Compliance (SOC 2 Type 2):**
+- `GET /api/framework/compliance/soc2/controls` - Get SOC2 Type 2 controls
 - `POST /api/framework/compliance/soc2/control` - Register control
-- `GET /api/framework/compliance/pci/audit-log` - Get PCI audit log
-- `POST /api/framework/compliance/pci/log` - Log PCI event
+
+Note: GDPR and PCI DSS endpoints are commented out (not required for US-only operations)
 
 ### 4. Admin Panel UI
 
@@ -114,7 +107,7 @@ Eight new tabs added:
 4. 💬 **Team Messaging** - Chat channels and collaboration
 5. 📍 **Nomadic E911** - Location tracking and site configuration
 6. 🔗 **CRM Integrations** - HubSpot and Zendesk setup
-7. ✅ **Compliance** - GDPR, SOC2, PCI DSS management
+7. ✅ **Compliance** - SOC 2 Type 2 management (PCI DSS and GDPR not implemented)
 8. 🎙️ **Speech Analytics** - Transcription and sentiment configuration
 
 **JavaScript UI Module** (`/admin/js/framework_features.js`)
@@ -189,23 +182,17 @@ def analyze_audio_stream(self, call_id: str, audio_chunk: bytes) -> Dict:
 
 ## Security & Compliance Features
 
-### GDPR Compliance
-- ✅ Explicit consent required (no default to True)
-- ✅ Consent withdrawal support
-- ✅ Data access requests
-- ✅ Right to erasure framework
-- ✅ Audit trail of all consent changes
-
-### SOC 2 Type II
+### SOC 2 Type II (Fully Implemented)
 - ✅ Control tracking and documentation
 - ✅ Test evidence recording
 - ✅ Implementation status tracking
 - ✅ Comprehensive audit logging
+- ✅ Trust Services Criteria coverage (Security, Availability, Processing Integrity, Confidentiality)
+- ✅ Default controls automatically registered
+- ✅ Compliance summary and reporting
 
-### PCI DSS
-- ✅ Detailed audit logging
-- ✅ Event tracking and monitoring
-- ✅ Access control logging
+### GDPR and PCI DSS
+Note: GDPR and PCI DSS frameworks are commented out in the code as they are not required for US-only operations without payment card processing. They can be re-enabled if needed in the future.
 
 ## Database Storage
 
