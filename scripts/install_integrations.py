@@ -15,6 +15,9 @@ import sys
 import subprocess
 import argparse
 import platform
+import tempfile
+import secrets
+import string
 from pathlib import Path
 
 
@@ -424,9 +427,6 @@ class IntegrationInstaller:
             
             # Setup MySQL database with random password
             # Generate random password for security
-            import secrets
-            import string
-            import tempfile
             alphabet = string.ascii_letters + string.digits
             db_password = ''.join(secrets.choice(alphabet) for _ in range(16))
             
@@ -445,7 +445,10 @@ class IntegrationInstaller:
                 # In dry-run mode, skip actual database setup
                 pass
             else:
-                # Use NamedTemporaryFile with delete=True for automatic cleanup
+                # Use NamedTemporaryFile with delete=False (required so files persist for mysql to read)
+                # We manually clean up in the finally block
+                mysql_config_path = None
+                mysql_sql_path = None
                 try:
                     # Create config file
                     with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.cnf', delete=False) as config_file:
@@ -486,7 +489,7 @@ class IntegrationInstaller:
                         try:
                             if temp_file and os.path.exists(temp_file):
                                 os.remove(temp_file)
-                        except (OSError, NameError):
+                        except OSError:
                             pass
             
             self.log("EspoCRM installed successfully", "SUCCESS")
