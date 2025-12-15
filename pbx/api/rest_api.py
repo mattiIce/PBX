@@ -115,8 +115,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, data, status=200):
         """Send JSON response"""
-        self._set_headers(status)
-        self.wfile.write(json.dumps(data, cls=DateTimeEncoder).encode())
+        try:
+            self._set_headers(status)
+            self.wfile.write(json.dumps(data, cls=DateTimeEncoder).encode())
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
+            # Client disconnected - log but don't try to send error response
+            self.logger.warning(f"Client disconnected before response could be sent: {e}")
+        except Exception as e:
+            # Other errors during response sending
+            self.logger.error(f"Error sending response: {e}")
 
     def _get_body(self):
         """Get request body"""
@@ -361,6 +368,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_log_pci_event()
             else:
                 self._send_json({'error': 'Not found'}, 404)
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
+            # Client disconnected - log but don't try to send error response
+            self.logger.warning(f"Client disconnected during POST request: {e}")
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
@@ -411,6 +421,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_upload_voicemail_greeting(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
+            # Client disconnected - log but don't try to send error response
+            self.logger.warning(f"Client disconnected during PUT request: {e}")
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
@@ -517,6 +530,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Invalid pattern ID'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
+            # Client disconnected - log but don't try to send error response
+            self.logger.warning(f"Client disconnected during DELETE request: {e}")
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
@@ -792,6 +808,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_static_file(path)
             else:
                 self._send_json({'error': 'Not found'}, 404)
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
+            # Client disconnected - log but don't try to send error response
+            self.logger.warning(f"Client disconnected during GET request: {e}")
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 

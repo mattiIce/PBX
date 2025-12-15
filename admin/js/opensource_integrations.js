@@ -278,13 +278,6 @@ async function quickSetupIntegration(integration) {
                 loadEspoCRMConfig();
             }
         } else {
-            alert('Failed to enable ' + integration);
-            // Revert checkbox
-            const checkbox = document.getElementById(`quick-${integration}-enabled`);
-            if (checkbox) {
-                checkbox.checked = false;
-            }
-        } else {
             showQuickSetupNotification(`Failed to enable ${INTEGRATION_NAMES[integration]}`, 'error');
             // Revert checkbox
             const checkbox = document.getElementById(`quick-${integration}-enabled`);
