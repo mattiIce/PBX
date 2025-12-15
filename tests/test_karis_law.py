@@ -378,6 +378,85 @@ def test_statistics():
     print("✓ Statistics reporting works correctly")
 
 
+def test_multi_site_e911_routing():
+    """Test multi-site E911 routing with site-specific trunks"""
+    print("Testing multi-site E911 routing...")
+    
+    pbx = create_mock_pbx()
+    
+    # Mock database with multi-site configuration
+    pbx.database = MagicMock()
+    pbx.database.enabled = True
+    pbx.database.db_type = 'sqlite'
+    
+    # Mock nomadic E911 location with IP address
+    mock_location_row = (
+        1, '1001', '192.168.10.50', 'Factory Building A', '123 Factory Lane', 
+        'Detroit', 'MI', '48201', 'USA', 'Building A', '1', 'Assembly Line 3',
+        None, None, '2025-12-15 10:00:00', True
+    )
+    
+    # Mock site configuration
+    mock_site_row = (
+        1, 'Factory Building A', '192.168.10.1', '192.168.10.255', 
+        'site_a_emergency_trunk', '911', '+13135551234',
+        '123 Factory Lane', 'Detroit', 'MI', '48201', 'USA', 'Building A', ''
+    )
+    
+    # Track database call count to return appropriate results
+    call_count = [0]
+    
+    def mock_execute(query, params=None):
+        call_count[0] += 1
+        # Return location for first query, site for second and third
+        if 'nomadic_e911_locations' in query:
+            return [mock_location_row]
+        elif 'multi_site_e911_configs' in query:
+            return [mock_site_row]
+        return []
+    
+    pbx.database.execute = mock_execute
+    
+    # Mock site-specific trunk
+    site_trunk = MagicMock(trunk_id='site_a_emergency_trunk', name='Site A Emergency')
+    site_trunk.can_make_call = MagicMock(return_value=True)
+    
+    def get_trunk(trunk_id):
+        if trunk_id == 'site_a_emergency_trunk':
+            return site_trunk
+        return MagicMock(trunk_id=trunk_id, name='Default Trunk', can_make_call=lambda: True)
+    
+    pbx.trunk_system.get_trunk = get_trunk
+    
+    config = {
+        'features': {
+            'karis_law': {
+                'enabled': True,
+                'auto_notify': True,
+                'emergency_trunk_id': 'global_emergency_trunk'
+            }
+        }
+    }
+    karis_law = KarisLawCompliance(pbx, config)
+    
+    # Make emergency call
+    success, routing_info = karis_law.handle_emergency_call(
+        caller_extension='1001',
+        dialed_number='911',
+        call_id='test-multi-site',
+        from_addr=('192.168.10.50', 5060)
+    )
+    
+    assert success, "Emergency call should succeed"
+    assert routing_info['success'], "Routing should succeed"
+    assert routing_info['trunk_id'] == 'site_a_emergency_trunk', "Should use site-specific emergency trunk"
+    assert routing_info.get('site_specific'), "Should be marked as site-specific routing"
+    assert routing_info.get('psap_number') == '911', "Should include PSAP number"
+    assert routing_info.get('elin') == '+13135551234', "Should include ELIN"
+    
+    print("✓ Multi-site E911 routing works correctly")
+
+
 def run_all_tests():
     """Run all Kari's Law tests"""
     print("=" * 70)
@@ -397,6 +476,7 @@ def run_all_tests():
         test_disabled_compliance,
         test_no_trunk_available,
         test_statistics,
+        test_multi_site_e911_routing,
     ]
     
     passed = 0
