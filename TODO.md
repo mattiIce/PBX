@@ -27,8 +27,10 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 ### Overall Status
 - **Total Features Tracked**: 64 features (removed 7 non-applicable: HIPAA, TCPA, Video Conferencing, Screen Sharing, 4K Video Support, Team Messaging, File Sharing)
 - **Completed** ✅: 47 features (73%)
-- **Framework** ⚠️: 3 features (5%) - subset of completed, fully implemented
+- **Framework** ⚠️: 3 features (5%) - subset of completed features, now fully implemented
 - **Planned**: 17 features (27%)
+
+**Note**: Total = Completed + Planned. Framework features are a subset of Completed, not a separate category.
 
 ### Recently Completed (December 2025)
 1. **Multi-Site E911** (Dec 15) - Per-location emergency routing with site-specific trunks, PSAP, and ELIN
