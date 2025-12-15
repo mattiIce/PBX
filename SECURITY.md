@@ -179,11 +179,11 @@ If you discover a security vulnerability, please:
 
 For organizations with specific compliance requirements:
 - **FIPS 140-2**: Enable FIPS mode, use certified cryptography library, verify all algorithms
-- **PCI DSS**: Enable FIPS mode, implement call recording encryption with AES-256, access controls
+- **SOC 2 Type 2**: Enable FIPS mode, implement access controls, logging, monitoring (fully implemented)
 - **HIPAA**: Enable FIPS mode and SRTP, use encryption for PHI, implement audit logs
-- **GDPR**: Implement data retention policies, right to deletion, encryption at rest
-- **SOC 2**: Enable FIPS mode, implement access controls, logging, monitoring
 - **FedRAMP**: FIPS 140-2 compliance required, use TLS 1.2+, strong authentication
+
+Note: PCI DSS and GDPR frameworks are not implemented as this system does not process payment cards and is US-based only.
 
 ### Conclusion
 

@@ -45,8 +45,8 @@ function loadFrameworkOverview() {
             </div>
             <div class="stat-card">
                 <div class="stat-icon">✅</div>
-                <h3>Compliance</h3>
-                <p>GDPR, SOC2, PCI DSS frameworks</p>
+                <h3>SOC 2 Type 2 Compliance</h3>
+                <p>Security and compliance controls</p>
                 <button onclick="switchTab('compliance')" class="btn-primary">Configure</button>
             </div>
             <div class="stat-card">
@@ -64,7 +64,7 @@ function loadFrameworkOverview() {
                 <li><strong>Speech Analytics:</strong> Google Speech-to-Text, Azure Speech, OpenAI Whisper</li>
                 <li><strong>Video Conferencing:</strong> WebRTC infrastructure, video codecs (H.264/H.265)</li>
                 <li><strong>CRM Integration:</strong> HubSpot API, Zendesk API</li>
-                <li><strong>Compliance:</strong> Audit logging, data retention policies, consent management</li>
+                <li><strong>Compliance:</strong> SOC 2 Type 2 audit logging, security controls monitoring</li>
             </ul>
         </div>
     `;
