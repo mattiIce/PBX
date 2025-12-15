@@ -40,6 +40,11 @@ class GDPRComplianceEngine:
             bool: True if successful
         """
         try:
+            # GDPR requires explicit consent - no default to True
+            if 'consent_given' not in consent_data:
+                self.logger.error("consent_given is required for GDPR compliance")
+                return False
+                
             self.db.execute(
                 """INSERT INTO gdpr_consent_records 
                    (extension, consent_type, consent_given, consent_date, ip_address)
@@ -51,7 +56,7 @@ class GDPRComplianceEngine:
                 (
                     consent_data['extension'],
                     consent_data['consent_type'],
-                    consent_data.get('consent_given', True),
+                    consent_data['consent_given'],  # Explicit consent required
                     consent_data.get('consent_date', datetime.now()),
                     consent_data.get('ip_address')
                 )

@@ -7302,9 +7302,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Get integration activity log"""
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
-                from pbx.features.crm_integrations import ZendeskIntegration
-                integration = ZendeskIntegration(self.pbx_core.database, self.pbx_core.config)
-                activities = integration.get_activity_log()
+                # Query integration activity log directly from database
+                result = self.pbx_core.database.execute(
+                    """SELECT * FROM integration_activity_log 
+                       ORDER BY created_at DESC LIMIT 100"""
+                )
+                
+                activities = []
+                for row in (result or []):
+                    activities.append({
+                        'integration_type': row[1],
+                        'action': row[2],
+                        'status': row[3],
+                        'details': row[4],
+                        'created_at': row[5]
+                    })
+                
                 self._send_json({'activities': activities})
             except Exception as e:
                 self.logger.error(f"Error getting integration activity: {e}")

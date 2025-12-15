@@ -228,7 +228,8 @@ class NomadicE911Engine:
             start_addr = ipaddress.ip_address(start)
             end_addr = ipaddress.ip_address(end)
             return start_addr <= ip_addr <= end_addr
-        except Exception:
+        except (ValueError, TypeError) as e:
+            self.logger.warning(f"Invalid IP address in range check: {e}")
             return False
 
     def create_site_config(self, site_data: Dict) -> bool:
