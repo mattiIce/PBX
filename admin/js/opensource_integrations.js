@@ -771,11 +771,27 @@ function displayJitsiMeetingResult(url) {
 /**
  * Copy Jitsi meeting URL to clipboard
  */
-function copyJitsiMeetingUrl() {
+async function copyJitsiMeetingUrl() {
     const urlInput = document.getElementById('jitsi-meeting-url');
-    urlInput.select();
-    document.execCommand('copy');
-    showQuickSetupNotification('Meeting URL copied to clipboard!', 'success', 3000);
+    const url = urlInput.value;
+    
+    try {
+        // Use modern Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url);
+            showQuickSetupNotification('Meeting URL copied to clipboard!', 'success', 3000);
+        } else {
+            // Fallback for older browsers
+            urlInput.select();
+            document.execCommand('copy');
+            showQuickSetupNotification('Meeting URL copied to clipboard!', 'success', 3000);
+        }
+    } catch (error) {
+        // Fallback for errors
+        urlInput.select();
+        document.execCommand('copy');
+        showQuickSetupNotification('Meeting URL copied to clipboard!', 'success', 3000);
+    }
 }
 
 /**
@@ -968,7 +984,12 @@ async function searchEspoCRMContact() {
     }
     
     try {
-        const response = await fetch(`/api/integrations/espocrm/contacts/search?phone=${encodeURIComponent(searchTerm)}`, {
+        // Build query parameter based on search type
+        const queryParam = searchType === 'phone' ? 'phone' : 
+                          searchType === 'email' ? 'email' : 
+                          'name';
+        
+        const response = await fetch(`/api/integrations/espocrm/contacts/search?${queryParam}=${encodeURIComponent(searchTerm)}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });
