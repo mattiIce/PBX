@@ -135,8 +135,8 @@ class DTMFDetector:
                 len(other_high_mags) if other_high_mags else 0
 
             # Require the detected frequencies to be significantly stronger than noise
-            # Use 2.0 ratio for better noise rejection
-            if low_mag > avg_other_low * 2.0 and high_mag > avg_other_high * 2.0:
+            # Use 3.0 ratio for better noise rejection (prevents white noise false positives)
+            if low_mag > avg_other_low * 3.0 and high_mag > avg_other_high * 3.0:
                 # Find matching digit
                 for digit, (low, high) in DTMF_FREQUENCIES.items():
                     if low == low_freq and high == high_freq:

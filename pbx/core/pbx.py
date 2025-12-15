@@ -2891,6 +2891,18 @@ class PBXCore:
             self.logger.info(f"[VM IVR] Waiting 0.5s for RTP to stabilize...")
             time.sleep(0.5)
 
+            # Check if call was terminated during RTP stabilization
+            if call.state == CallState.ENDED:
+                self.logger.info(f"")
+                self.logger.info(
+                    f"[VM IVR] ✗ call ended before IVR could start")
+                self.logger.info(
+                    f"[VM IVR] Extension: {call.voicemail_extension}")
+                self.logger.info(f"[VM IVR] State: {call.state}")
+                self.logger.info(f"[VM IVR] Exiting IVR session")
+                self.logger.info(f"")
+                return
+
             self.logger.info(f"[VM IVR] Checking caller RTP information...")
             if not call.caller_rtp:
                 self.logger.warning(
@@ -3024,7 +3036,7 @@ class PBXCore:
                 if call.state == CallState.ENDED:
                     self.logger.info(f"")
                     self.logger.info(
-                        f"[VM IVR] ✗ Call ended before IVR could fully start")
+                        f"[VM IVR] ✗ call ended before IVR could start")
                     self.logger.info(
                         f"[VM IVR] Extension: {
                             call.voicemail_extension}")
