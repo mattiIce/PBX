@@ -5933,8 +5933,8 @@ async function loadPagingZones() {
                 <td>${escapeHtml(zone.description || '-')}</td>
                 <td>${escapeHtml(zone.device_id || '-')}</td>
                 <td>
-                    <button class="btn-icon" onclick="editPagingZone('${escapeHtml(zone.extension)}')" title="Edit">✏️</button>
-                    <button class="btn-icon" onclick="deletePagingZone('${escapeHtml(zone.extension)}')" title="Delete">🗑️</button>
+                    <button class="btn-icon" disabled title="Edit (Coming Soon)">✏️</button>
+                    <button class="btn-icon btn-delete-zone" data-extension="${escapeHtml(zone.extension)}" title="Delete">🗑️</button>
                 </td>
             </tr>
         `).join('');
@@ -5945,6 +5945,14 @@ async function loadPagingZones() {
                 (data.all_call_extension ? `<option value="${data.all_call_extension}">All Zones (${data.all_call_extension})</option>` : '') +
                 data.zones.map(zone => `<option value="${zone.extension}">${zone.name} (${zone.extension})</option>`).join('');
         }
+        
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.btn-delete-zone').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const extension = this.getAttribute('data-extension');
+                deletePagingZone(extension);
+            });
+        });
     } catch (error) {
         console.error('Error loading paging zones:', error);
         tableBody.innerHTML = '<tr><td colspan="5" class="error">Error loading paging zones</td></tr>';
@@ -5972,11 +5980,19 @@ async function loadPagingDevices() {
                 <td>${escapeHtml(device.sip_address || '-')}</td>
                 <td><span class="status-badge">${escapeHtml(device.status || 'Unknown')}</span></td>
                 <td>
-                    <button class="btn-icon" onclick="editPagingDevice('${escapeHtml(device.device_id)}')" title="Edit">✏️</button>
-                    <button class="btn-icon" onclick="deletePagingDevice('${escapeHtml(device.device_id)}')" title="Delete">🗑️</button>
+                    <button class="btn-icon" disabled title="Edit (Coming Soon)">✏️</button>
+                    <button class="btn-icon btn-delete-device" data-device-id="${escapeHtml(device.device_id)}" title="Delete">🗑️</button>
                 </td>
             </tr>
         `).join('');
+        
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.btn-delete-device').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const deviceId = this.getAttribute('data-device-id');
+                deletePagingDevice(deviceId);
+            });
+        });
     } catch (error) {
         console.error('Error loading paging devices:', error);
         tableBody.innerHTML = '<tr><td colspan="6" class="error">Error loading paging devices</td></tr>';
@@ -6018,10 +6034,6 @@ function showAddZoneModal() {
         console.error('Error adding zone:', error);
         showNotification('Error adding zone', 'error');
     });
-}
-
-function editPagingZone(extension) {
-    showNotification('Edit zone functionality coming soon', 'info');
 }
 
 function deletePagingZone(extension) {
@@ -6078,10 +6090,6 @@ function showAddDeviceModal() {
         console.error('Error adding device:', error);
         showNotification('Error adding device', 'error');
     });
-}
-
-function editPagingDevice(deviceId) {
-    showNotification('Edit device functionality coming soon', 'info');
 }
 
 function deletePagingDevice(deviceId) {
