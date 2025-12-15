@@ -21,6 +21,13 @@ from typing import Dict, Optional, Tuple
 
 from pbx.utils.logger import get_logger
 
+# Import for multi-site E911 support (avoid repeated imports in methods)
+try:
+    from pbx.features.nomadic_e911 import NomadicE911Engine
+    NOMADIC_E911_AVAILABLE = True
+except ImportError:
+    NOMADIC_E911_AVAILABLE = False
+
 
 class KarisLawCompliance:
     """
@@ -183,13 +190,17 @@ class KarisLawCompliance:
         # Get caller information
         caller_info = self._get_caller_info(caller_extension)
         
+        # Create nomadic E911 engine once for this call (cache for performance)
+        nomadic_e911_engine = self._get_nomadic_e911_engine()
+        
         # Route to emergency trunk
         routing_info = self._route_emergency_call(
             caller_extension=caller_extension,
             normalized_number=normalized_number,
             call_id=call_id,
             location_info=location_info,
-            caller_info=caller_info
+            caller_info=caller_info,
+            nomadic_e911_engine=nomadic_e911_engine
         )
         
         # Automatic notification (Kari's Law requirement)
@@ -222,6 +233,25 @@ class KarisLawCompliance:
         
         return True, routing_info
     
+    def _get_nomadic_e911_engine(self) -> Optional['NomadicE911Engine']:
+        """
+        Get or create nomadic E911 engine instance
+        
+        Returns:
+            NomadicE911Engine instance or None if not available
+        """
+        if not NOMADIC_E911_AVAILABLE:
+            return None
+        
+        if not hasattr(self.pbx_core, 'database') or not self.pbx_core.database.enabled:
+            return None
+        
+        try:
+            return NomadicE911Engine(self.pbx_core.database, self.config)
+        except Exception as e:
+            self.logger.warning(f"Could not create nomadic E911 engine: {e}")
+            return None
+    
     def _get_location_info(self, extension: str) -> Optional[Dict]:
         """
         Get location information for extension (Ray Baum's Act)
@@ -232,7 +262,35 @@ class KarisLawCompliance:
         Returns:
             Location information dictionary or None
         """
-        # Check if E911 location service is available
+        # First try nomadic E911 (multi-site support)
+        nomadic_e911 = self._get_nomadic_e911_engine()
+        if nomadic_e911:
+            try:
+                location = nomadic_e911.get_location(extension)
+                if location:
+                    # Format as dispatchable location string
+                    parts = []
+                    if location.get('street_address'):
+                        parts.append(location['street_address'])
+                    if location.get('building'):
+                        parts.append(f"Building: {location['building']}")
+                    if location.get('floor'):
+                        parts.append(f"Floor {location['floor']}")
+                    if location.get('room'):
+                        parts.append(f"Room {location['room']}")
+                    if location.get('city'):
+                        parts.append(location['city'])
+                    if location.get('state'):
+                        parts.append(location['state'])
+                    if location.get('postal_code'):
+                        parts.append(location['postal_code'])
+                    
+                    location['dispatchable_location'] = ', '.join(parts) if parts else 'Location on file'
+                    return location
+            except Exception as e:
+                self.logger.warning(f"Could not get nomadic E911 location: {e}")
+        
+        # Check if E911 location service is available (single-site)
         if hasattr(self.pbx_core, 'e911_location') and self.pbx_core.e911_location:
             location = self.pbx_core.e911_location.get_location(extension)
             if location:
@@ -275,9 +333,14 @@ class KarisLawCompliance:
     
     def _route_emergency_call(self, caller_extension: str, normalized_number: str,
                              call_id: str, location_info: Optional[Dict],
-                             caller_info: Dict) -> Dict:
+                             caller_info: Dict, nomadic_e911_engine: Optional['NomadicE911Engine'] = None) -> Dict:
         """
         Route emergency call to appropriate trunk
+        
+        Multi-Site E911 Integration:
+        1. Try site-specific emergency trunk (from nomadic E911 config)
+        2. Try global emergency trunk (from config)
+        3. Fallback to any available trunk
         
         Args:
             caller_extension: Caller extension
@@ -285,6 +348,7 @@ class KarisLawCompliance:
             call_id: Call ID
             location_info: Location information
             caller_info: Caller information
+            nomadic_e911_engine: Optional cached NomadicE911Engine instance
             
         Returns:
             Routing information
@@ -304,31 +368,120 @@ class KarisLawCompliance:
         
         trunk_system = self.pbx_core.trunk_system
         
-        # Try to route via emergency trunk if configured
+        # Multi-Site E911: Try to use site-specific emergency trunk
+        site_trunk_id = self._get_site_emergency_trunk(caller_extension, location_info, nomadic_e911_engine)
+        if site_trunk_id:
+            trunk = trunk_system.get_trunk(site_trunk_id)
+            if trunk and trunk.can_make_call():
+                self.logger.critical(f"Routing emergency call via SITE-SPECIFIC trunk: {site_trunk_id}")
+                routing_info['success'] = True
+                routing_info['trunk_id'] = site_trunk_id
+                routing_info['trunk_name'] = trunk.name
+                routing_info['site_specific'] = True
+                
+                # Include site-specific PSAP and ELIN if available
+                site_info = self._get_site_info(caller_extension, nomadic_e911_engine)
+                if site_info:
+                    routing_info['psap_number'] = site_info.get('psap_number')
+                    routing_info['elin'] = site_info.get('elin')
+                
+                return routing_info
+            else:
+                self.logger.warning(f"Site-specific emergency trunk {site_trunk_id} not available")
+        
+        # Try to route via global emergency trunk if configured
         if self.emergency_trunk_id:
             trunk = trunk_system.get_trunk(self.emergency_trunk_id)
             if trunk and trunk.can_make_call():
-                self.logger.critical(f"Routing emergency call via trunk: {self.emergency_trunk_id}")
+                self.logger.critical(f"Routing emergency call via GLOBAL trunk: {self.emergency_trunk_id}")
                 routing_info['success'] = True
                 routing_info['trunk_id'] = self.emergency_trunk_id
                 routing_info['trunk_name'] = trunk.name
                 return routing_info
             else:
-                self.logger.warning(f"Emergency trunk {self.emergency_trunk_id} not available")
+                self.logger.warning(f"Global emergency trunk {self.emergency_trunk_id} not available")
         
         # Fallback: try to route via any available trunk
         routed_trunk, transformed_number = trunk_system.route_outbound(normalized_number)
         
         if routed_trunk:
-            self.logger.critical(f"Routing emergency call via trunk: {routed_trunk.trunk_id}")
+            self.logger.critical(f"Routing emergency call via FALLBACK trunk: {routed_trunk.trunk_id}")
             routing_info['success'] = True
             routing_info['trunk_id'] = routed_trunk.trunk_id
             routing_info['trunk_name'] = routed_trunk.name
+            routing_info['fallback'] = True
         else:
             self.logger.error("❌ NO TRUNK AVAILABLE FOR EMERGENCY CALL")
             routing_info['error'] = 'No trunk available'
         
         return routing_info
+    
+    def _get_site_emergency_trunk(self, extension: str, location_info: Optional[Dict] = None,
+                                  nomadic_e911_engine: Optional['NomadicE911Engine'] = None) -> Optional[str]:
+        """
+        Get site-specific emergency trunk for extension (Multi-Site E911)
+        
+        Args:
+            extension: Extension number
+            location_info: Optional location info (if already retrieved)
+            nomadic_e911_engine: Optional cached NomadicE911Engine instance
+            
+        Returns:
+            Site-specific emergency trunk ID or None
+        """
+        # Use cached engine or create new one
+        nomadic_e911 = nomadic_e911_engine or self._get_nomadic_e911_engine()
+        if not nomadic_e911:
+            return None
+        
+        try:
+            # Get location if not provided
+            if not location_info:
+                location_info = nomadic_e911.get_location(extension)
+            
+            if not location_info or not location_info.get('ip_address'):
+                return None
+            
+            # Find site by IP address using public API
+            site = nomadic_e911.find_site_by_ip(location_info['ip_address'])
+            if site and site.get('emergency_trunk'):
+                self.logger.info(f"Found site-specific emergency trunk for {extension}: {site['emergency_trunk']}")
+                return site['emergency_trunk']
+            
+            return None
+            
+        except Exception as e:
+            self.logger.warning(f"Could not get site emergency trunk: {e}")
+            return None
+    
+    def _get_site_info(self, extension: str, nomadic_e911_engine: Optional['NomadicE911Engine'] = None) -> Optional[Dict]:
+        """
+        Get site information for extension (PSAP, ELIN, etc.)
+        
+        Args:
+            extension: Extension number
+            nomadic_e911_engine: Optional cached NomadicE911Engine instance
+            
+        Returns:
+            Site information or None
+        """
+        # Use cached engine or create new one
+        nomadic_e911 = nomadic_e911_engine or self._get_nomadic_e911_engine()
+        if not nomadic_e911:
+            return None
+        
+        try:
+            location = nomadic_e911.get_location(extension)
+            if not location or not location.get('ip_address'):
+                return None
+            
+            # Use public API method instead of private _find_site_by_ip
+            site = nomadic_e911.find_site_by_ip(location['ip_address'])
+            return site
+            
+        except Exception as e:
+            self.logger.warning(f"Could not get site info: {e}")
+            return None
     
     def _trigger_emergency_notification(self, caller_extension: str, caller_info: Dict,
                                        location_info: Optional[Dict], call_id: str):

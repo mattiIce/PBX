@@ -731,8 +731,8 @@ The PBX system prioritizes **free, open-source, offline** AI technologies to mai
 | Location Database | ✅ Complete | Full location tracking in pbx/features/e911_location.py |
 | Kari's Law Compliance | ✅ Complete | Direct 911 dialing with legacy prefix support (pbx/features/karis_law.py) |
 | Ray Baum's Act Compliance | ✅ Complete | Dispatchable location information (pbx/features/e911_location.py) |
-| Multi-Site E911 | ✅ Complete | Building/floor/room location tracking for multiple sites |
-| Nomadic E911 Support | ⏳ Planned | Dynamic location updates for remote/mobile workers |
+| Multi-Site E911 | ✅ Complete | Site-specific emergency routing with IP-based location detection |
+| Nomadic E911 Support | ✅ Complete | Dynamic location updates for remote/mobile workers |
 | Automatic Location Updates | ✅ Complete | API for real-time location management |
 | Emergency Notification | ✅ Complete | Auto-alerts to designated contacts (pbx/features/emergency_notification.py) |
 | PSAP Callback Support | ✅ Complete | Routing callback calls from 911 dispatchers |
@@ -860,14 +860,17 @@ e911:
 - **Configuration**: Extension range patterns mapped to street addresses
 - **Business Value**: Accurate emergency routing for distributed organizations
 
-**Nomadic E911** (Planned)
-- **Current Status**: ⏳ Planned
+**Nomadic E911** (Complete - December 15, 2025)
+- **Current Status**: ✅ Complete
 - **Capability**: Track and route based on current user location, not extension location
 - **Use Case**: Hot-desking, remote workers, mobile employees
 - **Method**: 
   - User login updates current location
-  - IP-based location detection
+  - IP-based location detection with multi-site support
   - Manual location selection via phone/web interface
+  - Automatic site detection by IP range
+  - Location history tracking
+- **Integration**: Works with Multi-Site E911 for site-specific emergency trunk routing
   - GPS integration for mobile softphones
 - **Business Value**: Accurate emergency services for flexible work environments
 
@@ -924,8 +927,8 @@ e911:
 - ⏳ Compliance reporting dashboard
 
 **Phase 3: Advanced Capabilities**
-- ⏳ Nomadic E911 with dynamic location tracking
-- ⏳ IP-based automatic location detection
+- ✅ Nomadic E911 with dynamic location tracking (Completed Dec 15, 2025)
+- ✅ IP-based automatic location detection (Completed Dec 15, 2025)
 - ⏳ Mobile softphone GPS integration
 - ⏳ Integration with physical security systems (badge readers, cameras)
 - ⏳ Automated location verification and updates
@@ -1844,9 +1847,10 @@ docker run -d -p 5060:5060/udp -p 8080:8080 pbx-system
 **Business Case**: Employee safety and regulatory compliance
 
 **Capabilities**:
-- Nomadic E911 support
-- Automatic location updates
-- Kari's Law compliance
+- Nomadic E911 support (✅ Complete - Dec 15, 2025)
+- Multi-Site E911 with site-specific trunk routing (✅ Complete - Dec 15, 2025)
+- Automatic location updates (✅ Complete - Dec 15, 2025)
+- Kari's Law compliance (✅ Complete)
 - Ray Baum's Act compliance
 - Multi-site emergency routing
 - Emergency notification system
