@@ -75,11 +75,11 @@ class MigrationManager:
             int: Current version number
         """
         try:
-            result = self.db.execute(
-                "SELECT MAX(version) FROM schema_migrations"
+            result = self.db.fetch_one(
+                "SELECT MAX(version) as max_version FROM schema_migrations"
             )
-            if result and result[0] and result[0][0] is not None:
-                return result[0][0]
+            if result and result.get('max_version') is not None:
+                return result['max_version']
             return 0
         except Exception as e:
             self.logger.warning(f"Could not get current version: {e}")
