@@ -561,17 +561,96 @@ function loadConversationalAITab() {
 
         <div class="section-card">
             <h3>Configuration</h3>
-            <p>Configure AI service integration here. Framework ready for connection to AI providers.</p>
-            <div class="info-box">
-                <p><strong>Ready for Integration:</strong></p>
-                <ul>
-                    <li>✅ Conversation context tracking</li>
-                    <li>✅ Intent and entity detection framework</li>
-                    <li>✅ Response generation pipeline</li>
-                    <li>⚠️ Requires AI service API credentials</li>
-                </ul>
+            <form id="conversational-ai-config-form" style="max-width: 600px;">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="ai-enabled" name="enabled">
+                        Enable Conversational AI
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>AI Provider:</label>
+                    <select id="ai-provider" name="provider" class="form-control">
+                        <option value="openai">OpenAI GPT</option>
+                        <option value="dialogflow">Google Dialogflow</option>
+                        <option value="lex">Amazon Lex</option>
+                        <option value="azure">Microsoft Azure Bot Service</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Model:</label>
+                    <input type="text" id="ai-model" name="model" class="form-control" placeholder="gpt-4" value="gpt-4">
+                    <small>For OpenAI: gpt-4, gpt-3.5-turbo, etc.</small>
+                </div>
+                <div class="form-group">
+                    <label>Max Tokens:</label>
+                    <input type="number" id="ai-max-tokens" name="max_tokens" class="form-control" value="150" min="50" max="4000">
+                    <small>Maximum length of AI responses</small>
+                </div>
+                <div class="form-group">
+                    <label>Temperature (0.0 - 1.0):</label>
+                    <input type="number" id="ai-temperature" name="temperature" class="form-control" value="0.7" min="0" max="1" step="0.1">
+                    <small>Higher = more creative, Lower = more focused</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Configuration</button>
+                    <button type="button" class="btn-secondary" onclick="loadConversationalAIStats()">View Statistics</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="section-card">
+            <h3>Statistics</h3>
+            <div id="ai-statistics">
+                <p>Click "View Statistics" to load current stats</p>
             </div>
         </div>
+
+        <div class="section-card">
+            <h3>Integration Requirements</h3>
+            <div class="info-box">
+                <p><strong>To activate this feature, you need:</strong></p>
+                <ul>
+                    <li>✅ Conversation context tracking - <strong>Ready</strong></li>
+                    <li>✅ Intent and entity detection framework - <strong>Ready</strong></li>
+                    <li>✅ Response generation pipeline - <strong>Ready</strong></li>
+                    <li>⚠️ AI service API credentials - <strong>Required</strong></li>
+                    <li>⚠️ Update config.yml with provider settings</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Example config.yml:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+features:
+  conversational_ai:
+    enabled: true
+    provider: 'openai'
+    model: 'gpt-4'
+    api_key: 'your-api-key-here'  # Store securely
+    max_tokens: 150
+    temperature: 0.7</pre>
+            </div>
+        </div>
+    `;
+}
+
+function loadConversationalAIStats() {
+    // This would call the API endpoint when implemented
+    const statsDiv = document.getElementById('ai-statistics');
+    statsDiv.innerHTML = `
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Total Conversations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Messages Processed</div>
+            </div>
+        </div>
+        <p style="margin-top: 15px; color: #666;"><em>Note: Statistics will be available when the feature is enabled and integrated with an AI provider.</em></p>
     `;
 }
 
@@ -760,25 +839,104 @@ function loadMobileAppsTab() {
         <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
-                <strong>Database & APIs Ready</strong>
+                <strong>Backend Infrastructure Ready</strong>
             </div>
-            <p>iOS and Android mobile client support framework.</p>
-            <p><strong>Features:</strong> Device registration, push notifications (Firebase/APNs), SIP configuration</p>
+            <p>Full-featured mobile client support for iOS and Android.</p>
+            <p><strong>Platforms:</strong> iOS (Swift/SwiftUI), Android (Kotlin)</p>
+            <p><strong>Features:</strong> SIP calling, push notifications, device management, background call handling</p>
         </div>
 
         <div class="section-card">
-            <h3>Mobile Device Management</h3>
-            <p>Configure mobile device settings here. Framework ready for mobile app integration.</p>
+            <h3>Configuration</h3>
+            <form id="mobile-apps-config-form" style="max-width: 600px;">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="mobile-apps-enabled" name="enabled">
+                        Enable Mobile App Support
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="ios-enabled" name="ios_enabled" checked>
+                        iOS Support
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="android-enabled" name="android_enabled" checked>
+                        Android Support
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="push-enabled" name="push_enabled" checked>
+                        Push Notifications
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Firebase Server Key (for push notifications):</label>
+                    <input type="password" id="firebase-key" name="firebase_key" class="form-control" placeholder="Your FCM server key">
+                    <small>Required for iOS and Android push notifications</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Configuration</button>
+                    <button type="button" class="btn-secondary" onclick="loadMobileAppsStats()">View Statistics</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="section-card">
+            <h3>Registered Devices</h3>
+            <div id="mobile-devices-list">
+                <p>No mobile devices registered yet.</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Development Requirements</h3>
             <div class="info-box">
-                <p><strong>Ready for Integration:</strong></p>
+                <p><strong>To deploy mobile apps:</strong></p>
                 <ul>
-                    <li>✅ Device registration and management</li>
-                    <li>✅ Push notification framework</li>
-                    <li>✅ Background call handling</li>
-                    <li>⚠️ Requires iOS/Android mobile applications</li>
+                    <li>✅ Device registration backend - <strong>Ready</strong></li>
+                    <li>✅ Push notification framework - <strong>Ready</strong></li>
+                    <li>✅ SIP configuration API - <strong>Ready</strong></li>
+                    <li>⚠️ iOS app development (Swift/SwiftUI) - <strong>Required</strong></li>
+                    <li>⚠️ Android app development (Kotlin) - <strong>Required</strong></li>
+                    <li>⚠️ Firebase/APNs configuration - <strong>Required</strong></li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Recommended SIP libraries:</strong></p>
+                <ul>
+                    <li>iOS: PushKit + CallKit integration</li>
+                    <li>Android: PJSIP or Linphone SDK</li>
+                    <li>Both: WebRTC for media handling</li>
                 </ul>
             </div>
         </div>
+    `;
+}
+
+function loadMobileAppsStats() {
+    const devicesDiv = document.getElementById('mobile-devices-list');
+    devicesDiv.innerHTML = `
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Total Devices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">iOS Devices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Android Devices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+        <p><em>Devices will appear here once the mobile apps are deployed and users register.</em></p>
     `;
 }
 
