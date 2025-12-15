@@ -445,32 +445,33 @@ class IntegrationInstaller:
                 # In dry-run mode, skip actual database setup
                 pass
             else:
-                # Create MySQL option file to avoid password in process list
-                mysql_config_fd, mysql_config_path = tempfile.mkstemp(prefix='mysql_', suffix='.cnf')
-                mysql_sql_fd, mysql_sql_path = tempfile.mkstemp(prefix='mysql_', suffix='.sql')
-                
+                # Use NamedTemporaryFile for automatic cleanup on exceptions
                 try:
-                    # Use context managers to ensure proper file handle cleanup
-                    with os.fdopen(mysql_config_fd, 'w') as f:
-                        f.write('[client]\n')
-                        f.write('user=root\n')
+                    with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.cnf', delete=False) as config_file:
+                        config_file.write('[client]\n')
+                        config_file.write('user=root\n')
+                        mysql_config_path = config_file.name
                     os.chmod(mysql_config_path, 0o600)
                     
-                    # Write SQL commands to temp file with password
-                    with os.fdopen(mysql_sql_fd, 'w') as f:
-                        f.write("CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
-                        # Use IDENTIFIED BY in SQL file rather than command line
-                        f.write(f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';\n")
-                        f.write("GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';\n")
-                        f.write("FLUSH PRIVILEGES;\n")
+                    # Escape password for SQL by doubling single quotes (SQL standard)
+                    escaped_password = db_password.replace("'", "''")
+                    
+                    # Write SQL commands to temp file with escaped password
+                    with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.sql', delete=False) as sql_file:
+                        sql_file.write("CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
+                        # Use escaped password to prevent SQL injection
+                        sql_file.write(f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{escaped_password}';\n")
+                        sql_file.write("GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';\n")
+                        sql_file.write("FLUSH PRIVILEGES;\n")
+                        mysql_sql_path = sql_file.name
                     os.chmod(mysql_sql_path, 0o600)
                     
                     # Execute SQL file - password is in file, not command line or process args
                     self.log("Setting up database and user with secure password...", "STEP")
-                    with open(mysql_sql_path, 'r') as sql_file:
+                    with open(mysql_sql_path, 'r') as sql_input:
                         subprocess.run(
                             ['mysql', f'--defaults-file={mysql_config_path}'],
-                            stdin=sql_file,
+                            stdin=sql_input,
                             check=True
                         )
                 except subprocess.CalledProcessError as e:
@@ -479,14 +480,14 @@ class IntegrationInstaller:
                 finally:
                     # Clean up temp files
                     try:
-                        if os.path.exists(mysql_config_path):
+                        if 'mysql_config_path' in locals() and os.path.exists(mysql_config_path):
                             os.remove(mysql_config_path)
-                    except OSError:
+                    except (OSError, NameError):
                         pass
                     try:
-                        if os.path.exists(mysql_sql_path):
+                        if 'mysql_sql_path' in locals() and os.path.exists(mysql_sql_path):
                             os.remove(mysql_sql_path)
-                    except OSError:
+                    except (OSError, NameError):
                         pass
             
             self.log("EspoCRM installed successfully", "SUCCESS")
