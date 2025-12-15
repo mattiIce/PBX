@@ -1557,6 +1557,27 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 }
 
+/* Framework Feature Status Badges */
+.status-fully-implemented {
+    background: #4caf50 !important;
+    color: white;
+}
+
+.status-framework-only {
+    background: #ff9800 !important;
+    color: white;
+}
+
+.status-integration-required {
+    background: #2196f3 !important;
+    color: white;
+}
+
+.status-disabled {
+    background: #9e9e9e !important;
+    color: white;
+}
+
 /* Print styles - hide sidebar when printing */
 @media print {
     .sidebar {
