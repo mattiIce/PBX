@@ -8,30 +8,10 @@ function loadFrameworkOverview() {
     const content = `
         <h2>🎯 Framework Features Overview</h2>
         <div class="info-box">
-            <p>Welcome to the Framework Features section. These are advanced features that provide frameworks for future enhancements.</p>
-            <p>All configurations are stored in the PostgreSQL database and can be managed through this admin panel.</p>
+            <p>Framework Features - Configure advanced features below.</p>
         </div>
 
-        <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ff9800;">
-            <h3 style="margin-top: 0;">⚙️ Framework Features - Development Ready</h3>
-            <p><strong>This section contains features that are framework-ready but not yet fully implemented.</strong></p>
-            <p>These features have database schemas and REST APIs in place, but require additional integration work or external services to be production-ready.</p>
-            <div style="margin-top: 10px;">
-                <span class="status-badge status-framework-only">⚙️ Framework Only</span> - Database & APIs ready, needs integration work
-            </div>
-        </div>
 
-        <div class="info-box" style="margin-bottom: 20px; background: #e8f5e9; border-left: 4px solid #4caf50;">
-            <h3 style="margin-top: 0;">✅ Fully Implemented Features Moved</h3>
-            <p>The following features have been moved to their appropriate sections as they are fully implemented and production-ready:</p>
-            <ul>
-                <li><strong>Click-to-Dial</strong> → Communication section</li>
-                <li><strong>Nomadic E911</strong> → Communication section</li>
-                <li><strong>Speech Analytics</strong> → Features section</li>
-                <li><strong>CRM Integrations</strong> → Integrations section</li>
-                <li><strong>Compliance (SOC 2)</strong> → Security section</li>
-            </ul>
-        </div>
 
         <div class="stats-grid">
             <div class="stat-card">
@@ -57,25 +37,10 @@ function loadFrameworkOverview() {
         </div>
 
         <div class="section-card" style="margin-top: 20px;">
-            <h3>📋 Framework Features Summary</h3>
-            <p>These framework-only features include:</p>
-            <ul>
-                <li>✅ <strong>Database Schema:</strong> PostgreSQL tables with full CRUD operations</li>
-                <li>✅ <strong>REST API Endpoints:</strong> 15+ endpoints for room/message management and configuration</li>
-                <li>✅ <strong>Python Backend:</strong> Feature classes with error handling and logging</li>
-                <li>⚠️ <strong>Integration Required:</strong> External services or UI development needed</li>
-            </ul>
+            <h3>📋 Framework Features</h3>
+            <p>Configure framework features below.</p>
         </div>
 
-        <div class="info-box" style="margin-top: 20px; background: #fff3cd; border-left: 4px solid #ff9800;">
-            <h3 style="margin-top: 0;">⚙️ Next Steps for Framework Features</h3>
-            <p>To activate these framework features for production use:</p>
-            <ol>
-                <li><strong>Video Conferencing:</strong> Create rooms and integrate with external video service (Zoom/Teams API integration or custom WebRTC implementation)</li>
-                <li><strong>Team Messaging:</strong> Build custom frontend UI or integrate existing messaging platform (via Slack API, Mattermost embedding, or custom React/Vue components)</li>
-            </ol>
-            <p style="margin-top: 15px;"><strong>Note:</strong> For fully implemented and production-ready features, check the Communication, Features, Security, and Integrations sections in the navigation menu.</p>
-        </div>
     `;
     return content;
 }

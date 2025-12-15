@@ -1039,49 +1039,13 @@ function initializeForms() {
     }
 }
 
-// Notification System
+// Notification System - Disabled (no users yet)
 function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    // Style the notification
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 5px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideInRight 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    `;
-    
-    // Set background color based on type
-    switch(type) {
-        case 'success':
-            notification.style.background = '#10b981';
-            break;
-        case 'error':
-            notification.style.background = '#ef4444';
-            break;
-        case 'warning':
-            notification.style.background = '#f59e0b';
-            break;
-        default:
-            notification.style.background = '#667eea';
+    // Notifications disabled - no users to notify yet
+    // Errors are still logged to console for debugging
+    if (type === 'error') {
+        console.error('Error:', message);
     }
-    
-    document.body.appendChild(notification);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
 }
 
 // Add slide animations
@@ -5829,39 +5793,39 @@ function loadLocationHistory() {
 // ============================================================================
 
 function showAddSpeechAnalyticsConfigModal() {
-    showNotification('Speech Analytics per-extension configuration coming soon', 'info');
+    // Coming soon
 }
 
 function editSpeechAnalyticsConfig(extension) {
-    showNotification(`Edit config for extension ${extension} - coming soon`, 'info');
+    // Coming soon
 }
 
 function deleteSpeechAnalyticsConfig(extension) {
     if (!confirm(`Delete speech analytics config for extension ${extension}?`)) {
         return;
     }
-    showNotification('Delete functionality coming soon', 'info');
+    // Coming soon
 }
 
 function showAddE911SiteModal() {
-    showNotification('E911 site creation modal coming soon', 'info');
+    // Coming soon
 }
 
 function editE911Site(siteId) {
-    showNotification(`Edit E911 site ${siteId} - coming soon`, 'info');
+    // Coming soon
 }
 
 function deleteE911Site(siteId) {
     if (!confirm(`Delete E911 site ${siteId}?`)) {
         return;
     }
-    showNotification('Delete functionality coming soon', 'info');
+    // Coming soon
 }
 
 function showUpdateLocationModal() {
-    showNotification('Manual location update modal coming soon', 'info');
+    // Coming soon
 }
 
 function updateExtensionLocation(extension) {
-    showNotification(`Update location for ${extension} - coming soon`, 'info');
+    // Coming soon
 }
