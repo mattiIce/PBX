@@ -56,20 +56,20 @@ function loadFrameworkOverview() {
                 <div class="stat-icon">📍</div>
                 <h3>Nomadic E911</h3>
                 <div style="margin: 10px 0;">
-                    <span class="status-badge status-framework-only">⚙️ Framework Only</span>
+                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>Location-based emergency routing</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Database schema ✓ REST APIs ✓ Site management ⚠ Location tracking needed</small>
+                <small style="color: #666; display: block; margin-top: 8px;">✓ IP-based location detection ✓ Multi-site support ✓ Location history ✓ Manual updates</small>
                 <button onclick="switchTab('nomadic-e911')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🔗</div>
                 <h3>CRM Integrations</h3>
                 <div style="margin: 10px 0;">
-                    <span class="status-badge status-integration-required">🔌 Integration Required</span>
+                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>HubSpot and Zendesk connectivity</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Database schema ✓ REST APIs ⚠ Requires HubSpot/Zendesk API keys</small>
+                <small style="color: #666; display: block; margin-top: 8px;">✓ Contact sync ✓ Deal creation ✓ Ticket management ✓ Activity logging ✓ API integration</small>
                 <button onclick="switchTab('crm-integrations')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -86,10 +86,10 @@ function loadFrameworkOverview() {
                 <div class="stat-icon">🎙️</div>
                 <h3>Speech Analytics</h3>
                 <div style="margin: 10px 0;">
-                    <span class="status-badge status-integration-required">🔌 Integration Required</span>
+                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>Real-time transcription and sentiment</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Database schema ✓ REST APIs ⚠ Requires Google/Azure/OpenAI integration</small>
+                <small style="color: #666; display: block; margin-top: 8px;">✓ Vosk offline transcription ✓ Sentiment analysis ✓ Call summarization ✓ Production ready</small>
                 <button onclick="switchTab('speech-analytics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
         </div>
@@ -107,12 +107,13 @@ function loadFrameworkOverview() {
 
         <div class="section-card" style="margin-top: 20px;">
             <h3>🔌 External Service Integration Examples</h3>
-            <p>Framework features are designed to integrate with external services:</p>
+            <p>Framework features support integration with external services:</p>
             <ul>
-                <li><strong>Speech Analytics:</strong> Google Speech-to-Text, Azure Speech Services, OpenAI Whisper, AWS Transcribe</li>
-                <li><strong>Video Conferencing:</strong> WebRTC infrastructure, H.264/H.265 codecs, STUN/TURN servers</li>
-                <li><strong>CRM Integration:</strong> HubSpot Contacts/Deals API, Zendesk Tickets API</li>
-                <li><strong>Compliance:</strong> SOC 2 Type 2 audit logging, security controls monitoring (fully operational)</li>
+                <li><strong>Speech Analytics:</strong> ✅ Vosk offline (included), optional: Google Speech-to-Text, Azure, OpenAI Whisper, AWS Transcribe</li>
+                <li><strong>CRM Integration:</strong> ✅ HubSpot Contacts/Deals API (fully operational), ✅ Zendesk Tickets API (fully operational)</li>
+                <li><strong>Video Conferencing:</strong> WebRTC infrastructure, H.264/H.265 codecs, STUN/TURN servers (requires external video service)</li>
+                <li><strong>Compliance:</strong> ✅ SOC 2 Type 2 audit logging and security controls (fully operational)</li>
+                <li><strong>Nomadic E911:</strong> ✅ IP-based location detection (fully operational), optional: GPS integration</li>
             </ul>
         </div>
 
@@ -122,11 +123,11 @@ function loadFrameworkOverview() {
             <ol>
                 <li><strong>Click-to-Dial:</strong> Already fully operational - configure extensions in the tab</li>
                 <li><strong>SOC 2 Compliance:</strong> Already fully operational - review controls in the tab</li>
+                <li><strong>Speech Analytics:</strong> Already fully operational - configure Vosk transcription settings</li>
+                <li><strong>CRM Integrations:</strong> Already fully operational - configure HubSpot/Zendesk API credentials</li>
+                <li><strong>Nomadic E911:</strong> Already fully operational - configure sites and IP ranges for location detection</li>
                 <li><strong>Video Conferencing:</strong> Create rooms and integrate with external video service (Zoom/Teams)</li>
-                <li><strong>Speech Analytics:</strong> Add API keys for Google/Azure/OpenAI in configuration</li>
-                <li><strong>CRM Integrations:</strong> Configure HubSpot/Zendesk API credentials</li>
                 <li><strong>Team Messaging:</strong> Build or integrate a frontend UI for messaging</li>
-                <li><strong>Nomadic E911:</strong> Implement location tracking service integration</li>
             </ol>
         </div>
     `;
