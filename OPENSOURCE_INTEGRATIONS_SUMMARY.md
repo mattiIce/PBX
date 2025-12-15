@@ -255,7 +255,7 @@ server_url: https://jitsi.yourcompany.com
    - Create a new account for your PBX bot (e.g., @pbxbot:matrix.org)
    - Note the username and password
 2. Set bot password in .env file:
-   - Edit `/home/runner/work/PBX/PBX/.env`
+   - Edit `<PBX_ROOT>/.env`
    - Add: `MATRIX_BOT_PASSWORD=your-bot-password`
 3. Go to Admin Portal → Integrations → Open Source (Free)
 4. Check the box next to "Matrix" OR click "Quick Setup"
@@ -307,7 +307,7 @@ homeserver_url: https://matrix.yourcompany.com
    - Login → Administration → API Users → Create API User
    - Copy the generated API key
 3. Set API key in .env file:
-   - Edit `/home/runner/work/PBX/PBX/.env`
+   - Edit `<PBX_ROOT>/.env` (the `.env` file in your PBX installation directory)
    - Add: `ESPOCRM_API_KEY=your-api-key`
 4. Go to Admin Portal → Integrations → Open Source (Free)
 5. Check the box next to "EspoCRM" OR click "Quick Setup"
