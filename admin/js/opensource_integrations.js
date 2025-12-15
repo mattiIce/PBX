@@ -3,6 +3,21 @@
  * Handles configuration for Jitsi, Matrix, and EspoCRM
  */
 
+// HTML-escape a string for safe insertion into HTML context
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"'\/]/g, function (s) {
+       switch (s) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#39;';
+          case '/': return '&#x2F;';
+          default: return s;
+       }
+    });
+}
+
 // Initialize open source integrations when tab is shown
 function initializeOpenSourceIntegrations() {
     loadJitsiConfig();
@@ -71,7 +86,7 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
 async function testJitsiConnection() {
     const serverUrl = document.getElementById('jitsi-server-url').value;
     
-    showJitsiStatus('Testing connection to ' + serverUrl + '...', 'info');
+    showJitsiStatus('Testing connection to ' + escapeHtml(serverUrl) + '...', 'info');
     
     try {
         // Test if server is reachable
@@ -85,11 +100,11 @@ async function testJitsiConnection() {
         const testMeetingUrl = serverUrl + '/test-pbx-' + Date.now();
         showJitsiStatus(
             '✅ Connection successful!<br>' +
-            'Test meeting URL: <a href="' + testMeetingUrl + '" target="_blank">' + testMeetingUrl + '</a>',
+            'Test meeting URL: <a href="' + escapeHtml(testMeetingUrl) + '" target="_blank">' + escapeHtml(testMeetingUrl) + '</a>',
             'success'
         );
     } catch (error) {
-        showJitsiStatus('⚠️ Could not verify connection. Server may still be accessible.<br>Error: ' + error.message, 'warning');
+        showJitsiStatus('⚠️ Could not verify connection. Server may still be accessible.<br>Error: ' + escapeHtml(error.message), 'warning');
     }
 }
 
