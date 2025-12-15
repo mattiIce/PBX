@@ -423,8 +423,6 @@ class IntegrationInstaller:
                 return False
             
             # Setup MySQL database with random password
-            self.log("Setting up MySQL database...", "STEP")
-            
             # Generate random password for security
             import secrets
             import string
@@ -440,17 +438,18 @@ class IntegrationInstaller:
                 password_file.write_text(db_password)
                 os.chmod(password_file, 0o600)  # Read/write for owner only
             
-            # Create MySQL option file to avoid password in process list
-            mysql_config_fd, mysql_config_path = tempfile.mkstemp(prefix='mysql_', suffix='.cnf')
-            mysql_sql_fd, mysql_sql_path = tempfile.mkstemp(prefix='mysql_', suffix='.sql')
+            # Setup MySQL database
+            self.log("Setting up MySQL database...", "STEP")
             
-            # Close file descriptors immediately if in dry-run mode
             if self.dry_run:
-                os.close(mysql_config_fd)
-                os.close(mysql_sql_fd)
+                # In dry-run mode, skip actual database setup
+                pass
+            else:
+                # Create MySQL option file to avoid password in process list
+                mysql_config_fd, mysql_config_path = tempfile.mkstemp(prefix='mysql_', suffix='.cnf')
+                mysql_sql_fd, mysql_sql_path = tempfile.mkstemp(prefix='mysql_', suffix='.sql')
                 
-            try:
-                if not self.dry_run:
+                try:
                     # Use context managers to ensure proper file handle cleanup
                     with os.fdopen(mysql_config_fd, 'w') as f:
                         f.write('[client]\n')
@@ -474,21 +473,21 @@ class IntegrationInstaller:
                             stdin=sql_file,
                             check=True
                         )
-            except subprocess.CalledProcessError as e:
-                self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
-                return False
-            finally:
-                # Clean up temp files - always run, even in dry-run mode
-                try:
-                    if os.path.exists(mysql_config_path):
-                        os.remove(mysql_config_path)
-                except OSError:
-                    pass
-                try:
-                    if os.path.exists(mysql_sql_path):
-                        os.remove(mysql_sql_path)
-                except OSError:
-                    pass
+                except subprocess.CalledProcessError as e:
+                    self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
+                    return False
+                finally:
+                    # Clean up temp files
+                    try:
+                        if os.path.exists(mysql_config_path):
+                            os.remove(mysql_config_path)
+                    except OSError:
+                        pass
+                    try:
+                        if os.path.exists(mysql_sql_path):
+                            os.remove(mysql_sql_path)
+                    except OSError:
+                        pass
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
