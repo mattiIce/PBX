@@ -24,18 +24,19 @@ The issue reported: *"looks like we have conflicting port usage between the 3 in
 
 ### 1. Port Conflict Resolution
 
-**Changed default configurations to avoid conflicts:**
+**Changed default configurations to use dedicated local ports to avoid conflicts:**
 
 | Integration | Old Config | New Config | Resolution |
 |------------|------------|------------|------------|
-| **Jitsi** | `https://localhost` | `https://meet.jit.si` | Uses free public server (no local port) |
-| **Matrix** | `https://localhost:8008` | `https://matrix.org` | Uses public homeserver (no local port) |
-| **EspoCRM** | `https://localhost/api/v1` | `http://localhost:8000/api/v1` | Dedicated port 8000 |
+| **Jitsi** | `https://localhost` (port 443) | `https://localhost:8443` | Dedicated port 8443 |
+| **Matrix** | `https://localhost:8008` | `https://localhost:8008` | No change (8008 doesn't conflict) |
+| **EspoCRM** | `https://localhost/api/v1` (port 443) | `https://localhost:8001/api/v1` | Dedicated port 8001 |
 
 **Benefits:**
-- ✅ No port conflicts
-- ✅ Easier setup (public servers don't require installation)
-- ✅ Can still self-host on dedicated ports if needed
+- ✅ No port conflicts - all services use unique ports
+- ✅ All services run locally on same machine
+- ✅ Private local servers maintained (no public servers)
+- ✅ HTTPS used for all services (secure)
 
 ### 2. Complete Integration Implementation
 

@@ -16,33 +16,34 @@ The original configuration had port conflicts:
 - Both services trying to use port 443 would cause conflicts
 
 ### Solution
-Updated default configurations to use different approaches:
+Updated default configurations to use dedicated local ports to avoid conflicts:
 
 | Integration | Old Configuration | New Configuration | Port Used |
 |-------------|------------------|-------------------|-----------|
-| **Jitsi Meet** | `https://localhost` (port 443) | `https://meet.jit.si` (public server) | N/A (external) |
-| **Matrix** | `https://localhost:8008` | `https://matrix.org` (public server) | N/A (external) |
-| **EspoCRM** | `https://localhost/api/v1` (port 443) | `http://localhost:8000/api/v1` | 8000 |
+| **Jitsi Meet** | `https://localhost` (port 443) | `https://localhost:8443` | 8443 |
+| **Matrix** | `https://localhost:8008` | `https://localhost:8008` | 8008 |
+| **EspoCRM** | `https://localhost/api/v1` (port 443) | `https://localhost:8001/api/v1` | 8001 |
 | **PBX API** | `http://0.0.0.0:8080` | `http://0.0.0.0:8080` | 8080 |
 | **PBX SIP** | `udp://0.0.0.0:5060` | `udp://0.0.0.0:5060` | 5060 |
 
 ## Default Configuration Strategy
 
-The new defaults use **public servers** for Jitsi and Matrix to avoid local port conflicts:
+The new defaults use **dedicated local ports** for each integration to avoid conflicts while keeping all services on the same machine:
 
 ### Jitsi Meet
-- **Default**: `https://meet.jit.si` (free public server)
-- **Self-hosted alternative**: `https://jitsi.yourcompany.com:8443` (port 8443)
-- **Local development**: `http://localhost:8888` (port 8888)
+- **Default**: `https://localhost:8443` (dedicated HTTPS port)
+- **Alternative**: `https://jitsi.yourcompany.com:8443` (network deployment)
+- **Development**: `http://localhost:8888` (HTTP for testing)
 
 ### Matrix
-- **Default**: `https://matrix.org` (public homeserver)
-- **Self-hosted alternative**: `http://localhost:8008` (Matrix Synapse default port)
-- **HTTPS alternative**: `https://localhost:8448` (Synapse federation port)
+- **Default**: `https://localhost:8008` (Matrix Synapse standard port)
+- **Alternative**: `https://localhost:8448` (Synapse federation port for HTTPS)
+- **Network**: `https://matrix.yourcompany.com:8008`
 
 ### EspoCRM
-- **Default**: `http://localhost:8000/api/v1` (port 8000 to avoid conflicts)
-- **Production**: `https://crm.yourcompany.com/api/v1` (standard HTTPS port 443 on dedicated server)
+- **Default**: `https://localhost:8001/api/v1` (dedicated port to avoid conflicts)
+- **Alternative**: `http://localhost:8001/api/v1` (HTTP for development)
+- **Network**: `https://crm.yourcompany.com/api/v1` (standard HTTPS on dedicated server)
 
 ## Updating Existing Configurations
 
@@ -50,37 +51,37 @@ If you have an existing `config.yml`, follow these steps to update it:
 
 ### Option 1: Automatic Update (Recommended)
 
-Your existing `config.yml` will be automatically updated when you pull the latest changes. The system will use the new defaults which point to public servers (no local installation required).
+Your existing `config.yml` will be automatically updated when you pull the latest changes. The system will use the new defaults which point to local servers on dedicated ports to avoid conflicts.
 
 ### Option 2: Manual Update
 
-If you prefer self-hosted integrations, edit your `config.yml`:
+If you need to customize the ports, edit your `config.yml`:
 
 ```yaml
 integrations:
   # Jitsi Meet - Video Conferencing
   jitsi:
     enabled: true
-    # Option 1: Use free public server (no installation needed)
-    server_url: https://meet.jit.si
+    # Default: Local server on dedicated port 8443
+    server_url: https://localhost:8443
     
-    # Option 2: Self-hosted on dedicated port
+    # Alternative: Network deployment
     # server_url: https://jitsi.yourcompany.com:8443
     
-    # Option 3: Local development
+    # Alternative: Development (HTTP)
     # server_url: http://localhost:8888
 
   # Matrix - Team Messaging
   matrix:
     enabled: true
-    # Option 1: Use public homeserver (requires account creation)
-    homeserver_url: https://matrix.org
+    # Default: Local Synapse on standard port 8008
+    homeserver_url: https://localhost:8008
     
-    # Option 2: Self-hosted Synapse (default port)
-    # homeserver_url: http://localhost:8008
-    
-    # Option 3: Self-hosted with HTTPS
+    # Alternative: Federation port with HTTPS
     # homeserver_url: https://localhost:8448
+    
+    # Alternative: Network deployment
+    # homeserver_url: https://matrix.yourcompany.com:8008
     
     bot_username: ''  # Required for Matrix
     bot_password: ${MATRIX_BOT_PASSWORD}
@@ -89,27 +90,35 @@ integrations:
   # EspoCRM - CRM
   espocrm:
     enabled: true
-    # Option 1: Local installation on dedicated port (avoids conflict)
-    api_url: http://localhost:8000/api/v1
+    # Default: Local installation on dedicated port 8001
+    api_url: https://localhost:8001/api/v1
     
-    # Option 2: Production server (standard HTTPS port)
+    # Alternative: HTTP for development
+    # api_url: http://localhost:8001/api/v1
+    
+    # Alternative: Network deployment
     # api_url: https://crm.yourcompany.com/api/v1
     
     api_key: ${ESPOCRM_API_KEY}
 ```
 
-### Option 3: Keep Self-Hosted with Dedicated Ports
+### Option 3: Self-Hosted Configuration on Same Machine
 
-If you're running self-hosted services on the same machine as the PBX:
+If you're running self-hosted services on the same machine as the PBX, here's how to configure each service:
 
-#### Configure Apache/Nginx for EspoCRM on Port 8000
+#### Configure Apache/Nginx for EspoCRM on Port 8001
 
 **Apache Configuration** (`/etc/apache2/sites-available/espocrm.conf`):
 ```apache
-Listen 8000
-<VirtualHost *:8000>
+Listen 8001
+<VirtualHost *:8001>
     DocumentRoot /var/www/espocrm
     ServerName localhost
+    
+    # SSL Configuration (recommended)
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/espocrm.crt
+    SSLCertificateKeyFile /etc/ssl/private/espocrm.key
     
     <Directory /var/www/espocrm>
         Options Indexes FollowSymLinks
@@ -122,6 +131,7 @@ Listen 8000
 Enable and restart:
 ```bash
 sudo a2ensite espocrm
+sudo a2enmod ssl  # Enable SSL module
 sudo systemctl restart apache2
 ```
 
@@ -132,7 +142,7 @@ sudo systemctl restart apache2
 server {
     listen 8443 ssl http2;
     listen [::]:8443 ssl http2;
-    server_name jitsi.yourcompany.com;
+    server_name localhost;  # or jitsi.yourcompany.com
     
     # SSL configuration
     ssl_certificate /etc/jitsi/meet/jitsi.crt;
@@ -149,6 +159,10 @@ sudo systemctl restart jicofo
 sudo systemctl restart jitsi-videobridge2
 ```
 
+#### Matrix Synapse on Port 8008 (Default)
+
+Matrix Synapse uses port 8008 by default, which doesn't conflict. No changes needed unless you want to use HTTPS on port 8448.
+
 ## Port Allocation Reference
 
 ### Standard Ports (No Changes Required)
@@ -159,25 +173,20 @@ sudo systemctl restart jitsi-videobridge2
 | PBX RTP | UDP | 10000-20000 | Audio/video streams |
 | PBX API | HTTP | 8080 | REST API and admin panel |
 
-### Integration Ports (New Allocations)
+### Integration Ports (Local Self-Hosted)
 
 | Service | Protocol | Port | Configuration |
 |---------|----------|------|---------------|
-| Matrix Synapse | HTTP | 8008 | Client API (if self-hosted) |
-| Matrix Federation | HTTPS | 8448 | Server-to-server (if self-hosted) |
-| Jitsi Meet | HTTPS | 8443 | Web interface (if self-hosted) |
-| EspoCRM | HTTP | 8000 | API endpoint (if self-hosted) |
+| Matrix Synapse | HTTPS | 8008 | Client API (default, no conflict) |
+| Matrix Federation | HTTPS | 8448 | Server-to-server (alternative) |
+| Jitsi Meet | HTTPS | 8443 | Web interface (dedicated port) |
+| EspoCRM | HTTPS | 8001 | API endpoint (dedicated port) |
 
-### Public Server Defaults (No Local Ports)
-
-If using default configuration with public servers:
-- **Jitsi**: Uses `https://meet.jit.si` (no local ports)
-- **Matrix**: Uses `https://matrix.org` (no local ports)
-- **EspoCRM**: Must be self-hosted (default: port 8000)
+**All ports are unique - no conflicts**
 
 ## Firewall Configuration
 
-If self-hosting all services, update your firewall rules:
+If self-hosting all services locally, update your firewall rules:
 
 ```bash
 # PBX Core (no changes)
@@ -185,11 +194,11 @@ sudo firewall-cmd --permanent --add-port=5060/udp    # SIP
 sudo firewall-cmd --permanent --add-port=10000-20000/udp  # RTP
 sudo firewall-cmd --permanent --add-port=8080/tcp    # API
 
-# Integration Ports (new)
-sudo firewall-cmd --permanent --add-port=8000/tcp    # EspoCRM
-sudo firewall-cmd --permanent --add-port=8008/tcp    # Matrix HTTP
-sudo firewall-cmd --permanent --add-port=8448/tcp    # Matrix Federation
-sudo firewall-cmd --permanent --add-port=8443/tcp    # Jitsi
+# Integration Ports (local servers)
+sudo firewall-cmd --permanent --add-port=8001/tcp    # EspoCRM HTTPS
+sudo firewall-cmd --permanent --add-port=8008/tcp    # Matrix HTTPS
+sudo firewall-cmd --permanent --add-port=8448/tcp    # Matrix Federation (optional)
+sudo firewall-cmd --permanent --add-port=8443/tcp    # Jitsi HTTPS
 
 sudo firewall-cmd --reload
 ```
@@ -200,13 +209,13 @@ After updating your configuration, verify no port conflicts:
 
 ```bash
 # Check which ports are in use
-sudo netstat -tulpn | grep -E ':(443|8000|8008|8080|8443|8448)'
+sudo netstat -tulpn | grep -E ':(8001|8008|8080|8443|8448)'
 
-# Expected output (if all self-hosted):
+# Expected output (if all self-hosted locally):
 # tcp  0.0.0.0:8080  PBX API
-# tcp  0.0.0.0:8000  Apache (EspoCRM)
+# tcp  0.0.0.0:8001  Apache (EspoCRM)
 # tcp  0.0.0.0:8008  Synapse (Matrix)
-# tcp  0.0.0.0:8448  Synapse Federation
+# tcp  0.0.0.0:8448  Synapse Federation (optional)
 # tcp  0.0.0.0:8443  Nginx (Jitsi)
 ```
 
@@ -226,9 +235,10 @@ sudo netstat -tulpn | grep -E ':(443|8000|8008|8080|8443|8448)'
 
 3. **Review** the integration section in `config.yml`
 
-4. **Choose** your deployment strategy:
-   - **Easy**: Use default public servers (Jitsi, Matrix)
-   - **Advanced**: Self-host on dedicated ports
+4. **Configure your local servers** on the new ports:
+   - Jitsi: Port 8443 (instead of 443)
+   - Matrix: Port 8008 (no change, already used)
+   - EspoCRM: Port 8001 (instead of 443)
 
 5. **Update** environment variables in `.env`:
    ```bash

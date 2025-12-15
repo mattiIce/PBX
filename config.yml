@@ -431,12 +431,11 @@ integrations:
   jitsi:
     enabled: false  # Set to true to enable
     # Use local server with HTTPS on dedicated port (recommended for security)
-    # Port 8443 is commonly used for Jitsi Meet HTTPS
+    # Port 8443 is commonly used for Jitsi Meet HTTPS to avoid conflict with port 443
     # Or self-host on network: https://jitsi.yourcompany.com:8443
     # NOTE: HTTPS requires SSL certificates - see HTTPS_SETUP_GUIDE.md
     # For development/testing only, you may use: http://localhost:8888
-    # For public server (free, no installation): https://meet.jit.si
-    server_url: https://meet.jit.si  # Using free public server (no port conflict)
+    server_url: https://localhost:8443  # Using dedicated port 8443 to avoid conflicts
     auto_create_rooms: true  # Auto-create meeting rooms for call escalation
     
     # Optional: JWT authentication for secure rooms (requires self-hosted Jitsi)
@@ -450,8 +449,8 @@ integrations:
     # Use local Synapse server: http://localhost:8008 or https://localhost:8448
     # Or self-host on network: https://matrix.yourcompany.com:8008
     # NOTE: HTTPS recommended to encrypt Matrix communications - see HTTPS_SETUP_GUIDE.md
-    # For public server (free, requires account): https://matrix.org
-    homeserver_url: https://matrix.org  # Using public homeserver (no local port conflict)
+    # Port 8008 is standard for Matrix and does not conflict with other services
+    homeserver_url: https://localhost:8008  # Using local server on standard port 8008
     
     # Bot account for sending notifications
     bot_username: ''  # Matrix bot user ID (@pbxbot:localhost or @pbxbot:matrix.org)
@@ -468,12 +467,12 @@ integrations:
   espocrm:
     enabled: false  # Set to true to enable
     # EspoCRM typically runs on Apache/Nginx on port 80 (HTTP) or 443 (HTTPS)
-    # For dedicated port to avoid conflicts, configure Apache on port 8000
-    # Use local installation: http://localhost:8000/api/v1 or https://localhost:8001/api/v1
+    # Using port 8001 for HTTPS to avoid conflicts with Jitsi (8443) and Matrix (8008)
+    # Or configure Apache/Nginx to use this dedicated port
+    # Use local installation: https://localhost:8001/api/v1 (recommended for security)
     # Or self-host on network: https://crm.yourcompany.com/api/v1
-    # SECURITY WARNING: HTTPS required to protect sensitive customer data - see HTTPS_SETUP_GUIDE.md
-    # Example with dedicated port: http://localhost:8000/api/v1
-    api_url: http://localhost:8000/api/v1  # Using port 8000 to avoid conflicts with Jitsi/Matrix
+    # SECURITY WARNING: HTTPS recommended to protect sensitive customer data - see HTTPS_SETUP_GUIDE.md
+    api_url: https://localhost:8001/api/v1  # Using dedicated port 8001 to avoid conflicts
     # SECURITY: API key loaded from environment variable
     # Set ESPOCRM_API_KEY in .env file
     api_key: ${ESPOCRM_API_KEY}
