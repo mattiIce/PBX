@@ -750,7 +750,30 @@ class DatabaseBackend:
                 if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
 
+        # Apply framework feature migrations
+        self._apply_framework_migrations()
+
         self.logger.info("Schema migration check complete")
+
+    def _apply_framework_migrations(self):
+        """Apply framework feature migrations"""
+        try:
+            from pbx.utils.migrations import MigrationManager, register_all_migrations
+            
+            self.logger.info("Applying framework feature migrations...")
+            migration_manager = MigrationManager(self)
+            register_all_migrations(migration_manager)
+            
+            if migration_manager.apply_migrations():
+                self.logger.info("✓ Framework migrations applied successfully")
+            else:
+                self.logger.warning("Some framework migrations may have failed")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to apply framework migrations: {e}")
+            # Don't fail startup if migrations fail
+            import traceback
+            self.logger.debug(traceback.format_exc())
 
 
 class VIPCallerDB:
