@@ -443,8 +443,15 @@ class IntegrationInstaller:
             # Create MySQL option file to avoid password in process list
             mysql_config_fd, mysql_config_path = tempfile.mkstemp(prefix='mysql_', suffix='.cnf')
             mysql_sql_fd, mysql_sql_path = tempfile.mkstemp(prefix='mysql_', suffix='.sql')
+            
+            # Close file descriptors immediately if in dry-run mode
+            if self.dry_run:
+                os.close(mysql_config_fd)
+                os.close(mysql_sql_fd)
+                
             try:
                 if not self.dry_run:
+                    # Use context managers to ensure proper file handle cleanup
                     with os.fdopen(mysql_config_fd, 'w') as f:
                         f.write('[client]\n')
                         f.write('user=root\n')
@@ -461,21 +468,27 @@ class IntegrationInstaller:
                     
                     # Execute SQL file - password is in file, not command line or process args
                     self.log("Setting up database and user with secure password...", "STEP")
-                    subprocess.run(
-                        ['mysql', f'--defaults-file={mysql_config_path}'],
-                        stdin=open(mysql_sql_path, 'r'),
-                        check=True
-                    )
+                    with open(mysql_sql_path, 'r') as sql_file:
+                        subprocess.run(
+                            ['mysql', f'--defaults-file={mysql_config_path}'],
+                            stdin=sql_file,
+                            check=True
+                        )
             except subprocess.CalledProcessError as e:
                 self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
                 return False
             finally:
-                # Clean up temp files
-                if not self.dry_run:
+                # Clean up temp files - always run, even in dry-run mode
+                try:
                     if os.path.exists(mysql_config_path):
                         os.remove(mysql_config_path)
+                except OSError:
+                    pass
+                try:
                     if os.path.exists(mysql_sql_path):
                         os.remove(mysql_sql_path)
+                except OSError:
+                    pass
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
