@@ -609,9 +609,6 @@ class ZendeskIntegration:
             self._log_activity('zendesk', 'update_ticket', 'error', str(e))
             self.logger.error(f"Zendesk ticket update error: {e}")
             return False
-        self._log_activity('zendesk', 'update_ticket', 'pending', 
-                          f"{ticket_id}: {update_data}")
-        return True
 
     def _log_activity(self, integration_type: str, action: str, status: str, details: str):
         """Log integration activity"""
