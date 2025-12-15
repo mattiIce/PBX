@@ -43,31 +43,45 @@ When you use quick setup, these defaults are configured:
 
 **Jitsi Meet:**
 - ✅ Enabled: true
-- Server: https://meet.jit.si (free public server)
+- Server: https://localhost (local self-hosted server with HTTPS)
 - Auto-create rooms: enabled
-- **Ready to use immediately!**
+- **Note:** Requires local Jitsi installation with SSL - see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) and [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
 
 **Matrix:**
 - ✅ Enabled: true
-- Homeserver: https://matrix.org (free public server)
-- **Requires:** Bot username and password to be configured
+- Homeserver: https://localhost:8008 (local Synapse server with HTTPS)
+- **Requires:** Local Matrix Synapse installation with SSL and bot username/password to be configured
+- **Note:** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for setup
 
 **EspoCRM:**
 - ✅ Enabled: true
-- **Requires:** Your CRM URL and API key to be configured
+- API URL: https://localhost/api/v1 (local CRM installation with HTTPS)
+- **Requires:** Local EspoCRM installation with SSL and API key to be configured
+- **Security:** HTTPS recommended to protect sensitive customer data
+- **Note:** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for setup
 
 ## Additional Configuration (If Needed)
 
 ### For Jitsi
-✅ **No additional setup needed!** Works immediately with the free public server.
+⚠️ **Requires local installation with HTTPS!** The quick setup now points to `https://localhost` for a self-hosted Jitsi server with SSL encryption.
 
-For self-hosted Jitsi, click "Configure" and set your custom server URL.
+**Installation Steps:**
+1. See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide) for complete installation guide
+2. Install Jitsi Meet on your local server or the same machine as the PBX
+3. Configure SSL certificates (see [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md))
+4. Quick setup will automatically configure the PBX to use your local server
+
+**Alternative:** If you want to use HTTP for development/testing:
+1. Click "Configure" button on the Jitsi card
+2. Change server URL to `http://localhost`
+3. Click "Save Configuration"
 
 ### For Matrix
 
 1. **Create a bot account:**
-   - Go to https://app.element.io
-   - Create a new account (e.g., @pbxbot:matrix.org)
+   - Install Matrix Synapse locally (see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md))
+   - OR use a public server like https://app.element.io
+   - Create a new account (e.g., @pbxbot:matrix.org or @pbxbot:localhost)
    - Note the username and password
 
 2. **Set the bot password:**
@@ -82,8 +96,9 @@ For self-hosted Jitsi, click "Configure" and set your custom server URL.
 
 ### For EspoCRM
 
-1. **Install EspoCRM** (if not already installed)
+1. **Install EspoCRM locally** (required)
    - See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup) for installation steps
+   - Quick setup points to `http://localhost/api/v1` by default
 
 2. **Generate API key:**
    - Log in to EspoCRM
@@ -157,21 +172,69 @@ Look for colored status badges next to integration names:
 ## Benefits of Quick Setup
 
 ✅ **One-Click Enable** - No manual config file editing  
-✅ **Safe Defaults** - Uses free public servers  
-✅ **Instant Activation** - Works immediately (Jitsi)  
+✅ **Local Installation** - Uses self-hosted services for privacy and control  
+✅ **Instant Configuration** - Pre-configured with localhost URLs  
 ✅ **Easy to Customize** - Click "Configure" for advanced options  
 ✅ **Visual Feedback** - Status badges show what's enabled  
 ✅ **Reversible** - Uncheck to disable instantly  
 
+## Prerequisites
+
+**NEW: Automated Installation Available!**
+
+You can now automatically install all required services with one command:
+```bash
+sudo python3 scripts/install_integrations.py
+```
+
+See [AUTOMATED_INSTALLATION_GUIDE.md](AUTOMATED_INSTALLATION_GUIDE.md) for complete automated installation guide.
+
+---
+
+### Manual Installation (Alternative)
+
+If you prefer manual installation or the automated installer doesn't work for your system, you need to have the following services installed locally with SSL/HTTPS:
+
+### Required Local Installations:
+
+1. **Jitsi Meet** (for video conferencing)
+   - Default URL: `https://localhost`
+   - Requires SSL certificates
+   - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide)
+   - SSL setup: [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
+
+2. **Matrix Synapse** (for team messaging)
+   - Default URL: `https://localhost:8008`
+   - Requires SSL for secure communications
+   - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup)
+   - SSL setup: [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
+
+3. **EspoCRM** (for CRM functionality)
+   - Default URL: `https://localhost/api/v1`
+   - **Security Critical:** HTTPS required to protect customer data
+   - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup)
+   - SSL setup: [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
+
+**Security Note:** All integrations default to HTTPS to protect sensitive data in transit. For development/testing only, you can manually change URLs to HTTP after quick setup.
+
+**Note:** If you want to use public/cloud servers instead of local installations, you can click "Configure" on each integration and change the server URLs after quick setup.  
+
 ## Cost Savings
 
-By using these free open-source integrations instead of proprietary alternatives:
+By using these free open-source integrations with local installations instead of proprietary cloud alternatives:
 
 - **Video Conferencing**: $0 vs $150-300/user/year (Zoom)
 - **Team Messaging**: $0 vs $96-240/user/year (Slack/Teams)
 - **CRM**: $0 vs $1,200+/user/year (Salesforce)
 
 **Total Savings: $3,726+ per user per year!**
+
+**Additional Benefits of Local Hosting:**
+- ✅ Complete data privacy and control
+- ✅ No dependency on external services
+- ✅ No recurring subscription fees
+- ✅ Customizable to your specific needs
+- ✅ Secure HTTPS encryption for all communications
 
 ---
 

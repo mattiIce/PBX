@@ -202,14 +202,14 @@ async function quickSetupIntegration(integration) {
     const defaults = {
         jitsi: {
             enabled: true,
-            server_url: 'https://meet.jit.si',
+            server_url: 'https://localhost',
             auto_create_rooms: true,
             app_id: '',
             app_secret: ''
         },
         matrix: {
             enabled: true,
-            homeserver_url: 'https://matrix.org',
+            homeserver_url: 'https://localhost:8008',
             bot_username: '',
             bot_password: '${MATRIX_BOT_PASSWORD}',
             notification_room: '',
@@ -218,7 +218,7 @@ async function quickSetupIntegration(integration) {
         },
         espocrm: {
             enabled: true,
-            api_url: '',
+            api_url: 'https://localhost/api/v1',
             api_key: '${ESPOCRM_API_KEY}',
             auto_create_contacts: true,
             auto_log_calls: true,
@@ -363,7 +363,7 @@ function loadJitsiConfig() {
             const config = data.integrations?.jitsi || {};
             
             document.getElementById('jitsi-enabled').checked = config.enabled || false;
-            document.getElementById('jitsi-server-url').value = config.server_url || 'https://meet.jit.si';
+            document.getElementById('jitsi-server-url').value = config.server_url || 'https://localhost';
             document.getElementById('jitsi-auto-create-rooms').checked = config.auto_create_rooms !== false;
             document.getElementById('jitsi-app-id').value = config.app_id || '';
             document.getElementById('jitsi-app-secret').value = config.app_secret || '';
@@ -455,7 +455,7 @@ function loadMatrixConfig() {
             const config = data.integrations?.matrix || {};
             
             document.getElementById('matrix-enabled').checked = config.enabled || false;
-            document.getElementById('matrix-homeserver-url').value = config.homeserver_url || 'https://matrix.org';
+            document.getElementById('matrix-homeserver-url').value = config.homeserver_url || 'https://localhost:8008';
             document.getElementById('matrix-bot-username').value = config.bot_username || '';
             document.getElementById('matrix-bot-password').value = config.bot_password || '';
             document.getElementById('matrix-notification-room').value = config.notification_room || '';
@@ -560,7 +560,7 @@ function loadEspoCRMConfig() {
             const config = data.integrations?.espocrm || {};
             
             document.getElementById('espocrm-enabled').checked = config.enabled || false;
-            document.getElementById('espocrm-api-url').value = config.api_url || '';
+            document.getElementById('espocrm-api-url').value = config.api_url || 'https://localhost/api/v1';
             document.getElementById('espocrm-api-key').value = config.api_key || '';
             document.getElementById('espocrm-auto-create-contacts').checked = config.auto_create_contacts !== false;
             document.getElementById('espocrm-auto-log-calls').checked = config.auto_log_calls !== false;

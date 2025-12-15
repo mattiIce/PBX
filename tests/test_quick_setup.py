@@ -45,14 +45,14 @@ def test_default_configs():
     defaults = {
         'jitsi': {
             'enabled': True,
-            'server_url': 'https://meet.jit.si',
+            'server_url': 'https://localhost',
             'auto_create_rooms': True,
             'app_id': '',
             'app_secret': ''
         },
         'matrix': {
             'enabled': True,
-            'homeserver_url': 'https://matrix.org',
+            'homeserver_url': 'https://localhost:8008',
             'bot_username': '',
             'bot_password': '${MATRIX_BOT_PASSWORD}',
             'notification_room': '',
@@ -61,7 +61,7 @@ def test_default_configs():
         },
         'espocrm': {
             'enabled': True,
-            'api_url': '',
+            'api_url': 'https://localhost/api/v1',
             'api_key': '${ESPOCRM_API_KEY}',
             'auto_create_contacts': True,
             'auto_log_calls': True,

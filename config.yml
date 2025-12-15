@@ -430,37 +430,45 @@ integrations:
   # Jitsi Meet - Video Conferencing (Free alternative to Zoom)
   jitsi:
     enabled: false  # Set to true to enable
-    # Use public server (free, instant): https://meet.jit.si
-    # Or self-host for production: https://jitsi.yourcompany.com
-    server_url: https://meet.jit.si
+    # Use local server with HTTPS (recommended for security): https://localhost
+    # Or self-host on network: https://jitsi.yourcompany.com
+    # NOTE: HTTPS requires SSL certificates - see HTTPS_SETUP_GUIDE.md
+    # For development/testing only, you may use: http://localhost
+    server_url: https://localhost
     auto_create_rooms: true  # Auto-create meeting rooms for call escalation
     
     # Optional: JWT authentication for secure rooms (requires self-hosted Jitsi)
-    app_id: ''  # JWT application ID (leave empty for public server)
-    app_secret: ''  # JWT secret key (leave empty for public server)
+    app_id: ''  # JWT application ID (leave empty for basic setup)
+    app_secret: ''  # JWT secret key (leave empty for basic setup)
   
   # Matrix - Team Messaging (Free alternative to Slack/Teams Chat)
   matrix:
     enabled: false  # Set to true to enable
-    # Use public homeserver: https://matrix.org
-    # Or self-host Synapse: https://matrix.yourcompany.com
-    homeserver_url: https://matrix.org
+    # Use local Synapse server with HTTPS (recommended for security): https://localhost:8008
+    # Or self-host on network: https://matrix.yourcompany.com
+    # NOTE: HTTPS recommended to encrypt Matrix communications - see HTTPS_SETUP_GUIDE.md
+    # For development/testing only, you may use: http://localhost:8008
+    homeserver_url: https://localhost:8008
     
     # Bot account for sending notifications
-    bot_username: ''  # Matrix bot user ID (@pbxbot:matrix.org)
+    bot_username: ''  # Matrix bot user ID (@pbxbot:localhost or @pbxbot:matrix.org)
     # SECURITY: Password loaded from environment variable
     # Set MATRIX_BOT_PASSWORD in .env file
     bot_password: ${MATRIX_BOT_PASSWORD}
     
     # Room configuration
-    notification_room: ''  # Room ID for general notifications (!xxx:matrix.org)
-    voicemail_room: ''  # Optional: Separate room for voicemail (!xxx:matrix.org)
+    notification_room: ''  # Room ID for general notifications (!xxx:localhost or !xxx:matrix.org)
+    voicemail_room: ''  # Optional: Separate room for voicemail (!xxx:localhost or !xxx:matrix.org)
     missed_call_notifications: true  # Send missed call alerts
   
   # EspoCRM - Customer Relationship Management (Free alternative to Salesforce/HubSpot)
   espocrm:
     enabled: false  # Set to true to enable
-    api_url: ''  # Your EspoCRM server (https://crm.yourcompany.com/api/v1)
+    # Use local installation with HTTPS (recommended for security): https://localhost/api/v1
+    # Or self-host on network: https://crm.yourcompany.com/api/v1
+    # SECURITY WARNING: HTTPS required to protect sensitive customer data - see HTTPS_SETUP_GUIDE.md
+    # For development/testing only, you may use: http://localhost/api/v1
+    api_url: https://localhost/api/v1
     # SECURITY: API key loaded from environment variable
     # Set ESPOCRM_API_KEY in .env file
     api_key: ${ESPOCRM_API_KEY}

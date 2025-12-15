@@ -22,7 +22,7 @@ class IntegrationSetup:
             'description': 'Video conferencing (Free Zoom alternative)',
             'default_config': {
                 'enabled': True,
-                'server_url': 'https://meet.jit.si',
+                'server_url': 'https://localhost',
                 'auto_create_rooms': True,
                 'app_id': '',
                 'app_secret': ''
@@ -34,7 +34,7 @@ class IntegrationSetup:
             'description': 'Team messaging (Free Slack/Teams alternative)',
             'default_config': {
                 'enabled': True,
-                'homeserver_url': 'https://matrix.org',
+                'homeserver_url': 'https://localhost:8008',
                 'bot_username': '',
                 'bot_password': '${MATRIX_BOT_PASSWORD}',
                 'notification_room': '',
@@ -50,7 +50,7 @@ class IntegrationSetup:
             'description': 'CRM with screen pop & call logging (Free Salesforce alternative)',
             'default_config': {
                 'enabled': True,
-                'api_url': '',
+                'api_url': 'https://localhost/api/v1',
                 'api_key': '${ESPOCRM_API_KEY}',
                 'auto_create_contacts': True,
                 'auto_log_calls': True,
@@ -295,22 +295,23 @@ class IntegrationSetup:
         
         # Special handling for each integration
         if integration_name == 'jitsi':
-            print("\nJitsi can use a free public server or your own self-hosted server.")
-            use_public = input("Use public server (meet.jit.si)? [Y/n]: ").strip().lower()
-            if use_public != 'n':
-                config_updates['server_url'] = 'https://meet.jit.si'
-            else:
-                server = input("Enter your Jitsi server URL: ").strip()
+            print("\nJitsi will use your local installation by default (https://localhost).")
+            use_local = input("Use local server? [Y/n]: ").strip().lower()
+            if use_local == 'n':
+                server = input("Enter your Jitsi server URL (e.g., https://meet.jit.si): ").strip()
                 config_updates['server_url'] = server
+            else:
+                config_updates['server_url'] = 'https://localhost'
         
         elif integration_name == 'matrix':
-            print("\nMatrix requires a bot account for sending notifications.")
-            use_public = input("Use public Matrix server (matrix.org)? [Y/n]: ").strip().lower()
-            if use_public != 'n':
-                config_updates['homeserver_url'] = 'https://matrix.org'
-            else:
-                server = input("Enter your Matrix homeserver URL: ").strip()
+            print("\nMatrix will use your local Synapse installation by default (https://localhost:8008).")
+            print("Matrix requires a bot account for sending notifications.")
+            use_local = input("Use local Synapse server? [Y/n]: ").strip().lower()
+            if use_local == 'n':
+                server = input("Enter your Matrix homeserver URL (e.g., https://matrix.org): ").strip()
                 config_updates['homeserver_url'] = server
+            else:
+                config_updates['homeserver_url'] = 'https://localhost:8008'
             
             bot_username = input("Enter bot username (e.g., @pbxbot:matrix.org): ").strip()
             if bot_username:
@@ -322,10 +323,14 @@ class IntegrationSetup:
                 config_updates['MATRIX_BOT_PASSWORD'] = bot_password
         
         elif integration_name == 'espocrm':
-            print("\nEspoCRM requires a running instance with API access.")
-            api_url = input("Enter EspoCRM API URL (e.g., https://crm.yourcompany.com/api/v1): ").strip()
-            if api_url:
-                config_updates['api_url'] = api_url
+            print("\nEspoCRM will use your local installation by default (https://localhost/api/v1).")
+            use_local = input("Use local EspoCRM? [Y/n]: ").strip().lower()
+            if use_local == 'n':
+                api_url = input("Enter EspoCRM API URL (e.g., https://crm.yourcompany.com/api/v1): ").strip()
+                if api_url:
+                    config_updates['api_url'] = api_url
+            else:
+                config_updates['api_url'] = 'https://localhost/api/v1'
             
             print("\nℹ️  API key will be set in .env file (ESPOCRM_API_KEY)")
             api_key = input("Enter EspoCRM API key (or press Enter to set later): ").strip()
