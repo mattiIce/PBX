@@ -224,6 +224,43 @@ class PBXCore:
         else:
             self.ad_integration = None
 
+        # Initialize open-source integrations
+        # Jitsi Meet - Video conferencing
+        if self.config.get('integrations.jitsi.enabled', False):
+            from pbx.integrations.jitsi import JitsiIntegration
+            self.jitsi_integration = JitsiIntegration(self.config)
+            if self.jitsi_integration.enabled:
+                self._log_startup("Jitsi Meet video conferencing integration initialized")
+        else:
+            self.jitsi_integration = None
+
+        # Matrix - Team messaging
+        if self.config.get('integrations.matrix.enabled', False):
+            from pbx.integrations.matrix import MatrixIntegration
+            self.matrix_integration = MatrixIntegration(self.config)
+            if self.matrix_integration.enabled:
+                self._log_startup("Matrix team messaging integration initialized")
+        else:
+            self.matrix_integration = None
+
+        # EspoCRM - Customer relationship management
+        if self.config.get('integrations.espocrm.enabled', False):
+            from pbx.integrations.espocrm import EspoCRMIntegration
+            self.espocrm_integration = EspoCRMIntegration(self.config)
+            if self.espocrm_integration.enabled:
+                self._log_startup("EspoCRM integration initialized")
+        else:
+            self.espocrm_integration = None
+
+        # Zoom integration (proprietary - requires license)
+        if self.config.get('integrations.zoom.enabled', False):
+            from pbx.integrations.zoom import ZoomIntegration
+            self.zoom_integration = ZoomIntegration(self.config)
+            if self.zoom_integration.enabled:
+                self._log_startup("Zoom integration initialized")
+        else:
+            self.zoom_integration = None
+
         # Initialize phone book if enabled
         if self.config.get('features.phone_book.enabled', False):
             from pbx.features.phone_book import PhoneBook

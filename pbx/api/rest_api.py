@@ -64,6 +64,29 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     pbx_core = None  # Set by PBXAPIServer
     logger = get_logger()  # Initialize logger for handler
+    _integration_endpoints = None  # Cache for integration endpoints
+
+    def _get_integration_endpoints(self):
+        """Get integration endpoints (cached)"""
+        if PBXAPIHandler._integration_endpoints is None:
+            from pbx.api.opensource_integration_api import add_opensource_integration_endpoints
+            PBXAPIHandler._integration_endpoints = add_opensource_integration_endpoints(self)
+        return PBXAPIHandler._integration_endpoints
+
+    def _check_integration_available(self, integration_name):
+        """Check if integration is available and enabled"""
+        if not self.pbx_core:
+            return False, 'PBX core not available'
+        
+        attr_name = f'{integration_name}_integration'
+        if not hasattr(self.pbx_core, attr_name):
+            return False, f'{integration_name.capitalize()} integration not available'
+        
+        integration = getattr(self.pbx_core, attr_name)
+        if not integration or not integration.enabled:
+            return False, f'{integration_name.capitalize()} integration not enabled'
+        
+        return True, None
 
     def _set_headers(self, status=200, content_type='application/json'):
         """Set response headers with security enhancements"""
@@ -366,6 +389,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_register_soc2_control()
             elif path == '/api/framework/compliance/pci/log':
                 self._handle_log_pci_event()
+            
+            # Open-source integration APIs
+            elif path == '/api/integrations/jitsi/meetings':
+                self._handle_jitsi_create_meeting()
+            elif path == '/api/integrations/jitsi/instant':
+                self._handle_jitsi_instant_meeting()
+            elif path == '/api/integrations/espocrm/contacts':
+                self._handle_espocrm_create_contact()
+            elif path == '/api/integrations/espocrm/calls':
+                self._handle_espocrm_log_call()
+            elif path == '/api/integrations/matrix/messages':
+                self._handle_matrix_send_message()
+            elif path == '/api/integrations/matrix/notifications':
+                self._handle_matrix_send_notification()
+            elif path == '/api/integrations/matrix/rooms':
+                self._handle_matrix_create_room()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
@@ -800,6 +839,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_soc2_controls()
             elif path == '/api/framework/compliance/pci/audit-log':
                 self._handle_get_pci_audit_log()
+            
+            # Open-source integration GET APIs
+            elif path.startswith('/api/integrations/espocrm/contacts/search'):
+                self._handle_espocrm_search_contact()
+            
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -7602,6 +7646,151 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'Database not available'}, 500)
     """
+
+    # Open-source integration handlers
+    def _handle_jitsi_create_meeting(self):
+        """POST /api/integrations/jitsi/meetings - Create Jitsi meeting"""
+        available, error = self._check_integration_available('jitsi')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/jitsi/meetings')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in Jitsi create meeting: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_jitsi_instant_meeting(self):
+        """POST /api/integrations/jitsi/instant - Create instant meeting"""
+        available, error = self._check_integration_available('jitsi')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/jitsi/instant')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in Jitsi instant meeting: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_espocrm_search_contact(self):
+        """GET /api/integrations/espocrm/contacts/search - Search contact by phone"""
+        available, error = self._check_integration_available('espocrm')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('GET /api/integrations/espocrm/contacts/search')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in EspoCRM search contact: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_espocrm_create_contact(self):
+        """POST /api/integrations/espocrm/contacts - Create contact"""
+        available, error = self._check_integration_available('espocrm')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/espocrm/contacts')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in EspoCRM create contact: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_espocrm_log_call(self):
+        """POST /api/integrations/espocrm/calls - Log call"""
+        available, error = self._check_integration_available('espocrm')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/espocrm/calls')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in EspoCRM log call: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_matrix_send_message(self):
+        """POST /api/integrations/matrix/messages - Send message to room"""
+        available, error = self._check_integration_available('matrix')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/matrix/messages')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in Matrix send message: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_matrix_send_notification(self):
+        """POST /api/integrations/matrix/notifications - Send notification"""
+        available, error = self._check_integration_available('matrix')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/matrix/notifications')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in Matrix send notification: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_matrix_create_room(self):
+        """POST /api/integrations/matrix/rooms - Create room"""
+        available, error = self._check_integration_available('matrix')
+        if not available:
+            self._send_json({'error': error}, 400)
+            return
+        
+        try:
+            endpoints = self._get_integration_endpoints()
+            handler = endpoints.get('POST /api/integrations/matrix/rooms')
+            if handler:
+                handler(self)
+            else:
+                self._send_json({'error': 'Handler not found'}, 500)
+        except Exception as e:
+            self.logger.error(f"Error in Matrix create room: {e}")
+            self._send_json({'error': str(e)}, 500)
 
 
 class PBXAPIServer:
