@@ -56,6 +56,20 @@ function loadFrameworkOverview() {
             </div>
         </div>
 
+        <h3 style="margin-top: 30px;">📢 Production-Ready Features with Admin UI</h3>
+        <div class="stats-grid">
+            <div class="stat-card" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+                <div class="stat-icon">📢</div>
+                <h3>Paging System</h3>
+                <div style="margin: 10px 0;">
+                    <span class="status-badge status-fully-implemented">✅ Admin UI Available</span>
+                </div>
+                <p>Overhead paging with zone management</p>
+                <small style="color: #2e7d32; display: block; margin-top: 8px;">✓ Zone configuration ✓ DAC management ✓ Active monitoring ✓ Full REST API</small>
+                <button onclick="switchTab('paging')" class="btn-success" style="margin-top: 10px;">Configure</button>
+            </div>
+        </div>
+
         <h3 style="margin-top: 30px;">📹 Video & Codecs</h3>
         <div class="stats-grid">
             <div class="stat-card">
