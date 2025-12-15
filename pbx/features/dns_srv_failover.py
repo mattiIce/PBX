@@ -5,6 +5,7 @@ Automatic server failover using DNS SRV records
 from typing import Dict, List, Optional
 from datetime import datetime
 from pbx.utils.logger import get_logger
+import random
 
 
 class SRVRecord:
@@ -171,11 +172,9 @@ class DNSSRVFailover:
         
         if total_weight == 0:
             # Equal probability if all weights are 0
-            import random
             return random.choice(records)
         
         # Weighted random selection
-        import random
         rand = random.randint(0, total_weight)
         
         cumulative = 0

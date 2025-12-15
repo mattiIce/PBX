@@ -7,6 +7,7 @@ from datetime import datetime
 from enum import Enum
 from pbx.utils.logger import get_logger
 import hashlib
+import random
 
 
 class BiometricStatus(Enum):
@@ -295,7 +296,6 @@ class VoiceBiometrics:
         """
         # TODO: Implement actual voice matching algorithm
         # Placeholder returns random score for testing
-        import random
         return random.uniform(0.75, 0.95)
     
     def get_profile(self, user_id: str) -> Optional[VoiceProfile]:

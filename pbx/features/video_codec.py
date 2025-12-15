@@ -4,6 +4,7 @@ Video codec support for video calling features
 """
 from typing import Dict, Optional
 from enum import Enum
+from datetime import datetime
 from pbx.utils.logger import get_logger
 
 
@@ -168,7 +169,7 @@ class VideoCodecManager:
             'bitrate': bitrate,
             'gop_size': framerate * 2,  # GOP size (keyframe interval)
             'b_frames': 2,  # B-frames for better compression
-            'created_at': None
+            'created_at': datetime.now().isoformat()
         }
         
         # TODO: Initialize actual encoder with FFmpeg or other library
@@ -192,7 +193,7 @@ class VideoCodecManager:
         decoder_config = {
             'codec': codec.value,
             'threads': 4,  # Multi-threaded decoding
-            'created_at': None
+            'created_at': datetime.now().isoformat()
         }
         
         # TODO: Initialize actual decoder with FFmpeg or other library

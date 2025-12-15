@@ -270,6 +270,21 @@ class PredictiveDialer:
         Returns:
             Dict: Call initiation result
         """
+        if campaign_id not in self.campaigns:
+            return {
+                'success': False,
+                'error': 'Campaign not found'
+            }
+        
+        campaign = self.campaigns[campaign_id]
+        
+        # Check if max attempts exceeded
+        if contact.attempts >= campaign.max_attempts:
+            return {
+                'success': False,
+                'error': 'Max attempts exceeded'
+            }
+        
         # TODO: Integrate with PBX call manager to initiate call
         contact.attempts += 1
         contact.last_attempt = datetime.now()
