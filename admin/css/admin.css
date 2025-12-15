@@ -19,9 +19,10 @@ body {
     margin: 0;
     background: #ffffff;
     box-shadow: none;
-    min-height: 100vh;
+    height: 100vh; /* Fixed height to viewport */
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent container from scrolling */
 }
 
 /* Header */
@@ -73,6 +74,7 @@ header h1 {
     display: flex;
     flex: 1;
     overflow: hidden;
+    min-height: 0; /* Important: allows flex children to shrink below content size */
 }
 
 /* Left Sidebar Navigation */
@@ -81,8 +83,10 @@ header h1 {
     background: #ffffff;
     border-right: 1px solid #e1e8ed;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
     flex-shrink: 0;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+    min-height: 0; /* Important: allows scrolling within flex container */
 }
 
 .sidebar-section {
@@ -161,7 +165,9 @@ header h1 {
 .main-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
     background: #f5f7fa;
+    min-height: 0; /* Important: allows scrolling within flex container */
 }
 
 /* Tab Content */
