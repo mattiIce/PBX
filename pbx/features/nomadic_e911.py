@@ -192,6 +192,18 @@ class NomadicE911Engine:
             }
 
         return None
+    
+    def find_site_by_ip(self, ip_address: str) -> Optional[Dict]:
+        """
+        Find site configuration by IP address (Public API)
+        
+        Args:
+            ip_address: IP address to check
+            
+        Returns:
+            Site config with full address details or None
+        """
+        return self._find_site_by_ip(ip_address)
 
     def _find_site_by_ip(self, ip_address: str) -> Optional[Dict]:
         """
