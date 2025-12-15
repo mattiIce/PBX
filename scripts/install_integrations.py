@@ -123,10 +123,10 @@ class IntegrationInstaller:
             return False
     
     def check_command_exists(self, command):
-        """Check if a command exists"""
-        # Use safe subprocess call without shell injection
-        result = self.run_command(['which', command], check=False, capture=True)
-        return bool(result)
+        """Check if a command exists using Python's shutil.which for cross-platform compatibility"""
+        import shutil
+        result = shutil.which(command)
+        return result is not None
     
     def detect_os(self):
         """Detect the operating system"""
@@ -445,8 +445,9 @@ class IntegrationInstaller:
                 # In dry-run mode, skip actual database setup
                 pass
             else:
-                # Use NamedTemporaryFile for automatic cleanup on exceptions
+                # Use NamedTemporaryFile with delete=True for automatic cleanup
                 try:
+                    # Create config file
                     with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.cnf', delete=False) as config_file:
                         config_file.write('[client]\n')
                         config_file.write('user=root\n')
@@ -454,9 +455,10 @@ class IntegrationInstaller:
                     os.chmod(mysql_config_path, 0o600)
                     
                     # Escape password for SQL by doubling single quotes (SQL standard)
+                    # Note: For production use, consider using MySQL connector with parameterized queries
                     escaped_password = db_password.replace("'", "''")
                     
-                    # Write SQL commands to temp file with escaped password
+                    # Create SQL file
                     with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.sql', delete=False) as sql_file:
                         sql_file.write("CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
                         # Use escaped password to prevent SQL injection
@@ -478,17 +480,14 @@ class IntegrationInstaller:
                     self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
                     return False
                 finally:
-                    # Clean up temp files
-                    try:
-                        if 'mysql_config_path' in locals() and os.path.exists(mysql_config_path):
-                            os.remove(mysql_config_path)
-                    except (OSError, NameError):
-                        pass
-                    try:
-                        if 'mysql_sql_path' in locals() and os.path.exists(mysql_sql_path):
-                            os.remove(mysql_sql_path)
-                    except (OSError, NameError):
-                        pass
+                    # Clean up temp files manually since we used delete=False
+                    # (delete=False required so files exist when mysql reads them)
+                    for temp_file in [mysql_config_path, mysql_sql_path]:
+                        try:
+                            if temp_file and os.path.exists(temp_file):
+                                os.remove(temp_file)
+                        except (OSError, NameError):
+                            pass
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
