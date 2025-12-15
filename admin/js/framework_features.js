@@ -61,7 +61,7 @@ function loadFrameworkOverview() {
             <p>These framework-only features include:</p>
             <ul>
                 <li>✅ <strong>Database Schema:</strong> PostgreSQL tables with full CRUD operations</li>
-                <li>✅ <strong>REST API Endpoints:</strong> Configuration and management endpoints</li>
+                <li>✅ <strong>REST API Endpoints:</strong> 15+ endpoints for room/message management and configuration</li>
                 <li>✅ <strong>Python Backend:</strong> Feature classes with error handling and logging</li>
                 <li>⚠️ <strong>Integration Required:</strong> External services or UI development needed</li>
             </ul>
@@ -71,8 +71,8 @@ function loadFrameworkOverview() {
             <h3 style="margin-top: 0;">⚙️ Next Steps for Framework Features</h3>
             <p>To activate these framework features for production use:</p>
             <ol>
-                <li><strong>Video Conferencing:</strong> Create rooms and integrate with external video service (Zoom/Teams/custom WebRTC)</li>
-                <li><strong>Team Messaging:</strong> Build or integrate a frontend UI for messaging (Slack/Mattermost/custom)</li>
+                <li><strong>Video Conferencing:</strong> Create rooms and integrate with external video service (Zoom/Teams API integration or custom WebRTC implementation)</li>
+                <li><strong>Team Messaging:</strong> Build custom frontend UI or integrate existing messaging platform (via Slack API, Mattermost embedding, or custom React/Vue components)</li>
             </ol>
             <p style="margin-top: 15px;"><strong>Note:</strong> For fully implemented and production-ready features, check the Communication, Features, Security, and Integrations sections in the navigation menu.</p>
         </div>
