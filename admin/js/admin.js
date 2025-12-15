@@ -335,6 +335,86 @@ function showTab(tabName) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoConferencingTab();
             }
             break;
+        case 'conversational-ai':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadConversationalAITab();
+            }
+            break;
+        case 'predictive-dialing':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadPredictiveDialingTab();
+            }
+            break;
+        case 'voice-biometrics':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVoiceBiometricsTab();
+            }
+            break;
+        case 'call-quality-prediction':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallQualityPredictionTab();
+            }
+            break;
+        case 'video-codec':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoCodecTab();
+            }
+            break;
+        case 'bi-integration':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadBIIntegrationTab();
+            }
+            break;
+        case 'call-tagging':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallTaggingTab();
+            }
+            break;
+        case 'mobile-apps':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadMobileAppsTab();
+            }
+            break;
+        case 'mobile-number-portability':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadMobileNumberPortabilityTab();
+            }
+            break;
+        case 'recording-analytics':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadRecordingAnalyticsTab();
+            }
+            break;
+        case 'call-blending':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallBlendingTab();
+            }
+            break;
+        case 'voicemail-drop':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVoicemailDropTab();
+            }
+            break;
+        case 'geographic-redundancy':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadGeographicRedundancyTab();
+            }
+            break;
+        case 'dns-srv-failover':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadDNSSRVFailoverTab();
+            }
+            break;
+        case 'session-border-controller':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadSessionBorderControllerTab();
+            }
+            break;
+        case 'data-residency':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadDataResidencyTab();
+            }
+            break;
     }
 }
 
