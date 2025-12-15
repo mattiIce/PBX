@@ -312,6 +312,45 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_unregister_device()
             elif path == '/api/mobile-push/test':
                 self._handle_test_push_notification()
+            
+            # Framework feature POST APIs
+            elif path.startswith('/api/framework/speech-analytics/config/'):
+                extension = path.split('/')[-1]
+                self._handle_update_speech_analytics_config(extension)
+            elif path == '/api/framework/video-conference/create-room':
+                self._handle_create_video_room()
+            elif path.startswith('/api/framework/video-conference/join/'):
+                room_id = path.split('/')[-1]
+                self._handle_join_video_room(room_id)
+            elif path.startswith('/api/framework/click-to-dial/call/'):
+                extension = path.split('/')[-1]
+                self._handle_click_to_dial_call(extension)
+            elif path.startswith('/api/framework/click-to-dial/config/'):
+                extension = path.split('/')[-1]
+                self._handle_update_click_to_dial_config(extension)
+            elif path == '/api/framework/team-messaging/create-channel':
+                self._handle_create_team_channel()
+            elif path == '/api/framework/team-messaging/send-message':
+                self._handle_send_team_message()
+            elif path.startswith('/api/framework/nomadic-e911/update-location/'):
+                extension = path.split('/')[-1]
+                self._handle_update_e911_location(extension)
+            elif path == '/api/framework/nomadic-e911/create-site':
+                self._handle_create_e911_site()
+            elif path == '/api/framework/integrations/hubspot/config':
+                self._handle_update_hubspot_config()
+            elif path == '/api/framework/integrations/zendesk/config':
+                self._handle_update_zendesk_config()
+            elif path == '/api/framework/compliance/gdpr/consent':
+                self._handle_record_gdpr_consent()
+            elif path == '/api/framework/compliance/gdpr/withdraw':
+                self._handle_withdraw_gdpr_consent()
+            elif path == '/api/framework/compliance/gdpr/request':
+                self._handle_create_gdpr_request()
+            elif path == '/api/framework/compliance/soc2/control':
+                self._handle_register_soc2_control()
+            elif path == '/api/framework/compliance/pci/log':
+                self._handle_log_pci_event()
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except Exception as e:
@@ -686,6 +725,51 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_time_routing_rules()
             elif path == '/api/time-routing/statistics':
                 self._handle_get_time_routing_statistics()
+            
+            # Framework feature APIs
+            elif path == '/api/framework/speech-analytics/configs':
+                self._handle_get_speech_analytics_configs()
+            elif path.startswith('/api/framework/speech-analytics/config/'):
+                extension = path.split('/')[-1]
+                self._handle_get_speech_analytics_config(extension)
+            elif path == '/api/framework/video-conference/rooms':
+                self._handle_get_video_rooms()
+            elif path.startswith('/api/framework/video-conference/room/'):
+                room_id = path.split('/')[-1]
+                self._handle_get_video_room(room_id)
+            elif path == '/api/framework/click-to-dial/configs':
+                self._handle_get_click_to_dial_configs()
+            elif path.startswith('/api/framework/click-to-dial/config/'):
+                extension = path.split('/')[-1]
+                self._handle_get_click_to_dial_config(extension)
+            elif path.startswith('/api/framework/click-to-dial/history/'):
+                extension = path.split('/')[-1]
+                self._handle_get_click_to_dial_history(extension)
+            elif path == '/api/framework/team-messaging/channels':
+                self._handle_get_team_channels()
+            elif path.startswith('/api/framework/team-messaging/messages/'):
+                channel_id = path.split('/')[-1]
+                self._handle_get_team_messages(channel_id)
+            elif path == '/api/framework/nomadic-e911/sites':
+                self._handle_get_e911_sites()
+            elif path.startswith('/api/framework/nomadic-e911/location/'):
+                extension = path.split('/')[-1]
+                self._handle_get_e911_location(extension)
+            elif path == '/api/framework/integrations/hubspot':
+                self._handle_get_hubspot_config()
+            elif path == '/api/framework/integrations/zendesk':
+                self._handle_get_zendesk_config()
+            elif path == '/api/framework/integrations/activity':
+                self._handle_get_integration_activity()
+            elif path == '/api/framework/compliance/gdpr/consents':
+                extension = self.headers.get('X-Extension', '')
+                self._handle_get_gdpr_consents(extension)
+            elif path == '/api/framework/compliance/gdpr/requests':
+                self._handle_get_gdpr_requests()
+            elif path == '/api/framework/compliance/soc2/controls':
+                self._handle_get_soc2_controls()
+            elif path == '/api/framework/compliance/pci/audit-log':
+                self._handle_get_pci_audit_log()
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
             elif path == '' or path == '/admin':
@@ -6804,6 +6888,572 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Error getting announcement config'}, 500)
         else:
             self._send_json({'error': 'Recording announcements not initialized'}, 500)
+
+    # Framework Feature Handlers - Speech Analytics
+    def _handle_get_speech_analytics_configs(self):
+        """Get all speech analytics configurations"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                configs = engine.get_all_configs()
+                self._send_json({'configs': configs})
+            except Exception as e:
+                self.logger.error(f"Error getting speech analytics configs: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_speech_analytics_config(self, extension: str):
+        """Get speech analytics config for extension"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                config = engine.get_config(extension)
+                if config:
+                    self._send_json(config)
+                else:
+                    self._send_json({'error': 'Config not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting speech analytics config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_update_speech_analytics_config(self, extension: str):
+        """Update speech analytics configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.update_config(extension, body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to update config'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error updating speech analytics config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    # Framework Feature Handlers - Video Conferencing
+    def _handle_get_video_rooms(self):
+        """Get all video conference rooms"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.video_conferencing import VideoConferencingEngine
+                engine = VideoConferencingEngine(self.pbx_core.database, self.pbx_core.config)
+                rooms = engine.get_all_rooms()
+                self._send_json({'rooms': rooms})
+            except Exception as e:
+                self.logger.error(f"Error getting video rooms: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_video_room(self, room_id: str):
+        """Get video conference room details"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.video_conferencing import VideoConferencingEngine
+                engine = VideoConferencingEngine(self.pbx_core.database, self.pbx_core.config)
+                room = engine.get_room(int(room_id))
+                if room:
+                    participants = engine.get_room_participants(int(room_id))
+                    room['participants'] = participants
+                    self._send_json(room)
+                else:
+                    self._send_json({'error': 'Room not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting video room: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_create_video_room(self):
+        """Create video conference room"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.video_conferencing import VideoConferencingEngine
+                engine = VideoConferencingEngine(self.pbx_core.database, self.pbx_core.config)
+                room_id = engine.create_room(body)
+                if room_id:
+                    self._send_json({'room_id': room_id, 'success': True})
+                else:
+                    self._send_json({'error': 'Failed to create room'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error creating video room: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_join_video_room(self, room_id: str):
+        """Join video conference room"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.video_conferencing import VideoConferencingEngine
+                engine = VideoConferencingEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.join_room(int(room_id), body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to join room'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error joining video room: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    # Framework Feature Handlers - Click-to-Dial
+    def _handle_get_click_to_dial_configs(self):
+        """Get all click-to-dial configurations"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.click_to_dial import ClickToDialEngine
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                configs = engine.get_all_configs()
+                self._send_json({'configs': configs})
+            except Exception as e:
+                self.logger.error(f"Error getting click-to-dial configs: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_click_to_dial_config(self, extension: str):
+        """Get click-to-dial config for extension"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.click_to_dial import ClickToDialEngine
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                config = engine.get_config(extension)
+                if config:
+                    self._send_json(config)
+                else:
+                    # Return default config
+                    self._send_json({
+                        'extension': extension,
+                        'enabled': True,
+                        'auto_answer': False,
+                        'browser_notification': True
+                    })
+            except Exception as e:
+                self.logger.error(f"Error getting click-to-dial config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_update_click_to_dial_config(self, extension: str):
+        """Update click-to-dial configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.click_to_dial import ClickToDialEngine
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.update_config(extension, body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to update config'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error updating click-to-dial config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_click_to_dial_call(self, extension: str):
+        """Initiate click-to-dial call"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                destination = body.get('destination')
+                source = body.get('source', 'web')
+                
+                from pbx.features.click_to_dial import ClickToDialEngine
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                call_id = engine.initiate_call(extension, destination, source)
+                
+                if call_id:
+                    self._send_json({'call_id': call_id, 'success': True})
+                else:
+                    self._send_json({'error': 'Failed to initiate call'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error initiating click-to-dial call: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_click_to_dial_history(self, extension: str):
+        """Get click-to-dial call history"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.click_to_dial import ClickToDialEngine
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                history = engine.get_call_history(extension)
+                self._send_json({'history': history})
+            except Exception as e:
+                self.logger.error(f"Error getting click-to-dial history: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    # Framework Feature Handlers - Team Messaging
+    def _handle_get_team_channels(self):
+        """Get all team messaging channels"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.team_collaboration import TeamMessagingEngine
+                engine = TeamMessagingEngine(self.pbx_core.database, self.pbx_core.config)
+                channels = engine.get_all_channels()
+                self._send_json({'channels': channels})
+            except Exception as e:
+                self.logger.error(f"Error getting team channels: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_create_team_channel(self):
+        """Create team messaging channel"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.team_collaboration import TeamMessagingEngine
+                engine = TeamMessagingEngine(self.pbx_core.database, self.pbx_core.config)
+                channel_id = engine.create_channel(body)
+                if channel_id:
+                    self._send_json({'channel_id': channel_id, 'success': True})
+                else:
+                    self._send_json({'error': 'Failed to create channel'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error creating team channel: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_send_team_message(self):
+        """Send team message"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.team_collaboration import TeamMessagingEngine
+                engine = TeamMessagingEngine(self.pbx_core.database, self.pbx_core.config)
+                message_id = engine.send_message(body)
+                if message_id:
+                    self._send_json({'message_id': message_id, 'success': True})
+                else:
+                    self._send_json({'error': 'Failed to send message'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error sending team message: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_team_messages(self, channel_id: str):
+        """Get team messages for channel"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.team_collaboration import TeamMessagingEngine
+                engine = TeamMessagingEngine(self.pbx_core.database, self.pbx_core.config)
+                messages = engine.get_channel_messages(int(channel_id))
+                self._send_json({'messages': messages})
+            except Exception as e:
+                self.logger.error(f"Error getting team messages: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    # Framework Feature Handlers - Nomadic E911
+    def _handle_get_e911_sites(self):
+        """Get all E911 site configurations"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                sites = engine.get_all_sites()
+                self._send_json({'sites': sites})
+            except Exception as e:
+                self.logger.error(f"Error getting E911 sites: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_e911_location(self, extension: str):
+        """Get E911 location for extension"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                location = engine.get_location(extension)
+                if location:
+                    self._send_json(location)
+                else:
+                    self._send_json({'error': 'Location not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting E911 location: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_update_e911_location(self, extension: str):
+        """Update E911 location for extension"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                if engine.update_location(extension, body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to update location'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error updating E911 location: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_create_e911_site(self):
+        """Create E911 site configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                if engine.create_site_config(body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to create site'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error creating E911 site: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    # Framework Feature Handlers - CRM Integrations
+    def _handle_get_hubspot_config(self):
+        """Get HubSpot integration configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.crm_integrations import HubSpotIntegration
+                integration = HubSpotIntegration(self.pbx_core.database, self.pbx_core.config)
+                config = integration.get_config()
+                if config:
+                    self._send_json(config)
+                else:
+                    self._send_json({'enabled': False})
+            except Exception as e:
+                self.logger.error(f"Error getting HubSpot config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_update_hubspot_config(self):
+        """Update HubSpot integration configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.crm_integrations import HubSpotIntegration
+                integration = HubSpotIntegration(self.pbx_core.database, self.pbx_core.config)
+                if integration.update_config(body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to update config'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error updating HubSpot config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_zendesk_config(self):
+        """Get Zendesk integration configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.crm_integrations import ZendeskIntegration
+                integration = ZendeskIntegration(self.pbx_core.database, self.pbx_core.config)
+                config = integration.get_config()
+                if config:
+                    self._send_json(config)
+                else:
+                    self._send_json({'enabled': False})
+            except Exception as e:
+                self.logger.error(f"Error getting Zendesk config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_update_zendesk_config(self):
+        """Update Zendesk integration configuration"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.crm_integrations import ZendeskIntegration
+                integration = ZendeskIntegration(self.pbx_core.database, self.pbx_core.config)
+                if integration.update_config(body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to update config'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error updating Zendesk config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_integration_activity(self):
+        """Get integration activity log"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.crm_integrations import ZendeskIntegration
+                integration = ZendeskIntegration(self.pbx_core.database, self.pbx_core.config)
+                activities = integration.get_activity_log()
+                self._send_json({'activities': activities})
+            except Exception as e:
+                self.logger.error(f"Error getting integration activity: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    # Framework Feature Handlers - Compliance
+    def _handle_get_gdpr_consents(self, extension: str):
+        """Get GDPR consent records"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.compliance_framework import GDPRComplianceEngine
+                engine = GDPRComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                consents = engine.get_consent_status(extension)
+                self._send_json({'consents': consents})
+            except Exception as e:
+                self.logger.error(f"Error getting GDPR consents: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_record_gdpr_consent(self):
+        """Record GDPR consent"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.compliance_framework import GDPRComplianceEngine
+                engine = GDPRComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.record_consent(body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to record consent'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error recording GDPR consent: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_withdraw_gdpr_consent(self):
+        """Withdraw GDPR consent"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.compliance_framework import GDPRComplianceEngine
+                engine = GDPRComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.withdraw_consent(body.get('extension'), body.get('consent_type')):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to withdraw consent'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error withdrawing GDPR consent: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_create_gdpr_request(self):
+        """Create GDPR data request"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.compliance_framework import GDPRComplianceEngine
+                engine = GDPRComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                request_id = engine.create_data_request(body)
+                if request_id:
+                    self._send_json({'request_id': request_id, 'success': True})
+                else:
+                    self._send_json({'error': 'Failed to create request'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error creating GDPR request: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_gdpr_requests(self):
+        """Get pending GDPR data requests"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.compliance_framework import GDPRComplianceEngine
+                engine = GDPRComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                requests = engine.get_pending_requests()
+                self._send_json({'requests': requests})
+            except Exception as e:
+                self.logger.error(f"Error getting GDPR requests: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_soc2_controls(self):
+        """Get SOC 2 controls"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.compliance_framework import SOC2ComplianceEngine
+                engine = SOC2ComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                controls = engine.get_all_controls()
+                self._send_json({'controls': controls})
+            except Exception as e:
+                self.logger.error(f"Error getting SOC2 controls: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_register_soc2_control(self):
+        """Register SOC 2 control"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.compliance_framework import SOC2ComplianceEngine
+                engine = SOC2ComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.register_control(body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to register control'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error registering SOC2 control: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_pci_audit_log(self):
+        """Get PCI DSS audit log"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.compliance_framework import PCIDSSComplianceEngine
+                engine = PCIDSSComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                logs = engine.get_audit_log()
+                self._send_json({'logs': logs})
+            except Exception as e:
+                self.logger.error(f"Error getting PCI audit log: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_log_pci_event(self):
+        """Log PCI DSS event"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                from pbx.features.compliance_framework import PCIDSSComplianceEngine
+                engine = PCIDSSComplianceEngine(self.pbx_core.database, self.pbx_core.config)
+                if engine.log_audit_event(body):
+                    self._send_json({'success': True})
+                else:
+                    self._send_json({'error': 'Failed to log event'}, 500)
+            except Exception as e:
+                self.logger.error(f"Error logging PCI event: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
 
 
 class PBXAPIServer:
