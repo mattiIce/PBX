@@ -1,5 +1,16 @@
 # Open Source Integration Guide
 
+## 🆘 Having Issues? Start Here!
+
+**⚠️ TROUBLESHOOTING FIRST**: If you're experiencing issues with:
+- **Jitsi**: Installed self-hosted Jitsi but don't know how to integrate it with PBX
+- **Matrix**: `pip3 install` worked but `python3` command fails or gives errors  
+- **EspoCRM**: Getting "404 Not Found" errors when trying to access the API
+
+**👉 See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for step-by-step solutions!**
+
+---
+
 ## Overview
 
 This guide documents all free and open-source integrations available for the PBX system. All components listed are either free, open-source, or self-hosted solutions that don't require proprietary licenses or paid APIs.
@@ -87,7 +98,7 @@ This guide documents all free and open-source integrations available for the PBX
 ### Video Conferencing
 
 #### **Jitsi Meet** (Free Alternative to Zoom/Teams)
-- **Status**: 🔧 Integration Needed
+- **Status**: ✅ Fully Integrated
 - **License**: Apache 2.0
 - **Cost**: Free
 - **Features**: Video calls, screen sharing, recording
@@ -99,8 +110,11 @@ This guide documents all free and open-source integrations available for the PBX
   sudo sh -c "echo 'deb https://download.jitsi.org stable/' > /etc/apt/sources.list.d/jitsi-stable.list"
   sudo apt-get update
   sudo apt-get install jitsi-meet
+  
+  # After installation, see INTEGRATION_TROUBLESHOOTING_GUIDE.md
+  # for step-by-step PBX integration instructions
   ```
-- **Integration**: Create meetings via REST API
+- **Integration**: ⚠️ **IMPORTANT**: After installing Jitsi, you must configure the PBX to use it. See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide) for complete instructions.
 
 #### **BigBlueButton** (Alternative - Education Focus)
 - **License**: LGPL
@@ -111,22 +125,33 @@ This guide documents all free and open-source integrations available for the PBX
 ### Team Messaging & Collaboration
 
 #### **Matrix (Element)** (Free Alternative to Slack/Teams Chat)
-- **Status**: 🔧 Integration Needed
+- **Status**: ✅ Fully Integrated
 - **License**: Apache 2.0
 - **Cost**: Free
 - **Features**: Federated messaging, E2E encryption, file sharing
 - **Self-Hosted**: Yes (Synapse server)
 - **Setup**:
   ```bash
-  # Install Synapse (Matrix homeserver)
-  pip install matrix-synapse
-  python -m synapse.app.homeserver \
+  # Step 1: Install Synapse (Matrix homeserver)
+  pip3 install matrix-synapse
+  
+  # Step 2: Generate configuration (ONLY - does NOT start server)
+  mkdir -p ~/matrix-synapse
+  cd ~/matrix-synapse
+  python3 -m synapse.app.homeserver \
     --server-name my.domain.name \
     --config-path homeserver.yaml \
     --generate-config \
-    --report-stats=yes
+    --report-stats=no
+  
+  # Step 3: Start the server (separate command)
+  python3 -m synapse.app.homeserver --config-path homeserver.yaml
+  
+  # ⚠️ IMPORTANT: See INTEGRATION_TROUBLESHOOTING_GUIDE.md for complete
+  # setup instructions including bot account creation and PBX configuration
   ```
 - **Client**: Element (web, desktop, mobile)
+- **Troubleshooting**: If you're getting errors, see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup)
 
 #### **Rocket.Chat** (Alternative)
 - **License**: MIT
@@ -143,7 +168,7 @@ This guide documents all free and open-source integrations available for the PBX
 ### CRM (Customer Relationship Management)
 
 #### **EspoCRM** (Free Alternative to Salesforce/HubSpot)
-- **Status**: 🔧 Integration Needed
+- **Status**: ✅ Fully Integrated
 - **License**: GPL v3
 - **Cost**: Free
 - **Features**: Contacts, deals, cases, workflow automation
@@ -151,12 +176,19 @@ This guide documents all free and open-source integrations available for the PBX
 - **API**: REST API available
 - **Setup**:
   ```bash
-  # Download and extract
-  wget https://www.espocrm.com/downloads/EspoCRM-7.x.x.zip
-  unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
+  # Prerequisites
+  sudo apt-get install apache2 mysql-server php php-mysql php-curl \
+    php-gd php-mbstring php-xml php-zip php-intl unzip wget
   
-  # Configure web server and database
+  # Download and extract (replace X.X.X with latest version)
+  wget https://www.espocrm.com/downloads/EspoCRM-8.1.3.zip
+  sudo unzip EspoCRM-8.1.3.zip -d /var/www/espocrm
+  sudo chown -R www-data:www-data /var/www/espocrm
+  
+  # Complete installation via web wizard at http://your-server/
+  # Then see INTEGRATION_TROUBLESHOOTING_GUIDE.md for PBX integration
   ```
+- **⚠️ Common Issue**: Getting "404 Not Found"? This means EspoCRM is not installed or Apache is not configured. See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup) for complete installation and troubleshooting.
 
 #### **SuiteCRM** (Alternative - Salesforce Fork)
 - **License**: AGPLv3

@@ -52,7 +52,11 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **EspoCRM** - CRM with screen pop & call logging (Salesforce alternative) - ✅ Integrated
 - **Vosk** - Offline speech recognition for transcription - ✅ Integrated
 - **OpenLDAP** - Directory services (Active Directory compatible) - ✅ Compatible
-- **See [OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md) for complete guide**
+
+**📖 Documentation:**
+- **[INTEGRATION_QUICK_FIX.md](INTEGRATION_QUICK_FIX.md)** - 🆘 **START HERE for troubleshooting!**
+- **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Complete setup guides
+- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Full integration reference
 
 **💰 Cost Savings**: $0/year vs $3,726+/user/year for proprietary stack
 

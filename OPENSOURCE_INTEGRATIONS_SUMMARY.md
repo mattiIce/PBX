@@ -4,6 +4,20 @@
 **Status**: ✅ COMPLETE  
 **Cost Savings**: $3,726+/user/year → $0/year
 
+## 🆘 Troubleshooting
+
+**Having issues with integrations?**
+
+- **[INTEGRATION_QUICK_FIX.md](INTEGRATION_QUICK_FIX.md)** - 🚨 **Fast fixes for common problems**
+- **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Complete troubleshooting guide
+
+**Common Issues:**
+- **Jitsi**: Installed but not integrated → [Solution](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide)
+- **Matrix**: `python3` command fails → [Solution](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup)
+- **EspoCRM**: 404 Not Found → [Solution](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup)
+
+---
+
 ## Overview
 
 This implementation provides a complete framework for integrating free, open-source alternatives to expensive proprietary services. All integrations are fully configurable through the admin web portal and require no licensing fees.
@@ -178,9 +192,11 @@ sudo sh -c "echo 'deb https://download.jitsi.org stable/' > /etc/apt/sources.lis
 sudo apt-get update
 sudo apt-get install jitsi-meet
 
-# Then configure in admin portal
+# Then configure in admin portal OR config.yml
 server_url: https://jitsi.yourcompany.com
 ```
+
+**⚠️ Having issues?** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide) for complete setup instructions.
 
 ### 4. Example: Setting Up Matrix
 
@@ -201,35 +217,52 @@ notification_room: !abc123:matrix.org
 ```bash
 # Install Matrix Synapse
 pip3 install matrix-synapse
+
+# Generate config (separate from starting server!)
+mkdir -p ~/matrix-synapse
+cd ~/matrix-synapse
 python3 -m synapse.app.homeserver \
   --server-name yourcompany.com \
   --config-path homeserver.yaml \
-  --generate-config
+  --generate-config \
+  --report-stats=no
+
+# Start server (separate command)
+python3 -m synapse.app.homeserver --config-path homeserver.yaml
 
 # Configure in admin portal
 homeserver_url: https://matrix.yourcompany.com
 ```
 
+**⚠️ Having issues?** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup) for complete setup instructions including bot account creation.
+
 ### 5. Example: Setting Up EspoCRM
 
 ```bash
-# 1. Install EspoCRM
-wget https://www.espocrm.com/downloads/EspoCRM-7.x.x.zip
-unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
+# 1. Install prerequisites
+sudo apt-get install apache2 mysql-server php php-mysql php-curl \
+  php-gd php-mbstring php-xml php-zip php-intl unzip
 
-# 2. Setup database and web server
-# Follow installation wizard at https://your-server/espocrm
+# 2. Download and install EspoCRM
+wget https://www.espocrm.com/downloads/EspoCRM-8.1.3.zip
+sudo unzip EspoCRM-8.1.3.zip -d /var/www/espocrm
+sudo chown -R www-data:www-data /var/www/espocrm
 
-# 3. Generate API Key
-# Login to EspoCRM → Administration → API Users → Create API User
+# 3. Configure Apache and complete web installation
+# See INTEGRATION_TROUBLESHOOTING_GUIDE.md for complete steps
 
-# 4. Configure in admin portal
+# 4. After installation, generate API Key in EspoCRM
+# Login → Administration → API Users → Create API User
+
+# 5. Configure in admin portal
 api_url: https://crm.yourcompany.com/api/v1
 api_key: your-generated-api-key
 auto_create_contacts: true
 auto_log_calls: true
 screen_pop: true
 ```
+
+**⚠️ Getting 404 errors?** This means EspoCRM is not installed. See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup) for complete installation guide.
 
 ## Architecture
 
