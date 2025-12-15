@@ -4,6 +4,14 @@
 **Status**: ✅ COMPLETE  
 **Cost Savings**: $3,726+/user/year → $0/year
 
+## 🚀 Quick Setup
+
+**NEW: One-Click Integration Setup!**
+
+- **[QUICK_SETUP_GUIDE.md](QUICK_SETUP_GUIDE.md)** - 🎯 **Enable integrations with one click in the Admin Panel!**
+
+Simply check the checkbox next to any integration in the admin panel to enable it with default settings. No manual configuration needed!
+
 ## 🆘 Troubleshooting
 
 **Having issues with integrations?**
@@ -20,7 +28,7 @@
 
 ## Overview
 
-This implementation provides a complete framework for integrating free, open-source alternatives to expensive proprietary services. All integrations are fully configurable through the admin web portal and require no licensing fees.
+This implementation provides a complete framework for integrating free, open-source alternatives to expensive proprietary services. All integrations are fully configurable through the admin web portal with **one-click quick setup** and require no licensing fees.
 
 ## What Was Implemented
 
@@ -162,18 +170,59 @@ POST /api/integrations/matrix/rooms - Create room
 
 ## How to Use
 
-### 1. Access Admin Portal
-Navigate to `https://your-server:8080/admin/` and login.
+### Quick Setup (Recommended)
 
-### 2. Configure Integrations
-1. Click "Integrations" in sidebar
-2. Click "Open Source (Free)" tab
-3. Select integration to configure
-4. Fill in configuration details
-5. Click "Test Connection"
-6. Click "Save Configuration"
+The easiest way to enable integrations is through the Admin Portal's quick setup feature:
 
-### 3. Example: Setting Up Jitsi
+1. **Access Admin Portal**
+   - Navigate to `https://your-server:8080/admin/`
+   - Login with your credentials
+
+2. **Enable Integrations with One Click**
+   - Click "Integrations" in the sidebar
+   - Click "Open Source (Free)" tab
+   - You'll see cards for each integration with checkboxes
+   - **Simply check the box** next to any integration to enable it with default settings!
+   - Or click the **"Quick Setup"** button for instant configuration
+
+3. **Quick Setup Features**
+   - ✅ **One-click enable/disable** - Just check or uncheck the box
+   - 🚀 **Automatic default configuration** - Uses free public servers
+   - 📊 **Status badges** - See which integrations are active
+   - ⚙️ **Advanced configuration** - Click "Configure" for custom settings
+
+4. **Default Settings Applied**
+   - **Jitsi**: Uses free public server (meet.jit.si)
+   - **Matrix**: Uses public homeserver (matrix.org) - requires bot setup
+   - **EspoCRM**: Enabled but requires your CRM URL and API key
+
+5. **Complete Setup (If Needed)**
+   - For **Matrix**: Set `MATRIX_BOT_PASSWORD` in your `.env` file
+   - For **EspoCRM**: Click "Configure" to set API URL and API key
+   - For **Jitsi**: Works immediately with default settings!
+
+### Manual Configuration
+
+For advanced users who want full control:
+
+1. **Access Admin Portal** - Navigate to `https://your-server:8080/admin/` and login.
+
+2. **Configure Integrations**
+   - Click "Integrations" in sidebar
+   - Click "Open Source (Free)" tab
+   - Select integration to configure
+   - Fill in configuration details
+   - Click "Test Connection"
+   - Click "Save Configuration"
+
+### Example: Setting Up Jitsi (Quick Setup)
+
+**🚀 Quick Method (Recommended - Uses Admin Portal)**
+1. Go to Admin Portal → Integrations → Open Source (Free)
+2. Check the box next to "Jitsi Meet" OR click "Quick Setup"
+3. Done! Jitsi is now enabled with the free public server (meet.jit.si)
+
+**📝 Manual Method (For Custom Configuration)**
 
 **Option 1: Public Server (Instant, Free)**
 ```yaml
@@ -198,7 +247,21 @@ server_url: https://jitsi.yourcompany.com
 
 **⚠️ Having issues?** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide) for complete setup instructions.
 
-### 4. Example: Setting Up Matrix
+### Example: Setting Up Matrix (Quick Setup)
+
+**🚀 Quick Method (Requires Bot Account)**
+1. Create a Matrix bot account:
+   - Go to https://app.element.io
+   - Create a new account for your PBX bot (e.g., @pbxbot:matrix.org)
+   - Note the username and password
+2. Set bot password in .env file:
+   - Edit `/home/runner/work/PBX/PBX/.env`
+   - Add: `MATRIX_BOT_PASSWORD=your-bot-password`
+3. Go to Admin Portal → Integrations → Open Source (Free)
+4. Check the box next to "Matrix" OR click "Quick Setup"
+5. Click "Configure" to set bot username and room IDs
+
+**📝 Manual Method**
 
 **Option 1: Public Homeserver**
 ```bash
@@ -236,7 +299,22 @@ homeserver_url: https://matrix.yourcompany.com
 
 **⚠️ Having issues?** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup) for complete setup instructions including bot account creation.
 
-### 5. Example: Setting Up EspoCRM
+### Example: Setting Up EspoCRM (Quick Setup)
+
+**🚀 Quick Method (Requires EspoCRM Installation)**
+1. Install EspoCRM (see manual method below for installation)
+2. Generate API key in EspoCRM:
+   - Login → Administration → API Users → Create API User
+   - Copy the generated API key
+3. Set API key in .env file:
+   - Edit `/home/runner/work/PBX/PBX/.env`
+   - Add: `ESPOCRM_API_KEY=your-api-key`
+4. Go to Admin Portal → Integrations → Open Source (Free)
+5. Check the box next to "EspoCRM" OR click "Quick Setup"
+6. Click "Configure" to set your EspoCRM API URL (e.g., https://crm.yourcompany.com/api/v1)
+7. Save configuration
+
+**📝 Manual Method (Installation)**
 
 ```bash
 # 1. Install prerequisites

@@ -3182,33 +3182,57 @@ G.726-32</textarea>
 
             <div class="section-card">
                 <h3>Available Integrations</h3>
+                <div class="info-box" style="margin-bottom: 20px; background-color: #e3f2fd;">
+                    <strong>🚀 Quick Setup:</strong> Check the boxes below to enable integrations with default settings. All integrations use free public servers by default.
+                </div>
                 <div class="integration-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                     
-                    <div class="integration-card" style="border: 2px solid #4CAF50; border-radius: 8px; padding: 15px;">
-                        <h4 style="color: #4CAF50;">📹 Jitsi Meet</h4>
+                    <div class="integration-card" id="jitsi-card" style="border: 2px solid #4CAF50; border-radius: 8px; padding: 15px; position: relative;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <input type="checkbox" id="quick-jitsi-enabled" onchange="quickToggleIntegration('jitsi')" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                            <h4 style="color: #4CAF50; margin: 0;">📹 Jitsi Meet</h4>
+                            <span id="jitsi-status-badge" style="margin-left: auto; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: none;">●</span>
+                        </div>
                         <p><strong>Video Conferencing</strong></p>
-                        <p>Free alternative to Zoom with screen sharing, recording, and unlimited participants.</p>
-                        <button class="btn" onclick="showTab('jitsi-integration')" style="width: 100%; margin-top: 10px;">Configure Jitsi</button>
+                        <p style="font-size: 14px;">Free alternative to Zoom with screen sharing, recording, and unlimited participants.</p>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button class="btn" onclick="quickSetupIntegration('jitsi')" style="flex: 1; background-color: #4CAF50;">Quick Setup</button>
+                            <button class="btn" onclick="showTab('jitsi-integration')" style="flex: 1; background-color: #666;">Configure</button>
+                        </div>
                     </div>
 
-                    <div class="integration-card" style="border: 2px solid #9C27B0; border-radius: 8px; padding: 15px;">
-                        <h4 style="color: #9C27B0;">💬 Matrix</h4>
+                    <div class="integration-card" id="matrix-card" style="border: 2px solid #9C27B0; border-radius: 8px; padding: 15px; position: relative;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <input type="checkbox" id="quick-matrix-enabled" onchange="quickToggleIntegration('matrix')" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                            <h4 style="color: #9C27B0; margin: 0;">💬 Matrix</h4>
+                            <span id="matrix-status-badge" style="margin-left: auto; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: none;">●</span>
+                        </div>
                         <p><strong>Team Messaging</strong></p>
-                        <p>Federated chat alternative to Slack with end-to-end encryption and file sharing.</p>
-                        <button class="btn" onclick="showTab('matrix-integration')" style="width: 100%; margin-top: 10px;">Configure Matrix</button>
+                        <p style="font-size: 14px;">Federated chat alternative to Slack with end-to-end encryption and file sharing.</p>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button class="btn" onclick="quickSetupIntegration('matrix')" style="flex: 1; background-color: #9C27B0;">Quick Setup</button>
+                            <button class="btn" onclick="showTab('matrix-integration')" style="flex: 1; background-color: #666;">Configure</button>
+                        </div>
                     </div>
 
-                    <div class="integration-card" style="border: 2px solid #2196F3; border-radius: 8px; padding: 15px;">
-                        <h4 style="color: #2196F3;">👥 EspoCRM</h4>
+                    <div class="integration-card" id="espocrm-card" style="border: 2px solid #2196F3; border-radius: 8px; padding: 15px; position: relative;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <input type="checkbox" id="quick-espocrm-enabled" onchange="quickToggleIntegration('espocrm')" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                            <h4 style="color: #2196F3; margin: 0;">👥 EspoCRM</h4>
+                            <span id="espocrm-status-badge" style="margin-left: auto; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: none;">●</span>
+                        </div>
                         <p><strong>Customer Relationship</strong></p>
-                        <p>Open-source CRM with contacts, deals, screen pop, and call logging.</p>
-                        <button class="btn" onclick="showTab('espocrm-integration')" style="width: 100%; margin-top: 10px;">Configure EspoCRM</button>
+                        <p style="font-size: 14px;">Open-source CRM with contacts, deals, screen pop, and call logging.</p>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button class="btn" onclick="quickSetupIntegration('espocrm')" style="flex: 1; background-color: #2196F3;">Quick Setup</button>
+                            <button class="btn" onclick="showTab('espocrm-integration')" style="flex: 1; background-color: #666;">Configure</button>
+                        </div>
                     </div>
 
                     <div class="integration-card" style="border: 2px solid #FF9800; border-radius: 8px; padding: 15px;">
                         <h4 style="color: #FF9800;">🎙️ Vosk</h4>
                         <p><strong>Speech Recognition</strong></p>
-                        <p>Already integrated! Offline speech-to-text for voicemail transcription.</p>
+                        <p style="font-size: 14px;">Already integrated! Offline speech-to-text for voicemail transcription.</p>
                         <button class="btn" style="width: 100%; margin-top: 10px; opacity: 0.7;" disabled>✅ Active</button>
                     </div>
 

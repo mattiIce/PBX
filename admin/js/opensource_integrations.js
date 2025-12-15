@@ -18,11 +18,345 @@ function escapeHtml(str) {
     });
 }
 
+// Integration names mapping (used across multiple functions)
+const INTEGRATION_NAMES = {
+    jitsi: 'Jitsi Meet',
+    matrix: 'Matrix',
+    espocrm: 'EspoCRM'
+};
+
+// Show a temporary notification message
+function showQuickSetupNotification(message, type = 'info', duration = 5000) {
+    // Create notification element if it doesn't exist
+    let notificationContainer = document.getElementById('quick-setup-notifications');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'quick-setup-notifications';
+        notificationContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        document.body.appendChild(notificationContainer);
+    }
+    
+    // Create notification
+    const notification = document.createElement('div');
+    const bgColors = {
+        success: '#4CAF50',
+        error: '#f44336',
+        warning: '#ff9800',
+        info: '#2196F3'
+    };
+    
+    notification.style.cssText = `
+        background-color: ${bgColors[type] || bgColors.info};
+        color: white;
+        padding: 16px 20px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    notification.innerHTML = `
+        <div style="flex: 1; padding-right: 10px;">${escapeHtml(message)}</div>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        ">×</button>
+    `;
+    
+    // Add animation keyframes if not already added
+    if (!document.getElementById('notification-animations')) {
+        const style = document.createElement('style');
+        style.id = 'notification-animations';
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    notificationContainer.appendChild(notification);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            notification.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
+}
+
 // Initialize open source integrations when tab is shown
 function initializeOpenSourceIntegrations() {
     loadJitsiConfig();
     loadMatrixConfig();
     loadEspoCRMConfig();
+    updateQuickSetupStatus();
+}
+
+// =============================================================================
+// Quick Setup Functions
+// =============================================================================
+
+/**
+ * Update the status of quick setup checkboxes based on current config
+ */
+async function updateQuickSetupStatus() {
+    try {
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        const integrations = data.integrations || {};
+        
+        // Update Jitsi status
+        const jitsiEnabled = integrations.jitsi?.enabled || false;
+        const jitsiCheckbox = document.getElementById('quick-jitsi-enabled');
+        const jitsiBadge = document.getElementById('jitsi-status-badge');
+        if (jitsiCheckbox) {
+            jitsiCheckbox.checked = jitsiEnabled;
+        }
+        if (jitsiBadge) {
+            jitsiBadge.style.display = jitsiEnabled ? 'inline-block' : 'none';
+            jitsiBadge.style.backgroundColor = '#4CAF50';
+            jitsiBadge.style.color = 'white';
+            jitsiBadge.textContent = '● Enabled';
+        }
+        
+        // Update Matrix status
+        const matrixEnabled = integrations.matrix?.enabled || false;
+        const matrixCheckbox = document.getElementById('quick-matrix-enabled');
+        const matrixBadge = document.getElementById('matrix-status-badge');
+        if (matrixCheckbox) {
+            matrixCheckbox.checked = matrixEnabled;
+        }
+        if (matrixBadge) {
+            matrixBadge.style.display = matrixEnabled ? 'inline-block' : 'none';
+            matrixBadge.style.backgroundColor = '#9C27B0';
+            matrixBadge.style.color = 'white';
+            matrixBadge.textContent = '● Enabled';
+        }
+        
+        // Update EspoCRM status
+        const espocrmEnabled = integrations.espocrm?.enabled || false;
+        const espocrmCheckbox = document.getElementById('quick-espocrm-enabled');
+        const espocrmBadge = document.getElementById('espocrm-status-badge');
+        if (espocrmCheckbox) {
+            espocrmCheckbox.checked = espocrmEnabled;
+        }
+        if (espocrmBadge) {
+            espocrmBadge.style.display = espocrmEnabled ? 'inline-block' : 'none';
+            espocrmBadge.style.backgroundColor = '#2196F3';
+            espocrmBadge.style.color = 'white';
+            espocrmBadge.textContent = '● Enabled';
+        }
+        
+    } catch (error) {
+        console.error('Failed to load integration status:', error);
+    }
+}
+
+/**
+ * Quick toggle integration on/off
+ */
+async function quickToggleIntegration(integration) {
+    const checkbox = document.getElementById(`quick-${integration}-enabled`);
+    const isEnabled = checkbox.checked;
+    
+    if (isEnabled) {
+        // Enable with default settings
+        await quickSetupIntegration(integration);
+    } else {
+        // Disable integration
+        await disableIntegration(integration);
+    }
+}
+
+/**
+ * Quick setup integration with default settings
+ */
+async function quickSetupIntegration(integration) {
+    const defaults = {
+        jitsi: {
+            enabled: true,
+            server_url: 'https://meet.jit.si',
+            auto_create_rooms: true,
+            app_id: '',
+            app_secret: ''
+        },
+        matrix: {
+            enabled: true,
+            homeserver_url: 'https://matrix.org',
+            bot_username: '',
+            bot_password: '${MATRIX_BOT_PASSWORD}',
+            notification_room: '',
+            voicemail_room: '',
+            missed_call_notifications: true
+        },
+        espocrm: {
+            enabled: true,
+            api_url: '',
+            api_key: '${ESPOCRM_API_KEY}',
+            auto_create_contacts: true,
+            auto_log_calls: true,
+            screen_pop: true
+        }
+    };
+    
+    const config = defaults[integration];
+    
+    if (!config) {
+        showQuickSetupNotification('Unknown integration: ' + integration, 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/config/section', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { 
+                    [integration]: config 
+                } 
+            })
+        });
+        
+        if (response.ok) {
+            // Update the checkbox
+            const checkbox = document.getElementById(`quick-${integration}-enabled`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+            
+            // Update status badge
+            updateQuickSetupStatus();
+            
+            // Show success message
+            let message = `✅ ${INTEGRATION_NAMES[integration]} enabled with default settings! The integration is now active.`;
+            
+            // Show additional info for specific integrations
+            if (integration === 'matrix') {
+                message += ' Note: You need to set MATRIX_BOT_PASSWORD in your .env file for Matrix to work.';
+                showQuickSetupNotification(message, 'warning', 8000);
+            } else if (integration === 'espocrm') {
+                message += ' Note: You need to set ESPOCRM_API_KEY and api_url in the configuration tab.';
+                showQuickSetupNotification(message, 'warning', 8000);
+            } else {
+                showQuickSetupNotification(message, 'success');
+            }
+            
+            // Reload the detailed config if on that tab
+            if (integration === 'jitsi') {
+                loadJitsiConfig();
+            } else if (integration === 'matrix') {
+                loadMatrixConfig();
+            } else if (integration === 'espocrm') {
+                loadEspoCRMConfig();
+            }
+        } else {
+            alert('Failed to enable ' + integration);
+            // Revert checkbox
+            const checkbox = document.getElementById(`quick-${integration}-enabled`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+        } else {
+            showQuickSetupNotification(`Failed to enable ${INTEGRATION_NAMES[integration]}`, 'error');
+            // Revert checkbox
+            const checkbox = document.getElementById(`quick-${integration}-enabled`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+        }
+    } catch (error) {
+        showQuickSetupNotification('Error enabling integration: ' + error.message, 'error');
+        // Revert checkbox
+        const checkbox = document.getElementById(`quick-${integration}-enabled`);
+        if (checkbox) {
+            checkbox.checked = false;
+        }
+    }
+}
+
+/**
+ * Disable an integration
+ */
+async function disableIntegration(integration) {
+    try {
+        // First, get current config
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        const currentConfig = data.integrations?.[integration] || {};
+        
+        // Set enabled to false
+        currentConfig.enabled = false;
+        
+        // Update config
+        const updateResponse = await fetch('/api/config/section', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { 
+                    [integration]: currentConfig 
+                } 
+            })
+        });
+        
+        if (updateResponse.ok) {
+            // Update status
+            updateQuickSetupStatus();
+            
+            showQuickSetupNotification(`${INTEGRATION_NAMES[integration]} has been disabled.`, 'info');
+            
+            // Reload the detailed config if on that tab
+            if (integration === 'jitsi') {
+                loadJitsiConfig();
+            } else if (integration === 'matrix') {
+                loadMatrixConfig();
+            } else if (integration === 'espocrm') {
+                loadEspoCRMConfig();
+            }
+        } else {
+            showQuickSetupNotification('Failed to disable ' + INTEGRATION_NAMES[integration], 'error');
+            // Revert checkbox
+            const checkbox = document.getElementById(`quick-${integration}-enabled`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        }
+    } catch (error) {
+        showQuickSetupNotification('Error disabling integration: ' + error.message, 'error');
+        // Revert checkbox
+        const checkbox = document.getElementById(`quick-${integration}-enabled`);
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+    }
 }
 
 // =============================================================================
@@ -67,14 +401,18 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
     };
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ integrations: { jitsi: config } })
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { jitsi: config } 
+            })
         });
         
         if (response.ok) {
             showJitsiStatus('Configuration saved successfully!', 'success');
+            updateQuickSetupStatus(); // Update quick setup checkboxes
         } else {
             showJitsiStatus('Failed to save configuration', 'error');
         }
@@ -159,14 +497,18 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
     };
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ integrations: { matrix: config } })
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { matrix: config } 
+            })
         });
         
         if (response.ok) {
             showMatrixStatus('Configuration saved successfully!', 'success');
+            updateQuickSetupStatus(); // Update quick setup checkboxes
         } else {
             showMatrixStatus('Failed to save configuration', 'error');
         }
@@ -258,14 +600,18 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
     };
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ integrations: { espocrm: config } })
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { espocrm: config } 
+            })
         });
         
         if (response.ok) {
             showEspoCRMStatus('Configuration saved successfully!', 'success');
+            updateQuickSetupStatus(); // Update quick setup checkboxes
         } else {
             showEspoCRMStatus('Failed to save configuration', 'error');
         }
