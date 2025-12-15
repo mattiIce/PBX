@@ -39,9 +39,57 @@ class IntegrationInstaller:
         print(f"{prefix} {message}")
     
     def run_command(self, cmd, check=True, capture=False):
-        """Run a shell command"""
+        """
+        Run a command safely using subprocess without shell=True.
+        
+        Args:
+            cmd: Command as a list (e.g., ['apt-get', 'update']) or string for shell commands
+            check: Whether to check return code
+            capture: Whether to capture output
+        
+        Returns:
+            True/output if successful, False if failed
+        """
+        # Determine if this is a list-based command (safe) or shell command (for trusted inputs only)
+        if isinstance(cmd, list):
+            cmd_str = ' '.join(cmd)
+            use_shell = False
+        else:
+            cmd_str = cmd
+            use_shell = True
+            
         if self.verbose or self.dry_run:
-            self.log(f"Running: {cmd}", "STEP")
+            self.log(f"Running: {cmd_str}", "STEP")
+        
+        if self.dry_run:
+            return True
+        
+        try:
+            if capture:
+                result = subprocess.run(
+                    cmd, 
+                    shell=use_shell, 
+                    check=check,
+                    capture_output=True,
+                    text=True
+                )
+                return result.stdout.strip()
+            else:
+                subprocess.run(cmd, shell=use_shell, check=check)
+                return True
+        except subprocess.CalledProcessError as e:
+            self.log(f"Command failed: {cmd_str}", "ERROR")
+            if self.verbose:
+                self.log(f"Error: {e}", "ERROR")
+            return False
+    
+    def run_shell_command(self, cmd, check=True, capture=False):
+        """
+        Run a shell command that requires pipes/redirections (trusted input only).
+        This is kept separate to clearly mark which commands need shell=True.
+        """
+        if self.verbose or self.dry_run:
+            self.log(f"Running shell command: {cmd}", "STEP")
         
         if self.dry_run:
             return True
@@ -67,7 +115,8 @@ class IntegrationInstaller:
     
     def check_command_exists(self, command):
         """Check if a command exists"""
-        result = self.run_command(f"command -v {command}", check=False, capture=True)
+        # Use safe subprocess call without shell injection
+        result = self.run_command(['which', command], check=False, capture=True)
         return bool(result)
     
     def detect_os(self):
@@ -151,31 +200,48 @@ class IntegrationInstaller:
         if os_type in ["debian", "ubuntu"]:
             # Add Jitsi repository
             self.log("Adding Jitsi repository...", "STEP")
-            commands = [
+            # These commands use pipes/redirections so they need shell=True (trusted, fixed strings)
+            shell_commands = [
                 "curl -sL https://download.jitsi.org/jitsi-key.gpg.key | gpg --dearmor | tee /usr/share/keyrings/jitsi-keyring.gpg > /dev/null",
                 'echo "deb [signed-by=/usr/share/keyrings/jitsi-keyring.gpg] https://download.jitsi.org stable/" | tee /etc/apt/sources.list.d/jitsi-stable.list',
-                "apt-get update",
             ]
             
-            for cmd in commands:
-                if not self.run_command(cmd):
+            for cmd in shell_commands:
+                if not self.run_shell_command(cmd):
                     self.log("Failed to add Jitsi repository", "ERROR")
                     return False
             
+            # Safe command without shell injection
+            if not self.run_command(['apt-get', 'update']):
+                self.log("Failed to update package lists", "ERROR")
+                return False
+            
             # Install Jitsi
             self.log("Installing Jitsi Meet package...", "STEP")
-            # Use debconf to pre-seed configuration
+            # Use debconf to pre-seed configuration (these use pipes, so need shell)
             preseed_cmds = [
                 'echo "jitsi-meet jitsi-meet/jvb-hostname string localhost" | debconf-set-selections',
                 'echo "jitsi-meet-web-config jitsi-meet/cert-choice select Generate a new self-signed certificate" | debconf-set-selections',
             ]
             
             for cmd in preseed_cmds:
-                self.run_command(cmd)
+                self.run_shell_command(cmd)
             
-            if self.run_command("DEBIAN_FRONTEND=noninteractive apt-get install -y jitsi-meet"):
+            # Safe command execution with environment variable
+            env = os.environ.copy()
+            env['DEBIAN_FRONTEND'] = 'noninteractive'
+            try:
+                if not self.dry_run:
+                    subprocess.run(
+                        ['apt-get', 'install', '-y', 'jitsi-meet'],
+                        env=env,
+                        check=True
+                    )
                 self.log("Jitsi Meet installed successfully", "SUCCESS")
                 return True
+            except subprocess.CalledProcessError:
+                self.log("Failed to install Jitsi Meet", "ERROR")
+                return False
             else:
                 self.log("Failed to install Jitsi Meet", "ERROR")
                 return False
@@ -198,31 +264,53 @@ class IntegrationInstaller:
         if os_type in ["debian", "ubuntu"]:
             # Add Matrix repository
             self.log("Adding Matrix repository...", "STEP")
-            commands = [
-                "apt-get install -y wget apt-transport-https",
-                "wget -O /usr/share/keyrings/matrix-org-archive-keyring.gpg https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg",
-                'echo "deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/matrix-org.list',
-                "apt-get update",
-            ]
             
-            for cmd in commands:
-                if not self.run_command(cmd):
-                    self.log("Failed to add Matrix repository", "ERROR")
-                    return False
+            # Install dependencies first (safe)
+            if not self.run_command(['apt-get', 'install', '-y', 'wget', 'apt-transport-https']):
+                self.log("Failed to install dependencies", "ERROR")
+                return False
+            
+            # Download keyring (safe)
+            if not self.run_command([
+                'wget', '-O', '/usr/share/keyrings/matrix-org-archive-keyring.gpg',
+                'https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg'
+            ]):
+                self.log("Failed to download Matrix keyring", "ERROR")
+                return False
+            
+            # Add repository (needs shell for command substitution)
+            if not self.run_shell_command(
+                'echo "deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/matrix-org.list'
+            ):
+                self.log("Failed to add Matrix repository", "ERROR")
+                return False
+            
+            # Update package lists (safe)
+            if not self.run_command(['apt-get', 'update']):
+                self.log("Failed to update package lists", "ERROR")
+                return False
             
             # Install Matrix Synapse
             self.log("Installing Matrix Synapse package...", "STEP")
-            if self.run_command("apt-get install -y matrix-synapse-py3"):
+            if self.run_command(['apt-get', 'install', '-y', 'matrix-synapse-py3']):
                 self.log("Matrix Synapse installed successfully", "SUCCESS")
                 
                 # Configure Synapse
                 self.log("Configuring Matrix Synapse...", "STEP")
                 config_path = "/etc/matrix-synapse/homeserver.yaml"
                 
-                # Enable registration (for creating bot account)
+                # Enable registration (for creating bot account) - safe subprocess call
                 if Path(config_path).exists():
-                    self.run_command(f"sed -i 's/enable_registration: false/enable_registration: true/' {config_path}")
-                    self.run_command("systemctl restart matrix-synapse")
+                    try:
+                        if not self.dry_run:
+                            subprocess.run([
+                                'sed', '-i',
+                                's/enable_registration: false/enable_registration: true/',
+                                config_path
+                            ], check=True)
+                            subprocess.run(['systemctl', 'restart', 'matrix-synapse'], check=True)
+                    except subprocess.CalledProcessError as e:
+                        self.log(f"Failed to configure Matrix: {e}", "WARNING")
                 
                 return True
             else:
