@@ -75,11 +75,11 @@ class MigrationManager:
             int: Current version number
         """
         try:
-            result = self.db.execute(
-                "SELECT MAX(version) FROM schema_migrations"
+            result = self.db.fetch_one(
+                "SELECT MAX(version) as max_version FROM schema_migrations"
             )
-            if result and result[0] and result[0][0] is not None:
-                return result[0][0]
+            if result and result.get('max_version') is not None:
+                return result['max_version']
             return 0
         except Exception as e:
             self.logger.warning(f"Could not get current version: {e}")
@@ -153,10 +153,10 @@ class MigrationManager:
             current_version = self.get_current_version()
             
             # Get applied migrations
-            applied = self.db.execute(
+            applied = self.db.fetch_all(
                 "SELECT version, name, applied_at FROM schema_migrations ORDER BY version"
             )
-            applied_versions = {row[0]: row for row in (applied or [])}
+            applied_versions = {row['version']: row for row in (applied or [])}
 
             status = []
             for migration in sorted(self.migrations, key=lambda x: x['version']):
@@ -166,7 +166,7 @@ class MigrationManager:
                         'version': version,
                         'name': migration['name'],
                         'status': 'applied',
-                        'applied_at': applied_versions[version][2]
+                        'applied_at': applied_versions[version]['applied_at']
                     })
                 else:
                     status.append({
