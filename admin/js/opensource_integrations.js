@@ -141,11 +141,12 @@ async function quickSetupIntegration(integration) {
     }
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                integrations: { 
+                section: 'integrations',
+                data: { 
                     [integration]: config 
                 } 
             })
@@ -220,11 +221,12 @@ async function disableIntegration(integration) {
         currentConfig.enabled = false;
         
         // Update config
-        const updateResponse = await fetch('/api/config', {
+        const updateResponse = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                integrations: { 
+                section: 'integrations',
+                data: { 
                     [integration]: currentConfig 
                 } 
             })
@@ -310,14 +312,18 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
     };
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ integrations: { jitsi: config } })
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { jitsi: config } 
+            })
         });
         
         if (response.ok) {
             showJitsiStatus('Configuration saved successfully!', 'success');
+            updateQuickSetupStatus(); // Update quick setup checkboxes
         } else {
             showJitsiStatus('Failed to save configuration', 'error');
         }
@@ -402,14 +408,18 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
     };
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ integrations: { matrix: config } })
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { matrix: config } 
+            })
         });
         
         if (response.ok) {
             showMatrixStatus('Configuration saved successfully!', 'success');
+            updateQuickSetupStatus(); // Update quick setup checkboxes
         } else {
             showMatrixStatus('Failed to save configuration', 'error');
         }
@@ -501,14 +511,18 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
     };
     
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ integrations: { espocrm: config } })
+            body: JSON.stringify({ 
+                section: 'integrations',
+                data: { espocrm: config } 
+            })
         });
         
         if (response.ok) {
             showEspoCRMStatus('Configuration saved successfully!', 'success');
+            updateQuickSetupStatus(); // Update quick setup checkboxes
         } else {
             showEspoCRMStatus('Failed to save configuration', 'error');
         }
