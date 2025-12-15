@@ -117,21 +117,24 @@ class IntegrationInstaller:
         # Create certs directory
         cert_dir.mkdir(exist_ok=True)
         
-        # Generate self-signed certificate
+        # Generate self-signed certificate using subprocess for security
         self.log("Generating self-signed SSL certificate...", "STEP")
-        cmd = f"""openssl req -x509 -newkey rsa:4096 -nodes \
-            -keyout {key_file} \
-            -out {cert_file} \
-            -days 365 \
-            -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost" \
-            -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
-        """
         
-        if self.run_command(cmd):
+        try:
+            if not self.dry_run:
+                subprocess.run([
+                    'openssl', 'req', '-x509', '-newkey', 'rsa:4096', '-nodes',
+                    '-keyout', str(key_file),
+                    '-out', str(cert_file),
+                    '-days', '365',
+                    '-subj', '/C=US/ST=State/L=City/O=Organization/CN=localhost',
+                    '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'
+                ], check=True)
+                
             self.log("SSL certificates generated successfully", "SUCCESS")
             return True
-        else:
-            self.log("Failed to generate SSL certificates", "ERROR")
+        except subprocess.CalledProcessError as e:
+            self.log(f"Failed to generate SSL certificates: {e}", "ERROR")
             return False
     
     def install_jitsi(self):
@@ -258,17 +261,36 @@ class IntegrationInstaller:
             # Download and extract EspoCRM
             self.log("Downloading EspoCRM...", "STEP")
             espocrm_version = "7.5.5"  # Latest stable version
+            espocrm_url = f"https://www.espocrm.com/downloads/EspoCRM-{espocrm_version}.zip"
+            espocrm_zip = "/tmp/espocrm.zip"
+            
+            # Download file
+            try:
+                if not self.dry_run:
+                    subprocess.run(['wget', '-O', espocrm_zip, espocrm_url], check=True)
+            except subprocess.CalledProcessError:
+                self.log("Failed to download EspoCRM", "ERROR")
+                return False
+            
+            # Verify download (basic size check)
+            if not self.dry_run and Path(espocrm_zip).stat().st_size < 1000000:  # Less than 1MB is suspicious
+                self.log("Downloaded file appears corrupted (too small)", "ERROR")
+                return False
+            
+            # Extract and set permissions
             commands = [
-                f"wget -O /tmp/espocrm.zip https://www.espocrm.com/downloads/EspoCRM-{espocrm_version}.zip",
-                "mkdir -p /var/www/html/espocrm",
-                "unzip /tmp/espocrm.zip -d /var/www/html/espocrm",
-                "chown -R www-data:www-data /var/www/html/espocrm",
-                "chmod -R 755 /var/www/html/espocrm",
+                ['mkdir', '-p', '/var/www/html/espocrm'],
+                ['unzip', espocrm_zip, '-d', '/var/www/html/espocrm'],
+                ['chown', '-R', 'www-data:www-data', '/var/www/html/espocrm'],
+                ['chmod', '-R', '755', '/var/www/html/espocrm'],
             ]
             
             for cmd in commands:
-                if not self.run_command(cmd):
-                    self.log("Failed to download/extract EspoCRM", "ERROR")
+                try:
+                    if not self.dry_run:
+                        subprocess.run(cmd, check=True)
+                except subprocess.CalledProcessError as e:
+                    self.log(f"Failed to extract/configure EspoCRM: {e}", "ERROR")
                     return False
             
             # Configure Apache
@@ -301,20 +323,46 @@ class IntegrationInstaller:
             for cmd in commands:
                 self.run_command(cmd)
             
-            # Setup MySQL database
+            # Setup MySQL database with random password
             self.log("Setting up MySQL database...", "STEP")
-            mysql_commands = """
-CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY 'espocrm_password';
-GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';
-FLUSH PRIVILEGES;
-"""
             
-            self.run_command(f"mysql -u root -e \"{mysql_commands}\"", check=False)
+            # Generate random password for security
+            import secrets
+            import string
+            alphabet = string.ascii_letters + string.digits
+            db_password = ''.join(secrets.choice(alphabet) for _ in range(16))
+            
+            # Store password in a secure location
+            password_file = self.base_path / "certs" / "espocrm_db_password.txt"
+            if not self.dry_run:
+                password_file.write_text(db_password)
+                os.chmod(password_file, 0o600)  # Read/write for owner only
+            
+            # Use subprocess for secure MySQL command execution
+            mysql_commands = [
+                "CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+                f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';",
+                "GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';",
+                "FLUSH PRIVILEGES;"
+            ]
+            
+            for cmd in mysql_commands:
+                try:
+                    if not self.dry_run:
+                        subprocess.run(
+                            ['mysql', '-u', 'root', '-e', cmd],
+                            check=True,
+                            capture_output=True
+                        )
+                except subprocess.CalledProcessError:
+                    self.log("Failed to setup MySQL database", "ERROR")
+                    return False
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
-            self.log("Database: espocrm, User: espocrm_user, Password: espocrm_password", "INFO")
+            self.log(f"Database: espocrm, User: espocrm_user", "INFO")
+            self.log(f"Password stored in: {password_file}", "INFO")
+            self.log("⚠️  SECURITY: Keep this password file secure and delete after setup", "WARNING")
             
             return True
         else:

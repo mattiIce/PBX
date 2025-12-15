@@ -45,7 +45,8 @@ sudo register_new_matrix_user -c /etc/matrix-synapse/homeserver.yaml http://loca
 
 # Step 5: Complete EspoCRM setup in browser
 # Navigate to: http://localhost/espocrm
-# Database: espocrm, User: espocrm_user, Password: espocrm_password
+# Database: espocrm, User: espocrm_user, Password: (in certs/espocrm_db_password.txt)
+# After setup, delete the password file for security
 ```
 
 ## What Gets Installed
@@ -87,16 +88,18 @@ sudo register_new_matrix_user -c /etc/matrix-synapse/homeserver.yaml http://loca
 - **URL**: http://localhost/espocrm
 - **Services**: apache2, mysql-server
 - **Database**: espocrm (auto-created)
+- **Credentials**: Stored in `/home/runner/work/PBX/PBX/certs/espocrm_db_password.txt`
 
 **Post-Installation Steps:**
 1. Navigate to http://localhost/espocrm in browser
 2. Complete installation wizard:
    - Database: espocrm
    - Username: espocrm_user
-   - Password: espocrm_password
+   - Password: (found in certs/espocrm_db_password.txt)
    - Host: localhost
 3. Create admin account
-4. Generate API key:
+4. **Delete password file** after setup: `rm certs/espocrm_db_password.txt`
+5. Generate API key:
    - Go to Administration → API Users
    - Create new API User
    - Copy the API key
@@ -340,8 +343,9 @@ mysql -u root -e "DROP DATABASE espocrm; DROP USER 'espocrm_user'@'localhost';"
 - ✅ For production, use proper SSL certificates from Let's Encrypt or a trusted CA
 
 ### Default Credentials
-- ⚠️  Change default EspoCRM database password
-- ⚠️  Create strong Matrix bot password
+- ⚠️  EspoCRM database password is randomly generated and stored in `certs/espocrm_db_password.txt`
+- ⚠️  Delete the password file after completing EspoCRM setup
+- ⚠️  Create strong Matrix bot password during account creation
 - ✅ Store credentials securely in `.env` file
 
 ### Firewall Configuration
