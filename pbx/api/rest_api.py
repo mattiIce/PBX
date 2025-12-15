@@ -7084,7 +7084,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.click_to_dial import ClickToDialEngine
-                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config, self.pbx_core)
                 configs = engine.get_all_configs()
                 self._send_json({'configs': configs})
             except Exception as e:
@@ -7098,7 +7098,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.click_to_dial import ClickToDialEngine
-                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config, self.pbx_core)
                 config = engine.get_config(extension)
                 if config:
                     self._send_json(config)
@@ -7122,7 +7122,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             try:
                 body = self._get_body()
                 from pbx.features.click_to_dial import ClickToDialEngine
-                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config, self.pbx_core)
                 if engine.update_config(extension, body):
                     self._send_json({'success': True})
                 else:
@@ -7142,7 +7142,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 source = body.get('source', 'web')
                 
                 from pbx.features.click_to_dial import ClickToDialEngine
-                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config, self.pbx_core)
                 call_id = engine.initiate_call(extension, destination, source)
                 
                 if call_id:
@@ -7160,7 +7160,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.click_to_dial import ClickToDialEngine
-                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config)
+                engine = ClickToDialEngine(self.pbx_core.database, self.pbx_core.config, self.pbx_core)
                 history = engine.get_call_history(extension)
                 self._send_json({'history': history})
             except Exception as e:

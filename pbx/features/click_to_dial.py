@@ -14,17 +14,19 @@ class ClickToDialEngine:
     Enables dialing from web interfaces and applications
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict, pbx_core=None):
         """
         Initialize click-to-dial engine
 
         Args:
             db_backend: DatabaseBackend instance
             config: Configuration dictionary
+            pbx_core: PBXCore instance (optional, for call integration)
         """
         self.logger = get_logger()
         self.db = db_backend
         self.config = config
+        self.pbx_core = pbx_core
         self.enabled = config.get('click_to_dial.enabled', True)
 
         self.logger.info("Click-to-Dial Framework initialized")
@@ -125,7 +127,7 @@ class ClickToDialEngine:
     def initiate_call(self, extension: str, destination: str, source: str = 'web') -> Optional[str]:
         """
         Initiate click-to-dial call
-        Framework method - integrates with PBX call handling
+        Integrates with PBX call handling to create actual SIP calls
 
         Args:
             extension: Calling extension
@@ -135,17 +137,11 @@ class ClickToDialEngine:
         Returns:
             Call ID or None
         """
-        # Framework implementation
-        # TODO: Integrate with PBX call handling
-        # - Create SIP session
-        # - Ring extension
-        # - Bridge to destination
-        # - Handle WebRTC calls
-
+        import uuid
         call_id = f"c2d-{extension}-{int(datetime.now().timestamp())}"
 
         try:
-            # Log call initiation
+            # Log call initiation in database
             self.db.execute(
                 """INSERT INTO click_to_dial_history 
                    (extension, destination, call_id, source, status)
@@ -157,9 +153,42 @@ class ClickToDialEngine:
                 (extension, destination, call_id, source, 'initiated')
             )
 
-            self.logger.info(
-                f"Click-to-dial call initiated: {extension} -> {destination} ({source})"
-            )
+            # Integrate with PBX call handling if available
+            if self.pbx_core and hasattr(self.pbx_core, 'call_manager'):
+                try:
+                    # Create SIP call through CallManager
+                    # This follows the same pattern as WebRTC call initiation
+                    sip_call_id = str(uuid.uuid4())
+                    call = self.pbx_core.call_manager.create_call(
+                        call_id=sip_call_id,
+                        from_extension=extension,
+                        to_extension=destination
+                    )
+                    
+                    # Start the call
+                    call.start()
+                    
+                    # Update call status to indicate PBX integration succeeded
+                    self.update_call_status(call_id, 'ringing')
+                    
+                    self.logger.info(
+                        f"Click-to-dial call created via PBX: {extension} -> {destination} "
+                        f"(source: {source}, sip_call_id: {sip_call_id})"
+                    )
+                except Exception as e:
+                    self.logger.warning(
+                        f"PBX call integration failed, using framework mode: {e}"
+                    )
+                    # Fall back to framework logging only
+                    self.logger.info(
+                        f"Click-to-dial call initiated (framework mode): {extension} -> {destination} ({source})"
+                    )
+            else:
+                # Framework mode - log only, no actual call creation
+                self.logger.info(
+                    f"Click-to-dial call initiated (framework mode): {extension} -> {destination} ({source})"
+                )
+
             return call_id
 
         except Exception as e:

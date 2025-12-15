@@ -351,12 +351,11 @@ class VideoConferencingEngine:
                 (True, room_id, extension)
             )
 
-            # TODO: Integrate with WebRTC screen sharing
-            # - MediaStream API
-            # - getDisplayMedia()
-            # - Screen capture permissions
+            # NOTE: Video conferencing is handled by Zoom/Teams for this deployment
+            # This framework provides database tracking only
+            # WebRTC video/screen sharing is not implemented as it's redundant with Zoom/Teams
 
-            self.logger.info(f"Screen sharing enabled for {extension} in room {room_id}")
+            self.logger.info(f"Screen sharing flag enabled for {extension} in room {room_id}")
             return True
 
         except Exception as e:
