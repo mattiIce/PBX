@@ -5502,3 +5502,366 @@ function loadRecordingAnnouncementsStats() {
         showNotification('Error loading recording announcements data', 'error');
     });
 }
+
+// ============================================================================
+// Speech Analytics Functions
+// ============================================================================
+
+function loadSpeechAnalyticsConfigs() {
+    fetch('/api/framework/speech-analytics/configs', {
+        headers: getAuthHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById('speech-analytics-configs-table');
+        if (!data.configs || data.configs.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading">No extension-specific configurations. Using system defaults.</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.configs.map(config => `
+            <tr>
+                <td>${config.extension}</td>
+                <td>${config.transcription_enabled ? '✅ Enabled' : '❌ Disabled'}</td>
+                <td>${config.sentiment_enabled ? '✅ Enabled' : '❌ Disabled'}</td>
+                <td>${config.summarization_enabled ? '✅ Enabled' : '❌ Disabled'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editSpeechAnalyticsConfig('${config.extension}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSpeechAnalyticsConfig('${config.extension}')">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    })
+    .catch(error => {
+        console.error('Error loading speech analytics configs:', error);
+        showNotification('Error loading speech analytics configurations', 'error');
+    });
+}
+
+// Handle speech analytics config form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('speech-analytics-config-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const config = {
+                enabled: document.getElementById('speech-analytics-enabled').checked,
+                engine: document.getElementById('speech-engine').value,
+                sentiment_enabled: document.getElementById('sentiment-analysis-enabled').checked,
+                summarization_enabled: document.getElementById('call-summarization-enabled').checked
+            };
+            
+            fetch('/api/framework/speech-analytics/config', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Speech analytics configuration saved successfully', 'success');
+                } else {
+                    showNotification(data.error || 'Error saving configuration', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving speech analytics config:', error);
+                showNotification('Error saving configuration', 'error');
+            });
+        });
+    }
+});
+
+// ============================================================================
+// CRM Integration Functions (HubSpot & Zendesk)
+// ============================================================================
+
+function loadCRMActivityLog() {
+    fetch('/api/framework/integrations/activity-log', {
+        headers: getAuthHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById('crm-activity-log-table');
+        if (!data.activities || data.activities.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading">No integration activity yet</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.activities.map(activity => {
+            const statusClass = activity.status === 'success' ? 'success' : 'error';
+            const statusIcon = activity.status === 'success' ? '✅' : '❌';
+            return `
+                <tr>
+                    <td>${new Date(activity.timestamp).toLocaleString()}</td>
+                    <td>${activity.integration}</td>
+                    <td>${activity.action}</td>
+                    <td class="${statusClass}">${statusIcon} ${activity.status}</td>
+                    <td>${activity.details || '-'}</td>
+                </tr>
+            `;
+        }).join('');
+    })
+    .catch(error => {
+        console.error('Error loading CRM activity log:', error);
+        showNotification('Error loading CRM activity log', 'error');
+    });
+}
+
+function clearCRMActivityLog() {
+    if (!confirm('Clear old activity log entries? This will remove entries older than 30 days.')) {
+        return;
+    }
+    
+    fetch('/api/framework/integrations/activity-log/clear', {
+        method: 'POST',
+        headers: getAuthHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Cleared ${data.deleted_count} old entries`, 'success');
+            loadCRMActivityLog();
+        } else {
+            showNotification(data.error || 'Error clearing activity log', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error clearing CRM activity log:', error);
+        showNotification('Error clearing activity log', 'error');
+    });
+}
+
+// Handle HubSpot config form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const hubspotForm = document.getElementById('hubspot-config-form');
+    if (hubspotForm) {
+        // Toggle settings visibility
+        const hubspotEnabled = document.getElementById('hubspot-enabled');
+        const hubspotSettings = document.getElementById('hubspot-settings');
+        if (hubspotEnabled) {
+            hubspotEnabled.addEventListener('change', function() {
+                hubspotSettings.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        hubspotForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const config = {
+                enabled: document.getElementById('hubspot-enabled').checked,
+                api_key: document.getElementById('hubspot-api-key').value,
+                portal_id: document.getElementById('hubspot-portal-id').value,
+                sync_contacts: document.getElementById('hubspot-sync-contacts').checked,
+                create_deals: document.getElementById('hubspot-create-deals').checked,
+                log_calls: document.getElementById('hubspot-log-calls').checked
+            };
+            
+            fetch('/api/framework/integrations/hubspot/config', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('HubSpot configuration saved successfully', 'success');
+                } else {
+                    showNotification(data.error || 'Error saving HubSpot configuration', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving HubSpot config:', error);
+                showNotification('Error saving HubSpot configuration', 'error');
+            });
+        });
+    }
+});
+
+// Handle Zendesk config form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const zendeskForm = document.getElementById('zendesk-config-form');
+    if (zendeskForm) {
+        // Toggle settings visibility
+        const zendeskEnabled = document.getElementById('zendesk-enabled');
+        const zendeskSettings = document.getElementById('zendesk-settings');
+        if (zendeskEnabled) {
+            zendeskEnabled.addEventListener('change', function() {
+                zendeskSettings.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        zendeskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const config = {
+                enabled: document.getElementById('zendesk-enabled').checked,
+                subdomain: document.getElementById('zendesk-subdomain').value,
+                email: document.getElementById('zendesk-email').value,
+                api_token: document.getElementById('zendesk-api-token').value,
+                create_tickets: document.getElementById('zendesk-create-tickets').checked,
+                update_tickets: document.getElementById('zendesk-update-tickets').checked,
+                default_priority: document.getElementById('zendesk-default-priority').value
+            };
+            
+            fetch('/api/framework/integrations/zendesk/config', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Zendesk configuration saved successfully', 'success');
+                } else {
+                    showNotification(data.error || 'Error saving Zendesk configuration', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving Zendesk config:', error);
+                showNotification('Error saving Zendesk configuration', 'error');
+            });
+        });
+    }
+});
+
+// ============================================================================
+// Nomadic E911 Functions
+// ============================================================================
+
+function loadE911Sites() {
+    fetch('/api/framework/nomadic-e911/sites', {
+        headers: getAuthHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById('e911-sites-table');
+        if (!data.sites || data.sites.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading">No E911 sites configured</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.sites.map(site => `
+            <tr>
+                <td>${site.site_name}</td>
+                <td>${site.address}, ${site.city}, ${site.state} ${site.postal_code}</td>
+                <td>${site.ip_ranges || 'N/A'}</td>
+                <td>${site.psap || 'Default'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editE911Site(${site.id})">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteE911Site(${site.id})">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    })
+    .catch(error => {
+        console.error('Error loading E911 sites:', error);
+        showNotification('Error loading E911 sites', 'error');
+    });
+}
+
+function loadExtensionLocations() {
+    fetch('/api/framework/nomadic-e911/locations', {
+        headers: getAuthHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById('extension-locations-table');
+        if (!data.locations || data.locations.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading">No location data available</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.locations.map(loc => `
+            <tr>
+                <td>${loc.extension}</td>
+                <td>${loc.site_name || 'Unknown'} - ${loc.address || 'N/A'}</td>
+                <td>${loc.detection_method || 'N/A'}</td>
+                <td>${loc.last_updated ? new Date(loc.last_updated).toLocaleString() : 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="updateExtensionLocation('${loc.extension}')">Update</button>
+                </td>
+            </tr>
+        `).join('');
+    })
+    .catch(error => {
+        console.error('Error loading extension locations:', error);
+        showNotification('Error loading extension locations', 'error');
+    });
+}
+
+function loadLocationHistory() {
+    const extension = document.getElementById('location-history-extension')?.value || '';
+    const url = extension 
+        ? `/api/framework/nomadic-e911/history/${extension}`
+        : '/api/framework/nomadic-e911/history';
+    
+    fetch(url, {
+        headers: getAuthHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById('location-history-table');
+        if (!data.history || data.history.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading">No location history available</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.history.map(entry => `
+            <tr>
+                <td>${new Date(entry.timestamp).toLocaleString()}</td>
+                <td>${entry.extension}</td>
+                <td>${entry.site_name || 'N/A'}</td>
+                <td>${entry.detection_method || 'N/A'}</td>
+                <td>${entry.ip_address || 'N/A'}</td>
+            </tr>
+        `).join('');
+    })
+    .catch(error => {
+        console.error('Error loading location history:', error);
+        showNotification('Error loading location history', 'error');
+    });
+}
+
+// ============================================================================
+// Helper placeholder functions for modal dialogs (to be implemented as needed)
+// ============================================================================
+
+function showAddSpeechAnalyticsConfigModal() {
+    showNotification('Speech Analytics per-extension configuration coming soon', 'info');
+}
+
+function editSpeechAnalyticsConfig(extension) {
+    showNotification(`Edit config for extension ${extension} - coming soon`, 'info');
+}
+
+function deleteSpeechAnalyticsConfig(extension) {
+    if (!confirm(`Delete speech analytics config for extension ${extension}?`)) {
+        return;
+    }
+    showNotification('Delete functionality coming soon', 'info');
+}
+
+function showAddE911SiteModal() {
+    showNotification('E911 site creation modal coming soon', 'info');
+}
+
+function editE911Site(siteId) {
+    showNotification(`Edit E911 site ${siteId} - coming soon`, 'info');
+}
+
+function deleteE911Site(siteId) {
+    if (!confirm(`Delete E911 site ${siteId}?`)) {
+        return;
+    }
+    showNotification('Delete functionality coming soon', 'info');
+}
+
+function showUpdateLocationModal() {
+    showNotification('Manual location update modal coming soon', 'info');
+}
+
+function updateExtensionLocation(extension) {
+    showNotification(`Update location for ${extension} - coming soon`, 'info');
+}
