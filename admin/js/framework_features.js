@@ -12,26 +12,28 @@ function loadFrameworkOverview() {
             <p>All configurations are stored in the PostgreSQL database and can be managed through this admin panel.</p>
         </div>
 
-        <div class="info-box" style="margin-bottom: 20px; background: #e8f5e9; border-left: 4px solid #4caf50;">
-            <h3 style="margin-top: 0;">📊 Implementation Status Legend</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;">
-                <div><span class="status-badge status-fully-implemented">✅ Fully Implemented</span> - Ready for production use</div>
-                <div><span class="status-badge status-framework-only">⚙️ Framework Only</span> - Database & APIs ready, needs integration</div>
-                <div><span class="status-badge status-integration-required">🔌 Integration Required</span> - Requires external service setup</div>
+        <div class="info-box" style="margin-bottom: 20px; background: #fff3cd; border-left: 4px solid #ff9800;">
+            <h3 style="margin-top: 0;">⚙️ Framework Features - Development Ready</h3>
+            <p><strong>This section contains features that are framework-ready but not yet fully implemented.</strong></p>
+            <p>These features have database schemas and REST APIs in place, but require additional integration work or external services to be production-ready.</p>
+            <div style="margin-top: 10px;">
+                <span class="status-badge status-framework-only">⚙️ Framework Only</span> - Database & APIs ready, needs integration work
             </div>
         </div>
 
+        <div class="info-box" style="margin-bottom: 20px; background: #e8f5e9; border-left: 4px solid #4caf50;">
+            <h3 style="margin-top: 0;">✅ Fully Implemented Features Moved</h3>
+            <p>The following features have been moved to their appropriate sections as they are fully implemented and production-ready:</p>
+            <ul>
+                <li><strong>Click-to-Dial</strong> → Communication section</li>
+                <li><strong>Nomadic E911</strong> → Communication section</li>
+                <li><strong>Speech Analytics</strong> → Features section</li>
+                <li><strong>CRM Integrations</strong> → Integrations section</li>
+                <li><strong>Compliance (SOC 2)</strong> → Security section</li>
+            </ul>
+        </div>
+
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">📲</div>
-                <h3>Click-to-Dial</h3>
-                <div style="margin: 10px 0;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                </div>
-                <p>Web-based dialing from browser or CRM with PBX integration</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Database schema ✓ REST APIs ✓ PBX integration ✓ Call history</small>
-                <button onclick="switchTab('click-to-dial')" class="btn-primary" style="margin-top: 10px;">Configure</button>
-            </div>
             <div class="stat-card">
                 <div class="stat-icon">📹</div>
                 <h3>Video Conferencing</h3>
@@ -52,83 +54,27 @@ function loadFrameworkOverview() {
                 <small style="color: #666; display: block; margin-top: 8px;">✓ Database schema ✓ REST APIs ⚠ UI frontend needed</small>
                 <button onclick="switchTab('team-messaging')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">📍</div>
-                <h3>Nomadic E911</h3>
-                <div style="margin: 10px 0;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                </div>
-                <p>Location-based emergency routing</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ IP-based location detection ✓ Multi-site support ✓ Location history ✓ Manual updates</small>
-                <button onclick="switchTab('nomadic-e911')" class="btn-primary" style="margin-top: 10px;">Configure</button>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🔗</div>
-                <h3>CRM Integrations</h3>
-                <div style="margin: 10px 0;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                </div>
-                <p>HubSpot and Zendesk connectivity</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Contact sync ✓ Deal creation ✓ Ticket management ✓ Activity logging ✓ API integration</small>
-                <button onclick="switchTab('crm-integrations')" class="btn-primary" style="margin-top: 10px;">Configure</button>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">✅</div>
-                <h3>Compliance</h3>
-                <div style="margin: 10px 0;">
-                    <span class="status-badge status-fully-implemented">✅ SOC 2 Type II</span>
-                </div>
-                <p>Security and compliance controls</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ SOC 2 controls ✓ Audit logging ✓ Test evidence ⚠ GDPR/PCI DSS disabled</small>
-                <button onclick="switchTab('compliance')" class="btn-primary" style="margin-top: 10px;">Configure</button>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🎙️</div>
-                <h3>Speech Analytics</h3>
-                <div style="margin: 10px 0;">
-                    <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
-                </div>
-                <p>Real-time transcription and sentiment</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Vosk offline transcription ✓ Sentiment analysis ✓ Call summarization ✓ Production ready</small>
-                <button onclick="switchTab('speech-analytics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
-            </div>
         </div>
 
         <div class="section-card" style="margin-top: 20px;">
-            <h3>📋 Implementation Summary</h3>
-            <p>All framework features include:</p>
+            <h3>📋 Framework Features Summary</h3>
+            <p>These framework-only features include:</p>
             <ul>
                 <li>✅ <strong>Database Schema:</strong> PostgreSQL tables with full CRUD operations</li>
-                <li>✅ <strong>REST API Endpoints:</strong> 40+ endpoints for configuration and management</li>
+                <li>✅ <strong>REST API Endpoints:</strong> Configuration and management endpoints</li>
                 <li>✅ <strong>Python Backend:</strong> Feature classes with error handling and logging</li>
-                <li>✅ <strong>Admin Panel UI:</strong> Configuration interfaces and dashboards</li>
-            </ul>
-        </div>
-
-        <div class="section-card" style="margin-top: 20px;">
-            <h3>🔌 External Service Integration Examples</h3>
-            <p>Framework features support integration with external services:</p>
-            <ul>
-                <li><strong>Speech Analytics:</strong> ✅ Vosk offline (included), optional: Google Speech-to-Text, Azure, OpenAI Whisper, AWS Transcribe</li>
-                <li><strong>CRM Integration:</strong> ✅ HubSpot Contacts/Deals API (fully operational), ✅ Zendesk Tickets API (fully operational)</li>
-                <li><strong>Video Conferencing:</strong> WebRTC infrastructure, H.264/H.265 codecs, STUN/TURN servers (requires external video service)</li>
-                <li><strong>Compliance:</strong> ✅ SOC 2 Type 2 audit logging and security controls (fully operational)</li>
-                <li><strong>Nomadic E911:</strong> ✅ IP-based location detection (fully operational), optional: GPS integration</li>
+                <li>⚠️ <strong>Integration Required:</strong> External services or UI development needed</li>
             </ul>
         </div>
 
         <div class="info-box" style="margin-top: 20px; background: #fff3cd; border-left: 4px solid #ff9800;">
-            <h3 style="margin-top: 0;">⚠️ Next Steps for Framework Features</h3>
-            <p>To activate framework features for production use:</p>
+            <h3 style="margin-top: 0;">⚙️ Next Steps for Framework Features</h3>
+            <p>To activate these framework features for production use:</p>
             <ol>
-                <li><strong>Click-to-Dial:</strong> Already fully operational - configure extensions in the tab</li>
-                <li><strong>SOC 2 Compliance:</strong> Already fully operational - review controls in the tab</li>
-                <li><strong>Speech Analytics:</strong> Already fully operational - configure Vosk transcription settings</li>
-                <li><strong>CRM Integrations:</strong> Already fully operational - configure HubSpot/Zendesk API credentials</li>
-                <li><strong>Nomadic E911:</strong> Already fully operational - configure sites and IP ranges for location detection</li>
-                <li><strong>Video Conferencing:</strong> Create rooms and integrate with external video service (Zoom/Teams)</li>
-                <li><strong>Team Messaging:</strong> Build or integrate a frontend UI for messaging</li>
+                <li><strong>Video Conferencing:</strong> Create rooms and integrate with external video service (Zoom/Teams/custom WebRTC)</li>
+                <li><strong>Team Messaging:</strong> Build or integrate a frontend UI for messaging (Slack/Mattermost/custom)</li>
             </ol>
+            <p style="margin-top: 15px;"><strong>Note:</strong> For fully implemented and production-ready features, check the Communication, Features, Security, and Integrations sections in the navigation menu.</p>
         </div>
     `;
     return content;
