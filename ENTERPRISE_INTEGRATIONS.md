@@ -2,9 +2,74 @@
 
 This document outlines enterprise-grade integrations and features to enhance the PBX system for business use.
 
+> **🆓 Open Source First**: This PBX system prioritizes **free and open-source** integrations. See [OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md) for comprehensive documentation on zero-cost alternatives to all proprietary services listed below.
+
+## Quick Links
+
+- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Complete guide to free/open-source alternatives
+- **Zero-Cost Stack**: Jitsi (video) + Matrix (chat) + EspoCRM (CRM) + Vosk (speech) = $0/year
+- **Self-Hosted**: All open-source components can run on your own infrastructure
+
+## 🆓 Free & Open Source Alternatives (Recommended)
+
+All proprietary services below have free, open-source alternatives:
+
+| Proprietary | Free Alternative | Status | License |
+|------------|------------------|--------|---------|
+| Zoom | **Jitsi Meet** | ✅ Integrated | Apache 2.0 |
+| Slack/Teams Chat | **Matrix (Element)** | ✅ Integrated | Apache 2.0 |
+| Salesforce/HubSpot | **EspoCRM** | ✅ Integrated | GPL v3 |
+| Zendesk | **osTicket** | 📋 Documented | GPL v2 |
+| Power BI/Tableau | **Metabase** | 📋 Documented | AGPL v3 |
+| Active Directory | **OpenLDAP** | ✅ Compatible | OpenLDAP License |
+| Google Speech | **Vosk** | ✅ Integrated | Apache 2.0 |
+| OneDrive/Dropbox | **Nextcloud** | 📋 Documented | AGPL v3 |
+
+**Total Annual Cost**: $0 (vs $3,726+/user/year for proprietary stack)
+
+See [OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md) for setup guides and implementation details.
+
 ## 🔗 Unified Communications Integrations
 
+### Jitsi Meet Integration ✅ FREE & OPEN SOURCE
+**Recommended free alternative to Zoom/Teams video conferencing**
+
+**Features:**
+- **Video Conferencing** - HD video calls with multiple participants
+- **Screen Sharing** - Share your screen with participants
+- **Recording** - Record meetings for later review
+- **Chat** - In-meeting text chat
+- **Self-Hosted** - Run on your own infrastructure (or use meet.jit.si)
+- **No License Required** - 100% free and open source
+
+**Configuration:**
+```yaml
+integrations:
+  jitsi:
+    enabled: true
+    server_url: "https://meet.jit.si"  # Or self-hosted URL
+    # Optional: JWT authentication for secure rooms
+    app_id: "your-app-id"
+    app_secret: "your-secret"
+    auto_create_rooms: true
+    enable_recording: false
+```
+
+**Setup:**
+```bash
+# Option 1: Use public server (free, instant)
+# Just enable in config.yml - no installation needed!
+
+# Option 2: Self-host (recommended for production)
+wget -qO - https://download.jitsi.org/jitsi-key.gpg.key | sudo apt-key add -
+sudo sh -c "echo 'deb https://download.jitsi.org stable/' > /etc/apt/sources.list.d/jitsi-stable.list"
+sudo apt-get update
+sudo apt-get install jitsi-meet
+```
+
 ### Microsoft Teams Integration
+**Proprietary alternative (requires Microsoft 365 license)**
+
 Connect your PBX system with Microsoft Teams for seamless collaboration.
 
 **Features:**
@@ -29,6 +94,8 @@ integrations:
 ```
 
 ### Zoom Integration
+**Proprietary alternative (requires Zoom license)**
+
 Integrate with Zoom for video conferencing and phone system capabilities.
 
 **Features:**
