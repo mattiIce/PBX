@@ -182,6 +182,42 @@
                 </div>
 
                 <div class="sidebar-section">
+                    <div class="sidebar-section-title">Framework Features</div>
+                    <button class="tab-button" data-tab="framework-overview">
+                        <span class="tab-icon">🎯</span>
+                        <span class="tab-text">Overview</span>
+                    </button>
+                    <button class="tab-button" data-tab="click-to-dial">
+                        <span class="tab-icon">📲</span>
+                        <span class="tab-text">Click-to-Dial</span>
+                    </button>
+                    <button class="tab-button" data-tab="video-conferencing">
+                        <span class="tab-icon">📹</span>
+                        <span class="tab-text">Video Conferencing</span>
+                    </button>
+                    <button class="tab-button" data-tab="team-messaging">
+                        <span class="tab-icon">💬</span>
+                        <span class="tab-text">Team Messaging</span>
+                    </button>
+                    <button class="tab-button" data-tab="nomadic-e911">
+                        <span class="tab-icon">📍</span>
+                        <span class="tab-text">Nomadic E911</span>
+                    </button>
+                    <button class="tab-button" data-tab="crm-integrations">
+                        <span class="tab-icon">🔗</span>
+                        <span class="tab-text">CRM Integrations</span>
+                    </button>
+                    <button class="tab-button" data-tab="compliance">
+                        <span class="tab-icon">✅</span>
+                        <span class="tab-text">Compliance</span>
+                    </button>
+                    <button class="tab-button" data-tab="speech-analytics">
+                        <span class="tab-icon">🎙️</span>
+                        <span class="tab-text">Speech Analytics</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
                     <div class="sidebar-section-title">System</div>
                     <button class="tab-button" data-tab="config">
                         <span class="tab-icon">🔧</span>
@@ -2925,6 +2961,107 @@ G.726-32</textarea>
                 </div>
             </div>
         </div>
+
+        <!-- Framework Features Tabs -->
+        <div id="framework-overview" class="tab-content">
+            <!-- Content loaded dynamically by framework_features.js -->
+        </div>
+
+        <div id="click-to-dial" class="tab-content">
+            <!-- Content loaded dynamically by framework_features.js -->
+        </div>
+
+        <div id="video-conferencing" class="tab-content">
+            <!-- Content loaded dynamically by framework_features.js -->
+        </div>
+
+        <div id="team-messaging" class="tab-content">
+            <h2>💬 Team Messaging</h2>
+            <div class="info-box">
+                <p>Team messaging framework for internal communication and collaboration.</p>
+                <p>This feature provides database storage and REST APIs. Integrate with your messaging frontend or build a custom UI.</p>
+            </div>
+        </div>
+
+        <div id="nomadic-e911" class="tab-content">
+            <h2>📍 Nomadic E911</h2>
+            <div class="info-box">
+                <p>Location-based emergency routing framework for remote and mobile workers.</p>
+                <p>Automatically detects and tracks user locations for accurate 911 routing.</p>
+            </div>
+        </div>
+
+        <div id="crm-integrations" class="tab-content">
+            <h2>🔗 CRM Integrations</h2>
+            <div class="info-box">
+                <p>Integration framework for HubSpot and Zendesk.</p>
+                <p>Configure API credentials and sync settings to enable CRM integration.</p>
+            </div>
+            
+            <div class="section-card">
+                <h3>HubSpot Integration</h3>
+                <p>Connect to HubSpot for marketing automation and CRM features.</p>
+                <button class="btn-primary">Configure HubSpot</button>
+            </div>
+
+            <div class="section-card">
+                <h3>Zendesk Integration</h3>
+                <p>Connect to Zendesk for helpdesk ticket management.</p>
+                <button class="btn-primary">Configure Zendesk</button>
+            </div>
+        </div>
+
+        <div id="compliance" class="tab-content">
+            <h2>✅ Compliance Frameworks</h2>
+            <div class="info-box">
+                <p>Compliance management for GDPR, SOC 2, and PCI DSS.</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>GDPR Compliance</h3>
+                    <p>Data privacy and protection framework</p>
+                    <ul>
+                        <li>Consent management</li>
+                        <li>Data access requests</li>
+                        <li>Right to erasure</li>
+                    </ul>
+                </div>
+                <div class="stat-card">
+                    <h3>SOC 2 Type II</h3>
+                    <p>Security compliance controls</p>
+                    <ul>
+                        <li>Control tracking</li>
+                        <li>Test evidence</li>
+                        <li>Audit reporting</li>
+                    </ul>
+                </div>
+                <div class="stat-card">
+                    <h3>PCI DSS</h3>
+                    <p>Payment card industry standards</p>
+                    <ul>
+                        <li>Audit logging</li>
+                        <li>Access controls</li>
+                        <li>Event monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="speech-analytics" class="tab-content">
+            <h2>🎙️ Speech Analytics</h2>
+            <div class="info-box">
+                <p>Real-time speech analytics framework with transcription, sentiment analysis, and summarization.</p>
+                <p>Integrate with Google Speech-to-Text, Azure Speech Services, or OpenAI Whisper.</p>
+            </div>
+            
+            <div class="section-card">
+                <h3>Analytics Configuration</h3>
+                <p>Configure speech analytics settings per extension.</p>
+                <p><strong>Note:</strong> This framework requires external service integration to function.</p>
+            </div>
+        </div>
+
             </div><!-- end main-content -->
         </div><!-- end layout-wrapper -->
     </div><!-- end container -->
@@ -3568,5 +3705,6 @@ G.726-32</textarea>
     <script src="js/auto_attendant.js"></script>
     <script src="js/voicemail_enhanced.js"></script>
     <script src="js/webrtc_phone.js"></script>
+    <script src="js/framework_features.js"></script>
 </body>
 </html>

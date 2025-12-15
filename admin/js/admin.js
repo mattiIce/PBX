@@ -319,8 +319,27 @@ function showTab(tabName) {
         case 'config':
             loadConfig();
             break;
+        // Framework feature tabs
+        case 'framework-overview':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadFrameworkOverview();
+            }
+            break;
+        case 'click-to-dial':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadClickToDialTab();
+            }
+            break;
+        case 'video-conferencing':
+            if (window.frameworkFeatures) {
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoConferencingTab();
+            }
+            break;
     }
 }
+
+// Make switchTab available globally for framework features
+window.switchTab = showTab;
 
 // Connection Check
 async function checkConnection() {
