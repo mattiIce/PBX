@@ -43,35 +43,37 @@ When you use quick setup, these defaults are configured:
 
 **Jitsi Meet:**
 - ✅ Enabled: true
-- Server: http://localhost (local self-hosted server)
+- Server: https://localhost (local self-hosted server with HTTPS)
 - Auto-create rooms: enabled
-- **Note:** Requires local Jitsi installation - see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)
+- **Note:** Requires local Jitsi installation with SSL - see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) and [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
 
 **Matrix:**
 - ✅ Enabled: true
-- Homeserver: http://localhost:8008 (local Synapse server)
-- **Requires:** Local Matrix Synapse installation and bot username/password to be configured
+- Homeserver: https://localhost:8008 (local Synapse server with HTTPS)
+- **Requires:** Local Matrix Synapse installation with SSL and bot username/password to be configured
 - **Note:** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for setup
 
 **EspoCRM:**
 - ✅ Enabled: true
-- API URL: http://localhost/api/v1 (local CRM installation)
-- **Requires:** Local EspoCRM installation and API key to be configured
+- API URL: https://localhost/api/v1 (local CRM installation with HTTPS)
+- **Requires:** Local EspoCRM installation with SSL and API key to be configured
+- **Security:** HTTPS recommended to protect sensitive customer data
 - **Note:** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for setup
 
 ## Additional Configuration (If Needed)
 
 ### For Jitsi
-⚠️ **Requires local installation!** The quick setup now points to `http://localhost` for a self-hosted Jitsi server.
+⚠️ **Requires local installation with HTTPS!** The quick setup now points to `https://localhost` for a self-hosted Jitsi server with SSL encryption.
 
 **Installation Steps:**
 1. See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide) for complete installation guide
 2. Install Jitsi Meet on your local server or the same machine as the PBX
-3. Quick setup will automatically configure the PBX to use your local server
+3. Configure SSL certificates (see [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md))
+4. Quick setup will automatically configure the PBX to use your local server
 
-**Alternative:** If you want to use the free public server instead:
+**Alternative:** If you want to use HTTP for development/testing:
 1. Click "Configure" button on the Jitsi card
-2. Change server URL to `https://meet.jit.si`
+2. Change server URL to `http://localhost`
 3. Click "Save Configuration"
 
 ### For Matrix
@@ -178,21 +180,29 @@ Look for colored status badges next to integration names:
 
 ## Prerequisites
 
-Before using quick setup, you need to have the following services installed locally:
+Before using quick setup, you need to have the following services installed locally with SSL/HTTPS:
 
 ### Required Local Installations:
 
 1. **Jitsi Meet** (for video conferencing)
-   - Default URL: `http://localhost`
+   - Default URL: `https://localhost`
+   - Requires SSL certificates
    - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide)
+   - SSL setup: [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
 
 2. **Matrix Synapse** (for team messaging)
-   - Default URL: `http://localhost:8008`
+   - Default URL: `https://localhost:8008`
+   - Requires SSL for secure communications
    - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup)
+   - SSL setup: [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
 
 3. **EspoCRM** (for CRM functionality)
-   - Default URL: `http://localhost/api/v1`
+   - Default URL: `https://localhost/api/v1`
+   - **Security Critical:** HTTPS required to protect customer data
    - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup)
+   - SSL setup: [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md)
+
+**Security Note:** All integrations default to HTTPS to protect sensitive data in transit. For development/testing only, you can manually change URLs to HTTP after quick setup.
 
 **Note:** If you want to use public/cloud servers instead of local installations, you can click "Configure" on each integration and change the server URLs after quick setup.  
 
@@ -211,6 +221,7 @@ By using these free open-source integrations with local installations instead of
 - ✅ No dependency on external services
 - ✅ No recurring subscription fees
 - ✅ Customizable to your specific needs
+- ✅ Secure HTTPS encryption for all communications
 
 ---
 

@@ -430,10 +430,11 @@ integrations:
   # Jitsi Meet - Video Conferencing (Free alternative to Zoom)
   jitsi:
     enabled: false  # Set to true to enable
-    # Use local server (recommended): http://localhost
+    # Use local server with HTTPS (recommended for security): https://localhost
     # Or self-host on network: https://jitsi.yourcompany.com
-    # Or use public server: https://meet.jit.si
-    server_url: http://localhost
+    # NOTE: HTTPS requires SSL certificates - see HTTPS_SETUP_GUIDE.md
+    # For development/testing only, you may use: http://localhost
+    server_url: https://localhost
     auto_create_rooms: true  # Auto-create meeting rooms for call escalation
     
     # Optional: JWT authentication for secure rooms (requires self-hosted Jitsi)
@@ -443,10 +444,11 @@ integrations:
   # Matrix - Team Messaging (Free alternative to Slack/Teams Chat)
   matrix:
     enabled: false  # Set to true to enable
-    # Use local Synapse server (recommended): http://localhost:8008
+    # Use local Synapse server with HTTPS (recommended for security): https://localhost:8008
     # Or self-host on network: https://matrix.yourcompany.com
-    # Or use public homeserver: https://matrix.org
-    homeserver_url: http://localhost:8008
+    # NOTE: HTTPS recommended to encrypt Matrix communications - see HTTPS_SETUP_GUIDE.md
+    # For development/testing only, you may use: http://localhost:8008
+    homeserver_url: https://localhost:8008
     
     # Bot account for sending notifications
     bot_username: ''  # Matrix bot user ID (@pbxbot:localhost or @pbxbot:matrix.org)
@@ -462,9 +464,11 @@ integrations:
   # EspoCRM - Customer Relationship Management (Free alternative to Salesforce/HubSpot)
   espocrm:
     enabled: false  # Set to true to enable
-    # Use local installation (recommended): http://localhost/api/v1
+    # Use local installation with HTTPS (recommended for security): https://localhost/api/v1
     # Or self-host on network: https://crm.yourcompany.com/api/v1
-    api_url: http://localhost/api/v1
+    # SECURITY WARNING: HTTPS required to protect sensitive customer data - see HTTPS_SETUP_GUIDE.md
+    # For development/testing only, you may use: http://localhost/api/v1
+    api_url: https://localhost/api/v1
     # SECURITY: API key loaded from environment variable
     # Set ESPOCRM_API_KEY in .env file
     api_key: ${ESPOCRM_API_KEY}
