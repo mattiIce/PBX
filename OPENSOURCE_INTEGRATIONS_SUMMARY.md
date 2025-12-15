@@ -4,6 +4,14 @@
 **Status**: ✅ COMPLETE  
 **Cost Savings**: $3,726+/user/year → $0/year
 
+## 🚀 Quick Setup
+
+**NEW: One-Click Integration Setup!**
+
+- **[QUICK_SETUP_GUIDE.md](QUICK_SETUP_GUIDE.md)** - 🎯 **Enable integrations with one click in the Admin Panel!**
+
+Simply check the checkbox next to any integration in the admin panel to enable it with default settings. No manual configuration needed!
+
 ## 🆘 Troubleshooting
 
 **Having issues with integrations?**
@@ -20,7 +28,7 @@
 
 ## Overview
 
-This implementation provides a complete framework for integrating free, open-source alternatives to expensive proprietary services. All integrations are fully configurable through the admin web portal and require no licensing fees.
+This implementation provides a complete framework for integrating free, open-source alternatives to expensive proprietary services. All integrations are fully configurable through the admin web portal with **one-click quick setup** and require no licensing fees.
 
 ## What Was Implemented
 
