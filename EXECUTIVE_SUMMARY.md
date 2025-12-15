@@ -1132,8 +1132,8 @@ The PBX system has a solid E911 framework in place with location database struct
 ### Collaboration & Productivity
 | Feature | Status | Business Value |
 |---------|--------|---------------|
-| Team Messaging | ⏳ Planned | Built-in chat platform |
-| File Sharing | ⏳ Planned | Document collaboration |
+| Team Messaging | N/A | Handled by Teams/Zoom (manufacturing deployment) |
+| File Sharing | N/A | Handled by Teams/Zoom (manufacturing deployment) |
 | Presence Integration | ✅ Complete | Real-time availability status |
 | Calendar Integration | ✅ Complete | Outlook calendar sync |
 | Do Not Disturb Scheduling | ✅ Complete | Auto-DND based on calendar and time rules |
