@@ -38,7 +38,7 @@ New Functions Added:
 ```javascript
 {
   enabled: true,
-  server_url: 'https://meet.jit.si',
+  server_url: 'http://localhost',
   auto_create_rooms: true,
   app_id: '',
   app_secret: ''
@@ -49,7 +49,7 @@ New Functions Added:
 ```javascript
 {
   enabled: true,
-  homeserver_url: 'https://matrix.org',
+  homeserver_url: 'http://localhost:8008',
   bot_username: '',
   bot_password: '${MATRIX_BOT_PASSWORD}',
   notification_room: '',
@@ -62,7 +62,7 @@ New Functions Added:
 ```javascript
 {
   enabled: true,
-  api_url: '',
+  api_url: 'http://localhost/api/v1',
   api_key: '${ESPOCRM_API_KEY}',
   auto_create_contacts: true,
   auto_log_calls: true,
@@ -132,11 +132,12 @@ python3 scripts/setup_integrations.py --status
 2. User sees three integration cards with checkboxes
 3. User checks the box next to "Jitsi Meet"
 4. System automatically:
-   - Enables Jitsi with default settings
+   - Enables Jitsi with default settings (localhost)
    - Shows green "● Enabled" status badge
    - Displays success message
    - Updates config.yml immediately
-5. Integration is ready to use!
+5. Integration is configured to use local server!
+   - **Note:** User must have Jitsi installed locally at http://localhost
 
 ### Traditional Setup (Still Available)
 
@@ -215,14 +216,15 @@ Tests verify:
 
 ### For End Users
 - ✅ **Zero learning curve** - Just check a box!
-- ✅ **Instant gratification** - Jitsi works immediately
+- ✅ **Local installation** - Complete data privacy and control
 - ✅ **No config file editing** - Everything in UI
 - ✅ **Clear visual feedback** - Status badges and messages
 - ✅ **Easy to reverse** - Uncheck to disable
 
 ### For Administrators
 - ✅ **Faster deployment** - Enable in seconds
-- ✅ **Safe defaults** - Uses free public servers
+- ✅ **Local defaults** - Uses localhost URLs for self-hosted services
+- ✅ **Privacy focused** - No data sent to external servers
 - ✅ **Less support tickets** - Self-service setup
 - ✅ **Flexible** - Quick or advanced setup available
 
@@ -234,12 +236,13 @@ Tests verify:
 
 ## Known Limitations
 
-1. **Matrix** - Requires bot account creation (external step)
-2. **EspoCRM** - Requires CRM installation and API key setup
-3. **Internet Required** - Default configs use public servers
-4. **No Validation** - Quick setup doesn't test connections
+1. **Jitsi** - Requires local installation (not ready to use immediately like public server)
+2. **Matrix** - Requires local Synapse installation and bot account creation
+3. **EspoCRM** - Requires local CRM installation and API key setup
+4. **Local URLs** - Default configs assume services are installed on same machine/network
+5. **No Validation** - Quick setup doesn't test connections
 
-These are documented in QUICK_SETUP_GUIDE.md with clear instructions.
+These are documented in QUICK_SETUP_GUIDE.md with clear instructions and links to installation guides.
 
 ## Future Enhancements
 
@@ -266,13 +269,14 @@ Potential improvements:
 ### For Production
 1. Ensure `/api/config/section` endpoint is accessible
 2. Verify SSL is enabled for secure API calls
-3. Test quick setup with actual integrations
-4. Monitor config.yml permissions (must be writable)
-5. Review default server URLs (public vs self-hosted)
+3. **Install local services** - Jitsi, Matrix Synapse, and EspoCRM must be installed
+4. Test quick setup with actual integrations
+5. Monitor config.yml permissions (must be writable)
+6. Configure server URLs if services are on different machines/ports
 
 ### For Development
-1. Quick setup uses free public servers (safe for testing)
-2. Can test Jitsi immediately without setup
+1. Quick setup uses localhost URLs (requires local installations)
+2. Install services locally for testing or change URLs to remote servers
 3. Matrix/EspoCRM need credentials even in dev
 4. Test suite runs without external dependencies
 

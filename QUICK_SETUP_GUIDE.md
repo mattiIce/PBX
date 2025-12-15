@@ -43,31 +43,43 @@ When you use quick setup, these defaults are configured:
 
 **Jitsi Meet:**
 - ✅ Enabled: true
-- Server: https://meet.jit.si (free public server)
+- Server: http://localhost (local self-hosted server)
 - Auto-create rooms: enabled
-- **Ready to use immediately!**
+- **Note:** Requires local Jitsi installation - see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)
 
 **Matrix:**
 - ✅ Enabled: true
-- Homeserver: https://matrix.org (free public server)
-- **Requires:** Bot username and password to be configured
+- Homeserver: http://localhost:8008 (local Synapse server)
+- **Requires:** Local Matrix Synapse installation and bot username/password to be configured
+- **Note:** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for setup
 
 **EspoCRM:**
 - ✅ Enabled: true
-- **Requires:** Your CRM URL and API key to be configured
+- API URL: http://localhost/api/v1 (local CRM installation)
+- **Requires:** Local EspoCRM installation and API key to be configured
+- **Note:** See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md) for setup
 
 ## Additional Configuration (If Needed)
 
 ### For Jitsi
-✅ **No additional setup needed!** Works immediately with the free public server.
+⚠️ **Requires local installation!** The quick setup now points to `http://localhost` for a self-hosted Jitsi server.
 
-For self-hosted Jitsi, click "Configure" and set your custom server URL.
+**Installation Steps:**
+1. See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide) for complete installation guide
+2. Install Jitsi Meet on your local server or the same machine as the PBX
+3. Quick setup will automatically configure the PBX to use your local server
+
+**Alternative:** If you want to use the free public server instead:
+1. Click "Configure" button on the Jitsi card
+2. Change server URL to `https://meet.jit.si`
+3. Click "Save Configuration"
 
 ### For Matrix
 
 1. **Create a bot account:**
-   - Go to https://app.element.io
-   - Create a new account (e.g., @pbxbot:matrix.org)
+   - Install Matrix Synapse locally (see [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md))
+   - OR use a public server like https://app.element.io
+   - Create a new account (e.g., @pbxbot:matrix.org or @pbxbot:localhost)
    - Note the username and password
 
 2. **Set the bot password:**
@@ -82,8 +94,9 @@ For self-hosted Jitsi, click "Configure" and set your custom server URL.
 
 ### For EspoCRM
 
-1. **Install EspoCRM** (if not already installed)
+1. **Install EspoCRM locally** (required)
    - See [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup) for installation steps
+   - Quick setup points to `http://localhost/api/v1` by default
 
 2. **Generate API key:**
    - Log in to EspoCRM
@@ -157,21 +170,47 @@ Look for colored status badges next to integration names:
 ## Benefits of Quick Setup
 
 ✅ **One-Click Enable** - No manual config file editing  
-✅ **Safe Defaults** - Uses free public servers  
-✅ **Instant Activation** - Works immediately (Jitsi)  
+✅ **Local Installation** - Uses self-hosted services for privacy and control  
+✅ **Instant Configuration** - Pre-configured with localhost URLs  
 ✅ **Easy to Customize** - Click "Configure" for advanced options  
 ✅ **Visual Feedback** - Status badges show what's enabled  
 ✅ **Reversible** - Uncheck to disable instantly  
 
+## Prerequisites
+
+Before using quick setup, you need to have the following services installed locally:
+
+### Required Local Installations:
+
+1. **Jitsi Meet** (for video conferencing)
+   - Default URL: `http://localhost`
+   - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#jitsi-self-hosted-integration-complete-guide)
+
+2. **Matrix Synapse** (for team messaging)
+   - Default URL: `http://localhost:8008`
+   - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#matrix-synapse-proper-startup)
+
+3. **EspoCRM** (for CRM functionality)
+   - Default URL: `http://localhost/api/v1`
+   - Installation guide: [INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md#espocrm-installation-and-setup)
+
+**Note:** If you want to use public/cloud servers instead of local installations, you can click "Configure" on each integration and change the server URLs after quick setup.  
+
 ## Cost Savings
 
-By using these free open-source integrations instead of proprietary alternatives:
+By using these free open-source integrations with local installations instead of proprietary cloud alternatives:
 
 - **Video Conferencing**: $0 vs $150-300/user/year (Zoom)
 - **Team Messaging**: $0 vs $96-240/user/year (Slack/Teams)
 - **CRM**: $0 vs $1,200+/user/year (Salesforce)
 
 **Total Savings: $3,726+ per user per year!**
+
+**Additional Benefits of Local Hosting:**
+- ✅ Complete data privacy and control
+- ✅ No dependency on external services
+- ✅ No recurring subscription fees
+- ✅ Customizable to your specific needs
 
 ---
 
