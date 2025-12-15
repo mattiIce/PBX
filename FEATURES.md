@@ -712,6 +712,49 @@ auto_attendant:
       description: 'Support Queue'
 ```
 
+## Paging System
+
+### Paging Features
+- **Multi-Zone Paging**
+  - Configure multiple paging zones
+  - Individual zone control
+  - All-call paging support
+- **Zone Management**
+  - Web-based zone configuration via admin panel
+  - Zone naming and descriptions
+  - Device-to-zone mapping
+- **DAC Device Integration**
+  - SIP-to-analog gateway support (Cisco VG, Grandstream HT, etc.)
+  - Auto-answer configuration
+  - PA amplifier connectivity
+
+### Admin Panel Management
+- **Zone Configuration**
+  - Add/edit/delete paging zones through web UI
+  - Zone extension assignment (e.g., 701, 702, 703)
+  - Zone descriptions and device mappings
+- **DAC Device Management**
+  - Add/configure analog gateway devices
+  - SIP address configuration
+  - Device status monitoring
+- **Session Monitoring**
+  - Real-time view of active paging sessions
+  - Session history
+  - From-extension tracking
+
+### Usage
+- **Simple Dial-to-Page**
+  - Dial zone extension to page (e.g., 701 for Warehouse)
+  - Dial all-call extension to page all zones (default: 700)
+  - Automatic audio routing to PA system
+- **REST API**
+  - `/api/paging/zones` - Zone management
+  - `/api/paging/devices` - Device management
+  - `/api/paging/active` - Active session monitoring
+
+### Documentation
+See [PAGING_SYSTEM_GUIDE.md](PAGING_SYSTEM_GUIDE.md) for complete configuration guide
+
 ## Future Enhancements
 
 ### Planned Features
