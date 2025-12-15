@@ -430,11 +430,13 @@ integrations:
   # Jitsi Meet - Video Conferencing (Free alternative to Zoom)
   jitsi:
     enabled: false  # Set to true to enable
-    # Use local server with HTTPS (recommended for security): https://localhost
-    # Or self-host on network: https://jitsi.yourcompany.com
+    # Use local server with HTTPS on dedicated port (recommended for security)
+    # Port 8443 is commonly used for Jitsi Meet HTTPS
+    # Or self-host on network: https://jitsi.yourcompany.com:8443
     # NOTE: HTTPS requires SSL certificates - see HTTPS_SETUP_GUIDE.md
-    # For development/testing only, you may use: http://localhost
-    server_url: https://localhost
+    # For development/testing only, you may use: http://localhost:8888
+    # For public server (free, no installation): https://meet.jit.si
+    server_url: https://meet.jit.si  # Using free public server (no port conflict)
     auto_create_rooms: true  # Auto-create meeting rooms for call escalation
     
     # Optional: JWT authentication for secure rooms (requires self-hosted Jitsi)
@@ -444,11 +446,12 @@ integrations:
   # Matrix - Team Messaging (Free alternative to Slack/Teams Chat)
   matrix:
     enabled: false  # Set to true to enable
-    # Use local Synapse server with HTTPS (recommended for security): https://localhost:8008
-    # Or self-host on network: https://matrix.yourcompany.com
+    # Matrix Synapse default port is 8008 for HTTP (8448 for federation HTTPS)
+    # Use local Synapse server: http://localhost:8008 or https://localhost:8448
+    # Or self-host on network: https://matrix.yourcompany.com:8008
     # NOTE: HTTPS recommended to encrypt Matrix communications - see HTTPS_SETUP_GUIDE.md
-    # For development/testing only, you may use: http://localhost:8008
-    homeserver_url: https://localhost:8008
+    # For public server (free, requires account): https://matrix.org
+    homeserver_url: https://matrix.org  # Using public homeserver (no local port conflict)
     
     # Bot account for sending notifications
     bot_username: ''  # Matrix bot user ID (@pbxbot:localhost or @pbxbot:matrix.org)
@@ -464,11 +467,13 @@ integrations:
   # EspoCRM - Customer Relationship Management (Free alternative to Salesforce/HubSpot)
   espocrm:
     enabled: false  # Set to true to enable
-    # Use local installation with HTTPS (recommended for security): https://localhost/api/v1
+    # EspoCRM typically runs on Apache/Nginx on port 80 (HTTP) or 443 (HTTPS)
+    # For dedicated port to avoid conflicts, configure Apache on port 8000
+    # Use local installation: http://localhost:8000/api/v1 or https://localhost:8001/api/v1
     # Or self-host on network: https://crm.yourcompany.com/api/v1
     # SECURITY WARNING: HTTPS required to protect sensitive customer data - see HTTPS_SETUP_GUIDE.md
-    # For development/testing only, you may use: http://localhost/api/v1
-    api_url: https://localhost/api/v1
+    # Example with dedicated port: http://localhost:8000/api/v1
+    api_url: http://localhost:8000/api/v1  # Using port 8000 to avoid conflicts with Jitsi/Matrix
     # SECURITY: API key loaded from environment variable
     # Set ESPOCRM_API_KEY in .env file
     api_key: ${ESPOCRM_API_KEY}
