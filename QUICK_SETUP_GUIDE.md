@@ -180,7 +180,20 @@ Look for colored status badges next to integration names:
 
 ## Prerequisites
 
-Before using quick setup, you need to have the following services installed locally with SSL/HTTPS:
+**NEW: Automated Installation Available!**
+
+You can now automatically install all required services with one command:
+```bash
+sudo python3 scripts/install_integrations.py
+```
+
+See [AUTOMATED_INSTALLATION_GUIDE.md](AUTOMATED_INSTALLATION_GUIDE.md) for complete automated installation guide.
+
+---
+
+### Manual Installation (Alternative)
+
+If you prefer manual installation or the automated installer doesn't work for your system, you need to have the following services installed locally with SSL/HTTPS:
 
 ### Required Local Installations:
 
