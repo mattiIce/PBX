@@ -15,6 +15,10 @@ import sys
 import subprocess
 import argparse
 import platform
+import tempfile
+import secrets
+import string
+import shutil
 from pathlib import Path
 
 
@@ -38,10 +42,66 @@ class IntegrationInstaller:
         }.get(level, "")
         print(f"{prefix} {message}")
     
-    def run_command(self, cmd, check=True, capture=False):
-        """Run a shell command"""
+    def run_command(self, cmd, check=True, capture=False, show_output=True):
+        """
+        Run a command safely using subprocess without shell=True.
+        
+        Args:
+            cmd: Command as a list (e.g., ['apt-get', 'update']) or string for shell commands
+            check: Whether to check return code
+            capture: Whether to capture output (returns output instead of displaying it)
+            show_output: Whether to show output in real-time (ignored if capture=True)
+        
+        Returns:
+            True/output if successful, False if failed
+        """
+        # Determine if this is a list-based command (safe) or shell command (for trusted inputs only)
+        if isinstance(cmd, list):
+            cmd_str = ' '.join(cmd)
+            use_shell = False
+        else:
+            cmd_str = cmd
+            use_shell = True
+            
         if self.verbose or self.dry_run:
-            self.log(f"Running: {cmd}", "STEP")
+            self.log(f"Running: {cmd_str}", "STEP")
+        
+        if self.dry_run:
+            return True
+        
+        try:
+            if capture:
+                result = subprocess.run(
+                    cmd, 
+                    shell=use_shell, 
+                    check=check,
+                    capture_output=True,
+                    text=True
+                )
+                return result.stdout.strip()
+            else:
+                # Let output flow to terminal in real-time
+                subprocess.run(cmd, shell=use_shell, check=check)
+                return True
+        except subprocess.CalledProcessError as e:
+            self.log(f"Command failed: {cmd_str}", "ERROR")
+            if self.verbose:
+                self.log(f"Error: {e}", "ERROR")
+            return False
+    
+    def run_shell_command(self, cmd, check=True, capture=False, show_output=True):
+        """
+        Run a shell command that requires pipes/redirections (trusted input only).
+        This is kept separate to clearly mark which commands need shell=True.
+        
+        Args:
+            cmd: Shell command string
+            check: Whether to check return code
+            capture: Whether to capture output
+            show_output: Whether to show output in real-time (ignored if capture=True)
+        """
+        if self.verbose or self.dry_run:
+            self.log(f"Running shell command: {cmd}", "STEP")
         
         if self.dry_run:
             return True
@@ -57,6 +117,7 @@ class IntegrationInstaller:
                 )
                 return result.stdout.strip()
             else:
+                # Let output flow to terminal in real-time
                 subprocess.run(cmd, shell=True, check=check)
                 return True
         except subprocess.CalledProcessError as e:
@@ -66,9 +127,9 @@ class IntegrationInstaller:
             return False
     
     def check_command_exists(self, command):
-        """Check if a command exists"""
-        result = self.run_command(f"command -v {command}", check=False, capture=True)
-        return bool(result)
+        """Check if a command exists using Python's shutil.which for cross-platform compatibility"""
+        result = shutil.which(command)
+        return result is not None
     
     def detect_os(self):
         """Detect the operating system"""
@@ -151,32 +212,46 @@ class IntegrationInstaller:
         if os_type in ["debian", "ubuntu"]:
             # Add Jitsi repository
             self.log("Adding Jitsi repository...", "STEP")
-            commands = [
+            # These commands use pipes/redirections so they need shell=True (trusted, fixed strings)
+            shell_commands = [
                 "curl -sL https://download.jitsi.org/jitsi-key.gpg.key | gpg --dearmor | tee /usr/share/keyrings/jitsi-keyring.gpg > /dev/null",
                 'echo "deb [signed-by=/usr/share/keyrings/jitsi-keyring.gpg] https://download.jitsi.org stable/" | tee /etc/apt/sources.list.d/jitsi-stable.list',
-                "apt-get update",
             ]
             
-            for cmd in commands:
-                if not self.run_command(cmd):
+            for cmd in shell_commands:
+                if not self.run_shell_command(cmd):
                     self.log("Failed to add Jitsi repository", "ERROR")
                     return False
             
+            # Safe command without shell injection
+            if not self.run_command(['apt-get', 'update']):
+                self.log("Failed to update package lists", "ERROR")
+                return False
+            
             # Install Jitsi
             self.log("Installing Jitsi Meet package...", "STEP")
-            # Use debconf to pre-seed configuration
+            # Use debconf to pre-seed configuration (these use pipes, so need shell)
             preseed_cmds = [
                 'echo "jitsi-meet jitsi-meet/jvb-hostname string localhost" | debconf-set-selections',
                 'echo "jitsi-meet-web-config jitsi-meet/cert-choice select Generate a new self-signed certificate" | debconf-set-selections',
             ]
             
             for cmd in preseed_cmds:
-                self.run_command(cmd)
+                self.run_shell_command(cmd)
             
-            if self.run_command("DEBIAN_FRONTEND=noninteractive apt-get install -y jitsi-meet"):
+            # Safe command execution with environment variable
+            env = os.environ.copy()
+            env['DEBIAN_FRONTEND'] = 'noninteractive'
+            try:
+                if not self.dry_run:
+                    subprocess.run(
+                        ['apt-get', 'install', '-y', 'jitsi-meet'],
+                        env=env,
+                        check=True
+                    )
                 self.log("Jitsi Meet installed successfully", "SUCCESS")
                 return True
-            else:
+            except subprocess.CalledProcessError:
                 self.log("Failed to install Jitsi Meet", "ERROR")
                 return False
         else:
@@ -198,31 +273,53 @@ class IntegrationInstaller:
         if os_type in ["debian", "ubuntu"]:
             # Add Matrix repository
             self.log("Adding Matrix repository...", "STEP")
-            commands = [
-                "apt-get install -y wget apt-transport-https",
-                "wget -O /usr/share/keyrings/matrix-org-archive-keyring.gpg https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg",
-                'echo "deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/matrix-org.list',
-                "apt-get update",
-            ]
             
-            for cmd in commands:
-                if not self.run_command(cmd):
-                    self.log("Failed to add Matrix repository", "ERROR")
-                    return False
+            # Install dependencies first (safe)
+            if not self.run_command(['apt-get', 'install', '-y', 'wget', 'apt-transport-https']):
+                self.log("Failed to install dependencies", "ERROR")
+                return False
+            
+            # Download keyring (safe)
+            if not self.run_command([
+                'wget', '-O', '/usr/share/keyrings/matrix-org-archive-keyring.gpg',
+                'https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg'
+            ]):
+                self.log("Failed to download Matrix keyring", "ERROR")
+                return False
+            
+            # Add repository (needs shell for command substitution)
+            if not self.run_shell_command(
+                'echo "deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/matrix-org.list'
+            ):
+                self.log("Failed to add Matrix repository", "ERROR")
+                return False
+            
+            # Update package lists (safe)
+            if not self.run_command(['apt-get', 'update']):
+                self.log("Failed to update package lists", "ERROR")
+                return False
             
             # Install Matrix Synapse
             self.log("Installing Matrix Synapse package...", "STEP")
-            if self.run_command("apt-get install -y matrix-synapse-py3"):
+            if self.run_command(['apt-get', 'install', '-y', 'matrix-synapse-py3']):
                 self.log("Matrix Synapse installed successfully", "SUCCESS")
                 
                 # Configure Synapse
                 self.log("Configuring Matrix Synapse...", "STEP")
                 config_path = "/etc/matrix-synapse/homeserver.yaml"
                 
-                # Enable registration (for creating bot account)
+                # Enable registration (for creating bot account) - safe subprocess call
                 if Path(config_path).exists():
-                    self.run_command(f"sed -i 's/enable_registration: false/enable_registration: true/' {config_path}")
-                    self.run_command("systemctl restart matrix-synapse")
+                    try:
+                        if not self.dry_run:
+                            subprocess.run([
+                                'sed', '-i',
+                                's/enable_registration: false/enable_registration: true/',
+                                config_path
+                            ], check=True)
+                            subprocess.run(['systemctl', 'restart', 'matrix-synapse'], check=True)
+                    except subprocess.CalledProcessError as e:
+                        self.log(f"Failed to configure Matrix: {e}", "WARNING")
                 
                 return True
             else:
@@ -248,15 +345,14 @@ class IntegrationInstaller:
         if os_type in ["debian", "ubuntu"]:
             # Install prerequisites
             self.log("Installing LAMP stack prerequisites...", "STEP")
-            commands = [
-                "apt-get install -y apache2 mysql-server php libapache2-mod-php",
-                "apt-get install -y php-mysql php-json php-gd php-zip php-mbstring php-xml php-curl php-ldap",
-            ]
-            
-            for cmd in commands:
-                if not self.run_command(cmd):
-                    self.log("Failed to install prerequisites", "ERROR")
-                    return False
+            # Use safe subprocess calls
+            if not self.run_command(['apt-get', 'install', '-y', 'apache2', 'mysql-server', 'php', 'libapache2-mod-php']):
+                self.log("Failed to install LAMP stack", "ERROR")
+                return False
+                
+            if not self.run_command(['apt-get', 'install', '-y', 'php-mysql', 'php-json', 'php-gd', 'php-zip', 'php-mbstring', 'php-xml', 'php-curl', 'php-ldap']):
+                self.log("Failed to install PHP modules", "ERROR")
+                return False
             
             # Download and extract EspoCRM
             self.log("Downloading EspoCRM...", "STEP")
@@ -264,9 +360,10 @@ class IntegrationInstaller:
             espocrm_url = f"https://www.espocrm.com/downloads/EspoCRM-{espocrm_version}.zip"
             espocrm_zip = "/tmp/espocrm.zip"
             
-            # Download file
+            # Download file (show progress)
             try:
                 if not self.dry_run:
+                    self.log(f"Downloading from {espocrm_url}...", "STEP")
                     subprocess.run(['wget', '-O', espocrm_zip, espocrm_url], check=True)
             except subprocess.CalledProcessError:
                 self.log("Failed to download EspoCRM", "ERROR")
@@ -279,18 +376,19 @@ class IntegrationInstaller:
             
             # Extract and set permissions
             commands = [
-                ['mkdir', '-p', '/var/www/html/espocrm'],
-                ['unzip', espocrm_zip, '-d', '/var/www/html/espocrm'],
-                ['chown', '-R', 'www-data:www-data', '/var/www/html/espocrm'],
-                ['chmod', '-R', '755', '/var/www/html/espocrm'],
+                (['mkdir', '-p', '/var/www/html/espocrm'], "Creating EspoCRM directory"),
+                (['unzip', espocrm_zip, '-d', '/var/www/html/espocrm'], "Extracting EspoCRM files"),
+                (['chown', '-R', 'www-data:www-data', '/var/www/html/espocrm'], "Setting file ownership"),
+                (['chmod', '-R', '755', '/var/www/html/espocrm'], "Setting file permissions"),
             ]
             
-            for cmd in commands:
+            for cmd, desc in commands:
                 try:
+                    self.log(desc, "STEP")
                     if not self.dry_run:
                         subprocess.run(cmd, check=True)
                 except subprocess.CalledProcessError as e:
-                    self.log(f"Failed to extract/configure EspoCRM: {e}", "ERROR")
+                    self.log(f"Failed: {desc} - {e}", "ERROR")
                     return False
             
             # Configure Apache
@@ -314,49 +412,96 @@ class IntegrationInstaller:
             if not self.dry_run:
                 config_file.write_text(apache_config)
             
-            commands = [
-                "a2ensite espocrm",
-                "a2enmod rewrite",
-                "systemctl restart apache2",
-            ]
-            
-            for cmd in commands:
-                self.run_command(cmd)
+            # Use safe subprocess calls for Apache configuration
+            try:
+                if not self.dry_run:
+                    self.log("Enabling EspoCRM site...", "STEP")
+                    subprocess.run(['a2ensite', 'espocrm'], check=True)
+                    self.log("Enabling Apache rewrite module...", "STEP")
+                    subprocess.run(['a2enmod', 'rewrite'], check=True)
+                    self.log("Restarting Apache...", "STEP")
+                    subprocess.run(['systemctl', 'restart', 'apache2'], check=True)
+            except subprocess.CalledProcessError as e:
+                self.log(f"Failed to configure Apache: {e}", "ERROR")
+                return False
             
             # Setup MySQL database with random password
-            self.log("Setting up MySQL database...", "STEP")
-            
             # Generate random password for security
-            import secrets
-            import string
             alphabet = string.ascii_letters + string.digits
             db_password = ''.join(secrets.choice(alphabet) for _ in range(16))
             
             # Store password in a secure location
             password_file = self.base_path / "certs" / "espocrm_db_password.txt"
             if not self.dry_run:
+                # Ensure certs directory exists
+                password_file.parent.mkdir(exist_ok=True)
                 password_file.write_text(db_password)
                 os.chmod(password_file, 0o600)  # Read/write for owner only
             
-            # Use subprocess for secure MySQL command execution
-            mysql_commands = [
-                "CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
-                f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';",
-                "GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';",
-                "FLUSH PRIVILEGES;"
-            ]
+            # Setup MySQL database
+            self.log("Setting up MySQL database...", "STEP")
             
-            for cmd in mysql_commands:
+            if self.dry_run:
+                # In dry-run mode, skip actual database setup
+                pass
+            else:
+                # Use NamedTemporaryFile with delete=False (required so files persist for mysql to read)
+                # We manually clean up in the finally block
+                mysql_config_path = None
+                mysql_sql_path = None
                 try:
-                    if not self.dry_run:
+                    # Create config file
+                    with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.cnf', delete=False) as config_file:
+                        config_file.write('[client]\n')
+                        config_file.write('user=root\n')
+                        mysql_config_path = config_file.name
+                    os.chmod(mysql_config_path, 0o600)
+                    
+                    # Escape password for SQL
+                    # Note: For production use, strongly consider using MySQL connector library
+                    # with parameterized queries instead of string escaping
+                    # This escaping handles single quotes for basic SQL injection prevention
+                    # but is not comprehensive for all MySQL special characters
+                    escaped_password = db_password.replace("\\", "\\\\").replace("'", "''")
+                    
+                    # Create SQL file (with delete=False since mysql needs to read it)
+                    # Security note: Cleanup is critical - handled in finally block
+                    with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.sql', delete=False) as sql_file:
+                        sql_file.write("CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
+                        # Use escaped password to prevent SQL injection
+                        sql_file.write(f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{escaped_password}';\n")
+                        sql_file.write("GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';\n")
+                        sql_file.write("FLUSH PRIVILEGES;\n")
+                        mysql_sql_path = sql_file.name
+                    os.chmod(mysql_sql_path, 0o600)
+                    
+                    # Execute SQL file - password is in file, not command line or process args
+                    self.log("Setting up database and user with secure password...", "STEP")
+                    with open(mysql_sql_path, 'r') as sql_input:
                         subprocess.run(
-                            ['mysql', '-u', 'root', '-e', cmd],
-                            check=True,
-                            capture_output=True
+                            ['mysql', f'--defaults-file={mysql_config_path}'],
+                            stdin=sql_input,
+                            check=True
                         )
-                except subprocess.CalledProcessError:
-                    self.log("Failed to setup MySQL database", "ERROR")
+                except subprocess.CalledProcessError as e:
+                    self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
                     return False
+                finally:
+                    # Critical cleanup: Remove temp files containing sensitive data
+                    # This must succeed to prevent password leakage
+                    cleanup_errors = []
+                    for temp_file in [mysql_config_path, mysql_sql_path]:
+                        try:
+                            if temp_file and os.path.exists(temp_file):
+                                os.remove(temp_file)
+                        except OSError as e:
+                            cleanup_errors.append(f"{temp_file}: {e}")
+                    
+                    if cleanup_errors:
+                        self.log("WARNING: Failed to cleanup temporary files with sensitive data:", "WARNING")
+                        for error in cleanup_errors:
+                            self.log(f"  {error}", "WARNING")
+                        self.log("Please manually delete these files for security", "WARNING")
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")

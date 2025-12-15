@@ -88,7 +88,7 @@ sudo register_new_matrix_user -c /etc/matrix-synapse/homeserver.yaml http://loca
 - **URL**: http://localhost/espocrm
 - **Services**: apache2, mysql-server
 - **Database**: espocrm (auto-created)
-- **Credentials**: Stored in `/home/runner/work/PBX/PBX/certs/espocrm_db_password.txt`
+- **Credentials**: Stored in `certs/espocrm_db_password.txt` (relative to PBX installation directory)
 
 **Post-Installation Steps:**
 1. Navigate to http://localhost/espocrm in browser
@@ -112,7 +112,7 @@ curl http://localhost/espocrm  # Should return HTML
 ```
 
 ### 4. SSL Certificates
-- **Location**: /home/runner/work/PBX/PBX/certs/
+- **Location**: `certs/` (relative to PBX installation directory)
 - **Files**: server.crt, server.key
 - **Type**: Self-signed (valid for localhost and 127.0.0.1)
 - **Validity**: 365 days
@@ -285,7 +285,7 @@ sudo systemctl restart mysql
 
 **Regenerate Certificates:**
 ```bash
-cd /home/runner/work/PBX/PBX
+cd /path/to/pbx  # Navigate to your PBX installation directory
 rm -rf certs/
 sudo python3 scripts/install_integrations.py --service ssl
 ```
