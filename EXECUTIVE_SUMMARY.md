@@ -703,9 +703,9 @@ The PBX system prioritizes **free, open-source, offline** AI technologies to mai
 | Feature | Status | Business Value |
 |---------|--------|---------------|
 | WebRTC Browser Calling | ✅ Complete | No-download browser-based calling |
-| WebRTC Video Conferencing | ⏳ Planned | HD video calls from browser |
-| Screen Sharing | ⏳ Planned | Collaborative screen sharing |
-| 4K Video Support | ⏳ Planned | Ultra-HD video quality |
+| WebRTC Video Conferencing | N/A | Handled by Zoom/Teams (manufacturing deployment) |
+| Screen Sharing | N/A | Handled by Zoom/Teams (manufacturing deployment) |
+| 4K Video Support | N/A | Handled by Zoom/Teams (manufacturing deployment) |
 | Advanced Noise Suppression | ✅ Complete | AI-powered background noise removal (pbx/features/audio_processing.py) |
 | Echo Cancellation (Enhanced) | ✅ Complete | AEC/AGC for superior audio quality (pbx/features/audio_processing.py) |
 
@@ -1097,10 +1097,10 @@ The PBX system has a solid E911 framework in place with location database struct
 | Mobile Apps (iOS/Android) | ⏳ Planned | Full-featured mobile clients |
 | Hot-Desking | ✅ Complete | Log in from any phone, retain settings |
 | Softphone Support | ✅ Complete | SIP client compatibility |
-| Mobile Push Notifications | ⏳ Planned | Call/voicemail alerts on mobile |
-| Visual Voicemail | ⚠️ Framework | Enhanced voicemail interface |
+| Mobile Push Notifications | ✅ Complete | Firebase integration for iOS/Android alerts |
+| Visual Voicemail | ✅ Complete | Enhanced voicemail interface with transcription |
 | Voicemail Transcription | ✅ Complete | Speech-to-text with OpenAI/Google support |
-| Click-to-Dial | ⚠️ Framework | Web/app-based dialing API (WebRTC backend) |
+| Click-to-Dial | ✅ Complete | Web/app-based dialing with PBX integration |
 | Mobile Number Portability | ⏳ Planned | Use business number on mobile |
 
 ### Advanced Call Features (Next Generation)

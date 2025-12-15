@@ -26,13 +26,14 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 
 ### Overall Status
 - **Total Features Tracked**: 77 features (removed 2 non-applicable: HIPAA, TCPA)
-- **Completed** ✅: 43 features (56%)
-- **Framework** ⚠️: 4 features (5%)
+- **Completed** ✅: 44 features (57%)
+- **Framework** ⚠️: 3 features (4%)
 - **Planned**: 30 features (39%)
 
 ### Recently Completed (December 2025)
-1. **Nomadic E911 Support** (Dec 15) - IP-based location tracking for remote workers
-2. **Real-Time Speech Analytics** (Dec 15) - Live transcription, sentiment analysis, call summarization
+1. **Click-to-Dial** (Dec 15) - Full PBX integration with SIP call creation
+2. **Nomadic E911 Support** (Dec 15) - IP-based location tracking for remote workers
+3. **Real-Time Speech Analytics** (Dec 15) - Live transcription, sentiment analysis, call summarization
 3. **HubSpot Integration** (Dec 15) - Marketing automation with contact and deal management
 4. **Zendesk Integration** (Dec 15) - Helpdesk ticket creation and management
 5. **AI-Based Call Routing** (Dec 13) - Machine learning for intelligent agent selection
@@ -68,8 +69,7 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
-- Click-to-Dial (WebRTC API exists, needs web UI component)
-- Multi-Factor Authentication (security infrastructure exists, can add more auth methods)
+- Multi-Factor Authentication (✅ fully implemented - TOTP, YubiKey, FIDO2/WebAuthn, backup codes)
 - SOC 2 Type 2 Compliance (✅ fully implemented - audit logging, controls tracking, reporting)
 - Dashboard & Analytics (REST APIs available, can add more visualizations)
 
@@ -313,8 +313,11 @@ Features with foundational implementations that can be extended:
 
 ## Enhanced Integration Capabilities
 
-### CRM Features - REMOVED (Not Needed)
-Note: CRM integration features have been removed as they are not required for this deployment.
+### CRM Features - NOT NEEDED (Manufacturing Deployment)
+Note: CRM integration features are NOT required for this automotive manufacturing plant deployment. 
+However, the implementations below exist in the codebase and are marked as completed for potential 
+future use if business requirements change. For this manufacturing deployment, these features 
+should remain disabled.
 
 - [x] **HubSpot Integration** - Marketing automation integration
   - Status: ✅ COMPLETED - Full implementation in pbx/features/crm_integrations.py
@@ -372,11 +375,13 @@ Note: CRM integration features have been removed as they are not required for th
   - Device Management: Multi-device support per user
   - Impact: Instant mobile notifications for calls and voicemail
 
-- [⚠️] **Click-to-Dial** - Web/app-based dialing
-  - Status: Framework exists (WebRTC call initiation API)
-  - Features: WebRTC session API can initiate calls programmatically
+- [x] **Click-to-Dial** - Web/app-based dialing
+  - Status: ✅ COMPLETED - Full PBX integration in pbx/features/click_to_dial.py
+  - Features: WebRTC API integration, SIP call creation via CallManager
+  - Configuration: Per-extension settings with auto-answer and caller ID
   - Integration: REST API endpoints for call initiation
-  - Current: Backend API complete, web UI component can be added
+  - Call History: Complete database tracking of all click-to-dial calls
+  - PBX Integration: Creates actual SIP calls through PBX CallManager
   - Impact: API-based dialing from any web interface or application
 
 - [x] **Visual Voicemail** - Enhanced voicemail interface
