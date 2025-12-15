@@ -317,6 +317,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/speech-analytics/config/'):
                 extension = path.split('/')[-1]
                 self._handle_update_speech_analytics_config(extension)
+            elif path.startswith('/api/framework/speech-analytics/analyze-sentiment'):
+                self._handle_analyze_sentiment()
+            elif path.startswith('/api/framework/speech-analytics/generate-summary/'):
+                call_id = path.split('/')[-1]
+                self._handle_generate_summary(call_id)
             elif path == '/api/framework/video-conference/create-room':
                 self._handle_create_video_room()
             elif path.startswith('/api/framework/video-conference/join/'):
@@ -735,6 +740,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/speech-analytics/config/'):
                 extension = path.split('/')[-1]
                 self._handle_get_speech_analytics_config(extension)
+            elif path.startswith('/api/framework/speech-analytics/summary/'):
+                call_id = path.split('/')[-1]
+                self._handle_get_call_summary(call_id)
             elif path == '/api/framework/video-conference/rooms':
                 self._handle_get_video_rooms()
             elif path.startswith('/api/framework/video-conference/room/'):
@@ -6940,6 +6948,63 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Failed to update config'}, 500)
             except Exception as e:
                 self.logger.error(f"Error updating speech analytics config: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_analyze_sentiment(self):
+        """Analyze sentiment of provided text"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                text = body.get('text', '')
+                if not text:
+                    self._send_json({'error': 'Text required'}, 400)
+                    return
+                
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                result = engine.analyze_sentiment(text)
+                self._send_json(result)
+            except Exception as e:
+                self.logger.error(f"Error analyzing sentiment: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_generate_summary(self, call_id: str):
+        """Generate call summary from transcript"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                transcript = body.get('transcript', '')
+                if not transcript:
+                    self._send_json({'error': 'Transcript required'}, 400)
+                    return
+                
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                summary = engine.generate_summary(call_id, transcript)
+                self._send_json({'call_id': call_id, 'summary': summary})
+            except Exception as e:
+                self.logger.error(f"Error generating summary: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_call_summary(self, call_id: str):
+        """Get stored call summary"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                summary = engine.get_call_summary(call_id)
+                if summary:
+                    self._send_json(summary)
+                else:
+                    self._send_json({'error': 'Summary not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting call summary: {e}")
                 self._send_json({'error': str(e)}, 500)
         else:
             self._send_json({'error': 'Database not available'}, 500)
