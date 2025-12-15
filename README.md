@@ -45,7 +45,18 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **BLF Monitoring** - Real-time extension busy lamp field status
 - **Company Directory** - Quick lookup with search functionality
 
-### Enterprise Integrations
+### 🆓 Free & Open Source Integrations
+**Zero licensing costs - 100% free alternatives to expensive proprietary services**
+- **Jitsi Meet** - Video conferencing (Zoom alternative) - ✅ Integrated
+- **Matrix/Element** - Team messaging (Slack/Teams alternative) - ✅ Integrated  
+- **EspoCRM** - CRM with screen pop & call logging (Salesforce alternative) - ✅ Integrated
+- **Vosk** - Offline speech recognition for transcription - ✅ Integrated
+- **OpenLDAP** - Directory services (Active Directory compatible) - ✅ Compatible
+- **See [OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md) for complete guide**
+
+**💰 Cost Savings**: $0/year vs $3,726+/user/year for proprietary stack
+
+### Enterprise Integrations (Optional - Proprietary)
 - **Zoom Integration** - Create instant or scheduled Zoom meetings from PBX
 - **Active Directory** - LDAP authentication and user directory sync
 - **Microsoft Outlook** - Calendar sync, availability, and contact integration
