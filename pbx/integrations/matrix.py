@@ -2,6 +2,9 @@
 Matrix Integration (Free, Open-Source Alternative to Slack/Teams Chat)
 Enables team messaging, file sharing, and real-time notifications
 """
+import os
+import re
+import time
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -179,7 +182,6 @@ class MatrixIntegration:
         
         try:
             # Generate transaction ID
-            import time
             txn_id = f"pbx_{int(time.time() * 1000)}"
             
             data = {
@@ -394,7 +396,6 @@ class MatrixIntegration:
             return None
         
         try:
-            import os
             
             if not os.path.exists(file_path):
                 self.logger.error(f"File not found: {file_path}")
@@ -451,7 +452,6 @@ class MatrixIntegration:
             return None
         
         try:
-            import os
             
             # Upload file
             mxc_uri = self.upload_file(file_path, content_type)
@@ -460,7 +460,6 @@ class MatrixIntegration:
                 return None
             
             # Send file message
-            import time
             txn_id = f"pbx_{int(time.time() * 1000)}"
             
             if not filename:
@@ -504,9 +503,7 @@ class MatrixIntegration:
         html = markdown
         
         # Bold
-        import re
         html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
-        
         # Italic
         html = re.sub(r'\*(.+?)\*', r'<em>\1</em>', html)
         

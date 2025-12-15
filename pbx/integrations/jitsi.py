@@ -4,6 +4,7 @@ Enables video conferencing, screen sharing, and recording
 """
 import hashlib
 import json
+import re
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -15,6 +16,12 @@ try:
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
+
+try:
+    import jwt
+    JWT_AVAILABLE = True
+except ImportError:
+    JWT_AVAILABLE = False
 
 
 class JitsiIntegration:
@@ -273,7 +280,6 @@ class JitsiIntegration:
         name = room_name.lower()
         
         # Replace spaces and special chars with hyphens
-        import re
         name = re.sub(r'[^a-z0-9-]', '-', name)
         
         # Remove consecutive hyphens
@@ -303,9 +309,13 @@ class JitsiIntegration:
         Returns:
             JWT token string
         """
+        if not JWT_AVAILABLE:
+            self.logger.warning(
+                "JWT library not available. Install with: pip install PyJWT"
+            )
+            return ""
+        
         try:
-            import jwt
-            
             now = int(time.time())
             payload = {
                 'iss': self.app_id,
