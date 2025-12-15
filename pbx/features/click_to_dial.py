@@ -2,6 +2,7 @@
 Click-to-Dial Framework
 Web and application-based dialing with WebRTC integration
 """
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -137,7 +138,6 @@ class ClickToDialEngine:
         Returns:
             Call ID or None
         """
-        import uuid
         call_id = f"c2d-{extension}-{int(datetime.now().timestamp())}"
 
         try:
