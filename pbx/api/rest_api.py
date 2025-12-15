@@ -335,6 +335,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/nomadic-e911/update-location/'):
                 extension = path.split('/')[-1]
                 self._handle_update_e911_location(extension)
+            elif path.startswith('/api/framework/nomadic-e911/detect-location/'):
+                extension = path.split('/')[-1]
+                self._handle_detect_e911_location(extension)
             elif path == '/api/framework/nomadic-e911/create-site':
                 self._handle_create_e911_site()
             elif path == '/api/framework/integrations/hubspot/config':
@@ -755,6 +758,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/nomadic-e911/location/'):
                 extension = path.split('/')[-1]
                 self._handle_get_e911_location(extension)
+            elif path.startswith('/api/framework/nomadic-e911/history/'):
+                extension = path.split('/')[-1]
+                self._handle_get_e911_history(extension)
             elif path == '/api/framework/integrations/hubspot':
                 self._handle_get_hubspot_config()
             elif path == '/api/framework/integrations/zendesk':
@@ -7225,6 +7231,43 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Failed to create site'}, 500)
             except Exception as e:
                 self.logger.error(f"Error creating E911 site: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_detect_e911_location(self, extension: str):
+        """Auto-detect E911 location for extension by IP"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                ip_address = body.get('ip_address')
+                if not ip_address:
+                    self._send_json({'error': 'IP address required'}, 400)
+                    return
+                
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                location = engine.detect_location_by_ip(extension, ip_address)
+                if location:
+                    self._send_json(location)
+                else:
+                    self._send_json({'error': 'Location could not be detected'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error detecting E911 location: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_e911_history(self, extension: str):
+        """Get E911 location history for extension"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                history = engine.get_location_history(extension)
+                self._send_json({'history': history})
+            except Exception as e:
+                self.logger.error(f"Error getting E911 history: {e}")
                 self._send_json({'error': str(e)}, 500)
         else:
             self._send_json({'error': 'Database not available'}, 500)
