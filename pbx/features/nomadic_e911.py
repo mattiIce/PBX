@@ -149,7 +149,7 @@ class NomadicE911Engine:
     def detect_location_by_ip(self, extension: str, ip_address: str) -> Optional[Dict]:
         """
         Automatically detect location by IP address
-        Framework method - integrates with IP geolocation
+        Uses internal network mapping (multi-site configs)
 
         Args:
             extension: Extension number
@@ -158,19 +158,37 @@ class NomadicE911Engine:
         Returns:
             Detected location or None
         """
-        # Framework implementation
-        # TODO: Integrate with IP geolocation service
-        # - MaxMind GeoIP2
-        # - IPinfo.io
-        # - Internal network mapping
-
-        # Check multi-site configs first
+        # Check multi-site configs for IP range match
         site = self._find_site_by_ip(ip_address)
         if site:
-            return {
+            location_data = {
                 'ip_address': ip_address,
                 'location_name': site['site_name'],
+                'street_address': site.get('street_address', ''),
+                'city': site.get('city', ''),
+                'state': site.get('state', ''),
+                'postal_code': site.get('postal_code', ''),
+                'country': site.get('country', 'USA'),
+                'building': site.get('building', ''),
+                'floor': site.get('floor', ''),
+                'room': '',  # Room is typically not known from IP alone
                 'auto_detected': True
+            }
+            
+            # Automatically update location for extension
+            if self.update_location(extension, location_data, auto_detected=True):
+                self.logger.info(f"Auto-detected location for {extension} from IP {ip_address}: {site['site_name']}")
+                return location_data
+        
+        # If no site match found, check if this is a private IP
+        # Private IPs suggest internal network but unknown site
+        if self._is_private_ip(ip_address):
+            self.logger.warning(f"Private IP {ip_address} for {extension} does not match any configured site")
+            return {
+                'ip_address': ip_address,
+                'location_name': 'Unknown Internal Location',
+                'auto_detected': True,
+                'needs_configuration': True
             }
 
         return None
@@ -183,7 +201,7 @@ class NomadicE911Engine:
             ip_address: IP address to check
 
         Returns:
-            Site config or None
+            Site config with full address details or None
         """
         try:
             result = self.db.execute(
@@ -198,7 +216,14 @@ class NomadicE911Engine:
                     'ip_range_end': row[3],
                     'emergency_trunk': row[4],
                     'psap_number': row[5],
-                    'elin': row[6]
+                    'elin': row[6],
+                    'street_address': row[7] if len(row) > 7 else '',
+                    'city': row[8] if len(row) > 8 else '',
+                    'state': row[9] if len(row) > 9 else '',
+                    'postal_code': row[10] if len(row) > 10 else '',
+                    'country': row[11] if len(row) > 11 else 'USA',
+                    'building': row[12] if len(row) > 12 else '',
+                    'floor': row[13] if len(row) > 13 else ''
                 }
 
                 # Check if IP is in range
@@ -232,12 +257,28 @@ class NomadicE911Engine:
             self.logger.warning(f"Invalid IP address in range check: {e}")
             return False
 
+    def _is_private_ip(self, ip: str) -> bool:
+        """
+        Check if IP address is private (RFC 1918)
+
+        Args:
+            ip: IP address to check
+
+        Returns:
+            bool: True if private IP
+        """
+        try:
+            ip_addr = ipaddress.ip_address(ip)
+            return ip_addr.is_private
+        except (ValueError, TypeError):
+            return False
+
     def create_site_config(self, site_data: Dict) -> bool:
         """
         Create multi-site E911 configuration
 
         Args:
-            site_data: Site configuration
+            site_data: Site configuration including full address details
 
         Returns:
             bool: True if successful
@@ -245,19 +286,28 @@ class NomadicE911Engine:
         try:
             self.db.execute(
                 """INSERT INTO multi_site_e911_configs 
-                   (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin)
-                   VALUES (?, ?, ?, ?, ?, ?)"""
+                   (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
+                    street_address, city, state, postal_code, country, building, floor)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
                 if self.db.db_type == 'sqlite'
                 else """INSERT INTO multi_site_e911_configs 
-                   (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                   (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
+                    street_address, city, state, postal_code, country, building, floor)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     site_data['site_name'],
                     site_data['ip_range_start'],
                     site_data['ip_range_end'],
                     site_data.get('emergency_trunk'),
                     site_data.get('psap_number'),
-                    site_data.get('elin')
+                    site_data.get('elin'),
+                    site_data.get('street_address', ''),
+                    site_data.get('city', ''),
+                    site_data.get('state', ''),
+                    site_data.get('postal_code', ''),
+                    site_data.get('country', 'USA'),
+                    site_data.get('building', ''),
+                    site_data.get('floor', '')
                 )
             )
 
@@ -273,7 +323,7 @@ class NomadicE911Engine:
         Get all E911 site configurations
 
         Returns:
-            List of site dictionaries
+            List of site dictionaries with full address information
         """
         try:
             result = self.db.execute(
@@ -290,7 +340,14 @@ class NomadicE911Engine:
                     'emergency_trunk': row[4],
                     'psap_number': row[5],
                     'elin': row[6],
-                    'created_at': row[7]
+                    'street_address': row[7] if len(row) > 7 else '',
+                    'city': row[8] if len(row) > 8 else '',
+                    'state': row[9] if len(row) > 9 else '',
+                    'postal_code': row[10] if len(row) > 10 else '',
+                    'country': row[11] if len(row) > 11 else 'USA',
+                    'building': row[12] if len(row) > 12 else '',
+                    'floor': row[13] if len(row) > 13 else '',
+                    'created_at': row[14] if len(row) > 14 else None
                 })
 
             return sites

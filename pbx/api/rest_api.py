@@ -317,6 +317,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/speech-analytics/config/'):
                 extension = path.split('/')[-1]
                 self._handle_update_speech_analytics_config(extension)
+            elif path.startswith('/api/framework/speech-analytics/analyze-sentiment'):
+                self._handle_analyze_sentiment()
+            elif path.startswith('/api/framework/speech-analytics/generate-summary/'):
+                call_id = path.split('/')[-1]
+                self._handle_generate_summary(call_id)
             elif path == '/api/framework/video-conference/create-room':
                 self._handle_create_video_room()
             elif path.startswith('/api/framework/video-conference/join/'):
@@ -335,6 +340,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/nomadic-e911/update-location/'):
                 extension = path.split('/')[-1]
                 self._handle_update_e911_location(extension)
+            elif path.startswith('/api/framework/nomadic-e911/detect-location/'):
+                extension = path.split('/')[-1]
+                self._handle_detect_e911_location(extension)
             elif path == '/api/framework/nomadic-e911/create-site':
                 self._handle_create_e911_site()
             elif path == '/api/framework/integrations/hubspot/config':
@@ -732,6 +740,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/speech-analytics/config/'):
                 extension = path.split('/')[-1]
                 self._handle_get_speech_analytics_config(extension)
+            elif path.startswith('/api/framework/speech-analytics/summary/'):
+                call_id = path.split('/')[-1]
+                self._handle_get_call_summary(call_id)
             elif path == '/api/framework/video-conference/rooms':
                 self._handle_get_video_rooms()
             elif path.startswith('/api/framework/video-conference/room/'):
@@ -755,6 +766,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/nomadic-e911/location/'):
                 extension = path.split('/')[-1]
                 self._handle_get_e911_location(extension)
+            elif path.startswith('/api/framework/nomadic-e911/history/'):
+                extension = path.split('/')[-1]
+                self._handle_get_e911_history(extension)
             elif path == '/api/framework/integrations/hubspot':
                 self._handle_get_hubspot_config()
             elif path == '/api/framework/integrations/zendesk':
@@ -6938,6 +6952,63 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({'error': 'Database not available'}, 500)
 
+    def _handle_analyze_sentiment(self):
+        """Analyze sentiment of provided text"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                text = body.get('text', '')
+                if not text:
+                    self._send_json({'error': 'Text required'}, 400)
+                    return
+                
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                result = engine.analyze_sentiment(text)
+                self._send_json(result)
+            except Exception as e:
+                self.logger.error(f"Error analyzing sentiment: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_generate_summary(self, call_id: str):
+        """Generate call summary from transcript"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                transcript = body.get('transcript', '')
+                if not transcript:
+                    self._send_json({'error': 'Transcript required'}, 400)
+                    return
+                
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                summary = engine.generate_summary(call_id, transcript)
+                self._send_json({'call_id': call_id, 'summary': summary})
+            except Exception as e:
+                self.logger.error(f"Error generating summary: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_call_summary(self, call_id: str):
+        """Get stored call summary"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.speech_analytics import SpeechAnalyticsEngine
+                engine = SpeechAnalyticsEngine(self.pbx_core.database, self.pbx_core.config)
+                summary = engine.get_call_summary(call_id)
+                if summary:
+                    self._send_json(summary)
+                else:
+                    self._send_json({'error': 'Summary not found'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error getting call summary: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
     # Framework Feature Handlers - Video Conferencing
     def _handle_get_video_rooms(self):
         """Get all video conference rooms"""
@@ -7225,6 +7296,43 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': 'Failed to create site'}, 500)
             except Exception as e:
                 self.logger.error(f"Error creating E911 site: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_detect_e911_location(self, extension: str):
+        """Auto-detect E911 location for extension by IP"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                body = self._get_body()
+                ip_address = body.get('ip_address')
+                if not ip_address:
+                    self._send_json({'error': 'IP address required'}, 400)
+                    return
+                
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                location = engine.detect_location_by_ip(extension, ip_address)
+                if location:
+                    self._send_json(location)
+                else:
+                    self._send_json({'error': 'Location could not be detected'}, 404)
+            except Exception as e:
+                self.logger.error(f"Error detecting E911 location: {e}")
+                self._send_json({'error': str(e)}, 500)
+        else:
+            self._send_json({'error': 'Database not available'}, 500)
+
+    def _handle_get_e911_history(self, extension: str):
+        """Get E911 location history for extension"""
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                from pbx.features.nomadic_e911 import NomadicE911Engine
+                engine = NomadicE911Engine(self.pbx_core.database, self.pbx_core.config)
+                history = engine.get_location_history(extension)
+                self._send_json({'history': history})
+            except Exception as e:
+                self.logger.error(f"Error getting E911 history: {e}")
                 self._send_json({'error': str(e)}, 500)
         else:
             self._send_json({'error': 'Database not available'}, 500)
