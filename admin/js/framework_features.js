@@ -185,7 +185,7 @@ function loadFrameworkOverview() {
                 <button onclick="switchTab('geographic-redundancy')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🔀</div>
+                <div class="stat-icon">🌐</div>
                 <h3>DNS SRV Failover</h3>
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
@@ -916,7 +916,7 @@ function loadGeographicRedundancyTab() {
 // DNS SRV Failover Tab
 function loadDNSSRVFailoverTab() {
     return `
-        <h2>🔀 DNS SRV Failover</h2>
+        <h2>🌐 DNS SRV Failover</h2>
         <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
