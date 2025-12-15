@@ -1039,49 +1039,13 @@ function initializeForms() {
     }
 }
 
-// Notification System
+// Notification System - Disabled (no users yet)
 function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    // Style the notification
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 5px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideInRight 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    `;
-    
-    // Set background color based on type
-    switch(type) {
-        case 'success':
-            notification.style.background = '#10b981';
-            break;
-        case 'error':
-            notification.style.background = '#ef4444';
-            break;
-        case 'warning':
-            notification.style.background = '#f59e0b';
-            break;
-        default:
-            notification.style.background = '#667eea';
+    // Notifications disabled - no users to notify yet
+    // Errors are still logged to console for debugging
+    if (type === 'error') {
+        console.error('Error:', message);
     }
-    
-    document.body.appendChild(notification);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
 }
 
 // Add slide animations
