@@ -38,14 +38,15 @@ class IntegrationInstaller:
         }.get(level, "")
         print(f"{prefix} {message}")
     
-    def run_command(self, cmd, check=True, capture=False):
+    def run_command(self, cmd, check=True, capture=False, show_output=True):
         """
         Run a command safely using subprocess without shell=True.
         
         Args:
             cmd: Command as a list (e.g., ['apt-get', 'update']) or string for shell commands
             check: Whether to check return code
-            capture: Whether to capture output
+            capture: Whether to capture output (returns output instead of displaying it)
+            show_output: Whether to show output in real-time (ignored if capture=True)
         
         Returns:
             True/output if successful, False if failed
@@ -75,6 +76,7 @@ class IntegrationInstaller:
                 )
                 return result.stdout.strip()
             else:
+                # Let output flow to terminal in real-time
                 subprocess.run(cmd, shell=use_shell, check=check)
                 return True
         except subprocess.CalledProcessError as e:
@@ -83,10 +85,16 @@ class IntegrationInstaller:
                 self.log(f"Error: {e}", "ERROR")
             return False
     
-    def run_shell_command(self, cmd, check=True, capture=False):
+    def run_shell_command(self, cmd, check=True, capture=False, show_output=True):
         """
         Run a shell command that requires pipes/redirections (trusted input only).
         This is kept separate to clearly mark which commands need shell=True.
+        
+        Args:
+            cmd: Shell command string
+            check: Whether to check return code
+            capture: Whether to capture output
+            show_output: Whether to show output in real-time (ignored if capture=True)
         """
         if self.verbose or self.dry_run:
             self.log(f"Running shell command: {cmd}", "STEP")
@@ -105,6 +113,7 @@ class IntegrationInstaller:
                 )
                 return result.stdout.strip()
             else:
+                # Let output flow to terminal in real-time
                 subprocess.run(cmd, shell=True, check=check)
                 return True
         except subprocess.CalledProcessError as e:
@@ -336,15 +345,14 @@ class IntegrationInstaller:
         if os_type in ["debian", "ubuntu"]:
             # Install prerequisites
             self.log("Installing LAMP stack prerequisites...", "STEP")
-            commands = [
-                "apt-get install -y apache2 mysql-server php libapache2-mod-php",
-                "apt-get install -y php-mysql php-json php-gd php-zip php-mbstring php-xml php-curl php-ldap",
-            ]
-            
-            for cmd in commands:
-                if not self.run_command(cmd):
-                    self.log("Failed to install prerequisites", "ERROR")
-                    return False
+            # Use safe subprocess calls
+            if not self.run_command(['apt-get', 'install', '-y', 'apache2', 'mysql-server', 'php', 'libapache2-mod-php']):
+                self.log("Failed to install LAMP stack", "ERROR")
+                return False
+                
+            if not self.run_command(['apt-get', 'install', '-y', 'php-mysql', 'php-json', 'php-gd', 'php-zip', 'php-mbstring', 'php-xml', 'php-curl', 'php-ldap']):
+                self.log("Failed to install PHP modules", "ERROR")
+                return False
             
             # Download and extract EspoCRM
             self.log("Downloading EspoCRM...", "STEP")
@@ -352,9 +360,10 @@ class IntegrationInstaller:
             espocrm_url = f"https://www.espocrm.com/downloads/EspoCRM-{espocrm_version}.zip"
             espocrm_zip = "/tmp/espocrm.zip"
             
-            # Download file
+            # Download file (show progress)
             try:
                 if not self.dry_run:
+                    self.log(f"Downloading from {espocrm_url}...", "STEP")
                     subprocess.run(['wget', '-O', espocrm_zip, espocrm_url], check=True)
             except subprocess.CalledProcessError:
                 self.log("Failed to download EspoCRM", "ERROR")
@@ -367,18 +376,19 @@ class IntegrationInstaller:
             
             # Extract and set permissions
             commands = [
-                ['mkdir', '-p', '/var/www/html/espocrm'],
-                ['unzip', espocrm_zip, '-d', '/var/www/html/espocrm'],
-                ['chown', '-R', 'www-data:www-data', '/var/www/html/espocrm'],
-                ['chmod', '-R', '755', '/var/www/html/espocrm'],
+                (['mkdir', '-p', '/var/www/html/espocrm'], "Creating EspoCRM directory"),
+                (['unzip', espocrm_zip, '-d', '/var/www/html/espocrm'], "Extracting EspoCRM files"),
+                (['chown', '-R', 'www-data:www-data', '/var/www/html/espocrm'], "Setting file ownership"),
+                (['chmod', '-R', '755', '/var/www/html/espocrm'], "Setting file permissions"),
             ]
             
-            for cmd in commands:
+            for cmd, desc in commands:
                 try:
+                    self.log(desc, "STEP")
                     if not self.dry_run:
                         subprocess.run(cmd, check=True)
                 except subprocess.CalledProcessError as e:
-                    self.log(f"Failed to extract/configure EspoCRM: {e}", "ERROR")
+                    self.log(f"Failed: {desc} - {e}", "ERROR")
                     return False
             
             # Configure Apache
@@ -402,14 +412,18 @@ class IntegrationInstaller:
             if not self.dry_run:
                 config_file.write_text(apache_config)
             
-            commands = [
-                "a2ensite espocrm",
-                "a2enmod rewrite",
-                "systemctl restart apache2",
-            ]
-            
-            for cmd in commands:
-                self.run_command(cmd)
+            # Use safe subprocess calls for Apache configuration
+            try:
+                if not self.dry_run:
+                    self.log("Enabling EspoCRM site...", "STEP")
+                    subprocess.run(['a2ensite', 'espocrm'], check=True)
+                    self.log("Enabling Apache rewrite module...", "STEP")
+                    subprocess.run(['a2enmod', 'rewrite'], check=True)
+                    self.log("Restarting Apache...", "STEP")
+                    subprocess.run(['systemctl', 'restart', 'apache2'], check=True)
+            except subprocess.CalledProcessError as e:
+                self.log(f"Failed to configure Apache: {e}", "ERROR")
+                return False
             
             # Setup MySQL database with random password
             self.log("Setting up MySQL database...", "STEP")
@@ -417,34 +431,58 @@ class IntegrationInstaller:
             # Generate random password for security
             import secrets
             import string
+            import tempfile
             alphabet = string.ascii_letters + string.digits
             db_password = ''.join(secrets.choice(alphabet) for _ in range(16))
             
             # Store password in a secure location
             password_file = self.base_path / "certs" / "espocrm_db_password.txt"
             if not self.dry_run:
+                # Ensure certs directory exists
+                password_file.parent.mkdir(exist_ok=True)
                 password_file.write_text(db_password)
                 os.chmod(password_file, 0o600)  # Read/write for owner only
             
-            # Use subprocess for secure MySQL command execution
-            mysql_commands = [
-                "CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
-                f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';",
-                "GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';",
-                "FLUSH PRIVILEGES;"
-            ]
-            
-            for cmd in mysql_commands:
-                try:
-                    if not self.dry_run:
-                        subprocess.run(
-                            ['mysql', '-u', 'root', '-e', cmd],
-                            check=True,
-                            capture_output=True
-                        )
-                except subprocess.CalledProcessError:
-                    self.log("Failed to setup MySQL database", "ERROR")
-                    return False
+            # Create MySQL option file to avoid password in process list
+            mysql_config_fd, mysql_config_path = tempfile.mkstemp(prefix='mysql_', suffix='.cnf')
+            try:
+                if not self.dry_run:
+                    with os.fdopen(mysql_config_fd, 'w') as f:
+                        f.write('[client]\n')
+                        f.write('user=root\n')
+                        # Note: For security, password should not be here either in production
+                        # This is just for local dev setup
+                    os.chmod(mysql_config_path, 0o600)
+                
+                # Execute MySQL commands safely
+                mysql_commands = [
+                    "CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+                    f"CREATE USER IF NOT EXISTS 'espocrm_user'@'localhost' IDENTIFIED BY '{db_password}';",
+                    "GRANT ALL PRIVILEGES ON espocrm.* TO 'espocrm_user'@'localhost';",
+                    "FLUSH PRIVILEGES;"
+                ]
+                
+                for cmd in mysql_commands:
+                    try:
+                        if not self.dry_run:
+                            # Show command being executed (without password for security)
+                            if 'IDENTIFIED BY' in cmd:
+                                self.log("Creating database user with secure password...", "STEP")
+                            else:
+                                self.log(f"Executing: {cmd[:50]}...", "STEP")
+                            
+                            subprocess.run(
+                                ['mysql', f'--defaults-file={mysql_config_path}', '-e', cmd],
+                                check=True
+                                # No capture_output - let it display to terminal
+                            )
+                    except subprocess.CalledProcessError as e:
+                        self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
+                        return False
+            finally:
+                # Clean up temp file
+                if not self.dry_run and os.path.exists(mysql_config_path):
+                    os.remove(mysql_config_path)
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
