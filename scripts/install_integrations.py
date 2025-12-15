@@ -18,6 +18,7 @@ import platform
 import tempfile
 import secrets
 import string
+import shutil
 from pathlib import Path
 
 
@@ -127,7 +128,6 @@ class IntegrationInstaller:
     
     def check_command_exists(self, command):
         """Check if a command exists using Python's shutil.which for cross-platform compatibility"""
-        import shutil
         result = shutil.which(command)
         return result is not None
     
@@ -457,11 +457,15 @@ class IntegrationInstaller:
                         mysql_config_path = config_file.name
                     os.chmod(mysql_config_path, 0o600)
                     
-                    # Escape password for SQL by doubling single quotes (SQL standard)
-                    # Note: For production use, consider using MySQL connector with parameterized queries
-                    escaped_password = db_password.replace("'", "''")
+                    # Escape password for SQL
+                    # Note: For production use, strongly consider using MySQL connector library
+                    # with parameterized queries instead of string escaping
+                    # This escaping handles single quotes for basic SQL injection prevention
+                    # but is not comprehensive for all MySQL special characters
+                    escaped_password = db_password.replace("\\", "\\\\").replace("'", "''")
                     
-                    # Create SQL file
+                    # Create SQL file (with delete=False since mysql needs to read it)
+                    # Security note: Cleanup is critical - handled in finally block
                     with tempfile.NamedTemporaryFile(mode='w', prefix='mysql_', suffix='.sql', delete=False) as sql_file:
                         sql_file.write("CREATE DATABASE IF NOT EXISTS espocrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
                         # Use escaped password to prevent SQL injection
@@ -483,14 +487,21 @@ class IntegrationInstaller:
                     self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
                     return False
                 finally:
-                    # Clean up temp files manually since we used delete=False
-                    # (delete=False required so files exist when mysql reads them)
+                    # Critical cleanup: Remove temp files containing sensitive data
+                    # This must succeed to prevent password leakage
+                    cleanup_errors = []
                     for temp_file in [mysql_config_path, mysql_sql_path]:
                         try:
                             if temp_file and os.path.exists(temp_file):
                                 os.remove(temp_file)
-                        except OSError:
-                            pass
+                        except OSError as e:
+                            cleanup_errors.append(f"{temp_file}: {e}")
+                    
+                    if cleanup_errors:
+                        self.log("WARNING: Failed to cleanup temporary files with sensitive data:", "WARNING")
+                        for error in cleanup_errors:
+                            self.log(f"  {error}", "WARNING")
+                        self.log("Please manually delete these files for security", "WARNING")
             
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
