@@ -226,6 +226,26 @@ function loadFrameworkOverview() {
                 <small style="color: #666; display: block; margin-top: 8px;">✓ Region management ✓ GDPR support ⚠ Needs multi-region storage</small>
                 <button onclick="switchTab('data-residency')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon">📹</div>
+                <h3>Video Conferencing</h3>
+                <div style="margin: 10px 0;">
+                    <span class="status-badge status-framework-only">⚙️ Framework Only</span>
+                </div>
+                <p>HD/4K video calls with screen sharing (FREE: Jitsi, BigBlueButton)</p>
+                <small style="color: #666; display: block; margin-top: 8px;">✓ Room management ✓ Participant tracking ⚠ Needs video service (free options available)</small>
+                <button onclick="switchTab('video-conferencing')" class="btn-primary" style="margin-top: 10px;">Configure</button>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <h3>Team Messaging</h3>
+                <div style="margin: 10px 0;">
+                    <span class="status-badge status-framework-only">⚙️ Framework Only</span>
+                </div>
+                <p>Slack/Teams alternative with channels and file sharing (FREE: Matrix, Rocket.Chat)</p>
+                <small style="color: #666; display: block; margin-top: 8px;">✓ Channel management ✓ Message tracking ⚠ Needs messaging server (free options available)</small>
+                <button onclick="switchTab('team-messaging')" class="btn-primary" style="margin-top: 10px;">Configure</button>
+            </div>
         </div>
 
         <div class="section-card" style="margin-top: 30px; background: #e8f5e9; border-left: 4px solid #4caf50;">
@@ -2194,6 +2214,77 @@ function loadDataResidencyTab() {
     `;
 }
 
+// Team Messaging Tab
+function loadTeamMessagingTab() {
+    return `
+        <h2>💬 Team Messaging</h2>
+        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span class="status-badge status-framework-only">⚙️ Framework Only</span>
+                <strong>Database & APIs Ready</strong>
+            </div>
+            <p>Internal team messaging and collaboration platform (FREE alternatives to Slack/Teams).</p>
+            <p><strong>Supported Services:</strong> Matrix/Element, Rocket.Chat, Mattermost</p>
+            <p><strong>Features:</strong> Channels, direct messages, file sharing, integrations, search</p>
+        </div>
+
+        <div class="section-card">
+            <h3>Channel Management</h3>
+            <p>Configure team messaging channels here. Framework ready for messaging server integration.</p>
+            <div class="info-box">
+                <p><strong>Ready for Integration:</strong></p>
+                <ul>
+                    <li>✅ Channel creation and management - <strong>Ready</strong></li>
+                    <li>✅ Member management - <strong>Ready</strong></li>
+                    <li>✅ Message storage framework - <strong>Ready</strong></li>
+                    <li>✅ File attachment support - <strong>Ready</strong></li>
+                    <li>⚠️ Messaging server (Matrix/Rocket.Chat) - <strong>Required</strong></li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Recommended Setup:</strong></p>
+                <ul>
+                    <li><strong>Matrix + Element:</strong> Federated, secure, feature-rich</li>
+                    <li><strong>Rocket.Chat:</strong> Easy setup, familiar Slack-like interface</li>
+                    <li><strong>Mattermost:</strong> Enterprise features, compliance focus</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Integration Requirements</h3>
+            <div class="info-box">
+                <p><strong>To activate team messaging:</strong></p>
+                <ol>
+                    <li>Install Matrix Synapse, Rocket.Chat, or Mattermost server</li>
+                    <li>Configure server connection in config.yml</li>
+                    <li>Set up authentication integration</li>
+                    <li>Create initial channels and invite team members</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Example config.yml:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+features:
+  team_messaging:
+    enabled: true
+    provider: 'matrix'  # or 'rocketchat', 'mattermost'
+    server_url: 'https://matrix.example.com'
+    api_token: 'your-api-token'</pre>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>💚 100% Free Options</h3>
+            <div class="info-box" style="background: #e8f5e9;">
+                <p><strong>All team messaging options are free and open source:</strong></p>
+                <ul>
+                    <li>✅ <strong>Matrix:</strong> FREE federated messaging (like email for chat)</li>
+                    <li>✅ <strong>Rocket.Chat:</strong> FREE community edition with unlimited users</li>
+                    <li>✅ <strong>Mattermost:</strong> FREE team edition</li>
+                </ul>
+                <p style="margin-top: 15px; font-weight: bold; color: #2e7d32;">💰 Total Cost: $0 vs $96-240/user/year for Slack/Teams!</p>
+            </div>
+        </div>
+    `;
+}
+
 // Export functions for use in main admin.js
 window.frameworkFeatures = {
     loadFrameworkOverview,
@@ -2215,6 +2306,7 @@ window.frameworkFeatures = {
     loadDNSSRVFailoverTab,
     loadSessionBorderControllerTab,
     loadDataResidencyTab,
+    loadTeamMessagingTab,
     viewClickToDialHistory,
     loadConversationalAIStats,
     loadMobileAppsStats,
