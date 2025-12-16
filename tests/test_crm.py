@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Test CRM integration and screen pop support
+Comprehensive CRM Integration Tests
+Tests CRM integration framework, screen pop support, and specific integrations (HubSpot, Zendesk)
 """
 import os
 import sys
-from datetime import datetime
+import unittest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -14,11 +15,14 @@ from pbx.features.crm_integration import (
     CallerInfo,
     CRMIntegration,
     CRMLookupProvider,
-    ExternalCRMLookupProvider,
     PhoneBookLookupProvider,
 )
+from pbx.features.crm_integrations import HubSpotIntegration, ZendeskIntegration
 
 
+# ============================================================================
+# CRM Framework Tests
+# ============================================================================
 
 def test_caller_info_creation():
     """Test CallerInfo creation and conversion"""
@@ -373,10 +377,268 @@ def test_provider_status():
     return True
 
 
-def run_all_tests():
-    """Run all tests in this module"""
+# ============================================================================
+# Specific CRM Integration Tests (HubSpot, Zendesk)
+# ============================================================================
+
+class TestHubSpotIntegration(unittest.TestCase):
+    """Test HubSpot integration functionality"""
+
+    def setUp(self):
+        """Set up test database"""
+        import sqlite3
+        
+        class MockDB:
+            def __init__(self):
+                self.db_type = 'sqlite'
+                self.conn = sqlite3.connect(':memory:')
+                self.enabled = True
+                
+            def execute(self, query, params=None):
+                cursor = self.conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                self.conn.commit()
+                return cursor.fetchall()
+                
+            def disconnect(self):
+                self.conn.close()
+        
+        self.db = MockDB()
+        
+        # Create tables
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS hubspot_integration (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                enabled INTEGER DEFAULT 0,
+                api_key_encrypted TEXT,
+                portal_id TEXT,
+                sync_contacts INTEGER DEFAULT 0,
+                sync_deals INTEGER DEFAULT 0,
+                auto_create_contacts INTEGER DEFAULT 0,
+                webhook_url TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS integration_activity_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                integration_type TEXT,
+                action TEXT,
+                status TEXT,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        self.config = {}
+        self.integration = HubSpotIntegration(self.db, self.config)
+
+    def tearDown(self):
+        """Clean up test database"""
+        self.db.disconnect()
+
+    def test_initialization(self):
+        """Test integration initialization"""
+        self.assertIsNotNone(self.integration)
+        self.assertFalse(self.integration.enabled)
+
+    def test_update_config(self):
+        """Test updating configuration"""
+        config = {
+            'enabled': True,
+            'api_key': 'test-key-123',
+            'portal_id': '12345',
+            'webhook_url': 'https://webhook.example.com/hubspot'
+        }
+        
+        result = self.integration.update_config(config)
+        self.assertTrue(result)
+
+    def test_get_config(self):
+        """Test retrieving configuration"""
+        # First create a config
+        config = {
+            'enabled': True,
+            'api_key': 'test-key-456',
+            'portal_id': '67890'
+        }
+        self.integration.update_config(config)
+        
+        # Now retrieve it
+        retrieved = self.integration.get_config()
+        self.assertIsNotNone(retrieved)
+        self.assertTrue(retrieved['enabled'])
+        self.assertEqual(retrieved['portal_id'], '67890')
+
+    def test_sync_contact_disabled(self):
+        """Test sync contact when integration is disabled"""
+        contact = {
+            'email': 'test@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe'
+        }
+        
+        result = self.integration.sync_contact(contact)
+        self.assertFalse(result)
+
+    def test_create_deal_disabled(self):
+        """Test create deal when integration is disabled"""
+        deal = {
+            'dealname': 'Test Deal',
+            'amount': 1000
+        }
+        
+        result = self.integration.create_deal(deal)
+        self.assertFalse(result)
+
+
+class TestZendeskIntegration(unittest.TestCase):
+    """Test Zendesk integration functionality"""
+
+    def setUp(self):
+        """Set up test database"""
+        import sqlite3
+        
+        class MockDB:
+            def __init__(self):
+                self.db_type = 'sqlite'
+                self.conn = sqlite3.connect(':memory:')
+                self.enabled = True
+                
+            def execute(self, query, params=None):
+                cursor = self.conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                self.conn.commit()
+                return cursor.fetchall()
+                
+            def disconnect(self):
+                self.conn.close()
+        
+        self.db = MockDB()
+        
+        # Create tables
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS zendesk_integration (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                enabled INTEGER DEFAULT 0,
+                subdomain TEXT,
+                api_token_encrypted TEXT,
+                email TEXT,
+                auto_create_tickets INTEGER DEFAULT 0,
+                default_priority TEXT DEFAULT 'normal',
+                webhook_url TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS integration_activity_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                integration_type TEXT,
+                action TEXT,
+                status TEXT,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        self.config = {}
+        self.integration = ZendeskIntegration(self.db, self.config)
+
+    def tearDown(self):
+        """Clean up test database"""
+        self.db.disconnect()
+
+    def test_initialization(self):
+        """Test integration initialization"""
+        self.assertIsNotNone(self.integration)
+        self.assertFalse(self.integration.enabled)
+
+    def test_update_config(self):
+        """Test updating configuration"""
+        config = {
+            'enabled': True,
+            'subdomain': 'testcompany',
+            'api_token': 'test-token-123',
+            'email': 'admin@example.com',
+            'default_priority': 'high',
+            'webhook_url': 'https://webhook.example.com/zendesk'
+        }
+        
+        result = self.integration.update_config(config)
+        self.assertTrue(result)
+
+    def test_get_config(self):
+        """Test retrieving configuration"""
+        # First create a config
+        config = {
+            'enabled': True,
+            'subdomain': 'mycompany',
+            'api_token': 'token-456',
+            'email': 'support@example.com'
+        }
+        self.integration.update_config(config)
+        
+        # Now retrieve it
+        retrieved = self.integration.get_config()
+        self.assertIsNotNone(retrieved)
+        self.assertTrue(retrieved['enabled'])
+        self.assertEqual(retrieved['subdomain'], 'mycompany')
+
+    def test_create_ticket_disabled(self):
+        """Test create ticket when integration is disabled"""
+        ticket = {
+            'subject': 'Test Ticket',
+            'description': 'This is a test',
+            'requester_email': 'customer@example.com'
+        }
+        
+        result = self.integration.create_ticket(ticket)
+        self.assertIsNone(result)
+
+    def test_update_ticket_disabled(self):
+        """Test update ticket when integration is disabled"""
+        result = self.integration.update_ticket('123', {'status': 'solved'})
+        self.assertFalse(result)
+
+    def test_activity_logging(self):
+        """Test that integration activity is logged"""
+        # Enable integration
+        config = {
+            'enabled': True,
+            'subdomain': 'testco',
+            'api_token': 'token',
+            'email': 'test@test.com'
+        }
+        self.integration.update_config(config)
+        
+        # Try to create a ticket (will fail without real API, but should log)
+        ticket = {
+            'subject': 'Test',
+            'description': 'Test ticket'
+        }
+        self.integration.create_ticket(ticket)
+        
+        # Check activity log
+        logs = self.db.execute("SELECT * FROM integration_activity_log")
+        self.assertGreater(len(logs), 0)
+
+
+# ============================================================================
+# Test Runner
+# ============================================================================
+
+def run_framework_tests():
+    """Run CRM framework tests"""
     print("=" * 70)
-    print("Testing CRM Integration and Screen Pop Support")
+    print("Testing CRM Integration Framework")
     print("=" * 70)
 
     results = []
@@ -392,14 +654,38 @@ def run_all_tests():
 
     print("\n" + "=" * 70)
     if all(results):
-        print(
-            f"✅ All CRM integration tests passed! ({len(results)}/{len(results)})")
+        print(f"✅ All CRM framework tests passed! ({len(results)}/{len(results)})")
         return True
     else:
         print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
         return False
 
 
+def run_integration_tests():
+    """Run specific CRM integration tests (HubSpot, Zendesk)"""
+    print("\n" + "=" * 70)
+    print("Testing Specific CRM Integrations (HubSpot, Zendesk)")
+    print("=" * 70 + "\n")
+    
+    # Create test suite
+    suite = unittest.TestSuite()
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestHubSpotIntegration))
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestZendeskIntegration))
+    
+    # Run tests
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+    
+    return result.wasSuccessful()
+
+
 if __name__ == "__main__":
-    success = run_all_tests()
+    # Run framework tests
+    framework_success = run_framework_tests()
+    
+    # Run integration tests
+    integration_success = run_integration_tests()
+    
+    # Exit with appropriate code
+    success = framework_success and integration_success
     sys.exit(0 if success else 1)

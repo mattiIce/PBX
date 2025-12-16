@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Test HTTPS/SSL support for API server
+Comprehensive HTTPS/SSL Tests for API Server
+Tests SSL configuration, certificate validation, and HTTPS connections
 """
+import json
 import os
-import socket
 import ssl
 import sys
 import time
+import urllib.request
 from pathlib import Path
 
 # Add parent directory to path
@@ -16,12 +18,18 @@ from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
 
-
 class MockPBXCore:
     """Mock PBX core for testing"""
 
     def __init__(self, config):
         self.config = config
+
+    def get_status(self):
+        return {
+            'registered_extensions': 0,
+            'active_calls': 0,
+            'uptime': 0
+        }
 
 
 def test_ssl_configuration():
@@ -197,10 +205,97 @@ def test_api_server_with_ssl_enabled():
     return True
 
 
+def test_https_connection():
+    """Test making HTTPS requests to the API server"""
+    print("=" * 60)
+    print("Test 5: HTTPS Connection to API Server")
+    print("=" * 60)
+
+    cert_file = "certs/server.crt"
+    key_file = "certs/server.key"
+
+    if not os.path.exists(cert_file) or not os.path.exists(key_file):
+        print("  ⚠ Certificates not found, skipping connection test")
+        print("  Generate with: python scripts/generate_ssl_cert.py")
+        print()
+        return True
+
+    # Create config with SSL enabled
+    config = Config("test_config.yml")
+
+    # Override to enable SSL
+    original_get = config.get
+
+    def mock_get(key, default=None):
+        if key == 'api.ssl':
+            return {
+                'enabled': True,
+                'cert_file': cert_file,
+                'key_file': key_file,
+                'ca': {'enabled': False}
+            }
+        return original_get(key, default)
+
+    config.get = mock_get
+
+    mock_pbx = MockPBXCore(config)
+
+    # Create and start API server
+    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=8083)
+
+    print("  Starting HTTPS API server...")
+    if not api_server.start():
+        print("  ✗ Failed to start API server")
+        return False
+
+    print("  ✓ API server started on https://127.0.0.1:8083")
+
+    # Give it a moment to start
+    time.sleep(1)
+
+    # Try to connect
+    try:
+        # Create SSL context that doesn't verify self-signed cert
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
+        # Make HTTPS request
+        url = "https://127.0.0.1:8083/api/status"
+        print(f"  Making HTTPS request to {url}...")
+
+        with urllib.request.urlopen(url, context=ctx, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            print(f"  ✓ HTTPS request successful")
+            print(f"  Response: {data}")
+
+            if 'registered_extensions' in data:
+                print("  ✓ API response is valid")
+            else:
+                print("  ✗ Invalid API response")
+                api_server.stop()
+                return False
+
+    except Exception as e:
+        print(f"  ✗ HTTPS connection failed: {e}")
+        import traceback
+        traceback.print_exc()
+        api_server.stop()
+        return False
+
+    # Stop server
+    api_server.stop()
+    time.sleep(1)
+    print("  ✓ API server stopped")
+
+    print()
+    return True
+
+
 def main():
     """Run all tests"""
     print("\n" + "=" * 60)
-    print("HTTPS/SSL API Server Tests")
+    print("Comprehensive HTTPS/SSL API Server Tests")
     print("=" * 60)
     print()
 
@@ -209,6 +304,7 @@ def main():
         ("API Server (SSL Disabled)", test_api_server_with_ssl_disabled),
         ("Certificate Validation", test_certificate_files),
         ("API Server (SSL Enabled)", test_api_server_with_ssl_enabled),
+        ("HTTPS Connection", test_https_connection),
     ]
 
     passed = 0
