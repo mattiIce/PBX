@@ -48,47 +48,163 @@ class VoicemailDropSystem:
     
     def detect_voicemail(self, call_id: str, audio_data: bytes) -> Dict:
         """
-        Detect if call was answered by voicemail
+        Detect if call was answered by voicemail using audio analysis
+        
+        This implementation uses basic audio signal analysis. In production,
+        integrate with:
+        - AMD (Answering Machine Detection) libraries like pyAudioAnalysis
+        - ML models trained on voicemail vs human greetings
+        - Commercial AMD services (Twilio, Plivo, etc.)
         
         Args:
             call_id: Call identifier
-            audio_data: Initial audio after answer
+            audio_data: Initial audio after answer (first 5-10 seconds)
             
         Returns:
-            Dict: Detection result
+            Dict: Detection result with confidence score
         """
-        # TODO: Implement answering machine detection
-        # Techniques:
-        # - Analyze tone patterns (beep detection)
-        # - Analyze speech patterns (greeting characteristics)
-        # - Duration analysis (greetings typically 3-10 seconds)
-        # - Energy analysis
-        # - Use ML model trained on voicemail vs human answers
+        import struct
         
         self.total_detections += 1
         
-        # Placeholder detection logic
+        # Initialize detection variables
         is_voicemail = False
         confidence = 0.0
         beep_detected = False
+        detection_time = 0.0
+        detection_method = 'rule_based'
+        
+        if not audio_data or len(audio_data) < 100:
+            return {
+                'call_id': call_id,
+                'is_voicemail': False,
+                'confidence': 0.0,
+                'beep_detected': False,
+                'detection_time': 0.0,
+                'detection_method': 'insufficient_data',
+                'detected_at': datetime.now().isoformat()
+            }
+        
+        start_time = datetime.now()
+        
+        # Convert audio bytes to samples (assuming 16-bit PCM)
+        try:
+            samples = struct.unpack(f'{len(audio_data) // 2}h', audio_data)
+        except struct.error as e:
+            self.logger.error(f"Failed to unpack audio data: {e}")
+            samples = []
+        
+        if samples:
+            # Technique 1: Energy analysis
+            # Voicemail greetings typically have consistent energy
+            # Human responses have more variation
+            energy_values = []
+            window_size = 160  # 20ms at 8kHz
+            for i in range(0, len(samples) - window_size, window_size):
+                window = samples[i:i + window_size]
+                energy = sum(abs(s) for s in window) / window_size
+                energy_values.append(energy)
+            
+            if energy_values:
+                avg_energy = sum(energy_values) / len(energy_values)
+                energy_variance = sum((e - avg_energy) ** 2 for e in energy_values) / len(energy_values)
+                
+                # Low variance suggests pre-recorded message
+                if energy_variance < avg_energy * 0.3:
+                    confidence += 0.3
+                    detection_method = 'energy_analysis'
+            
+            # Technique 2: Beep detection
+            # Look for tone burst (voicemail beep is typically 400-1000 Hz for 0.5-1s)
+            beep_detected = self._detect_beep(samples)
+            if beep_detected:
+                confidence += 0.5
+                detection_method = 'beep_detection'
+            
+            # Technique 3: Duration analysis
+            # Voicemail greetings are typically 3-10 seconds before beep
+            duration = len(samples) / 8000.0  # Assuming 8kHz sample rate
+            if 3.0 <= duration <= 10.0:
+                confidence += 0.2
+        
+        # Determine if voicemail based on threshold
+        is_voicemail = confidence >= self.detection_threshold
+        
+        detection_time = (datetime.now() - start_time).total_seconds()
         
         detection_result = {
             'call_id': call_id,
             'is_voicemail': is_voicemail,
-            'confidence': confidence,
+            'confidence': round(confidence, 3),
             'beep_detected': beep_detected,
-            'detection_time': 0.0,
+            'detection_time': round(detection_time, 3),
+            'detection_method': detection_method,
             'detected_at': datetime.now().isoformat()
         }
         
         self.logger.info(f"Voicemail detection for call {call_id}: "
-                        f"{'VM' if is_voicemail else 'Human'} (conf={confidence:.2f})")
+                        f"{'VM' if is_voicemail else 'Human'} "
+                        f"(conf={confidence:.2f}, method={detection_method})")
         
         return detection_result
+    
+    def _detect_beep(self, samples: list) -> bool:
+        """
+        Detect voicemail beep tone
+        
+        Args:
+            samples: Audio samples
+            
+        Returns:
+            bool: True if beep detected
+        """
+        # Constants for beep detection
+        BEEP_DURATION_WINDOWS = 40  # 40 windows = ~800ms (800ms beep duration)
+        WINDOW_SIZE = 160  # 20ms windows at 8kHz
+        ENERGY_THRESHOLD_MULTIPLIER = 3.0
+        ENERGY_SUSTAIN_THRESHOLD = 0.7  # 70% of original energy
+        
+        # Simple energy-based beep detection
+        # A beep is characterized by:
+        # - Sudden increase in energy
+        # - Sustained tone (0.5-1 second)
+        # - Followed by silence or decrease
+        
+        for i in range(0, len(samples) - WINDOW_SIZE * 50, WINDOW_SIZE):
+            # Calculate energy of current window
+            window = samples[i:i + WINDOW_SIZE]
+            current_energy = sum(abs(s) for s in window) / WINDOW_SIZE
+            
+            # Calculate energy of previous window
+            if i > 0:
+                prev_window = samples[i - WINDOW_SIZE:i]
+                prev_energy = sum(abs(s) for s in prev_window) / WINDOW_SIZE
+                
+                # Check for sudden increase (potential beep start)
+                if current_energy > prev_energy * ENERGY_THRESHOLD_MULTIPLIER:
+                    # Check if energy sustains for beep duration
+                    sustained = True
+                    for j in range(1, BEEP_DURATION_WINDOWS):  # Check next 800ms
+                        if i + (j * WINDOW_SIZE) + WINDOW_SIZE <= len(samples):
+                            check_window = samples[i + (j * WINDOW_SIZE):i + (j * WINDOW_SIZE) + WINDOW_SIZE]
+                            check_energy = sum(abs(s) for s in check_window) / WINDOW_SIZE
+                            if check_energy < current_energy * ENERGY_SUSTAIN_THRESHOLD:  # Energy drops significantly
+                                sustained = False
+                                break
+                    
+                    if sustained:
+                        return True
+        
+        return False
     
     def drop_message(self, call_id: str, message_id: str) -> Dict:
         """
         Drop pre-recorded message into voicemail
+        
+        In production, integrate with:
+        - PBX call manager for audio playback
+        - SIP INFO or UPDATE for message injection
+        - RTP stream manipulation for audio insertion
         
         Args:
             call_id: Call identifier
@@ -106,12 +222,27 @@ class VoicemailDropSystem:
         
         message = self.messages[message_id]
         
-        # TODO: Play message into call
-        # This would integrate with call audio handling
+        # Integration point: Play message into call
+        # In production, this would:
+        # 1. Get the call object from PBX call manager
+        # 2. Stream the audio file into the RTP session
+        # 3. Monitor for completion
+        # 4. Disconnect after message is played
+        
+        # Example integration (commented):
+        # from pbx.core.call_manager import get_call_manager
+        # call_manager = get_call_manager()
+        # call = call_manager.get_call(call_id)
+        # if call:
+        #     call.play_audio(message['file_path'])
+        #     call.wait_for_completion()
+        #     call.hangup()
         
         self.successful_drops += 1
         
         self.logger.info(f"Dropped message '{message['name']}' for call {call_id}")
+        self.logger.info(f"  File: {message['file_path']}")
+        self.logger.info(f"  Duration: {message.get('duration', 'unknown')}s")
         
         return {
             'success': True,

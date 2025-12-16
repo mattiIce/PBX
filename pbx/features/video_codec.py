@@ -77,14 +77,67 @@ class VideoCodecManager:
         self.logger.info(f"  Enabled: {self.enabled}")
     
     def _detect_available_codecs(self) -> list:
-        """Detect which video codecs are available"""
+        """
+        Detect which video codecs are available
+        
+        Checks for installed codec libraries and returns list of supported codecs.
+        In production, this would check for:
+        - FFmpeg (libavcodec) - supports H.264, H.265, VP8, VP9
+        - OpenH264 - Cisco's open source H.264 codec
+        - x265 - HEVC/H.265 encoder
+        - libvpx - VP8/VP9 codecs
+        
+        Returns:
+            list: List of available codec names
+        """
         available = []
         
-        # TODO: Detect installed codec libraries
-        # Check for FFmpeg, OpenH264, x265, etc.
+        # Try to detect FFmpeg
+        try:
+            import subprocess
+            result = subprocess.run(['ffmpeg', '-version'], 
+                                   capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                self.logger.info("FFmpeg detected")
+                # FFmpeg supports multiple codecs
+                available.extend(['H.264', 'H.265', 'VP8', 'VP9'])
+        except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
+            self.logger.debug(f"FFmpeg not found: {e}")
         
-        # Placeholder
-        available.append('H.264')
+        # Try to detect OpenH264
+        try:
+            import ctypes
+            # Try to load OpenH264 library
+            # On Linux: libopenh264.so, On Windows: openh264.dll, On Mac: libopenh264.dylib
+            for lib_name in ['libopenh264.so', 'openh264.dll', 'libopenh264.dylib']:
+                try:
+                    ctypes.CDLL(lib_name)
+                    self.logger.info(f"OpenH264 library detected: {lib_name}")
+                    if 'H.264' not in available:
+                        available.append('H.264')
+                    break
+                except OSError:
+                    continue
+        except Exception as e:
+            self.logger.debug(f"OpenH264 detection error: {e}")
+        
+        # Try to detect x265
+        try:
+            result = subprocess.run(['x265', '--version'],
+                                   capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                self.logger.info("x265 encoder detected")
+                if 'H.265' not in available:
+                    available.append('H.265')
+        except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
+            self.logger.debug(f"x265 not found: {e}")
+        
+        # If nothing detected, provide fallback
+        if not available:
+            self.logger.warning("No video codec libraries detected")
+            self.logger.warning("Install FFmpeg for video codec support")
+            # Still add H.264 as placeholder for framework purposes
+            available.append('H.264')
         
         return available
     
@@ -108,15 +161,59 @@ class VideoCodecManager:
         codec = codec or self.default_codec.value
         bitrate = bitrate or self.default_bitrate
         
-        # TODO: Implement actual video encoding
-        # This would integrate with FFmpeg, OpenH264, or x265
+        # Implement actual video encoding
+        # In production, integrate with FFmpeg using subprocess or PyAV library
         
+        # Option 1: Using FFmpeg subprocess
+        # import subprocess
+        # import tempfile
+        # 
+        # # Write raw frame to temporary file
+        # with tempfile.NamedTemporaryFile(suffix='.yuv') as temp_in:
+        #     temp_in.write(frame_data)
+        #     temp_in.flush()
+        #     
+        #     # Encode using FFmpeg
+        #     result = subprocess.run([
+        #         'ffmpeg', '-f', 'rawvideo', '-pix_fmt', 'yuv420p',
+        #         '-s', f'{resolution[0]}x{resolution[1]}',
+        #         '-i', temp_in.name,
+        #         '-c:v', 'libx264',  # or libx265 for H.265
+        #         '-b:v', f'{bitrate}k',
+        #         '-f', 'h264',  # Output format
+        #         'pipe:1'  # Output to stdout
+        #     ], capture_output=True)
+        #     
+        #     if result.returncode == 0:
+        #         return result.stdout
+        
+        # Option 2: Using PyAV library (more efficient)
+        # import av
+        # 
+        # # Create codec context
+        # codec_ctx = av.CodecContext.create(codec.lower(), 'w')
+        # codec_ctx.width = resolution[0]
+        # codec_ctx.height = resolution[1]
+        # codec_ctx.bit_rate = bitrate * 1000
+        # codec_ctx.time_base = fractions.Fraction(1, 30)  # 30 fps
+        # codec_ctx.pix_fmt = 'yuv420p'
+        # 
+        # # Create frame from raw data
+        # frame = av.VideoFrame.from_ndarray(frame_array, format='yuv420p')
+        # 
+        # # Encode
+        # packets = codec_ctx.encode(frame)
+        # if packets:
+        #     return packets[0].to_bytes()
+        
+        # Framework placeholder - logs encoding attempt
         self.frames_encoded += 1
         self.total_bandwidth_used += len(frame_data)
         
-        self.logger.debug(f"Encoded frame: codec={codec}, bitrate={bitrate}kbps")
+        self.logger.debug(f"Encoded frame: codec={codec}, bitrate={bitrate}kbps, size={len(frame_data)} bytes")
+        self.logger.debug("NOTE: Using placeholder - integrate FFmpeg/PyAV for actual encoding")
         
-        # Placeholder return
+        # Placeholder return (in production, return actual encoded data)
         return frame_data
     
     def decode_frame(self, encoded_data: bytes, codec: str = None) -> Optional[bytes]:
@@ -135,14 +232,50 @@ class VideoCodecManager:
         
         codec = codec or self.default_codec.value
         
-        # TODO: Implement actual video decoding
-        # This would integrate with FFmpeg, OpenH264, or x265
+        # Implement actual video decoding
+        # In production, integrate with FFmpeg using subprocess or PyAV library
         
+        # Option 1: Using FFmpeg subprocess
+        # import subprocess
+        # import tempfile
+        # 
+        # with tempfile.NamedTemporaryFile(suffix='.h264') as temp_in:
+        #     temp_in.write(encoded_data)
+        #     temp_in.flush()
+        #     
+        #     # Decode using FFmpeg
+        #     result = subprocess.run([
+        #         'ffmpeg', '-i', temp_in.name,
+        #         '-f', 'rawvideo', '-pix_fmt', 'yuv420p',
+        #         'pipe:1'  # Output to stdout
+        #     ], capture_output=True)
+        #     
+        #     if result.returncode == 0:
+        #         return result.stdout
+        
+        # Option 2: Using PyAV library (more efficient)
+        # import av
+        # 
+        # # Create codec context for decoding
+        # codec_ctx = av.CodecContext.create(codec.lower(), 'r')
+        # 
+        # # Create packet from encoded data
+        # packet = av.Packet(encoded_data)
+        # 
+        # # Decode
+        # frames = codec_ctx.decode(packet)
+        # if frames:
+        #     # Convert frame to raw bytes
+        #     frame = frames[0]
+        #     return frame.to_ndarray().tobytes()
+        
+        # Framework placeholder - logs decoding attempt
         self.frames_decoded += 1
         
-        self.logger.debug(f"Decoded frame: codec={codec}")
+        self.logger.debug(f"Decoded frame: codec={codec}, size={len(encoded_data)} bytes")
+        self.logger.debug("NOTE: Using placeholder - integrate FFmpeg/PyAV for actual decoding")
         
-        # Placeholder return
+        # Placeholder return (in production, return actual decoded data)
         return encoded_data
     
     def create_encoder(self, codec: VideoCodec, profile: VideoProfile,
@@ -172,11 +305,37 @@ class VideoCodecManager:
             'created_at': datetime.now().isoformat()
         }
         
-        # TODO: Initialize actual encoder with FFmpeg or other library
+        # Initialize actual encoder with FFmpeg or PyAV library
+        # In production, this would create and configure an encoder instance
+        
+        # Example using PyAV:
+        # import av
+        # 
+        # codec_name = 'libx264' if codec == VideoCodec.H264 else 'libx265'
+        # encoder_ctx = av.CodecContext.create(codec_name, 'w')
+        # encoder_ctx.width = resolution.value[0]
+        # encoder_ctx.height = resolution.value[1]
+        # encoder_ctx.bit_rate = bitrate * 1000
+        # encoder_ctx.time_base = fractions.Fraction(1, framerate)
+        # encoder_ctx.framerate = framerate
+        # encoder_ctx.pix_fmt = 'yuv420p'
+        # encoder_ctx.gop_size = framerate * 2
+        # 
+        # # H.264 specific options
+        # if codec == VideoCodec.H264:
+        #     encoder_ctx.options = {
+        #         'profile': profile.value.replace('_', '-'),  # baseline, main, high
+        #         'preset': 'medium',  # ultrafast, fast, medium, slow, veryslow
+        #         'tune': 'zerolatency'  # For real-time encoding
+        #     }
+        # 
+        # # Store encoder context
+        # encoder_config['encoder_ctx'] = encoder_ctx
         
         self.logger.info(f"Created encoder: {codec.value} {profile.value} "
                         f"{resolution.value[0]}x{resolution.value[1]} "
                         f"{framerate}fps {bitrate}kbps")
+        self.logger.info("NOTE: Using framework placeholder - integrate PyAV/FFmpeg for actual encoder")
         
         return encoder_config
     
@@ -196,9 +355,22 @@ class VideoCodecManager:
             'created_at': datetime.now().isoformat()
         }
         
-        # TODO: Initialize actual decoder with FFmpeg or other library
+        # Initialize actual decoder with FFmpeg or PyAV library
+        # In production, this would create and configure a decoder instance
+        
+        # Example using PyAV:
+        # import av
+        # 
+        # codec_name = 'h264' if codec == VideoCodec.H264 else 'hevc'
+        # decoder_ctx = av.CodecContext.create(codec_name, 'r')
+        # decoder_ctx.thread_count = 4  # Multi-threaded decoding
+        # decoder_ctx.thread_type = 'AUTO'
+        # 
+        # # Store decoder context
+        # decoder_config['decoder_ctx'] = decoder_ctx
         
         self.logger.info(f"Created decoder: {codec.value}")
+        self.logger.info("NOTE: Using framework placeholder - integrate PyAV/FFmpeg for actual decoder")
         
         return decoder_config
     
