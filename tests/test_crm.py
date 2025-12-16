@@ -6,7 +6,6 @@ Tests CRM integration framework, screen pop support, and specific integrations (
 import os
 import sys
 import unittest
-from datetime import datetime
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -16,7 +15,6 @@ from pbx.features.crm_integration import (
     CallerInfo,
     CRMIntegration,
     CRMLookupProvider,
-    ExternalCRMLookupProvider,
     PhoneBookLookupProvider,
 )
 from pbx.features.crm_integrations import HubSpotIntegration, ZendeskIntegration
