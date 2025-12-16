@@ -37,6 +37,23 @@ This document summarizes the comprehensive web-based management features now ava
 
 **Documentation**: See [ADMIN_PANEL_VOICEMAIL_MANAGEMENT.md](ADMIN_PANEL_VOICEMAIL_MANAGEMENT.md)
 
+### 3. Paging System Management
+
+**Previously**: Required manual configuration file editing to set up paging zones and devices.
+
+**Now**: Full web-based paging system management through dedicated "Paging System" tab.
+
+**Features**:
+- Configure paging zones (Warehouse, Office, Production Floor, etc.)
+- Manage DAC (Digital-to-Analog Converter) devices
+- Monitor active paging sessions in real-time
+- Add/delete zones and devices through intuitive UI
+- Test paging functionality directly from admin panel
+- View zone-to-device mappings
+- Real-time session monitoring
+
+**Documentation**: See [PAGING_SYSTEM_GUIDE.md](PAGING_SYSTEM_GUIDE.md)
+
 ## Key Benefits
 
 ### 🚀 No Terminal Access Needed

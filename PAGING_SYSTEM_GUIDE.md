@@ -2,17 +2,18 @@
 
 ## Overview
 
-The Paging System provides a framework for overhead paging through digital-to-analog converters (DAC). This allows users to make announcements over PA systems by dialing paging extensions.
+The PBX system includes a comprehensive paging system that allows overhead announcements through digital-to-analog converters (DACs). This system is designed for manufacturing facilities, office buildings, and other environments that require public address capabilities.
 
-**Note**: This is currently a STUB IMPLEMENTATION. Full functionality requires integration with analog gateway hardware.
+**Status**: ✅ **Admin Panel Available** - Full configuration UI in admin panel with API support. Hardware integration ready for deployment.
 
 ## Features
 
-- **Zone-based Paging**: Configure multiple paging zones for different areas
-- **All-Call Paging**: Page all zones simultaneously
-- **DAC Device Management**: Configure and manage analog gateway devices
-- **Flexible Configuration**: Define zones and extensions via configuration or API
-- **Session Tracking**: Monitor active paging sessions
+- **Multi-Zone Paging**: Configure multiple paging zones (e.g., Warehouse, Office, Production Floor)
+- **All-Call Paging**: Page all zones simultaneously with a single extension
+- **DAC Device Management**: Support for SIP-to-analog gateways from multiple vendors
+- **Active Session Monitoring**: View all active paging sessions in real-time via admin panel
+- **Simple Dial-to-Page**: Just dial a zone extension to initiate paging
+- **Admin Panel**: Full web UI for managing zones, devices, and monitoring sessions
 
 ## Configuration
 
@@ -74,6 +75,88 @@ To implement full paging functionality, you need:
    - Configured to appropriate zones
 
 ## Usage
+
+## Admin Panel
+
+### Accessing the Paging Panel
+
+1. Log in to the admin panel at `https://your-pbx-server/admin/`
+2. Navigate to **Features** section in the left sidebar
+3. Click **📢 Paging System**
+4. You'll see three main sections:
+   - **Active Paging Sessions**: Real-time view of ongoing pages
+   - **Paging Zones**: Configure and manage paging zones
+   - **DAC Devices**: Manage analog gateway devices
+
+### Managing Paging Zones
+
+#### Add a Zone
+
+1. Click the **➕ Add Zone** button
+2. Enter zone details in the prompts:
+   - **Extension**: Zone extension number (e.g., "701")
+   - **Name**: Descriptive zone name (e.g., "Warehouse")
+   - **Description**: Optional description (e.g., "Warehouse and loading dock")
+   - **Device ID**: Associated DAC device ID (optional)
+3. Zone will be added immediately and appear in the table
+
+#### View Zones
+
+The zones table displays:
+- Extension number
+- Zone name
+- Description
+- Associated device
+- Action buttons (Edit/Delete)
+
+#### Delete a Zone
+
+1. Find the zone in the zones table
+2. Click the **🗑️** delete icon
+3. Confirm the deletion when prompted
+4. Zone will be removed from the system
+
+### Managing DAC Devices
+
+#### Add a Device
+
+1. Click the **➕ Add Device** button
+2. Enter device details in the prompts:
+   - **Device ID**: Unique identifier (e.g., "dac-1")
+   - **Name**: Descriptive name (e.g., "Main PA System")
+   - **Type**: Device type (usually "sip_gateway")
+   - **SIP Address**: SIP URI (e.g., "paging@192.168.1.10:5060")
+3. Device will be added and appear in the devices table
+
+#### View Devices
+
+The devices table shows:
+- Device ID
+- Device name
+- Type
+- SIP address
+- Status (Online/Offline/Unknown)
+- Action buttons (Edit/Delete)
+
+### Monitoring Active Pages
+
+The **Active Paging Sessions** section displays real-time information:
+- Page ID (unique identifier)
+- From Extension (who initiated the page)
+- Zone(s) being paged
+- Start time
+- Current status
+
+Click **🔄 Refresh** to update the active sessions list.
+
+### Testing Paging
+
+Use the **Test Paging** form at the bottom:
+
+1. Enter **From Extension** (your extension number)
+2. Select a **Zone Extension** from the dropdown
+3. Click **📢 Initiate Test Page**
+4. Note: This will create a SIP call from the specified extension to the zone
 
 ### Making a Page
 

@@ -746,3 +746,131 @@ fetch('http://pbx.company.com:8080/api/presence')
     });
   });
 ```
+
+## Paging System
+
+### GET /api/paging/zones
+
+Get all configured paging zones.
+
+**Response:**
+```json
+{
+  "zones": [
+    {
+      "extension": "701",
+      "name": "Warehouse",
+      "description": "Warehouse paging zone",
+      "device_id": "dac-1"
+    },
+    {
+      "extension": "702",
+      "name": "Office",
+      "description": "Office area paging",
+      "device_id": "dac-1"
+    }
+  ],
+  "all_call_extension": "700"
+}
+```
+
+### POST /api/paging/zones
+
+Add a new paging zone.
+
+**Request:**
+```json
+{
+  "extension": "703",
+  "name": "Production Floor",
+  "description": "Production floor paging",
+  "device_id": "dac-2"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Zone added successfully",
+  "zone": {
+    "extension": "703",
+    "name": "Production Floor",
+    "description": "Production floor paging",
+    "device_id": "dac-2"
+  }
+}
+```
+
+### DELETE /api/paging/zones/{extension}
+
+Delete a paging zone.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Zone deleted"
+}
+```
+
+### GET /api/paging/devices
+
+Get all configured DAC devices.
+
+**Response:**
+```json
+{
+  "devices": [
+    {
+      "device_id": "dac-1",
+      "name": "Main PA System",
+      "type": "sip_gateway",
+      "sip_address": "paging@192.168.1.10:5060",
+      "status": "Online"
+    }
+  ]
+}
+```
+
+### POST /api/paging/devices
+
+Add a new DAC device.
+
+**Request:**
+```json
+{
+  "device_id": "dac-2",
+  "name": "Production PA System",
+  "type": "sip_gateway",
+  "sip_address": "paging@192.168.1.20:5060"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Device added successfully"
+}
+```
+
+### GET /api/paging/active
+
+Get all active paging sessions.
+
+**Response:**
+```json
+{
+  "active_pages": [
+    {
+      "page_id": "page-20251215143022-1001-abc123",
+      "from_extension": "1001",
+      "to_extension": "701",
+      "zone_names": "Warehouse",
+      "started_at": "2025-12-15T14:30:22Z",
+      "status": "active"
+    }
+  ]
+}
+```

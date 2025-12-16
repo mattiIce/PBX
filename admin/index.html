@@ -159,6 +159,10 @@
                         <span class="tab-icon">📧</span>
                         <span class="tab-text">Voicemail</span>
                     </button>
+                    <button class="tab-button" data-tab="paging">
+                        <span class="tab-icon">📢</span>
+                        <span class="tab-text">Paging System</span>
+                    </button>
                     <button class="tab-button" data-tab="codecs">
                         <span class="tab-icon">🎵</span>
                         <span class="tab-text">Codecs</span>
@@ -176,7 +180,7 @@
                         <span class="tab-text">Mobile Push</span>
                     </button>
                     <button class="tab-button" data-tab="recording-announcements">
-                        <span class="tab-icon">📢</span>
+                        <span class="tab-icon">📣</span>
                         <span class="tab-text">Recording Announcements</span>
                     </button>
                     <button class="tab-button" data-tab="speech-analytics">
@@ -1337,6 +1341,120 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Paging System Tab -->
+        <div id="paging" class="tab-content">
+            <div class="section-header">
+                <h2>📢 Paging System</h2>
+                <button class="btn btn-primary" onclick="loadPagingData()">🔄 Refresh</button>
+            </div>
+
+            <div class="info-box">
+                <h3>ℹ️ About Paging System</h3>
+                <p>The paging system allows overhead announcements through digital-to-analog converters (DACs). Configure zones, devices, and monitor active paging sessions.</p>
+                <p><strong>Usage:</strong> Dial a zone extension (e.g., 701) to page that zone, or dial the all-call extension (default: 700) to page all zones.</p>
+            </div>
+
+            <!-- Active Paging Sessions -->
+            <div class="config-section">
+                <h3>📡 Active Paging Sessions</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Page ID</th>
+                                <th>From Extension</th>
+                                <th>Zone(s)</th>
+                                <th>Started</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-pages-table-body">
+                            <tr>
+                                <td colspan="5" class="loading">Loading active paging sessions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Paging Zones -->
+            <div class="config-section">
+                <div class="section-header">
+                    <h3>🗺️ Paging Zones</h3>
+                    <button class="btn btn-success" onclick="showAddZoneModal()">➕ Add Zone</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Zone Name</th>
+                                <th>Description</th>
+                                <th>Device</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paging-zones-table-body">
+                            <tr>
+                                <td colspan="5" class="loading">Loading paging zones...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DAC Devices -->
+            <div class="config-section">
+                <div class="section-header">
+                    <h3>🔌 DAC Devices</h3>
+                    <button class="btn btn-success" onclick="showAddDeviceModal()">➕ Add Device</button>
+                </div>
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p><strong>Supported Devices:</strong> SIP-to-analog gateways (Cisco VG series, Grandstream HT series, etc.)</p>
+                    <p><strong>Note:</strong> Devices should be configured to auto-answer and have their analog outputs connected to PA amplifiers.</p>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Device ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>SIP Address</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paging-devices-table-body">
+                            <tr>
+                                <td colspan="6" class="loading">Loading DAC devices...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Test Paging -->
+            <div class="config-section">
+                <h3>🧪 Test Paging</h3>
+                <form id="test-paging-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>From Extension:</label>
+                            <input type="text" id="test-page-from" placeholder="1001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Zone Extension:</label>
+                            <select id="test-page-zone" required>
+                                <option value="">Select Zone</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">📢 Initiate Test Page</button>
+                </form>
             </div>
         </div>
 

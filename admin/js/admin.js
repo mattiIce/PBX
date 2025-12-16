@@ -313,6 +313,9 @@ function showTab(tabName) {
         case 'voicemail':
             loadVoicemailTab();
             break;
+        case 'paging':
+            loadPagingData();
+            break;
         case 'calls':
             loadCalls();
             break;
@@ -5867,6 +5870,263 @@ function loadLocationHistory() {
         showNotification('Error loading location history', 'error');
     });
 }
+
+// ============================================================================
+// Paging System Functions
+// ============================================================================
+
+async function loadPagingData() {
+    loadActivePages();
+    loadPagingZones();
+    loadPagingDevices();
+}
+
+async function loadActivePages() {
+    const tableBody = document.getElementById('active-pages-table-body');
+    if (!tableBody) return;
+    
+    try {
+        const response = await fetch('/api/paging/active');
+        const data = await response.json();
+        
+        if (!data.active_pages || data.active_pages.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No active paging sessions</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.active_pages.map(page => `
+            <tr>
+                <td>${escapeHtml(page.page_id)}</td>
+                <td>${escapeHtml(page.from_extension)}</td>
+                <td>${escapeHtml(page.zone_names)}</td>
+                <td>${new Date(page.started_at).toLocaleString()}</td>
+                <td><span class="status-badge status-active">${escapeHtml(page.status)}</span></td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading active pages:', error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="error">Error loading active pages</td></tr>';
+    }
+}
+
+async function loadPagingZones() {
+    const tableBody = document.getElementById('paging-zones-table-body');
+    const zoneSelect = document.getElementById('test-page-zone');
+    if (!tableBody) return;
+    
+    try {
+        const response = await fetch('/api/paging/zones');
+        const data = await response.json();
+        
+        if (!data.zones || data.zones.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No paging zones configured. Click "Add Zone" to create one.</td></tr>';
+            if (zoneSelect) {
+                zoneSelect.innerHTML = '<option value="">No zones configured</option>';
+            }
+            return;
+        }
+        
+        tableBody.innerHTML = data.zones.map(zone => `
+            <tr>
+                <td>${escapeHtml(zone.extension)}</td>
+                <td>${escapeHtml(zone.name)}</td>
+                <td>${escapeHtml(zone.description || '-')}</td>
+                <td>${escapeHtml(zone.device_id || '-')}</td>
+                <td>
+                    <button class="btn-icon btn-delete-zone" data-extension="${escapeHtml(zone.extension)}" title="Delete">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+        
+        // Populate test zone select
+        if (zoneSelect) {
+            zoneSelect.innerHTML = '<option value="">Select Zone</option>' +
+                (data.all_call_extension ? `<option value="${data.all_call_extension}">All Zones (${data.all_call_extension})</option>` : '') +
+                data.zones.map(zone => `<option value="${zone.extension}">${zone.name} (${zone.extension})</option>`).join('');
+        }
+        
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.btn-delete-zone').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const extension = this.getAttribute('data-extension');
+                deletePagingZone(extension);
+            });
+        });
+    } catch (error) {
+        console.error('Error loading paging zones:', error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="error">Error loading paging zones</td></tr>';
+    }
+}
+
+async function loadPagingDevices() {
+    const tableBody = document.getElementById('paging-devices-table-body');
+    if (!tableBody) return;
+    
+    try {
+        const response = await fetch('/api/paging/devices');
+        const data = await response.json();
+        
+        if (!data.devices || data.devices.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No DAC devices configured. Click "Add Device" to create one.</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = data.devices.map(device => `
+            <tr>
+                <td>${escapeHtml(device.device_id)}</td>
+                <td>${escapeHtml(device.name)}</td>
+                <td>${escapeHtml(device.type)}</td>
+                <td>${escapeHtml(device.sip_address || '-')}</td>
+                <td><span class="status-badge">${escapeHtml(device.status || 'Unknown')}</span></td>
+                <td>
+                    <button class="btn-icon btn-delete-device" data-device-id="${escapeHtml(device.device_id)}" title="Delete">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+        
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.btn-delete-device').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const deviceId = this.getAttribute('data-device-id');
+                deletePagingDevice(deviceId);
+            });
+        });
+    } catch (error) {
+        console.error('Error loading paging devices:', error);
+        tableBody.innerHTML = '<tr><td colspan="6" class="error">Error loading paging devices</td></tr>';
+    }
+}
+
+function showAddZoneModal() {
+    const extension = prompt('Zone Extension (e.g., 701):');
+    if (!extension) return;
+    
+    const name = prompt('Zone Name (e.g., "Warehouse"):');
+    if (!name) return;
+    
+    const description = prompt('Description (optional):') || '';
+    const deviceId = prompt('Device ID (optional):') || '';
+    
+    const zoneData = {
+        extension: extension,
+        name: name,
+        description: description,
+        device_id: deviceId
+    };
+    
+    fetch('/api/paging/zones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(zoneData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Zone ${name} added successfully`, 'success');
+            loadPagingZones();
+        } else {
+            showNotification(data.message || 'Failed to add zone', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding zone:', error);
+        showNotification('Error adding zone', 'error');
+    });
+}
+
+function deletePagingZone(extension) {
+    if (!confirm(`Delete paging zone ${extension}?`)) return;
+    
+    fetch(`/api/paging/zones/${extension}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Zone ${extension} deleted`, 'success');
+                loadPagingZones();
+            } else {
+                showNotification(data.message || 'Failed to delete zone', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting zone:', error);
+            showNotification('Error deleting zone', 'error');
+        });
+}
+
+function showAddDeviceModal() {
+    const deviceId = prompt('Device ID (e.g., "dac-1"):');
+    if (!deviceId) return;
+    
+    const name = prompt('Device Name (e.g., "Main PA System"):');
+    if (!name) return;
+    
+    const type = prompt('Device Type (e.g., "sip_gateway"):') || 'sip_gateway';
+    const sipAddress = prompt('SIP Address (e.g., "paging@192.168.1.10:5060"):') || '';
+    
+    const deviceData = {
+        device_id: deviceId,
+        name: name,
+        type: type,
+        sip_address: sipAddress
+    };
+    
+    fetch('/api/paging/devices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deviceData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Device ${name} added successfully`, 'success');
+            loadPagingDevices();
+        } else {
+            showNotification(data.message || 'Failed to add device', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding device:', error);
+        showNotification('Error adding device', 'error');
+    });
+}
+
+function deletePagingDevice(deviceId) {
+    if (!confirm(`Delete paging device ${deviceId}?`)) return;
+    
+    fetch(`/api/paging/devices/${deviceId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Device ${deviceId} deleted`, 'success');
+                loadPagingDevices();
+            } else {
+                showNotification(data.message || 'Failed to delete device', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting device:', error);
+            showNotification('Error deleting device', 'error');
+        });
+}
+
+// Handle test paging form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const testPagingForm = document.getElementById('test-paging-form');
+    if (testPagingForm) {
+        testPagingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fromExt = document.getElementById('test-page-from').value;
+            const zoneExt = document.getElementById('test-page-zone').value;
+            
+            if (!fromExt || !zoneExt) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            showNotification(`To test paging: Dial ${zoneExt} from extension ${fromExt}. Note: This form doesn't initiate the actual SIP call - you need to dial from a phone.`, 'info');
+        });
+    }
+});
 
 // ============================================================================
 // Helper placeholder functions for modal dialogs (to be implemented as needed)
