@@ -681,13 +681,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 else:
                     self._send_json({'error': 'Invalid pattern ID'}, 400)
             elif path.startswith('/api/framework/voice-biometrics/profile/'):
-                # Extract user ID from path
+                # Extract user ID from path - sanitize
                 user_id = path.split('/')[-1]
-                self._handle_delete_voice_profile(user_id)
+                # Validate: alphanumeric, underscore, hyphen, dot only (no path traversal)
+                import re
+                if user_id and re.match(r'^[a-zA-Z0-9_.-]+$', user_id):
+                    self._handle_delete_voice_profile(user_id)
+                else:
+                    self._send_json({'error': 'Invalid user ID'}, 400)
             elif path.startswith('/api/framework/mobile-portability/mapping/'):
-                # Extract business number from path
+                # Extract business number from path - sanitize
                 business_number = path.split('/')[-1]
-                self._handle_delete_mobile_mapping(business_number)
+                # Validate: phone number format (digits, +, -, parentheses, spaces)
+                import re
+                if business_number and re.match(r'^[\d+\-() ]+$', business_number):
+                    self._handle_delete_mobile_mapping(business_number)
+                else:
+                    self._send_json({'error': 'Invalid business number'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
@@ -8710,12 +8720,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             body = self._get_body()
             user_id = body.get('user_id')
-            # In a real implementation, audio_data would be base64 encoded
-            audio_data = body.get('audio_data', b'')
+            # In a real implementation, audio_data would be base64 encoded string
+            audio_data_str = body.get('audio_data', '')
             
             if not user_id:
                 self._send_json({'error': 'user_id required'}, 400)
                 return
+            
+            # Convert base64 encoded audio data to bytes if provided
+            import base64
+            if audio_data_str:
+                try:
+                    audio_data = base64.b64decode(audio_data_str)
+                except Exception:
+                    audio_data = b''  # Fallback to empty bytes if decode fails
+            else:
+                audio_data = b''
             
             from pbx.features.voice_biometrics import get_voice_biometrics
             vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
@@ -8852,10 +8872,21 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """POST /api/framework/video-codec/bandwidth - Calculate required bandwidth"""
         try:
             body = self._get_body()
-            resolution = tuple(body.get('resolution', [1920, 1080]))
+            resolution_input = body.get('resolution', [1920, 1080])
             framerate = body.get('framerate', 30)
             codec = body.get('codec', 'h264')
             quality = body.get('quality', 'high')
+            
+            # Validate resolution input
+            if not isinstance(resolution_input, (list, tuple)) or len(resolution_input) != 2:
+                self._send_json({'error': 'resolution must be [width, height]'}, 400)
+                return
+            
+            try:
+                resolution = (int(resolution_input[0]), int(resolution_input[1]))
+            except (ValueError, TypeError):
+                self._send_json({'error': 'resolution values must be numeric'}, 400)
+                return
             
             from pbx.features.video_codec import get_video_codec_manager
             vc = get_video_codec_manager(self.pbx_core.config if self.pbx_core else None)
