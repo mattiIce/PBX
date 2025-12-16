@@ -335,10 +335,7 @@ class DatabaseBackend:
         """
         Build database-specific SQL from a template
         
-        Converts template placeholders to database-specific syntax:
-        - {SERIAL} -> SERIAL (PostgreSQL) or INTEGER PRIMARY KEY AUTOINCREMENT (SQLite)
-        - {BOOLEAN_TRUE} -> TRUE (PostgreSQL) or 1 (SQLite)
-        - {BOOLEAN_FALSE} -> FALSE (PostgreSQL) or 0 (SQLite)
+        Converts template placeholders to database-specific syntax.
         
         Args:
             template: SQL template with placeholders
@@ -346,14 +343,16 @@ class DatabaseBackend:
         Returns:
             Database-specific SQL string
         """
-        if self.db_type == 'postgresql':
-            return template.replace('{SERIAL}', 'SERIAL PRIMARY KEY')\
-                          .replace('{BOOLEAN_TRUE}', 'TRUE')\
-                          .replace('{BOOLEAN_FALSE}', 'FALSE')
-        else:  # sqlite
-            return template.replace('{SERIAL}', 'INTEGER PRIMARY KEY AUTOINCREMENT')\
-                          .replace('{BOOLEAN_TRUE}', '1')\
-                          .replace('{BOOLEAN_FALSE}', '0')
+        replacements = {
+            '{SERIAL}': 'SERIAL PRIMARY KEY' if self.db_type == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT',
+            '{BOOLEAN_TRUE}': 'TRUE' if self.db_type == 'postgresql' else '1',
+            '{BOOLEAN_FALSE}': 'FALSE' if self.db_type == 'postgresql' else '0',
+        }
+        
+        result = template
+        for placeholder, value in replacements.items():
+            result = result.replace(placeholder, value)
+        return result
 
     def create_tables(self):
         """Create database tables if they don't exist"""

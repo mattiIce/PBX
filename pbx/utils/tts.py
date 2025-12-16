@@ -3,6 +3,7 @@ Text-to-Speech utilities for PBX voice prompt generation
 Uses gTTS (Google Text-to-Speech) for natural American English voices
 """
 import os
+import subprocess
 import tempfile
 
 from pbx.utils.logger import get_logger
@@ -79,8 +80,6 @@ def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
     Returns:
         True if successful, False otherwise
     """
-    import subprocess
-    
     try:
         result = subprocess.run([
             'ffmpeg', '-y',  # Overwrite output

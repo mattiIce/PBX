@@ -29,12 +29,7 @@ class MigrationManager:
         """
         Build database-specific SQL from a template
         
-        Converts template placeholders to database-specific syntax:
-        - {SERIAL} -> SERIAL (PostgreSQL) or INTEGER PRIMARY KEY AUTOINCREMENT (SQLite)
-        - {BOOLEAN_TRUE} -> TRUE (PostgreSQL) or 1 (SQLite)
-        - {BOOLEAN_FALSE} -> FALSE (PostgreSQL) or 0 (SQLite)
-        - {BYTEA} -> BYTEA (PostgreSQL) or BLOB (SQLite)
-        - {TEXT} -> TEXT (both)
+        Converts template placeholders to database-specific syntax.
         
         Args:
             template: SQL template with placeholders
@@ -42,18 +37,18 @@ class MigrationManager:
         Returns:
             Database-specific SQL string
         """
-        if self.db.db_type == 'postgresql':
-            return template.replace('{SERIAL}', 'SERIAL PRIMARY KEY')\
-                          .replace('{BOOLEAN_TRUE}', 'TRUE')\
-                          .replace('{BOOLEAN_FALSE}', 'FALSE')\
-                          .replace('{BYTEA}', 'BYTEA')\
-                          .replace('{TEXT}', 'TEXT')
-        else:  # sqlite
-            return template.replace('{SERIAL}', 'INTEGER PRIMARY KEY AUTOINCREMENT')\
-                          .replace('{BOOLEAN_TRUE}', '1')\
-                          .replace('{BOOLEAN_FALSE}', '0')\
-                          .replace('{BYTEA}', 'BLOB')\
-                          .replace('{TEXT}', 'TEXT')
+        replacements = {
+            '{SERIAL}': 'SERIAL PRIMARY KEY' if self.db.db_type == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT',
+            '{BOOLEAN_TRUE}': 'TRUE' if self.db.db_type == 'postgresql' else '1',
+            '{BOOLEAN_FALSE}': 'FALSE' if self.db.db_type == 'postgresql' else '0',
+            '{BYTEA}': 'BYTEA' if self.db.db_type == 'postgresql' else 'BLOB',
+            '{TEXT}': 'TEXT',
+        }
+        
+        result = template
+        for placeholder, value in replacements.items():
+            result = result.replace(placeholder, value)
+        return result
 
     def register_migration(self, version: int, name: str, sql: str):
         """
