@@ -8522,7 +8522,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/predictive-dialing/campaigns - Get all campaigns"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             campaigns = [
                 {
                     'campaign_id': c.campaign_id,
@@ -8544,7 +8544,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/predictive-dialing/statistics - Get dialing statistics"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             stats = dialer.get_statistics()
             self._send_json(stats)
         except Exception as e:
@@ -8555,7 +8555,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/predictive-dialing/campaign/{id} - Get campaign details"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             stats = dialer.get_campaign_statistics(campaign_id)
             if stats:
                 self._send_json(stats)
@@ -8578,7 +8578,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.predictive_dialing import get_predictive_dialer, DialingMode
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             
             # Convert mode string to enum
             mode_enum = DialingMode.PROGRESSIVE
@@ -8610,7 +8610,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """POST /api/framework/predictive-dialing/campaign/{id}/start - Start campaign"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             dialer.start_campaign(campaign_id)
             self._send_json({'success': True, 'status': 'running'})
         except Exception as e:
@@ -8621,7 +8621,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """POST /api/framework/predictive-dialing/campaign/{id}/pause - Pause campaign"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             dialer.pause_campaign(campaign_id)
             self._send_json({'success': True, 'status': 'paused'})
         except Exception as e:
@@ -8640,7 +8640,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             count = dialer.add_contacts(campaign_id, contacts)
             
             self._send_json({'success': True, 'contacts_added': count})
