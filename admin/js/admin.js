@@ -25,6 +25,171 @@ const FRAMEWORK_FEATURES_ERROR_MESSAGE = `
 let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
 
+// Error Display Configuration
+const ERROR_DISPLAY_CONFIG = {
+    enabled: true,
+    displayTime: 8000, // 8 seconds
+    maxErrors: 5,
+    showStackTrace: true
+};
+
+// Error queue
+let errorQueue = [];
+
+// Display error in a visible notification
+function displayError(error, context = '') {
+    if (!ERROR_DISPLAY_CONFIG.enabled) return;
+    
+    const errorId = 'error-' + Date.now();
+    const errorMessage = error.message || error.toString();
+    const errorStack = error.stack || '';
+    
+    // Add to queue
+    errorQueue.push({
+        id: errorId,
+        message: errorMessage,
+        context: context,
+        stack: errorStack,
+        timestamp: new Date()
+    });
+    
+    // Keep only max errors
+    if (errorQueue.length > ERROR_DISPLAY_CONFIG.maxErrors) {
+        errorQueue.shift();
+    }
+    
+    // Create error notification element
+    const errorDiv = document.createElement('div');
+    errorDiv.id = errorId;
+    errorDiv.className = 'error-notification';
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        max-width: 450px;
+        background: #f44336;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        font-family: monospace;
+        font-size: 13px;
+        line-height: 1.4;
+    `;
+    
+    let html = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+            <strong style="font-size: 16px;">❌ JavaScript Error</strong>
+            <button onclick="document.getElementById('${errorId}').remove()" 
+                    style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; margin-left: 10px;">
+                ×
+            </button>
+        </div>
+    `;
+    
+    if (context) {
+        html += `<div style="margin-bottom: 5px;"><strong>Context:</strong> ${context}</div>`;
+    }
+    
+    html += `<div style="margin-bottom: 5px;"><strong>Message:</strong> ${errorMessage}</div>`;
+    
+    if (ERROR_DISPLAY_CONFIG.showStackTrace && errorStack) {
+        html += `
+            <details style="margin-top: 10px; cursor: pointer;">
+                <summary style="font-weight: bold; margin-bottom: 5px;">Stack Trace (click to expand)</summary>
+                <pre style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 11px; margin: 5px 0 0 0;">${errorStack}</pre>
+            </details>
+        `;
+    }
+    
+    html += `
+        <div style="margin-top: 10px; font-size: 11px; opacity: 0.9;">
+            💡 Tip: Press F12 to open browser console for more details
+        </div>
+    `;
+    
+    errorDiv.innerHTML = html;
+    
+    // Add to page
+    document.body.appendChild(errorDiv);
+    
+    // Auto-remove after configured time
+    setTimeout(() => {
+        if (document.getElementById(errorId)) {
+            errorDiv.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => errorDiv.remove(), 300);
+        }
+    }, ERROR_DISPLAY_CONFIG.displayTime);
+    
+    // Also log to console
+    console.error(`[${context || 'Error'}]`, errorMessage);
+    if (errorStack) {
+        console.error('Stack trace:', errorStack);
+    }
+}
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    displayError(event.error || new Error(event.message), 'Global Error Handler');
+});
+
+// Unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    displayError(new Error(event.reason), 'Unhandled Promise Rejection');
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(500px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(500px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Helper function to load framework feature tabs with error handling
+function loadFrameworkFeatureTab(tabName, loaderFunction) {
+    const element = document.getElementById(tabName);
+    if (!element) {
+        const error = new Error(`Element with id '${tabName}' not found`);
+        displayError(error, `Tab Loading: ${tabName}`);
+        return;
+    }
+    
+    if (window.frameworkFeatures && window.frameworkFeatures[loaderFunction]) {
+        try {
+            element.innerHTML = window.frameworkFeatures[loaderFunction]();
+        } catch (error) {
+            displayError(error, `Framework Features: ${loaderFunction}()`);
+            element.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
+        }
+    } else {
+        const error = new Error(`Framework Features module not loaded or ${loaderFunction} function not found`);
+        displayError(error, 'Framework Features Module');
+        element.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
+    }
+}
+
 // Helper function to get authentication headers
 function getAuthHeaders() {
     const token = localStorage.getItem('pbx_token');
@@ -350,162 +515,61 @@ function showTab(tabName) {
             break;
         // Framework feature tabs
         case 'framework-overview':
-            const overviewElement = document.getElementById(tabName);
-            if (!overviewElement) {
-                console.error(`Element with id '${tabName}' not found`);
-                return;
-            }
-            
-            if (window.frameworkFeatures && window.frameworkFeatures.loadFrameworkOverview) {
-                overviewElement.innerHTML = window.frameworkFeatures.loadFrameworkOverview();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                overviewElement.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadFrameworkOverview');
             break;
         case 'click-to-dial':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadClickToDialTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadClickToDialTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadClickToDialTab');
             break;
         case 'video-conferencing':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadVideoConferencingTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoConferencingTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadVideoConferencingTab');
             break;
         case 'conversational-ai':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadConversationalAITab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadConversationalAITab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadConversationalAITab');
             break;
         case 'predictive-dialing':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadPredictiveDialingTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadPredictiveDialingTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadPredictiveDialingTab');
             break;
         case 'voice-biometrics':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadVoiceBiometricsTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVoiceBiometricsTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadVoiceBiometricsTab');
             break;
         case 'call-quality-prediction':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadCallQualityPredictionTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallQualityPredictionTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadCallQualityPredictionTab');
             break;
         case 'video-codec':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadVideoCodecTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoCodecTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadVideoCodecTab');
             break;
         case 'bi-integration':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadBIIntegrationTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadBIIntegrationTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadBIIntegrationTab');
             break;
         case 'call-tagging':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadCallTaggingTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallTaggingTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadCallTaggingTab');
             break;
         case 'mobile-apps':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadMobileAppsTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadMobileAppsTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadMobileAppsTab');
             break;
         case 'mobile-number-portability':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadMobileNumberPortabilityTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadMobileNumberPortabilityTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadMobileNumberPortabilityTab');
             break;
         case 'recording-analytics':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadRecordingAnalyticsTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadRecordingAnalyticsTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadRecordingAnalyticsTab');
             break;
         case 'call-blending':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadCallBlendingTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallBlendingTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadCallBlendingTab');
             break;
         case 'voicemail-drop':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadVoicemailDropTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVoicemailDropTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadVoicemailDropTab');
             break;
         case 'geographic-redundancy':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadGeographicRedundancyTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadGeographicRedundancyTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadGeographicRedundancyTab');
             break;
         case 'dns-srv-failover':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadDNSSRVFailoverTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadDNSSRVFailoverTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadDNSSRVFailoverTab');
             break;
         case 'session-border-controller':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadSessionBorderControllerTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadSessionBorderControllerTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadSessionBorderControllerTab');
             break;
         case 'data-residency':
-            if (window.frameworkFeatures && window.frameworkFeatures.loadDataResidencyTab) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadDataResidencyTab();
-            } else {
-                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-            }
+            loadFrameworkFeatureTab(tabName, 'loadDataResidencyTab');
             break;
         case 'team-messaging':
             // Team messaging has static content in HTML, no dynamic loading needed
