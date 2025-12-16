@@ -561,6 +561,7 @@ function loadConversationalAITab() {
 
         <div class="section-card">
             <h3>Configuration</h3>
+            <p><em>Note: Configuration form is for planning purposes. Backend API integration coming soon.</em></p>
             <form id="conversational-ai-config-form" style="max-width: 600px;">
                 <div class="form-group">
                     <label>
@@ -848,6 +849,7 @@ function loadMobileAppsTab() {
 
         <div class="section-card">
             <h3>Configuration</h3>
+            <p><em>Note: Configuration form is for planning purposes. Backend API integration coming soon.</em></p>
             <form id="mobile-apps-config-form" style="max-width: 600px;">
                 <div class="form-group">
                     <label>

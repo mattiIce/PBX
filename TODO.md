@@ -72,9 +72,12 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 
 ### Framework Features Ready for Enhancement
 Features with foundational implementations that can be extended:
+- **Paging System** (✅ fully implemented - Admin UI, zone management, DAC device management, active monitoring)
 - Multi-Factor Authentication (✅ fully implemented - TOTP, YubiKey, FIDO2/WebAuthn, backup codes)
 - SOC 2 Type 2 Compliance (✅ fully implemented - audit logging, controls tracking, reporting)
 - Dashboard & Analytics (REST APIs available, can add more visualizations)
+- **Conversational AI** (⚙️ admin UI added - configuration forms, needs AI service integration)
+- **Mobile Apps** (⚙️ admin UI added - device management forms, needs native app development)
 
 ### High-Priority Next Steps
 1. **Mobile Apps** - Critical for modern workforce

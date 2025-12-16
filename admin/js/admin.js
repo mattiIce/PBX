@@ -5933,7 +5933,6 @@ async function loadPagingZones() {
                 <td>${escapeHtml(zone.description || '-')}</td>
                 <td>${escapeHtml(zone.device_id || '-')}</td>
                 <td>
-                    <button class="btn-icon" disabled title="Edit (Coming Soon)">✏️</button>
                     <button class="btn-icon btn-delete-zone" data-extension="${escapeHtml(zone.extension)}" title="Delete">🗑️</button>
                 </td>
             </tr>
@@ -5980,7 +5979,6 @@ async function loadPagingDevices() {
                 <td>${escapeHtml(device.sip_address || '-')}</td>
                 <td><span class="status-badge">${escapeHtml(device.status || 'Unknown')}</span></td>
                 <td>
-                    <button class="btn-icon" disabled title="Edit (Coming Soon)">✏️</button>
                     <button class="btn-icon btn-delete-device" data-device-id="${escapeHtml(device.device_id)}" title="Delete">🗑️</button>
                 </td>
             </tr>
@@ -6125,7 +6123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            showNotification(`Test paging from ${fromExt} to zone ${zoneExt} initiated. This requires actual SIP call.`, 'info');
+            showNotification(`To test paging: Dial ${zoneExt} from extension ${fromExt}. Note: This form doesn't initiate the actual SIP call - you need to dial from a phone.`, 'info');
         });
     }
 });
