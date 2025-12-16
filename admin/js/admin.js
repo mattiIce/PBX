@@ -3,6 +3,23 @@ const API_BASE = window.location.origin;
 
 // Constants
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
+const FRAMEWORK_FEATURES_ERROR_MESSAGE = `
+    <div class="alert-box warning">
+        <h2>⚠️ Framework Features Module Not Loaded</h2>
+        <p>The framework features module failed to load. This could be due to:</p>
+        <ul>
+            <li>Network error preventing the script from loading</li>
+            <li>JavaScript error in the framework_features.js file</li>
+            <li>Browser blocking the script</li>
+        </ul>
+        <p><strong>Troubleshooting:</strong></p>
+        <ul>
+            <li>Check the browser console for errors (F12)</li>
+            <li>Verify that <code>admin/js/framework_features.js</code> is accessible</li>
+            <li>Try refreshing the page</li>
+        </ul>
+    </div>
+`;
 
 // State
 let currentExtensions = [];
@@ -287,8 +304,17 @@ function showTab(tabName) {
     });
     
     // Show selected tab
-    document.getElementById(tabName).classList.add('active');
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    const tabElement = document.getElementById(tabName);
+    if (!tabElement) {
+        console.error(`Tab element with id '${tabName}' not found`);
+        return;
+    }
+    
+    tabElement.classList.add('active');
+    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    }
     
     // Load data for the tab
     switch(tabName) {
@@ -324,8 +350,17 @@ function showTab(tabName) {
             break;
         // Framework feature tabs
         case 'framework-overview':
-            if (window.frameworkFeatures) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadFrameworkOverview();
+            const overviewElement = document.getElementById(tabName);
+            if (!overviewElement) {
+                console.error(`Element with id '${tabName}' not found`);
+                return;
+            }
+            
+            if (window.frameworkFeatures && window.frameworkFeatures.loadFrameworkOverview) {
+                overviewElement.innerHTML = window.frameworkFeatures.loadFrameworkOverview();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                overviewElement.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'click-to-dial':
