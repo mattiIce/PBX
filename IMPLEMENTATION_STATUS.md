@@ -463,13 +463,13 @@ These features have complete backend implementations, database schemas, and REST
 
 ## Known Issues and Future Work
 
-### ⚠️ Known Issues
+### ⚠️ Known Issues with Available Fixes
 
-**Audio Issues (Under Investigation):**
-- WebRTC Browser Phone - Currently disabled and not working
+**Audio Issues (Fix Available):**
+- WebRTC Browser Phone - Currently disabled and not working (investigation ongoing)
 - Hardphone Audio - May experience distortion in some scenarios
-- Root cause identified: Audio sample rate mismatch (16kHz vs 8kHz)
-- Fix available: Regenerate audio prompts at 8kHz
+- Root cause: Audio sample rate mismatch (16kHz vs 8kHz)
+- Fix: Regenerate audio prompts at 8kHz (see TROUBLESHOOTING.md)
 
 **Workarounds:**
 - Use physical IP phones or SIP clients for reliable calls

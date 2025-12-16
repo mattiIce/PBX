@@ -9,6 +9,7 @@ This comprehensive guide covers common issues and their solutions for the PBX sy
 - [Phone Registration](#phone-registration)
 - [Network and Connectivity](#network-and-connectivity)
 - [Configuration Issues](#configuration-issues)
+- [Service Management](#service-management)
 
 ---
 
