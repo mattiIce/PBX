@@ -276,8 +276,6 @@ function initializeTabs() {
 }
 
 function showTab(tabName) {
-    console.log(`[Admin] showTab called with tabName: ${tabName}`);
-    
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -291,7 +289,7 @@ function showTab(tabName) {
     // Show selected tab
     const tabElement = document.getElementById(tabName);
     if (!tabElement) {
-        console.error(`[Admin] Tab element with id '${tabName}' not found!`);
+        console.error(`Tab element with id '${tabName}' not found`);
         return;
     }
     
@@ -300,8 +298,6 @@ function showTab(tabName) {
     if (tabButton) {
         tabButton.classList.add('active');
     }
-    
-    console.log(`[Admin] Tab '${tabName}' activated, loading content...`);
     
     // Load data for the tab
     switch(tabName) {
@@ -337,20 +333,25 @@ function showTab(tabName) {
             break;
         // Framework feature tabs
         case 'framework-overview':
-            console.log(`[Admin] Loading framework-overview tab, window.frameworkFeatures exists: ${!!window.frameworkFeatures}`);
             if (window.frameworkFeatures && window.frameworkFeatures.loadFrameworkOverview) {
-                console.log('[Admin] Calling loadFrameworkOverview()...');
-                const content = window.frameworkFeatures.loadFrameworkOverview();
-                console.log(`[Admin] loadFrameworkOverview() returned ${content ? content.length : 0} characters`);
-                document.getElementById(tabName).innerHTML = content;
-                console.log('[Admin] Content set successfully');
+                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadFrameworkOverview();
             } else {
-                console.error('[Admin] window.frameworkFeatures or loadFrameworkOverview not available');
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
                 document.getElementById(tabName).innerHTML = `
-                    <div class="error-box">
+                    <div class="error-box" style="padding: 30px; background: #fff3cd; border-left: 4px solid #ff9800; margin: 20px;">
                         <h2>⚠️ Framework Features Module Not Loaded</h2>
-                        <p>The framework features module failed to load. Please check the browser console for errors.</p>
-                        <p>Try refreshing the page. If the problem persists, check that <code>js/framework_features.js</code> is accessible.</p>
+                        <p>The framework features module failed to load. This could be due to:</p>
+                        <ul>
+                            <li>Network error preventing the script from loading</li>
+                            <li>JavaScript error in the framework_features.js file</li>
+                            <li>Browser blocking the script</li>
+                        </ul>
+                        <p><strong>Troubleshooting:</strong></p>
+                        <ul>
+                            <li>Check the browser console for errors (F12)</li>
+                            <li>Verify that <code>admin/js/framework_features.js</code> is accessible</li>
+                            <li>Try refreshing the page</li>
+                        </ul>
                     </div>
                 `;
             }
