@@ -587,7 +587,7 @@ function showTab(tabName) {
             loadFrameworkFeatureTab(tabName, 'loadDataResidencyTab');
             break;
         case 'team-messaging':
-            // Team messaging has static content in HTML, no dynamic loading needed
+            loadFrameworkFeatureTab(tabName, 'loadTeamMessagingTab');
             break;
     }
 }
