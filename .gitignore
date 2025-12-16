@@ -38,8 +38,14 @@ logs/
 recordings/
 voicemail/
 test_voicemail/
-moh/
 cdr/
+
+# Music on Hold - keep pre-generated files in repo
+# Only ignore custom user-added files (anything not in default/)
+moh/*
+!moh/README.md
+!moh/default/
+!moh/default/*.wav
 
 # Generated voice files (generate with scripts/generate_tts_prompts.py)
 auto_attendant/*.wav
