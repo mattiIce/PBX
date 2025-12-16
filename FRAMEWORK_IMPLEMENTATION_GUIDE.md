@@ -269,6 +269,10 @@ Comprehensive guides are available for each framework feature:
 
 ### Mobile & Communication
 - [MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md) - Mobile app framework
+- [VOICE_BIOMETRICS_GUIDE.md](VOICE_BIOMETRICS_GUIDE.md) - Speaker authentication and fraud detection
+
+### High Availability
+- [GEOGRAPHIC_REDUNDANCY_GUIDE.md](GEOGRAPHIC_REDUNDANCY_GUIDE.md) - Multi-region failover and disaster recovery
 
 ### Complete Feature Overview
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - All framework features overview
@@ -277,14 +281,12 @@ Comprehensive guides are available for each framework feature:
 Additional guides being developed for:
 - Conversational AI
 - Predictive Dialing
-- Voice Biometrics
 - Call Quality Prediction
-- Video Codecs
+- Video Codecs (H.264/H.265)
 - Mobile Number Portability
 - Call Recording Analytics
 - Call Blending
 - Predictive Voicemail Drop
-- Geographic Redundancy
 - DNS SRV Failover
 - Session Border Controller
 - Data Residency Controls
