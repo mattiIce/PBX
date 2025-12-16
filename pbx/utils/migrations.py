@@ -25,6 +25,31 @@ class MigrationManager:
         self.db = db_backend
         self.migrations = []
 
+    def _build_migration_sql(self, template: str) -> str:
+        """
+        Build database-specific SQL from a template
+        
+        Converts template placeholders to database-specific syntax.
+        
+        Args:
+            template: SQL template with placeholders
+            
+        Returns:
+            Database-specific SQL string
+        """
+        replacements = {
+            '{SERIAL}': 'SERIAL PRIMARY KEY' if self.db.db_type == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT',
+            '{BOOLEAN_TRUE}': 'TRUE' if self.db.db_type == 'postgresql' else '1',
+            '{BOOLEAN_FALSE}': 'FALSE' if self.db.db_type == 'postgresql' else '0',
+            '{BYTEA}': 'BYTEA' if self.db.db_type == 'postgresql' else 'BLOB',
+            '{TEXT}': 'TEXT',
+        }
+        
+        result = template
+        for placeholder, value in replacements.items():
+            result = result.replace(placeholder, value)
+        return result
+
     def register_migration(self, version: int, name: str, sql: str):
         """
         Register a migration
@@ -190,16 +215,16 @@ def register_all_migrations(manager: MigrationManager):
         manager: MigrationManager instance
     """
     # Migration 1000: AI-Powered Features Framework
-    manager.register_migration(1000, "AI Features Framework", """
+    manager.register_migration(1000, "AI Features Framework", manager._build_migration_sql("""
         -- Real-time speech analytics
         CREATE TABLE IF NOT EXISTS speech_analytics_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
-            enabled BOOLEAN DEFAULT TRUE,
-            transcription_enabled BOOLEAN DEFAULT TRUE,
-            sentiment_enabled BOOLEAN DEFAULT TRUE,
-            summarization_enabled BOOLEAN DEFAULT TRUE,
-            keywords TEXT,
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            transcription_enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            sentiment_enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            summarization_enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            keywords {TEXT},
             alert_threshold FLOAT DEFAULT 0.7,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -207,11 +232,11 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Conversational AI assistant
         CREATE TABLE IF NOT EXISTS ai_assistant_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
-            enabled BOOLEAN DEFAULT FALSE,
-            auto_response_enabled BOOLEAN DEFAULT FALSE,
-            greeting_template TEXT,
+            enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
+            auto_response_enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
+            greeting_template {TEXT},
             response_language VARCHAR(10) DEFAULT 'en',
             confidence_threshold FLOAT DEFAULT 0.8,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -219,9 +244,9 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Voice biometrics
         CREATE TABLE IF NOT EXISTS voice_biometrics (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
-            voiceprint_data BYTEA,
+            voiceprint_data {BYTEA},
             enrollment_status VARCHAR(20) DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_verified TIMESTAMP
@@ -229,138 +254,61 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Call quality prediction
         CREATE TABLE IF NOT EXISTS call_quality_predictions (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             call_id VARCHAR(50),
             predicted_mos FLOAT,
-            predicted_issues TEXT,
+            predicted_issues {TEXT},
             actual_mos FLOAT,
             prediction_accuracy FLOAT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS speech_analytics_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            enabled INTEGER DEFAULT 1,
-            transcription_enabled INTEGER DEFAULT 1,
-            sentiment_enabled INTEGER DEFAULT 1,
-            summarization_enabled INTEGER DEFAULT 1,
-            keywords TEXT,
-            alert_threshold REAL DEFAULT 0.7,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS ai_assistant_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            enabled INTEGER DEFAULT 0,
-            auto_response_enabled INTEGER DEFAULT 0,
-            greeting_template TEXT,
-            response_language TEXT DEFAULT 'en',
-            confidence_threshold REAL DEFAULT 0.8,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS voice_biometrics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            voiceprint_data BLOB,
-            enrollment_status TEXT DEFAULT 'pending',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_verified TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS call_quality_predictions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            call_id TEXT,
-            predicted_mos REAL,
-            predicted_issues TEXT,
-            actual_mos REAL,
-            prediction_accuracy REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1001: Video Conferencing Framework
-    manager.register_migration(1001, "Video Conferencing Framework", """
+    manager.register_migration(1001, "Video Conferencing Framework", manager._build_migration_sql("""
         -- Video conferencing rooms
         CREATE TABLE IF NOT EXISTS video_conference_rooms (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             room_name VARCHAR(100) NOT NULL UNIQUE,
             owner_extension VARCHAR(20),
             max_participants INTEGER DEFAULT 10,
-            enable_4k BOOLEAN DEFAULT FALSE,
-            enable_screen_share BOOLEAN DEFAULT TRUE,
-            recording_enabled BOOLEAN DEFAULT FALSE,
+            enable_4k BOOLEAN DEFAULT {BOOLEAN_FALSE},
+            enable_screen_share BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            recording_enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
             password_hash VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- Video conference participants
         CREATE TABLE IF NOT EXISTS video_conference_participants (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             room_id INTEGER REFERENCES video_conference_rooms(id),
             extension VARCHAR(20),
             display_name VARCHAR(100),
             joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             left_at TIMESTAMP,
-            video_enabled BOOLEAN DEFAULT TRUE,
-            audio_enabled BOOLEAN DEFAULT TRUE,
-            screen_sharing BOOLEAN DEFAULT FALSE
+            video_enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            audio_enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            screen_sharing BOOLEAN DEFAULT {BOOLEAN_FALSE}
         );
 
         -- Video codec configurations
         CREATE TABLE IF NOT EXISTS video_codec_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             codec_name VARCHAR(50) NOT NULL,
-            enabled BOOLEAN DEFAULT TRUE,
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
             priority INTEGER DEFAULT 100,
             max_resolution VARCHAR(20) DEFAULT '1920x1080',
             max_bitrate INTEGER DEFAULT 2000,
             min_bitrate INTEGER DEFAULT 500
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS video_conference_rooms (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            room_name TEXT NOT NULL UNIQUE,
-            owner_extension TEXT,
-            max_participants INTEGER DEFAULT 10,
-            enable_4k INTEGER DEFAULT 0,
-            enable_screen_share INTEGER DEFAULT 1,
-            recording_enabled INTEGER DEFAULT 0,
-            password_hash TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS video_conference_participants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            room_id INTEGER REFERENCES video_conference_rooms(id),
-            extension TEXT,
-            display_name TEXT,
-            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            left_at TIMESTAMP,
-            video_enabled INTEGER DEFAULT 1,
-            audio_enabled INTEGER DEFAULT 1,
-            screen_sharing INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE IF NOT EXISTS video_codec_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            codec_name TEXT NOT NULL,
-            enabled INTEGER DEFAULT 1,
-            priority INTEGER DEFAULT 100,
-            max_resolution TEXT DEFAULT '1920x1080',
-            max_bitrate INTEGER DEFAULT 2000,
-            min_bitrate INTEGER DEFAULT 500
-        );
-    """)
+    """))
 
     # Migration 1002: Emergency Services Framework
-    manager.register_migration(1002, "Emergency Services Framework", """
+    manager.register_migration(1002, "Emergency Services Framework", manager._build_migration_sql("""
         -- Nomadic E911 locations
         CREATE TABLE IF NOT EXISTS nomadic_e911_locations (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
             ip_address VARCHAR(45),
             location_name VARCHAR(100),
@@ -375,12 +323,12 @@ def register_all_migrations(manager: MigrationManager):
             latitude DECIMAL(10, 8),
             longitude DECIMAL(11, 8),
             last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            auto_detected BOOLEAN DEFAULT FALSE
+            auto_detected BOOLEAN DEFAULT {BOOLEAN_FALSE}
         );
 
         -- E911 location updates log
         CREATE TABLE IF NOT EXISTS e911_location_updates (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20),
             old_location TEXT,
             new_location TEXT,
@@ -390,7 +338,7 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Multi-site E911 configurations
         CREATE TABLE IF NOT EXISTS multi_site_e911_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             site_name VARCHAR(100) NOT NULL,
             ip_range_start VARCHAR(45),
             ip_range_end VARCHAR(45),
@@ -399,54 +347,15 @@ def register_all_migrations(manager: MigrationManager):
             elin VARCHAR(20),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS nomadic_e911_locations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            ip_address TEXT,
-            location_name TEXT,
-            street_address TEXT,
-            city TEXT,
-            state TEXT,
-            postal_code TEXT,
-            country TEXT DEFAULT 'USA',
-            building TEXT,
-            floor TEXT,
-            room TEXT,
-            latitude REAL,
-            longitude REAL,
-            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            auto_detected INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE IF NOT EXISTS e911_location_updates (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT,
-            old_location TEXT,
-            new_location TEXT,
-            update_source TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS multi_site_e911_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            site_name TEXT NOT NULL,
-            ip_range_start TEXT,
-            ip_range_end TEXT,
-            emergency_trunk TEXT,
-            psap_number TEXT,
-            elin TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1003: Analytics & Reporting Framework
-    manager.register_migration(1003, "Analytics & Reporting Framework", """
+    manager.register_migration(1003, "Analytics & Reporting Framework", manager._build_migration_sql("""
         -- BI integration configs
         CREATE TABLE IF NOT EXISTS bi_integration_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             integration_type VARCHAR(50) NOT NULL,
-            enabled BOOLEAN DEFAULT FALSE,
+            enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
             api_key_encrypted TEXT,
             endpoint_url VARCHAR(255),
             sync_interval INTEGER DEFAULT 3600,
@@ -456,7 +365,7 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Call tags and categories
         CREATE TABLE IF NOT EXISTS call_tags (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             tag_name VARCHAR(50) NOT NULL UNIQUE,
             category VARCHAR(50),
             color VARCHAR(20),
@@ -465,119 +374,58 @@ def register_all_migrations(manager: MigrationManager):
         );
 
         CREATE TABLE IF NOT EXISTS call_tag_assignments (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             call_id VARCHAR(50) NOT NULL,
             tag_id INTEGER REFERENCES call_tags(id),
             assigned_by VARCHAR(50),
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            auto_assigned BOOLEAN DEFAULT FALSE
+            auto_assigned BOOLEAN DEFAULT {BOOLEAN_FALSE}
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS bi_integration_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            integration_type TEXT NOT NULL,
-            enabled INTEGER DEFAULT 0,
-            api_key_encrypted TEXT,
-            endpoint_url TEXT,
-            sync_interval INTEGER DEFAULT 3600,
-            last_sync TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS call_tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tag_name TEXT NOT NULL UNIQUE,
-            category TEXT,
-            color TEXT,
-            auto_apply_rules TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS call_tag_assignments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            call_id TEXT NOT NULL,
-            tag_id INTEGER REFERENCES call_tags(id),
-            assigned_by TEXT,
-            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            auto_assigned INTEGER DEFAULT 0
-        );
-    """)
+    """))
 
     # Migration 1004: Integration Framework
-    manager.register_migration(1004, "Integration Framework", """
+    manager.register_migration(1004, "Integration Framework", manager._build_migration_sql("""
         -- HubSpot integration
         CREATE TABLE IF NOT EXISTS hubspot_integration (
-            id SERIAL PRIMARY KEY,
-            enabled BOOLEAN DEFAULT FALSE,
+            id {SERIAL},
+            enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
             api_key_encrypted TEXT,
             portal_id VARCHAR(50),
-            sync_contacts BOOLEAN DEFAULT TRUE,
-            sync_deals BOOLEAN DEFAULT TRUE,
-            auto_create_contacts BOOLEAN DEFAULT FALSE,
+            sync_contacts BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            sync_deals BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            auto_create_contacts BOOLEAN DEFAULT {BOOLEAN_FALSE},
             last_sync TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- Zendesk integration
         CREATE TABLE IF NOT EXISTS zendesk_integration (
-            id SERIAL PRIMARY KEY,
-            enabled BOOLEAN DEFAULT FALSE,
+            id {SERIAL},
+            enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
             subdomain VARCHAR(100),
             api_token_encrypted TEXT,
             email VARCHAR(255),
-            auto_create_tickets BOOLEAN DEFAULT FALSE,
+            auto_create_tickets BOOLEAN DEFAULT {BOOLEAN_FALSE},
             default_priority VARCHAR(20) DEFAULT 'normal',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- Integration activity log
         CREATE TABLE IF NOT EXISTS integration_activity_log (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             integration_type VARCHAR(50),
             action VARCHAR(100),
             status VARCHAR(20),
             details TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS hubspot_integration (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            enabled INTEGER DEFAULT 0,
-            api_key_encrypted TEXT,
-            portal_id TEXT,
-            sync_contacts INTEGER DEFAULT 1,
-            sync_deals INTEGER DEFAULT 1,
-            auto_create_contacts INTEGER DEFAULT 0,
-            last_sync TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS zendesk_integration (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            enabled INTEGER DEFAULT 0,
-            subdomain TEXT,
-            api_token_encrypted TEXT,
-            email TEXT,
-            auto_create_tickets INTEGER DEFAULT 0,
-            default_priority TEXT DEFAULT 'normal',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS integration_activity_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            integration_type TEXT,
-            action TEXT,
-            status TEXT,
-            details TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1005: Mobile Framework
-    manager.register_migration(1005, "Mobile Framework", """
+    manager.register_migration(1005, "Mobile Framework", manager._build_migration_sql("""
         -- Mobile app installations
         CREATE TABLE IF NOT EXISTS mobile_app_installations (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
             platform VARCHAR(20) NOT NULL,
             app_version VARCHAR(20),
@@ -586,12 +434,12 @@ def register_all_migrations(manager: MigrationManager):
             os_version VARCHAR(50),
             install_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_active TIMESTAMP,
-            enabled BOOLEAN DEFAULT TRUE
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE}
         );
 
         -- Mobile number portability
         CREATE TABLE IF NOT EXISTS mobile_number_portability (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
             mobile_number VARCHAR(20),
             carrier VARCHAR(100),
@@ -599,38 +447,15 @@ def register_all_migrations(manager: MigrationManager):
             port_date TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS mobile_app_installations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            platform TEXT NOT NULL,
-            app_version TEXT,
-            device_token TEXT,
-            device_model TEXT,
-            os_version TEXT,
-            install_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_active TIMESTAMP,
-            enabled INTEGER DEFAULT 1
-        );
-
-        CREATE TABLE IF NOT EXISTS mobile_number_portability (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            mobile_number TEXT,
-            carrier TEXT,
-            port_status TEXT DEFAULT 'pending',
-            port_date TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1006: Advanced Call Features Framework
-    manager.register_migration(1006, "Advanced Call Features Framework", """
+    manager.register_migration(1006, "Advanced Call Features Framework", manager._build_migration_sql("""
         -- Call blending configurations
         CREATE TABLE IF NOT EXISTS call_blending_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             queue_name VARCHAR(100) NOT NULL,
-            enabled BOOLEAN DEFAULT FALSE,
+            enabled BOOLEAN DEFAULT {BOOLEAN_FALSE},
             inbound_priority INTEGER DEFAULT 1,
             outbound_campaign_id INTEGER,
             blend_ratio FLOAT DEFAULT 0.5,
@@ -639,17 +464,17 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Predictive voicemail drop
         CREATE TABLE IF NOT EXISTS voicemail_drop_templates (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             template_name VARCHAR(100) NOT NULL,
             audio_file VARCHAR(255),
             duration_seconds INTEGER,
-            enabled BOOLEAN DEFAULT TRUE,
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- Call recording analytics
         CREATE TABLE IF NOT EXISTS call_recording_analytics (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             recording_id VARCHAR(100),
             sentiment_score FLOAT,
             keywords_detected TEXT,
@@ -657,52 +482,23 @@ def register_all_migrations(manager: MigrationManager):
             quality_score FLOAT,
             analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS call_blending_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            queue_name TEXT NOT NULL,
-            enabled INTEGER DEFAULT 0,
-            inbound_priority INTEGER DEFAULT 1,
-            outbound_campaign_id INTEGER,
-            blend_ratio REAL DEFAULT 0.5,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS voicemail_drop_templates (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            template_name TEXT NOT NULL,
-            audio_file TEXT,
-            duration_seconds INTEGER,
-            enabled INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS call_recording_analytics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            recording_id TEXT,
-            sentiment_score REAL,
-            keywords_detected TEXT,
-            compliance_score REAL,
-            quality_score REAL,
-            analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1007: SIP Trunking Framework
-    manager.register_migration(1007, "SIP Trunking Framework", """
+    manager.register_migration(1007, "SIP Trunking Framework", manager._build_migration_sql("""
         -- Geographic redundancy
         CREATE TABLE IF NOT EXISTS trunk_geographic_regions (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             region_name VARCHAR(100) NOT NULL,
             trunk_ids TEXT,
             priority INTEGER DEFAULT 100,
-            enabled BOOLEAN DEFAULT TRUE,
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- DNS SRV failover
         CREATE TABLE IF NOT EXISTS dns_srv_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             trunk_id INTEGER,
             srv_record VARCHAR(255),
             priority INTEGER,
@@ -714,62 +510,31 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Session Border Controller configs
         CREATE TABLE IF NOT EXISTS sbc_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             sbc_name VARCHAR(100) NOT NULL,
             sbc_address VARCHAR(255),
             sbc_port INTEGER DEFAULT 5060,
-            topology_hiding BOOLEAN DEFAULT TRUE,
-            nat_traversal BOOLEAN DEFAULT TRUE,
+            topology_hiding BOOLEAN DEFAULT {BOOLEAN_TRUE},
+            nat_traversal BOOLEAN DEFAULT {BOOLEAN_TRUE},
             security_profiles TEXT,
-            enabled BOOLEAN DEFAULT TRUE
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE}
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS trunk_geographic_regions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            region_name TEXT NOT NULL,
-            trunk_ids TEXT,
-            priority INTEGER DEFAULT 100,
-            enabled INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS dns_srv_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            trunk_id INTEGER,
-            srv_record TEXT,
-            priority INTEGER,
-            weight INTEGER,
-            port INTEGER,
-            last_tested TIMESTAMP,
-            status TEXT DEFAULT 'active'
-        );
-
-        CREATE TABLE IF NOT EXISTS sbc_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sbc_name TEXT NOT NULL,
-            sbc_address TEXT,
-            sbc_port INTEGER DEFAULT 5060,
-            topology_hiding INTEGER DEFAULT 1,
-            nat_traversal INTEGER DEFAULT 1,
-            security_profiles TEXT,
-            enabled INTEGER DEFAULT 1
-        );
-    """)
+    """))
 
     # Migration 1008: Collaboration Framework
-    manager.register_migration(1008, "Collaboration Framework", """
+    manager.register_migration(1008, "Collaboration Framework", manager._build_migration_sql("""
         -- Team messaging
         CREATE TABLE IF NOT EXISTS team_messaging_channels (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             channel_name VARCHAR(100) NOT NULL UNIQUE,
             description TEXT,
-            is_private BOOLEAN DEFAULT FALSE,
+            is_private BOOLEAN DEFAULT {BOOLEAN_FALSE},
             created_by VARCHAR(20),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS team_messaging_members (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             channel_id INTEGER REFERENCES team_messaging_channels(id),
             extension VARCHAR(20),
             role VARCHAR(20) DEFAULT 'member',
@@ -777,7 +542,7 @@ def register_all_migrations(manager: MigrationManager):
         );
 
         CREATE TABLE IF NOT EXISTS team_messages (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             channel_id INTEGER REFERENCES team_messaging_channels(id),
             sender_extension VARCHAR(20),
             message_text TEXT,
@@ -787,7 +552,7 @@ def register_all_migrations(manager: MigrationManager):
 
         -- File sharing
         CREATE TABLE IF NOT EXISTS shared_files (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             file_name VARCHAR(255) NOT NULL,
             file_path VARCHAR(500),
             file_size BIGINT,
@@ -798,53 +563,14 @@ def register_all_migrations(manager: MigrationManager):
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS team_messaging_channels (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            channel_name TEXT NOT NULL UNIQUE,
-            description TEXT,
-            is_private INTEGER DEFAULT 0,
-            created_by TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS team_messaging_members (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            channel_id INTEGER REFERENCES team_messaging_channels(id),
-            extension TEXT,
-            role TEXT DEFAULT 'member',
-            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS team_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            channel_id INTEGER REFERENCES team_messaging_channels(id),
-            sender_extension TEXT,
-            message_text TEXT,
-            message_type TEXT DEFAULT 'text',
-            sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS shared_files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            file_name TEXT NOT NULL,
-            file_path TEXT,
-            file_size INTEGER,
-            mime_type TEXT,
-            uploaded_by TEXT,
-            shared_with TEXT,
-            description TEXT,
-            uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            expires_at TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1009: Compliance Framework (SOC 2 Type 2 only)
     # Note: PCI DSS and GDPR tables commented out as not required
-    manager.register_migration(1009, "Compliance Framework", """
+    manager.register_migration(1009, "Compliance Framework", manager._build_migration_sql("""
         -- SOC 2 Type 2 enhanced
         CREATE TABLE IF NOT EXISTS soc2_controls (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             control_id VARCHAR(50) NOT NULL,
             control_category VARCHAR(50),
             description TEXT,
@@ -855,50 +581,31 @@ def register_all_migrations(manager: MigrationManager):
 
         -- Data residency (used by SOC 2)
         CREATE TABLE IF NOT EXISTS data_residency_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             data_type VARCHAR(50),
             region VARCHAR(50),
             storage_location VARCHAR(255),
-            encryption_required BOOLEAN DEFAULT TRUE,
+            encryption_required BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS soc2_controls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            control_id TEXT NOT NULL,
-            control_category TEXT,
-            description TEXT,
-            implementation_status TEXT,
-            last_tested TIMESTAMP,
-            test_results TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS data_residency_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            data_type TEXT,
-            region TEXT,
-            storage_location TEXT,
-            encryption_required INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
+    """))
 
     # Migration 1010: Click-to-Dial Framework
-    manager.register_migration(1010, "Click-to-Dial Framework", """
+    manager.register_migration(1010, "Click-to-Dial Framework", manager._build_migration_sql("""
         -- Click-to-dial configurations
         CREATE TABLE IF NOT EXISTS click_to_dial_configs (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20) NOT NULL,
-            enabled BOOLEAN DEFAULT TRUE,
+            enabled BOOLEAN DEFAULT {BOOLEAN_TRUE},
             default_caller_id VARCHAR(20),
-            auto_answer BOOLEAN DEFAULT FALSE,
-            browser_notification BOOLEAN DEFAULT TRUE,
+            auto_answer BOOLEAN DEFAULT {BOOLEAN_FALSE},
+            browser_notification BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- Click-to-dial history
         CREATE TABLE IF NOT EXISTS click_to_dial_history (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             extension VARCHAR(20),
             destination VARCHAR(20),
             call_id VARCHAR(50),
@@ -907,25 +614,4 @@ def register_all_migrations(manager: MigrationManager):
             connected_at TIMESTAMP,
             status VARCHAR(20)
         );
-    """ if manager.db.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS click_to_dial_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT NOT NULL,
-            enabled INTEGER DEFAULT 1,
-            default_caller_id TEXT,
-            auto_answer INTEGER DEFAULT 0,
-            browser_notification INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS click_to_dial_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension TEXT,
-            destination TEXT,
-            call_id TEXT,
-            source TEXT,
-            initiated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            connected_at TIMESTAMP,
-            status TEXT
-        );
-    """)
+    """))

@@ -331,6 +331,29 @@ class DatabaseBackend:
                 self.connection.rollback()
             return []
 
+    def _build_table_sql(self, template: str) -> str:
+        """
+        Build database-specific SQL from a template
+        
+        Converts template placeholders to database-specific syntax.
+        
+        Args:
+            template: SQL template with placeholders
+            
+        Returns:
+            Database-specific SQL string
+        """
+        replacements = {
+            '{SERIAL}': 'SERIAL PRIMARY KEY' if self.db_type == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT',
+            '{BOOLEAN_TRUE}': 'TRUE' if self.db_type == 'postgresql' else '1',
+            '{BOOLEAN_FALSE}': 'FALSE' if self.db_type == 'postgresql' else '0',
+        }
+        
+        result = template
+        for placeholder, value in replacements.items():
+            result = result.replace(placeholder, value)
+        return result
+
     def create_tables(self):
         """Create database tables if they don't exist"""
         if not self.enabled:
@@ -339,9 +362,9 @@ class DatabaseBackend:
         self.logger.info("Creating database tables...")
 
         # VIP Callers table
-        vip_table = """
+        vip_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS vip_callers (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             caller_id VARCHAR(20) UNIQUE NOT NULL,
             name VARCHAR(255),
             priority_level INTEGER DEFAULT 1,
@@ -350,23 +373,12 @@ class DatabaseBackend:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS vip_callers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            caller_id VARCHAR(20) UNIQUE NOT NULL,
-            name VARCHAR(255),
-            priority_level INTEGER DEFAULT 1,
-            notes TEXT,
-            special_routing VARCHAR(50),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Call Detail Records table
-        cdr_table = """
+        cdr_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS call_records (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             call_id VARCHAR(100) UNIQUE NOT NULL,
             from_extension VARCHAR(20),
             to_extension VARCHAR(20),
@@ -378,32 +390,18 @@ class DatabaseBackend:
             recording_path VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS call_records (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            call_id VARCHAR(100) UNIQUE NOT NULL,
-            from_extension VARCHAR(20),
-            to_extension VARCHAR(20),
-            caller_id VARCHAR(50),
-            start_time TIMESTAMP,
-            end_time TIMESTAMP,
-            duration INTEGER,
-            status VARCHAR(20),
-            recording_path VARCHAR(255),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Voicemail messages table
-        voicemail_table = """
+        voicemail_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS voicemail_messages (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             message_id VARCHAR(100) UNIQUE NOT NULL,
             extension_number VARCHAR(20) NOT NULL,
             caller_id VARCHAR(50),
             file_path VARCHAR(255),
             duration INTEGER,
-            listened BOOLEAN DEFAULT FALSE,
+            listened BOOLEAN DEFAULT {BOOLEAN_FALSE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             transcription_text TEXT,
             transcription_confidence FLOAT,
@@ -411,29 +409,12 @@ class DatabaseBackend:
             transcription_provider VARCHAR(20),
             transcribed_at TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS voicemail_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            message_id VARCHAR(100) UNIQUE NOT NULL,
-            extension_number VARCHAR(20) NOT NULL,
-            caller_id VARCHAR(50),
-            file_path VARCHAR(255),
-            duration INTEGER,
-            listened BOOLEAN DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            transcription_text TEXT,
-            transcription_confidence FLOAT,
-            transcription_language VARCHAR(10),
-            transcription_provider VARCHAR(20),
-            transcribed_at TIMESTAMP
-        )
-        """
+        """)
 
-        # Registered phones table - tracks phones by MAC (if available) or IP
-        # address
-        registered_phones_table = """
+        # Registered phones table - tracks phones by MAC (if available) or IP address
+        registered_phones_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS registered_phones (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             mac_address VARCHAR(20),
             extension_number VARCHAR(20) NOT NULL,
             user_agent VARCHAR(255),
@@ -444,25 +425,12 @@ class DatabaseBackend:
             UNIQUE(mac_address, extension_number),
             UNIQUE(ip_address, extension_number)
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS registered_phones (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            mac_address VARCHAR(20),
-            extension_number VARCHAR(20) NOT NULL,
-            user_agent VARCHAR(255),
-            ip_address VARCHAR(50) NOT NULL,
-            first_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            contact_uri VARCHAR(255),
-            UNIQUE(mac_address, extension_number),
-            UNIQUE(ip_address, extension_number)
-        )
-        """
+        """)
 
         # Provisioned devices table - stores phone provisioning configuration
-        provisioned_devices_table = """
+        provisioned_devices_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS provisioned_devices (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             mac_address VARCHAR(20) UNIQUE NOT NULL,
             extension_number VARCHAR(20) NOT NULL,
             vendor VARCHAR(50) NOT NULL,
@@ -473,35 +441,22 @@ class DatabaseBackend:
             last_provisioned TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS provisioned_devices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            mac_address VARCHAR(20) UNIQUE NOT NULL,
-            extension_number VARCHAR(20) NOT NULL,
-            vendor VARCHAR(50) NOT NULL,
-            model VARCHAR(50) NOT NULL,
-            static_ip VARCHAR(50),
-            config_url VARCHAR(255),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_provisioned TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Extensions table - stores user extensions/phone numbers
-        extensions_table = """
+        extensions_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS extensions (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             number VARCHAR(20) UNIQUE NOT NULL,
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255),
             password_hash VARCHAR(255) NOT NULL,
             password_salt VARCHAR(255),
-            allow_external BOOLEAN DEFAULT TRUE,
+            allow_external BOOLEAN DEFAULT {BOOLEAN_TRUE},
             voicemail_pin_hash VARCHAR(255),
             voicemail_pin_salt VARCHAR(255),
-            is_admin BOOLEAN DEFAULT FALSE,
-            ad_synced BOOLEAN DEFAULT FALSE,
+            is_admin BOOLEAN DEFAULT {BOOLEAN_FALSE},
+            ad_synced BOOLEAN DEFAULT {BOOLEAN_FALSE},
             ad_username VARCHAR(100),
             password_changed_at TIMESTAMP,
             failed_login_attempts INTEGER DEFAULT 0,
@@ -509,55 +464,24 @@ class DatabaseBackend:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS extensions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            number VARCHAR(20) UNIQUE NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            email VARCHAR(255),
-            password_hash VARCHAR(255) NOT NULL,
-            password_salt VARCHAR(255),
-            allow_external BOOLEAN DEFAULT 1,
-            voicemail_pin_hash VARCHAR(255),
-            voicemail_pin_salt VARCHAR(255),
-            is_admin BOOLEAN DEFAULT 0,
-            ad_synced BOOLEAN DEFAULT 0,
-            ad_username VARCHAR(100),
-            password_changed_at TIMESTAMP,
-            failed_login_attempts INTEGER DEFAULT 0,
-            account_locked_until TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Security audit log table
-        security_audit_table = """
+        security_audit_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS security_audit (
-            id SERIAL PRIMARY KEY,
+            id {SERIAL},
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             event_type VARCHAR(50) NOT NULL,
             identifier VARCHAR(100) NOT NULL,
             ip_address VARCHAR(45),
-            success BOOLEAN DEFAULT TRUE,
+            success BOOLEAN DEFAULT {BOOLEAN_TRUE},
             details TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS security_audit (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            event_type VARCHAR(50) NOT NULL,
-            identifier VARCHAR(100) NOT NULL,
-            ip_address VARCHAR(45),
-            success BOOLEAN DEFAULT 1,
-            details TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Emergency contacts table
-        emergency_contacts_table = """
+        emergency_contacts_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS emergency_contacts (
             id VARCHAR(100) PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
@@ -566,27 +490,14 @@ class DatabaseBackend:
             email VARCHAR(255),
             priority INTEGER DEFAULT 1,
             notification_methods TEXT,
-            active BOOLEAN DEFAULT TRUE,
+            active BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS emergency_contacts (
-            id VARCHAR(100) PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            extension VARCHAR(20),
-            phone VARCHAR(50),
-            email VARCHAR(255),
-            priority INTEGER DEFAULT 1,
-            notification_methods TEXT,
-            active BOOLEAN DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Emergency notifications table
-        emergency_notifications_table = """
+        emergency_notifications_table = self._build_table_sql("""
         CREATE TABLE IF NOT EXISTS emergency_notifications (
             id VARCHAR(100) PRIMARY KEY,
             timestamp VARCHAR(50) NOT NULL,
@@ -596,17 +507,7 @@ class DatabaseBackend:
             methods_used TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.db_type == 'postgresql' else """
-        CREATE TABLE IF NOT EXISTS emergency_notifications (
-            id VARCHAR(100) PRIMARY KEY,
-            timestamp VARCHAR(50) NOT NULL,
-            trigger_type VARCHAR(50) NOT NULL,
-            details TEXT,
-            contacts_notified TEXT,
-            methods_used TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        """)
 
         # Execute table creation
         success = True
