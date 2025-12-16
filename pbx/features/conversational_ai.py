@@ -46,10 +46,12 @@ class ConversationalAI:
     - Microsoft Azure Bot Service
     """
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, db_backend=None):
         """Initialize conversational AI system"""
         self.logger = get_logger()
         self.config = config or {}
+        self.db_backend = db_backend
+        self.db = None
         
         # Configuration
         ai_config = self.config.get('features', {}).get('conversational_ai', {})
@@ -62,10 +64,23 @@ class ConversationalAI:
         # Active conversations
         self.active_conversations: Dict[str, ConversationContext] = {}
         
+        # Active conversation ID mapping (call_id -> conversation_id)
+        self.conversation_ids: Dict[str, int] = {}
+        
         # Statistics
         self.total_conversations = 0
         self.total_messages_processed = 0
         self.intents_detected = {}
+        
+        # Initialize database if available
+        if self.db_backend and self.db_backend.enabled:
+            try:
+                from pbx.features.conversational_ai_db import ConversationalAIDatabase
+                self.db = ConversationalAIDatabase(self.db_backend)
+                self.db.create_tables()
+                self.logger.info("Conversational AI database layer initialized")
+            except Exception as e:
+                self.logger.warning(f"Could not initialize database layer: {e}")
         
         self.logger.info("Conversational AI assistant initialized")
         self.logger.info(f"  Provider: {self.provider}")
@@ -86,6 +101,12 @@ class ConversationalAI:
         context = ConversationContext(call_id, caller_id)
         self.active_conversations[call_id] = context
         self.total_conversations += 1
+        
+        # Save to database
+        if self.db:
+            conversation_id = self.db.save_conversation(call_id, caller_id, context.started_at)
+            if conversation_id:
+                self.conversation_ids[call_id] = conversation_id
         
         self.logger.info(f"Started conversation for call {call_id} from {caller_id}")
         return context
@@ -120,6 +141,18 @@ class ConversationalAI:
         context.add_message('assistant', response['response'])
         context.intent = response['intent']
         context.entities = response['entities']
+        
+        # Save to database
+        if self.db and call_id in self.conversation_ids:
+            conversation_id = self.conversation_ids[call_id]
+            # Save messages
+            self.db.save_message(conversation_id, 'user', user_input, datetime.now())
+            self.db.save_message(conversation_id, 'assistant', response['response'], datetime.now())
+            # Save intent
+            if response['intent'] and response['intent'] != 'general_inquiry':
+                confidence = response.get('confidence', 0.9)
+                self.db.save_intent(conversation_id, response['intent'], confidence, 
+                                   response['entities'], datetime.now())
         
         # Track intents
         intent = response['intent']
@@ -191,7 +224,8 @@ class ConversationalAI:
         return {
             'response': response,
             'intent': intent,
-            'entities': entities
+            'entities': entities,
+            'confidence': 0.85  # Placeholder confidence score
         }
     
     def detect_intent(self, text: str) -> str:
@@ -337,16 +371,23 @@ class ConversationalAI:
             context = self.active_conversations[call_id]
             duration = (datetime.now() - context.started_at).total_seconds()
             
+            # Save to database
+            if self.db:
+                self.db.end_conversation(call_id, context.intent or 'unknown', 
+                                        len(context.messages))
+            
             self.logger.info(f"Ended conversation for call {call_id}")
             self.logger.info(f"  Duration: {duration:.1f}s")
             self.logger.info(f"  Messages: {len(context.messages)}")
             self.logger.info(f"  Final intent: {context.intent}")
             
             del self.active_conversations[call_id]
+            if call_id in self.conversation_ids:
+                del self.conversation_ids[call_id]
     
     def get_statistics(self) -> Dict:
         """Get AI assistant statistics"""
-        return {
+        stats = {
             'total_conversations': self.total_conversations,
             'active_conversations': len(self.active_conversations),
             'total_messages_processed': self.total_messages_processed,
@@ -355,6 +396,28 @@ class ConversationalAI:
             'model': self.model,
             'enabled': self.enabled
         }
+        
+        # Add database statistics if available
+        if self.db:
+            db_stats = self.db.get_intent_statistics()
+            if db_stats:
+                stats['intent_statistics_db'] = db_stats
+        
+        return stats
+    
+    def get_conversation_history(self, limit: int = 100) -> List[Dict]:
+        """
+        Get conversation history from database
+        
+        Args:
+            limit: Maximum number of conversations to return
+            
+        Returns:
+            List of conversation dictionaries
+        """
+        if self.db:
+            return self.db.get_conversation_history(limit)
+        return []
     
     def configure_provider(self, provider: str, api_key: str = None, **kwargs):
         """
@@ -432,9 +495,9 @@ class ConversationalAI:
 _conversational_ai = None
 
 
-def get_conversational_ai(config=None) -> ConversationalAI:
+def get_conversational_ai(config=None, db_backend=None) -> ConversationalAI:
     """Get or create conversational AI instance"""
     global _conversational_ai
     if _conversational_ai is None:
-        _conversational_ai = ConversationalAI(config)
+        _conversational_ai = ConversationalAI(config, db_backend)
     return _conversational_ai

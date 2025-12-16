@@ -1024,6 +1024,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_ai_statistics()
             elif path == '/api/framework/conversational-ai/conversations':
                 self._handle_get_ai_conversations()
+            elif path == '/api/framework/conversational-ai/history':
+                self._handle_get_ai_conversation_history()
             
             # Predictive Dialing API endpoints
             elif path == '/api/framework/predictive-dialing/campaigns':
@@ -1048,6 +1050,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_quality_predictions()
             elif path == '/api/framework/call-quality-prediction/statistics':
                 self._handle_get_quality_statistics()
+            elif path == '/api/framework/call-quality-prediction/alerts':
+                self._handle_get_quality_alerts()
             elif path.startswith('/api/framework/call-quality-prediction/prediction/'):
                 call_id = path.split('/')[-1]
                 self._handle_get_call_prediction(call_id)
@@ -8387,7 +8391,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/conversational-ai/config - Get AI configuration"""
         try:
             from pbx.features.conversational_ai import get_conversational_ai
-            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             config = {
                 'enabled': ai.enabled,
                 'provider': ai.provider,
@@ -8404,7 +8408,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/conversational-ai/statistics - Get AI statistics"""
         try:
             from pbx.features.conversational_ai import get_conversational_ai
-            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            db_backend = getattr(self.pbx_core, 'db', None) if self.pbx_core else None
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, db_backend)
             stats = ai.get_statistics()
             self._send_json(stats)
         except Exception as e:
@@ -8415,7 +8420,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/conversational-ai/conversations - Get active conversations"""
         try:
             from pbx.features.conversational_ai import get_conversational_ai
-            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             conversations = [
                 {
                     'call_id': conv.call_id,
@@ -8431,6 +8436,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self.logger.error(f"Error getting conversations: {e}")
             self._send_json({'error': str(e)}, 500)
 
+    def _handle_get_ai_conversation_history(self):
+        """GET /api/framework/conversational-ai/history - Get conversation history from database"""
+        try:
+            from pbx.features.conversational_ai import get_conversational_ai
+            db_backend = getattr(self.pbx_core, 'db', None) if self.pbx_core else None
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, db_backend)
+            
+            # Get limit from query parameters
+            query_params = parse_qs(urlparse(self.path).query)
+            limit = int(query_params.get('limit', [100])[0])
+            
+            history = ai.get_conversation_history(limit)
+            self._send_json({'history': history})
+        except Exception as e:
+            self.logger.error(f"Error getting conversation history: {e}")
+            self._send_json({'error': str(e)}, 500)
+
     def _handle_start_ai_conversation(self):
         """POST /api/framework/conversational-ai/conversation - Start conversation"""
         try:
@@ -8443,7 +8465,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.conversational_ai import get_conversational_ai
-            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             context = ai.start_conversation(call_id, caller_id)
             
             self._send_json({
@@ -8467,7 +8489,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.conversational_ai import get_conversational_ai
-            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             result = ai.process_user_input(call_id, user_input)
             
             self._send_json(result)
@@ -8487,7 +8509,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.conversational_ai import get_conversational_ai
-            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             ai.configure_provider(provider, api_key, **body.get('options', {}))
             
             self._send_json({'success': True, 'provider': provider})
@@ -8500,7 +8522,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/predictive-dialing/campaigns - Get all campaigns"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             campaigns = [
                 {
                     'campaign_id': c.campaign_id,
@@ -8522,7 +8544,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/predictive-dialing/statistics - Get dialing statistics"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             stats = dialer.get_statistics()
             self._send_json(stats)
         except Exception as e:
@@ -8533,7 +8555,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/predictive-dialing/campaign/{id} - Get campaign details"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             stats = dialer.get_campaign_statistics(campaign_id)
             if stats:
                 self._send_json(stats)
@@ -8556,7 +8578,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.predictive_dialing import get_predictive_dialer, DialingMode
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             
             # Convert mode string to enum
             mode_enum = DialingMode.PROGRESSIVE
@@ -8588,7 +8610,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """POST /api/framework/predictive-dialing/campaign/{id}/start - Start campaign"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             dialer.start_campaign(campaign_id)
             self._send_json({'success': True, 'status': 'running'})
         except Exception as e:
@@ -8599,7 +8621,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """POST /api/framework/predictive-dialing/campaign/{id}/pause - Pause campaign"""
         try:
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             dialer.pause_campaign(campaign_id)
             self._send_json({'success': True, 'status': 'paused'})
         except Exception as e:
@@ -8618,7 +8640,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.predictive_dialing import get_predictive_dialer
-            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             count = dialer.add_contacts(campaign_id, contacts)
             
             self._send_json({'success': True, 'contacts_added': count})
@@ -8631,7 +8653,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/voice-biometrics/profiles - Get all voice profiles"""
         try:
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             profiles = [
                 {
                     'user_id': p.user_id,
@@ -8653,7 +8675,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/voice-biometrics/statistics - Get biometrics statistics"""
         try:
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             stats = vb.get_statistics()
             self._send_json(stats)
         except Exception as e:
@@ -8664,7 +8686,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/voice-biometrics/profile/{user_id} - Get voice profile"""
         try:
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             profile = vb.get_profile(user_id)
             if profile:
                 self._send_json({
@@ -8694,7 +8716,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             profile = vb.create_profile(user_id, extension)
             
             self._send_json({
@@ -8718,7 +8740,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             result = vb.start_enrollment(user_id)
             
             self._send_json(result)
@@ -8750,7 +8772,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 audio_data = b''
             
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             result = vb.verify_speaker(user_id, audio_data)
             
             self._send_json(result)
@@ -8762,7 +8784,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """DELETE /api/framework/voice-biometrics/profile/{user_id} - Delete profile"""
         try:
             from pbx.features.voice_biometrics import get_voice_biometrics
-            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             success = vb.delete_profile(user_id)
             if success:
                 self._send_json({'success': True})
@@ -8777,7 +8799,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/call-quality-prediction/predictions - Get all predictions"""
         try:
             from pbx.features.call_quality_prediction import get_quality_prediction
-            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             predictions = {
                 call_id: pred for call_id, pred in qp.predictions.items()
             }
@@ -8790,18 +8812,34 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """GET /api/framework/call-quality-prediction/statistics - Get prediction statistics"""
         try:
             from pbx.features.call_quality_prediction import get_quality_prediction
-            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             stats = qp.get_statistics()
             self._send_json(stats)
         except Exception as e:
             self.logger.error(f"Error getting quality statistics: {e}")
             self._send_json({'error': str(e)}, 500)
 
+    def _handle_get_quality_alerts(self):
+        """GET /api/framework/call-quality-prediction/alerts - Get active quality alerts from database"""
+        try:
+            from pbx.features.call_quality_prediction import get_quality_prediction
+            db_backend = getattr(self.pbx_core, 'db', None) if self.pbx_core else None
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None, db_backend)
+            
+            if qp.db:
+                alerts = qp.db.get_active_alerts()
+                self._send_json({'alerts': alerts})
+            else:
+                self._send_json({'alerts': [], 'message': 'Database not configured'})
+        except Exception as e:
+            self.logger.error(f"Error getting quality alerts: {e}")
+            self._send_json({'error': str(e)}, 500)
+
     def _handle_get_call_prediction(self, call_id: str):
         """GET /api/framework/call-quality-prediction/prediction/{call_id} - Get call prediction"""
         try:
             from pbx.features.call_quality_prediction import get_quality_prediction
-            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             prediction = qp.get_prediction(call_id)
             if prediction:
                 self._send_json(prediction)
@@ -8822,7 +8860,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.call_quality_prediction import get_quality_prediction, NetworkMetrics
-            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             
             # Create metrics object from request
             metrics = NetworkMetrics()
@@ -8849,7 +8887,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             from pbx.features.call_quality_prediction import get_quality_prediction
-            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None, getattr(self.pbx_core, 'db', None) if self.pbx_core else None)
             qp.train_model(historical_data)
             
             self._send_json({'success': True, 'samples_trained': len(historical_data)})

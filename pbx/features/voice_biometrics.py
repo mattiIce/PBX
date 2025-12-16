@@ -54,10 +54,12 @@ class VoiceBiometrics:
     - Microsoft Azure Speaker Recognition
     """
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, db_backend=None):
         """Initialize voice biometrics system"""
         self.logger = get_logger()
         self.config = config or {}
+        self.db_backend = db_backend
+        self.db = None
         
         # Configuration
         biometric_config = self.config.get('features', {}).get('voice_biometrics', {})
@@ -76,6 +78,16 @@ class VoiceBiometrics:
         self.successful_verifications = 0
         self.failed_verifications = 0
         self.fraud_attempts_detected = 0
+        
+        # Initialize database if available
+        if self.db_backend and self.db_backend.enabled:
+            try:
+                from pbx.features.voice_biometrics_db import VoiceBiometricsDatabase
+                self.db = VoiceBiometricsDatabase(self.db_backend)
+                self.db.create_tables()
+                self.logger.info("Voice biometrics database layer initialized")
+            except Exception as e:
+                self.logger.warning(f"Could not initialize database layer: {e}")
         
         self.logger.info("Voice biometrics system initialized")
         self.logger.info(f"  Provider: {self.provider}")
@@ -101,6 +113,10 @@ class VoiceBiometrics:
         profile = VoiceProfile(user_id, extension)
         profile.required_samples = self.enrollment_required_samples
         self.profiles[user_id] = profile
+        
+        # Save to database
+        if self.db:
+            self.db.save_profile(user_id, extension, profile.status.value)
         
         self.logger.info(f"Created voice profile for user {user_id}")
         return profile
@@ -163,6 +179,12 @@ class VoiceBiometrics:
             self.total_enrollments += 1
             self.logger.info(f"Enrollment completed for user {user_id}")
         
+        # Update database
+        if self.db:
+            self.db.update_enrollment_progress(user_id, profile.enrollment_samples)
+            if enrollment_complete:
+                self.db.save_profile(user_id, profile.extension, profile.status.value)
+        
         return {
             'success': True,
             'samples_collected': profile.enrollment_samples,
@@ -215,6 +237,11 @@ class VoiceBiometrics:
             self.logger.warning(f"Voice verification failed for user {user_id} "
                               f"(confidence: {confidence:.2f})")
         
+        # Save to database
+        if self.db:
+            call_id = f"call-{datetime.now().timestamp()}"
+            self.db.save_verification(user_id, call_id, verified, confidence)
+        
         return {
             'verified': verified,
             'confidence': confidence,
@@ -254,6 +281,12 @@ class VoiceBiometrics:
             self.fraud_attempts_detected += 1
             self.logger.warning(f"Fraud detected! Risk score: {risk_score:.2f}")
             self.logger.warning(f"  Indicators: {', '.join(fraud_indicators)}")
+        
+        # Save to database
+        if self.db:
+            call_id = caller_info.get('call_id', f"call-{datetime.now().timestamp()}")
+            caller_id = caller_info.get('caller_id', 'unknown')
+            self.db.save_fraud_detection(call_id, caller_id, fraud_detected, risk_score, fraud_indicators)
         
         return {
             'fraud_detected': fraud_detected,
@@ -318,7 +351,7 @@ class VoiceBiometrics:
     
     def get_statistics(self) -> Dict:
         """Get voice biometrics statistics"""
-        return {
+        stats = {
             'total_profiles': len(self.profiles),
             'enrolled_profiles': len([p for p in self.profiles.values() 
                                      if p.status == BiometricStatus.ENROLLED]),
@@ -331,15 +364,23 @@ class VoiceBiometrics:
             'provider': self.provider,
             'enabled': self.enabled
         }
+        
+        # Add database statistics if available
+        if self.db:
+            db_stats = self.db.get_statistics()
+            if db_stats:
+                stats['database_stats'] = db_stats
+        
+        return stats
 
 
 # Global instance
 _voice_biometrics = None
 
 
-def get_voice_biometrics(config=None) -> VoiceBiometrics:
+def get_voice_biometrics(config=None, db_backend=None) -> VoiceBiometrics:
     """Get or create voice biometrics instance"""
     global _voice_biometrics
     if _voice_biometrics is None:
-        _voice_biometrics = VoiceBiometrics(config)
+        _voice_biometrics = VoiceBiometrics(config, db_backend)
     return _voice_biometrics

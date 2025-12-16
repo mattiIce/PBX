@@ -76,10 +76,12 @@ class PredictiveDialer:
     - Compliance with call regulations
     """
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, db_backend=None):
         """Initialize predictive dialer"""
         self.logger = get_logger()
         self.config = config or {}
+        self.db_backend = db_backend
+        self.db = None
         
         # Configuration
         dialer_config = self.config.get('features', {}).get('predictive_dialing', {})
@@ -96,6 +98,16 @@ class PredictiveDialer:
         self.total_calls_made = 0
         self.total_connects = 0
         self.total_abandons = 0
+        
+        # Initialize database if available
+        if self.db_backend and self.db_backend.enabled:
+            try:
+                from pbx.features.predictive_dialing_db import PredictiveDialingDatabase
+                self.db = PredictiveDialingDatabase(self.db_backend)
+                self.db.create_tables()
+                self.logger.info("Predictive dialing database layer initialized")
+            except Exception as e:
+                self.logger.warning(f"Could not initialize database layer: {e}")
         
         self.logger.info("Predictive dialer initialized")
         self.logger.info(f"  Max abandon rate: {self.max_abandon_rate*100}%")
@@ -119,6 +131,17 @@ class PredictiveDialer:
         campaign = Campaign(campaign_id, name, mode)
         self.campaigns[campaign_id] = campaign
         self.total_campaigns += 1
+        
+        # Save to database
+        if self.db:
+            self.db.save_campaign({
+                'campaign_id': campaign_id,
+                'name': name,
+                'dialing_mode': dialing_mode,
+                'status': campaign.status.value,
+                'max_attempts': campaign.max_attempts,
+                'retry_interval': campaign.retry_interval
+            })
         
         self.logger.info(f"Created campaign '{name}' ({campaign_id})")
         self.logger.info(f"  Dialing mode: {dialing_mode}")
@@ -465,9 +488,9 @@ class PredictiveDialer:
 _predictive_dialer = None
 
 
-def get_predictive_dialer(config=None) -> PredictiveDialer:
+def get_predictive_dialer(config=None, db_backend=None) -> PredictiveDialer:
     """Get or create predictive dialer instance"""
     global _predictive_dialer
     if _predictive_dialer is None:
-        _predictive_dialer = PredictiveDialer(config)
+        _predictive_dialer = PredictiveDialer(config, db_backend)
     return _predictive_dialer
