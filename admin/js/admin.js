@@ -3,23 +3,6 @@ const API_BASE = window.location.origin;
 
 // Constants
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
-const FRAMEWORK_FEATURES_ERROR_MESSAGE = `
-    <div class="alert-box warning">
-        <h2>⚠️ Framework Features Module Not Loaded</h2>
-        <p>The framework features module failed to load. This could be due to:</p>
-        <ul>
-            <li>Network error preventing the script from loading</li>
-            <li>JavaScript error in the framework_features.js file</li>
-            <li>Browser blocking the script</li>
-        </ul>
-        <p><strong>Troubleshooting:</strong></p>
-        <ul>
-            <li>Check the browser console for errors (F12)</li>
-            <li>Verify that <code>admin/js/framework_features.js</code> is accessible</li>
-            <li>Try refreshing the page</li>
-        </ul>
-    </div>
-`;
 
 // State
 let currentExtensions = [];
@@ -181,29 +164,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-// Helper function to load framework feature tabs with error handling
-function loadFrameworkFeatureTab(tabName, loaderFunction) {
-    const element = document.getElementById(tabName);
-    if (!element) {
-        const error = new Error(`Element with id '${tabName}' not found`);
-        displayError(error, `Tab Loading: ${tabName}`);
-        return;
-    }
-    
-    if (window.frameworkFeatures && window.frameworkFeatures[loaderFunction]) {
-        try {
-            element.innerHTML = window.frameworkFeatures[loaderFunction]();
-        } catch (error) {
-            displayError(error, `Framework Features: ${loaderFunction}()`);
-            element.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-        }
-    } else {
-        const error = new Error(`Framework Features module not loaded or ${loaderFunction} function not found`);
-        displayError(error, 'Framework Features Module');
-        element.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
-    }
-}
 
 // Helper function to get authentication headers
 function getAuthHeaders() {
@@ -528,71 +488,13 @@ function showTab(tabName) {
         case 'config':
             loadConfig();
             break;
-        // Framework feature tabs
-        case 'framework-overview':
-            loadFrameworkFeatureTab(tabName, 'loadFrameworkOverview');
-            break;
-        case 'click-to-dial':
-            loadFrameworkFeatureTab(tabName, 'loadClickToDialTab');
-            break;
-        case 'video-conferencing':
-            loadFrameworkFeatureTab(tabName, 'loadVideoConferencingTab');
-            break;
-        case 'conversational-ai':
-            loadFrameworkFeatureTab(tabName, 'loadConversationalAITab');
-            break;
-        case 'predictive-dialing':
-            loadFrameworkFeatureTab(tabName, 'loadPredictiveDialingTab');
-            break;
-        case 'voice-biometrics':
-            loadFrameworkFeatureTab(tabName, 'loadVoiceBiometricsTab');
-            break;
-        case 'call-quality-prediction':
-            loadFrameworkFeatureTab(tabName, 'loadCallQualityPredictionTab');
-            break;
-        case 'video-codec':
-            loadFrameworkFeatureTab(tabName, 'loadVideoCodecTab');
-            break;
-        case 'bi-integration':
-            loadFrameworkFeatureTab(tabName, 'loadBIIntegrationTab');
-            break;
-        case 'call-tagging':
-            loadFrameworkFeatureTab(tabName, 'loadCallTaggingTab');
-            break;
-        case 'mobile-apps':
-            loadFrameworkFeatureTab(tabName, 'loadMobileAppsTab');
-            break;
-        case 'mobile-number-portability':
-            loadFrameworkFeatureTab(tabName, 'loadMobileNumberPortabilityTab');
-            break;
-        case 'recording-analytics':
-            loadFrameworkFeatureTab(tabName, 'loadRecordingAnalyticsTab');
-            break;
-        case 'call-blending':
-            loadFrameworkFeatureTab(tabName, 'loadCallBlendingTab');
-            break;
-        case 'voicemail-drop':
-            loadFrameworkFeatureTab(tabName, 'loadVoicemailDropTab');
-            break;
-        case 'geographic-redundancy':
-            loadFrameworkFeatureTab(tabName, 'loadGeographicRedundancyTab');
-            break;
-        case 'dns-srv-failover':
-            loadFrameworkFeatureTab(tabName, 'loadDNSSRVFailoverTab');
-            break;
-        case 'session-border-controller':
-            loadFrameworkFeatureTab(tabName, 'loadSessionBorderControllerTab');
-            break;
-        case 'data-residency':
-            loadFrameworkFeatureTab(tabName, 'loadDataResidencyTab');
-            break;
-        case 'team-messaging':
-            loadFrameworkFeatureTab(tabName, 'loadTeamMessagingTab');
+        case 'features-status':
+            loadFeaturesStatus();
             break;
     }
 }
 
-// Make switchTab available globally for framework features
+// Make switchTab available globally
 window.switchTab = showTab;
 
 // Connection Check
@@ -1000,6 +902,129 @@ async function loadConfig() {
     } catch (error) {
         console.error('Error loading configuration:', error);
         // Use defaults - this is expected when endpoint hasn't been implemented yet
+    }
+}
+
+// Load Features Status
+async function loadFeaturesStatus() {
+    try {
+        const response = await fetch(`${API_BASE}/api/config/full`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load configuration');
+        }
+        
+        const config = await response.json();
+        
+        // Define feature mappings
+        const coreFeatures = [
+            { key: 'call_recording', name: 'Call Recording', description: 'Record calls for quality and compliance' },
+            { key: 'call_transfer', name: 'Call Transfer', description: 'Transfer calls between extensions' },
+            { key: 'call_hold', name: 'Call Hold', description: 'Put calls on hold' },
+            { key: 'conference', name: 'Conference Calling', description: 'Multi-party conference calls' },
+            { key: 'voicemail', name: 'Voicemail', description: 'Voicemail system with email notifications' },
+            { key: 'call_parking', name: 'Call Parking', description: 'Park and retrieve calls' },
+            { key: 'call_queues', name: 'Call Queues', description: 'Queue management for incoming calls' },
+            { key: 'presence', name: 'Presence', description: 'Real-time extension status' },
+            { key: 'music_on_hold', name: 'Music on Hold', description: 'Play music while calls are on hold' },
+            { key: 'auto_attendant', name: 'Auto Attendant', description: 'Automated call routing menu' }
+        ];
+        
+        const advancedFeatures = [
+            { key: 'webrtc.enabled', name: 'WebRTC Phone', description: 'Browser-based phone client' },
+            { key: 'webhooks.enabled', name: 'Webhooks', description: 'HTTP callbacks for events' },
+            { key: 'crm_integration.enabled', name: 'CRM Integration', description: 'Integration with CRM systems' },
+            { key: 'hot_desking.enabled', name: 'Hot Desking', description: 'Flexible workspace login' },
+            { key: 'voicemail_transcription.enabled', name: 'Voicemail Transcription', description: 'Convert voicemail to text' }
+        ];
+        
+        const integrationFeatures = [
+            { key: 'ad_integration', name: 'Active Directory', description: 'User sync with AD' },
+            { key: 'jitsi_integration', name: 'Jitsi Video', description: 'Video conferencing integration' },
+            { key: 'matrix_integration', name: 'Matrix Chat', description: 'Team messaging integration' },
+            { key: 'espocrm_integration', name: 'EspoCRM', description: 'Open-source CRM integration' }
+        ];
+        
+        // Helper function to get nested config value
+        const getConfigValue = (obj, path) => {
+            const keys = path.split('.');
+            let value = obj;
+            for (const key of keys) {
+                value = value?.[key];
+                if (value === undefined) return false;
+            }
+            return Boolean(value);
+        };
+        
+        // Helper function to render feature row
+        const renderFeatureRow = (feature, config) => {
+            const enabled = getConfigValue(config.features || {}, feature.key);
+            const statusBadge = enabled ? 
+                '<span class="status-badge status-online">✅ Enabled</span>' : 
+                '<span class="status-badge status-offline">❌ Disabled</span>';
+            
+            return `
+                <tr>
+                    <td><strong>${feature.name}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${feature.description}</td>
+                </tr>
+            `;
+        };
+        
+        // Update tables
+        const coreTableBody = document.getElementById('core-features-table');
+        if (coreTableBody) {
+            coreTableBody.innerHTML = coreFeatures.map(f => renderFeatureRow(f, config)).join('');
+        }
+        
+        const advancedTableBody = document.getElementById('advanced-features-table');
+        if (advancedTableBody) {
+            advancedTableBody.innerHTML = advancedFeatures.map(f => renderFeatureRow(f, config)).join('');
+        }
+        
+        // For integrations, check different config sections
+        const integrationTableBody = document.getElementById('integration-features-table');
+        if (integrationTableBody) {
+            const integrationRows = integrationFeatures.map(feature => {
+                let enabled = false;
+                if (feature.key === 'ad_integration') {
+                    enabled = config.active_directory?.enabled || false;
+                } else if (feature.key === 'jitsi_integration') {
+                    enabled = config.integrations?.jitsi?.enabled || false;
+                } else if (feature.key === 'matrix_integration') {
+                    enabled = config.integrations?.matrix?.enabled || false;
+                } else if (feature.key === 'espocrm_integration') {
+                    enabled = config.integrations?.espocrm?.enabled || false;
+                }
+                
+                const statusBadge = enabled ? 
+                    '<span class="status-badge status-online">✅ Enabled</span>' : 
+                    '<span class="status-badge status-offline">❌ Disabled</span>';
+                
+                return `
+                    <tr>
+                        <td><strong>${feature.name}</strong></td>
+                        <td>${statusBadge}</td>
+                        <td>${feature.description}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            integrationTableBody.innerHTML = integrationRows;
+        }
+        
+    } catch (error) {
+        console.error('Error loading features status:', error);
+        // Show error in tables
+        ['core-features-table', 'advanced-features-table', 'integration-features-table'].forEach(tableId => {
+            const table = document.getElementById(tableId);
+            if (table) {
+                table.innerHTML = '<tr><td colspan="3" class="loading">Error loading features. Check Configuration tab.</td></tr>';
+            }
+        });
     }
 }
 
