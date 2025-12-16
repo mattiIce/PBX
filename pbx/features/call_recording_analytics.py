@@ -191,13 +191,13 @@ class RecordingAnalytics:
                             total_confidence += word['conf']
                             confidence_count += 1
             
+            # Get duration from wave file before closing
+            duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
+            
             wf.close()
             
             # Calculate average confidence
             avg_confidence = total_confidence / confidence_count if confidence_count > 0 else 0.0
-            
-            # Get duration from wave file
-            duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
             
             return {
                 'transcript': ' '.join(full_transcript),

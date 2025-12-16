@@ -467,7 +467,8 @@ class VoiceBiometrics:
             sample_count = len(audio_data) // 2
             samples = []
             
-            for i in range(0, len(audio_data) - 1, 2):
+            # Process in pairs of bytes (16-bit samples)
+            for i in range(0, len(audio_data) - (len(audio_data) % 2), 2):
                 # Unpack 16-bit signed integer (little-endian)
                 sample = struct.unpack('<h', audio_data[i:i+2])[0]
                 samples.append(sample)
