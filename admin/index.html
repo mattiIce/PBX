@@ -226,90 +226,14 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-section-title">Framework Features</div>
-                    <button class="tab-button" data-tab="framework-overview">
-                        <span class="tab-icon">🎯</span>
-                        <span class="tab-text">Overview</span>
-                    </button>
-                    <button class="tab-button" data-tab="conversational-ai">
-                        <span class="tab-icon">🤖</span>
-                        <span class="tab-text">Conversational AI</span>
-                    </button>
-                    <button class="tab-button" data-tab="predictive-dialing">
-                        <span class="tab-icon">📞</span>
-                        <span class="tab-text">Predictive Dialing</span>
-                    </button>
-                    <button class="tab-button" data-tab="voice-biometrics">
-                        <span class="tab-icon">🔊</span>
-                        <span class="tab-text">Voice Biometrics</span>
-                    </button>
-                    <button class="tab-button" data-tab="call-quality-prediction">
-                        <span class="tab-icon">📊</span>
-                        <span class="tab-text">Quality Prediction</span>
-                    </button>
-                    <button class="tab-button" data-tab="video-codec">
-                        <span class="tab-icon">🎬</span>
-                        <span class="tab-text">Video Codecs</span>
-                    </button>
-                    <button class="tab-button" data-tab="bi-integration">
-                        <span class="tab-icon">📈</span>
-                        <span class="tab-text">BI Integration</span>
-                    </button>
-                    <button class="tab-button" data-tab="call-tagging">
-                        <span class="tab-icon">🏷️</span>
-                        <span class="tab-text">Call Tagging</span>
-                    </button>
-                    <button class="tab-button" data-tab="mobile-apps">
-                        <span class="tab-icon">📱</span>
-                        <span class="tab-text">Mobile Apps</span>
-                    </button>
-                    <button class="tab-button" data-tab="mobile-number-portability">
-                        <span class="tab-icon">🔄</span>
-                        <span class="tab-text">Number Portability</span>
-                    </button>
-                    <button class="tab-button" data-tab="recording-analytics">
-                        <span class="tab-icon">🎙️</span>
-                        <span class="tab-text">Recording Analytics</span>
-                    </button>
-                    <button class="tab-button" data-tab="call-blending">
-                        <span class="tab-icon">🔀</span>
-                        <span class="tab-text">Call Blending</span>
-                    </button>
-                    <button class="tab-button" data-tab="voicemail-drop">
-                        <span class="tab-icon">📭</span>
-                        <span class="tab-text">Voicemail Drop</span>
-                    </button>
-                    <button class="tab-button" data-tab="geographic-redundancy">
-                        <span class="tab-icon">🌍</span>
-                        <span class="tab-text">Geo Redundancy</span>
-                    </button>
-                    <button class="tab-button" data-tab="dns-srv-failover">
-                        <span class="tab-icon">🌐</span>
-                        <span class="tab-text">DNS SRV Failover</span>
-                    </button>
-                    <button class="tab-button" data-tab="session-border-controller">
-                        <span class="tab-icon">🛡️</span>
-                        <span class="tab-text">SBC</span>
-                    </button>
-                    <button class="tab-button" data-tab="data-residency">
-                        <span class="tab-icon">🗺️</span>
-                        <span class="tab-text">Data Residency</span>
-                    </button>
-                    <button class="tab-button" data-tab="video-conferencing">
-                        <span class="tab-icon">📹</span>
-                        <span class="tab-text">Video Conferencing</span>
-                    </button>
-                    <button class="tab-button" data-tab="team-messaging">
-                        <span class="tab-icon">💬</span>
-                        <span class="tab-text">Team Messaging</span>
-                    </button>
-                </div>
-
-                <div class="sidebar-section">
                     <div class="sidebar-section-title">System</div>
                     <button class="tab-button" data-tab="config">
                         <span class="tab-icon">🔧</span>
                         <span class="tab-text">Configuration</span>
+                    </button>
+                    <button class="tab-button" data-tab="features-status">
+                        <span class="tab-icon">⚙️</span>
+                        <span class="tab-text">Features Status</span>
                     </button>
                 </div>
             </nav>
@@ -3138,21 +3062,66 @@ G.726-32</textarea>
             </div>
         </div>
 
-        <!-- Framework Features Tabs -->
-        <div id="framework-overview" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
+        <!-- Features Status Tab -->
+        <div id="features-status" class="tab-content">
+            <h2>⚙️ System Features Status</h2>
+            
+            <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3; margin-bottom: 20px;">
+                <p><strong>💡 Tip:</strong> This page shows all available system features and their current status. Enable or disable features in the Configuration tab.</p>
+            </div>
 
-        <div id="click-to-dial" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
+            <div class="config-section">
+                <h3>Core Features</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="core-features-table">
+                        <tr><td colspan="3" class="loading">Loading features...</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <div id="video-conferencing" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
+            <div class="config-section">
+                <h3>Advanced Features</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="advanced-features-table">
+                        <tr><td colspan="3" class="loading">Loading features...</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <div id="team-messaging" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
+            <div class="config-section">
+                <h3>Integration Features</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="integration-features-table">
+                        <tr><td colspan="3" class="loading">Loading features...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="loadFeaturesStatus()">🔄 Refresh Status</button>
+                <button class="btn btn-secondary" onclick="showTab('config')">⚙️ Configure Features</button>
+            </div>
         </div>
 
         <div id="nomadic-e911" class="tab-content">
@@ -4103,70 +4072,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
         </div>
 
-        <!-- New Framework Feature Tabs -->
-        <div id="conversational-ai" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
 
-        <div id="predictive-dialing" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="voice-biometrics" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="call-quality-prediction" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="video-codec" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="bi-integration" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="call-tagging" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="mobile-apps" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="mobile-number-portability" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="recording-analytics" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="call-blending" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="voicemail-drop" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="geographic-redundancy" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="dns-srv-failover" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="session-border-controller" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
-
-        <div id="data-residency" class="tab-content">
-            <!-- Content loaded dynamically by framework_features.js -->
-        </div>
 
             </div><!-- end main-content -->
         </div><!-- end layout-wrapper -->
@@ -4811,7 +4717,6 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
     <script src="js/auto_attendant.js"></script>
     <script src="js/voicemail_enhanced.js"></script>
     <script src="js/webrtc_phone.js"></script>
-    <script src="js/framework_features.js"></script>
     <script src="js/opensource_integrations.js"></script>
 </body>
 </html>
