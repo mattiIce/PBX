@@ -75,3 +75,6 @@ Thumbs.db
 *.crt
 *.csr
 certs/
+
+# Test files
+admin/test_framework.html
