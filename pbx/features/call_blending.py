@@ -257,6 +257,44 @@ class CallBlending:
         if agent_id in self.agents:
             self.agents[agent_id].available = available
     
+    def register_agent(self, agent_id: str, extension: str, mode: str = 'blended') -> Dict:
+        """
+        Register a new agent for call blending
+        
+        Args:
+            agent_id: Unique agent identifier
+            extension: Agent's extension number
+            mode: Initial operating mode (default: blended)
+            
+        Returns:
+            Dict: Registration result
+        """
+        if agent_id in self.agents:
+            return {'success': False, 'error': 'Agent already registered'}
+        
+        agent = Agent(agent_id, extension)
+        
+        # Set initial mode
+        if mode == 'inbound_only':
+            agent.mode = AgentMode.INBOUND_ONLY
+        elif mode == 'outbound_only':
+            agent.mode = AgentMode.OUTBOUND_ONLY
+        elif mode == 'auto':
+            agent.mode = AgentMode.AUTO
+        else:
+            agent.mode = AgentMode.BLENDED
+        
+        self.agents[agent_id] = agent
+        
+        self.logger.info(f"Registered agent {agent_id} (ext {extension}) in {mode} mode")
+        
+        return {
+            'success': True,
+            'agent_id': agent_id,
+            'extension': extension,
+            'mode': agent.mode.value
+        }
+    
     def get_all_agents(self) -> List[Dict]:
         """Get all registered agents"""
         return [

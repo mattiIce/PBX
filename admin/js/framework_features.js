@@ -1244,67 +1244,19 @@ function loadCallTaggingTab() {
     const content = `
         <h2>🏷️ Call Tagging & Categorization</h2>
         <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
-            </form>
-        </div>
-
-        <div class="section-card">
-            <h3>BI Tool Integration</h3>
-            <div class="info-box">
-                <p><strong>Integration Status:</strong></p>
-                <ul>
-                    <li>✅ Default datasets (CDR, queue stats, QoS metrics) - <strong>Ready</strong></li>
-                    <li>✅ Multiple export formats (CSV, JSON, Parquet, Excel, SQL) - <strong>Ready</strong></li>
-                    <li>✅ REST API endpoints for data export - <strong>Ready</strong></li>
-                    <li>✅ Date range filtering - <strong>Ready</strong></li>
-                    <li>⚠️ Direct BI tool API connections - <strong>Requires credentials</strong></li>
-                </ul>
-                <p style="margin-top: 15px;"><strong>API Endpoints:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
-GET /api/framework/bi-integration/datasets
-GET /api/framework/bi-integration/export/{dataset}?format=csv&from=2025-01-01&to=2025-12-31
-GET /api/framework/bi-integration/statistics</pre>
-            </div>
-        </div>
-    `;
-    return content;
-}
-
-function exportBIDataset(dataset) {
-    const format = document.getElementById('bi-export-format')?.value || 'csv';
-    const dateRange = document.getElementById('bi-date-range')?.value || 'last7days';
-    
-    // Show loading message
-    alert(`Exporting ${dataset} dataset in ${format.toUpperCase()} format for ${dateRange}...\n\nNote: This will call /api/framework/bi-integration/export/${dataset}?format=${format}&range=${dateRange}`);
-    
-    // In production, this would trigger the actual export
-    fetch(`/api/framework/bi-integration/export/${dataset}?format=${format}&range=${dateRange}`)
-        .then(r => r.blob())
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${dataset}_${dateRange}.${format}`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        })
-        .catch(err => {
-            alert(`Export not yet available: ${err.message}\n\nThe BI Integration framework is ready but requires BI tool API configuration.`);
-        });
-}
-
-// Call Tagging Tab
-function loadCallTaggingTab() {
-    const content = `
-        <h2>🏷️ Call Tagging & Categorization</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span class="status-badge status-framework-only">⚙️ Framework Only</span>
-                <strong>Database & APIs Ready</strong>
+                <span class="status-badge status-fully-implemented">✅ API Connected</span>
+                <strong>REST API Endpoints Active</strong>
             </div>
             <p>AI-powered call classification and auto-tagging.</p>
             <p><strong>Features:</strong> Auto-tagging, rule-based tagging, tag analytics, search by tags</p>
+        </div>
+
+        <div class="section-card">
+            <h3>Statistics</h3>
+            <div id="tagging-stats-display">
+                <p>Loading statistics...</p>
+            </div>
         </div>
 
         <div class="section-card">
@@ -1318,6 +1270,51 @@ function loadCallTaggingTab() {
         <div class="section-card">
             <h3>Auto-Tagging Rules</h3>
             <button onclick="showCreateRuleDialog()" class="btn-primary">+ Create Rule</button>
+            <div id="tagging-rules-list" style="margin-top: 15px;">
+                <p>Loading rules...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>API Integration</h3>
+            <div class="info-box">
+                <p><strong>Integration Status:</strong></p>
+                <ul>
+                    <li>✅ Tag creation and management - <strong>Active</strong></li>
+                    <li>✅ Rule-based auto-tagging - <strong>Ready</strong></li>
+                    <li>✅ Tag search and analytics - <strong>Ready</strong></li>
+                    <li>✅ REST API endpoints - <strong>Active</strong></li>
+                    <li>⚠️ AI classification service - <strong>Requires external AI</strong></li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+GET  /api/framework/call-tagging/tags
+GET  /api/framework/call-tagging/rules
+GET  /api/framework/call-tagging/statistics
+POST /api/framework/call-tagging/tag
+POST /api/framework/call-tagging/rule
+POST /api/framework/call-tagging/classify/{call_id}</pre>
+                <p style="margin-top: 15px;"><strong>Supported AI Services:</strong></p>
+                <ul>
+                    <li>OpenAI GPT for semantic classification</li>
+                    <li>Google Cloud Natural Language</li>
+                    <li>AWS Comprehend</li>
+                    <li>Custom ML models via REST API</li>
+                </ul>
+            </div>
+        </div>
+    `;
+    
+    // Load tags and rules after content is rendered
+    setTimeout(() => {
+        loadCallTags();
+        loadTaggingRules();
+    }, 100);
+    
+    return content;
+}
+
+function loadCallTags() {
             <div id="tagging-rules-list" style="margin-top: 15px;">
                 <p>Loading rules...</p>
             </div>

@@ -404,6 +404,13 @@ class CallTagging:
         """
         Classify a call and return applicable tags
         
+        NOTE: This is a simplified implementation that returns rule tags
+        without evaluating conditions. In production, this should:
+        1. Retrieve actual call data (transcript, metadata, etc.)
+        2. Evaluate rule conditions against call data
+        3. Call AI classification service for semantic analysis
+        4. Combine rule-based and AI-based tags
+        
         Args:
             call_id: Call ID
             
@@ -411,16 +418,20 @@ class CallTagging:
             List[str]: List of tags
         """
         # Placeholder for AI classification
-        # In production, this would call an ML model
+        # In production, this would:
+        # - Fetch call transcript/metadata
+        # - Call ML model for classification
+        # - Evaluate rule conditions against actual call data
         tags = []
         
-        # Apply rule-based tagging
+        # Apply rule-based tagging (simplified)
+        # TODO: Add actual rule condition evaluation
         for rule in self.tagging_rules:
-            # Simplified rule evaluation
-            # In production, would evaluate actual call data
+            # In production, evaluate rule conditions here
+            # For now, just add tags from all rules
             tags.append(rule['tag'])
         
-        # Store tags
+        # Store tags (limited by max_tags_per_call)
         self.call_tags[call_id] = [CallTag(tag, TagSource.AUTO) for tag in tags[:self.max_tags_per_call]]
         self.total_calls_tagged += 1
         self.auto_tags_created += len(tags)
