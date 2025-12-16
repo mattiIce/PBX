@@ -197,8 +197,9 @@ extensions: []
 
         # Verify phones table was preserved
         phones = pbx2.registered_phones_db.list_all()
-        assert len(phones) == 2, f"Expected 2 phones after boot, got {len(phones)}"
-        print(f"  Phones preserved on boot: {len(phones)} phones remaining")
+        phone_count = len(phones)
+        assert phone_count == 2, f"Expected 2 phones after boot, got {phone_count}"
+        print(f"  Phones preserved on boot: {phone_count} phones remaining")
 
         # Stop the PBX
         pbx2.stop()
@@ -295,7 +296,8 @@ class TestPhoneCleanupStartup(unittest.TestCase):
             "extension_number IS NULL OR extension_number = ''",
             delete_query)
 
-        # Verify it uses OR between conditions (any missing field triggers deletion)
+        # Verify it uses OR between field conditions (mac_address OR ip_address OR extension_number)
+        # Any single missing field should trigger deletion of that record
         self.assertIn("OR", delete_query)
 
 
