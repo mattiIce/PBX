@@ -364,93 +364,147 @@ function showTab(tabName) {
             }
             break;
         case 'click-to-dial':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadClickToDialTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadClickToDialTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'video-conferencing':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadVideoConferencingTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoConferencingTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'conversational-ai':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadConversationalAITab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadConversationalAITab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'predictive-dialing':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadPredictiveDialingTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadPredictiveDialingTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'voice-biometrics':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadVoiceBiometricsTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVoiceBiometricsTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'call-quality-prediction':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadCallQualityPredictionTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallQualityPredictionTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'video-codec':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadVideoCodecTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVideoCodecTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'bi-integration':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadBIIntegrationTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadBIIntegrationTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'call-tagging':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadCallTaggingTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallTaggingTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'mobile-apps':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadMobileAppsTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadMobileAppsTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'mobile-number-portability':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadMobileNumberPortabilityTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadMobileNumberPortabilityTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'recording-analytics':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadRecordingAnalyticsTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadRecordingAnalyticsTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'call-blending':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadCallBlendingTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadCallBlendingTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'voicemail-drop':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadVoicemailDropTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadVoicemailDropTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'geographic-redundancy':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadGeographicRedundancyTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadGeographicRedundancyTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'dns-srv-failover':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadDNSSRVFailoverTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadDNSSRVFailoverTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'session-border-controller':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadSessionBorderControllerTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadSessionBorderControllerTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'data-residency':
-            if (window.frameworkFeatures) {
+            if (window.frameworkFeatures && window.frameworkFeatures.loadDataResidencyTab) {
                 document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadDataResidencyTab();
+            } else {
+                console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
+                document.getElementById(tabName).innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'team-messaging':
