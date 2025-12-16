@@ -54,7 +54,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **OpenLDAP** - Directory services (Active Directory compatible) - ✅ Compatible
 
 **📖 Documentation:**
-- **[INTEGRATION_QUICK_FIX.md](INTEGRATION_QUICK_FIX.md)** - 🆘 **START HERE for troubleshooting!**
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🆘 **Comprehensive troubleshooting guide**
 - **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Complete setup guides
 - **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Full integration reference
 
@@ -367,7 +367,7 @@ python tests/test_e911_protection.py
 - **Rate Limiting** - Protection against brute force attacks
 - **IP Banning** - Automatic blocking after failed attempts
 
-For detailed security information, see [FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md), [SECURITY.md](SECURITY.md), and [FIPS_COMPLIANCE.md](FIPS_COMPLIANCE.md).
+For detailed security information, see [FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md), [SECURITY.md](SECURITY.md), and [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md).
 
 ## 📊 Monitoring
 
@@ -498,7 +498,7 @@ For issues and questions, please open a GitHub issue.
 - **WebRTC Browser Phone**: Currently disabled and not working. Use physical IP phones or SIP clients for calls.
 - **Hardphone Audio**: Audio playback on physical IP phones is experiencing issues and may be distorted or non-functional. Investigation ongoing.
 - **Root Cause**: Audio sample rate mismatch - voicemail prompt files are 16kHz but system expects 8kHz for PCMU codec, causing downsampling and distortion.
-- **Fix Available**: See [AUDIO_SAMPLE_RATE_FIX.md](AUDIO_SAMPLE_RATE_FIX.md) for detailed solution (regenerate audio prompts at 8kHz).
+- **Fix Available**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed solution (regenerate audio prompts at 8kHz).
 
 These are critical components being actively investigated. All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) remain fully functional.
 
@@ -531,6 +531,7 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 
 **Documentation:**
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview
+- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) - Implementation status and details
 - [BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md) - Business Intelligence integration
 - [CALL_TAGGING_GUIDE.md](CALL_TAGGING_GUIDE.md) - Call tagging and categorization
 - [MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md) - Mobile app framework
