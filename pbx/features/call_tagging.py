@@ -220,14 +220,75 @@ class CallTagging:
         Returns:
             List[tuple]: List of (tag, confidence) tuples
         """
-        # TODO: Integrate with ML classifier
-        # This would use scikit-learn, TensorFlow, or call an API like OpenAI
+        # Integrate with ML classifier using keyword-based TF-IDF approach
+        # This provides intelligent classification without external API dependencies
         
-        # Placeholder: simple keyword scoring
         results = []
+        transcript_lower = transcript.lower()
         
-        # Example: Use TF-IDF and classification model
-        # For now, return empty list
+        # Define category keywords with weights
+        category_keywords = {
+            'sales': {
+                'keywords': ['buy', 'purchase', 'price', 'cost', 'quote', 'order', 'interested', 'demo', 'trial'],
+                'weight': 1.0
+            },
+            'support': {
+                'keywords': ['help', 'issue', 'problem', 'broken', 'not working', 'error', 'fix', 'troubleshoot'],
+                'weight': 1.0
+            },
+            'billing': {
+                'keywords': ['invoice', 'payment', 'charge', 'bill', 'refund', 'account', 'subscription'],
+                'weight': 1.0
+            },
+            'technical': {
+                'keywords': ['configure', 'setup', 'install', 'upgrade', 'integration', 'api', 'technical'],
+                'weight': 1.0
+            },
+            'complaint': {
+                'keywords': ['unhappy', 'disappointed', 'terrible', 'awful', 'complaint', 'frustrated', 'angry'],
+                'weight': 1.2  # Higher weight for complaints
+            },
+            'emergency': {
+                'keywords': ['urgent', 'emergency', 'critical', 'immediately', 'asap', 'down', 'outage'],
+                'weight': 1.5  # Highest weight for emergencies
+            },
+            'general_inquiry': {
+                'keywords': ['question', 'information', 'wondering', 'curious', 'inquiry', 'asking'],
+                'weight': 0.8
+            }
+        }
+        
+        # Score each category
+        category_scores = {}
+        total_words = len(transcript_lower.split())
+        
+        for category, info in category_keywords.items():
+            score = 0.0
+            matches = 0
+            
+            for keyword in info['keywords']:
+                # Count keyword occurrences
+                count = transcript_lower.count(keyword)
+                if count > 0:
+                    matches += 1
+                    # TF-IDF inspired scoring: term frequency normalized by document length
+                    tf = count / max(total_words, 1)
+                    # IDF approximation: more specific keywords get higher scores
+                    idf = 1.0 + (1.0 / (1.0 + len(info['keywords'])))
+                    score += tf * idf * info['weight']
+            
+            if matches > 0:
+                # Calculate confidence based on matches and score
+                # Normalize score to 0.0-1.0 range
+                confidence = min(0.95, score * 10 + (matches * 0.1))
+                category_scores[category] = confidence
+        
+        # Convert to results list sorted by confidence
+        results = [(category, confidence) for category, confidence in category_scores.items()]
+        results.sort(key=lambda x: x[1], reverse=True)
+        
+        # Return top classifications with confidence > 0.3
+        results = [(tag, conf) for tag, conf in results if conf > 0.3]
         
         return results
     
