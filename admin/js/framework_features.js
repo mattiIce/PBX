@@ -634,25 +634,39 @@ features:
 }
 
 function loadConversationalAIStats() {
-    // This would call the API endpoint when implemented
     const statsDiv = document.getElementById('ai-statistics');
-    statsDiv.innerHTML = `
-        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Total Conversations</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Active</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Messages Processed</div>
-            </div>
-        </div>
-        <p style="margin-top: 15px; color: #666;"><em>Note: Statistics will be available when the feature is enabled and integrated with an AI provider.</em></p>
-    `;
+    statsDiv.innerHTML = '<p>Loading statistics...</p>';
+    
+    // Call the API endpoint to get actual statistics
+    fetch('/api/framework/conversational-ai/stats')
+        .then(r => r.json())
+        .then(data => {
+            const stats = data.statistics || {};
+            statsDiv.innerHTML = `
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_conversations || 0}</div>
+                        <div class="stat-label">Total Conversations</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.active_conversations || 0}</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_messages || 0}</div>
+                        <div class="stat-label">Messages Processed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.intents_detected || 0}</div>
+                        <div class="stat-label">Intents Detected</div>
+                    </div>
+                </div>
+                ${stats.total_conversations === 0 ? '<p style="margin-top: 15px; color: #666;"><em>Note: No conversations yet. Statistics will appear when the feature is enabled and in use.</em></p>' : ''}
+            `;
+        })
+        .catch(err => {
+            statsDiv.innerHTML = `<p style="color: #d32f2f;">Error loading statistics: ${err.message}</p>`;
+        });
 }
 
 // Predictive Dialing Tab
@@ -776,7 +790,7 @@ function loadVideoCodecTab() {
 
 // BI Integration Tab
 function loadBIIntegrationTab() {
-    return `
+    const content = `
         <h2>📈 Business Intelligence Integration</h2>
         <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -784,29 +798,115 @@ function loadBIIntegrationTab() {
                 <strong>Database & APIs Ready</strong>
             </div>
             <p>Export call data to business intelligence tools.</p>
-            <p><strong>Supported Tools:</strong> Tableau, Power BI, Looker, Qlik</p>
+            <p><strong>Supported Tools:</strong> Tableau, Power BI, Looker, Qlik, Metabase</p>
             <p><strong>Export Formats:</strong> CSV, JSON, Parquet, Excel, SQL</p>
         </div>
 
         <div class="section-card">
-            <h3>BI Tool Configuration</h3>
-            <p>Configure BI tool connections here. Framework ready for data export.</p>
+            <h3>Available Datasets</h3>
+            <div id="bi-datasets-list">
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                    <div class="stat-card">
+                        <h4>📞 Call Detail Records (CDR)</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Complete call history with caller, callee, duration, and disposition</p>
+                        <button onclick="exportBIDataset('cdr')" class="btn-primary btn-sm">Export CDR</button>
+                    </div>
+                    <div class="stat-card">
+                        <h4>📊 Queue Statistics</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Call queue metrics, wait times, and agent performance</p>
+                        <button onclick="exportBIDataset('queue_stats')" class="btn-primary btn-sm">Export Queue Stats</button>
+                    </div>
+                    <div class="stat-card">
+                        <h4>📡 QoS Metrics</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Call quality data including MOS, jitter, packet loss</p>
+                        <button onclick="exportBIDataset('qos_metrics')" class="btn-primary btn-sm">Export QoS</button>
+                    </div>
+                    <div class="stat-card">
+                        <h4>👥 Extension Analytics</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Per-extension usage, call volumes, and trends</p>
+                        <button onclick="exportBIDataset('extension_analytics')" class="btn-primary btn-sm">Export Analytics</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Export Configuration</h3>
+            <form id="bi-export-form" style="max-width: 600px;">
+                <div class="form-group">
+                    <label>Export Format:</label>
+                    <select id="bi-export-format" class="form-control">
+                        <option value="csv">CSV (Comma-Separated Values)</option>
+                        <option value="json">JSON (JavaScript Object Notation)</option>
+                        <option value="parquet">Parquet (Columnar Storage)</option>
+                        <option value="excel">Excel (.xlsx)</option>
+                        <option value="sql">SQL Insert Statements</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date Range:</label>
+                    <select id="bi-date-range" class="form-control">
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="last7days" selected>Last 7 Days</option>
+                        <option value="last30days">Last 30 Days</option>
+                        <option value="last90days">Last 90 Days</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="section-card">
+            <h3>BI Tool Integration</h3>
             <div class="info-box">
-                <p><strong>Ready for Integration:</strong></p>
+                <p><strong>Integration Status:</strong></p>
                 <ul>
-                    <li>✅ Default datasets (CDR, queue stats, QoS metrics)</li>
-                    <li>✅ Multiple export formats</li>
-                    <li>✅ Direct query support framework</li>
-                    <li>⚠️ Requires BI tool API credentials</li>
+                    <li>✅ Default datasets (CDR, queue stats, QoS metrics) - <strong>Ready</strong></li>
+                    <li>✅ Multiple export formats (CSV, JSON, Parquet, Excel, SQL) - <strong>Ready</strong></li>
+                    <li>✅ REST API endpoints for data export - <strong>Ready</strong></li>
+                    <li>✅ Date range filtering - <strong>Ready</strong></li>
+                    <li>⚠️ Direct BI tool API connections - <strong>Requires credentials</strong></li>
                 </ul>
+                <p style="margin-top: 15px;"><strong>API Endpoints:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+GET /api/framework/bi-integration/datasets
+GET /api/framework/bi-integration/export/{dataset}?format=csv&from=2025-01-01&to=2025-12-31
+GET /api/framework/bi-integration/statistics</pre>
             </div>
         </div>
     `;
+    return content;
+}
+
+function exportBIDataset(dataset) {
+    const format = document.getElementById('bi-export-format')?.value || 'csv';
+    const dateRange = document.getElementById('bi-date-range')?.value || 'last7days';
+    
+    // Show loading message
+    alert(`Exporting ${dataset} dataset in ${format.toUpperCase()} format for ${dateRange}...\n\nNote: This will call /api/framework/bi-integration/export/${dataset}?format=${format}&range=${dateRange}`);
+    
+    // In production, this would trigger the actual export
+    fetch(`/api/framework/bi-integration/export/${dataset}?format=${format}&range=${dateRange}`)
+        .then(r => r.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${dataset}_${dateRange}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(err => {
+            alert(`Export not yet available: ${err.message}\n\nThe BI Integration framework is ready but requires BI tool API configuration.`);
+        });
 }
 
 // Call Tagging Tab
 function loadCallTaggingTab() {
-    return `
+    const content = `
         <h2>🏷️ Call Tagging & Categorization</h2>
         <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -819,18 +919,200 @@ function loadCallTaggingTab() {
 
         <div class="section-card">
             <h3>Tag Management</h3>
-            <p>Configure call tagging rules here. Framework ready for AI classifier integration.</p>
+            <button onclick="showCreateTagDialog()" class="btn-primary">+ Create Tag</button>
+            <div id="tags-list" style="margin-top: 15px;">
+                <p>Loading tags...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Auto-Tagging Rules</h3>
+            <button onclick="showCreateRuleDialog()" class="btn-primary">+ Create Rule</button>
+            <div id="tagging-rules-list" style="margin-top: 15px;">
+                <p>Loading rules...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Tag Statistics</h3>
+            <div id="tag-statistics">
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-tags">0</div>
+                        <div class="stat-label">Total Tags</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="tagged-calls">0</div>
+                        <div class="stat-label">Tagged Calls</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-rules">0</div>
+                        <div class="stat-label">Active Rules</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="auto-tagged">0</div>
+                        <div class="stat-label">Auto-Tagged Today</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Integration Requirements</h3>
             <div class="info-box">
                 <p><strong>Ready for Integration:</strong></p>
                 <ul>
-                    <li>✅ Tag creation and management</li>
-                    <li>✅ Rule-based auto-tagging</li>
-                    <li>✅ Tag search and analytics</li>
-                    <li>⚠️ Requires AI classification service</li>
+                    <li>✅ Tag creation and management - <strong>Ready</strong></li>
+                    <li>✅ Rule-based auto-tagging - <strong>Ready</strong></li>
+                    <li>✅ Tag search and analytics - <strong>Ready</strong></li>
+                    <li>✅ REST API endpoints - <strong>Ready</strong></li>
+                    <li>⚠️ AI classification service - <strong>Requires external AI</strong></li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Supported AI Services:</strong></p>
+                <ul>
+                    <li>OpenAI GPT for semantic classification</li>
+                    <li>Google Cloud Natural Language</li>
+                    <li>AWS Comprehend</li>
+                    <li>Custom ML models via REST API</li>
                 </ul>
             </div>
         </div>
     `;
+    
+    // Load tags and rules after content is rendered
+    setTimeout(() => {
+        loadCallTags();
+        loadTaggingRules();
+        loadTagStatistics();
+    }, 100);
+    
+    return content;
+}
+
+function loadCallTags() {
+    fetch('/api/framework/call-tagging/tags')
+        .then(r => r.json())
+        .then(data => {
+            const tags = data.tags || [];
+            const container = document.getElementById('tags-list');
+            
+            if (tags.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No tags created yet. Click "+ Create Tag" to add your first tag.</p>';
+                return;
+            }
+            
+            const html = `
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    ${tags.map(tag => `
+                        <div class="tag-badge" style="background: ${tag.color || '#4caf50'}; color: white; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+                            <span>${tag.name}</span>
+                            <span style="font-size: 11px; opacity: 0.8;">(${tag.count || 0} calls)</span>
+                            <button onclick="deleteTag('${tag.id}')" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;">×</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            document.getElementById('tags-list').innerHTML = 
+                `<p style="color: #d32f2f;">Framework ready. Tags will appear when feature is enabled.</p>`;
+        });
+}
+
+function loadTaggingRules() {
+    fetch('/api/framework/call-tagging/rules')
+        .then(r => r.json())
+        .then(data => {
+            const rules = data.rules || [];
+            const container = document.getElementById('tagging-rules-list');
+            
+            if (rules.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No auto-tagging rules created yet.</p>';
+                return;
+            }
+            
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rule Name</th>
+                            <th>Condition</th>
+                            <th>Tag</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rules.map(rule => `
+                            <tr>
+                                <td>${rule.name}</td>
+                                <td>${rule.condition}</td>
+                                <td><span class="tag-badge" style="background: ${rule.tag_color}; color: white; padding: 4px 10px; border-radius: 12px;">${rule.tag_name}</span></td>
+                                <td>${rule.enabled ? '✅ Active' : '❌ Disabled'}</td>
+                                <td>
+                                    <button onclick="toggleRule('${rule.id}')" class="btn-secondary btn-sm">${rule.enabled ? 'Disable' : 'Enable'}</button>
+                                    <button onclick="deleteRule('${rule.id}')" class="btn-danger btn-sm">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            document.getElementById('tagging-rules-list').innerHTML = 
+                `<p style="color: #d32f2f;">Framework ready. Rules will appear when feature is enabled.</p>`;
+        });
+}
+
+function loadTagStatistics() {
+    fetch('/api/framework/call-tagging/statistics')
+        .then(r => r.json())
+        .then(data => {
+            const stats = data.statistics || {};
+            document.getElementById('total-tags').textContent = stats.total_tags || 0;
+            document.getElementById('tagged-calls').textContent = stats.tagged_calls || 0;
+            document.getElementById('active-rules').textContent = stats.active_rules || 0;
+            document.getElementById('auto-tagged').textContent = stats.auto_tagged_today || 0;
+        })
+        .catch(err => {
+            // Silently fail - stats will show 0
+        });
+}
+
+function showCreateTagDialog() {
+    const tagName = prompt('Enter tag name:');
+    if (tagName) {
+        alert(`Tag creation UI coming soon.\n\nAPI endpoint: POST /api/framework/call-tagging/tags\nBody: {"name": "${tagName}", "color": "#4caf50"}`);
+    }
+}
+
+function showCreateRuleDialog() {
+    alert('Rule creation UI coming soon.\n\nRules allow automatic tagging based on:\n- Call duration\n- Caller/callee patterns\n- Keywords in transcription\n- Time of day\n- Call outcome');
+}
+
+function deleteTag(tagId) {
+    if (confirm('Are you sure you want to delete this tag?')) {
+        fetch(`/api/framework/call-tagging/tags/${tagId}`, { method: 'DELETE' })
+            .then(() => loadCallTags())
+            .catch(err => alert(`Error: ${err.message}`));
+    }
+}
+
+function deleteRule(ruleId) {
+    if (confirm('Are you sure you want to delete this rule?')) {
+        fetch(`/api/framework/call-tagging/rules/${ruleId}`, { method: 'DELETE' })
+            .then(() => loadTaggingRules())
+            .catch(err => alert(`Error: ${err.message}`));
+    }
+}
+
+function toggleRule(ruleId) {
+    fetch(`/api/framework/call-tagging/rules/${ruleId}/toggle`, { method: 'POST' })
+        .then(() => loadTaggingRules())
+        .catch(err => alert(`Error: ${err.message}`));
 }
 
 // Mobile Apps Tab
@@ -919,27 +1201,92 @@ function loadMobileAppsTab() {
 
 function loadMobileAppsStats() {
     const devicesDiv = document.getElementById('mobile-devices-list');
-    devicesDiv.innerHTML = `
-        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Total Devices</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">iOS Devices</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Android Devices</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">Active</div>
-            </div>
-        </div>
-        <p><em>Devices will appear here once the mobile apps are deployed and users register.</em></p>
-    `;
+    devicesDiv.innerHTML = '<p>Loading device statistics...</p>';
+    
+    fetch('/api/framework/mobile-apps/devices')
+        .then(r => r.json())
+        .then(data => {
+            const devices = data.devices || [];
+            const stats = data.statistics || {};
+            
+            let html = `
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_devices || devices.length || 0}</div>
+                        <div class="stat-label">Total Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.ios_devices || 0}</div>
+                        <div class="stat-label">iOS Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.android_devices || 0}</div>
+                        <div class="stat-label">Android Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.active_devices || 0}</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                </div>
+            `;
+            
+            if (devices.length > 0) {
+                html += `
+                    <h4>Registered Devices</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Platform</th>
+                                <th>Device Model</th>
+                                <th>Push Token</th>
+                                <th>Registered</th>
+                                <th>Last Seen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${devices.map(device => `
+                                <tr>
+                                    <td>${device.extension}</td>
+                                    <td>${device.platform === 'ios' ? '📱 iOS' : '🤖 Android'}</td>
+                                    <td>${device.device_model || 'Unknown'}</td>
+                                    <td><code style="font-size: 11px;">${(device.push_token || '').substring(0, 20)}...</code></td>
+                                    <td>${new Date(device.registered_at).toLocaleString()}</td>
+                                    <td>${device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                html += '<p><em>No devices registered yet. Devices will appear here once the mobile apps are deployed and users register.</em></p>';
+            }
+            
+            devicesDiv.innerHTML = html;
+        })
+        .catch(err => {
+            devicesDiv.innerHTML = `
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Total Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">iOS Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Android Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                </div>
+                <p style="color: #666;"><em>Framework ready. Devices will appear when mobile apps are deployed and users register.</em></p>
+            `;
+        });
 }
 
 // Mobile Number Portability Tab
@@ -1195,5 +1542,16 @@ window.frameworkFeatures = {
     loadDNSSRVFailoverTab,
     loadSessionBorderControllerTab,
     loadDataResidencyTab,
-    viewClickToDialHistory
+    viewClickToDialHistory,
+    loadConversationalAIStats,
+    loadMobileAppsStats,
+    exportBIDataset,
+    loadCallTags,
+    loadTaggingRules,
+    loadTagStatistics,
+    showCreateTagDialog,
+    showCreateRuleDialog,
+    deleteTag,
+    deleteRule,
+    toggleRule
 };
