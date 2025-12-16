@@ -78,3 +78,6 @@ certs/
 
 # Test files
 admin/test_framework.html
+
+# Test files
+admin/test_*.html
