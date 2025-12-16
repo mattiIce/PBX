@@ -1,10 +1,23 @@
 # PBX System - Feature Implementation TODO List
 
-**Last Updated**: December 12, 2025  
+**Last Updated**: December 16, 2025  
 **Status**: Active Development  
 **Deployment Context**: Automotive Manufacturing Plant
 
 This document tracks all features from the Executive Summary that are marked as **⏳ Planned** and need to be implemented.
+
+## 📚 New Documentation (December 16, 2025)
+
+Comprehensive guides have been created for framework features:
+
+- **[FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)** - Complete overview of all 20+ framework features
+- **[BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md)** - Business Intelligence integration (Tableau, Power BI, Looker)
+- **[CALL_TAGGING_GUIDE.md](CALL_TAGGING_GUIDE.md)** - AI-powered call classification and tagging
+- **[MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md)** - Mobile app framework for iOS and Android
+- **[VOICE_BIOMETRICS_GUIDE.md](VOICE_BIOMETRICS_GUIDE.md)** - Speaker authentication and fraud detection
+- **[GEOGRAPHIC_REDUNDANCY_GUIDE.md](GEOGRAPHIC_REDUNDANCY_GUIDE.md)** - Multi-region failover and disaster recovery
+
+All framework features now have complete backend implementations, database schemas, REST APIs, and admin UI support. External service integration required for production use.
 
 ## Deployment-Specific Notes
 

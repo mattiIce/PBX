@@ -502,20 +502,53 @@ For issues and questions, please open a GitHub issue.
 
 These are critical components being actively investigated. All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) remain fully functional.
 
+### Framework Features
+
+The PBX system includes comprehensive framework implementations for 20+ advanced features:
+
+**AI-Powered Features:**
+- Conversational AI Assistant - Auto-responses and smart call handling
+- Predictive Dialing - AI-optimized outbound campaigns
+- Voice Biometrics - Speaker authentication and fraud detection
+- Call Quality Prediction - Proactive network issue detection
+
+**Analytics & Reporting:**
+- Business Intelligence Integration - Export to Tableau, Power BI, Looker
+- Call Tagging & Categorization - AI-powered call classification
+- Call Recording Analytics - AI analysis of recorded calls
+
+**Mobile & Remote Work:**
+- Mobile Apps Framework - iOS and Android client support
+- Mobile Number Portability - Use business number on mobile
+
+**Advanced Features:**
+- Call Blending - Mix inbound/outbound for efficiency
+- Predictive Voicemail Drop - Auto-leave message on voicemail detection
+- Geographic Redundancy - Multi-region trunk registration
+- DNS SRV Failover - Automatic server failover
+- Session Border Controller - Enhanced security and NAT traversal
+- Data Residency Controls - Geographic data storage options
+
+**Documentation:**
+- [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview
+- [BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md) - Business Intelligence integration
+- [CALL_TAGGING_GUIDE.md](CALL_TAGGING_GUIDE.md) - Call tagging and categorization
+- [MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md) - Mobile app framework
+
+**Note:** Framework features have complete backend implementations, database schemas, and REST APIs. Some require external service integration or additional configuration for production use. See individual guides for details.
+
 ### Future Enhancements
 - [ ] Fix WebRTC browser-based calling (currently non-functional)
 - [ ] Fix hardphone audio playback issues
 - [ ] Resolve audio sample rate mismatch (8kHz vs 16kHz)
+- [ ] Complete external service integrations for framework features
+- [ ] Native iOS and Android mobile apps
 - [ ] SMS/Messaging integration
-- [ ] Mobile app support (iOS/Android)
 - [ ] Clustering/High availability
-- [ ] Advanced analytics dashboard
-- [ ] Video conferencing support
 - [ ] Full SIP Direct Routing to Teams
-- [ ] CRM integrations (Salesforce, HubSpot)
 - [ ] Professional voice recordings for auto attendant (TTS or voice actor)
 
-See [TODO.md](TODO.md) for a comprehensive list of 69 planned features organized by priority.
+See [TODO.md](TODO.md) for a comprehensive list of planned features organized by priority.
 
 ---
 
