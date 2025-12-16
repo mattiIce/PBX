@@ -15,6 +15,7 @@ Start here if you're new to the PBX system:
 1. **[README.md](README.md)** - Project overview, features, and basic usage
 2. **[QUICK_START.md](QUICK_START.md)** - First-time setup checklist for quick deployment
 3. **[INSTALLATION.md](INSTALLATION.md)** - Detailed installation instructions
+4. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature status and implementation overview**
 
 ## Deployment Guides
 
@@ -45,6 +46,9 @@ Migrate from legacy phone systems:
 
 Connect the PBX with external services:
 
+- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - ⭐ **Free integrations (Jitsi, Matrix, EspoCRM)**
+- **[QUICK_SETUP_GUIDE.md](QUICK_SETUP_GUIDE.md)** - One-click integration setup
+- **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Integration setup and fixes
 - **[ENTERPRISE_INTEGRATIONS.md](ENTERPRISE_INTEGRATIONS.md)** - Zoom, Active Directory, Outlook, Teams integrations
 - **[AD_USER_SYNC_GUIDE.md](AD_USER_SYNC_GUIDE.md)** - Active Directory user synchronization
 - **[TESTING_AD_INTEGRATION.md](TESTING_AD_INTEGRATION.md)** - Testing Active Directory integration
@@ -55,10 +59,7 @@ Secure your PBX deployment:
 
 - **[SECURITY.md](SECURITY.md)** - Security summary and CodeQL analysis results
 - **[SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md)** - Comprehensive security guide for production
-- **[FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md)** - ⭐ **Current FIPS compliance status and quick reference**
-- **[FIPS_COMPLIANCE.md](FIPS_COMPLIANCE.md)** - FIPS 140-2 compliance guide for regulated industries
-- **[FIPS_QUICK_REFERENCE.md](FIPS_QUICK_REFERENCE.md)** - Quick reference for FIPS operations
-- **[FIPS_VERIFICATION_SUMMARY.md](FIPS_VERIFICATION_SUMMARY.md)** - FIPS verification and testing summary
+- **[FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md)** - ⭐ **Complete FIPS compliance reference** (consolidated guide)
 - **[UBUNTU_FIPS_GUIDE.md](UBUNTU_FIPS_GUIDE.md)** - Ubuntu FIPS deployment guide
 
 ## Development Documentation
@@ -66,6 +67,7 @@ Secure your PBX deployment:
 For developers working on or extending the PBX:
 
 - **[SUMMARY.md](SUMMARY.md)** - Project architecture and technical overview
+- **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature implementation status**
 - **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - Requirements for implementing features
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Testing procedures and guidelines
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - REST API reference for custom integrations
@@ -74,6 +76,7 @@ For developers working on or extending the PBX:
 
 Common issues and solutions:
 
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - ⭐ **Comprehensive troubleshooting guide** (audio, integration, networking, config)
 - **[FIXING_YAML_MERGE_CONFLICTS.md](FIXING_YAML_MERGE_CONFLICTS.md)** - How to resolve Git merge conflicts in config.yml
 - **[TROUBLESHOOTING_PROVISIONING.md](TROUBLESHOOTING_PROVISIONING.md)** - Phone provisioning troubleshooting
 
@@ -114,6 +117,7 @@ Must read:
 2. DEPLOYMENT_GUIDE.md or UBUNTU_SETUP_GUIDE.md
 3. SECURITY_BEST_PRACTICES.md
 4. POSTGRESQL_SETUP.md (if using database features)
+5. TROUBLESHOOTING.md (for common issues)
 
 ### Network Administrator
 
@@ -134,27 +138,29 @@ Must read:
 
 Must read:
 1. SUMMARY.md
-2. API_DOCUMENTATION.md
-3. TODO.md (for remaining work)
-4. IMPLEMENTATION_GUIDE.md
-5. TESTING_GUIDE.md
+2. IMPLEMENTATION_STATUS.md (feature status)
+3. API_DOCUMENTATION.md
+4. TODO.md (for remaining work)
+5. IMPLEMENTATION_GUIDE.md
+6. TESTING_GUIDE.md
 
 ### Security Officer
 
 Must read:
-1. FIPS_COMPLIANCE_STATUS.md (current compliance status)
+1. FIPS_COMPLIANCE_STATUS.md (complete compliance reference)
 2. SECURITY.md
 3. SECURITY_BEST_PRACTICES.md
-4. FIPS_COMPLIANCE.md (detailed guide)
+4. UBUNTU_FIPS_GUIDE.md (deployment guide)
 
 ### Project Manager
 
 Must read:
 1. EXECUTIVE_SUMMARY.md
 2. README.md
-3. FEATURES.md
-4. SUMMARY.md
-5. DEPLOYMENT_CHECKLIST.md
+3. IMPLEMENTATION_STATUS.md (feature status)
+4. FEATURES.md
+5. SUMMARY.md
+6. DEPLOYMENT_CHECKLIST.md
 
 ### Executive / Business Leader
 
