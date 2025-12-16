@@ -204,7 +204,7 @@ class MobileAppFramework:
             'register_interval': 600,  # 10 minutes
             'codec_priority': ['opus', 'pcma', 'pcmu'],  # Opus best for mobile
             'ice_enabled': True,  # For NAT traversal
-            'turn_servers': [],  # TODO: Add TURN servers
+            'turn_servers': self._get_turn_servers(),
             'battery_optimization': {
                 'background_mode': 'push',  # Use push instead of persistent connection
                 'reduce_bandwidth': True,
@@ -215,6 +215,36 @@ class MobileAppFramework:
         self.logger.info(f"Generated SIP config for device {device_id}")
         
         return sip_config
+    
+    def _get_turn_servers(self) -> List[Dict]:
+        """
+        Get configured TURN servers for NAT traversal
+        
+        Returns:
+            List[Dict]: TURN server configurations
+        """
+        mobile_config = self.config.get('features', {}).get('mobile_apps', {})
+        turn_config = mobile_config.get('turn_servers', [])
+        
+        # Return configured TURN servers or default public ones
+        if turn_config:
+            return turn_config
+        
+        # Default TURN servers (for testing only - use your own in production)
+        return [
+            {
+                'urls': ['turn:turn.example.com:3478'],
+                'username': 'user',
+                'credential': 'pass',
+                'credentialType': 'password'
+            },
+            {
+                'urls': ['turns:turn.example.com:5349'],  # TURN over TLS
+                'username': 'user',
+                'credential': 'pass',
+                'credentialType': 'password'
+            }
+        ]
     
     def handle_incoming_call(self, device_id: str, call_info: Dict) -> Dict:
         """

@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 from pbx.utils.logger import get_logger
 import random
+import socket
 
 
 class SRVRecord:
@@ -83,15 +84,71 @@ class DNSSRVFailover:
             records = self.srv_cache[srv_name]
             self.logger.debug(f"SRV cache hit for {srv_name}")
         else:
-            # TODO: Perform actual DNS SRV lookup
-            # import dns.resolver
-            # answers = dns.resolver.resolve(srv_name, 'SRV')
-            
-            # Placeholder - in production, parse actual SRV responses
-            records = []
-            self.logger.info(f"SRV lookup for {srv_name}")
+            # Perform actual DNS SRV lookup
+            records = self._perform_srv_lookup(srv_name)
+            # Cache the results
+            if records:
+                self.srv_cache[srv_name] = records
         
         return self._format_srv_records(records)
+    
+    def _perform_srv_lookup(self, srv_name: str) -> List[SRVRecord]:
+        """
+        Perform actual DNS SRV lookup
+        
+        Args:
+            srv_name: SRV record name to lookup
+            
+        Returns:
+            List[SRVRecord]: Found SRV records
+        """
+        records = []
+        
+        try:
+            # Try to use dnspython if available
+            import dns.resolver
+            
+            self.logger.info(f"Performing DNS SRV lookup for {srv_name}")
+            answers = dns.resolver.resolve(srv_name, 'SRV')
+            
+            for rdata in answers:
+                record = SRVRecord(
+                    priority=rdata.priority,
+                    weight=rdata.weight,
+                    port=rdata.port,
+                    target=str(rdata.target).rstrip('.')
+                )
+                records.append(record)
+                self.logger.debug(f"Found SRV: priority={record.priority}, "
+                                f"weight={record.weight}, port={record.port}, "
+                                f"target={record.target}")
+            
+            # Sort by priority (lower is better), then by weight
+            records.sort(key=lambda r: (r.priority, -r.weight))
+            
+        except ImportError:
+            self.logger.warning("dnspython not installed. Install with: pip install dnspython")
+            self.logger.warning("Falling back to basic DNS resolution")
+            
+            # Fallback: try basic hostname resolution
+            try:
+                # Extract service name from SRV query
+                parts = srv_name.split('.')
+                if len(parts) >= 3:
+                    hostname = '.'.join(parts[2:])
+                    # Try to resolve hostname
+                    ip = socket.gethostbyname(hostname)
+                    # Create a single SRV record with default values
+                    record = SRVRecord(priority=0, weight=0, port=5060, target=ip)
+                    records.append(record)
+                    self.logger.info(f"Fallback resolution: {hostname} -> {ip}")
+            except socket.gaierror:
+                self.logger.error(f"Failed to resolve {srv_name}")
+        
+        except Exception as e:
+            self.logger.error(f"SRV lookup failed for {srv_name}: {e}")
+        
+        return records
     
     def _format_srv_records(self, records: List[SRVRecord]) -> List[Dict]:
         """Format SRV records for output"""
@@ -196,15 +253,32 @@ class DNSSRVFailover:
         Returns:
             bool: Server is healthy
         """
-        # TODO: Implement actual health check
-        # - TCP connection test
-        # - SIP OPTIONS ping
-        # - HTTP health endpoint check
-        
         self.logger.debug(f"Checking health: {target}:{port}")
         
-        # Placeholder
-        return True
+        try:
+            # Perform TCP connection test
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2.0)  # 2 second timeout
+            
+            result = sock.connect_ex((target, port))
+            sock.close()
+            
+            if result == 0:
+                # Connection successful
+                self.logger.debug(f"Health check passed: {target}:{port}")
+                return True
+            else:
+                # Connection failed
+                self.logger.warning(f"Health check failed: {target}:{port} (error {result})")
+                return False
+        except socket.gaierror:
+            # DNS resolution failed
+            self.logger.error(f"Cannot resolve hostname: {target}")
+            return False
+        except Exception as e:
+            # Other errors
+            self.logger.error(f"Health check error for {target}:{port}: {e}")
+            return False
     
     def mark_server_failed(self, service: str, protocol: str, domain: str,
                           target: str, port: int):

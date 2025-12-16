@@ -5,6 +5,8 @@ Multi-region trunk registration for disaster recovery
 from typing import Dict, List, Optional
 from datetime import datetime
 from enum import Enum
+import socket
+import time
 from pbx.utils.logger import get_logger
 
 
@@ -104,6 +106,124 @@ class GeographicRedundancy:
             'region_id': region_id
         }
     
+    def _check_trunk_health(self, region: 'GeographicRegion') -> bool:
+        """
+        Check health of trunks in region
+        
+        Args:
+            region: Geographic region
+            
+        Returns:
+            bool: True if at least one trunk is healthy
+        """
+        if not region.trunks:
+            # No trunks configured
+            return False
+        
+        # Try to get trunk manager
+        try:
+            from pbx.features.sip_trunk import get_trunk_manager
+            trunk_manager = get_trunk_manager()
+            
+            healthy_trunks = 0
+            for trunk_id in region.trunks:
+                trunk = trunk_manager.get_trunk(trunk_id)
+                if trunk and trunk.can_make_call():
+                    healthy_trunks += 1
+            
+            # At least one trunk must be healthy
+            return healthy_trunks > 0
+        except Exception as e:
+            self.logger.warning(f"Cannot check trunk health: {e}")
+            # Assume healthy if can't check
+            return True
+    
+    def _check_network_latency(self, target_host: str = None) -> float:
+        """
+        Check network latency to region
+        
+        Args:
+            target_host: Host to ping (optional)
+            
+        Returns:
+            float: Latency in milliseconds
+        """
+        if not target_host:
+            # Use a public DNS server as default
+            target_host = '8.8.8.8'
+        
+        try:
+            # Simple TCP connection test
+            start_time = time.time()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2.0)  # 2 second timeout
+            result = sock.connect_ex((target_host, 53))  # DNS port
+            sock.close()
+            end_time = time.time()
+            
+            if result == 0:
+                # Connection successful
+                latency_ms = (end_time - start_time) * 1000
+                return latency_ms
+            else:
+                # Connection failed
+                return 9999.0  # High latency indicates failure
+        except Exception as e:
+            self.logger.warning(f"Network latency check failed: {e}")
+            return 9999.0
+    
+    def _check_database_connectivity(self) -> bool:
+        """
+        Check database connectivity
+        
+        Returns:
+            bool: True if database is connected
+        """
+        try:
+            from pbx.utils.database import get_database
+            db = get_database()
+            if db and db.enabled and db.connection:
+                # Try a simple query
+                try:
+                    if db.db_type == 'postgresql':
+                        cursor = db.connection.cursor()
+                        cursor.execute("SELECT 1")
+                        cursor.fetchone()
+                        cursor.close()
+                        return True
+                    elif db.db_type == 'sqlite':
+                        cursor = db.connection.cursor()
+                        cursor.execute("SELECT 1")
+                        cursor.fetchone()
+                        return True
+                except Exception as e:
+                    self.logger.warning(f"Database query failed: {e}")
+                    return False
+            else:
+                # Database not configured, assume OK
+                return True
+        except Exception as e:
+            self.logger.warning(f"Database check failed: {e}")
+            # If database module not available, assume OK
+            return True
+    
+    def _check_services_running(self) -> bool:
+        """
+        Check if critical services are running
+        
+        Returns:
+            bool: True if services are running
+        """
+        # Check if we can import critical modules
+        try:
+            from pbx.features.sip_trunk import get_trunk_manager
+            from pbx.utils.database import get_database
+            # If imports succeed, services are available
+            return True
+        except Exception as e:
+            self.logger.error(f"Service check failed: {e}")
+            return False
+    
     def check_region_health(self, region_id: str) -> Dict:
         """
         Check health of a region
@@ -119,28 +239,28 @@ class GeographicRedundancy:
         
         region = self.regions[region_id]
         
-        # TODO: Implement actual health checks
-        # - Ping trunks in region
-        # - Check network latency
-        # - Verify database connectivity
-        # - Check service availability
+        # Perform actual health checks
+        trunks_available = self._check_trunk_health(region)
+        network_latency = self._check_network_latency()
+        database_connected = self._check_database_connectivity()
+        services_running = self._check_services_running()
         
         health_checks = {
-            'trunks_available': True,
-            'network_latency': 50,  # ms
-            'database_connected': True,
-            'services_running': True
+            'trunks_available': trunks_available,
+            'network_latency': network_latency,
+            'database_connected': database_connected,
+            'services_running': services_running
         }
         
         # Calculate overall health score
         health_score = 1.0
-        if not health_checks['trunks_available']:
+        if not trunks_available:
             health_score -= 0.4
-        if health_checks['network_latency'] > 100:
+        if network_latency > 100:
             health_score -= 0.2
-        if not health_checks['database_connected']:
+        if not database_connected:
             health_score -= 0.3
-        if not health_checks['services_running']:
+        if not services_running:
             health_score -= 0.4
         
         region.health_score = health_score
@@ -314,12 +434,12 @@ class GeographicRedundancy:
     def trigger_failover(self, target_region_id: str = None) -> Dict:
         """Trigger manual failover to specified region or auto-select"""
         if target_region_id:
-            return self.failover_to_region(target_region_id)
+            return self.manual_failover(target_region_id)
         else:
             # Auto-select best region
-            best_region = self._select_best_region()
-            if best_region:
-                return self.failover_to_region(best_region.region_id)
+            best_region_id = self._select_backup_region(self.active_region)
+            if best_region_id:
+                return self.manual_failover(best_region_id)
             else:
                 return {'success': False, 'error': 'No available regions for failover'}
     

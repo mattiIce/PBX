@@ -151,16 +151,34 @@ class MobileNumberPortability:
     
     def _is_business_hours(self) -> bool:
         """Check if current time is within business hours"""
-        # TODO: Implement business hours check
-        # This would check against configured business hours
+        # Check against configured business hours
         now = datetime.now()
         hour = now.hour
-        weekday = now.weekday()
+        minute = now.minute
+        weekday = now.weekday()  # 0 = Monday, 6 = Sunday
         
-        # Simple default: Mon-Fri 9am-5pm
-        if weekday >= 5:  # Weekend
+        # Get business hours from config
+        mnp_config = self.config.get('features', {}).get('mobile_number_portability', {})
+        business_hours = mnp_config.get('business_hours', {})
+        
+        # Default to Mon-Fri 9am-5pm if not configured
+        start_hour = business_hours.get('start_hour', 9)
+        start_minute = business_hours.get('start_minute', 0)
+        end_hour = business_hours.get('end_hour', 17)
+        end_minute = business_hours.get('end_minute', 0)
+        work_days = business_hours.get('work_days', [0, 1, 2, 3, 4])  # Mon-Fri
+        
+        # Check if today is a work day
+        if weekday not in work_days:
             return False
-        if hour < 9 or hour >= 17:  # Outside 9-5
+        
+        # Convert times to minutes for easier comparison
+        current_time_minutes = hour * 60 + minute
+        start_time_minutes = start_hour * 60 + start_minute
+        end_time_minutes = end_hour * 60 + end_minute
+        
+        # Check if current time is within business hours
+        if current_time_minutes < start_time_minutes or current_time_minutes >= end_time_minutes:
             return False
         
         return True
