@@ -316,6 +316,8 @@ ionic start myPBXApp blank
 ## Cost Comparison
 
 ### Traditional Proprietary Stack (Annual Cost per User)
+**Note:** Based on industry average pricing for enterprise solutions (as of 2024)
+
 - Speech Recognition (Cloud): $300-600/year
 - AI/Chatbot Service: $500-1,200/year
 - BI Tool License: $1,200-2,400/year

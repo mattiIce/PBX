@@ -43,7 +43,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
-                <p>Real-time transcription and sentiment analysis (FREE - uses Vosk offline)</p>
+                <p>Real-time transcription and sentiment analysis (FREE: Vosk offline)</p>
                 <small style="color: #2e7d32; display: block; margin-top: 8px;">✓ Live transcription ✓ Sentiment analysis ✓ Call summaries ✓ No cloud costs</small>
                 <button onclick="switchTab('speech-analytics')" class="btn-success" style="margin-top: 10px;">Use Now</button>
             </div>
@@ -67,7 +67,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
-                <p>AI assistant with live statistics (FREE options: Rasa, ChatterBot)</p>
+                <p>AI assistant with live statistics (FREE: Rasa, ChatterBot)</p>
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Live statistics ✓ API integration ⚠ Needs AI service (free options available)</small>
                 <button onclick="switchTab('conversational-ai')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
@@ -77,7 +77,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
-                <p>Campaign management with live statistics (FREE option: Vicidial)</p>
+                <p>Campaign management with live statistics (FREE: Vicidial)</p>
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Campaign tracking ✓ Statistics dashboard ⚠ Needs dialer engine (free options available)</small>
                 <button onclick="switchTab('predictive-dialing')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
@@ -87,7 +87,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
-                <p>Speaker authentication with enrollment tracking (FREE option: speaker-recognition)</p>
+                <p>Speaker authentication with enrollment tracking (FREE: speaker-recognition)</p>
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Profile management ✓ Verification tracking ⚠ Needs biometric engine (free options available)</small>
                 <button onclick="switchTab('voice-biometrics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
@@ -97,7 +97,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
-                <p>Dataset browser with export (FREE options: Metabase, Superset, Redash)</p>
+                <p>Dataset browser with export (FREE: Metabase, Superset, Redash)</p>
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Export functionality ✓ Multiple formats ⚠ Needs BI tool (free options available)</small>
                 <button onclick="switchTab('bi-integration')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
@@ -107,7 +107,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
-                <p>Tag management with analytics (FREE option: spaCy NLP)</p>
+                <p>Tag management with analytics (FREE: spaCy NLP)</p>
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Tag management ✓ Live statistics ⚠ Needs AI classifier (free options available)</small>
                 <button onclick="switchTab('call-tagging')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
@@ -131,7 +131,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
-                <p>ML-based QoS prediction (FREE option: scikit-learn)</p>
+                <p>ML-based QoS prediction (FREE: scikit-learn)</p>
                 <small style="color: #666; display: block; margin-top: 8px;">✓ Metrics tracking ✓ Alerting ⚠ Needs ML model (free framework available)</small>
                 <button onclick="switchTab('call-quality-prediction')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
@@ -162,7 +162,7 @@ function loadFrameworkOverview() {
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
-                <p>AI analysis of recorded calls (FREE option: Vosk + spaCy)</p>
+                <p>AI analysis of recorded calls (FREE: Vosk + spaCy)</p>
                 <small style="color: #666; display: block; margin-top: 8px;">✓ Sentiment ✓ Keywords ⚠ Needs NLP service (free options available)</small>
                 <button onclick="switchTab('recording-analytics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
