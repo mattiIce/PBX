@@ -276,6 +276,8 @@ function initializeTabs() {
 }
 
 function showTab(tabName) {
+    console.log(`[Admin] showTab called with tabName: ${tabName}`);
+    
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -287,8 +289,19 @@ function showTab(tabName) {
     });
     
     // Show selected tab
-    document.getElementById(tabName).classList.add('active');
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    const tabElement = document.getElementById(tabName);
+    if (!tabElement) {
+        console.error(`[Admin] Tab element with id '${tabName}' not found!`);
+        return;
+    }
+    
+    tabElement.classList.add('active');
+    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    }
+    
+    console.log(`[Admin] Tab '${tabName}' activated, loading content...`);
     
     // Load data for the tab
     switch(tabName) {
@@ -324,8 +337,22 @@ function showTab(tabName) {
             break;
         // Framework feature tabs
         case 'framework-overview':
-            if (window.frameworkFeatures) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadFrameworkOverview();
+            console.log(`[Admin] Loading framework-overview tab, window.frameworkFeatures exists: ${!!window.frameworkFeatures}`);
+            if (window.frameworkFeatures && window.frameworkFeatures.loadFrameworkOverview) {
+                console.log('[Admin] Calling loadFrameworkOverview()...');
+                const content = window.frameworkFeatures.loadFrameworkOverview();
+                console.log(`[Admin] loadFrameworkOverview() returned ${content ? content.length : 0} characters`);
+                document.getElementById(tabName).innerHTML = content;
+                console.log('[Admin] Content set successfully');
+            } else {
+                console.error('[Admin] window.frameworkFeatures or loadFrameworkOverview not available');
+                document.getElementById(tabName).innerHTML = `
+                    <div class="error-box">
+                        <h2>⚠️ Framework Features Module Not Loaded</h2>
+                        <p>The framework features module failed to load. Please check the browser console for errors.</p>
+                        <p>Try refreshing the page. If the problem persists, check that <code>js/framework_features.js</code> is accessible.</p>
+                    </div>
+                `;
             }
             break;
         case 'click-to-dial':

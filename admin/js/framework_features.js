@@ -3,6 +3,8 @@
  * Handles UI for framework features in admin panel
  */
 
+console.log('[Framework Features] Loading module...');
+
 // Framework Overview Tab
 function loadFrameworkOverview() {
     const content = `
@@ -2222,3 +2224,5 @@ window.frameworkFeatures = {
     showEnrollUserDialog,
     deleteVoiceProfile
 };
+
+console.log('[Framework Features] Module loaded successfully. window.frameworkFeatures available.');

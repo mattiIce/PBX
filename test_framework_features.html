@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Framework Features</title>
+</head>
+<body>
+    <h1>Testing Framework Features Module</h1>
+    <div id="test-output"></div>
+    <div id="framework-overview"></div>
+    
+    <script src="admin/js/framework_features.js"></script>
+    <script>
+        console.log('Testing framework features...');
+        console.log('window.frameworkFeatures:', window.frameworkFeatures);
+        console.log('window.frameworkFeatures.loadFrameworkOverview:', window.frameworkFeatures?.loadFrameworkOverview);
+        
+        if (window.frameworkFeatures && window.frameworkFeatures.loadFrameworkOverview) {
+            const content = window.frameworkFeatures.loadFrameworkOverview();
+            console.log('Content length:', content?.length);
+            console.log('First 200 chars:', content?.substring(0, 200));
+            
+            document.getElementById('framework-overview').innerHTML = content;
+            document.getElementById('test-output').innerHTML = '<p style="color: green;">✅ Framework Features module loaded successfully! Content length: ' + content.length + '</p>';
+        } else {
+            document.getElementById('test-output').innerHTML = '<p style="color: red;">❌ Framework Features module not available</p>';
+        }
+    </script>
+</body>
+</html>
