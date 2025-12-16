@@ -54,6 +54,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **OpenLDAP** - Directory services (Active Directory compatible) - ✅ Compatible
 
 **📖 Documentation:**
+- **[FREE_INTEGRATION_OPTIONS.md](FREE_INTEGRATION_OPTIONS.md)** - 💚 **Complete guide to free/open-source integration options**
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🆘 **Comprehensive troubleshooting guide**
 - **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Complete setup guides
 - **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Full integration reference
