@@ -9,6 +9,7 @@ from pbx.utils.logger import get_logger
 import hashlib
 import random
 import struct
+import math
 
 
 class BiometricStatus(Enum):
@@ -519,12 +520,12 @@ class VoiceBiometrics:
                 bin_idx = min(9, int(abs(s) / max_amp * 10))
                 amplitude_bins[bin_idx] += 1
             
-            # Geometric mean / arithmetic mean
+            # Geometric mean / arithmetic mean using logarithms for numerical stability
             non_zero_bins = [b for b in amplitude_bins if b > 0]
             if non_zero_bins:
-                geometric_mean = 1.0
-                for b in non_zero_bins:
-                    geometric_mean *= b ** (1.0 / len(non_zero_bins))
+                # Use logarithms to avoid overflow
+                log_sum = sum(math.log(b) for b in non_zero_bins)
+                geometric_mean = math.exp(log_sum / len(non_zero_bins))
                 arithmetic_mean = sum(non_zero_bins) / len(non_zero_bins)
                 features['spectral_flatness'] = geometric_mean / (arithmetic_mean + 1e-6)
             

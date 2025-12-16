@@ -189,7 +189,7 @@ class ConversationalAI:
         entities = self.extract_entities(user_input)
         
         # Check conversation history for context
-        previous_intent = context.intent if hasattr(context, 'intent') else None
+        previous_intent = context.intent  # ConversationContext has intent attribute
         message_count = len(context.messages)
         
         # Generate contextual response based on intent and conversation flow

@@ -393,14 +393,18 @@ class CallQualityPrediction:
                 feat_var = sum((f - feat_mean) ** 2 for f in feat_values)
                 target_var = sum((t - target_mean) ** 2 for t in targets)
                 
-                denominator = (feat_var * target_var) ** 0.5
-                
-                if denominator > 0:
-                    correlation = numerator / denominator
-                    # Weight is negative correlation (bad metrics decrease MOS)
-                    # Except for bandwidth which has positive correlation
-                    weight = -correlation if feat_idx < 3 else correlation
-                    self.model_weights.append(weight)
+                # Validate before calculating denominator
+                if feat_var >= 0 and target_var >= 0:
+                    denominator = (feat_var * target_var) ** 0.5
+                    
+                    if denominator > 0:
+                        correlation = numerator / denominator
+                        # Weight is negative correlation (bad metrics decrease MOS)
+                        # Except for bandwidth which has positive correlation
+                        weight = -correlation if feat_idx < 3 else correlation
+                        self.model_weights.append(weight)
+                    else:
+                        self.model_weights.append(0.0)
                 else:
                     self.model_weights.append(0.0)
             
