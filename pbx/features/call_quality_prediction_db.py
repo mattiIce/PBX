@@ -2,6 +2,7 @@
 Database layer for Call Quality Prediction
 Provides persistence for quality metrics, predictions, and alerts
 """
+import json
 from typing import Dict, List, Optional
 from datetime import datetime
 from pbx.utils.logger import get_logger
@@ -203,7 +204,6 @@ class CallQualityPredictionDatabase:
         """Save quality prediction"""
         try:
             cursor = self.db.connection.cursor()
-            import json
             
             if self.db.db_type == 'postgresql':
                 sql = """
@@ -416,10 +416,18 @@ class CallQualityPredictionDatabase:
             active_alerts = cursor.fetchone()[0]
             
             # Average MOS from recent metrics
-            cursor.execute("""
-                SELECT AVG(mos_score) FROM quality_metrics
-                WHERE timestamp > datetime('now', '-24 hours')
-            """)
+            if self.db.db_type == 'postgresql':
+                sql = """
+                    SELECT AVG(mos_score) FROM quality_metrics
+                    WHERE timestamp > NOW() - INTERVAL '24 hours'
+                """
+            else:
+                sql = """
+                    SELECT AVG(mos_score) FROM quality_metrics
+                    WHERE timestamp > datetime('now', '-24 hours')
+                """
+            
+            cursor.execute(sql)
             row = cursor.fetchone()
             avg_mos_24h = row[0] if row and row[0] else 0.0
             

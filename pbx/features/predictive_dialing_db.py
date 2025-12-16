@@ -2,6 +2,7 @@
 Database layer for Predictive Dialing
 Provides persistence for campaigns, contacts, and call results
 """
+import json
 from typing import Dict, List, Optional
 from datetime import datetime
 from pbx.utils.logger import get_logger
@@ -218,7 +219,6 @@ class PredictiveDialingDatabase:
         """Save a contact to a campaign"""
         try:
             cursor = self.db.connection.cursor()
-            import json
             
             if self.db.db_type == 'postgresql':
                 sql = """

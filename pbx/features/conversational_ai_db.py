@@ -2,6 +2,7 @@
 Database layer for Conversational AI Assistant
 Provides persistence for conversations, intents, and statistics
 """
+import json
 from typing import Dict, List, Optional
 from datetime import datetime
 from pbx.utils.logger import get_logger

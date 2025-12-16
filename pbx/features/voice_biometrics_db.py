@@ -2,6 +2,7 @@
 Database layer for Voice Biometrics
 Provides persistence for voice profiles, enrollments, and verifications
 """
+import json
 from typing import Dict, List, Optional
 from datetime import datetime
 from pbx.utils.logger import get_logger
@@ -254,15 +255,16 @@ class VoiceBiometricsDatabase:
             cursor.execute(sql, params)
             
             # Update profile stats
-            if verified:
-                update_sql = "UPDATE voice_profiles SET successful_verifications = successful_verifications + 1 WHERE user_id = "
-            else:
-                update_sql = "UPDATE voice_profiles SET failed_verifications = failed_verifications + 1 WHERE user_id = "
-            
             if self.db.db_type == 'postgresql':
-                update_sql += "%s"
+                if verified:
+                    update_sql = "UPDATE voice_profiles SET successful_verifications = successful_verifications + 1 WHERE user_id = %s"
+                else:
+                    update_sql = "UPDATE voice_profiles SET failed_verifications = failed_verifications + 1 WHERE user_id = %s"
             else:
-                update_sql += "?"
+                if verified:
+                    update_sql = "UPDATE voice_profiles SET successful_verifications = successful_verifications + 1 WHERE user_id = ?"
+                else:
+                    update_sql = "UPDATE voice_profiles SET failed_verifications = failed_verifications + 1 WHERE user_id = ?"
             
             cursor.execute(update_sql, (user_id,))
             self.db.connection.commit()
@@ -275,7 +277,6 @@ class VoiceBiometricsDatabase:
         """Save fraud detection result"""
         try:
             cursor = self.db.connection.cursor()
-            import json
             
             if self.db.db_type == 'postgresql':
                 sql = """
