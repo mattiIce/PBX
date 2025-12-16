@@ -315,7 +315,9 @@ class BIIntegration:
         
         try:
             # Check if Tableau Hyper API is available
-            from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode, TableDefinition, SqlType, TableName
+            from tableauhyperapi import (HyperProcess, Telemetry, Connection, 
+                                        CreateMode, TableDefinition, SqlType, 
+                                        TableName, Inserter)
             
             if dataset_name not in self.datasets:
                 self.logger.error(f"Dataset {dataset_name} not found")
@@ -385,7 +387,6 @@ class BIIntegration:
             else:
                 sql_type = SqlType.text()
             
-            from tableauhyperapi import TableDefinition
             columns.append(TableDefinition.Column(key, sql_type))
         
         return TableDefinition(

@@ -37,6 +37,10 @@ class SessionBorderController:
     - SIP header manipulation
     """
     
+    # Constants
+    IP_PATTERN = r'(\d+\.\d+\.\d+\.\d+)'
+    PACKETS_PER_SECOND = 50  # Assumed packets per second for VoIP bandwidth calculation
+    
     def __init__(self, config=None):
         """Initialize SBC"""
         self.logger = get_logger()
@@ -192,27 +196,24 @@ class SessionBorderController:
         """Rewrite Via header with SBC IP"""
         # Replace IP addresses in Via header with SBC public IP
         # Format: Via: SIP/2.0/UDP 192.168.1.1:5060;branch=z9hG4bK...
-        via_pattern = r'(\d+\.\d+\.\d+\.\d+)'
-        return re.sub(via_pattern, public_ip, via)
+        return re.sub(self.IP_PATTERN, public_ip, via)
     
     def _rewrite_contact_header(self, contact: str, public_ip: str) -> str:
         """Rewrite Contact header with SBC IP"""
         # Replace IP in Contact header
         # Format: Contact: <sip:user@192.168.1.1:5060>
-        contact_pattern = r'(\d+\.\d+\.\d+\.\d+)'
-        return re.sub(contact_pattern, public_ip, contact)
+        return re.sub(self.IP_PATTERN, public_ip, contact)
     
     def _rewrite_record_route(self, record_route: str, public_ip: str) -> str:
         """Rewrite Record-Route header with SBC IP"""
         # Replace IP in Record-Route
-        rr_pattern = r'(\d+\.\d+\.\d+\.\d+)'
-        return re.sub(rr_pattern, public_ip, record_route)
+        return re.sub(self.IP_PATTERN, public_ip, record_route)
     
     def _hide_internal_ips_in_sdp(self, sdp: str, public_ip: str) -> str:
         """Hide internal IPs in SDP body"""
         # Replace connection line (c=) with public IP
         # Format: c=IN IP4 192.168.1.1
-        sdp_pattern = r'(c=IN IP4 )(\d+\.\d+\.\d+\.\d+)'
+        sdp_pattern = r'(c=IN IP4 )' + self.IP_PATTERN
         return re.sub(sdp_pattern, r'\g<1>' + public_ip, sdp)
     
     def _normalize_sip_message(self, message: Dict) -> Dict:
@@ -422,8 +423,7 @@ class SessionBorderController:
         self.relayed_media_bytes += packet_size
         
         # Update bandwidth tracking (rough estimate in kbps)
-        # Assume 50 packets per second for typical VoIP
-        bandwidth_kbps = (packet_size * 8 * 50) / 1000
+        bandwidth_kbps = (packet_size * 8 * self.PACKETS_PER_SECOND) / 1000
         
         self.logger.debug(f"Relayed RTP packet for {call_id}: {packet_size} bytes")
         
