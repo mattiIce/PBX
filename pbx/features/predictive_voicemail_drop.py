@@ -90,7 +90,8 @@ class VoicemailDropSystem:
         # Convert audio bytes to samples (assuming 16-bit PCM)
         try:
             samples = struct.unpack(f'{len(audio_data) // 2}h', audio_data)
-        except:
+        except struct.error as e:
+            self.logger.error(f"Failed to unpack audio data: {e}")
             samples = []
         
         if samples:
@@ -157,34 +158,37 @@ class VoicemailDropSystem:
         Returns:
             bool: True if beep detected
         """
+        # Constants for beep detection
+        BEEP_DURATION_WINDOWS = 40  # 40 windows = ~800ms (800ms beep duration)
+        WINDOW_SIZE = 160  # 20ms windows at 8kHz
+        ENERGY_THRESHOLD_MULTIPLIER = 3.0
+        ENERGY_SUSTAIN_THRESHOLD = 0.7  # 70% of original energy
+        
         # Simple energy-based beep detection
         # A beep is characterized by:
         # - Sudden increase in energy
         # - Sustained tone (0.5-1 second)
         # - Followed by silence or decrease
         
-        window_size = 160  # 20ms windows
-        energy_threshold_multiplier = 3.0
-        
-        for i in range(0, len(samples) - window_size * 50, window_size):
+        for i in range(0, len(samples) - WINDOW_SIZE * 50, WINDOW_SIZE):
             # Calculate energy of current window
-            window = samples[i:i + window_size]
-            current_energy = sum(abs(s) for s in window) / window_size
+            window = samples[i:i + WINDOW_SIZE]
+            current_energy = sum(abs(s) for s in window) / WINDOW_SIZE
             
             # Calculate energy of previous window
             if i > 0:
-                prev_window = samples[i - window_size:i]
-                prev_energy = sum(abs(s) for s in prev_window) / window_size
+                prev_window = samples[i - WINDOW_SIZE:i]
+                prev_energy = sum(abs(s) for s in prev_window) / WINDOW_SIZE
                 
                 # Check for sudden increase (potential beep start)
-                if current_energy > prev_energy * energy_threshold_multiplier:
+                if current_energy > prev_energy * ENERGY_THRESHOLD_MULTIPLIER:
                     # Check if energy sustains for beep duration
                     sustained = True
-                    for j in range(1, 40):  # Check next 800ms
-                        if i + (j * window_size) + window_size <= len(samples):
-                            check_window = samples[i + (j * window_size):i + (j * window_size) + window_size]
-                            check_energy = sum(abs(s) for s in check_window) / window_size
-                            if check_energy < current_energy * 0.7:  # Energy drops significantly
+                    for j in range(1, BEEP_DURATION_WINDOWS):  # Check next 800ms
+                        if i + (j * WINDOW_SIZE) + WINDOW_SIZE <= len(samples):
+                            check_window = samples[i + (j * WINDOW_SIZE):i + (j * WINDOW_SIZE) + WINDOW_SIZE]
+                            check_energy = sum(abs(s) for s in check_window) / WINDOW_SIZE
+                            if check_energy < current_energy * ENERGY_SUSTAIN_THRESHOLD:  # Energy drops significantly
                                 sustained = False
                                 break
                     

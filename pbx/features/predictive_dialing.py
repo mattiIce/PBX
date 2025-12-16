@@ -272,15 +272,21 @@ class PredictiveDialer:
         answer_rate = max(0.1, historical_answer_rate)  # Minimum 10% to avoid division issues
         target_abandon_rate = self.max_abandon_rate
         
-        optimal_lines = int(
-            predicted_available_agents / (answer_rate * (1 - target_abandon_rate))
-        )
-        
-        # Apply lines-per-agent multiplier based on mode
-        lines_to_dial = min(
-            optimal_lines,
-            int(current_agents * self.lines_per_agent)
-        )
+        # Calculate denominator and check for zero
+        denominator = answer_rate * (1 - target_abandon_rate)
+        if denominator <= 0.001:  # Avoid division by very small numbers
+            # Fallback to simple calculation
+            lines_to_dial = int(current_agents * self.lines_per_agent)
+        else:
+            optimal_lines = int(
+                predicted_available_agents / denominator
+            )
+            
+            # Apply lines-per-agent multiplier based on mode
+            lines_to_dial = min(
+                optimal_lines,
+                int(current_agents * self.lines_per_agent)
+            )
         
         self.logger.debug(f"Predicted dialing: {lines_to_dial} lines "
                          f"({current_agents} agents, {answer_rate:.2f} answer rate)")

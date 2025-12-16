@@ -545,9 +545,13 @@ class RecordingAnalytics:
         # Filter analyses by date range
         filtered_analyses = []
         for recording_id, analysis in self.analyses.items():
-            analyzed_at = datetime.fromisoformat(analysis['analyzed_at'])
-            if start_date <= analyzed_at <= end_date:
-                filtered_analyses.append(analysis)
+            try:
+                analyzed_at = datetime.fromisoformat(analysis['analyzed_at'])
+                if start_date <= analyzed_at <= end_date:
+                    filtered_analyses.append(analysis)
+            except (ValueError, KeyError) as e:
+                self.logger.warning(f"Skipping analysis {recording_id} due to invalid timestamp: {e}")
+                continue
         
         if not filtered_analyses:
             return {

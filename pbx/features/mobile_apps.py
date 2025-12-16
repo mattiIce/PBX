@@ -206,7 +206,9 @@ class MobileAppFramework:
                 # notification_id = response
                 
                 self.logger.info(f"Sending FCM notification to Android device {device_id}")
-                notification_id = f"fcm-{device_id}-{datetime.now().timestamp()}"
+                # Use UUID for guaranteed unique notification ID
+                import uuid
+                notification_id = f"fcm-{uuid.uuid4()}"
                 
             elif device.platform == MobilePlatform.IOS:
                 # Apple Push Notification Service (APNs) via FCM or direct APNs
@@ -269,7 +271,9 @@ class MobileAppFramework:
                 # notification_id = response
                 
                 self.logger.info(f"Sending APNs notification to iOS device {device_id}")
-                notification_id = f"apns-{device_id}-{datetime.now().timestamp()}"
+                # Use UUID for guaranteed unique notification ID
+                import uuid
+                notification_id = f"apns-{uuid.uuid4()}"
                 
             else:
                 return {'success': False, 'error': 'Unknown platform'}

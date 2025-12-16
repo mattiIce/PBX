@@ -96,7 +96,7 @@ class VideoCodecManager:
         try:
             import subprocess
             result = subprocess.run(['ffmpeg', '-version'], 
-                                   capture_output=True, text=True, timeout=5)
+                                   capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 self.logger.info("FFmpeg detected")
                 # FFmpeg supports multiple codecs
@@ -124,7 +124,7 @@ class VideoCodecManager:
         # Try to detect x265
         try:
             result = subprocess.run(['x265', '--version'],
-                                   capture_output=True, text=True, timeout=5)
+                                   capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 self.logger.info("x265 encoder detected")
                 if 'H.265' not in available:
