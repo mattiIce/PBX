@@ -333,12 +333,18 @@ function showTab(tabName) {
             break;
         // Framework feature tabs
         case 'framework-overview':
+            const overviewElement = document.getElementById(tabName);
+            if (!overviewElement) {
+                console.error(`Element with id '${tabName}' not found`);
+                return;
+            }
+            
             if (window.frameworkFeatures && window.frameworkFeatures.loadFrameworkOverview) {
-                document.getElementById(tabName).innerHTML = window.frameworkFeatures.loadFrameworkOverview();
+                overviewElement.innerHTML = window.frameworkFeatures.loadFrameworkOverview();
             } else {
                 console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                document.getElementById(tabName).innerHTML = `
-                    <div class="error-box" style="padding: 30px; background: #fff3cd; border-left: 4px solid #ff9800; margin: 20px;">
+                overviewElement.innerHTML = `
+                    <div class="alert-box warning" style="padding: 30px; margin: 20px;">
                         <h2>⚠️ Framework Features Module Not Loaded</h2>
                         <p>The framework features module failed to load. This could be due to:</p>
                         <ul>
