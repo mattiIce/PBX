@@ -357,8 +357,9 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     
     # Determine which tracks to generate
-    generate_all = args.all or not (args.melody or args.ambient or 
-                                     args.arpeggio or args.pad or args.chimes)
+    generate_all = (args.all or 
+                    not (args.melody or args.ambient or args.arpeggio or 
+                         args.pad or args.chimes))
     
     print("=" * 60)
     print("Music on Hold (MOH) Generator")

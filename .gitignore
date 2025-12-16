@@ -40,12 +40,12 @@ voicemail/
 test_voicemail/
 cdr/
 
-# Music on Hold - keep pre-generated files in repo
-# Only ignore custom user-added files (anything not in default/)
+# Music on Hold
+# Keep pre-generated default files, exclude user-added custom classes
+!moh/
 moh/*
 !moh/README.md
 !moh/default/
-!moh/default/*.wav
 
 # Generated voice files (generate with scripts/generate_tts_prompts.py)
 auto_attendant/*.wav
