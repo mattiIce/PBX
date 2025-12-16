@@ -96,6 +96,9 @@ class VoiceBiometrics:
         self.GMM_SCORE_FAIR = -20.0  # Fair match (80%+ similarity)
         self.GMM_SCORE_WEAK = -30.0  # Weak match (75%+ similarity)
         
+        # ML model configuration
+        self.MIN_GMM_ENROLLMENT_SAMPLES = 3  # Minimum samples needed to train GMM
+        
         # Statistics
         self.total_enrollments = 0
         self.total_verifications = 0
@@ -413,7 +416,7 @@ class VoiceBiometrics:
             profile.voiceprint_features = aggregated_features
             
             # Train GMM model if scikit-learn is available for better accuracy
-            if SKLEARN_AVAILABLE and len(profile.enrollment_features) >= 3:
+            if SKLEARN_AVAILABLE and len(profile.enrollment_features) >= self.MIN_GMM_ENROLLMENT_SAMPLES:
                 try:
                     # Convert features to numpy array
                     feature_vectors = []

@@ -100,6 +100,11 @@ class CallQualityPrediction:
         self.scaler = None
         self.model_trained = False
         
+        # ML model configuration constants
+        self.MIN_TRAINING_SAMPLES = 10  # Minimum samples needed to train model
+        self.RF_N_ESTIMATORS = 50  # Number of trees in RandomForest
+        self.RF_MAX_DEPTH = 10  # Maximum tree depth
+        
         # Initialize database if available
         if self.db_backend and self.db_backend.enabled:
             try:
@@ -376,8 +381,8 @@ class CallQualityPrediction:
                 Each dict should contain: latency, jitter, packet_loss, bandwidth, 
                 codec (optional), time_of_day (optional), mos_score
         """
-        if not historical_data or len(historical_data) < 10:
-            self.logger.warning(f"Insufficient training data: {len(historical_data)} samples")
+        if not historical_data or len(historical_data) < self.MIN_TRAINING_SAMPLES:
+            self.logger.warning(f"Insufficient training data: {len(historical_data)} samples (need {self.MIN_TRAINING_SAMPLES})")
             return
         
         self.logger.info(f"Training model with {len(historical_data)} samples")
@@ -426,8 +431,8 @@ class CallQualityPrediction:
                 
                 # Train RandomForest Regressor
                 self.rf_model = RandomForestRegressor(
-                    n_estimators=50,
-                    max_depth=10,
+                    n_estimators=self.RF_N_ESTIMATORS,
+                    max_depth=self.RF_MAX_DEPTH,
                     random_state=42,
                     n_jobs=-1  # Use all CPU cores
                 )

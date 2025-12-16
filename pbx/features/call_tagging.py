@@ -94,6 +94,7 @@ class CallTagging:
         self.ml_classifier = None
         self.tfidf_vectorizer = None
         self.label_encoder = None
+        self.MIN_CLASSIFICATION_PROBABILITY = 0.1  # Minimum probability to include in results
         self._initialize_ml_classifier()
         
         self.logger.info("Call tagging system initialized")
@@ -320,7 +321,7 @@ class CallTagging:
                 
                 # Create results with confidence scores
                 for i, prob in enumerate(probabilities):
-                    if prob > 0.1:  # Only include if probability > 10%
+                    if prob > self.MIN_CLASSIFICATION_PROBABILITY:  # Only include if probability > threshold
                         category = classes[i]
                         results.append((category, float(prob)))
                 
