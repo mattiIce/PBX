@@ -1569,8 +1569,13 @@ input[type="range"]::-moz-range-thumb:hover {
     color: white;
 }
 
-.status-framework-only {
+.status-enhanced {
     background: #ff9800 !important;
+    color: white;
+}
+
+.status-framework-only {
+    background: #9e9e9e !important;
     color: white;
 }
 
