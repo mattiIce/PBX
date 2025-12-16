@@ -3,6 +3,23 @@ const API_BASE = window.location.origin;
 
 // Constants
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
+const FRAMEWORK_FEATURES_ERROR_MESSAGE = `
+    <div class="alert-box warning">
+        <h2>⚠️ Framework Features Module Not Loaded</h2>
+        <p>The framework features module failed to load. This could be due to:</p>
+        <ul>
+            <li>Network error preventing the script from loading</li>
+            <li>JavaScript error in the framework_features.js file</li>
+            <li>Browser blocking the script</li>
+        </ul>
+        <p><strong>Troubleshooting:</strong></p>
+        <ul>
+            <li>Check the browser console for errors (F12)</li>
+            <li>Verify that <code>admin/js/framework_features.js</code> is accessible</li>
+            <li>Try refreshing the page</li>
+        </ul>
+    </div>
+`;
 
 // State
 let currentExtensions = [];
@@ -343,23 +360,7 @@ function showTab(tabName) {
                 overviewElement.innerHTML = window.frameworkFeatures.loadFrameworkOverview();
             } else {
                 console.error('Framework Features module not loaded. Check that js/framework_features.js is accessible.');
-                overviewElement.innerHTML = `
-                    <div class="alert-box warning" style="padding: 30px; margin: 20px;">
-                        <h2>⚠️ Framework Features Module Not Loaded</h2>
-                        <p>The framework features module failed to load. This could be due to:</p>
-                        <ul>
-                            <li>Network error preventing the script from loading</li>
-                            <li>JavaScript error in the framework_features.js file</li>
-                            <li>Browser blocking the script</li>
-                        </ul>
-                        <p><strong>Troubleshooting:</strong></p>
-                        <ul>
-                            <li>Check the browser console for errors (F12)</li>
-                            <li>Verify that <code>admin/js/framework_features.js</code> is accessible</li>
-                            <li>Try refreshing the page</li>
-                        </ul>
-                    </div>
-                `;
+                overviewElement.innerHTML = FRAMEWORK_FEATURES_ERROR_MESSAGE;
             }
             break;
         case 'click-to-dial':
