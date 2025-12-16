@@ -54,10 +54,12 @@ class CallQualityPrediction:
     - Recommendation engine
     """
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, db_backend=None):
         """Initialize call quality prediction system"""
         self.logger = get_logger()
         self.config = config or {}
+        self.db_backend = db_backend
+        self.db = None
         
         # Configuration
         prediction_config = self.config.get('features', {}).get('quality_prediction', {})
@@ -78,6 +80,16 @@ class CallQualityPrediction:
         self.accurate_predictions = 0
         self.false_positives = 0
         self.alerts_generated = 0
+        
+        # Initialize database if available
+        if self.db_backend and self.db_backend.enabled:
+            try:
+                from pbx.features.call_quality_prediction_db import CallQualityPredictionDatabase
+                self.db = CallQualityPredictionDatabase(self.db_backend)
+                self.db.create_tables()
+                self.logger.info("Call quality prediction database layer initialized")
+            except Exception as e:
+                self.logger.warning(f"Could not initialize database layer: {e}")
         
         self.logger.info("Call quality prediction system initialized")
         self.logger.info(f"  Prediction interval: {self.prediction_interval}s")
@@ -100,6 +112,10 @@ class CallQualityPrediction:
         # Limit history size
         if len(self.metrics_history[call_id]) > self.max_history_per_endpoint:
             self.metrics_history[call_id].pop(0)
+        
+        # Save to database
+        if self.db:
+            self.db.save_metrics(call_id, metrics.to_dict())
         
         # Trigger prediction
         if self.enabled:
@@ -176,11 +192,23 @@ class CallQualityPrediction:
         self.active_predictions[call_id] = prediction
         self.total_predictions += 1
         
+        # Save to database
+        if self.db:
+            self.db.save_prediction(call_id, prediction)
+        
         if alert:
             self.alerts_generated += 1
             self.logger.warning(f"Quality alert for call {call_id}")
             for reason in alert_reasons:
                 self.logger.warning(f"  {reason}")
+            
+            # Save alerts to database
+            if self.db:
+                for reason in alert_reasons:
+                    severity = 'critical' if predicted_mos < 3.0 else 'warning'
+                    metric_val = predicted_mos if 'MOS' in reason else predicted_packet_loss
+                    thresh_val = self.alert_threshold_mos if 'MOS' in reason else self.alert_threshold_packet_loss
+                    self.db.save_alert(call_id, 'quality_degradation', severity, reason, metric_val, thresh_val)
         
         return prediction
     
@@ -282,7 +310,7 @@ class CallQualityPrediction:
         """Get prediction statistics"""
         accuracy = self.accurate_predictions / max(1, self.total_predictions)
         
-        return {
+        stats = {
             'total_predictions': self.total_predictions,
             'accurate_predictions': self.accurate_predictions,
             'false_positives': self.false_positives,
@@ -292,15 +320,23 @@ class CallQualityPrediction:
             'endpoints_monitored': len(self.metrics_history),
             'enabled': self.enabled
         }
+        
+        # Add database statistics if available
+        if self.db:
+            db_stats = self.db.get_statistics()
+            if db_stats:
+                stats['database_stats'] = db_stats
+        
+        return stats
 
 
 # Global instance
 _quality_prediction = None
 
 
-def get_quality_prediction(config=None) -> CallQualityPrediction:
+def get_quality_prediction(config=None, db_backend=None) -> CallQualityPrediction:
     """Get or create call quality prediction instance"""
     global _quality_prediction
     if _quality_prediction is None:
-        _quality_prediction = CallQualityPrediction(config)
+        _quality_prediction = CallQualityPrediction(config, db_backend)
     return _quality_prediction
