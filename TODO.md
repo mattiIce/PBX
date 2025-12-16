@@ -89,8 +89,12 @@ Features with foundational implementations that can be extended:
 - Multi-Factor Authentication (✅ fully implemented - TOTP, YubiKey, FIDO2/WebAuthn, backup codes)
 - SOC 2 Type 2 Compliance (✅ fully implemented - audit logging, controls tracking, reporting)
 - Dashboard & Analytics (REST APIs available, can add more visualizations)
-- **Conversational AI** (⚙️ admin UI added - configuration forms, needs AI service integration)
-- **Mobile Apps** (⚙️ admin UI added - device management forms, needs native app development)
+- **Conversational AI** (🔧 enhanced admin UI - configuration, live statistics, needs AI service integration)
+- **BI Integration** (🔧 enhanced admin UI - dataset browser, export functionality, needs BI tool credentials)
+- **Call Tagging** (🔧 enhanced admin UI - tag/rule management, analytics, needs AI classifier)
+- **Mobile Apps** (🔧 enhanced admin UI - device management, statistics, needs native app development)
+- **Predictive Dialing** (🔧 enhanced admin UI - campaign management, statistics, needs dialer engine)
+- **Voice Biometrics** (🔧 enhanced admin UI - profile enrollment, verification tracking, needs biometric engine)
 
 ### High-Priority Next Steps
 1. **Mobile Apps** - Critical for modern workforce
