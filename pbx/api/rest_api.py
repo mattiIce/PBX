@@ -2,10 +2,13 @@
 REST API Server for PBX Management
 Provides HTTP/HTTPS API for managing PBX features
 """
+import base64
+import binascii
 import ipaddress
 import json
 import mimetypes
 import os
+import re
 import shutil
 import socket
 import ssl
@@ -427,6 +430,92 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 else:
                     self._send_json({'error': 'Not found'}, 404)
             
+            # Conversational AI POST endpoints
+            elif path == '/api/framework/conversational-ai/conversation':
+                self._handle_start_ai_conversation()
+            elif path == '/api/framework/conversational-ai/process':
+                self._handle_process_ai_input()
+            elif path == '/api/framework/conversational-ai/config':
+                self._handle_configure_ai_provider()
+            
+            # Predictive Dialing POST endpoints
+            elif path == '/api/framework/predictive-dialing/campaign':
+                self._handle_create_dialing_campaign()
+            elif path == '/api/framework/predictive-dialing/contacts':
+                self._handle_add_campaign_contacts()
+            elif path.startswith('/api/framework/predictive-dialing/campaign/'):
+                # Parse campaign ID and action from path: /campaign/{id}/{action}
+                path_parts = path.split('/api/framework/predictive-dialing/campaign/')[-1].split('/')
+                if len(path_parts) >= 2:
+                    campaign_id = '/'.join(path_parts[:-1])  # Support IDs with slashes
+                    action = path_parts[-1]
+                    if action == 'start':
+                        self._handle_start_dialing_campaign(campaign_id)
+                    elif action == 'pause':
+                        self._handle_pause_dialing_campaign(campaign_id)
+                    else:
+                        self._send_json({'error': 'Not found'}, 404)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
+            
+            # Voice Biometrics POST endpoints
+            elif path == '/api/framework/voice-biometrics/profile':
+                self._handle_create_voice_profile()
+            elif path == '/api/framework/voice-biometrics/enroll':
+                self._handle_start_voice_enrollment()
+            elif path == '/api/framework/voice-biometrics/verify':
+                self._handle_verify_speaker()
+            
+            # Call Quality Prediction POST endpoints
+            elif path == '/api/framework/call-quality-prediction/metrics':
+                self._handle_collect_quality_metrics()
+            elif path == '/api/framework/call-quality-prediction/train':
+                self._handle_train_quality_model()
+            
+            # Video Codec POST endpoints
+            elif path == '/api/framework/video-codec/bandwidth':
+                self._handle_calculate_video_bandwidth()
+            
+            # Mobile Number Portability POST endpoints
+            elif path == '/api/framework/mobile-portability/mapping':
+                self._handle_create_mobile_mapping()
+            elif path.startswith('/api/framework/mobile-portability/mapping/'):
+                # Parse business number and action from path: /mapping/{number}/{action}
+                path_parts = path.split('/api/framework/mobile-portability/mapping/')[-1].split('/')
+                if len(path_parts) >= 2:
+                    business_number = '/'.join(path_parts[:-1])  # Support numbers with slashes
+                    action = path_parts[-1]
+                    if action == 'toggle':
+                        self._handle_toggle_mobile_mapping(business_number)
+                    else:
+                        self._send_json({'error': 'Not found'}, 404)
+                else:
+                    self._send_json({'error': 'Invalid path'}, 400)
+            
+            # Call Recording Analytics POST endpoints
+            elif path == '/api/framework/recording-analytics/analyze':
+                self._handle_analyze_recording()
+            elif path == '/api/framework/recording-analytics/search':
+                self._handle_search_recordings()
+            
+            # Predictive Voicemail Drop POST endpoints
+            elif path == '/api/framework/voicemail-drop/message':
+                self._handle_add_voicemail_message()
+            elif path == '/api/framework/voicemail-drop/drop':
+                self._handle_drop_voicemail()
+            
+            # DNS SRV Failover POST endpoints
+            elif path == '/api/framework/dns-srv/lookup':
+                self._handle_lookup_srv()
+            
+            # Session Border Controller POST endpoints
+            elif path == '/api/framework/sbc/relay':
+                self._handle_allocate_sbc_relay()
+            
+            # Data Residency Controls POST endpoints
+            elif path == '/api/framework/data-residency/location':
+                self._handle_get_storage_location()
+            
             # Open-source integration APIs
             elif path == '/api/integrations/jitsi/meetings':
                 self._handle_jitsi_create_meeting()
@@ -604,6 +693,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._handle_delete_blocked_pattern(pattern_id)
                 else:
                     self._send_json({'error': 'Invalid pattern ID'}, 400)
+            elif path.startswith('/api/framework/voice-biometrics/profile/'):
+                # Extract user ID from path - sanitize
+                user_id = path.split('/')[-1]
+                # Validate: alphanumeric, underscore, hyphen, dot only (no path traversal)
+                if user_id and re.match(r'^[a-zA-Z0-9_.-]+$', user_id):
+                    self._handle_delete_voice_profile(user_id)
+                else:
+                    self._send_json({'error': 'Invalid user ID'}, 400)
+            elif path.startswith('/api/framework/mobile-portability/mapping/'):
+                # Extract business number from path - sanitize
+                business_number = path.split('/')[-1]
+                # Validate: phone number format (digits, +, -, parentheses, spaces)
+                if business_number and re.match(r'^[\d+\-() ]+$', business_number):
+                    self._handle_delete_mobile_mapping(business_number)
+                else:
+                    self._send_json({'error': 'Invalid business number'}, 400)
             else:
                 self._send_json({'error': 'Not found'}, 404)
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError) as e:
@@ -911,6 +1016,89 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith('/api/framework/geo-redundancy/region/'):
                 region_id = path.split('/')[-1]
                 self._handle_get_geo_region_status(region_id)
+            
+            # Conversational AI API endpoints
+            elif path == '/api/framework/conversational-ai/config':
+                self._handle_get_ai_config()
+            elif path == '/api/framework/conversational-ai/statistics':
+                self._handle_get_ai_statistics()
+            elif path == '/api/framework/conversational-ai/conversations':
+                self._handle_get_ai_conversations()
+            
+            # Predictive Dialing API endpoints
+            elif path == '/api/framework/predictive-dialing/campaigns':
+                self._handle_get_dialing_campaigns()
+            elif path == '/api/framework/predictive-dialing/statistics':
+                self._handle_get_dialing_statistics()
+            elif path.startswith('/api/framework/predictive-dialing/campaign/'):
+                campaign_id = path.split('/')[-1]
+                self._handle_get_campaign_details(campaign_id)
+            
+            # Voice Biometrics API endpoints
+            elif path == '/api/framework/voice-biometrics/profiles':
+                self._handle_get_voice_profiles()
+            elif path == '/api/framework/voice-biometrics/statistics':
+                self._handle_get_voice_statistics()
+            elif path.startswith('/api/framework/voice-biometrics/profile/'):
+                user_id = path.split('/')[-1]
+                self._handle_get_voice_profile(user_id)
+            
+            # Call Quality Prediction API endpoints
+            elif path == '/api/framework/call-quality-prediction/predictions':
+                self._handle_get_quality_predictions()
+            elif path == '/api/framework/call-quality-prediction/statistics':
+                self._handle_get_quality_statistics()
+            elif path.startswith('/api/framework/call-quality-prediction/prediction/'):
+                call_id = path.split('/')[-1]
+                self._handle_get_call_prediction(call_id)
+            
+            # Video Codec API endpoints
+            elif path == '/api/framework/video-codec/codecs':
+                self._handle_get_video_codecs()
+            elif path == '/api/framework/video-codec/statistics':
+                self._handle_get_video_statistics()
+            
+            # Mobile Number Portability API endpoints
+            elif path == '/api/framework/mobile-portability/mappings':
+                self._handle_get_mobile_mappings()
+            elif path == '/api/framework/mobile-portability/statistics':
+                self._handle_get_mobile_statistics()
+            elif path.startswith('/api/framework/mobile-portability/mapping/'):
+                business_number = path.split('/')[-1]
+                self._handle_get_mobile_mapping(business_number)
+            
+            # Call Recording Analytics API endpoints
+            elif path == '/api/framework/recording-analytics/analyses':
+                self._handle_get_recording_analyses()
+            elif path == '/api/framework/recording-analytics/statistics':
+                self._handle_get_recording_statistics()
+            elif path.startswith('/api/framework/recording-analytics/analysis/'):
+                recording_id = path.split('/')[-1]
+                self._handle_get_recording_analysis(recording_id)
+            
+            # Predictive Voicemail Drop API endpoints
+            elif path == '/api/framework/voicemail-drop/messages':
+                self._handle_get_voicemail_messages()
+            elif path == '/api/framework/voicemail-drop/statistics':
+                self._handle_get_voicemail_drop_statistics()
+            
+            # DNS SRV Failover API endpoints
+            elif path == '/api/framework/dns-srv/records':
+                self._handle_get_srv_records()
+            elif path == '/api/framework/dns-srv/statistics':
+                self._handle_get_dns_srv_statistics()
+            
+            # Session Border Controller API endpoints
+            elif path == '/api/framework/sbc/statistics':
+                self._handle_get_sbc_statistics()
+            elif path == '/api/framework/sbc/relays':
+                self._handle_get_sbc_relays()
+            
+            # Data Residency Controls API endpoints
+            elif path == '/api/framework/data-residency/regions':
+                self._handle_get_data_regions()
+            elif path == '/api/framework/data-residency/statistics':
+                self._handle_get_data_residency_statistics()
             
             # Open-source integration GET APIs
             elif path.startswith('/api/integrations/espocrm/contacts/search'):
@@ -8192,6 +8380,933 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(result)
         except Exception as e:
             self.logger.error(f"Error triggering failover: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Conversational AI Handlers
+    def _handle_get_ai_config(self):
+        """GET /api/framework/conversational-ai/config - Get AI configuration"""
+        try:
+            from pbx.features.conversational_ai import get_conversational_ai
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            config = {
+                'enabled': ai.enabled,
+                'provider': ai.provider,
+                'model': ai.model,
+                'max_tokens': ai.max_tokens,
+                'temperature': ai.temperature
+            }
+            self._send_json(config)
+        except Exception as e:
+            self.logger.error(f"Error getting AI config: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_ai_statistics(self):
+        """GET /api/framework/conversational-ai/statistics - Get AI statistics"""
+        try:
+            from pbx.features.conversational_ai import get_conversational_ai
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            stats = ai.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting AI statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_ai_conversations(self):
+        """GET /api/framework/conversational-ai/conversations - Get active conversations"""
+        try:
+            from pbx.features.conversational_ai import get_conversational_ai
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            conversations = [
+                {
+                    'call_id': conv.call_id,
+                    'caller_id': conv.caller_id,
+                    'started_at': conv.started_at.isoformat(),
+                    'intent': conv.intent,
+                    'message_count': len(conv.messages)
+                }
+                for conv in ai.active_conversations.values()
+            ]
+            self._send_json({'conversations': conversations})
+        except Exception as e:
+            self.logger.error(f"Error getting conversations: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_start_ai_conversation(self):
+        """POST /api/framework/conversational-ai/conversation - Start conversation"""
+        try:
+            body = self._get_body()
+            call_id = body.get('call_id')
+            caller_id = body.get('caller_id')
+            
+            if not call_id or not caller_id:
+                self._send_json({'error': 'call_id and caller_id required'}, 400)
+                return
+            
+            from pbx.features.conversational_ai import get_conversational_ai
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            context = ai.start_conversation(call_id, caller_id)
+            
+            self._send_json({
+                'success': True,
+                'call_id': context.call_id,
+                'started_at': context.started_at.isoformat()
+            })
+        except Exception as e:
+            self.logger.error(f"Error starting conversation: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_process_ai_input(self):
+        """POST /api/framework/conversational-ai/process - Process user input"""
+        try:
+            body = self._get_body()
+            call_id = body.get('call_id')
+            user_input = body.get('input')
+            
+            if not call_id or not user_input:
+                self._send_json({'error': 'call_id and input required'}, 400)
+                return
+            
+            from pbx.features.conversational_ai import get_conversational_ai
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            result = ai.process_user_input(call_id, user_input)
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error processing input: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_configure_ai_provider(self):
+        """POST /api/framework/conversational-ai/config - Configure AI provider"""
+        try:
+            body = self._get_body()
+            provider = body.get('provider')
+            api_key = body.get('api_key')
+            
+            if not provider or not api_key:
+                self._send_json({'error': 'provider and api_key required'}, 400)
+                return
+            
+            from pbx.features.conversational_ai import get_conversational_ai
+            ai = get_conversational_ai(self.pbx_core.config if self.pbx_core else None)
+            ai.configure_provider(provider, api_key, **body.get('options', {}))
+            
+            self._send_json({'success': True, 'provider': provider})
+        except Exception as e:
+            self.logger.error(f"Error configuring provider: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Predictive Dialing Handlers
+    def _handle_get_dialing_campaigns(self):
+        """GET /api/framework/predictive-dialing/campaigns - Get all campaigns"""
+        try:
+            from pbx.features.predictive_dialing import get_predictive_dialer
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            campaigns = [
+                {
+                    'campaign_id': c.campaign_id,
+                    'name': c.name,
+                    'status': c.status.value,
+                    'dialing_mode': c.dialing_mode.value,
+                    'total_contacts': c.total_contacts,
+                    'contacts_completed': c.contacts_completed,
+                    'successful_calls': c.successful_calls
+                }
+                for c in dialer.campaigns.values()
+            ]
+            self._send_json({'campaigns': campaigns})
+        except Exception as e:
+            self.logger.error(f"Error getting campaigns: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_dialing_statistics(self):
+        """GET /api/framework/predictive-dialing/statistics - Get dialing statistics"""
+        try:
+            from pbx.features.predictive_dialing import get_predictive_dialer
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            stats = dialer.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting dialing statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_campaign_details(self, campaign_id: str):
+        """GET /api/framework/predictive-dialing/campaign/{id} - Get campaign details"""
+        try:
+            from pbx.features.predictive_dialing import get_predictive_dialer
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            stats = dialer.get_campaign_statistics(campaign_id)
+            if stats:
+                self._send_json(stats)
+            else:
+                self._send_json({'error': 'Campaign not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting campaign details: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_dialing_campaign(self):
+        """POST /api/framework/predictive-dialing/campaign - Create campaign"""
+        try:
+            body = self._get_body()
+            campaign_id = body.get('campaign_id')
+            name = body.get('name')
+            dialing_mode = body.get('dialing_mode', 'progressive')
+            
+            if not campaign_id or not name:
+                self._send_json({'error': 'campaign_id and name required'}, 400)
+                return
+            
+            from pbx.features.predictive_dialing import get_predictive_dialer, DialingMode
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            
+            # Convert mode string to enum
+            mode_enum = DialingMode.PROGRESSIVE
+            if dialing_mode.lower() == 'preview':
+                mode_enum = DialingMode.PREVIEW
+            elif dialing_mode.lower() == 'predictive':
+                mode_enum = DialingMode.PREDICTIVE
+            elif dialing_mode.lower() == 'power':
+                mode_enum = DialingMode.POWER
+            
+            campaign = dialer.create_campaign(
+                campaign_id, 
+                name, 
+                mode_enum,
+                max_attempts=body.get('max_attempts', 3),
+                retry_interval=body.get('retry_interval', 3600)
+            )
+            
+            self._send_json({
+                'success': True,
+                'campaign_id': campaign.campaign_id,
+                'name': campaign.name
+            })
+        except Exception as e:
+            self.logger.error(f"Error creating campaign: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_start_dialing_campaign(self, campaign_id: str):
+        """POST /api/framework/predictive-dialing/campaign/{id}/start - Start campaign"""
+        try:
+            from pbx.features.predictive_dialing import get_predictive_dialer
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer.start_campaign(campaign_id)
+            self._send_json({'success': True, 'status': 'running'})
+        except Exception as e:
+            self.logger.error(f"Error starting campaign: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_pause_dialing_campaign(self, campaign_id: str):
+        """POST /api/framework/predictive-dialing/campaign/{id}/pause - Pause campaign"""
+        try:
+            from pbx.features.predictive_dialing import get_predictive_dialer
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            dialer.pause_campaign(campaign_id)
+            self._send_json({'success': True, 'status': 'paused'})
+        except Exception as e:
+            self.logger.error(f"Error pausing campaign: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_add_campaign_contacts(self):
+        """POST /api/framework/predictive-dialing/contacts - Add contacts to campaign"""
+        try:
+            body = self._get_body()
+            campaign_id = body.get('campaign_id')
+            contacts = body.get('contacts', [])
+            
+            if not campaign_id or not contacts:
+                self._send_json({'error': 'campaign_id and contacts required'}, 400)
+                return
+            
+            from pbx.features.predictive_dialing import get_predictive_dialer
+            dialer = get_predictive_dialer(self.pbx_core.config if self.pbx_core else None)
+            count = dialer.add_contacts(campaign_id, contacts)
+            
+            self._send_json({'success': True, 'contacts_added': count})
+        except Exception as e:
+            self.logger.error(f"Error adding contacts: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Voice Biometrics Handlers
+    def _handle_get_voice_profiles(self):
+        """GET /api/framework/voice-biometrics/profiles - Get all voice profiles"""
+        try:
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            profiles = [
+                {
+                    'user_id': p.user_id,
+                    'extension': p.extension,
+                    'status': p.status,
+                    'enrollment_completed': p.enrollment_completed,
+                    'created_at': p.created_at.isoformat(),
+                    'verification_count': p.verification_count,
+                    'fraud_attempts': p.fraud_attempts
+                }
+                for p in vb.profiles.values()
+            ]
+            self._send_json({'profiles': profiles})
+        except Exception as e:
+            self.logger.error(f"Error getting voice profiles: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_voice_statistics(self):
+        """GET /api/framework/voice-biometrics/statistics - Get biometrics statistics"""
+        try:
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            stats = vb.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting voice statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_voice_profile(self, user_id: str):
+        """GET /api/framework/voice-biometrics/profile/{user_id} - Get voice profile"""
+        try:
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            profile = vb.get_profile(user_id)
+            if profile:
+                self._send_json({
+                    'user_id': profile.user_id,
+                    'extension': profile.extension,
+                    'status': profile.status,
+                    'enrollment_completed': profile.enrollment_completed,
+                    'created_at': profile.created_at.isoformat(),
+                    'verification_count': profile.verification_count,
+                    'fraud_attempts': profile.fraud_attempts
+                })
+            else:
+                self._send_json({'error': 'Profile not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting voice profile: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_voice_profile(self):
+        """POST /api/framework/voice-biometrics/profile - Create voice profile"""
+        try:
+            body = self._get_body()
+            user_id = body.get('user_id')
+            extension = body.get('extension')
+            
+            if not user_id or not extension:
+                self._send_json({'error': 'user_id and extension required'}, 400)
+                return
+            
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            profile = vb.create_profile(user_id, extension)
+            
+            self._send_json({
+                'success': True,
+                'user_id': profile.user_id,
+                'extension': profile.extension,
+                'status': profile.status
+            })
+        except Exception as e:
+            self.logger.error(f"Error creating voice profile: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_start_voice_enrollment(self):
+        """POST /api/framework/voice-biometrics/enroll - Start enrollment"""
+        try:
+            body = self._get_body()
+            user_id = body.get('user_id')
+            
+            if not user_id:
+                self._send_json({'error': 'user_id required'}, 400)
+                return
+            
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            result = vb.start_enrollment(user_id)
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error starting enrollment: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_verify_speaker(self):
+        """POST /api/framework/voice-biometrics/verify - Verify speaker"""
+        try:
+            body = self._get_body()
+            user_id = body.get('user_id')
+            # In a real implementation, audio_data would be base64 encoded string
+            audio_data_str = body.get('audio_data', '')
+            
+            if not user_id:
+                self._send_json({'error': 'user_id required'}, 400)
+                return
+            
+            # Convert base64 encoded audio data to bytes if provided
+            if audio_data_str:
+                try:
+                    audio_data = base64.b64decode(audio_data_str)
+                except (binascii.Error, ValueError) as e:
+                    self._send_json({'error': f'Invalid base64 audio data: {str(e)}'}, 400)
+                    return
+            else:
+                audio_data = b''
+                audio_data = b''
+            
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            result = vb.verify_speaker(user_id, audio_data)
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error verifying speaker: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_delete_voice_profile(self, user_id: str):
+        """DELETE /api/framework/voice-biometrics/profile/{user_id} - Delete profile"""
+        try:
+            from pbx.features.voice_biometrics import get_voice_biometrics
+            vb = get_voice_biometrics(self.pbx_core.config if self.pbx_core else None)
+            success = vb.delete_profile(user_id)
+            if success:
+                self._send_json({'success': True})
+            else:
+                self._send_json({'error': 'Profile not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error deleting voice profile: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Call Quality Prediction Handlers
+    def _handle_get_quality_predictions(self):
+        """GET /api/framework/call-quality-prediction/predictions - Get all predictions"""
+        try:
+            from pbx.features.call_quality_prediction import get_quality_prediction
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            predictions = {
+                call_id: pred for call_id, pred in qp.predictions.items()
+            }
+            self._send_json({'predictions': predictions})
+        except Exception as e:
+            self.logger.error(f"Error getting quality predictions: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_quality_statistics(self):
+        """GET /api/framework/call-quality-prediction/statistics - Get prediction statistics"""
+        try:
+            from pbx.features.call_quality_prediction import get_quality_prediction
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            stats = qp.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting quality statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_call_prediction(self, call_id: str):
+        """GET /api/framework/call-quality-prediction/prediction/{call_id} - Get call prediction"""
+        try:
+            from pbx.features.call_quality_prediction import get_quality_prediction
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            prediction = qp.get_prediction(call_id)
+            if prediction:
+                self._send_json(prediction)
+            else:
+                self._send_json({'error': 'Prediction not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting call prediction: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_collect_quality_metrics(self):
+        """POST /api/framework/call-quality-prediction/metrics - Collect quality metrics"""
+        try:
+            body = self._get_body()
+            call_id = body.get('call_id')
+            
+            if not call_id:
+                self._send_json({'error': 'call_id required'}, 400)
+                return
+            
+            from pbx.features.call_quality_prediction import get_quality_prediction, NetworkMetrics
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            
+            # Create metrics object from request
+            metrics = NetworkMetrics()
+            metrics.packet_loss = body.get('packet_loss', 0.0)
+            metrics.jitter = body.get('jitter', 0.0)
+            metrics.latency = body.get('latency', 0.0)
+            metrics.bandwidth = body.get('bandwidth', 0.0)
+            
+            qp.collect_metrics(call_id, metrics)
+            
+            self._send_json({'success': True, 'call_id': call_id})
+        except Exception as e:
+            self.logger.error(f"Error collecting metrics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_train_quality_model(self):
+        """POST /api/framework/call-quality-prediction/train - Train prediction model"""
+        try:
+            body = self._get_body()
+            historical_data = body.get('data', [])
+            
+            if not historical_data:
+                self._send_json({'error': 'historical data required'}, 400)
+                return
+            
+            from pbx.features.call_quality_prediction import get_quality_prediction
+            qp = get_quality_prediction(self.pbx_core.config if self.pbx_core else None)
+            qp.train_model(historical_data)
+            
+            self._send_json({'success': True, 'samples_trained': len(historical_data)})
+        except Exception as e:
+            self.logger.error(f"Error training model: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Video Codec Handlers
+    def _handle_get_video_codecs(self):
+        """GET /api/framework/video-codec/codecs - Get supported video codecs"""
+        try:
+            from pbx.features.video_codec import get_video_codec_manager
+            vc = get_video_codec_manager(self.pbx_core.config if self.pbx_core else None)
+            codecs = vc.available_codecs
+            self._send_json({'codecs': codecs})
+        except Exception as e:
+            self.logger.error(f"Error getting video codecs: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_video_statistics(self):
+        """GET /api/framework/video-codec/statistics - Get video codec statistics"""
+        try:
+            from pbx.features.video_codec import get_video_codec_manager
+            vc = get_video_codec_manager(self.pbx_core.config if self.pbx_core else None)
+            stats = vc.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting video statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_calculate_video_bandwidth(self):
+        """POST /api/framework/video-codec/bandwidth - Calculate required bandwidth"""
+        try:
+            body = self._get_body()
+            resolution_input = body.get('resolution', [1920, 1080])
+            framerate = body.get('framerate', 30)
+            codec = body.get('codec', 'h264')
+            quality = body.get('quality', 'high')
+            
+            # Validate resolution input
+            if not isinstance(resolution_input, (list, tuple)) or len(resolution_input) != 2:
+                self._send_json({'error': 'resolution must be [width, height]'}, 400)
+                return
+            
+            try:
+                resolution = (int(resolution_input[0]), int(resolution_input[1]))
+            except (ValueError, TypeError):
+                self._send_json({'error': 'resolution values must be numeric'}, 400)
+                return
+            
+            from pbx.features.video_codec import get_video_codec_manager
+            vc = get_video_codec_manager(self.pbx_core.config if self.pbx_core else None)
+            bandwidth = vc.calculate_bandwidth(resolution, framerate, codec, quality)
+            
+            self._send_json({
+                'resolution': list(resolution),
+                'framerate': framerate,
+                'codec': codec,
+                'quality': quality,
+                'bandwidth_mbps': bandwidth
+            })
+        except Exception as e:
+            self.logger.error(f"Error calculating bandwidth: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Mobile Number Portability Handlers
+    def _handle_get_mobile_mappings(self):
+        """GET /api/framework/mobile-portability/mappings - Get all number mappings"""
+        try:
+            from pbx.features.mobile_number_portability import get_mobile_number_portability
+            mnp = get_mobile_number_portability(self.pbx_core.config if self.pbx_core else None)
+            mappings = [
+                {
+                    'business_number': number,
+                    **details
+                }
+                for number, details in mnp.number_mappings.items()
+            ]
+            self._send_json({'mappings': mappings})
+        except Exception as e:
+            self.logger.error(f"Error getting mobile mappings: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_mobile_statistics(self):
+        """GET /api/framework/mobile-portability/statistics - Get portability statistics"""
+        try:
+            from pbx.features.mobile_number_portability import get_mobile_number_portability
+            mnp = get_mobile_number_portability(self.pbx_core.config if self.pbx_core else None)
+            stats = mnp.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting mobile statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_mobile_mapping(self, business_number: str):
+        """GET /api/framework/mobile-portability/mapping/{number} - Get specific mapping"""
+        try:
+            from pbx.features.mobile_number_portability import get_mobile_number_portability
+            mnp = get_mobile_number_portability(self.pbx_core.config if self.pbx_core else None)
+            mapping = mnp.get_mapping(business_number)
+            if mapping:
+                self._send_json(mapping)
+            else:
+                self._send_json({'error': 'Mapping not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting mobile mapping: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_mobile_mapping(self):
+        """POST /api/framework/mobile-portability/mapping - Create number mapping"""
+        try:
+            body = self._get_body()
+            business_number = body.get('business_number')
+            extension = body.get('extension')
+            mobile_device = body.get('mobile_device')
+            
+            if not all([business_number, extension, mobile_device]):
+                self._send_json({'error': 'business_number, extension, and mobile_device required'}, 400)
+                return
+            
+            from pbx.features.mobile_number_portability import get_mobile_number_portability
+            mnp = get_mobile_number_portability(self.pbx_core.config if self.pbx_core else None)
+            result = mnp.map_number_to_mobile(
+                business_number,
+                extension,
+                mobile_device,
+                body.get('forward_to_mobile', True)
+            )
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error creating mobile mapping: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_toggle_mobile_mapping(self, business_number: str):
+        """POST /api/framework/mobile-portability/mapping/{number}/toggle - Toggle mapping"""
+        try:
+            body = self._get_body()
+            active = body.get('active', True)
+            
+            from pbx.features.mobile_number_portability import get_mobile_number_portability
+            mnp = get_mobile_number_portability(self.pbx_core.config if self.pbx_core else None)
+            success = mnp.toggle_mapping(business_number, active)
+            
+            if success:
+                self._send_json({'success': True, 'active': active})
+            else:
+                self._send_json({'error': 'Mapping not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error toggling mobile mapping: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_delete_mobile_mapping(self, business_number: str):
+        """DELETE /api/framework/mobile-portability/mapping/{number} - Delete mapping"""
+        try:
+            from pbx.features.mobile_number_portability import get_mobile_number_portability
+            mnp = get_mobile_number_portability(self.pbx_core.config if self.pbx_core else None)
+            success = mnp.remove_mapping(business_number)
+            
+            if success:
+                self._send_json({'success': True})
+            else:
+                self._send_json({'error': 'Mapping not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error deleting mobile mapping: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Call Recording Analytics Handlers
+    def _handle_get_recording_analyses(self):
+        """GET /api/framework/recording-analytics/analyses - Get all analyses"""
+        try:
+            from pbx.features.call_recording_analytics import get_recording_analytics
+            ra = get_recording_analytics(self.pbx_core.config if self.pbx_core else None)
+            analyses = {
+                rec_id: analysis for rec_id, analysis in ra.analyses.items()
+            }
+            self._send_json({'analyses': analyses})
+        except Exception as e:
+            self.logger.error(f"Error getting recording analyses: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_recording_statistics(self):
+        """GET /api/framework/recording-analytics/statistics - Get analytics statistics"""
+        try:
+            from pbx.features.call_recording_analytics import get_recording_analytics
+            ra = get_recording_analytics(self.pbx_core.config if self.pbx_core else None)
+            stats = ra.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting recording statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_recording_analysis(self, recording_id: str):
+        """GET /api/framework/recording-analytics/analysis/{id} - Get specific analysis"""
+        try:
+            from pbx.features.call_recording_analytics import get_recording_analytics
+            ra = get_recording_analytics(self.pbx_core.config if self.pbx_core else None)
+            analysis = ra.get_analysis(recording_id)
+            if analysis:
+                self._send_json(analysis)
+            else:
+                self._send_json({'error': 'Analysis not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting recording analysis: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_analyze_recording(self):
+        """POST /api/framework/recording-analytics/analyze - Analyze recording"""
+        try:
+            body = self._get_body()
+            recording_id = body.get('recording_id')
+            audio_path = body.get('audio_path')
+            
+            if not recording_id or not audio_path:
+                self._send_json({'error': 'recording_id and audio_path required'}, 400)
+                return
+            
+            from pbx.features.call_recording_analytics import get_recording_analytics
+            ra = get_recording_analytics(self.pbx_core.config if self.pbx_core else None)
+            result = ra.analyze_recording(
+                recording_id,
+                audio_path,
+                metadata=body.get('metadata', {})
+            )
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error analyzing recording: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_search_recordings(self):
+        """POST /api/framework/recording-analytics/search - Search recordings"""
+        try:
+            body = self._get_body()
+            criteria = body.get('criteria', {})
+            
+            from pbx.features.call_recording_analytics import get_recording_analytics
+            ra = get_recording_analytics(self.pbx_core.config if self.pbx_core else None)
+            results = ra.search_recordings(criteria)
+            
+            self._send_json({'results': results})
+        except Exception as e:
+            self.logger.error(f"Error searching recordings: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Predictive Voicemail Drop Handlers
+    def _handle_get_voicemail_messages(self):
+        """GET /api/framework/voicemail-drop/messages - Get all drop messages"""
+        try:
+            from pbx.features.predictive_voicemail_drop import get_voicemail_drop
+            vd = get_voicemail_drop(self.pbx_core.config if self.pbx_core else None)
+            messages = vd.list_messages()
+            self._send_json({'messages': messages})
+        except Exception as e:
+            self.logger.error(f"Error getting voicemail messages: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_voicemail_drop_statistics(self):
+        """GET /api/framework/voicemail-drop/statistics - Get drop statistics"""
+        try:
+            from pbx.features.predictive_voicemail_drop import get_voicemail_drop
+            vd = get_voicemail_drop(self.pbx_core.config if self.pbx_core else None)
+            stats = vd.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting voicemail drop statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_add_voicemail_message(self):
+        """POST /api/framework/voicemail-drop/message - Add drop message"""
+        try:
+            body = self._get_body()
+            message_id = body.get('message_id')
+            name = body.get('name')
+            audio_path = body.get('audio_path')
+            
+            if not all([message_id, name, audio_path]):
+                self._send_json({'error': 'message_id, name, and audio_path required'}, 400)
+                return
+            
+            from pbx.features.predictive_voicemail_drop import get_voicemail_drop
+            vd = get_voicemail_drop(self.pbx_core.config if self.pbx_core else None)
+            vd.add_message(
+                message_id,
+                name,
+                audio_path,
+                description=body.get('description')
+            )
+            
+            self._send_json({'success': True, 'message_id': message_id})
+        except Exception as e:
+            self.logger.error(f"Error adding voicemail message: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_drop_voicemail(self):
+        """POST /api/framework/voicemail-drop/drop - Drop message to voicemail"""
+        try:
+            body = self._get_body()
+            call_id = body.get('call_id')
+            message_id = body.get('message_id')
+            
+            if not call_id or not message_id:
+                self._send_json({'error': 'call_id and message_id required'}, 400)
+                return
+            
+            from pbx.features.predictive_voicemail_drop import get_voicemail_drop
+            vd = get_voicemail_drop(self.pbx_core.config if self.pbx_core else None)
+            result = vd.drop_message(call_id, message_id)
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error dropping voicemail: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # DNS SRV Failover Handlers
+    def _handle_get_srv_records(self):
+        """GET /api/framework/dns-srv/records - Get SRV records"""
+        try:
+            from pbx.features.dns_srv_failover import get_dns_srv_failover
+            dns = get_dns_srv_failover(self.pbx_core.config if self.pbx_core else None)
+            # Get all cached records
+            records = {}
+            for key, record_list in dns.cache.items():
+                records[key] = [
+                    {
+                        'priority': r.priority,
+                        'weight': r.weight,
+                        'port': r.port,
+                        'target': r.target
+                    }
+                    for r in record_list
+                ]
+            self._send_json({'records': records})
+        except Exception as e:
+            self.logger.error(f"Error getting SRV records: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_dns_srv_statistics(self):
+        """GET /api/framework/dns-srv/statistics - Get DNS SRV statistics"""
+        try:
+            from pbx.features.dns_srv_failover import get_dns_srv_failover
+            dns = get_dns_srv_failover(self.pbx_core.config if self.pbx_core else None)
+            stats = dns.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting DNS SRV statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_lookup_srv(self):
+        """POST /api/framework/dns-srv/lookup - Lookup SRV records"""
+        try:
+            body = self._get_body()
+            service = body.get('service')
+            protocol = body.get('protocol', 'tcp')
+            domain = body.get('domain')
+            
+            if not service or not domain:
+                self._send_json({'error': 'service and domain required'}, 400)
+                return
+            
+            from pbx.features.dns_srv_failover import get_dns_srv_failover
+            dns = get_dns_srv_failover(self.pbx_core.config if self.pbx_core else None)
+            records = dns.lookup_srv(service, protocol, domain)
+            
+            self._send_json({'records': records})
+        except Exception as e:
+            self.logger.error(f"Error looking up SRV: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Session Border Controller Handlers
+    def _handle_get_sbc_statistics(self):
+        """GET /api/framework/sbc/statistics - Get SBC statistics"""
+        try:
+            from pbx.features.session_border_controller import get_session_border_controller
+            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            stats = sbc.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting SBC statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_sbc_relays(self):
+        """GET /api/framework/sbc/relays - Get active RTP relays"""
+        try:
+            from pbx.features.session_border_controller import get_session_border_controller
+            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            relays = {
+                call_id: relay for call_id, relay in sbc.active_relays.items()
+            }
+            self._send_json({'relays': relays})
+        except Exception as e:
+            self.logger.error(f"Error getting SBC relays: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_allocate_sbc_relay(self):
+        """POST /api/framework/sbc/relay - Allocate RTP relay"""
+        try:
+            body = self._get_body()
+            call_id = body.get('call_id')
+            codec = body.get('codec', 'PCMU')
+            
+            if not call_id:
+                self._send_json({'error': 'call_id required'}, 400)
+                return
+            
+            from pbx.features.session_border_controller import get_session_border_controller
+            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            result = sbc.allocate_relay(call_id, codec)
+            
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error allocating SBC relay: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Data Residency Controls Handlers
+    def _handle_get_data_regions(self):
+        """GET /api/framework/data-residency/regions - Get configured regions"""
+        try:
+            from pbx.features.data_residency_controls import get_data_residency
+            dr = get_data_residency(self.pbx_core.config if self.pbx_core else None)
+            regions = {
+                region.value: config for region, config in dr.region_configs.items()
+            }
+            self._send_json({'regions': regions})
+        except Exception as e:
+            self.logger.error(f"Error getting data regions: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_data_residency_statistics(self):
+        """GET /api/framework/data-residency/statistics - Get residency statistics"""
+        try:
+            from pbx.features.data_residency_controls import get_data_residency
+            dr = get_data_residency(self.pbx_core.config if self.pbx_core else None)
+            stats = dr.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting data residency statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_storage_location(self):
+        """POST /api/framework/data-residency/location - Get storage location"""
+        try:
+            body = self._get_body()
+            category = body.get('category')
+            user_region = body.get('user_region')
+            
+            if not category:
+                self._send_json({'error': 'category required'}, 400)
+                return
+            
+            from pbx.features.data_residency_controls import get_data_residency
+            dr = get_data_residency(self.pbx_core.config if self.pbx_core else None)
+            location = dr.get_storage_location(category, user_region)
+            
+            self._send_json(location)
+        except Exception as e:
+            self.logger.error(f"Error getting storage location: {e}")
             self._send_json({'error': str(e)}, 500)
 
 

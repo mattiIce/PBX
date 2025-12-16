@@ -874,3 +874,458 @@ Get all active paging sessions.
   ]
 }
 ```
+
+## Framework Features API
+
+The following endpoints provide access to advanced framework features. These features have complete backend implementations and REST APIs, but may require external service integration for full production use.
+
+### Conversational AI
+
+AI-powered call handling and auto-responses.
+
+#### GET /api/framework/conversational-ai/config
+
+Get AI configuration.
+
+#### GET /api/framework/conversational-ai/statistics
+
+Get AI statistics.
+
+#### GET /api/framework/conversational-ai/conversations
+
+Get active conversations.
+
+#### POST /api/framework/conversational-ai/conversation
+
+Start a new conversation.
+
+**Request:**
+```json
+{
+  "call_id": "call-123",
+  "caller_id": "+15551234567"
+}
+```
+
+#### POST /api/framework/conversational-ai/process
+
+Process user input in conversation.
+
+**Request:**
+```json
+{
+  "call_id": "call-123",
+  "input": "I need help with my order"
+}
+```
+
+#### POST /api/framework/conversational-ai/config
+
+Configure AI provider.
+
+**Request:**
+```json
+{
+  "provider": "openai",
+  "api_key": "sk-...",
+  "options": {
+    "model": "gpt-4",
+    "temperature": 0.7
+  }
+}
+```
+
+### Predictive Dialing
+
+AI-optimized outbound campaign management.
+
+#### GET /api/framework/predictive-dialing/campaigns
+
+List all campaigns.
+
+#### GET /api/framework/predictive-dialing/statistics
+
+Get dialing statistics.
+
+#### GET /api/framework/predictive-dialing/campaign/{id}
+
+Get specific campaign details.
+
+#### POST /api/framework/predictive-dialing/campaign
+
+Create a new campaign.
+
+**Request:**
+```json
+{
+  "campaign_id": "campaign-001",
+  "name": "Q1 Outreach",
+  "dialing_mode": "progressive",
+  "max_attempts": 3,
+  "retry_interval": 3600
+}
+```
+
+#### POST /api/framework/predictive-dialing/contacts
+
+Add contacts to campaign.
+
+**Request:**
+```json
+{
+  "campaign_id": "campaign-001",
+  "contacts": [
+    {
+      "contact_id": "c1",
+      "phone_number": "+15551234567",
+      "data": {"name": "John Doe"}
+    }
+  ]
+}
+```
+
+#### POST /api/framework/predictive-dialing/campaign/{id}/start
+
+Start a campaign.
+
+#### POST /api/framework/predictive-dialing/campaign/{id}/pause
+
+Pause a campaign.
+
+### Voice Biometrics
+
+Speaker authentication and fraud detection.
+
+#### GET /api/framework/voice-biometrics/profiles
+
+List all voice profiles.
+
+#### GET /api/framework/voice-biometrics/statistics
+
+Get biometrics statistics.
+
+#### GET /api/framework/voice-biometrics/profile/{user_id}
+
+Get specific voice profile.
+
+#### POST /api/framework/voice-biometrics/profile
+
+Create a voice profile.
+
+**Request:**
+```json
+{
+  "user_id": "user123",
+  "extension": "1001"
+}
+```
+
+#### POST /api/framework/voice-biometrics/enroll
+
+Start enrollment process.
+
+**Request:**
+```json
+{
+  "user_id": "user123"
+}
+```
+
+#### POST /api/framework/voice-biometrics/verify
+
+Verify speaker identity.
+
+**Request:**
+```json
+{
+  "user_id": "user123",
+  "audio_data": "base64_encoded_audio..."
+}
+```
+
+#### DELETE /api/framework/voice-biometrics/profile/{user_id}
+
+Delete a voice profile.
+
+### Call Quality Prediction
+
+ML-based quality prediction and monitoring.
+
+#### GET /api/framework/call-quality-prediction/predictions
+
+Get all predictions.
+
+#### GET /api/framework/call-quality-prediction/statistics
+
+Get prediction statistics.
+
+#### GET /api/framework/call-quality-prediction/prediction/{call_id}
+
+Get prediction for specific call.
+
+#### POST /api/framework/call-quality-prediction/metrics
+
+Collect quality metrics for a call.
+
+**Request:**
+```json
+{
+  "call_id": "call-123",
+  "packet_loss": 0.5,
+  "jitter": 20,
+  "latency": 50,
+  "bandwidth": 100
+}
+```
+
+#### POST /api/framework/call-quality-prediction/train
+
+Train the prediction model.
+
+**Request:**
+```json
+{
+  "data": [
+    {
+      "packet_loss": 0.5,
+      "jitter": 20,
+      "latency": 50,
+      "mos": 4.2
+    }
+  ]
+}
+```
+
+### Video Codec
+
+Video codec support for H.264/H.265.
+
+#### GET /api/framework/video-codec/codecs
+
+Get supported video codecs.
+
+#### GET /api/framework/video-codec/statistics
+
+Get video codec statistics.
+
+#### POST /api/framework/video-codec/bandwidth
+
+Calculate required bandwidth for video.
+
+**Request:**
+```json
+{
+  "resolution": [1920, 1080],
+  "framerate": 30,
+  "codec": "h264",
+  "quality": "high"
+}
+```
+
+### Mobile Number Portability
+
+Mobile DID mapping and routing.
+
+#### GET /api/framework/mobile-portability/mappings
+
+List all number mappings.
+
+#### GET /api/framework/mobile-portability/statistics
+
+Get portability statistics.
+
+#### GET /api/framework/mobile-portability/mapping/{number}
+
+Get specific mapping.
+
+#### POST /api/framework/mobile-portability/mapping
+
+Create number mapping.
+
+**Request:**
+```json
+{
+  "business_number": "+15551234567",
+  "extension": "1001",
+  "mobile_device": "mobile:user123@pbx.example.com",
+  "forward_to_mobile": true
+}
+```
+
+#### POST /api/framework/mobile-portability/mapping/{number}/toggle
+
+Toggle mapping active status.
+
+**Request:**
+```json
+{
+  "active": true
+}
+```
+
+#### DELETE /api/framework/mobile-portability/mapping/{number}
+
+Delete a number mapping.
+
+### Call Recording Analytics
+
+AI analysis of call recordings.
+
+#### GET /api/framework/recording-analytics/analyses
+
+Get all recording analyses.
+
+#### GET /api/framework/recording-analytics/statistics
+
+Get analytics statistics.
+
+#### GET /api/framework/recording-analytics/analysis/{id}
+
+Get specific analysis.
+
+#### POST /api/framework/recording-analytics/analyze
+
+Analyze a recording.
+
+**Request:**
+```json
+{
+  "recording_id": "rec-123",
+  "audio_path": "/recordings/call-123.wav",
+  "metadata": {
+    "extension": "1001",
+    "duration": 180
+  }
+}
+```
+
+#### POST /api/framework/recording-analytics/search
+
+Search recordings by criteria.
+
+**Request:**
+```json
+{
+  "criteria": {
+    "sentiment": "positive",
+    "keywords": ["sales", "support"]
+  }
+}
+```
+
+### Predictive Voicemail Drop
+
+Automated voicemail message delivery.
+
+#### GET /api/framework/voicemail-drop/messages
+
+List all drop messages.
+
+#### GET /api/framework/voicemail-drop/statistics
+
+Get drop statistics.
+
+#### POST /api/framework/voicemail-drop/message
+
+Add a drop message.
+
+**Request:**
+```json
+{
+  "message_id": "msg-001",
+  "name": "Holiday Greeting",
+  "audio_path": "/messages/holiday.wav",
+  "description": "2024 Holiday greeting message"
+}
+```
+
+#### POST /api/framework/voicemail-drop/drop
+
+Drop a message to voicemail.
+
+**Request:**
+```json
+{
+  "call_id": "call-123",
+  "message_id": "msg-001"
+}
+```
+
+### DNS SRV Failover
+
+Automatic DNS-based server failover.
+
+#### GET /api/framework/dns-srv/records
+
+Get cached SRV records.
+
+#### GET /api/framework/dns-srv/statistics
+
+Get DNS SRV statistics.
+
+#### POST /api/framework/dns-srv/lookup
+
+Lookup SRV records.
+
+**Request:**
+```json
+{
+  "service": "sip",
+  "protocol": "tcp",
+  "domain": "example.com"
+}
+```
+
+### Session Border Controller
+
+Security and NAT traversal for SIP/RTP.
+
+#### GET /api/framework/sbc/statistics
+
+Get SBC statistics.
+
+#### GET /api/framework/sbc/relays
+
+Get active RTP relays.
+
+#### POST /api/framework/sbc/relay
+
+Allocate RTP relay for a call.
+
+**Request:**
+```json
+{
+  "call_id": "call-123",
+  "codec": "PCMU"
+}
+```
+
+### Data Residency Controls
+
+Geographic data storage compliance.
+
+#### GET /api/framework/data-residency/regions
+
+Get configured storage regions.
+
+#### GET /api/framework/data-residency/statistics
+
+Get residency statistics.
+
+#### POST /api/framework/data-residency/location
+
+Get storage location for data category.
+
+**Request:**
+```json
+{
+  "category": "call_recordings",
+  "user_region": "us-east-1"
+}
+```
+
+## See Also
+
+- [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Detailed framework feature documentation
+- [README.md](README.md) - Getting started guide
+- [TODO.md](TODO.md) - Implementation status and roadmap
