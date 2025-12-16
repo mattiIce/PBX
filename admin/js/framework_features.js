@@ -1054,16 +1054,49 @@ function loadVideoCodecTab() {
 
 // BI Integration Tab
 function loadBIIntegrationTab() {
+    // Load statistics on tab load
+    fetch('/api/framework/bi-integration/statistics')
+        .then(r => r.json())
+        .then(stats => {
+            document.getElementById('bi-stats-display').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-value">${stats.total_datasets || 0}</div>
+                        <div class="stat-label">Datasets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📤</div>
+                        <div class="stat-value">${stats.total_exports || 0}</div>
+                        <div class="stat-label">Total Exports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-value">${stats.last_export_time ? new Date(stats.last_export_time).toLocaleDateString() : 'Never'}</div>
+                        <div class="stat-label">Last Export</div>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => console.error('Error loading BI statistics:', err));
+    
     const content = `
         <h2>📈 Business Intelligence Integration</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span class="status-badge status-framework-only">⚙️ Framework Only</span>
-                <strong>Database & APIs Ready</strong>
+                <span class="status-badge status-fully-implemented">✅ API Connected</span>
+                <strong>REST API Endpoints Active</strong>
             </div>
             <p>Export call data to business intelligence tools.</p>
             <p><strong>Supported Tools:</strong> Tableau, Power BI, Looker, Qlik, Metabase</p>
-            <p><strong>Export Formats:</strong> CSV, JSON, Parquet, Excel, SQL</p>
+            <p><strong>Export Formats:</strong> CSV, JSON, Excel</p>
+        </div>
+
+        <div class="section-card">
+            <h3>Statistics</h3>
+            <div id="bi-stats-display">
+                <p>Loading statistics...</p>
+            </div>
         </div>
 
         <div class="section-card">
@@ -1086,9 +1119,9 @@ function loadBIIntegrationTab() {
                         <button onclick="exportBIDataset('qos_metrics')" class="btn-primary btn-sm">Export QoS</button>
                     </div>
                     <div class="stat-card">
-                        <h4>👥 Extension Analytics</h4>
+                        <h4>👥 Extension Usage</h4>
                         <p style="color: #666; font-size: 14px; margin: 10px 0;">Per-extension usage, call volumes, and trends</p>
-                        <button onclick="exportBIDataset('extension_analytics')" class="btn-primary btn-sm">Export Analytics</button>
+                        <button onclick="exportBIDataset('extension_usage')" class="btn-primary btn-sm">Export Analytics</button>
                     </div>
                 </div>
             </div>
@@ -1102,9 +1135,7 @@ function loadBIIntegrationTab() {
                     <select id="bi-export-format" class="form-control">
                         <option value="csv">CSV (Comma-Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
-                        <option value="parquet">Parquet (Columnar Storage)</option>
                         <option value="excel">Excel (.xlsx)</option>
-                        <option value="sql">SQL Insert Statements</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1115,9 +1146,104 @@ function loadBIIntegrationTab() {
                         <option value="last7days" selected>Last 7 Days</option>
                         <option value="last30days">Last 30 Days</option>
                         <option value="last90days">Last 90 Days</option>
-                        <option value="custom">Custom Range</option>
                     </select>
                 </div>
+            </form>
+        </div>
+
+        <div class="section-card">
+            <h3>BI Tool Integration</h3>
+            <div class="info-box">
+                <p><strong>Integration Status:</strong></p>
+                <ul>
+                    <li>✅ Default datasets (CDR, queue stats, QoS metrics) - <strong>Ready</strong></li>
+                    <li>✅ Multiple export formats (CSV, JSON, Excel) - <strong>Ready</strong></li>
+                    <li>✅ REST API endpoints for data export - <strong>Active</strong></li>
+                    <li>✅ Date range filtering - <strong>Ready</strong></li>
+                    <li>⚠️ Direct BI tool API connections - <strong>Requires credentials</strong></li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+GET  /api/framework/bi-integration/datasets
+GET  /api/framework/bi-integration/statistics
+GET  /api/framework/bi-integration/export/{dataset}
+POST /api/framework/bi-integration/export
+POST /api/framework/bi-integration/dataset
+POST /api/framework/bi-integration/test-connection</pre>
+            </div>
+        </div>
+    `;
+    return content;
+}
+
+function exportBIDataset(dataset) {
+    const format = document.getElementById('bi-export-format')?.value || 'csv';
+    const dateRange = document.getElementById('bi-date-range')?.value || 'last7days';
+    
+    // Show loading message
+    const exportBtn = event.target;
+    const originalText = exportBtn.textContent;
+    exportBtn.textContent = 'Exporting...';
+    exportBtn.disabled = true;
+    
+    // Call the new API endpoint
+    fetch('/api/framework/bi-integration/export', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            dataset: dataset,
+            format: format,
+            date_range: dateRange
+        })
+    })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                alert(`✅ Export successful!\n\nDataset: ${result.dataset}\nFormat: ${result.format}\nFile: ${result.file_path}\n\nThe export has been created on the server.`);
+            } else {
+                alert(`❌ Export failed: ${result.error}`);
+            }
+        })
+        .catch(err => {
+            alert(`❌ Export error: ${err.message}`);
+        })
+        .finally(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        });
+}
+
+// Call Tagging Tab
+function loadCallTaggingTab() {
+    // Load tags and statistics
+    fetch('/api/framework/call-tagging/statistics')
+        .then(r => r.json())
+        .then(stats => {
+            document.getElementById('tagging-stats-display').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🏷️</div>
+                        <div class="stat-value">${stats.total_calls_tagged || 0}</div>
+                        <div class="stat-label">Calls Tagged</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value">${stats.custom_tags_count || 0}</div>
+                        <div class="stat-label">Custom Tags</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚙️</div>
+                        <div class="stat-value">${stats.tagging_rules_count || 0}</div>
+                        <div class="stat-label">Active Rules</div>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => console.error('Error loading tagging statistics:', err));
+    
+    const content = `
+        <h2>🏷️ Call Tagging & Categorization</h2>
+        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
             </form>
         </div>
 
@@ -1618,31 +1744,169 @@ function loadRecordingAnalyticsTab() {
 
 // Call Blending Tab
 function loadCallBlendingTab() {
+    // Load statistics on tab load
+    fetch('/api/framework/call-blending/statistics')
+        .then(r => r.json())
+        .then(stats => {
+            document.getElementById('blending-stats-display').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value">${stats.total_agents || 0}</div>
+                        <div class="stat-label">Total Agents</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value">${stats.available_agents || 0}</div>
+                        <div class="stat-label">Available</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📞</div>
+                        <div class="stat-value">${stats.total_blended_calls || 0}</div>
+                        <div class="stat-label">Blended Calls</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value">${Math.round((stats.actual_blend_ratio || 0) * 100)}%</div>
+                        <div class="stat-label">Inbound Ratio</div>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => console.error('Error loading blending statistics:', err));
+    
+    // Load agents list
+    fetch('/api/framework/call-blending/agents')
+        .then(r => r.json())
+        .then(data => {
+            const agents = data.agents || [];
+            const container = document.getElementById('blending-agents-list');
+            
+            if (agents.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No agents registered for call blending yet.</p>';
+                return;
+            }
+            
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Extension</th>
+                            <th>Mode</th>
+                            <th>Status</th>
+                            <th>Inbound Calls</th>
+                            <th>Outbound Calls</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${agents.map(agent => `
+                            <tr>
+                                <td>${agent.agent_id}</td>
+                                <td>${agent.extension}</td>
+                                <td>
+                                    <select onchange="changeAgentMode('${agent.agent_id}', this.value)">
+                                        <option value="blended" ${agent.mode === 'blended' ? 'selected' : ''}>Blended</option>
+                                        <option value="inbound_only" ${agent.mode === 'inbound_only' ? 'selected' : ''}>Inbound Only</option>
+                                        <option value="outbound_only" ${agent.mode === 'outbound_only' ? 'selected' : ''}>Outbound Only</option>
+                                        <option value="auto" ${agent.mode === 'auto' ? 'selected' : ''}>Auto</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <span class="status-badge ${agent.available ? 'status-online' : 'status-offline'}">
+                                        ${agent.available ? '✅ Available' : '🔴 Unavailable'}
+                                    </span>
+                                </td>
+                                <td>${agent.inbound_calls_handled || 0}</td>
+                                <td>${agent.outbound_calls_handled || 0}</td>
+                                <td>
+                                    <button onclick="viewAgentDetails('${agent.agent_id}')" class="btn-sm btn-primary">View</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error loading agents:', err);
+            document.getElementById('blending-agents-list').innerHTML = '<p style="color: #666;">No agents available.</p>';
+        });
+    
     return `
         <h2>🔀 Call Blending</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span class="status-badge status-framework-only">⚙️ Framework Only</span>
-                <strong>Database & APIs Ready</strong>
+                <span class="status-badge status-fully-implemented">✅ API Connected</span>
+                <strong>REST API Endpoints Active</strong>
             </div>
             <p>Mix inbound and outbound calls for agent efficiency.</p>
             <p><strong>Features:</strong> Dynamic mode switching, priority distribution, inbound surge protection, workload balancing</p>
         </div>
 
         <div class="section-card">
-            <h3>Blending Configuration</h3>
-            <p>Configure call blending here. Framework ready for queue integration.</p>
+            <h3>Statistics</h3>
+            <div id="blending-stats-display">
+                <p>Loading statistics...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Registered Agents</h3>
+            <div id="blending-agents-list">
+                <p>Loading agents...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>API Integration</h3>
             <div class="info-box">
-                <p><strong>Ready for Integration:</strong></p>
+                <p><strong>Integration Status:</strong></p>
                 <ul>
-                    <li>✅ Agent mode management</li>
-                    <li>✅ Priority-based distribution</li>
-                    <li>✅ Workload balancing framework</li>
-                    <li>⚠️ Requires queue system integration</li>
+                    <li>✅ Agent mode management - <strong>Active</strong></li>
+                    <li>✅ Priority-based distribution - <strong>Ready</strong></li>
+                    <li>✅ Workload balancing framework - <strong>Ready</strong></li>
+                    <li>✅ REST API endpoints - <strong>Active</strong></li>
+                    <li>⚠️ Queue system integration - <strong>Requires configuration</strong></li>
                 </ul>
+                <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+GET  /api/framework/call-blending/agents
+GET  /api/framework/call-blending/statistics
+GET  /api/framework/call-blending/agent/{agent_id}
+POST /api/framework/call-blending/agent
+POST /api/framework/call-blending/agent/{agent_id}/mode</pre>
             </div>
         </div>
     `;
+}
+
+function changeAgentMode(agentId, newMode) {
+    fetch(`/api/framework/call-blending/agent/${agentId}/mode`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mode: newMode})
+    })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                alert(`✅ Agent mode updated to ${newMode}`);
+            } else {
+                alert(`❌ Failed to update mode: ${result.error}`);
+            }
+        })
+        .catch(err => alert(`❌ Error: ${err.message}`));
+}
+
+function viewAgentDetails(agentId) {
+    fetch(`/api/framework/call-blending/agent/${agentId}`)
+        .then(r => r.json())
+        .then(agent => {
+            alert(`Agent Details:\n\nAgent ID: ${agent.agent_id}\nExtension: ${agent.extension}\nMode: ${agent.mode}\nStatus: ${agent.available ? 'Available' : 'Unavailable'}\nInbound Calls: ${agent.inbound_calls_handled}\nOutbound Calls: ${agent.outbound_calls_handled}`);
+        })
+        .catch(err => alert(`❌ Error loading agent: ${err.message}`));
 }
 
 // Voicemail Drop Tab
@@ -1676,31 +1940,222 @@ function loadVoicemailDropTab() {
 
 // Geographic Redundancy Tab
 function loadGeographicRedundancyTab() {
+    // Load statistics on tab load
+    fetch('/api/framework/geo-redundancy/statistics')
+        .then(r => r.json())
+        .then(stats => {
+            document.getElementById('geo-stats-display').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🌍</div>
+                        <div class="stat-value">${stats.total_regions || 0}</div>
+                        <div class="stat-label">Regions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value">${stats.active_region || 'None'}</div>
+                        <div class="stat-label">Active Region</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-value">${stats.total_failovers || 0}</div>
+                        <div class="stat-label">Total Failovers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🤖</div>
+                        <div class="stat-value">${stats.auto_failover ? 'Enabled' : 'Disabled'}</div>
+                        <div class="stat-label">Auto Failover</div>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => console.error('Error loading geo statistics:', err));
+    
+    // Load regions list
+    fetch('/api/framework/geo-redundancy/regions')
+        .then(r => r.json())
+        .then(data => {
+            const regions = data.regions || [];
+            const container = document.getElementById('geo-regions-list');
+            
+            if (regions.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No regions configured yet. Click "+ Add Region" to create your first region.</p>';
+                return;
+            }
+            
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Region ID</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Health Score</th>
+                            <th>Trunks</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${regions.map(region => {
+                            let statusColor = '#4caf50';
+                            if (region.status === 'failed') statusColor = '#f44336';
+                            else if (region.status === 'standby') statusColor = '#ff9800';
+                            
+                            return `
+                                <tr ${region.is_active ? 'style="background: #e8f5e9;"' : ''}>
+                                    <td>
+                                        ${region.region_id}
+                                        ${region.is_active ? '<span class="status-badge status-online">ACTIVE</span>' : ''}
+                                    </td>
+                                    <td>${region.name}</td>
+                                    <td>${region.location}</td>
+                                    <td>
+                                        <span class="status-badge" style="background: ${statusColor};">
+                                            ${region.status.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td>${Math.round((region.health_score || 0) * 100)}%</td>
+                                    <td>${region.trunk_count || 0}</td>
+                                    <td>${region.priority}</td>
+                                    <td>
+                                        ${!region.is_active ? `<button onclick="triggerFailover('${region.region_id}')" class="btn-sm btn-primary">Activate</button>` : ''}
+                                        <button onclick="viewRegionDetails('${region.region_id}')" class="btn-sm">Details</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error loading regions:', err);
+            document.getElementById('geo-regions-list').innerHTML = '<p style="color: #666;">No regions available.</p>';
+        });
+    
     return `
         <h2>🌍 Geographic Redundancy</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span class="status-badge status-framework-only">⚙️ Framework Only</span>
-                <strong>Database & APIs Ready</strong>
+                <span class="status-badge status-fully-implemented">✅ API Connected</span>
+                <strong>REST API Endpoints Active</strong>
             </div>
-            <p>Multi-region trunk registration with automatic failover.</p>
+            <p>Multi-region trunk registration with automatic failover for disaster recovery.</p>
             <p><strong>Features:</strong> Regional health monitoring, automatic failover, priority-based region selection, data replication</p>
         </div>
 
         <div class="section-card">
-            <h3>Regional Configuration</h3>
-            <p>Configure geographic redundancy here. Framework ready for multi-region deployment.</p>
+            <h3>Statistics</h3>
+            <div id="geo-stats-display">
+                <p>Loading statistics...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Geographic Regions</h3>
+            <button onclick="showCreateRegionDialog()" class="btn-primary">+ Add Region</button>
+            <div id="geo-regions-list" style="margin-top: 15px;">
+                <p>Loading regions...</p>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>API Integration</h3>
             <div class="info-box">
-                <p><strong>Ready for Integration:</strong></p>
+                <p><strong>Integration Status:</strong></p>
                 <ul>
-                    <li>✅ Region management</li>
-                    <li>✅ Health check framework</li>
-                    <li>✅ Failover priority configuration</li>
-                    <li>⚠️ Requires multi-region infrastructure</li>
+                    <li>✅ Region management - <strong>Active</strong></li>
+                    <li>✅ Health check framework - <strong>Ready</strong></li>
+                    <li>✅ Failover priority configuration - <strong>Ready</strong></li>
+                    <li>✅ REST API endpoints - <strong>Active</strong></li>
+                    <li>⚠️ Multi-region infrastructure - <strong>Requires deployment</strong></li>
                 </ul>
+                <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+GET  /api/framework/geo-redundancy/regions
+GET  /api/framework/geo-redundancy/statistics
+GET  /api/framework/geo-redundancy/region/{region_id}
+POST /api/framework/geo-redundancy/region
+POST /api/framework/geo-redundancy/region/{region_id}/failover</pre>
             </div>
         </div>
     `;
+}
+
+function showCreateRegionDialog() {
+    const regionId = prompt('Enter Region ID (e.g., us-east-1):');
+    if (!regionId) return;
+    
+    const name = prompt('Enter Region Name (e.g., US East):');
+    if (!name) return;
+    
+    const location = prompt('Enter Region Location (e.g., Virginia, USA):');
+    if (!location) return;
+    
+    fetch('/api/framework/geo-redundancy/region', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            region_id: regionId,
+            name: name,
+            location: location
+        })
+    })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                alert(`✅ Region created successfully!`);
+                // Reload the tab
+                switchTab('geographic-redundancy');
+            } else {
+                alert(`❌ Failed to create region: ${result.error}`);
+            }
+        })
+        .catch(err => alert(`❌ Error: ${err.message}`));
+}
+
+function triggerFailover(regionId) {
+    if (!confirm(`Are you sure you want to failover to region ${regionId}?`)) return;
+    
+    fetch(`/api/framework/geo-redundancy/region/${regionId}/failover`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                alert(`✅ Failover successful!\nFrom: ${result.from_region}\nTo: ${result.to_region}`);
+                // Reload the tab
+                switchTab('geographic-redundancy');
+            } else {
+                alert(`❌ Failover failed: ${result.error}`);
+            }
+        })
+        .catch(err => alert(`❌ Error: ${err.message}`));
+}
+
+function viewRegionDetails(regionId) {
+    fetch(`/api/framework/geo-redundancy/region/${regionId}`)
+        .then(r => r.json())
+        .then(region => {
+            const details = `Region Details:
+
+Region ID: ${region.region_id}
+Name: ${region.name}
+Location: ${region.location}
+Status: ${region.status}
+Health Score: ${Math.round((region.health_score || 0) * 100)}%
+Trunks: ${region.trunk_count}
+Priority: ${region.priority}
+Is Active: ${region.is_active ? 'Yes' : 'No'}
+Last Health Check: ${region.last_health_check || 'Never'}`;
+            
+            alert(details);
+        })
+        .catch(err => alert(`❌ Error loading region: ${err.message}`));
 }
 
 // DNS SRV Failover Tab
