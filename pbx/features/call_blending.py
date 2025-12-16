@@ -257,6 +257,99 @@ class CallBlending:
         if agent_id in self.agents:
             self.agents[agent_id].available = available
     
+    def register_agent(self, agent_id: str, extension: str, mode: str = 'blended') -> Dict:
+        """
+        Register a new agent for call blending
+        
+        Args:
+            agent_id: Unique agent identifier
+            extension: Agent's extension number
+            mode: Initial operating mode (default: blended)
+            
+        Returns:
+            Dict: Registration result
+        """
+        if agent_id in self.agents:
+            return {'success': False, 'error': 'Agent already registered'}
+        
+        agent = Agent(agent_id, extension)
+        
+        # Set initial mode
+        if mode == 'inbound_only':
+            agent.mode = AgentMode.INBOUND_ONLY
+        elif mode == 'outbound_only':
+            agent.mode = AgentMode.OUTBOUND_ONLY
+        elif mode == 'auto':
+            agent.mode = AgentMode.AUTO
+        else:
+            agent.mode = AgentMode.BLENDED
+        
+        self.agents[agent_id] = agent
+        
+        self.logger.info(f"Registered agent {agent_id} (ext {extension}) in {mode} mode")
+        
+        return {
+            'success': True,
+            'agent_id': agent_id,
+            'extension': extension,
+            'mode': agent.mode.value
+        }
+    
+    def get_all_agents(self) -> List[Dict]:
+        """Get all registered agents"""
+        return [
+            {
+                'agent_id': agent.agent_id,
+                'extension': agent.extension,
+                'mode': agent.mode.value,
+                'available': agent.available,
+                'current_call': agent.current_call,
+                'inbound_calls_handled': agent.inbound_calls_handled,
+                'outbound_calls_handled': agent.outbound_calls_handled
+            }
+            for agent in self.agents.values()
+        ]
+    
+    def get_agent_status(self, agent_id: str) -> Optional[Dict]:
+        """Get status of a specific agent"""
+        if agent_id not in self.agents:
+            return None
+        
+        agent = self.agents[agent_id]
+        return {
+            'agent_id': agent.agent_id,
+            'extension': agent.extension,
+            'mode': agent.mode.value,
+            'available': agent.available,
+            'current_call': agent.current_call,
+            'inbound_calls_handled': agent.inbound_calls_handled,
+            'outbound_calls_handled': agent.outbound_calls_handled
+        }
+    
+    def set_agent_mode(self, agent_id: str, mode: str) -> Dict:
+        """Set agent operating mode"""
+        if agent_id not in self.agents:
+            return {'success': False, 'error': 'Agent not found'}
+        
+        agent = self.agents[agent_id]
+        try:
+            if mode == 'inbound_only':
+                agent.mode = AgentMode.INBOUND_ONLY
+            elif mode == 'outbound_only':
+                agent.mode = AgentMode.OUTBOUND_ONLY
+            elif mode == 'blended':
+                agent.mode = AgentMode.BLENDED
+            elif mode == 'auto':
+                agent.mode = AgentMode.AUTO
+            else:
+                return {'success': False, 'error': 'Invalid mode'}
+            
+            self.logger.info(f"Set agent {agent_id} mode to {mode}")
+            return {'success': True, 'agent_id': agent_id, 'mode': mode}
+        except Exception as e:
+            self.logger.error(f"Error setting agent mode: {e}")
+            return {'success': False, 'error': str(e)}
+    
     def get_queue_statistics(self) -> Dict:
         """Get queue statistics"""
         return {

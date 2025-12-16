@@ -259,6 +259,70 @@ class GeographicRedundancy:
             }
         return None
     
+    def get_all_regions(self) -> List[Dict]:
+        """Get all regions"""
+        return [
+            {
+                'region_id': region.region_id,
+                'name': region.name,
+                'location': region.location,
+                'status': region.status.value,
+                'health_score': region.health_score,
+                'trunk_count': len(region.trunks),
+                'priority': region.priority,
+                'is_active': region.region_id == self.active_region
+            }
+            for region in self.regions.values()
+        ]
+    
+    def get_region_status(self, region_id: str) -> Optional[Dict]:
+        """Get status of a specific region"""
+        if region_id not in self.regions:
+            return None
+        
+        region = self.regions[region_id]
+        return {
+            'region_id': region.region_id,
+            'name': region.name,
+            'location': region.location,
+            'status': region.status.value,
+            'health_score': region.health_score,
+            'trunk_count': len(region.trunks),
+            'trunks': region.trunks,
+            'priority': region.priority,
+            'is_active': region.region_id == self.active_region,
+            'last_health_check': region.last_health_check.isoformat() if region.last_health_check else None
+        }
+    
+    def create_region(self, region_id: str, name: str, location: str) -> Dict:
+        """Create a new geographic region"""
+        if region_id in self.regions:
+            return {'success': False, 'error': 'Region already exists'}
+        
+        region = GeographicRegion(region_id, name, location)
+        self.regions[region_id] = region
+        
+        self.logger.info(f"Created region: {region_id} ({name}) at {location}")
+        
+        return {
+            'success': True,
+            'region_id': region_id,
+            'name': name,
+            'location': location
+        }
+    
+    def trigger_failover(self, target_region_id: str = None) -> Dict:
+        """Trigger manual failover to specified region or auto-select"""
+        if target_region_id:
+            return self.failover_to_region(target_region_id)
+        else:
+            # Auto-select best region
+            best_region = self._select_best_region()
+            if best_region:
+                return self.failover_to_region(best_region.region_id)
+            else:
+                return {'success': False, 'error': 'No available regions for failover'}
+    
     def get_statistics(self) -> Dict:
         """Get redundancy statistics"""
         return {

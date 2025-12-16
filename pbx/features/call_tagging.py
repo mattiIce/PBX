@@ -343,6 +343,101 @@ class CallTagging:
         
         return matching_calls
     
+    def get_all_tags(self) -> List[Dict]:
+        """Get all unique tags"""
+        all_tags = set()
+        for tags_list in self.call_tags.values():
+            for tag in tags_list:
+                all_tags.add(tag.tag)
+        
+        # Include custom tags
+        all_tags.update(self.custom_tags)
+        
+        return [{'tag': tag} for tag in sorted(all_tags)]
+    
+    def get_all_rules(self) -> List[Dict]:
+        """Get all tagging rules"""
+        return self.tagging_rules.copy()
+    
+    def create_tag(self, name: str, description: str = '', color: str = '#007bff') -> str:
+        """
+        Create a new custom tag
+        
+        Args:
+            name: Tag name
+            description: Tag description
+            color: Tag color (hex)
+            
+        Returns:
+            str: Tag ID
+        """
+        self.custom_tags.add(name)
+        self.logger.info(f"Created custom tag: {name}")
+        return name
+    
+    def create_rule(self, name: str, conditions: List, tag_id: str, priority: int = 100) -> str:
+        """
+        Create a new tagging rule
+        
+        Args:
+            name: Rule name
+            conditions: List of conditions
+            tag_id: Tag to apply
+            priority: Rule priority
+            
+        Returns:
+            str: Rule ID
+        """
+        rule_id = f"rule_{len(self.tagging_rules) + 1}"
+        rule = {
+            'id': rule_id,
+            'name': name,
+            'conditions': conditions,
+            'tag': tag_id,
+            'priority': priority
+        }
+        self.tagging_rules.append(rule)
+        self.logger.info(f"Created tagging rule: {name}")
+        return rule_id
+    
+    def classify_call(self, call_id: str) -> List[str]:
+        """
+        Classify a call and return applicable tags
+        
+        NOTE: This is a simplified implementation that returns rule tags
+        without evaluating conditions. In production, this should:
+        1. Retrieve actual call data (transcript, metadata, etc.)
+        2. Evaluate rule conditions against call data
+        3. Call AI classification service for semantic analysis
+        4. Combine rule-based and AI-based tags
+        
+        Args:
+            call_id: Call ID
+            
+        Returns:
+            List[str]: List of tags
+        """
+        # Placeholder for AI classification
+        # In production, this would:
+        # - Fetch call transcript/metadata
+        # - Call ML model for classification
+        # - Evaluate rule conditions against actual call data
+        tags = []
+        
+        # Apply rule-based tagging (simplified)
+        # TODO: Add actual rule condition evaluation
+        for rule in self.tagging_rules:
+            # In production, evaluate rule conditions here
+            # For now, just add tags from all rules
+            tags.append(rule['tag'])
+        
+        # Store tags (limited by max_tags_per_call)
+        self.call_tags[call_id] = [CallTag(tag, TagSource.AUTO) for tag in tags[:self.max_tags_per_call]]
+        self.total_calls_tagged += 1
+        self.auto_tags_created += len(tags)
+        
+        return tags
+    
     def get_statistics(self) -> Dict:
         """Get overall tagging statistics"""
         return {
