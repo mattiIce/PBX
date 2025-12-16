@@ -390,6 +390,43 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path == '/api/framework/compliance/pci/log':
                 self._handle_log_pci_event()
             
+            # BI Integration POST endpoints
+            elif path == '/api/framework/bi-integration/export':
+                self._handle_export_bi_dataset()
+            elif path == '/api/framework/bi-integration/dataset':
+                self._handle_create_bi_dataset()
+            elif path == '/api/framework/bi-integration/test-connection':
+                self._handle_test_bi_connection()
+            
+            # Call Tagging POST endpoints
+            elif path == '/api/framework/call-tagging/tag':
+                self._handle_create_call_tag()
+            elif path == '/api/framework/call-tagging/rule':
+                self._handle_create_tagging_rule()
+            elif path.startswith('/api/framework/call-tagging/classify/'):
+                call_id = path.split('/')[-1]
+                self._handle_classify_call(call_id)
+            
+            # Call Blending POST endpoints
+            elif path == '/api/framework/call-blending/agent':
+                self._handle_register_blending_agent()
+            elif path.startswith('/api/framework/call-blending/agent/'):
+                agent_id = path.split('/')[-1]
+                if path.endswith('/mode'):
+                    self._handle_set_agent_mode(agent_id)
+                else:
+                    self._send_json({'error': 'Not found'}, 404)
+            
+            # Geographic Redundancy POST endpoints
+            elif path == '/api/framework/geo-redundancy/region':
+                self._handle_create_geo_region()
+            elif path.startswith('/api/framework/geo-redundancy/region/'):
+                region_id = path.split('/')[-1]
+                if path.endswith('/failover'):
+                    self._handle_trigger_geo_failover(region_id)
+                else:
+                    self._send_json({'error': 'Not found'}, 404)
+            
             # Open-source integration APIs
             elif path == '/api/integrations/jitsi/meetings':
                 self._handle_jitsi_create_meeting()
@@ -839,6 +876,41 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_soc2_controls()
             elif path == '/api/framework/compliance/pci/audit-log':
                 self._handle_get_pci_audit_log()
+            
+            # BI Integration API endpoints
+            elif path == '/api/framework/bi-integration/datasets':
+                self._handle_get_bi_datasets()
+            elif path == '/api/framework/bi-integration/statistics':
+                self._handle_get_bi_statistics()
+            elif path.startswith('/api/framework/bi-integration/export/'):
+                dataset_name = path.split('/')[-1]
+                self._handle_get_bi_export_status(dataset_name)
+            
+            # Call Tagging API endpoints
+            elif path == '/api/framework/call-tagging/tags':
+                self._handle_get_call_tags()
+            elif path == '/api/framework/call-tagging/rules':
+                self._handle_get_tagging_rules()
+            elif path == '/api/framework/call-tagging/statistics':
+                self._handle_get_tagging_statistics()
+            
+            # Call Blending API endpoints
+            elif path == '/api/framework/call-blending/agents':
+                self._handle_get_blending_agents()
+            elif path == '/api/framework/call-blending/statistics':
+                self._handle_get_blending_statistics()
+            elif path.startswith('/api/framework/call-blending/agent/'):
+                agent_id = path.split('/')[-1]
+                self._handle_get_blending_agent_status(agent_id)
+            
+            # Geographic Redundancy API endpoints
+            elif path == '/api/framework/geo-redundancy/regions':
+                self._handle_get_geo_regions()
+            elif path == '/api/framework/geo-redundancy/statistics':
+                self._handle_get_geo_statistics()
+            elif path.startswith('/api/framework/geo-redundancy/region/'):
+                region_id = path.split('/')[-1]
+                self._handle_get_geo_region_status(region_id)
             
             # Open-source integration GET APIs
             elif path.startswith('/api/integrations/espocrm/contacts/search'):
@@ -7790,6 +7862,336 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': 'Handler not found'}, 500)
         except Exception as e:
             self.logger.error(f"Error in Matrix create room: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # BI Integration Handlers
+    def _handle_get_bi_datasets(self):
+        """GET /api/framework/bi-integration/datasets - Get available datasets"""
+        try:
+            from pbx.features.bi_integration import get_bi_integration
+            bi = get_bi_integration(self.pbx_core.config if self.pbx_core else None)
+            datasets = bi.get_available_datasets()
+            self._send_json({'datasets': datasets})
+        except Exception as e:
+            self.logger.error(f"Error getting BI datasets: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_bi_statistics(self):
+        """GET /api/framework/bi-integration/statistics - Get BI statistics"""
+        try:
+            from pbx.features.bi_integration import get_bi_integration
+            bi = get_bi_integration(self.pbx_core.config if self.pbx_core else None)
+            stats = bi.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting BI statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_bi_export_status(self, dataset_name: str):
+        """GET /api/framework/bi-integration/export/{dataset} - Get export status"""
+        try:
+            from pbx.features.bi_integration import get_bi_integration
+            bi = get_bi_integration(self.pbx_core.config if self.pbx_core else None)
+            datasets = bi.get_available_datasets()
+            dataset = next((d for d in datasets if d['name'] == dataset_name), None)
+            if dataset:
+                self._send_json(dataset)
+            else:
+                self._send_json({'error': 'Dataset not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting export status: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_export_bi_dataset(self):
+        """POST /api/framework/bi-integration/export - Export dataset"""
+        try:
+            body = self._get_body()
+            dataset_name = body.get('dataset')
+            export_format = body.get('format', 'csv')
+            
+            if not dataset_name:
+                self._send_json({'error': 'Dataset name required'}, 400)
+                return
+            
+            from pbx.features.bi_integration import get_bi_integration, ExportFormat
+            bi = get_bi_integration(self.pbx_core.config if self.pbx_core else None)
+            
+            # Convert format string to enum
+            format_enum = ExportFormat.CSV
+            if export_format.lower() == 'json':
+                format_enum = ExportFormat.JSON
+            elif export_format.lower() == 'excel':
+                format_enum = ExportFormat.EXCEL
+            
+            result = bi.export_dataset(dataset_name, format_enum)
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error exporting dataset: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_bi_dataset(self):
+        """POST /api/framework/bi-integration/dataset - Create custom dataset"""
+        try:
+            body = self._get_body()
+            name = body.get('name')
+            query = body.get('query')
+            
+            if not name or not query:
+                self._send_json({'error': 'Name and query required'}, 400)
+                return
+            
+            from pbx.features.bi_integration import get_bi_integration
+            bi = get_bi_integration(self.pbx_core.config if self.pbx_core else None)
+            bi.create_custom_dataset(name, query)
+            self._send_json({'success': True, 'dataset': name})
+        except Exception as e:
+            self.logger.error(f"Error creating dataset: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_test_bi_connection(self):
+        """POST /api/framework/bi-integration/test-connection - Test BI provider connection"""
+        try:
+            body = self._get_body()
+            provider = body.get('provider', 'tableau')
+            credentials = body.get('credentials', {})
+            
+            from pbx.features.bi_integration import get_bi_integration, BIProvider
+            bi = get_bi_integration(self.pbx_core.config if self.pbx_core else None)
+            
+            # Convert provider string to enum
+            provider_enum = BIProvider.TABLEAU
+            if provider.lower() == 'powerbi':
+                provider_enum = BIProvider.POWER_BI
+            elif provider.lower() == 'looker':
+                provider_enum = BIProvider.LOOKER
+            
+            result = bi.test_connection(provider_enum, credentials)
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error testing BI connection: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Call Tagging Handlers
+    def _handle_get_call_tags(self):
+        """GET /api/framework/call-tagging/tags - Get all tags"""
+        try:
+            from pbx.features.call_tagging import get_call_tagging
+            tagging = get_call_tagging(self.pbx_core.config if self.pbx_core else None)
+            tags = tagging.get_all_tags()
+            self._send_json({'tags': tags})
+        except Exception as e:
+            self.logger.error(f"Error getting call tags: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_tagging_rules(self):
+        """GET /api/framework/call-tagging/rules - Get tagging rules"""
+        try:
+            from pbx.features.call_tagging import get_call_tagging
+            tagging = get_call_tagging(self.pbx_core.config if self.pbx_core else None)
+            rules = tagging.get_all_rules()
+            self._send_json({'rules': rules})
+        except Exception as e:
+            self.logger.error(f"Error getting tagging rules: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_tagging_statistics(self):
+        """GET /api/framework/call-tagging/statistics - Get tagging statistics"""
+        try:
+            from pbx.features.call_tagging import get_call_tagging
+            tagging = get_call_tagging(self.pbx_core.config if self.pbx_core else None)
+            stats = tagging.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting tagging statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_call_tag(self):
+        """POST /api/framework/call-tagging/tag - Create new tag"""
+        try:
+            body = self._get_body()
+            name = body.get('name')
+            description = body.get('description', '')
+            color = body.get('color', '#007bff')
+            
+            if not name:
+                self._send_json({'error': 'Tag name required'}, 400)
+                return
+            
+            from pbx.features.call_tagging import get_call_tagging
+            tagging = get_call_tagging(self.pbx_core.config if self.pbx_core else None)
+            tag_id = tagging.create_tag(name, description, color)
+            self._send_json({'success': True, 'tag_id': tag_id})
+        except Exception as e:
+            self.logger.error(f"Error creating tag: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_tagging_rule(self):
+        """POST /api/framework/call-tagging/rule - Create tagging rule"""
+        try:
+            body = self._get_body()
+            name = body.get('name')
+            conditions = body.get('conditions', [])
+            tag_id = body.get('tag_id')
+            
+            if not name or not tag_id:
+                self._send_json({'error': 'Name and tag_id required'}, 400)
+                return
+            
+            from pbx.features.call_tagging import get_call_tagging
+            tagging = get_call_tagging(self.pbx_core.config if self.pbx_core else None)
+            rule_id = tagging.create_rule(name, conditions, tag_id)
+            self._send_json({'success': True, 'rule_id': rule_id})
+        except Exception as e:
+            self.logger.error(f"Error creating tagging rule: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_classify_call(self, call_id: str):
+        """POST /api/framework/call-tagging/classify/{call_id} - Classify call"""
+        try:
+            from pbx.features.call_tagging import get_call_tagging
+            tagging = get_call_tagging(self.pbx_core.config if self.pbx_core else None)
+            tags = tagging.classify_call(call_id)
+            self._send_json({'call_id': call_id, 'tags': tags})
+        except Exception as e:
+            self.logger.error(f"Error classifying call: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Call Blending Handlers
+    def _handle_get_blending_agents(self):
+        """GET /api/framework/call-blending/agents - Get all agents"""
+        try:
+            from pbx.features.call_blending import get_call_blending
+            blending = get_call_blending(self.pbx_core.config if self.pbx_core else None)
+            agents = blending.get_all_agents()
+            self._send_json({'agents': agents})
+        except Exception as e:
+            self.logger.error(f"Error getting blending agents: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_blending_statistics(self):
+        """GET /api/framework/call-blending/statistics - Get blending statistics"""
+        try:
+            from pbx.features.call_blending import get_call_blending
+            blending = get_call_blending(self.pbx_core.config if self.pbx_core else None)
+            stats = blending.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting blending statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_blending_agent_status(self, agent_id: str):
+        """GET /api/framework/call-blending/agent/{agent_id} - Get agent status"""
+        try:
+            from pbx.features.call_blending import get_call_blending
+            blending = get_call_blending(self.pbx_core.config if self.pbx_core else None)
+            status = blending.get_agent_status(agent_id)
+            if status:
+                self._send_json(status)
+            else:
+                self._send_json({'error': 'Agent not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting agent status: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_register_blending_agent(self):
+        """POST /api/framework/call-blending/agent - Register agent"""
+        try:
+            body = self._get_body()
+            agent_id = body.get('agent_id')
+            extension = body.get('extension')
+            
+            if not agent_id or not extension:
+                self._send_json({'error': 'agent_id and extension required'}, 400)
+                return
+            
+            from pbx.features.call_blending import get_call_blending
+            blending = get_call_blending(self.pbx_core.config if self.pbx_core else None)
+            result = blending.register_agent(agent_id, extension)
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error registering agent: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_set_agent_mode(self, agent_id: str):
+        """POST /api/framework/call-blending/agent/{agent_id}/mode - Set agent mode"""
+        try:
+            body = self._get_body()
+            mode = body.get('mode', 'blended')
+            
+            from pbx.features.call_blending import get_call_blending
+            blending = get_call_blending(self.pbx_core.config if self.pbx_core else None)
+            result = blending.set_agent_mode(agent_id, mode)
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error setting agent mode: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    # Geographic Redundancy Handlers
+    def _handle_get_geo_regions(self):
+        """GET /api/framework/geo-redundancy/regions - Get all regions"""
+        try:
+            from pbx.features.geographic_redundancy import get_geographic_redundancy
+            geo = get_geographic_redundancy(self.pbx_core.config if self.pbx_core else None)
+            regions = geo.get_all_regions()
+            self._send_json({'regions': regions})
+        except Exception as e:
+            self.logger.error(f"Error getting geo regions: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_geo_statistics(self):
+        """GET /api/framework/geo-redundancy/statistics - Get geo statistics"""
+        try:
+            from pbx.features.geographic_redundancy import get_geographic_redundancy
+            geo = get_geographic_redundancy(self.pbx_core.config if self.pbx_core else None)
+            stats = geo.get_statistics()
+            self._send_json(stats)
+        except Exception as e:
+            self.logger.error(f"Error getting geo statistics: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_geo_region_status(self, region_id: str):
+        """GET /api/framework/geo-redundancy/region/{region_id} - Get region status"""
+        try:
+            from pbx.features.geographic_redundancy import get_geographic_redundancy
+            geo = get_geographic_redundancy(self.pbx_core.config if self.pbx_core else None)
+            status = geo.get_region_status(region_id)
+            if status:
+                self._send_json(status)
+            else:
+                self._send_json({'error': 'Region not found'}, 404)
+        except Exception as e:
+            self.logger.error(f"Error getting region status: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_create_geo_region(self):
+        """POST /api/framework/geo-redundancy/region - Create region"""
+        try:
+            body = self._get_body()
+            region_id = body.get('region_id')
+            name = body.get('name')
+            location = body.get('location')
+            
+            if not region_id or not name or not location:
+                self._send_json({'error': 'region_id, name, and location required'}, 400)
+                return
+            
+            from pbx.features.geographic_redundancy import get_geographic_redundancy
+            geo = get_geographic_redundancy(self.pbx_core.config if self.pbx_core else None)
+            result = geo.create_region(region_id, name, location)
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error creating region: {e}")
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_trigger_geo_failover(self, region_id: str):
+        """POST /api/framework/geo-redundancy/region/{region_id}/failover - Trigger failover"""
+        try:
+            from pbx.features.geographic_redundancy import get_geographic_redundancy
+            geo = get_geographic_redundancy(self.pbx_core.config if self.pbx_core else None)
+            result = geo.trigger_failover(region_id)
+            self._send_json(result)
+        except Exception as e:
+            self.logger.error(f"Error triggering failover: {e}")
             self._send_json({'error': str(e)}, 500)
 
 
