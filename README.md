@@ -330,7 +330,8 @@ PBX System
 ├── logs/              # Log files
 ├── recordings/        # Call recordings
 ├── voicemail/         # Voicemail storage
-├── moh/               # Music on hold files
+├── moh/               # Music on hold (5 tracks included)
+│   └── default/       # Default MOH class
 └── config.yml         # Main configuration
 ```
 
