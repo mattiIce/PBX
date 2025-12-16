@@ -36,6 +36,13 @@ const ERROR_DISPLAY_CONFIG = {
 // Error queue
 let errorQueue = [];
 
+// HTML escape function to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Display error in a visible notification
 function displayError(error, context = '') {
     if (!ERROR_DISPLAY_CONFIG.enabled) return;
@@ -82,7 +89,7 @@ function displayError(error, context = '') {
     let html = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
             <strong style="font-size: 16px;">❌ JavaScript Error</strong>
-            <button onclick="document.getElementById('${errorId}').remove()" 
+            <button id="close-${errorId}" 
                     style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; margin-left: 10px;">
                 ×
             </button>
@@ -90,16 +97,16 @@ function displayError(error, context = '') {
     `;
     
     if (context) {
-        html += `<div style="margin-bottom: 5px;"><strong>Context:</strong> ${context}</div>`;
+        html += `<div style="margin-bottom: 5px;"><strong>Context:</strong> ${escapeHtml(context)}</div>`;
     }
     
-    html += `<div style="margin-bottom: 5px;"><strong>Message:</strong> ${errorMessage}</div>`;
+    html += `<div style="margin-bottom: 5px;"><strong>Message:</strong> ${escapeHtml(errorMessage)}</div>`;
     
     if (ERROR_DISPLAY_CONFIG.showStackTrace && errorStack) {
         html += `
             <details style="margin-top: 10px; cursor: pointer;">
                 <summary style="font-weight: bold; margin-bottom: 5px;">Stack Trace (click to expand)</summary>
-                <pre style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 11px; margin: 5px 0 0 0;">${errorStack}</pre>
+                <pre style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 11px; margin: 5px 0 0 0;">${escapeHtml(errorStack)}</pre>
             </details>
         `;
     }
@@ -111,6 +118,12 @@ function displayError(error, context = '') {
     `;
     
     errorDiv.innerHTML = html;
+    
+    // Add click handler for close button using event listener (not inline onclick)
+    const closeBtn = errorDiv.querySelector(`#close-${errorId}`);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => errorDiv.remove());
+    }
     
     // Add to page
     document.body.appendChild(errorDiv);
@@ -137,7 +150,9 @@ window.addEventListener('error', function(event) {
 
 // Unhandled promise rejection handler
 window.addEventListener('unhandledrejection', function(event) {
-    displayError(new Error(event.reason), 'Unhandled Promise Rejection');
+    // Check if event.reason is already an Error object
+    const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+    displayError(error, 'Unhandled Promise Rejection');
 });
 
 // Add CSS animations
