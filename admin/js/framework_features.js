@@ -1315,68 +1315,6 @@ POST /api/framework/call-tagging/classify/{call_id}</pre>
 }
 
 function loadCallTags() {
-            <div id="tagging-rules-list" style="margin-top: 15px;">
-                <p>Loading rules...</p>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <h3>Tag Statistics</h3>
-            <div id="tag-statistics">
-                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-                    <div class="stat-card">
-                        <div class="stat-value" id="total-tags">0</div>
-                        <div class="stat-label">Total Tags</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="tagged-calls">0</div>
-                        <div class="stat-label">Tagged Calls</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="active-rules">0</div>
-                        <div class="stat-label">Active Rules</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="auto-tagged">0</div>
-                        <div class="stat-label">Auto-Tagged Today</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <h3>Integration Requirements</h3>
-            <div class="info-box">
-                <p><strong>Ready for Integration:</strong></p>
-                <ul>
-                    <li>✅ Tag creation and management - <strong>Ready</strong></li>
-                    <li>✅ Rule-based auto-tagging - <strong>Ready</strong></li>
-                    <li>✅ Tag search and analytics - <strong>Ready</strong></li>
-                    <li>✅ REST API endpoints - <strong>Ready</strong></li>
-                    <li>⚠️ AI classification service - <strong>Requires external AI</strong></li>
-                </ul>
-                <p style="margin-top: 15px;"><strong>Supported AI Services:</strong></p>
-                <ul>
-                    <li>OpenAI GPT for semantic classification</li>
-                    <li>Google Cloud Natural Language</li>
-                    <li>AWS Comprehend</li>
-                    <li>Custom ML models via REST API</li>
-                </ul>
-            </div>
-        </div>
-    `;
-    
-    // Load tags and rules after content is rendered
-    setTimeout(() => {
-        loadCallTags();
-        loadTaggingRules();
-        loadTagStatistics();
-    }, 100);
-    
-    return content;
-}
-
-function loadCallTags() {
     fetch('/api/framework/call-tagging/tags')
         .then(r => r.json())
         .then(data => {
