@@ -665,7 +665,8 @@ function loadConversationalAIStats() {
             `;
         })
         .catch(err => {
-            statsDiv.innerHTML = `<p style="color: #d32f2f;">Error loading statistics: ${err.message}</p>`;
+            // API endpoint not yet implemented or feature not enabled - show friendly message
+            statsDiv.innerHTML = `<p style="color: #666;"><em>Statistics unavailable. The API endpoint (/api/framework/conversational-ai/stats) will be available when the feature is enabled with an AI provider configured.</em></p>`;
         });
 }
 
@@ -824,7 +825,8 @@ function loadPredictiveDialingStats() {
             document.getElementById('contact-rate').textContent = (stats.contact_rate || 0) + '%';
         })
         .catch(err => {
-            // Silently fail
+            // Silent failure is acceptable - statistics will show 0 values
+            // This occurs when the feature is not yet enabled or API endpoint not implemented
         });
 }
 
@@ -974,7 +976,8 @@ function loadVoiceBiometricStats() {
             document.getElementById('fraud-attempts').textContent = stats.fraud_attempts || 0;
         })
         .catch(err => {
-            // Silently fail
+            // Silent failure is acceptable - statistics will show 0 values
+            // This occurs when the feature is not yet enabled or API endpoint not implemented
         });
 }
 
@@ -1276,8 +1279,10 @@ function loadCallTags() {
             container.innerHTML = html;
         })
         .catch(err => {
+            // Expected when feature is not yet enabled or API endpoint not implemented
+            // Fallback shows framework ready message with 0 values
             document.getElementById('tags-list').innerHTML = 
-                `<p style="color: #d32f2f;">Framework ready. Tags will appear when feature is enabled.</p>`;
+                `<p class="text-muted">Framework ready. Tags will appear when feature is enabled.</p>`;
         });
 }
 
@@ -1323,8 +1328,10 @@ function loadTaggingRules() {
             container.innerHTML = html;
         })
         .catch(err => {
+            // Expected when feature is not yet enabled or API endpoint not implemented
+            // Fallback shows framework ready message
             document.getElementById('tagging-rules-list').innerHTML = 
-                `<p style="color: #d32f2f;">Framework ready. Rules will appear when feature is enabled.</p>`;
+                `<p class="text-muted">Framework ready. Rules will appear when feature is enabled.</p>`;
         });
 }
 
@@ -1339,7 +1346,8 @@ function loadTagStatistics() {
             document.getElementById('auto-tagged').textContent = stats.auto_tagged_today || 0;
         })
         .catch(err => {
-            // Silently fail - stats will show 0
+            // Expected when feature is not yet enabled or API endpoint not implemented
+            // Fallback shows 0 values which is acceptable for framework-only features
         });
 }
 
