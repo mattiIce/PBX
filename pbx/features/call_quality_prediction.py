@@ -393,8 +393,8 @@ class CallQualityPrediction:
                 feat_var = sum((f - feat_mean) ** 2 for f in feat_values)
                 target_var = sum((t - target_mean) ** 2 for t in targets)
                 
-                # Validate before calculating denominator
-                if feat_var >= 0 and target_var >= 0:
+                # Validate before calculating denominator (must be > 0 to avoid division by zero)
+                if feat_var > 0 and target_var > 0:
                     denominator = (feat_var * target_var) ** 0.5
                     
                     if denominator > 0:

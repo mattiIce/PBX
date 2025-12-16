@@ -39,6 +39,7 @@ class VoiceProfile:
         self.enrollment_samples = 0
         self.required_samples = 3
         self.voiceprint = None  # Actual voiceprint data (voice features)
+        self.voiceprint_features = {}  # Aggregated features for matching
         self.enrollment_features = []  # Store features from enrollment samples
         self.successful_verifications = 0
         self.failed_verifications = 0
@@ -410,7 +411,7 @@ class VoiceBiometrics:
         # Implement actual voice matching algorithm
         # Compare extracted features with stored voiceprint features
         
-        if not voice_features or not hasattr(profile, 'voiceprint_features'):
+        if not voice_features or not profile.voiceprint_features:
             # Fallback to random score for backward compatibility
             return random.uniform(0.75, 0.95)
         

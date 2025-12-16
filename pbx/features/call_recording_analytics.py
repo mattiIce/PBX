@@ -150,51 +150,49 @@ class RecordingAnalytics:
                     'error': 'Vosk model not available'
                 }
             
-            # Open audio file
-            wf = wave.open(audio_path, "rb")
-            sample_rate = wf.getframerate()
-            
-            # Create recognizer
-            rec = KaldiRecognizer(vosk_model, sample_rate)
-            rec.SetWords(True)
-            
-            # Process audio
-            full_transcript = []
-            all_words = []
-            total_confidence = 0.0
-            confidence_count = 0
-            
-            while True:
-                data = wf.readframes(4000)
-                if len(data) == 0:
-                    break
-                    
-                if rec.AcceptWaveform(data):
-                    result = json.loads(rec.Result())
-                    if result.get('text'):
-                        full_transcript.append(result['text'])
-                        if 'result' in result:
-                            all_words.extend(result['result'])
-                            for word in result['result']:
-                                if 'conf' in word:
-                                    total_confidence += word['conf']
-                                    confidence_count += 1
-            
-            # Get final result
-            final_result = json.loads(rec.FinalResult())
-            if final_result.get('text'):
-                full_transcript.append(final_result['text'])
-                if 'result' in final_result:
-                    all_words.extend(final_result['result'])
-                    for word in final_result['result']:
-                        if 'conf' in word:
-                            total_confidence += word['conf']
-                            confidence_count += 1
-            
-            # Get duration from wave file before closing
-            duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
-            
-            wf.close()
+            # Open audio file with context manager for proper cleanup
+            with wave.open(audio_path, "rb") as wf:
+                sample_rate = wf.getframerate()
+                
+                # Create recognizer
+                rec = KaldiRecognizer(vosk_model, sample_rate)
+                rec.SetWords(True)
+                
+                # Process audio
+                full_transcript = []
+                all_words = []
+                total_confidence = 0.0
+                confidence_count = 0
+                
+                while True:
+                    data = wf.readframes(4000)
+                    if len(data) == 0:
+                        break
+                        
+                    if rec.AcceptWaveform(data):
+                        result = json.loads(rec.Result())
+                        if result.get('text'):
+                            full_transcript.append(result['text'])
+                            if 'result' in result:
+                                all_words.extend(result['result'])
+                                for word in result['result']:
+                                    if 'conf' in word:
+                                        total_confidence += word['conf']
+                                        confidence_count += 1
+                
+                # Get final result
+                final_result = json.loads(rec.FinalResult())
+                if final_result.get('text'):
+                    full_transcript.append(final_result['text'])
+                    if 'result' in final_result:
+                        all_words.extend(final_result['result'])
+                        for word in final_result['result']:
+                            if 'conf' in word:
+                                total_confidence += word['conf']
+                                confidence_count += 1
+                
+                # Get duration from wave file before closing
+                duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
             
             # Calculate average confidence
             avg_confidence = total_confidence / confidence_count if confidence_count > 0 else 0.0
