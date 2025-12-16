@@ -2,10 +2,13 @@
 REST API Server for PBX Management
 Provides HTTP/HTTPS API for managing PBX features
 """
+import base64
+import binascii
 import ipaddress
 import json
 import mimetypes
 import os
+import re
 import shutil
 import socket
 import ssl
@@ -441,14 +444,19 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path == '/api/framework/predictive-dialing/contacts':
                 self._handle_add_campaign_contacts()
             elif path.startswith('/api/framework/predictive-dialing/campaign/'):
-                campaign_id = path.split('/')[-2]  # campaign/ID/action
-                action = path.split('/')[-1]
-                if action == 'start':
-                    self._handle_start_dialing_campaign(campaign_id)
-                elif action == 'pause':
-                    self._handle_pause_dialing_campaign(campaign_id)
+                # Parse campaign ID and action from path: /campaign/{id}/{action}
+                path_parts = path.split('/api/framework/predictive-dialing/campaign/')[-1].split('/')
+                if len(path_parts) >= 2:
+                    campaign_id = '/'.join(path_parts[:-1])  # Support IDs with slashes
+                    action = path_parts[-1]
+                    if action == 'start':
+                        self._handle_start_dialing_campaign(campaign_id)
+                    elif action == 'pause':
+                        self._handle_pause_dialing_campaign(campaign_id)
+                    else:
+                        self._send_json({'error': 'Not found'}, 404)
                 else:
-                    self._send_json({'error': 'Not found'}, 404)
+                    self._send_json({'error': 'Invalid path'}, 400)
             
             # Voice Biometrics POST endpoints
             elif path == '/api/framework/voice-biometrics/profile':
@@ -472,12 +480,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path == '/api/framework/mobile-portability/mapping':
                 self._handle_create_mobile_mapping()
             elif path.startswith('/api/framework/mobile-portability/mapping/'):
-                business_number = path.split('/')[-2]
-                action = path.split('/')[-1]
-                if action == 'toggle':
-                    self._handle_toggle_mobile_mapping(business_number)
+                # Parse business number and action from path: /mapping/{number}/{action}
+                path_parts = path.split('/api/framework/mobile-portability/mapping/')[-1].split('/')
+                if len(path_parts) >= 2:
+                    business_number = '/'.join(path_parts[:-1])  # Support numbers with slashes
+                    action = path_parts[-1]
+                    if action == 'toggle':
+                        self._handle_toggle_mobile_mapping(business_number)
+                    else:
+                        self._send_json({'error': 'Not found'}, 404)
                 else:
-                    self._send_json({'error': 'Not found'}, 404)
+                    self._send_json({'error': 'Invalid path'}, 400)
             
             # Call Recording Analytics POST endpoints
             elif path == '/api/framework/recording-analytics/analyze':
@@ -684,7 +697,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract user ID from path - sanitize
                 user_id = path.split('/')[-1]
                 # Validate: alphanumeric, underscore, hyphen, dot only (no path traversal)
-                import re
                 if user_id and re.match(r'^[a-zA-Z0-9_.-]+$', user_id):
                     self._handle_delete_voice_profile(user_id)
                 else:
@@ -693,7 +705,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Extract business number from path - sanitize
                 business_number = path.split('/')[-1]
                 # Validate: phone number format (digits, +, -, parentheses, spaces)
-                import re
                 if business_number and re.match(r'^[\d+\-() ]+$', business_number):
                     self._handle_delete_mobile_mapping(business_number)
                 else:
@@ -8728,13 +8739,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 return
             
             # Convert base64 encoded audio data to bytes if provided
-            import base64
             if audio_data_str:
                 try:
                     audio_data = base64.b64decode(audio_data_str)
-                except Exception:
-                    audio_data = b''  # Fallback to empty bytes if decode fails
+                except (binascii.Error, ValueError) as e:
+                    self._send_json({'error': f'Invalid base64 audio data: {str(e)}'}, 400)
+                    return
             else:
+                audio_data = b''
                 audio_data = b''
             
             from pbx.features.voice_biometrics import get_voice_biometrics
