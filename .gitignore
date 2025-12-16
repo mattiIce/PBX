@@ -46,6 +46,7 @@ cdr/
 moh/*
 !moh/README.md
 !moh/default/
+!moh/default/*.wav
 
 # Generated voice files (generate with scripts/generate_tts_prompts.py)
 auto_attendant/*.wav
