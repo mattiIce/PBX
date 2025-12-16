@@ -400,43 +400,102 @@ class CallTagging:
         self.logger.info(f"Created tagging rule: {name}")
         return rule_id
     
-    def classify_call(self, call_id: str) -> List[str]:
+    def classify_call(self, call_id: str, transcript: str = None, metadata: Dict = None) -> List[str]:
         """
         Classify a call and return applicable tags
         
-        NOTE: This is a simplified implementation that returns rule tags
-        without evaluating conditions. In production, this should:
-        1. Retrieve actual call data (transcript, metadata, etc.)
-        2. Evaluate rule conditions against call data
-        3. Call AI classification service for semantic analysis
-        4. Combine rule-based and AI-based tags
+        Evaluates rules based on call transcript and metadata to determine tags.
+        In production, this should also:
+        - Call AI classification service for semantic analysis
+        - Combine rule-based and AI-based tags
         
         Args:
             call_id: Call ID
+            transcript: Optional call transcript for keyword matching
+            metadata: Optional call metadata (queue, duration, disposition, etc.)
             
         Returns:
             List[str]: List of tags
         """
-        # Placeholder for AI classification
-        # In production, this would:
-        # - Fetch call transcript/metadata
-        # - Call ML model for classification
-        # - Evaluate rule conditions against actual call data
         tags = []
+        transcript_lower = (transcript or "").lower()
+        metadata = metadata or {}
         
-        # Apply rule-based tagging (simplified)
-        # TODO: Add actual rule condition evaluation
+        # Apply rule-based tagging with actual condition evaluation
         for rule in self.tagging_rules:
-            # In production, evaluate rule conditions here
-            # For now, just add tags from all rules
-            tags.append(rule['tag'])
+            if self._evaluate_rule(rule, transcript_lower, metadata):
+                tags.append(rule['tag'])
+        
+        # Add tags from metadata (queue, disposition, etc.)
+        metadata_tags = self._tag_from_metadata(metadata)
+        tags.extend(metadata_tags)
+        
+        # If AI classification is enabled, get ML-based tags
+        if self.auto_tag_enabled and transcript:
+            ai_tags = self._classify_with_ai(transcript)
+            for tag, confidence in ai_tags:
+                if confidence >= self.min_confidence:
+                    tags.append(tag)
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_tags = []
+        for tag in tags:
+            if tag not in seen:
+                seen.add(tag)
+                unique_tags.append(tag)
         
         # Store tags (limited by max_tags_per_call)
-        self.call_tags[call_id] = [CallTag(tag, TagSource.AUTO) for tag in tags[:self.max_tags_per_call]]
+        self.call_tags[call_id] = [CallTag(tag, TagSource.AUTO) for tag in unique_tags[:self.max_tags_per_call]]
         self.total_calls_tagged += 1
-        self.auto_tags_created += len(tags)
+        self.auto_tags_created += len(unique_tags)
         
-        return tags
+        return unique_tags
+    
+    def _evaluate_rule(self, rule: Dict, transcript: str, metadata: Dict) -> bool:
+        """
+        Evaluate a tagging rule against call data
+        
+        Args:
+            rule: Tagging rule with conditions
+            transcript: Call transcript (lowercased)
+            metadata: Call metadata
+            
+        Returns:
+            bool: True if rule conditions are met
+        """
+        # Check keyword conditions
+        if 'keywords' in rule:
+            keywords = rule['keywords']
+            if any(keyword.lower() in transcript for keyword in keywords):
+                return True
+        
+        # Check metadata conditions
+        if 'conditions' in rule:
+            conditions = rule['conditions']
+            
+            # Check queue condition
+            if 'queue' in conditions:
+                if metadata.get('queue') == conditions['queue']:
+                    return True
+            
+            # Check disposition condition
+            if 'disposition' in conditions:
+                if metadata.get('disposition') == conditions['disposition']:
+                    return True
+            
+            # Check duration condition (in seconds)
+            if 'min_duration' in conditions:
+                duration = metadata.get('duration', 0)
+                if duration >= conditions['min_duration']:
+                    return True
+            
+            if 'max_duration' in conditions:
+                duration = metadata.get('duration', 0)
+                if duration <= conditions['max_duration']:
+                    return True
+        
+        return False
     
     def get_statistics(self) -> Dict:
         """Get overall tagging statistics"""
