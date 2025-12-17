@@ -399,7 +399,8 @@ class SecurityMonitor:
         }
 
         # Threat detection is optional but recommended
-        threat_enabled = self._get_config('security.threat_detection.enabled', True)
+        # Default to False if not configured to avoid false positives
+        threat_enabled = self._get_config('security.threat_detection.enabled', False)
         
         result['details'] = {
             'enabled': threat_enabled

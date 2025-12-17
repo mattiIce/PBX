@@ -401,10 +401,11 @@ class PBXCore:
             self.threat_detector = None
 
         # Initialize security runtime monitor (always enabled for FIPS compliance)
+        # Note: webhook_system is initialized earlier, so it's always available
         from pbx.utils.security_monitor import get_security_monitor
         self.security_monitor = get_security_monitor(
             config=self.config,
-            webhook_system=self.webhook_system if hasattr(self, 'webhook_system') else None
+            webhook_system=self.webhook_system
         )
         self.logger.info("Security runtime monitor initialized")
 

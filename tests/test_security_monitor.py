@@ -269,16 +269,16 @@ def test_monitor_lifecycle():
     
     # Start monitor
     monitor.start()
-    assert monitor.running == True, "Monitor should be running"
+    assert monitor.running, "Monitor should be running"
     assert monitor.monitor_thread is not None, "Monitor thread should exist"
     print("  ✓ Monitor starts successfully")
     
-    # Let it run briefly
-    time.sleep(1)
+    # Let it run briefly (2 seconds to ensure thread is active)
+    time.sleep(2)
     
     # Stop monitor
     monitor.stop()
-    assert monitor.running == False, "Monitor should be stopped"
+    assert not monitor.running, "Monitor should be stopped"
     print("  ✓ Monitor stops successfully")
 
 
