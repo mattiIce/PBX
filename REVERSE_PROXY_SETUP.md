@@ -383,6 +383,60 @@ sudo certbot renew
 sudo certbot renew --dry-run
 ```
 
+### Certbot OpenSSL Compatibility Error
+
+If you encounter an error like `_hashlib.UnsupportedDigestmodError: [digital envelope routines] unsupported`, this is a known compatibility issue between certbot's Python cryptography library and certain OpenSSL versions.
+
+**The setup script will automatically continue with HTTP-only configuration** and provide you with solutions to fix the SSL issue.
+
+**Solution 1: Update certbot and cryptography library**
+
+```bash
+sudo apt update
+sudo apt upgrade certbot python3-certbot-nginx
+sudo pip3 install --upgrade cryptography
+sudo certbot --nginx -d abps.albl.com
+```
+
+**Solution 2: Reinstall certbot using snap (recommended by Let's Encrypt)**
+
+This is the most reliable solution as snap packages include all dependencies:
+
+```bash
+# Remove the apt version
+sudo apt remove certbot python3-certbot-nginx
+
+# Install via snap
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+
+# Obtain certificate
+sudo certbot --nginx -d abps.albl.com
+```
+
+**Solution 3: Use manual certificate verification**
+
+If the above solutions don't work, use standalone verification:
+
+```bash
+# Stop nginx temporarily
+sudo systemctl stop nginx
+
+# Obtain certificate using standalone mode
+sudo certbot certonly --standalone -d abps.albl.com
+
+# Start nginx
+sudo systemctl start nginx
+
+# Your nginx is already configured to use certificates from Let's Encrypt
+# They will be automatically picked up once certbot creates them
+```
+
+**After fixing certbot:**
+- Your nginx configuration is already set up to use HTTPS
+- The certificates will be automatically applied
+- Visit `https://abps.albl.com` to verify SSL is working
+
 ### Nginx Configuration Test Failed
 
 ```bash

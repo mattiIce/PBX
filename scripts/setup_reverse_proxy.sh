@@ -5,13 +5,16 @@
 set -e
 
 # Cleanup temporary files on exit
-trap 'rm -f /tmp/nginx_test.log' EXIT
+trap 'rm -f /tmp/nginx_test.log /tmp/certbot_output.log' EXIT
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Error patterns for certbot SSL certificate issues
+CERTBOT_OPENSSL_ERROR_PATTERN='UnsupportedDigestmodError\|digital envelope routines'
 
 # Helper function to check if port 80 is in use
 is_port_80_in_use() {
@@ -461,12 +464,59 @@ echo "Obtaining SSL certificate from Let's Encrypt..."
 echo "Certbot will automatically configure HTTPS and add redirect from HTTP..."
 echo "This may take a minute..."
 
-certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email $EMAIL --redirect
+# Try to obtain SSL certificate
+CERTBOT_SUCCESS=false
+certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email $EMAIL --redirect 2>&1 | tee /tmp/certbot_output.log
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to obtain SSL certificate${NC}"
-    echo "You can try manually with: sudo certbot --nginx -d $DOMAIN_NAME"
-    exit 1
+if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    CERTBOT_SUCCESS=true
+    echo -e "${GREEN}Successfully obtained SSL certificate!${NC}"
+else
+    echo -e "${YELLOW}Warning: Failed to obtain SSL certificate${NC}"
+    
+    # Check for specific error types
+    if grep -q "$CERTBOT_OPENSSL_ERROR_PATTERN" /tmp/certbot_output.log; then
+        echo ""
+        echo -e "${YELLOW}Detected OpenSSL compatibility issue with certbot${NC}"
+        echo ""
+        echo "This is a known issue caused by incompatibility between certbot's Python"
+        echo "cryptography library and your OpenSSL version."
+        echo ""
+        echo "Your nginx configuration has been created and the site is accessible via HTTP."
+        echo "You can access your PBX at: http://$DOMAIN_NAME"
+        echo ""
+        echo -e "${YELLOW}To fix the SSL certificate issue, try these solutions:${NC}"
+        echo ""
+        echo "Solution 1: Update certbot and Python cryptography library"
+        echo "  sudo apt update"
+        echo "  sudo apt upgrade certbot python3-certbot-nginx"
+        echo "  sudo pip3 install --upgrade cryptography"
+        echo "  sudo certbot --nginx -d $DOMAIN_NAME"
+        echo ""
+        echo "Solution 2: Reinstall certbot using snap (recommended by Let's Encrypt)"
+        echo "  sudo apt remove certbot python3-certbot-nginx"
+        echo "  sudo snap install --classic certbot"
+        echo "  sudo ln -s /snap/bin/certbot /usr/bin/certbot"
+        echo "  sudo certbot --nginx -d $DOMAIN_NAME"
+        echo ""
+        echo "Solution 3: Use manual certificate verification"
+        echo "  sudo certbot certonly --standalone -d $DOMAIN_NAME"
+        echo "  Then manually configure nginx to use the certificates"
+        echo ""
+        echo "After fixing certbot, your nginx is already configured to work with SSL."
+        echo "The certificates will be automatically used once certbot succeeds."
+        echo ""
+    else
+        echo ""
+        echo "You can try manually with: sudo certbot --nginx -d $DOMAIN_NAME"
+        echo "Check the certbot logs at: /var/log/letsencrypt/letsencrypt.log"
+        echo ""
+    fi
+    
+    # Don't exit - allow the script to complete with HTTP-only configuration
+    echo -e "${YELLOW}Continuing with HTTP-only configuration...${NC}"
+    echo "Your site will be accessible via: http://$DOMAIN_NAME"
+    echo ""
 fi
 
 # Configure firewall (if ufw is available)
@@ -483,27 +533,52 @@ echo -e "${GREEN}===============================================================
 echo -e "${GREEN}Setup Complete!${NC}"
 echo -e "${GREEN}================================================================${NC}"
 echo ""
-echo "Your PBX admin panel is now accessible at:"
-echo -e "  ${GREEN}https://$DOMAIN_NAME${NC}"
-echo ""
-echo "SSL Certificate:"
-echo "  Status: Active"
-echo "  Auto-renewal: Enabled (every 90 days)"
-echo ""
-echo "Next Steps:"
-echo "  1. Open your browser and go to: https://$DOMAIN_NAME"
-echo "  2. You should see the PBX admin login page"
-echo "  3. Log in with your admin credentials"
-echo ""
-echo "Logs:"
-echo "  Nginx access: /var/log/nginx/${DOMAIN_NAME}-access.log"
-echo "  Nginx error: /var/log/nginx/${DOMAIN_NAME}-error.log"
-echo "  PBX: [PBX_INSTALL_DIR]/logs/pbx.log"
-echo ""
-echo "SSL Certificate Management:"
-echo "  Check status: sudo certbot certificates"
-echo "  Renew manually: sudo certbot renew"
-echo "  Test renewal: sudo certbot renew --dry-run"
+
+# Display appropriate URL based on SSL status
+if [ "$CERTBOT_SUCCESS" = true ]; then
+    echo "Your PBX admin panel is now accessible at:"
+    echo -e "  ${GREEN}https://$DOMAIN_NAME${NC}"
+    echo ""
+    echo "SSL Certificate:"
+    echo "  Status: Active"
+    echo "  Auto-renewal: Enabled (every 90 days)"
+    echo ""
+    echo "Next Steps:"
+    echo "  1. Open your browser and go to: https://$DOMAIN_NAME"
+    echo "  2. You should see the PBX admin login page"
+    echo "  3. Log in with your admin credentials"
+    echo ""
+    echo "Logs:"
+    echo "  Nginx access: /var/log/nginx/${DOMAIN_NAME}-access.log"
+    echo "  Nginx error: /var/log/nginx/${DOMAIN_NAME}-error.log"
+    echo "  PBX: [PBX_INSTALL_DIR]/logs/pbx.log"
+    echo ""
+    echo "SSL Certificate Management:"
+    echo "  Check status: sudo certbot certificates"
+    echo "  Renew manually: sudo certbot renew"
+    echo "  Test renewal: sudo certbot renew --dry-run"
+else
+    echo -e "${YELLOW}Your PBX admin panel is accessible via HTTP (no SSL):${NC}"
+    echo -e "  ${YELLOW}http://$DOMAIN_NAME${NC}"
+    echo ""
+    echo -e "${YELLOW}⚠️  SSL Certificate: Not configured${NC}"
+    echo ""
+    echo -e "${YELLOW}IMPORTANT: Your connection is not encrypted!${NC}"
+    echo "Please complete the SSL setup following the troubleshooting steps above."
+    echo ""
+    echo "Next Steps:"
+    echo "  1. Fix the certbot SSL issue using one of the solutions provided above"
+    echo "  2. Once certbot succeeds, your site will automatically use HTTPS"
+    echo "  3. Open your browser and go to: http://$DOMAIN_NAME (for now)"
+    echo "  4. You should see the PBX admin login page"
+    echo ""
+    echo "Logs:"
+    echo "  Nginx access: /var/log/nginx/${DOMAIN_NAME}-access.log"
+    echo "  Nginx error: /var/log/nginx/${DOMAIN_NAME}-error.log"
+    echo "  Certbot: /var/log/letsencrypt/letsencrypt.log"
+    echo "  PBX: [PBX_INSTALL_DIR]/logs/pbx.log"
+fi
+
 echo ""
 echo -e "${GREEN}Enjoy your PBX system!${NC}"
 

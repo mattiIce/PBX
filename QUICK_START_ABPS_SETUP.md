@@ -80,7 +80,7 @@ sudo scripts/setup_reverse_proxy.sh
 - ✅ Configure firewall rules
 - ✅ Start nginx
 
-**Expected output:**
+**Expected output (if SSL succeeds):**
 ```
 ================================================================
 Setup Complete!
@@ -89,6 +89,12 @@ Setup Complete!
 Your PBX admin panel is now accessible at:
   https://abps.albl.com
 ```
+
+**Note:** If the SSL certificate setup encounters an error (e.g., OpenSSL compatibility issue), the script will:
+- ✅ Continue with HTTP-only configuration
+- ✅ Provide detailed troubleshooting steps
+- ✅ Complete successfully so you can access the site via `http://abps.albl.com`
+- ⚠️ You can fix the SSL issue later following the provided instructions
 
 ---
 
@@ -112,6 +118,26 @@ nslookup abps.albl.com
 # Test locally on server
 curl -I http://localhost:8080/admin/
 ```
+
+**If you got an SSL certificate error during setup:**
+
+The script will have provided specific solutions. Common fix for OpenSSL compatibility issues:
+
+```bash
+# Option 1: Update certbot
+sudo apt update
+sudo apt upgrade certbot python3-certbot-nginx
+sudo pip3 install --upgrade cryptography
+sudo certbot --nginx -d abps.albl.com
+
+# Option 2: Reinstall certbot via snap (recommended)
+sudo apt remove certbot python3-certbot-nginx
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+sudo certbot --nginx -d abps.albl.com
+```
+
+See the [Reverse Proxy Setup Guide](REVERSE_PROXY_SETUP.md#certbot-openssl-compatibility-error) for more details.
 
 ---
 
