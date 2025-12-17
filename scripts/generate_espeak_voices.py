@@ -147,7 +147,7 @@ def generate_voicemail_voices(output_dir='voicemail_prompts'):
             'description': 'Voicemail main menu'
         },
         'options_menu.wav': {
-            'text': 'To record a greeting, press 1. To return to the main menu, press star.',
+            'text': 'Press 1 to record greeting. Press star to return to main menu.',
             'description': 'Options menu'
         },
         'message_menu.wav': {

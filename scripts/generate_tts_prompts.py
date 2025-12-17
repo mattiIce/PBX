@@ -154,7 +154,7 @@ def generate_voicemail_tts(output_dir='voicemail_prompts', sample_rate=8000):
             'description': 'Voicemail main menu'
         },
         'options_menu.wav': {
-            'text': 'To record a greeting, press 1. To return to the main menu, press star.',
+            'text': 'Press 1 to record greeting. Press star to return to main menu.',
             'description': 'Options menu'
         },
         'message_menu.wav': {
