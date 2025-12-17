@@ -29,7 +29,7 @@ class TestSpeexCodec(unittest.TestCase):
         
         self.assertEqual(codec.mode, 'nb')
         self.assertEqual(codec.sample_rate, 8000)
-        self.assertEqual(codec.payload_type, 97)
+        self.assertEqual(codec.payload_type, 98)  # NB uses PT 98
 
     def test_codec_initialization_wideband(self):
         """Test wideband mode initialization"""
@@ -37,7 +37,7 @@ class TestSpeexCodec(unittest.TestCase):
         
         self.assertEqual(codec.mode, 'wb')
         self.assertEqual(codec.sample_rate, 16000)
-        self.assertEqual(codec.payload_type, 98)
+        self.assertEqual(codec.payload_type, 99)  # WB uses PT 99
 
     def test_codec_initialization_ultrawideband(self):
         """Test ultra-wideband mode initialization"""
@@ -45,7 +45,7 @@ class TestSpeexCodec(unittest.TestCase):
         
         self.assertEqual(codec.mode, 'uwb')
         self.assertEqual(codec.sample_rate, 32000)
-        self.assertEqual(codec.payload_type, 99)
+        self.assertEqual(codec.payload_type, 100)  # UWB uses PT 100
 
     def test_invalid_mode_defaults_to_nb(self):
         """Test that invalid mode defaults to narrowband"""
@@ -106,43 +106,43 @@ class TestSpeexCodec(unittest.TestCase):
 
     def test_get_sdp_description_narrowband(self):
         """Test SDP description for narrowband"""
-        codec = SpeexCodec({'mode': 'nb', 'payload_type': 97})
+        codec = SpeexCodec({'mode': 'nb', 'payload_type': 98})
         sdp = codec.get_sdp_description()
         
-        self.assertEqual(sdp, 'rtpmap:97 SPEEX/8000')
+        self.assertEqual(sdp, 'rtpmap:98 SPEEX/8000')
 
     def test_get_sdp_description_wideband(self):
         """Test SDP description for wideband"""
-        codec = SpeexCodec({'mode': 'wb', 'payload_type': 98})
+        codec = SpeexCodec({'mode': 'wb', 'payload_type': 99})
         sdp = codec.get_sdp_description()
         
-        self.assertEqual(sdp, 'rtpmap:98 SPEEX/16000')
+        self.assertEqual(sdp, 'rtpmap:99 SPEEX/16000')
 
     def test_get_fmtp_with_vbr(self):
         """Test FMTP generation with VBR enabled"""
-        codec = SpeexCodec({'mode': 'nb', 'vbr': True, 'payload_type': 97})
+        codec = SpeexCodec({'mode': 'nb', 'vbr': True, 'payload_type': 98})
         fmtp = codec.get_fmtp()
         
         self.assertIn('vbr=on', fmtp)
-        self.assertIn('fmtp:97', fmtp)
+        self.assertIn('fmtp:98', fmtp)
 
     def test_get_fmtp_wideband(self):
         """Test FMTP for wideband mode"""
-        codec = SpeexCodec({'mode': 'wb', 'vbr': True, 'payload_type': 98})
+        codec = SpeexCodec({'mode': 'wb', 'vbr': True, 'payload_type': 99})
         fmtp = codec.get_fmtp()
         
         self.assertIn('mode="1,any"', fmtp)
 
     def test_get_fmtp_ultrawideband(self):
         """Test FMTP for ultra-wideband mode"""
-        codec = SpeexCodec({'mode': 'uwb', 'vbr': True, 'payload_type': 99})
+        codec = SpeexCodec({'mode': 'uwb', 'vbr': True, 'payload_type': 100})
         fmtp = codec.get_fmtp()
         
         self.assertIn('mode="2,any"', fmtp)
 
     def test_get_fmtp_no_vbr(self):
         """Test FMTP without VBR"""
-        codec = SpeexCodec({'mode': 'nb', 'vbr': False, 'payload_type': 97})
+        codec = SpeexCodec({'mode': 'nb', 'vbr': False, 'payload_type': 98})
         fmtp = codec.get_fmtp()
         
         # Should have no fmtp or just mode for wideband
@@ -151,15 +151,15 @@ class TestSpeexCodec(unittest.TestCase):
 
     def test_get_sdp_parameters(self):
         """Test complete SDP parameters"""
-        codec = SpeexCodec({'mode': 'nb', 'vbr': True, 'payload_type': 97})
+        codec = SpeexCodec({'mode': 'nb', 'vbr': True, 'payload_type': 98})
         params = codec.get_sdp_parameters()
         
-        self.assertEqual(params['payload_type'], 97)
+        self.assertEqual(params['payload_type'], 98)
         self.assertEqual(params['encoding_name'], 'SPEEX')
         self.assertEqual(params['clock_rate'], 8000)
         self.assertEqual(params['channels'], 1)
         self.assertEqual(params['mode'], 'nb')
-        self.assertEqual(params['rtpmap'], 'rtpmap:97 SPEEX/8000')
+        self.assertEqual(params['rtpmap'], 'rtpmap:98 SPEEX/8000')
         self.assertIn('fmtp', params)
 
     def test_frame_size_narrowband(self):

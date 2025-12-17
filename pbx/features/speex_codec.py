@@ -50,10 +50,11 @@ class SpeexCodec:
     }
     
     # Payload types (RFC 5574)
+    # Ensure no conflicts with iLBC (PT 97)
     PAYLOAD_TYPES = {
-        MODE_NARROWBAND: 97,     # Dynamic (no static type)
-        MODE_WIDEBAND: 98,       # Dynamic
-        MODE_ULTRA_WIDEBAND: 99  # Dynamic
+        MODE_NARROWBAND: 98,     # PT 98 for narrowband (8kHz)
+        MODE_WIDEBAND: 99,       # PT 99 for wideband (16kHz)
+        MODE_ULTRA_WIDEBAND: 100  # PT 100 for ultra-wideband (32kHz)
     }
     
     # Typical bitrates (VBR can vary)
