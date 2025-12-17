@@ -13,12 +13,22 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Helper function to check if port 80 is in use
+is_port_80_in_use() {
+    netstat -tuln 2>/dev/null | grep -q ':80 ' || ss -tuln 2>/dev/null | grep -q ':80 '
+}
+
+# Helper function to check if nginx processes are running
+has_nginx_processes() {
+    pgrep nginx >/dev/null 2>&1
+}
+
 # Function to check if port 80 is available and handle conflicts
 check_port_80() {
     echo "Checking port 80 availability..."
     
     # Check if something is listening on port 80
-    if netstat -tuln 2>/dev/null | grep -q ':80 ' || ss -tuln 2>/dev/null | grep -q ':80 '; then
+    if is_port_80_in_use; then
         echo -e "${YELLOW}Port 80 is already in use${NC}"
         
         # Try to identify what's using port 80
@@ -26,7 +36,8 @@ check_port_80() {
         if command -v lsof &> /dev/null; then
             port_80_process=$(lsof -ti:80 2>/dev/null | head -1)
         elif command -v ss &> /dev/null; then
-            port_80_process=$(ss -tlnp 2>/dev/null | grep ':80 ' | grep -oP 'pid=\K[0-9]+' | head -1)
+            # Use awk instead of grep -oP for better compatibility
+            port_80_process=$(ss -tlnp 2>/dev/null | grep ':80 ' | awk -F'pid=' '{if ($2) {split($2, a, ","); print a[1]}}' | head -1)
         fi
         
         if [ -n "$port_80_process" ]; then
@@ -62,14 +73,14 @@ check_port_80() {
                     sleep 2
                     
                     # If nginx processes still exist, force kill them
-                    if pgrep nginx >/dev/null 2>&1; then
+                    if has_nginx_processes; then
                         echo "Force killing remaining nginx processes..."
                         pkill -9 nginx 2>/dev/null || true
                         sleep 1
                     fi
                     
                     # Verify port 80 is now free
-                    if netstat -tuln 2>/dev/null | grep -q ':80 ' || ss -tuln 2>/dev/null | grep -q ':80 '; then
+                    if is_port_80_in_use; then
                         echo -e "${RED}Error: Unable to free port 80 even after stopping nginx${NC}"
                         echo "Please manually investigate and stop the process using port 80"
                         return 1
@@ -131,7 +142,7 @@ manage_nginx_service() {
         echo "Nginx is not active (state: $NGINX_STATE), starting service..."
         
         # Check if there are any stale nginx processes running
-        if pgrep nginx >/dev/null 2>&1; then
+        if has_nginx_processes; then
             echo -e "${YELLOW}Warning: Found nginx processes running but service state is $NGINX_STATE${NC}"
             echo "Cleaning up stale nginx processes..."
             
@@ -140,14 +151,14 @@ manage_nginx_service() {
             sleep 2
             
             # If processes still exist, force kill them
-            if pgrep nginx >/dev/null 2>&1; then
+            if has_nginx_processes; then
                 echo "Nginx processes still running, force terminating..."
                 pkill -9 nginx 2>/dev/null || true
                 sleep 1
             fi
             
             # Verify processes are gone
-            if pgrep nginx >/dev/null 2>&1; then
+            if has_nginx_processes; then
                 echo -e "${RED}Error: Unable to stop nginx processes${NC}"
                 echo "Please manually kill nginx processes and try again"
                 return 1
