@@ -52,7 +52,9 @@ class PBXLogger:
 
         # File handler
         if log_file:
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            log_dir = os.path.dirname(log_file)
+            if log_dir:  # Only create directory if path includes a directory
+                os.makedirs(log_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
@@ -107,7 +109,9 @@ class PBXLogger:
         
         # File handler (if log_file specified)
         if log_file:
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            log_dir = os.path.dirname(log_file)
+            if log_dir:  # Only create directory if path includes a directory
+                os.makedirs(log_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
