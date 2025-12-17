@@ -13,6 +13,51 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Function to manage nginx service (start/reload)
+manage_nginx_service() {
+    local action_description="${1:-Starting/reloading}"
+    
+    echo "$action_description nginx..."
+    
+    # Check nginx service state
+    NGINX_STATE=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
+    
+    if [ "$NGINX_STATE" = "active" ]; then
+        # Nginx is running, reload configuration
+        echo "Nginx is active, reloading configuration..."
+        if ! systemctl reload nginx; then
+            echo -e "${RED}Failed to reload nginx${NC}"
+            echo "Attempting to restart nginx instead..."
+            systemctl restart nginx || {
+                echo -e "${RED}Failed to restart nginx. Check 'journalctl -xeu nginx.service' for details.${NC}"
+                return 1
+            }
+        fi
+    else
+        # Nginx is not active (could be inactive, failed, or not loaded)
+        echo "Nginx is not active (state: $NGINX_STATE), starting service..."
+        
+        # If nginx is in a failed state, reset it first
+        if systemctl is-failed --quiet nginx 2>/dev/null; then
+            echo "Resetting failed nginx service..."
+            systemctl reset-failed nginx
+        fi
+        
+        # Start nginx
+        if ! systemctl start nginx; then
+            echo -e "${RED}Failed to start nginx${NC}"
+            echo "Checking for detailed error information..."
+            journalctl -xeu nginx.service --no-pager -n 50
+            return 1
+        fi
+        
+        # Enable nginx to start on boot
+        systemctl enable nginx
+    fi
+    
+    return 0
+}
+
 echo "================================================================"
 echo "PBX Reverse Proxy Setup Script"
 echo "================================================================"
@@ -158,43 +203,7 @@ if grep -q "duplicate.*MIME type\|duplicate extension" /tmp/nginx_test.log; then
 fi
 
 # Start or reload nginx to serve HTTP traffic
-echo "Starting/reloading nginx..."
-
-# Check nginx service state
-NGINX_STATE=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
-
-if [ "$NGINX_STATE" = "active" ]; then
-    # Nginx is running, reload configuration
-    echo "Nginx is active, reloading configuration..."
-    if ! systemctl reload nginx; then
-        echo -e "${RED}Failed to reload nginx${NC}"
-        echo "Attempting to restart nginx instead..."
-        systemctl restart nginx || {
-            echo -e "${RED}Failed to restart nginx. Check 'journalctl -xeu nginx.service' for details.${NC}"
-            exit 1
-        }
-    fi
-else
-    # Nginx is not active (could be inactive, failed, or not loaded)
-    echo "Nginx is not active (state: $NGINX_STATE), starting service..."
-    
-    # If nginx is in a failed state, reset it first
-    if systemctl is-failed --quiet nginx 2>/dev/null; then
-        echo "Resetting failed nginx service..."
-        systemctl reset-failed nginx
-    fi
-    
-    # Start nginx
-    if ! systemctl start nginx; then
-        echo -e "${RED}Failed to start nginx${NC}"
-        echo "Checking for detailed error information..."
-        journalctl -xeu nginx.service --no-pager -n 50
-        exit 1
-    fi
-    
-    # Enable nginx to start on boot
-    systemctl enable nginx
-fi
+manage_nginx_service "Starting/reloading" || exit 1
 
 # Get SSL certificate from Let's Encrypt
 echo ""
@@ -217,42 +226,7 @@ if command -v ufw &> /dev/null; then
 fi
 
 # Final nginx reload
-echo "Final nginx reload..."
-
-# Check nginx service state
-NGINX_STATE=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
-
-if [ "$NGINX_STATE" = "active" ]; then
-    # Nginx is running, reload configuration
-    if ! systemctl reload nginx; then
-        echo -e "${RED}Failed to reload nginx${NC}"
-        echo "Attempting to restart nginx instead..."
-        systemctl restart nginx || {
-            echo -e "${RED}Failed to restart nginx. Check 'journalctl -xeu nginx.service' for details.${NC}"
-            exit 1
-        }
-    fi
-else
-    # Nginx is not active (could be inactive, failed, or not loaded)
-    echo "Nginx is not active (state: $NGINX_STATE), starting service..."
-    
-    # If nginx is in a failed state, reset it first
-    if systemctl is-failed --quiet nginx 2>/dev/null; then
-        echo "Resetting failed nginx service..."
-        systemctl reset-failed nginx
-    fi
-    
-    # Start nginx
-    if ! systemctl start nginx; then
-        echo -e "${RED}Failed to start nginx${NC}"
-        echo "Checking for detailed error information..."
-        journalctl -xeu nginx.service --no-pager -n 50
-        exit 1
-    fi
-    
-    # Enable nginx to start on boot
-    systemctl enable nginx
-fi
+manage_nginx_service "Final nginx reload" || exit 1
 
 echo ""
 echo -e "${GREEN}================================================================${NC}"
