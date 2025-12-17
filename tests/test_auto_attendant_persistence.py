@@ -3,9 +3,13 @@ Tests for Auto Attendant Database Persistence
 Ensures configuration and menu options persist across restarts
 """
 import os
+import sys
 import unittest
 import tempfile
 import sqlite3
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.features.auto_attendant import AutoAttendant
 

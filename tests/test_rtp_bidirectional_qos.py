@@ -1,10 +1,15 @@
 """
 Test RTP bidirectional QoS tracking to verify packet loss calculation fix
 """
+import os
+import sys
 import struct
 import time
 import unittest
 from unittest.mock import MagicMock, Mock
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.features.qos_monitoring import QoSMonitor
 from pbx.rtp.handler import RTPRelayHandler

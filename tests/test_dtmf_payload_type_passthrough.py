@@ -7,7 +7,12 @@ working server-side because the dtmf_payload_type parameter was not being passed
 to the build_audio_sdp function.
 """
 
+import os
+import sys
 import unittest
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from unittest.mock import Mock, MagicMock, call
 
 from pbx.core.pbx import PBXCore
