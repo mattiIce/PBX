@@ -77,6 +77,22 @@ codecs:
   g726:
     enabled: true
     bitrate: 32000  # Options: 16000, 24000, 32000 (recommended), 40000
+  # iLBC Codec - Internet Low Bitrate Codec with built-in packet loss concealment
+  # License: Free/libre (royalty-free), used by FreeSWITCH, WebRTC, PJMEDIA
+  # Best for: Poor network conditions with packet loss
+  ilbc:
+    enabled: true
+    mode: 30  # Frame duration: 20ms (15.2 kbps) or 30ms (13.33 kbps, recommended)
+    payload_type: 97  # Dynamic RTP payload type
+  # Speex Codec - Open source speech codec from Xiph.Org
+  # License: BSD (royalty-free)
+  # Note: Being superseded by Opus but still widely deployed
+  speex:
+    enabled: true
+    mode: nb  # Bandwidth mode: 'nb' (8kHz), 'wb' (16kHz), 'uwb' (32kHz)
+    quality: 8  # Quality level 0-10 (8 is recommended)
+    vbr: true  # Enable Variable Bitrate
+    payload_type: 97  # Dynamic RTP payload type (will use 98 for wb, 99 for uwb)
 features:
   call_recording: true
   call_transfer: true

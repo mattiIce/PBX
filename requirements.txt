@@ -33,8 +33,19 @@ msal>=1.24.0  # Microsoft Authentication Library
 # For FIDO2/WebAuthn authentication
 fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
 
-# Opus codec support (Modern, high-quality, low-latency audio codec)
+# Audio Codec Support
+# Opus codec - Modern, high-quality, low-latency audio codec
 opuslib>=3.0.0  # Python bindings for Opus codec (requires libopus system library)
+
+# iLBC codec - Internet Low Bitrate Codec with packet loss concealment
+# Install: pip install pyilbc
+# Note: May require system libraries on some platforms
+# pyilbc>=1.0.0  # Uncomment to enable iLBC codec
+
+# Speex codec - Open source speech codec from Xiph.Org
+# Install: pip install speex
+# Note: May require system libraries (libspeex) on some platforms  
+# speex>=1.0.0  # Uncomment to enable Speex codec
 
 # Voicemail transcription (FREE, offline speech recognition)
 vosk>=0.3.45
