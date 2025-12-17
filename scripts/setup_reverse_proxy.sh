@@ -4,6 +4,9 @@
 
 set -e
 
+# Cleanup temporary files on exit
+trap 'rm -f /tmp/nginx_test.log' EXIT
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -150,7 +153,7 @@ if [ ${PIPESTATUS[0]} -ne 0 ]; then
 fi
 
 # Inform user about non-critical warnings
-if grep -q "warn.*duplicate" /tmp/nginx_test.log; then
+if grep -q "duplicate.*MIME type\|duplicate extension" /tmp/nginx_test.log; then
     echo -e "${YELLOW}Note: Warnings about duplicate MIME types from other nginx configs can be safely ignored.${NC}"
 fi
 
@@ -189,6 +192,7 @@ if systemctl is-active --quiet nginx; then
     systemctl reload nginx
 else
     systemctl start nginx
+    systemctl enable nginx
 fi
 
 echo ""
