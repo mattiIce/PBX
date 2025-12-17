@@ -83,9 +83,24 @@ account.1.codec.5.payload_type = 2
 account.1.codec.5.priority = 5
 account.1.codec.5.name = G726-32
 
-# Codec 6: Explicitly disabled (was in original config)
-account.1.codec.6.enable = 0
-account.1.codec.6.priority = 0
+# Codec 6: iLBC - Internet Low Bitrate Codec (13.33 kbps at 30ms mode)
+# Excellent packet loss concealment for poor network conditions
+account.1.codec.6.enable = 1
+account.1.codec.6.payload_type = 97
+account.1.codec.6.priority = 6
+account.1.codec.6.name = iLBC
+account.1.codec.6.ptime = 30
+
+# Codec 7: Speex - Open source speech codec (narrowband mode)
+# Good fallback option, royalty-free
+account.1.codec.7.enable = 1
+account.1.codec.7.payload_type = 98
+account.1.codec.7.priority = 7
+account.1.codec.7.name = SPEEX
+
+# Codec 8: Explicitly disabled (was in original config)
+account.1.codec.8.enable = 0
+account.1.codec.8.priority = 0
 
 # RTP Settings
 account.1.rtp.port_min = 10000

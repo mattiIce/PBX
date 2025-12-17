@@ -9,11 +9,13 @@ P47 = {{SIP_SERVER}}
 P48 = {{SIP_PORT}}
 P2 = 3600
 
-# Codecs
-P57 = 0    # PCMU
-P58 = 8    # PCMA
-P67 = 9    # G722
-P46 = 18   # G729
+# Codecs - Priority order: PCMU > PCMA > G722 > iLBC > Speex > G729
+P57 = 0    # PCMU (Priority 1)
+P58 = 8    # PCMA (Priority 2)
+P67 = 9    # G722 (Priority 3)
+P97 = 97   # iLBC (Priority 4) - excellent for packet loss
+P98 = 98   # Speex (Priority 5) - open source alternative
+P46 = 18   # G729 (Priority 6)
 
 # DTMF Settings
 P79 = 2    # DTMF Type: 0=In-audio, 1=RFC2833, 2=SIP INFO
