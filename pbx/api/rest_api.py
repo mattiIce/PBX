@@ -723,7 +723,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip('/')
 
         try:
-            if path == '/api/status':
+            if path == '':
+                self._handle_root()
+            elif path == '/api/status':
                 self._handle_status()
             elif path == '/api/extensions':
                 self._handle_get_extensions()
@@ -1114,7 +1116,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             
             elif path.startswith('/provision/') and path.endswith('.cfg'):
                 self._handle_provisioning_request(path)
-            elif path == '' or path == '/admin':
+            elif path == '/admin':
                 self._handle_admin_redirect()
             elif path.startswith('/admin/'):
                 self._handle_static_file(path)
