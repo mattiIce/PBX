@@ -4,6 +4,9 @@
 
 set -e
 
+# Cleanup temporary files on exit
+trap 'rm -f /tmp/nginx_test.log' EXIT
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -141,16 +144,27 @@ ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
 
 # Test nginx configuration
 echo "Testing nginx configuration..."
-nginx -t
+nginx -t 2>&1 | tee /tmp/nginx_test.log
 
-if [ $? -ne 0 ]; then
+# Check for critical errors (ignore warnings about duplicate MIME types from other configs)
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
     echo -e "${RED}Nginx configuration test failed!${NC}"
     exit 1
 fi
 
-# Reload nginx to serve HTTP traffic
-echo "Reloading nginx..."
-systemctl reload nginx
+# Inform user about non-critical warnings
+if grep -q "duplicate.*MIME type\|duplicate extension" /tmp/nginx_test.log; then
+    echo -e "${YELLOW}Note: Warnings about duplicate MIME types from other nginx configs can be safely ignored.${NC}"
+fi
+
+# Start or reload nginx to serve HTTP traffic
+echo "Starting/reloading nginx..."
+if systemctl is-active --quiet nginx; then
+    systemctl reload nginx
+else
+    systemctl start nginx
+    systemctl enable nginx
+fi
 
 # Get SSL certificate from Let's Encrypt
 echo ""
@@ -174,7 +188,12 @@ fi
 
 # Final nginx reload
 echo "Final nginx reload..."
-systemctl reload nginx
+if systemctl is-active --quiet nginx; then
+    systemctl reload nginx
+else
+    systemctl start nginx
+    systemctl enable nginx
+fi
 
 echo ""
 echo -e "${GREEN}================================================================${NC}"
