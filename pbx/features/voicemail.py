@@ -19,6 +19,18 @@ try:
 except ImportError:
     TRANSCRIPTION_AVAILABLE = False
 
+try:
+    from pbx.utils.database import ExtensionDB
+    EXTENSIONDB_AVAILABLE = True
+except ImportError:
+    EXTENSIONDB_AVAILABLE = False
+
+try:
+    from pbx.utils.encryption import get_encryption
+    ENCRYPTION_AVAILABLE = True
+except ImportError:
+    ENCRYPTION_AVAILABLE = False
+
 
 # Constants
 GREETING_FILENAME = "greeting.wav"
@@ -67,9 +79,8 @@ class VoicemailBox:
 
         # Load PIN from database first (if available), then fall back to config
         pin_loaded = False
-        if database and database.enabled:
+        if database and database.enabled and EXTENSIONDB_AVAILABLE:
             try:
-                from pbx.utils.database import ExtensionDB
                 ext_db = ExtensionDB(database)
                 db_extension = ext_db.get(extension_number)
                 if db_extension:
@@ -576,9 +587,8 @@ class VoicemailBox:
             True if PIN is correct
         """
         # First try hashed PIN from database (if available)
-        if self.pin_hash and self.pin_salt:
+        if self.pin_hash and self.pin_salt and ENCRYPTION_AVAILABLE:
             try:
-                from pbx.utils.encryption import get_encryption
                 enc = get_encryption()
                 return enc.verify_password(str(pin), self.pin_hash, self.pin_salt)
             except Exception as e:
