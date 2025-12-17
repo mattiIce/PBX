@@ -34,6 +34,7 @@ except ImportError:
 
 # Constants
 GREETING_FILENAME = "greeting.wav"
+MIN_WAV_HEADER_SIZE = 12  # Minimum size for RIFF/WAVE header check
 
 # Cache the debug PIN logging flag at module level to avoid repeated environment lookups
 # This value is set once when the module is loaded and doesn't change during runtime
@@ -636,7 +637,7 @@ class VoicemailBox:
                 return False
             
             # Check for complete WAV/RIFF header (warn but don't fail for tests)
-            if len(audio_data) >= 12:
+            if len(audio_data) >= MIN_WAV_HEADER_SIZE:
                 if not (audio_data.startswith(b'RIFF') and audio_data[8:12] == b'WAVE'):
                     self.logger.warning(
                         f"Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)")
