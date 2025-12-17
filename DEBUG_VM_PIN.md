@@ -10,7 +10,25 @@ This feature provides detailed console logging to help troubleshoot DTMF PIN rec
 
 ## How to Enable
 
-Set the `DEBUG_VM_PIN` environment variable to enable PIN debug logging:
+There are three ways to enable PIN debug logging:
+
+### Method 1: Using .env file (Recommended)
+
+Add the following line to your `.env` file in the PBX root directory:
+
+```bash
+DEBUG_VM_PIN=true
+```
+
+Then start or restart the PBX system:
+
+```bash
+python main.py
+```
+
+The `.env` file is automatically loaded when the PBX starts, so the environment variable will be available before any modules are imported.
+
+### Method 2: Export environment variable
 
 ```bash
 # Enable PIN debug logging
@@ -20,7 +38,7 @@ export DEBUG_VM_PIN=true
 python main.py
 ```
 
-Or run with the environment variable inline:
+### Method 3: Inline environment variable
 
 ```bash
 DEBUG_VM_PIN=true python main.py
