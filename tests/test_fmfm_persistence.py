@@ -1,9 +1,14 @@
 """
 Test Find Me/Follow Me database persistence
 """
-import unittest
 import os
+import sys
+import unittest
 import tempfile
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.utils.database import DatabaseBackend
 

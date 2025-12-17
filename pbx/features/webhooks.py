@@ -172,6 +172,7 @@ class WebhookSystem:
 
         # Subscriptions
         self.subscriptions = []
+        self.subscriptions_lock = threading.Lock()
 
         # Delivery queue
         self.delivery_queue = WebhookDeliveryQueue()
@@ -202,19 +203,20 @@ class WebhookSystem:
         webhooks_config = self._get_config(
             'features.webhooks.subscriptions', [])
 
-        for webhook_config in webhooks_config:
-            subscription = WebhookSubscription(
-                url=webhook_config.get('url'),
-                events=webhook_config.get('events', ['*']),
-                secret=webhook_config.get('secret'),
-                headers=webhook_config.get('headers'),
-                enabled=webhook_config.get('enabled', True)
-            )
-            self.subscriptions.append(subscription)
-            self.logger.info(
-                f"Loaded webhook subscription: {
-                    subscription.url} (events: {
-                    subscription.events})")
+        with self.subscriptions_lock:
+            for webhook_config in webhooks_config:
+                subscription = WebhookSubscription(
+                    url=webhook_config.get('url'),
+                    events=webhook_config.get('events', ['*']),
+                    secret=webhook_config.get('secret'),
+                    headers=webhook_config.get('headers'),
+                    enabled=webhook_config.get('enabled', True)
+                )
+                self.subscriptions.append(subscription)
+                self.logger.info(
+                    f"Loaded webhook subscription: {
+                        subscription.url} (events: {
+                        subscription.events})")
 
     def _start_workers(self):
         """Start webhook delivery worker threads"""
@@ -343,11 +345,12 @@ class WebhookSystem:
         # Create event
         event = WebhookEvent(event_type, data)
 
-        # Find matching subscriptions
-        matching_subscriptions = [
-            sub for sub in self.subscriptions
-            if sub.matches_event(event_type)
-        ]
+        # Find matching subscriptions (make a copy to avoid holding lock during delivery)
+        with self.subscriptions_lock:
+            matching_subscriptions = [
+                sub for sub in self.subscriptions
+                if sub.matches_event(event_type)
+            ]
 
         if not matching_subscriptions:
             return
@@ -379,7 +382,8 @@ class WebhookSystem:
             WebhookSubscription object
         """
         subscription = WebhookSubscription(url, events, secret, headers)
-        self.subscriptions.append(subscription)
+        with self.subscriptions_lock:
+            self.subscriptions.append(subscription)
         self.logger.info(
             f"Added webhook subscription: {url} (events: {events})")
         return subscription
@@ -394,42 +398,46 @@ class WebhookSystem:
         Returns:
             True if removed, False if not found
         """
-        for i, subscription in enumerate(self.subscriptions):
-            if subscription.url == url:
-                self.subscriptions.pop(i)
-                self.logger.info(f"Removed webhook subscription: {url}")
-                return True
+        with self.subscriptions_lock:
+            for i, subscription in enumerate(self.subscriptions):
+                if subscription.url == url:
+                    self.subscriptions.pop(i)
+                    self.logger.info(f"Removed webhook subscription: {url}")
+                    return True
         return False
 
     def get_subscriptions(self) -> List[Dict]:
         """Get all webhook subscriptions"""
-        return [
-            {
-                'url': sub.url,
-                'events': sub.events,
-                'enabled': sub.enabled,
-                'created_at': sub.created_at.isoformat() if sub.created_at else None,
-                'last_sent': sub.last_sent.isoformat() if sub.last_sent else None,
-                'success_count': sub.success_count,
-                'failure_count': sub.failure_count
-            }
-            for sub in self.subscriptions
-        ]
+        with self.subscriptions_lock:
+            return [
+                {
+                    'url': sub.url,
+                    'events': sub.events,
+                    'enabled': sub.enabled,
+                    'created_at': sub.created_at.isoformat() if sub.created_at else None,
+                    'last_sent': sub.last_sent.isoformat() if sub.last_sent else None,
+                    'success_count': sub.success_count,
+                    'failure_count': sub.failure_count
+                }
+                for sub in self.subscriptions
+            ]
 
     def enable_subscription(self, url: str) -> bool:
         """Enable a webhook subscription"""
-        for subscription in self.subscriptions:
-            if subscription.url == url:
-                subscription.enabled = True
-                self.logger.info(f"Enabled webhook subscription: {url}")
-                return True
+        with self.subscriptions_lock:
+            for subscription in self.subscriptions:
+                if subscription.url == url:
+                    subscription.enabled = True
+                    self.logger.info(f"Enabled webhook subscription: {url}")
+                    return True
         return False
 
     def disable_subscription(self, url: str) -> bool:
         """Disable a webhook subscription"""
-        for subscription in self.subscriptions:
-            if subscription.url == url:
-                subscription.enabled = False
-                self.logger.info(f"Disabled webhook subscription: {url}")
-                return True
+        with self.subscriptions_lock:
+            for subscription in self.subscriptions:
+                if subscription.url == url:
+                    subscription.enabled = False
+                    self.logger.info(f"Disabled webhook subscription: {url}")
+                    return True
         return False

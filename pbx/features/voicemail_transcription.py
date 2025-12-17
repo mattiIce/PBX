@@ -217,46 +217,41 @@ class VoicemailTranscriptionService:
 
         try:
             # Open WAV file
-            wf = wave.open(audio_file_path, "rb")
+            with wave.open(audio_file_path, "rb") as wf:
+                # Validate audio format
+                if wf.getnchannels() != 1:
+                    error_msg = "Audio must be mono channel"
+                    self.logger.error(error_msg)
+                    return self._create_error_response(error_msg, language, 'vosk')
 
-            # Validate audio format
-            if wf.getnchannels() != 1:
-                wf.close()
-                error_msg = "Audio must be mono channel"
-                self.logger.error(error_msg)
-                return self._create_error_response(error_msg, language, 'vosk')
+                # Check sample rate - Vosk works best with 8kHz or 16kHz
+                sample_rate = wf.getframerate()
+                if sample_rate not in [8000, 16000, 32000, 44100, 48000]:
+                    error_msg = f"Unsupported sample rate: {sample_rate}. Use 8000, 16000, 32000, 44100, or 48000 Hz"
+                    self.logger.error(error_msg)
+                    return self._create_error_response(error_msg, language, 'vosk')
 
-            # Check sample rate - Vosk works best with 8kHz or 16kHz
-            sample_rate = wf.getframerate()
-            if sample_rate not in [8000, 16000, 32000, 44100, 48000]:
-                wf.close()
-                error_msg = f"Unsupported sample rate: {sample_rate}. Use 8000, 16000, 32000, 44100, or 48000 Hz"
-                self.logger.error(error_msg)
-                return self._create_error_response(error_msg, language, 'vosk')
+                # Create recognizer
+                rec = KaldiRecognizer(self.vosk_model, sample_rate)
+                rec.SetWords(True)  # Enable word-level timestamps
 
-            # Create recognizer
-            rec = KaldiRecognizer(self.vosk_model, sample_rate)
-            rec.SetWords(True)  # Enable word-level timestamps
+                # Process audio in chunks
+                self.logger.info(f"Processing audio with Vosk (offline)...")
+                results = []
 
-            # Process audio in chunks
-            self.logger.info(f"Processing audio with Vosk (offline)...")
-            results = []
+                while True:
+                    data = wf.readframes(VOSK_FRAME_SIZE)
+                    if len(data) == 0:
+                        break
+                    if rec.AcceptWaveform(data):
+                        result = json.loads(rec.Result())
+                        if 'text' in result and result['text']:
+                            results.append(result['text'])
 
-            while True:
-                data = wf.readframes(VOSK_FRAME_SIZE)
-                if len(data) == 0:
-                    break
-                if rec.AcceptWaveform(data):
-                    result = json.loads(rec.Result())
-                    if 'text' in result and result['text']:
-                        results.append(result['text'])
-
-            # Get final result
-            final_result = json.loads(rec.FinalResult())
-            if 'text' in final_result and final_result['text']:
-                results.append(final_result['text'])
-
-            wf.close()
+                # Get final result
+                final_result = json.loads(rec.FinalResult())
+                if 'text' in final_result and final_result['text']:
+                    results.append(final_result['text'])
 
             # Combine all text
             text = ' '.join(results).strip()

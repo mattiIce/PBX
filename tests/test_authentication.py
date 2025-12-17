@@ -1,8 +1,13 @@
 """
 Test Phase 3 Authentication and Authorization
 """
+import os
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from pbx.utils.session_token import SessionToken, get_session_token_manager
 

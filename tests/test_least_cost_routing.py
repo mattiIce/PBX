@@ -2,10 +2,15 @@
 Tests for Least-Cost Routing (LCR) System
 """
 import os
+import sys
 import unittest
 import tempfile
 import sqlite3
 from datetime import time
+
+# Add parent directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from pbx.features.least_cost_routing import (
     DialPattern, RateEntry, TimeBasedRate, LeastCostRouting
 )

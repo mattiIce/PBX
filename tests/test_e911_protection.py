@@ -107,7 +107,7 @@ def test_sip_trunk_e911_blocking():
     trunk_system = SIPTrunkSystem()
 
     # Add a test trunk
-    from pbx.features.sip_trunk import TrunkStatus
+    from pbx.features.sip_trunk import TrunkStatus, TrunkHealthStatus
 
     trunk = SIPTrunk(
         trunk_id="test_trunk",
@@ -117,6 +117,7 @@ def test_sip_trunk_e911_blocking():
         password="test"
     )
     trunk.status = TrunkStatus.REGISTERED
+    trunk.health_status = TrunkHealthStatus.HEALTHY
     trunk.channels_available = 10
     trunk_system.add_trunk(trunk)
 
