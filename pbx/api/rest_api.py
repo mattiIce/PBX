@@ -9804,7 +9804,7 @@ class PBXAPIServer:
                     if hasattr(self, 'server') and self.server:
                         try:
                             self.server.server_close()
-                        except (OSError, socket.error) as cleanup_error:
+                        except OSError as cleanup_error:
                             self.logger.debug(f"Error during server cleanup: {cleanup_error}")
                         self.server = None
                     

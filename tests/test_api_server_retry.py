@@ -89,45 +89,50 @@ def test_retry_on_port_in_use():
     print("Test 2: Retry on Port In Use")
     print("=" * 60)
 
+    # Minimum expected time for retry logic (1s + 2s = 3s, with 0.5s margin for processing)
+    MIN_RETRY_TIME = 2.5
+
     config = Config("test_config.yml")
     mock_pbx = MockPBXCore(config)
 
     # First, create a blocking socket on the test port
     test_port = 8083
     blocker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    blocker.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    blocker.bind(('127.0.0.1', test_port))
-    blocker.listen(1)
-    print(f"  ✓ Blocking socket created on port {test_port}")
+    
+    try:
+        blocker.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        blocker.bind(('127.0.0.1', test_port))
+        blocker.listen(1)
+        print(f"  ✓ Blocking socket created on port {test_port}")
 
-    # Try to start API server on the same port (should fail initially)
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
-    
-    print(f"  Starting API server on port {test_port} (should retry)...")
-    start_time = time.time()
-    
-    # This should fail after retries
-    result = api_server.start()
-    
-    elapsed = time.time() - start_time
-    print(f"  Elapsed time: {elapsed:.2f}s")
-    
-    if not result:
-        print("  ✓ API server correctly failed after retries")
-        if elapsed >= 2.5:  # Should have retried at least twice (1s + 2s = 3s total, allowing 0.5s margin)
-            print(f"  ✓ Retry logic executed (took {elapsed:.2f}s)")
+        # Try to start API server on the same port (should fail initially)
+        api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+        
+        print(f"  Starting API server on port {test_port} (should retry)...")
+        start_time = time.time()
+        
+        # This should fail after retries
+        result = api_server.start()
+        
+        elapsed = time.time() - start_time
+        print(f"  Elapsed time: {elapsed:.2f}s")
+        
+        if not result:
+            print("  ✓ API server correctly failed after retries")
+            if elapsed >= MIN_RETRY_TIME:
+                print(f"  ✓ Retry logic executed (took {elapsed:.2f}s)")
+            else:
+                print(f"  ⚠ Retry may not have executed (took {elapsed:.2f}s)")
         else:
-            print(f"  ⚠ Retry may not have executed (took {elapsed:.2f}s)")
-    else:
-        print("  ✗ API server should have failed when port is blocked")
-        api_server.stop()
-        blocker.close()
-        return False
+            print("  ✗ API server should have failed when port is blocked")
+            api_server.stop()
+            return False
 
-    # Now close the blocker and try again with a new instance
-    blocker.close()
-    print(f"  ✓ Blocker socket closed")
-    time.sleep(0.5)  # Give time for OS to release the port
+    finally:
+        # Always close the blocker socket
+        blocker.close()
+        print(f"  ✓ Blocker socket closed")
+        time.sleep(0.5)  # Give time for OS to release the port
 
     # Create a new API server instance and try again
     api_server2 = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
