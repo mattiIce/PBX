@@ -612,7 +612,11 @@ class VoicemailBox:
         Returns:
             True if custom greeting exists
         """
-        return os.path.exists(self.greeting_path)
+        exists = os.path.exists(self.greeting_path)
+        self.logger.debug(
+            f"Checking custom greeting for extension {self.extension_number}: "
+            f"{'exists' if exists else 'not found'} at {self.greeting_path}")
+        return exists
 
     def save_greeting(self, audio_data):
         """
@@ -625,12 +629,33 @@ class VoicemailBox:
             True if greeting was saved successfully
         """
         try:
+            # Verify audio data exists
+            if not audio_data:
+                self.logger.error(
+                    f"Cannot save greeting: audio data is empty")
+                return False
+            
+            # Check for WAV/RIFF header (warn but don't fail for tests)
+            if len(audio_data) >= 4 and not audio_data.startswith(b'RIFF'):
+                self.logger.warning(
+                    f"Audio data may not be in WAV format (missing RIFF header)")
+            
             with open(self.greeting_path, 'wb') as f:
                 f.write(audio_data)
             self.logger.info(
                 f"Saved custom greeting for extension {
-                    self.extension_number}")
-            return True
+                    self.extension_number} ({len(audio_data)} bytes) to {self.greeting_path}")
+            
+            # Verify the file was written successfully
+            if os.path.exists(self.greeting_path):
+                file_size = os.path.getsize(self.greeting_path)
+                self.logger.info(
+                    f"Verified greeting file exists on disk ({file_size} bytes)")
+                return True
+            else:
+                self.logger.error(
+                    f"Greeting file was not created at {self.greeting_path}")
+                return False
         except Exception as e:
             self.logger.error(
                 f"Error saving greeting for extension {
@@ -645,7 +670,11 @@ class VoicemailBox:
             Path to greeting file if it exists, None otherwise
         """
         if self.has_custom_greeting():
+            self.logger.debug(
+                f"Custom greeting path for extension {self.extension_number}: {self.greeting_path}")
             return self.greeting_path
+        self.logger.debug(
+            f"No custom greeting for extension {self.extension_number}")
         return None
 
     def delete_greeting(self):

@@ -1743,8 +1743,18 @@ class PBXCore:
                             greeting_file = custom_greeting_path
                             self.logger.info(
                                 f"Using custom greeting for extension {
-                                    call.to_extension}")
-                        else:
+                                    call.to_extension}: {custom_greeting_path}")
+                            # Verify file exists and is readable
+                            if os.path.exists(custom_greeting_path):
+                                file_size = os.path.getsize(custom_greeting_path)
+                                self.logger.info(
+                                    f"Custom greeting file exists ({file_size} bytes)")
+                            else:
+                                self.logger.warning(
+                                    f"Custom greeting file not found at {custom_greeting_path}, using default")
+                                custom_greeting_path = None  # Fall back to default
+                        
+                        if not custom_greeting_path:
                             # Use default prompt: "Please leave a message after the tone"
                             # Try to load from
                             # voicemail_prompts/leave_message.wav, fallback to
@@ -3379,16 +3389,20 @@ class PBXCore:
                                     recording = False
                                     # Process through IVR to transition state
                                     action = voicemail_ivr.handle_dtmf('#')
-                                    # Save recorded audio
+                                    # Save recorded audio - convert to WAV format
                                     if hasattr(
                                             recorder, 'recorded_data') and recorder.recorded_data:
-                                        greeting_audio = b''.join(
+                                        greeting_audio_raw = b''.join(
                                             recorder.recorded_data)
+                                        # Convert raw audio to WAV format before saving
+                                        greeting_audio_wav = self._build_wav_file(
+                                            greeting_audio_raw)
                                         voicemail_ivr.save_recorded_greeting(
-                                            greeting_audio)
+                                            greeting_audio_wav)
                                         self.logger.info(
-                                            f"Saved recorded greeting ({
-                                                len(greeting_audio)} bytes)")
+                                            f"Saved recorded greeting as WAV ({
+                                                len(greeting_audio_wav)} bytes, {
+                                                len(greeting_audio_raw)} bytes raw audio)")
                                     # Handle the returned action
                                     if action.get('action') == 'play_prompt':
                                         # Play greeting review menu prompt
@@ -3432,12 +3446,9 @@ class PBXCore:
                                     f"Playing recorded greeting for review ({
                                         len(greeting_data)} bytes)")
 
-                                # Build WAV file from recorded audio
-                                greeting_wav = self._build_wav_file(
-                                    greeting_data)
-
+                                # Greeting is already in WAV format (converted when recorded)
                                 with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                                    temp_file.write(greeting_wav)
+                                    temp_file.write(greeting_data)
                                     greeting_file = temp_file.name
 
                                 try:
