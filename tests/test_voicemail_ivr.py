@@ -6,6 +6,7 @@ Tests that voicemail prompts and menu navigation work correctly
 import os
 import sys
 import time
+import importlib
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -14,6 +15,23 @@ from pbx.features.voicemail import VoicemailBox, VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
 from pbx.utils.config import Config
 
+
+# Helper function for DEBUG_VM_PIN tests to manage environment and module reloading
+def reload_voicemail_module():
+    """Reload the voicemail module to pick up environment changes"""
+    from pbx.features import voicemail
+    importlib.reload(voicemail)
+    return voicemail
+
+
+def restore_debug_vm_pin_env(original_value):
+    """Restore the DEBUG_VM_PIN environment variable to its original state"""
+    if original_value is not None:
+        os.environ['DEBUG_VM_PIN'] = original_value
+    elif 'DEBUG_VM_PIN' in os.environ:
+        del os.environ['DEBUG_VM_PIN']
+    # Reload module to restore original state
+    reload_voicemail_module()
 
 
 def test_voice_prompt_generation():
@@ -337,9 +355,7 @@ def test_debug_pin_flag_disabled_by_default():
             del os.environ['DEBUG_VM_PIN']
         
         # Reload the module to pick up the environment change
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        voicemail = reload_voicemail_module()
         
         # Check that the flag is False
         assert voicemail._DEBUG_PIN_LOGGING_ENABLED == False, \
@@ -356,16 +372,7 @@ def test_debug_pin_flag_disabled_by_default():
         print("✓ DEBUG_VM_PIN flag is disabled by default")
     
     finally:
-        # Restore original value
-        if original_value is not None:
-            os.environ['DEBUG_VM_PIN'] = original_value
-        elif 'DEBUG_VM_PIN' in os.environ:
-            del os.environ['DEBUG_VM_PIN']
-        
-        # Reload module to restore original state
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        restore_debug_vm_pin_env(original_value)
 
 
 def test_debug_pin_flag_enabled_when_set():
@@ -381,9 +388,7 @@ def test_debug_pin_flag_enabled_when_set():
             os.environ['DEBUG_VM_PIN'] = truthy_value
             
             # Reload the module to pick up the environment change
-            import importlib
-            from pbx.features import voicemail
-            importlib.reload(voicemail)
+            voicemail = reload_voicemail_module()
             
             # Check that the flag is True
             assert voicemail._DEBUG_PIN_LOGGING_ENABLED == True, \
@@ -402,9 +407,7 @@ def test_debug_pin_flag_enabled_when_set():
             os.environ['DEBUG_VM_PIN'] = falsy_value
             
             # Reload the module to pick up the environment change
-            import importlib
-            from pbx.features import voicemail
-            importlib.reload(voicemail)
+            voicemail = reload_voicemail_module()
             
             # Check that the flag is False
             assert voicemail._DEBUG_PIN_LOGGING_ENABLED == False, \
@@ -413,16 +416,7 @@ def test_debug_pin_flag_enabled_when_set():
         print("✓ DEBUG_VM_PIN flag enabled/disabled correctly based on environment variable")
     
     finally:
-        # Restore original value
-        if original_value is not None:
-            os.environ['DEBUG_VM_PIN'] = original_value
-        elif 'DEBUG_VM_PIN' in os.environ:
-            del os.environ['DEBUG_VM_PIN']
-        
-        # Reload module to restore original state
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        restore_debug_vm_pin_env(original_value)
 
 
 def test_debug_pin_logging_suppressed_when_disabled():
@@ -437,9 +431,7 @@ def test_debug_pin_logging_suppressed_when_disabled():
         os.environ['DEBUG_VM_PIN'] = 'false'
         
         # Reload the module to pick up the environment change
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        voicemail = reload_voicemail_module()
         
         config = Config('config.yml')
         vm_system = voicemail.VoicemailSystem(storage_path='test_voicemail', config=config)
@@ -487,16 +479,7 @@ def test_debug_pin_logging_suppressed_when_disabled():
         print("✓ Debug PIN logging is suppressed when DEBUG_VM_PIN is disabled")
     
     finally:
-        # Restore original value
-        if original_value is not None:
-            os.environ['DEBUG_VM_PIN'] = original_value
-        elif 'DEBUG_VM_PIN' in os.environ:
-            del os.environ['DEBUG_VM_PIN']
-        
-        # Reload module to restore original state
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        restore_debug_vm_pin_env(original_value)
 
 
 def test_debug_pin_logging_emitted_when_enabled():
@@ -511,9 +494,7 @@ def test_debug_pin_logging_emitted_when_enabled():
         os.environ['DEBUG_VM_PIN'] = 'true'
         
         # Reload the module to pick up the environment change
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        voicemail = reload_voicemail_module()
         
         config = Config('config.yml')
         vm_system = voicemail.VoicemailSystem(storage_path='test_voicemail', config=config)
@@ -567,16 +548,7 @@ def test_debug_pin_logging_emitted_when_enabled():
         print("✓ Debug PIN logging is emitted when DEBUG_VM_PIN is enabled")
     
     finally:
-        # Restore original value
-        if original_value is not None:
-            os.environ['DEBUG_VM_PIN'] = original_value
-        elif 'DEBUG_VM_PIN' in os.environ:
-            del os.environ['DEBUG_VM_PIN']
-        
-        # Reload module to restore original state
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        restore_debug_vm_pin_env(original_value)
 
 
 def test_debug_pin_module_level_caching():
@@ -591,9 +563,7 @@ def test_debug_pin_module_level_caching():
         os.environ['DEBUG_VM_PIN'] = 'true'
         
         # Reload the module to pick up the environment change
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        voicemail = reload_voicemail_module()
         
         # Verify it's enabled
         assert voicemail._DEBUG_PIN_LOGGING_ENABLED == True, \
@@ -617,16 +587,7 @@ def test_debug_pin_module_level_caching():
         print("✓ DEBUG_VM_PIN flag is cached at module level")
     
     finally:
-        # Restore original value
-        if original_value is not None:
-            os.environ['DEBUG_VM_PIN'] = original_value
-        elif 'DEBUG_VM_PIN' in os.environ:
-            del os.environ['DEBUG_VM_PIN']
-        
-        # Reload module to restore original state
-        import importlib
-        from pbx.features import voicemail
-        importlib.reload(voicemail)
+        restore_debug_vm_pin_env(original_value)
 
 
 def run_all_tests():
