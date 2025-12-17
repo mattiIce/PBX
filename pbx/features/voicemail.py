@@ -635,10 +635,11 @@ class VoicemailBox:
                     f"Cannot save greeting: audio data is empty")
                 return False
             
-            # Check for WAV/RIFF header (warn but don't fail for tests)
-            if len(audio_data) >= 4 and not audio_data.startswith(b'RIFF'):
-                self.logger.warning(
-                    f"Audio data may not be in WAV format (missing RIFF header)")
+            # Check for complete WAV/RIFF header (warn but don't fail for tests)
+            if len(audio_data) >= 12:
+                if not (audio_data.startswith(b'RIFF') and audio_data[8:12] == b'WAVE'):
+                    self.logger.warning(
+                        f"Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)")
             
             with open(self.greeting_path, 'wb') as f:
                 f.write(audio_data)
