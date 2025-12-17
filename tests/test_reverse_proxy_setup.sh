@@ -49,15 +49,15 @@ fi
 echo "✓ Script includes Apache handling"
 
 # Test 5: Check for user prompts for stopping service
-if ! grep -q "Stop.*now.*y/n" "$SETUP_SCRIPT"; then
+if ! grep -q 'read -p.*Stop.*y/n' "$SETUP_SCRIPT"; then
     echo "FAIL: Script doesn't prompt user to stop conflicting service"
     exit 1
 fi
 echo "✓ Script prompts user for service stop confirmation"
 
-# Test 6: Check for systemctl stop command
-if ! grep -q "systemctl stop.*service_name" "$SETUP_SCRIPT"; then
-    echo "FAIL: Script doesn't stop the conflicting service"
+# Test 6: Check for systemctl stop command with variable
+if ! grep -q 'systemctl stop "\$service_name"' "$SETUP_SCRIPT" && ! grep -q 'systemctl stop \$service_name' "$SETUP_SCRIPT" && ! grep -q 'systemctl stop.*"$service_name"' "$SETUP_SCRIPT"; then
+    echo "FAIL: Script doesn't stop the conflicting service with proper variable substitution"
     exit 1
 fi
 echo "✓ Script can stop conflicting service"

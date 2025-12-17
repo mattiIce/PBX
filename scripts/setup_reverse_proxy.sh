@@ -124,6 +124,7 @@ check_port_80() {
                     
                     if [ "$STOP_SERVICE" = "y" ] || [ "$STOP_SERVICE" = "Y" ]; then
                         echo "Stopping $service_name..."
+                        # Note: systemctl commands don't need sudo as script requires root (checked at script start)
                         if systemctl stop "$service_name"; then
                             echo -e "${GREEN}Successfully stopped $service_name${NC}"
                             
