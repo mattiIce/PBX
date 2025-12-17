@@ -245,26 +245,29 @@ class SDPBuilder:
         if '112' in codecs:
             attributes.append('rtpmap:112 G726-16/8000')
         
-        # iLBC - Internet Low Bitrate Codec (dynamic PT, typically 97)
+        # iLBC - Internet Low Bitrate Codec (dynamic PT)
+        # Note: Check config for actual payload type, default to 97 if iLBC enabled
+        # If both iLBC and Speex narrowband are enabled, ensure distinct payload types
         if '97' in codecs:
             attributes.append('rtpmap:97 iLBC/8000')
-            # Check config for iLBC mode (20ms or 30ms)
-            # Default to 30ms mode if not specified
+            # Default to 30ms mode (13.33 kbps)
+            # TODO: Read mode from config
             attributes.append('fmtp:97 mode=30')
         
         # Speex - Open source speech codec (dynamic PT)
-        # Narrowband (8kHz) typically uses PT 97
-        # Wideband (16kHz) typically uses PT 98
-        # Ultra-wideband (32kHz) typically uses PT 99
+        # Use distinct payload types for each bandwidth mode
+        # PT 98 for narrowband, PT 99 for wideband, PT 100 for ultra-wideband
         if '98' in codecs:
-            # Speex narrowband
+            # Speex narrowband (8kHz)
             attributes.append('rtpmap:98 SPEEX/8000')
         if '99' in codecs:
-            # Speex wideband
+            # Speex wideband (16kHz)
             attributes.append('rtpmap:99 SPEEX/16000')
+            attributes.append('fmtp:99 vbr=on;mode="1,any"')
         if '100' in codecs:
-            # Speex ultra-wideband
+            # Speex ultra-wideband (32kHz)
             attributes.append('rtpmap:100 SPEEX/32000')
+            attributes.append('fmtp:100 vbr=on;mode="2,any"')
         
         # Support configurable DTMF payload type (not just hardcoded 101)
         dtmf_pt_str = str(dtmf_payload_type)
