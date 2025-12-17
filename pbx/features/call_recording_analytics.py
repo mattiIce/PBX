@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 from enum import Enum
 from pbx.utils.logger import get_logger
+import os
 
 
 class AnalysisType(Enum):
@@ -111,14 +112,116 @@ class RecordingAnalytics:
         return results
     
     def _transcribe(self, audio_path: str) -> Dict:
-        """Transcribe audio to text"""
-        # TODO: Use Whisper or other speech-to-text
-        return {
-            'transcript': '',
-            'confidence': 0.0,
-            'duration': 0,
-            'words': []
-        }
+        """
+        Transcribe audio to text using Vosk (offline speech-to-text)
+        
+        Args:
+            audio_path: Path to audio file (WAV format, 16kHz recommended)
+            
+        Returns:
+            Dict: Transcription results with transcript, confidence, duration, words
+        """
+        try:
+            # Try to use Vosk for offline transcription (already in requirements.txt)
+            from vosk import KaldiRecognizer, Model
+            import wave
+            import json
+            
+            # Try to get Vosk model from voicemail transcription if available
+            vosk_model = None
+            model_path = 'models/vosk-model-small-en-us-0.15'
+            
+            try:
+                if os.path.exists(model_path):
+                    vosk_model = Model(model_path)
+                else:
+                    self.logger.warning(f"Vosk model not found at {model_path}")
+                    self.logger.info("Download from: https://alphacephei.com/vosk/models")
+            except Exception as e:
+                self.logger.warning(f"Could not load Vosk model: {e}")
+            
+            if not vosk_model:
+                # Return empty result if model not available
+                return {
+                    'transcript': '',
+                    'confidence': 0.0,
+                    'duration': 0,
+                    'words': [],
+                    'error': 'Vosk model not available'
+                }
+            
+            # Open audio file with context manager for proper cleanup
+            with wave.open(audio_path, "rb") as wf:
+                sample_rate = wf.getframerate()
+                
+                # Create recognizer
+                rec = KaldiRecognizer(vosk_model, sample_rate)
+                rec.SetWords(True)
+                
+                # Process audio
+                full_transcript = []
+                all_words = []
+                total_confidence = 0.0
+                confidence_count = 0
+                
+                while True:
+                    data = wf.readframes(4000)
+                    if len(data) == 0:
+                        break
+                        
+                    if rec.AcceptWaveform(data):
+                        result = json.loads(rec.Result())
+                        if result.get('text'):
+                            full_transcript.append(result['text'])
+                            if 'result' in result:
+                                all_words.extend(result['result'])
+                                for word in result['result']:
+                                    if 'conf' in word:
+                                        total_confidence += word['conf']
+                                        confidence_count += 1
+                
+                # Get final result
+                final_result = json.loads(rec.FinalResult())
+                if final_result.get('text'):
+                    full_transcript.append(final_result['text'])
+                    if 'result' in final_result:
+                        all_words.extend(final_result['result'])
+                        for word in final_result['result']:
+                            if 'conf' in word:
+                                total_confidence += word['conf']
+                                confidence_count += 1
+                
+                # Get duration from wave file before closing
+                duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
+            
+            # Calculate average confidence
+            avg_confidence = total_confidence / confidence_count if confidence_count > 0 else 0.0
+            
+            return {
+                'transcript': ' '.join(full_transcript),
+                'confidence': avg_confidence,
+                'duration': duration,
+                'words': all_words
+            }
+            
+        except ImportError:
+            self.logger.warning("Vosk not available. Install with: pip install vosk")
+            return {
+                'transcript': '',
+                'confidence': 0.0,
+                'duration': 0,
+                'words': [],
+                'error': 'Vosk not installed'
+            }
+        except Exception as e:
+            self.logger.error(f"Transcription error: {e}")
+            return {
+                'transcript': '',
+                'confidence': 0.0,
+                'duration': 0,
+                'words': [],
+                'error': str(e)
+            }
     
     def _analyze_sentiment(self, audio_path: str) -> Dict:
         """
