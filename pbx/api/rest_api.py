@@ -14,6 +14,7 @@ import socket
 import ssl
 import tempfile
 import threading
+import time
 import traceback
 import zipfile
 from datetime import date, datetime, timedelta, timezone
@@ -9382,6 +9383,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 class ReusableHTTPServer(HTTPServer):
     """HTTPServer that allows immediate socket reuse after restart"""
     allow_reuse_address = True
+    
+    def server_bind(self):
+        """Bind the server with socket reuse options"""
+        # Set SO_REUSEADDR (already done by allow_reuse_address, but explicit is better)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        
+        # Set SO_REUSEPORT if available (helps with rapid restarts)
+        if hasattr(socket, 'SO_REUSEPORT'):
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            except (OSError, AttributeError):
+                # SO_REUSEPORT not supported on this platform, continue without it
+                pass
+        
+        # Call parent bind
+        super().server_bind()
 
 
 class PBXAPIServer:
@@ -9718,68 +9735,113 @@ class PBXAPIServer:
             return False
 
     def start(self):
-        """Start API server"""
-        try:
-            self.server = ReusableHTTPServer((self.host, self.port), PBXAPIHandler)
+        """Start API server with retry logic for address binding"""
+        max_retries = 3
+        retry_delay = 1  # Initial delay in seconds
+        
+        for attempt in range(max_retries):
+            try:
+                self.server = ReusableHTTPServer((self.host, self.port), PBXAPIHandler)
 
-            # Wrap with SSL if enabled
-            if self.ssl_enabled and self.ssl_context:
-                self.server.socket = self.ssl_context.wrap_socket(
-                    self.server.socket,
-                    server_side=True
-                )
+                # Wrap with SSL if enabled
+                if self.ssl_enabled and self.ssl_context:
+                    self.server.socket = self.ssl_context.wrap_socket(
+                        self.server.socket,
+                        server_side=True
+                    )
 
-            # Set timeout on socket to allow periodic checking of running flag
-            self.server.socket.settimeout(1.0)
-            self.running = True
+                # Set timeout on socket to allow periodic checking of running flag
+                self.server.socket.settimeout(1.0)
+                self.running = True
 
-            protocol = "https" if self.ssl_enabled else "http"
+                protocol = "https" if self.ssl_enabled else "http"
 
-            # Check if there's a mismatch between config and actual state
-            ssl_config = self.pbx_core.config.get('api.ssl', {})
-            config_ssl_enabled = ssl_config.get('enabled', False)
+                # Check if there's a mismatch between config and actual state
+                ssl_config = self.pbx_core.config.get('api.ssl', {})
+                config_ssl_enabled = ssl_config.get('enabled', False)
 
-            if config_ssl_enabled and not self.ssl_enabled:
-                # SSL is enabled in config but not actually running
-                self.logger.warning("=" * 80)
-                self.logger.warning("SSL/HTTPS CONFIGURATION MISMATCH")
-                self.logger.warning("=" * 80)
-                self.logger.warning("config.yml has api.ssl.enabled: true")
-                self.logger.warning(
-                    "However, SSL could not be configured (see errors above)")
-                self.logger.warning("")
-                self.logger.warning("SERVER IS RUNNING ON HTTP (not HTTPS)")
-                self.logger.warning("")
-                self.logger.warning("Access the admin panel at:")
-                self.logger.warning(f"  http://{self.host}:{self.port}/admin/")
-                self.logger.warning("")
-                self.logger.warning("To fix this:")
-                self.logger.warning(
-                    "  1. Generate SSL certificate: python scripts/generate_ssl_cert.py")
-                self.logger.warning(
-                    "  2. Then restart the server: sudo systemctl restart pbx")
-                self.logger.warning("  OR")
-                self.logger.warning(
-                    "  3. Disable SSL in config.yml: set api.ssl.enabled: false")
-                self.logger.warning("=" * 80)
-            else:
-                self.logger.info(
-                    f"API server started on {protocol}://{self.host}:{self.port}")
-                if self.ssl_enabled:
+                if config_ssl_enabled and not self.ssl_enabled:
+                    # SSL is enabled in config but not actually running
+                    self.logger.warning("=" * 80)
+                    self.logger.warning("SSL/HTTPS CONFIGURATION MISMATCH")
+                    self.logger.warning("=" * 80)
+                    self.logger.warning("config.yml has api.ssl.enabled: true")
+                    self.logger.warning(
+                        "However, SSL could not be configured (see errors above)")
+                    self.logger.warning("")
+                    self.logger.warning("SERVER IS RUNNING ON HTTP (not HTTPS)")
+                    self.logger.warning("")
+                    self.logger.warning("Access the admin panel at:")
+                    self.logger.warning(f"  http://{self.host}:{self.port}/admin/")
+                    self.logger.warning("")
+                    self.logger.warning("To fix this:")
+                    self.logger.warning(
+                        "  1. Generate SSL certificate: python scripts/generate_ssl_cert.py")
+                    self.logger.warning(
+                        "  2. Then restart the server: sudo systemctl restart pbx")
+                    self.logger.warning("  OR")
+                    self.logger.warning(
+                        "  3. Disable SSL in config.yml: set api.ssl.enabled: false")
+                    self.logger.warning("=" * 80)
+                else:
                     self.logger.info(
-                        f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
+                        f"API server started on {protocol}://{self.host}:{self.port}")
+                    if self.ssl_enabled:
+                        self.logger.info(
+                            f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
-            # Start in separate thread
-            server_thread = threading.Thread(target=self._run)
-            server_thread.daemon = True
-            server_thread.start()
+                # Start in separate thread
+                server_thread = threading.Thread(target=self._run)
+                server_thread.daemon = True
+                server_thread.start()
 
-            return True
-        except Exception as e:
-            self.logger.error(f"Failed to start API server: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+                return True
+                
+            except OSError as e:
+                if e.errno == 98:  # Address already in use
+                    # Clean up the failed server object
+                    if hasattr(self, 'server') and self.server:
+                        try:
+                            self.server.server_close()
+                        except Exception:
+                            pass
+                        self.server = None
+                    
+                    if attempt < max_retries - 1:
+                        self.logger.warning(
+                            f"Port {self.port} is in use, retrying in {retry_delay}s "
+                            f"(attempt {attempt + 1}/{max_retries})...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                    else:
+                        self.logger.error(f"Failed to start API server after {max_retries} attempts: {e}")
+                        self.logger.error(
+                            f"Port {self.port} is in use. This may be caused by:")
+                        self.logger.error(
+                            f"  1. Another instance of PBX is already running")
+                        self.logger.error(
+                            f"  2. A previous instance did not shut down cleanly")
+                        self.logger.error(
+                            f"  3. Another service is using port {self.port}")
+                        self.logger.error(f"To resolve:")
+                        self.logger.error(
+                            f"  - Check for running processes: sudo lsof -i :{self.port}")
+                        self.logger.error(
+                            f"  - Or change the port in config.yml")
+                        traceback.print_exc()
+                        return False
+                else:
+                    # Other OSError, not address in use
+                    self.logger.error(f"Failed to start API server: {e}")
+                    traceback.print_exc()
+                    return False
+                    
+            except Exception as e:
+                self.logger.error(f"Failed to start API server: {e}")
+                traceback.print_exc()
+                return False
+        
+        return False
 
     def _run(self):
         """Run server"""
