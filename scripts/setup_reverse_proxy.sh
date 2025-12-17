@@ -63,9 +63,42 @@ check_port_80() {
                 local nginx_service_state=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
                 
                 if [ "$nginx_service_state" = "active" ]; then
-                    echo "Nginx service is active and healthy."
-                    echo "This is normal - nginx will reload the new configuration."
-                    return 0
+                    # Nginx is active - check if it's already configured for PBX
+                    # If we're setting up for a new domain, this is likely from another service (Jitsi, etc.)
+                    echo "Nginx service is active."
+                    echo ""
+                    echo -e "${YELLOW}This nginx installation may be from Jitsi Meet or another service.${NC}"
+                    echo ""
+                    echo "Would you like to stop nginx to set up PBX reverse proxy?"
+                    echo -e "${YELLOW}Warning: Stopping nginx will affect services using it (e.g., Jitsi Meet).${NC}"
+                    echo "      Jitsi services (prosody, jicofo, jitsi-videobridge2) will continue running."
+                    echo "You can restart nginx later with: sudo systemctl start nginx"
+                    echo ""
+                    read -p "Stop nginx now? (y/n): " STOP_NGINX
+                    
+                    if [ "$STOP_NGINX" = "y" ] || [ "$STOP_NGINX" = "Y" ]; then
+                        echo "Stopping nginx..."
+                        systemctl stop nginx 2>/dev/null || true
+                        sleep 2
+                        
+                        # Verify port 80 is now free
+                        if is_port_80_in_use; then
+                            echo -e "${RED}Error: Port 80 is still in use after stopping nginx${NC}"
+                            return 1
+                        fi
+                        
+                        echo -e "${GREEN}Successfully stopped nginx${NC}"
+                        echo ""
+                        read -p "Disable nginx from starting on boot? (y/n): " DISABLE_NGINX
+                        if [ "$DISABLE_NGINX" = "y" ] || [ "$DISABLE_NGINX" = "Y" ]; then
+                            systemctl disable nginx 2>/dev/null || true
+                            echo -e "${GREEN}nginx disabled from automatic startup${NC}"
+                        fi
+                        return 0
+                    else
+                        echo "Setup cancelled."
+                        return 1
+                    fi
                 else
                     echo -e "${YELLOW}Warning: Nginx process exists but service state is: $nginx_service_state${NC}"
                     echo "This suggests a stale nginx process. Attempting to clean up..."
@@ -104,8 +137,8 @@ check_port_80() {
                 local is_systemd_service=false
                 local service_name=""
                 
-                # Common web servers that might be running as services
-                for svc in apache2 httpd lighttpd nginx; do
+                # Common web servers that might be running as services (excluding nginx, handled above)
+                for svc in apache2 httpd lighttpd; do
                     if systemctl is-active --quiet "$svc" 2>/dev/null; then
                         is_systemd_service=true
                         service_name="$svc"
@@ -121,9 +154,6 @@ check_port_80() {
                         apache2|httpd)
                             echo "This may be serving EspoCRM or other web applications."
                             ;;
-                        nginx)
-                            echo "This may be from Jitsi Meet or another integration installation."
-                            ;;
                     esac
                     
                     echo ""
@@ -131,10 +161,7 @@ check_port_80() {
                     echo -e "${YELLOW}Warning: This will stop the $service_name service and may affect related services.${NC}"
                     
                     # Additional warnings for specific services
-                    if [ "$service_name" = "nginx" ]; then
-                        echo -e "${YELLOW}Note: If you have Jitsi installed, stopping nginx may affect Jitsi Meet access.${NC}"
-                        echo "      Jitsi services (prosody, jicofo, jitsi-videobridge2) will continue running."
-                    elif [ "$service_name" = "apache2" ] || [ "$service_name" = "httpd" ]; then
+                    if [ "$service_name" = "apache2" ] || [ "$service_name" = "httpd" ]; then
                         echo -e "${YELLOW}Note: This may affect EspoCRM or other web applications using Apache.${NC}"
                     fi
                     
