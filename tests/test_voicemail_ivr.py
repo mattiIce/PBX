@@ -70,22 +70,22 @@ def test_voicemail_ivr_welcome_state():
 
     config = Config('config.yml')
     vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+    
+    # Test 1: Non-digit input should transition to PIN entry and prompt
     ivr = VoicemailIVR(vm_system, '1001')
-
-    # In welcome state, non-digit input should transition to PIN entry and prompt
     result = ivr.handle_dtmf('*')
     assert result['action'] == 'play_prompt'
     assert result['prompt'] == 'enter_pin'
     assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
 
-    # Reset for second test
-    ivr2 = VoicemailIVR(vm_system, '1001')
+    # Test 2: Digit input should transition to PIN entry and collect the digit
+    ivr.state = VoicemailIVR.STATE_WELCOME  # Reset to welcome state
+    ivr.entered_pin = ''  # Clear any collected digits
     
-    # In welcome state, digit input should transition to PIN entry and collect the digit
-    result2 = ivr2.handle_dtmf('1')
-    assert result2['action'] == 'collect_digit'
-    assert ivr2.state == VoicemailIVR.STATE_PIN_ENTRY
-    assert ivr2.entered_pin == '1'  # First digit should be collected
+    result = ivr.handle_dtmf('1')
+    assert result['action'] == 'collect_digit'
+    assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
+    assert ivr.entered_pin == '1'  # First digit should be collected
 
     print("✓ VoicemailIVR welcome state works")
 

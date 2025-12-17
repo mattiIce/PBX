@@ -810,6 +810,8 @@ class VoicemailIVR:
         
         # If the digit is a valid PIN digit (0-9), process it immediately
         # to avoid losing the first digit
+        # Note: We use explicit string check instead of isdigit() for consistency
+        # with _handle_pin_entry and to avoid accepting unicode digits
         if digit in '0123456789':
             return self._handle_pin_entry(digit)
         
