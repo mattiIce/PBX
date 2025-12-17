@@ -17,15 +17,17 @@ class SecurityMonitor:
     Ensures FIPS compliance and security features remain active during operation
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict = None, webhook_system=None):
         """
         Initialize security monitor
 
         Args:
             config: PBX configuration object
+            webhook_system: Optional webhook system for security alerts
         """
         self.logger = get_logger()
         self.config = config or {}
+        self.webhook_system = webhook_system
         self.running = False
         self.monitor_thread = None
         
@@ -186,14 +188,53 @@ class SecurityMonitor:
             )
             for violation in results['violations']:
                 self.logger.warning(f"  - {violation['check']}: {violation['message']}")
+            # Send webhook alert for warnings
+            self._send_security_alert(results, 'WARNING')
         else:
             self.logger.error(
                 f"Security compliance check: CRITICAL ({len(results['violations'])} issues)"
             )
             for violation in results['violations']:
                 self.logger.error(f"  - {violation['check']}: {violation['message']}")
+            # Send webhook alert for critical issues
+            self._send_security_alert(results, 'CRITICAL')
 
         return results
+
+    def _send_security_alert(self, results: Dict, severity: str):
+        """
+        Send security alert via webhook
+
+        Args:
+            results: Security check results
+            severity: Alert severity (WARNING or CRITICAL)
+        """
+        if not self.webhook_system:
+            return
+
+        try:
+            # Create security alert event
+            event_data = {
+                'event': 'security.compliance_alert',
+                'severity': severity,
+                'timestamp': results['timestamp'],
+                'overall_status': results['overall_status'],
+                'violations_count': len(results['violations']),
+                'violations': results['violations'],
+                'checks': {
+                    check_name: {
+                        'status': check_data.get('status'),
+                        'message': check_data.get('message', '')
+                    }
+                    for check_name, check_data in results['checks'].items()
+                }
+            }
+
+            # Send webhook
+            self.webhook_system.trigger('security.compliance_alert', event_data)
+            self.logger.info(f"Security alert sent via webhook (severity: {severity})")
+        except Exception as e:
+            self.logger.error(f"Failed to send security alert via webhook: {e}")
 
     def _check_fips_compliance(self) -> Dict:
         """Check FIPS 140-2 compliance status"""
@@ -421,6 +462,6 @@ class SecurityMonitor:
         return True
 
 
-def get_security_monitor(config: dict = None) -> SecurityMonitor:
+def get_security_monitor(config: dict = None, webhook_system=None) -> SecurityMonitor:
     """Get security monitor instance"""
-    return SecurityMonitor(config)
+    return SecurityMonitor(config, webhook_system)

@@ -402,7 +402,10 @@ class PBXCore:
 
         # Initialize security runtime monitor (always enabled for FIPS compliance)
         from pbx.utils.security_monitor import get_security_monitor
-        self.security_monitor = get_security_monitor(config=self.config)
+        self.security_monitor = get_security_monitor(
+            config=self.config,
+            webhook_system=self.webhook_system if hasattr(self, 'webhook_system') else None
+        )
         self.logger.info("Security runtime monitor initialized")
 
         # Initialize DND scheduler if enabled
