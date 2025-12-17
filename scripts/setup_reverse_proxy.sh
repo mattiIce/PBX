@@ -105,7 +105,7 @@ check_port_80() {
                 local service_name=""
                 
                 # Common web servers that might be running as services
-                for svc in apache2 httpd lighttpd; do
+                for svc in apache2 httpd lighttpd nginx; do
                     if systemctl is-active --quiet "$svc" 2>/dev/null; then
                         is_systemd_service=true
                         service_name="$svc"
@@ -113,11 +113,39 @@ check_port_80() {
                     fi
                 done
                 
+                # Special case: If nginx is detected but not our PBX nginx setup,
+                # it might be from Jitsi or other service installation
+                if [ "$is_systemd_service" = true ] && [ "$service_name" = "nginx" ]; then
+                    echo "Detected nginx service is running on port 80."
+                    echo "This may be from a Jitsi Meet or other integration installation."
+                    echo ""
+                fi
+                
                 if [ "$is_systemd_service" = true ] && [ -n "$service_name" ]; then
                     echo "Detected $service_name service is running on port 80."
+                    
+                    # Provide context about what might be affected
+                    case "$service_name" in
+                        apache2|httpd)
+                            echo "This may be serving EspoCRM or other web applications."
+                            ;;
+                        nginx)
+                            echo "This may be from Jitsi Meet or another integration installation."
+                            ;;
+                    esac
+                    
                     echo ""
                     echo "Would you like to automatically stop $service_name to free port 80?"
-                    echo -e "${YELLOW}Warning: This will stop the $service_name service.${NC}"
+                    echo -e "${YELLOW}Warning: This will stop the $service_name service and may affect related services.${NC}"
+                    
+                    # Additional warnings for specific services
+                    if [ "$service_name" = "nginx" ]; then
+                        echo -e "${YELLOW}Note: If you have Jitsi installed, stopping nginx may affect Jitsi Meet access.${NC}"
+                        echo "      Jitsi services (prosody, jicofo, jitsi-videobridge2) will continue running."
+                    elif [ "$service_name" = "apache2" ] || [ "$service_name" = "httpd" ]; then
+                        echo -e "${YELLOW}Note: This may affect EspoCRM or other web applications using Apache.${NC}"
+                    fi
+                    
                     echo "You can restart it later if needed with: sudo systemctl start $service_name"
                     echo ""
                     read -p "Stop $service_name now? (y/n): " STOP_SERVICE

@@ -41,12 +41,12 @@ for func in "${required_functions[@]}"; do
     echo "✓ Function '$func' exists"
 done
 
-# Test 4: Check for Apache handling logic
-if ! grep -q "apache2\|httpd" "$SETUP_SCRIPT"; then
-    echo "FAIL: Script doesn't handle Apache servers"
+# Test 4: Check for Apache/nginx/httpd handling logic
+if ! grep -q "apache2\|httpd\|lighttpd\|nginx" "$SETUP_SCRIPT"; then
+    echo "FAIL: Script doesn't handle common web servers"
     exit 1
 fi
-echo "✓ Script includes Apache handling"
+echo "✓ Script includes common web server handling (apache2, httpd, lighttpd, nginx)"
 
 # Test 5: Check for user prompts for stopping service
 if ! grep -q 'read -p.*Stop.*y/n' "$SETUP_SCRIPT"; then
@@ -69,13 +69,21 @@ if ! grep -q "Port 80 is still in use after stopping" "$SETUP_SCRIPT"; then
 fi
 echo "✓ Script verifies port is freed after stopping service"
 
+# Test 8: Check for Jitsi-specific warnings
+if ! grep -q -i "jitsi" "$SETUP_SCRIPT"; then
+    echo "FAIL: Script doesn't mention Jitsi in warnings"
+    exit 1
+fi
+echo "✓ Script includes Jitsi-specific warnings"
+
 echo ""
 echo "All tests passed! ✓"
 echo ""
 echo "Summary:"
 echo "- Script syntax is valid"
 echo "- All required functions are present"
-echo "- Apache/httpd handling is implemented"
+echo "- Common web server handling is implemented (apache2, httpd, lighttpd, nginx)"
 echo "- User confirmation prompts are in place"
 echo "- Service stop functionality is implemented"
 echo "- Port verification after service stop is implemented"
+echo "- Jitsi-specific warnings are included"
