@@ -79,7 +79,7 @@ class VoicemailBox:
 
         # Load PIN from database first (if available), then fall back to config
         pin_loaded = False
-        if database and database.enabled and EXTENSIONDB_AVAILABLE:
+        if database and getattr(database, 'enabled', False) and EXTENSIONDB_AVAILABLE:
             try:
                 ext_db = ExtensionDB(database)
                 db_extension = ext_db.get(extension_number)

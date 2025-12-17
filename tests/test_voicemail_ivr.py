@@ -618,8 +618,16 @@ def test_voicemail_pin_from_database():
             name='Test User',
             password_hash='test_hash',
             email='test@example.com',
-            voicemail_pin='4655'  # This will be hashed
+            voicemail_pin='4655'  # ExtensionDB.add() will hash this automatically
         )
+        
+        # Verify the PIN was actually hashed in the database
+        db_extension = ext_db.get('1537')
+        assert db_extension is not None, "Extension should be in database"
+        assert db_extension.get('voicemail_pin_hash') is not None, "PIN hash should be stored"
+        assert db_extension.get('voicemail_pin_salt') is not None, "PIN salt should be stored"
+        # Verify it's not stored as plaintext
+        assert db_extension.get('voicemail_pin_hash') != '4655', "PIN should be hashed, not plaintext"
         
         # Create voicemail system with database
         vm_system = VoicemailSystem(
@@ -631,7 +639,7 @@ def test_voicemail_pin_from_database():
         # Get mailbox - should load PIN from database
         mailbox = vm_system.get_mailbox('1537')
         
-        # Verify PIN hash and salt were loaded
+        # Verify PIN hash and salt were loaded from database
         assert mailbox.pin_hash is not None, "PIN hash should be loaded from database"
         assert mailbox.pin_salt is not None, "PIN salt should be loaded from database"
         assert mailbox.pin is None, "Plaintext PIN should not be set when using database"
