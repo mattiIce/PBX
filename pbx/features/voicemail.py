@@ -831,6 +831,13 @@ class VoicemailIVR:
             self.logger.debug(
                 f"[VM IVR PIN] Verifying PIN for extension {self.extension_number}")
             
+            # DEBUG LOGGING FOR TESTING PURPOSES ONLY
+            # WARNING: This logs sensitive PIN data - use only for troubleshooting
+            self.logger.info(
+                f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Entered PIN: '{self.entered_pin}'")
+            self.logger.info(
+                f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Expected PIN: '{self.mailbox.pin}'")
+            
             pin_valid = self.mailbox.verify_pin(self.entered_pin)
             self.logger.info(
                 f"[VM IVR PIN] PIN verification result: {'VALID' if pin_valid else 'INVALID'}")
@@ -872,6 +879,10 @@ class VoicemailIVR:
                 self.entered_pin += digit
                 self.logger.debug(
                     f"[VM IVR PIN] Collected digit, entered_pin length now: {len(self.entered_pin)}")
+                # DEBUG LOGGING FOR TESTING PURPOSES ONLY
+                # WARNING: This logs sensitive PIN data - use only for troubleshooting
+                self.logger.info(
+                    f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '{digit}' collected, current PIN buffer: '{self.entered_pin}'")
             return {
                 'action': 'collect_digit',
                 'prompt': 'continue'
