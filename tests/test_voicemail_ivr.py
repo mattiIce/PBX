@@ -7,6 +7,8 @@ import os
 import sys
 import time
 import importlib
+import io
+import logging
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -358,7 +360,7 @@ def test_debug_pin_flag_disabled_by_default():
         voicemail = reload_voicemail_module()
         
         # Check that the flag is False
-        assert voicemail._DEBUG_PIN_LOGGING_ENABLED == False, \
+        assert voicemail._DEBUG_PIN_LOGGING_ENABLED is False, \
             "DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN is not set"
         
         config = Config('config.yml')
@@ -366,7 +368,7 @@ def test_debug_pin_flag_disabled_by_default():
         ivr = voicemail.VoicemailIVR(vm_system, '1001')
         
         # Verify the IVR instance has debug_pin_logging disabled
-        assert ivr.debug_pin_logging == False, \
+        assert ivr.debug_pin_logging is False, \
             "VoicemailIVR.debug_pin_logging should be False by default"
         
         print("✓ DEBUG_VM_PIN flag is disabled by default")
@@ -391,7 +393,7 @@ def test_debug_pin_flag_enabled_when_set():
             voicemail = reload_voicemail_module()
             
             # Check that the flag is True
-            assert voicemail._DEBUG_PIN_LOGGING_ENABLED == True, \
+            assert voicemail._DEBUG_PIN_LOGGING_ENABLED is True, \
                 f"DEBUG_PIN_LOGGING should be True when DEBUG_VM_PIN='{truthy_value}'"
             
             config = Config('config.yml')
@@ -399,7 +401,7 @@ def test_debug_pin_flag_enabled_when_set():
             ivr = voicemail.VoicemailIVR(vm_system, '1001')
             
             # Verify the IVR instance has debug_pin_logging enabled
-            assert ivr.debug_pin_logging == True, \
+            assert ivr.debug_pin_logging is True, \
                 f"VoicemailIVR.debug_pin_logging should be True when DEBUG_VM_PIN='{truthy_value}'"
         
         # Test falsy values
@@ -410,7 +412,7 @@ def test_debug_pin_flag_enabled_when_set():
             voicemail = reload_voicemail_module()
             
             # Check that the flag is False
-            assert voicemail._DEBUG_PIN_LOGGING_ENABLED == False, \
+            assert voicemail._DEBUG_PIN_LOGGING_ENABLED is False, \
                 f"DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN='{falsy_value}'"
         
         print("✓ DEBUG_VM_PIN flag enabled/disabled correctly based on environment variable")
@@ -444,8 +446,6 @@ def test_debug_pin_logging_suppressed_when_disabled():
         ivr.state = voicemail.VoicemailIVR.STATE_PIN_ENTRY
         
         # Capture log output by checking the logger
-        import io
-        import logging
         log_capture = io.StringIO()
         handler = logging.StreamHandler(log_capture)
         handler.setLevel(logging.INFO)
@@ -505,8 +505,6 @@ def test_debug_pin_logging_emitted_when_enabled():
         
         # Capture log output - we need to set up handler BEFORE creating IVR
         # to capture initialization warnings
-        import io
-        import logging
         log_capture = io.StringIO()
         handler = logging.StreamHandler(log_capture)
         handler.setLevel(logging.DEBUG)  # Capture all log levels
@@ -566,14 +564,14 @@ def test_debug_pin_module_level_caching():
         voicemail = reload_voicemail_module()
         
         # Verify it's enabled
-        assert voicemail._DEBUG_PIN_LOGGING_ENABLED == True, \
+        assert voicemail._DEBUG_PIN_LOGGING_ENABLED is True, \
             "DEBUG_PIN_LOGGING should be True initially"
         
         # Now change the environment variable (simulating runtime change)
         os.environ['DEBUG_VM_PIN'] = 'false'
         
         # The module-level flag should NOT change (it's cached)
-        assert voicemail._DEBUG_PIN_LOGGING_ENABLED == True, \
+        assert voicemail._DEBUG_PIN_LOGGING_ENABLED is True, \
             "Module-level DEBUG_PIN_LOGGING should remain True (cached, not re-read from env)"
         
         # Create a new IVR - it should still use the cached True value
@@ -581,7 +579,7 @@ def test_debug_pin_module_level_caching():
         vm_system = voicemail.VoicemailSystem(storage_path='test_voicemail', config=config)
         ivr = voicemail.VoicemailIVR(vm_system, '1001')
         
-        assert ivr.debug_pin_logging == True, \
+        assert ivr.debug_pin_logging is True, \
             "New IVR should use cached module-level flag value"
         
         print("✓ DEBUG_VM_PIN flag is cached at module level")
