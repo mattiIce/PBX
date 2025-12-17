@@ -86,8 +86,9 @@ if ! grep -q "limit_req_zone.*api_limit" /etc/nginx/nginx.conf; then
     sed -i '/http {/a \    # Rate limiting zone for PBX API\n    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;' /etc/nginx/nginx.conf
 fi
 
+# Create initial HTTP-only configuration (certbot will add HTTPS later)
 cat > /etc/nginx/sites-available/$DOMAIN_NAME << EOF
-# HTTP - Redirect to HTTPS
+# HTTP configuration - certbot will configure HTTPS
 server {
     listen 80;
     server_name $DOMAIN_NAME;
@@ -97,34 +98,6 @@ server {
         root /var/www/html;
     }
     
-    # Redirect all other HTTP traffic to HTTPS
-    location / {
-        return 301 https://\$server_name\$request_uri;
-    }
-}
-
-# HTTPS - Main configuration
-server {
-    listen 443 ssl http2;
-    server_name $DOMAIN_NAME;
-
-    # SSL Certificate Configuration (will be updated by certbot)
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
-
-    # Strong SSL Configuration
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-
-    # Security Headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
     # Logging
     access_log /var/log/nginx/${DOMAIN_NAME}-access.log;
     error_log /var/log/nginx/${DOMAIN_NAME}-error.log;
@@ -166,7 +139,7 @@ EOF
 echo "Enabling nginx site..."
 ln -sf /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/
 
-# Test nginx configuration (before SSL)
+# Test nginx configuration
 echo "Testing nginx configuration..."
 nginx -t
 
@@ -175,13 +148,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Reload nginx
+# Reload nginx to serve HTTP traffic
 echo "Reloading nginx..."
 systemctl reload nginx
 
 # Get SSL certificate from Let's Encrypt
 echo ""
 echo "Obtaining SSL certificate from Let's Encrypt..."
+echo "Certbot will automatically configure HTTPS and add redirect from HTTP..."
 echo "This may take a minute..."
 
 certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email $EMAIL --redirect
