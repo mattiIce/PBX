@@ -13,6 +13,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Error patterns for certbot SSL certificate issues
+CERTBOT_OPENSSL_ERROR_PATTERN='UnsupportedDigestmodError\|digital envelope routines'
+
 # Helper function to check if port 80 is in use
 is_port_80_in_use() {
     netstat -tuln 2>/dev/null | grep -q ':80 ' || ss -tuln 2>/dev/null | grep -q ':80 '
@@ -472,7 +475,7 @@ else
     echo -e "${YELLOW}Warning: Failed to obtain SSL certificate${NC}"
     
     # Check for specific error types
-    if grep -q "UnsupportedDigestmodError\|digital envelope routines" /tmp/certbot_output.log; then
+    if grep -q "$CERTBOT_OPENSSL_ERROR_PATTERN" /tmp/certbot_output.log; then
         echo ""
         echo -e "${YELLOW}Detected OpenSSL compatibility issue with certbot${NC}"
         echo ""
@@ -515,9 +518,6 @@ else
     echo "Your site will be accessible via: http://$DOMAIN_NAME"
     echo ""
 fi
-
-# Clean up temporary certbot output log
-rm -f /tmp/certbot_output.log
 
 # Configure firewall (if ufw is available)
 if command -v ufw &> /dev/null; then
