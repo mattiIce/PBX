@@ -17,6 +17,25 @@ server:
   rtp_port_range_end: 20000
   server_name: Aluminum Blanking Phone System
   version: 1.0.0
+# RTP Configuration (imported from Asterisk/FreeSWITCH best practices)
+rtp:
+  # Jitter Buffer (from FreeSWITCH STFU library)
+  jitter_buffer:
+    enabled: true
+    initial_length_ms: 50      # Initial buffer size
+    max_length_ms: 200         # Maximum buffer size
+    max_drift_ms: 30           # Maximum drift tolerance
+    adaptive: true             # Enable adaptive sizing
+# RTCP Monitoring (from Asterisk RTCP implementation)
+rtcp:
+  enabled: true
+  interval_seconds: 5          # RTCP report interval
+  monitor_quality: true        # Enable quality monitoring
+  alert_thresholds:
+    packet_loss_percent: 5.0   # Alert if packet loss > 5%
+    jitter_ms: 50.0            # Alert if jitter > 50ms
+    mos_min: 3.5               # Alert if MOS score < 3.5
+    rtt_ms: 300.0              # Alert if round-trip time > 300ms
 api:
   host: 0.0.0.0
   port: 8080
