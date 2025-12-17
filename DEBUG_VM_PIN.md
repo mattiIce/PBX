@@ -135,3 +135,72 @@ This shows you:
 3. **Secure your logs** - If debug logs are written to files, ensure they're properly secured and rotated
 4. **Review log access** - Ensure only authorized personnel can access debug logs
 5. **Clear sensitive data** - After debugging, clear or rotate logs containing PIN data
+
+## Troubleshooting Common Issues
+
+### Issue: DTMF digits received but PIN always invalid
+
+**Symptoms:**
+- You see DTMF digits being received in the logs
+- Each digit shows "Queued DTMF 'X' from SIP INFO for voicemail IVR"
+- IVR processes each digit: "Processing DTMF 'X' through IVR state machine"
+- But PIN verification fails with INVALID result
+
+**How to diagnose with DEBUG_VM_PIN:**
+
+1. Enable debug logging:
+   ```bash
+   export DEBUG_VM_PIN=true
+   python main.py
+   ```
+
+2. Call voicemail and enter your PIN (e.g., 1234)
+
+3. Look for the PIN buffer logs:
+   ```
+   [VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '1' collected, current PIN buffer: '1'
+   [VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '2' collected, current PIN buffer: '12'
+   [VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '3' collected, current PIN buffer: '123'
+   [VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '4' collected, current PIN buffer: '1234'
+   ```
+
+4. **If you see the buffer accumulating correctly** (1, 12, 123, 1234):
+   - The DTMF collection is working
+   - Check the "Expected PIN" in the verification log
+   - Problem is likely with configured PIN, not DTMF detection
+
+5. **If the buffer is NOT accumulating** (stays '1' for each digit):
+   - Indicates the IVR instance may be getting recreated
+   - Or the entered_pin is being reset between digits
+   - This is a bug that needs investigation
+
+6. **If digits are missing** (buffer shows '1', '2', '4' but skips '3'):
+   - DTMF transmission issue
+   - Try using in-band DTMF instead of SIP INFO
+   - Check phone DTMF configuration
+
+7. **If digits are duplicated** (buffer shows '11', '112', '1123'):
+   - DTMF debouncing issue
+   - May need to adjust debounce timing
+   - Check if phone is sending duplicate DTMF events
+
+### Issue: First digit lost when entering PIN
+
+**Symptoms:**
+- First digit you press doesn't appear in PIN buffer
+- Subsequent digits work fine
+
+**Solution:**
+This was fixed in a recent update. The voicemail IVR now captures the first digit when transitioning from WELCOME state to PIN_ENTRY state. Ensure you're running the latest version.
+
+### Issue: PIN appears correct in logs but still fails verification
+
+**Symptoms:**
+- Debug shows: Entered PIN: '1234', Expected PIN: '1234'
+- But verification still fails
+
+**Possible causes:**
+1. Hidden characters in the configured PIN (whitespace, newlines)
+2. PIN stored in different encoding
+3. Check mailbox PIN configuration in database or config file
+
