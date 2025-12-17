@@ -40,6 +40,11 @@ check_port_80() {
             port_80_process=$(ss -tlnp 2>/dev/null | grep ':80 ' | awk -F'pid=' '{if ($2) {split($2, a, ","); print a[1]}}' | head -1)
         fi
         
+        # Validate PID is numeric
+        if [ -n "$port_80_process" ] && ! [[ "$port_80_process" =~ ^[0-9]+$ ]]; then
+            port_80_process=""
+        fi
+        
         if [ -n "$port_80_process" ]; then
             local process_name=$(ps -p "$port_80_process" -o comm= 2>/dev/null || echo "unknown")
             local process_cmdline=$(ps -p "$port_80_process" -o args= 2>/dev/null || echo "unknown")
