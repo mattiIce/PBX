@@ -156,6 +156,23 @@ The PBX will start on:
 
 **Note:** Browsers will show a security warning for self-signed certificates during development. This is normal. For production, use a certificate from a trusted CA like Let's Encrypt.
 
+### 🌐 Production URL Setup (Optional)
+
+For production deployments, you can access the admin panel via a friendly URL (e.g., `https://abps.albl.com`) instead of `IP:8080`:
+
+**Quick Setup (Automated):**
+```bash
+sudo scripts/setup_reverse_proxy.sh
+```
+
+**Manual Setup:** See [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) for detailed nginx/Apache configuration instructions.
+
+**Benefits:**
+- ✅ Access via friendly domain name (no port number needed)
+- ✅ HTTPS with free Let's Encrypt SSL certificate
+- ✅ Enhanced security with reverse proxy
+- ✅ Professional appearance
+
 ## 🖥️ Admin Panel
 
 Access the web-based admin panel at `https://localhost:8080/admin/` to manage your PBX system through a modern, intuitive interface.

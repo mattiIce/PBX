@@ -9377,6 +9377,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': str(e)}, 500)
 
 
+class ReusableHTTPServer(HTTPServer):
+    """HTTPServer that allows immediate socket reuse after restart"""
+    allow_reuse_address = True
+
+
 class PBXAPIServer:
     """REST API server for PBX with HTTPS support"""
 
@@ -9713,7 +9718,7 @@ class PBXAPIServer:
     def start(self):
         """Start API server"""
         try:
-            self.server = HTTPServer((self.host, self.port), PBXAPIHandler)
+            self.server = ReusableHTTPServer((self.host, self.port), PBXAPIHandler)
 
             # Wrap with SSL if enabled
             if self.ssl_enabled and self.ssl_context:
