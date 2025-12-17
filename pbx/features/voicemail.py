@@ -79,6 +79,8 @@ class VoicemailBox:
 
         # Load PIN from database first (if available), then fall back to config
         pin_loaded = False
+        # Note: Use getattr for 'enabled' attribute to safely handle cases where
+        # database object may not have this attribute (e.g., in tests or older code)
         if database and getattr(database, 'enabled', False) and EXTENSIONDB_AVAILABLE:
             try:
                 ext_db = ExtensionDB(database)
