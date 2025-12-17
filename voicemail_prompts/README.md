@@ -40,11 +40,12 @@ python3 scripts/generate_espeak_voices.py
 
 ## Required Files
 
-This directory needs these 12 voice files:
+This directory needs these 13 voice files:
 
 - `enter_pin.wav` - PIN entry prompt
 - `invalid_pin.wav` - Invalid PIN message
 - `main_menu.wav` - Voicemail main menu
+- `options_menu.wav` - Options menu
 - `message_menu.wav` - Message playback menu
 - `no_messages.wav` - No messages notification
 - `you_have_messages.wav` - Message count announcement

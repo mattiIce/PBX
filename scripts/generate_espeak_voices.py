@@ -146,6 +146,10 @@ def generate_voicemail_voices(output_dir='voicemail_prompts'):
             'text': 'To listen to your messages, press 1. For options, press 2. To exit, press star.',
             'description': 'Voicemail main menu'
         },
+        'options_menu.wav': {
+            'text': 'Press 1 to record greeting. Press star to return to main menu.',
+            'description': 'Options menu'
+        },
         'message_menu.wav': {
             'text': 'To replay this message, press 1. For the next message, press 2. To delete this message, press 3. To return to the main menu, press star.',
             'description': 'Message playback menu'
@@ -300,7 +304,7 @@ The generated files are in proper telephony format:
     if not args.aa_only:
         vm_count = generate_voicemail_voices(args.vm_dir)
         total_success += vm_count
-        total_files += 12
+        total_files += 13
     
     logger.info("=" * 70)
     logger.info(f"TOTAL: Generated {total_success}/{total_files} VOICE prompts")
