@@ -17,6 +17,25 @@ server:
   rtp_port_range_end: 20000
   server_name: Aluminum Blanking Phone System
   version: 1.0.0
+# RTP Configuration (imported from Asterisk/FreeSWITCH best practices)
+rtp:
+  # Jitter Buffer (from FreeSWITCH STFU library)
+  jitter_buffer:
+    enabled: true
+    initial_length_ms: 50      # Initial buffer size
+    max_length_ms: 200         # Maximum buffer size
+    max_drift_ms: 30           # Maximum drift tolerance
+    adaptive: true             # Enable adaptive sizing
+# RTCP Monitoring (from Asterisk RTCP implementation)
+rtcp:
+  enabled: true
+  interval_seconds: 5          # RTCP report interval
+  monitor_quality: true        # Enable quality monitoring
+  alert_thresholds:
+    packet_loss_percent: 5.0   # Alert if packet loss > 5%
+    jitter_ms: 50.0            # Alert if jitter > 50ms
+    mos_min: 3.5               # Alert if MOS score < 3.5
+    rtt_ms: 300.0              # Alert if round-trip time > 300ms
 api:
   host: 0.0.0.0
   port: 8080
@@ -77,6 +96,23 @@ codecs:
   g726:
     enabled: true
     bitrate: 32000  # Options: 16000, 24000, 32000 (recommended), 40000
+  # iLBC Codec - Internet Low Bitrate Codec with built-in packet loss concealment
+  # License: Free/libre (royalty-free), used by FreeSWITCH, WebRTC, PJMEDIA
+  # Best for: Poor network conditions with packet loss
+  ilbc:
+    enabled: true
+    mode: 30  # Frame duration: 20ms (15.2 kbps) or 30ms (13.33 kbps, recommended)
+    payload_type: 97  # Dynamic RTP payload type (97 for iLBC)
+  # Speex Codec - Open source speech codec from Xiph.Org
+  # License: BSD (royalty-free)
+  # Note: Being superseded by Opus but still widely deployed
+  # Payload types: 98 for narrowband, 99 for wideband, 100 for ultra-wideband
+  speex:
+    enabled: true
+    mode: nb  # Bandwidth mode: 'nb' (8kHz), 'wb' (16kHz), 'uwb' (32kHz)
+    quality: 8  # Quality level 0-10 (8 is recommended)
+    vbr: true  # Enable Variable Bitrate
+    payload_type: 98  # Dynamic RTP payload type (98 for nb, 99 for wb, 100 for uwb)
 features:
   call_recording: true
   call_transfer: true

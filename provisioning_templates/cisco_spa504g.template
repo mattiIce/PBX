@@ -8,11 +8,13 @@ Password_1_ : {{EXTENSION_PASSWORD}}
 Proxy_1_ : {{SIP_SERVER}}
 Register_Expires_1_ : 3600
 
-# Codecs
+# Codecs - Priority order
 Preferred_Codec_1_ : G711u
 Preferred_Codec_2_ : G711a
 Preferred_Codec_3_ : G722
-Preferred_Codec_4_ : G729a
+Preferred_Codec_4_ : iLBC
+Preferred_Codec_5_ : SPEEX
+Preferred_Codec_6_ : G729a
 
 # Network
 Internet_Connection_Type : DHCP
