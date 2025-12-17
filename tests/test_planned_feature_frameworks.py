@@ -165,21 +165,32 @@ def test_bi_integration():
     print("\nTesting BI Integration...")
     
     from pbx.features.bi_integration import ExportFormat
+    import tempfile
     
-    bi = BIIntegration()
-    assert bi is not None, "BI should initialize"
-    
-    # Get available datasets
-    datasets = bi.get_available_datasets()
-    assert len(datasets) > 0, "Should have default datasets"
-    
-    # Export dataset
-    result = bi.export_dataset('cdr', ExportFormat.CSV)
-    assert result['success'], "Export should succeed"
-    
-    # Get statistics
-    stats = bi.get_statistics()
-    assert stats['total_exports'] == 1, "Should track exports"
+    # Use temporary directory for exports to avoid permission issues
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config = {
+            'features': {
+                'bi_integration': {
+                    'export_path': tmpdir
+                }
+            }
+        }
+        
+        bi = BIIntegration(config)
+        assert bi is not None, "BI should initialize"
+        
+        # Get available datasets
+        datasets = bi.get_available_datasets()
+        assert len(datasets) > 0, "Should have default datasets"
+        
+        # Export dataset
+        result = bi.export_dataset('cdr', ExportFormat.CSV)
+        assert result['success'], "Export should succeed"
+        
+        # Get statistics
+        stats = bi.get_statistics()
+        assert stats['total_exports'] == 1, "Should track exports"
     
     print("✓ BI Integration framework works")
     return True
