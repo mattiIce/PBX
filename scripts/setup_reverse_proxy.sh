@@ -38,7 +38,7 @@ manage_nginx_service() {
         echo "Nginx is not active (state: $NGINX_STATE), starting service..."
         
         # If nginx is in a failed state, reset it first
-        if systemctl is-failed --quiet nginx 2>/dev/null; then
+        if systemctl is-failed --quiet nginx; then
             echo "Resetting failed nginx service..."
             systemctl reset-failed nginx
         fi
