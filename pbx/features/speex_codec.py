@@ -262,7 +262,7 @@ class SpeexCodec:
             
             # Create encoder based on mode
             if self.mode == self.MODE_NARROWBAND:
-                self.encoder = speex.WBEncoder()  # Narrowband
+                self.encoder = speex.NBEncoder()  # Narrowband
             elif self.mode == self.MODE_WIDEBAND:
                 self.encoder = speex.WBEncoder()  # Wideband
             else:  # Ultra-wideband
@@ -301,7 +301,7 @@ class SpeexCodec:
             
             # Create decoder based on mode
             if self.mode == self.MODE_NARROWBAND:
-                self.decoder = speex.WBDecoder()  # Narrowband
+                self.decoder = speex.NBDecoder()  # Narrowband
             elif self.mode == self.MODE_WIDEBAND:
                 self.decoder = speex.WBDecoder()  # Wideband
             else:  # Ultra-wideband
