@@ -113,14 +113,6 @@ check_port_80() {
                     fi
                 done
                 
-                # Special case: If nginx is detected but not our PBX nginx setup,
-                # it might be from Jitsi or other service installation
-                if [ "$is_systemd_service" = true ] && [ "$service_name" = "nginx" ]; then
-                    echo "Detected nginx service is running on port 80."
-                    echo "This may be from a Jitsi Meet or other integration installation."
-                    echo ""
-                fi
-                
                 if [ "$is_systemd_service" = true ] && [ -n "$service_name" ]; then
                     echo "Detected $service_name service is running on port 80."
                     
