@@ -206,6 +206,7 @@ def test_comprehensive_security_check():
     for check in expected_checks:
         assert check in results['checks'], f"Check '{check}' should be present"
     
+    # Only log summary status, never the full results which may contain sensitive data.
     print(f"  ✓ Comprehensive check works (status: {results['overall_status']})")
     print(f"    Checks performed: {len(results['checks'])}")
     print(f"    Violations found: {len(results['violations'])}")
