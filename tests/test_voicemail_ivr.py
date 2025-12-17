@@ -70,14 +70,22 @@ def test_voicemail_ivr_welcome_state():
 
     config = Config('config.yml')
     vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+    
+    # Test 1: Non-digit input should transition to PIN entry and prompt
     ivr = VoicemailIVR(vm_system, '1001')
-
-    # In welcome state, any input should transition to PIN entry
-    result = ivr.handle_dtmf('1')
-
+    result = ivr.handle_dtmf('*')
     assert result['action'] == 'play_prompt'
     assert result['prompt'] == 'enter_pin'
     assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
+
+    # Test 2: Digit input should transition to PIN entry and collect the digit
+    ivr.state = VoicemailIVR.STATE_WELCOME  # Reset to welcome state
+    ivr.entered_pin = ''  # Clear any collected digits
+    
+    result = ivr.handle_dtmf('1')
+    assert result['action'] == 'collect_digit'
+    assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
+    assert ivr.entered_pin == '1'  # First digit should be collected
 
     print("✓ VoicemailIVR welcome state works")
 
@@ -273,6 +281,49 @@ def test_voicemail_ivr_exit():
     print("✓ VoicemailIVR exit works")
 
 
+def test_voicemail_ivr_pin_entry_from_welcome():
+    """Test IVR PIN entry starting from welcome state (verifies first digit not lost)"""
+    print("Testing VoicemailIVR PIN entry from welcome state...")
+
+    config = Config('config.yml')
+    vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+
+    # Get mailbox and set PIN
+    mailbox = vm_system.get_mailbox('1001')
+    mailbox.set_pin('1234')
+
+    # Create IVR in WELCOME state
+    ivr = VoicemailIVR(vm_system, '1001')
+    assert ivr.state == VoicemailIVR.STATE_WELCOME
+
+    # Enter PIN starting from welcome state: 1234#
+    # First digit '1' should trigger transition AND be collected
+    result1 = ivr.handle_dtmf('1')
+    assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
+    assert ivr.entered_pin == '1', f"Expected entered_pin='1', got '{ivr.entered_pin}'"
+
+    # Continue entering remaining digits
+    ivr.handle_dtmf('2')
+    assert ivr.entered_pin == '12'
+    
+    ivr.handle_dtmf('3')
+    assert ivr.entered_pin == '123'
+    
+    ivr.handle_dtmf('4')
+    assert ivr.entered_pin == '1234'
+    
+    # Press # to complete PIN entry
+    result = ivr.handle_dtmf('#')
+
+    # Should successfully authenticate and transition to main menu
+    assert result['action'] == 'play_prompt'
+    assert result['prompt'] == 'main_menu'
+    assert ivr.state == VoicemailIVR.STATE_MAIN_MENU
+    assert ivr.entered_pin == '', "PIN should be cleared after verification"
+
+    print("✓ VoicemailIVR PIN entry from welcome state works (first digit not lost)")
+
+
 def run_all_tests():
     """Run all tests in this module"""
     print("=" * 60)
@@ -286,6 +337,7 @@ def run_all_tests():
         test_voicemail_ivr_welcome_state,
         test_voicemail_ivr_pin_entry,
         test_voicemail_ivr_invalid_pin,
+        test_voicemail_ivr_pin_entry_from_welcome,  # New test for the fix
         test_voicemail_ivr_main_menu,
         test_voicemail_ivr_message_menu,
         test_voicemail_ivr_delete_message,
