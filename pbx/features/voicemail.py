@@ -24,6 +24,18 @@ except ImportError:
 GREETING_FILENAME = "greeting.wav"
 
 
+def _is_debug_pin_logging_enabled():
+    """
+    Check if PIN debug logging is enabled via environment variable.
+    
+    Returns:
+        bool: True if DEBUG_VM_PIN is set to 'true', '1', or 'yes' (case-insensitive)
+    
+    WARNING: Only enable for testing/debugging - logs sensitive PIN data
+    """
+    return os.environ.get('DEBUG_VM_PIN', 'false').lower() in ('true', '1', 'yes')
+
+
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
 
@@ -769,10 +781,9 @@ class VoicemailIVR:
         self.entered_pin = ''  # Collect PIN digits from user
         self.recorded_greeting_data = None  # Temporary storage for recorded greeting
         
-        # Debug flag for PIN logging (controlled by environment variable)
+        # Debug flag for PIN logging (controlled by DEBUG_VM_PIN environment variable)
         # WARNING: Only enable for testing/debugging - logs sensitive PIN data
-        import os
-        self.debug_pin_logging = os.environ.get('DEBUG_VM_PIN', 'false').lower() in ('true', '1', 'yes')
+        self.debug_pin_logging = _is_debug_pin_logging_enabled()
         if self.debug_pin_logging:
             self.logger.warning(
                 f"[VM IVR] ⚠️  PIN DEBUG LOGGING ENABLED for extension {extension_number} - TESTING ONLY!")
