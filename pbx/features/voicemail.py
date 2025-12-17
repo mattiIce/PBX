@@ -23,6 +23,10 @@ except ImportError:
 # Constants
 GREETING_FILENAME = "greeting.wav"
 
+# Cache the debug PIN logging flag at module level to avoid repeated environment lookups
+# This value is set once when the module is loaded and doesn't change during runtime
+_DEBUG_PIN_LOGGING_ENABLED = os.environ.get('DEBUG_VM_PIN', 'false').lower() in ('true', '1', 'yes')
+
 
 class VoicemailBox:
     """Represents a voicemail box for an extension"""
@@ -768,6 +772,15 @@ class VoicemailIVR:
         self.current_messages = []
         self.entered_pin = ''  # Collect PIN digits from user
         self.recorded_greeting_data = None  # Temporary storage for recorded greeting
+        
+        # Debug flag for PIN logging (controlled by DEBUG_VM_PIN environment variable)
+        # WARNING: Only enable for testing/debugging - logs sensitive PIN data
+        self.debug_pin_logging = _DEBUG_PIN_LOGGING_ENABLED
+        if self.debug_pin_logging:
+            self.logger.warning(
+                f"[VM IVR] ⚠️  PIN DEBUG LOGGING ENABLED for extension {extension_number} - TESTING ONLY!")
+            self.logger.warning(
+                f"[VM IVR] ⚠️  Set DEBUG_VM_PIN=false to disable sensitive PIN logging")
 
         self.logger.info(
             f"Voicemail IVR initialized for extension {extension_number}")
@@ -831,6 +844,14 @@ class VoicemailIVR:
             self.logger.debug(
                 f"[VM IVR PIN] Verifying PIN for extension {self.extension_number}")
             
+            # DEBUG LOGGING FOR TESTING PURPOSES ONLY (controlled by DEBUG_VM_PIN env var)
+            # WARNING: This logs sensitive PIN data - only enable for troubleshooting
+            if self.debug_pin_logging:
+                self.logger.info(
+                    f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Entered PIN: '{self.entered_pin}'")
+                self.logger.info(
+                    f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Expected PIN: '{self.mailbox.pin}'")
+            
             pin_valid = self.mailbox.verify_pin(self.entered_pin)
             self.logger.info(
                 f"[VM IVR PIN] PIN verification result: {'VALID' if pin_valid else 'INVALID'}")
@@ -872,6 +893,11 @@ class VoicemailIVR:
                 self.entered_pin += digit
                 self.logger.debug(
                     f"[VM IVR PIN] Collected digit, entered_pin length now: {len(self.entered_pin)}")
+                # DEBUG LOGGING FOR TESTING PURPOSES ONLY (controlled by DEBUG_VM_PIN env var)
+                # WARNING: This logs sensitive PIN data - only enable for troubleshooting
+                if self.debug_pin_logging:
+                    self.logger.info(
+                        f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '{digit}' collected, current PIN buffer: '{self.entered_pin}'")
             return {
                 'action': 'collect_digit',
                 'prompt': 'continue'
