@@ -34,7 +34,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **CDR (Call Detail Records)** - Comprehensive call logging and statistics
 - **REST API** - HTTPS/HTTP API for integration and management
 - **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
-- **Multi-codec Support** - G.711, G.729 and more
+- **Multi-codec Support** - G.711 (PCMU/PCMA), G.722 (HD), G.729, G.726, Opus, iLBC, Speex and more
 - **DTMF Detection** - Goertzel algorithm for interactive voice menus
 
 ### Operator Console Features
