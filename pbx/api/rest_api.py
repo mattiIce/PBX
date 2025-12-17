@@ -4,6 +4,7 @@ Provides HTTP/HTTPS API for managing PBX features
 """
 import base64
 import binascii
+import errno
 import ipaddress
 import json
 import mimetypes
@@ -9798,13 +9799,13 @@ class PBXAPIServer:
                 return True
                 
             except OSError as e:
-                if e.errno == 98:  # Address already in use
+                if e.errno == errno.EADDRINUSE:  # Address already in use
                     # Clean up the failed server object
                     if hasattr(self, 'server') and self.server:
                         try:
                             self.server.server_close()
-                        except Exception:
-                            pass
+                        except (OSError, socket.error) as cleanup_error:
+                            self.logger.debug(f"Error during server cleanup: {cleanup_error}")
                         self.server = None
                     
                     if attempt < max_retries - 1:
@@ -9828,17 +9829,14 @@ class PBXAPIServer:
                             f"  - Check for running processes: sudo lsof -i :{self.port}")
                         self.logger.error(
                             f"  - Or change the port in config.yml")
-                        traceback.print_exc()
                         return False
                 else:
                     # Other OSError, not address in use
-                    self.logger.error(f"Failed to start API server: {e}")
-                    traceback.print_exc()
+                    self.logger.exception(f"Failed to start API server: {e}")
                     return False
                     
             except Exception as e:
-                self.logger.error(f"Failed to start API server: {e}")
-                traceback.print_exc()
+                self.logger.exception(f"Failed to start API server: {e}")
                 return False
         
         return False

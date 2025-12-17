@@ -114,7 +114,7 @@ def test_retry_on_port_in_use():
     
     if not result:
         print("  ✓ API server correctly failed after retries")
-        if elapsed >= 2.5:  # Should have retried at least twice (1s + 2s = 3s minimum)
+        if elapsed >= 2.5:  # Should have retried at least twice (1s + 2s = 3s total, allowing 0.5s margin)
             print(f"  ✓ Retry logic executed (took {elapsed:.2f}s)")
         else:
             print(f"  ⚠ Retry may not have executed (took {elapsed:.2f}s)")
