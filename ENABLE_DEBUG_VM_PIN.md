@@ -24,9 +24,11 @@ If you're experiencing DTMF PIN recognition issues in voicemail IVR, follow thes
    # If running as a service
    sudo systemctl restart pbx
    
-   # Or if running manually
+   # Or if running manually, stop with Ctrl+C and restart
    python main.py
    ```
+
+**Note**: The `.env` file is automatically loaded when the PBX starts. The environment variable will be read before any modules are imported, ensuring DEBUG_VM_PIN works correctly.
 
 ### Method 2: One-time testing (Inline environment variable)
 

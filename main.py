@@ -6,6 +6,12 @@ import signal
 import sys
 import time
 
+# Load .env file BEFORE importing any PBX modules
+# This ensures environment variables (like DEBUG_VM_PIN) are available
+# when modules are imported and initialized
+from pbx.utils.env_loader import load_env_file
+load_env_file('.env')
+
 from pbx.core.pbx import PBXCore
 from pbx.utils.test_runner import run_all_tests
 
