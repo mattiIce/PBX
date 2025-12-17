@@ -80,6 +80,12 @@ fi
 # Create nginx configuration
 echo "Creating nginx configuration for $DOMAIN_NAME..."
 
+# First, add rate limiting zone to nginx.conf if not already present
+if ! grep -q "limit_req_zone.*api_limit" /etc/nginx/nginx.conf; then
+    echo "Adding rate limiting zone to nginx.conf..."
+    sed -i '/http {/a \    # Rate limiting zone for PBX API\n    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;' /etc/nginx/nginx.conf
+fi
+
 cat > /etc/nginx/sites-available/$DOMAIN_NAME << EOF
 # HTTP - Redirect to HTTPS
 server {
@@ -143,10 +149,8 @@ server {
         proxy_connect_timeout 300;
         proxy_send_timeout 300;
     }
-
-    # Rate limiting for API endpoints
-    limit_req_zone \$binary_remote_addr zone=api_limit:10m rate=10r/s;
     
+    # API endpoint with rate limiting
     location /api/ {
         limit_req zone=api_limit burst=20 nodelay;
         proxy_pass http://localhost:$BACKEND_PORT/api/;
@@ -226,4 +230,3 @@ echo "  Renew manually: sudo certbot renew"
 echo "  Test renewal: sudo certbot renew --dry-run"
 echo ""
 echo -e "${GREEN}Enjoy your PBX system!${NC}"
-echo ""

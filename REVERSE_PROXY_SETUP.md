@@ -46,6 +46,10 @@ sudo nano /etc/nginx/sites-available/abps.albl.com
 **Configuration for HTTPS (Recommended):**
 
 ```nginx
+# Rate limiting zone - must be defined at http context level
+# Add this to /etc/nginx/nginx.conf in the http {} block, or include this config file there
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+
 # HTTP - Redirect to HTTPS
 server {
     listen 80;
@@ -115,15 +119,15 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
-
-    # Rate limiting to prevent abuse
-    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
     
+    # API endpoint with rate limiting
     location /api/ {
         limit_req zone=api_limit burst=20 nodelay;
         proxy_pass http://localhost:8080/api/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
