@@ -2,6 +2,8 @@
 
 This guide shows you how to access your PBX web interface via a friendly URL (like `abps.albl.com`) instead of `IP:8080`.
 
+> **Note:** Throughout this guide, `[PBX_INSTALL_DIR]` refers to your PBX installation directory. Replace it with your actual path (e.g., `/opt/PBX`, `/home/pbx/PBX`, etc.).
+
 ## Why Use a Reverse Proxy?
 
 **Security and Best Practices:**
@@ -200,7 +202,7 @@ sudo ufw deny 8080/tcp
 
 If you want to restrict PBX to only listen on localhost (more secure):
 
-Edit `/home/runner/work/PBX/PBX/config.yml`:
+Edit `[PBX_INSTALL_DIR]/config.yml`:
 
 ```yaml
 api:
@@ -412,4 +414,5 @@ sudo nginx -t
 
 **Need Help?** Check logs at:
 - Nginx: `/var/log/nginx/abps.albl.com-error.log`
-- PBX: `/home/runner/work/PBX/PBX/logs/pbx.log`
+- PBX: `[PBX_INSTALL_DIR]/logs/pbx.log`
+

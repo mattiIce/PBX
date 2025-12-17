@@ -2,6 +2,8 @@
 
 This is your complete implementation guide for Option 1: DNS + Reverse Proxy setup for accessing your PBX at `https://abps.albl.com`.
 
+> **Note:** In this guide, `[PBX_INSTALL_DIR]` refers to your PBX installation directory (e.g., `/opt/PBX`, `/home/user/PBX`, or wherever you installed the PBX system).
+
 ## ✅ What You'll Get
 
 After completing these steps:
@@ -56,7 +58,7 @@ SSH into your PBX server and run:
 
 ```bash
 # Navigate to PBX directory
-cd /home/runner/work/PBX/PBX
+cd [PBX_INSTALL_DIR]
 
 # Run the automated setup script
 sudo scripts/setup_reverse_proxy.sh
@@ -119,7 +121,7 @@ For enhanced security, restrict PBX to only listen on localhost:
 
 **Edit config.yml:**
 ```bash
-nano /home/runner/work/PBX/PBX/config.yml
+nano [PBX_INSTALL_DIR]/config.yml
 ```
 
 **Change:**
@@ -203,7 +205,7 @@ sudo tail -f /var/log/nginx/abps.albl.com-error.log
 
 **PBX log:**
 ```bash
-tail -f /home/runner/work/PBX/PBX/logs/pbx.log
+tail -f [PBX_INSTALL_DIR]/logs/pbx.log
 ```
 
 ### Test Nginx Configuration
@@ -330,3 +332,4 @@ If you prefer manual setup or the script fails, see the complete manual guide:
 
 **Last Updated:** 2025-12-17  
 **For:** PBX v1.0.0 with abps.albl.com domain
+
