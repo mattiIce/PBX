@@ -63,9 +63,42 @@ check_port_80() {
                 local nginx_service_state=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
                 
                 if [ "$nginx_service_state" = "active" ]; then
-                    echo "Nginx service is active and healthy."
-                    echo "This is normal - nginx will reload the new configuration."
-                    return 0
+                    # Nginx is active - check if it's already configured for PBX
+                    # If we're setting up for a new domain, this is likely from another service (Jitsi, etc.)
+                    echo "Nginx service is active."
+                    echo ""
+                    echo -e "${YELLOW}This nginx installation may be from Jitsi Meet or another service.${NC}"
+                    echo ""
+                    echo "Would you like to stop nginx to set up PBX reverse proxy?"
+                    echo -e "${YELLOW}Warning: Stopping nginx will affect services using it (e.g., Jitsi Meet).${NC}"
+                    echo "      Jitsi services (prosody, jicofo, jitsi-videobridge2) will continue running."
+                    echo "You can restart nginx later with: sudo systemctl start nginx"
+                    echo ""
+                    read -p "Stop nginx now? (y/n): " STOP_NGINX
+                    
+                    if [ "$STOP_NGINX" = "y" ] || [ "$STOP_NGINX" = "Y" ]; then
+                        echo "Stopping nginx..."
+                        systemctl stop nginx 2>/dev/null || true
+                        sleep 2
+                        
+                        # Verify port 80 is now free
+                        if is_port_80_in_use; then
+                            echo -e "${RED}Error: Port 80 is still in use after stopping nginx${NC}"
+                            return 1
+                        fi
+                        
+                        echo -e "${GREEN}Successfully stopped nginx${NC}"
+                        echo ""
+                        read -p "Disable nginx from starting on boot? (y/n): " DISABLE_NGINX
+                        if [ "$DISABLE_NGINX" = "y" ] || [ "$DISABLE_NGINX" = "Y" ]; then
+                            systemctl disable nginx 2>/dev/null || true
+                            echo -e "${GREEN}nginx disabled from automatic startup${NC}"
+                        fi
+                        return 0
+                    else
+                        echo "Setup cancelled."
+                        return 1
+                    fi
                 else
                     echo -e "${YELLOW}Warning: Nginx process exists but service state is: $nginx_service_state${NC}"
                     echo "This suggests a stale nginx process. Attempting to clean up..."
@@ -97,17 +130,97 @@ check_port_80() {
             else
                 # Not nginx - could be Apache, another web server, or something else
                 echo ""
-                echo -e "${RED}Error: Port 80 is in use by a non-nginx process${NC}"
+                echo -e "${YELLOW}Port 80 is in use by a non-nginx process${NC}"
                 echo ""
-                echo "To fix this, you need to:"
-                echo "  1. Stop the process using port 80:"
-                echo "     sudo systemctl stop $process_name  (if it's a service)"
-                echo "     or"
-                echo "     sudo kill $port_80_process  (to stop the specific process)"
-                echo ""
-                echo "  2. Or, configure that service to use a different port"
-                echo "  3. Then run this script again"
-                return 1
+                
+                # Check if it's a known service that we can offer to stop automatically
+                local is_systemd_service=false
+                local service_name=""
+                
+                # Common web servers that might be running as services (excluding nginx, handled above)
+                for svc in apache2 httpd lighttpd; do
+                    if systemctl is-active --quiet "$svc" 2>/dev/null; then
+                        is_systemd_service=true
+                        service_name="$svc"
+                        break
+                    fi
+                done
+                
+                if [ "$is_systemd_service" = true ] && [ -n "$service_name" ]; then
+                    echo "Detected $service_name service is running on port 80."
+                    
+                    # Provide context about what might be affected
+                    case "$service_name" in
+                        apache2|httpd)
+                            echo "This may be serving EspoCRM or other web applications."
+                            ;;
+                    esac
+                    
+                    echo ""
+                    echo "Would you like to automatically stop $service_name to free port 80?"
+                    echo -e "${YELLOW}Warning: This will stop the $service_name service and may affect related services.${NC}"
+                    
+                    # Additional warnings for specific services
+                    if [ "$service_name" = "apache2" ] || [ "$service_name" = "httpd" ]; then
+                        echo -e "${YELLOW}Note: This may affect EspoCRM or other web applications using Apache.${NC}"
+                    fi
+                    
+                    echo "You can restart it later if needed with: sudo systemctl start $service_name"
+                    echo ""
+                    read -p "Stop $service_name now? (y/n): " STOP_SERVICE
+                    
+                    if [ "$STOP_SERVICE" = "y" ] || [ "$STOP_SERVICE" = "Y" ]; then
+                        echo "Stopping $service_name..."
+                        # Note: systemctl commands don't need sudo as script requires root (checked at script start)
+                        if systemctl stop "$service_name"; then
+                            echo -e "${GREEN}Successfully stopped $service_name${NC}"
+                            
+                            # Optionally disable the service from starting on boot
+                            echo ""
+                            read -p "Disable $service_name from starting on boot? (y/n): " DISABLE_SERVICE
+                            if [ "$DISABLE_SERVICE" = "y" ] || [ "$DISABLE_SERVICE" = "Y" ]; then
+                                systemctl disable "$service_name" 2>/dev/null || true
+                                echo -e "${GREEN}$service_name disabled from automatic startup${NC}"
+                            fi
+                            
+                            # Verify port 80 is now free
+                            sleep 2
+                            if is_port_80_in_use; then
+                                echo -e "${RED}Error: Port 80 is still in use after stopping $service_name${NC}"
+                                echo "Please check what else might be using port 80"
+                                return 1
+                            fi
+                            
+                            echo -e "${GREEN}Port 80 is now available${NC}"
+                            return 0
+                        else
+                            echo -e "${RED}Failed to stop $service_name${NC}"
+                            return 1
+                        fi
+                    else
+                        echo ""
+                        echo "Setup cancelled. To fix this manually, you need to:"
+                        echo "  1. Stop the process using port 80:"
+                        echo "     sudo systemctl stop $service_name"
+                        echo ""
+                        echo "  2. Or, configure that service to use a different port"
+                        echo "  3. Then run this script again"
+                        return 1
+                    fi
+                else
+                    # Unknown service or not a systemd service
+                    echo -e "${RED}Error: Port 80 is in use by a non-nginx process${NC}"
+                    echo ""
+                    echo "To fix this, you need to:"
+                    echo "  1. Stop the process using port 80:"
+                    echo "     sudo systemctl stop $process_name  (if it's a service)"
+                    echo "     or"
+                    echo "     sudo kill $port_80_process  (to stop the specific process)"
+                    echo ""
+                    echo "  2. Or, configure that service to use a different port"
+                    echo "  3. Then run this script again"
+                    return 1
+                fi
             fi
         else
             echo -e "${YELLOW}Could not identify the process using port 80${NC}"
