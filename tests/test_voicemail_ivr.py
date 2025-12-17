@@ -9,6 +9,7 @@ import time
 import importlib
 import io
 import logging
+import tempfile
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -16,6 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from pbx.features.voicemail import VoicemailBox, VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
 from pbx.utils.config import Config
+from pbx.utils.database import DatabaseBackend, ExtensionDB
 
 
 # Helper function for DEBUG_VM_PIN tests to manage environment and module reloading
@@ -592,9 +594,6 @@ def test_voicemail_pin_from_database():
     """Test that voicemail PIN is loaded from database and verified correctly"""
     print("Testing voicemail PIN from database...")
     
-    import tempfile
-    from pbx.utils.database import DatabaseBackend, ExtensionDB
-    
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
     temp_db.close()
@@ -664,9 +663,13 @@ def test_voicemail_pin_from_database():
         print("✓ Voicemail PIN from database works correctly")
         
     finally:
-        # Cleanup
-        if os.path.exists(temp_db.name):
-            os.unlink(temp_db.name)
+        # Cleanup - use try-except to handle potential issues
+        try:
+            if os.path.exists(temp_db.name):
+                os.unlink(temp_db.name)
+        except (OSError, PermissionError) as e:
+            # Log but don't fail the test on cleanup errors
+            print(f"Warning: Could not clean up temporary database: {e}")
 
 
 def run_all_tests():
