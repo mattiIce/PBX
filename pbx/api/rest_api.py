@@ -723,7 +723,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip('/')
 
         try:
-            if path == '' or path == '/':
+            if path == '':
                 self._handle_root()
             elif path == '/api/status':
                 self._handle_status()
