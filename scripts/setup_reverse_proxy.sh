@@ -13,6 +13,99 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Function to check if port 80 is available and handle conflicts
+check_port_80() {
+    echo "Checking port 80 availability..."
+    
+    # Check if something is listening on port 80
+    if netstat -tuln 2>/dev/null | grep -q ':80 ' || ss -tuln 2>/dev/null | grep -q ':80 '; then
+        echo -e "${YELLOW}Port 80 is already in use${NC}"
+        
+        # Try to identify what's using port 80
+        local port_80_process=""
+        if command -v lsof &> /dev/null; then
+            port_80_process=$(lsof -ti:80 2>/dev/null | head -1)
+        elif command -v ss &> /dev/null; then
+            port_80_process=$(ss -tlnp 2>/dev/null | grep ':80 ' | grep -oP 'pid=\K[0-9]+' | head -1)
+        fi
+        
+        if [ -n "$port_80_process" ]; then
+            local process_name=$(ps -p "$port_80_process" -o comm= 2>/dev/null || echo "unknown")
+            local process_cmdline=$(ps -p "$port_80_process" -o args= 2>/dev/null || echo "unknown")
+            
+            echo "Process using port 80:"
+            echo "  PID: $port_80_process"
+            echo "  Name: $process_name"
+            echo "  Command: $process_cmdline"
+            
+            # Check if it's an nginx process
+            if [[ "$process_name" == *"nginx"* ]]; then
+                echo ""
+                echo -e "${YELLOW}An nginx process is already running on port 80${NC}"
+                
+                # Check if nginx service thinks it's running
+                local nginx_service_state=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
+                
+                if [ "$nginx_service_state" = "active" ]; then
+                    echo "Nginx service is active and healthy."
+                    echo "This is normal - nginx will reload the new configuration."
+                    return 0
+                else
+                    echo -e "${YELLOW}Warning: Nginx process exists but service state is: $nginx_service_state${NC}"
+                    echo "This suggests a stale nginx process. Attempting to clean up..."
+                    
+                    # Try to stop all nginx processes
+                    echo "Stopping stale nginx processes..."
+                    systemctl stop nginx 2>/dev/null || true
+                    
+                    # Wait a moment for processes to stop
+                    sleep 2
+                    
+                    # If nginx processes still exist, force kill them
+                    if pgrep nginx >/dev/null 2>&1; then
+                        echo "Force killing remaining nginx processes..."
+                        pkill -9 nginx 2>/dev/null || true
+                        sleep 1
+                    fi
+                    
+                    # Verify port 80 is now free
+                    if netstat -tuln 2>/dev/null | grep -q ':80 ' || ss -tuln 2>/dev/null | grep -q ':80 '; then
+                        echo -e "${RED}Error: Unable to free port 80 even after stopping nginx${NC}"
+                        echo "Please manually investigate and stop the process using port 80"
+                        return 1
+                    fi
+                    
+                    echo -e "${GREEN}Successfully cleaned up stale nginx processes${NC}"
+                    return 0
+                fi
+            else
+                # Not nginx - could be Apache, another web server, or something else
+                echo ""
+                echo -e "${RED}Error: Port 80 is in use by a non-nginx process${NC}"
+                echo ""
+                echo "To fix this, you need to:"
+                echo "  1. Stop the process using port 80:"
+                echo "     sudo systemctl stop $process_name  (if it's a service)"
+                echo "     or"
+                echo "     sudo kill $port_80_process  (to stop the specific process)"
+                echo ""
+                echo "  2. Or, configure that service to use a different port"
+                echo "  3. Then run this script again"
+                return 1
+            fi
+        else
+            echo -e "${YELLOW}Could not identify the process using port 80${NC}"
+            echo "Please manually check what's using port 80:"
+            echo "  sudo lsof -i :80"
+            echo "  sudo ss -tlnp | grep :80"
+            return 1
+        fi
+    else
+        echo "Port 80 is available"
+        return 0
+    fi
+}
+
 # Function to manage nginx service (start/reload)
 manage_nginx_service() {
     local action_description="${1:-Starting/reloading}"
@@ -36,6 +129,31 @@ manage_nginx_service() {
     else
         # Nginx is not active (could be inactive, failed, or not loaded)
         echo "Nginx is not active (state: $NGINX_STATE), starting service..."
+        
+        # Check if there are any stale nginx processes running
+        if pgrep nginx >/dev/null 2>&1; then
+            echo -e "${YELLOW}Warning: Found nginx processes running but service state is $NGINX_STATE${NC}"
+            echo "Cleaning up stale nginx processes..."
+            
+            # Try graceful stop first
+            systemctl stop nginx 2>/dev/null || true
+            sleep 2
+            
+            # If processes still exist, force kill them
+            if pgrep nginx >/dev/null 2>&1; then
+                echo "Nginx processes still running, force terminating..."
+                pkill -9 nginx 2>/dev/null || true
+                sleep 1
+            fi
+            
+            # Verify processes are gone
+            if pgrep nginx >/dev/null 2>&1; then
+                echo -e "${RED}Error: Unable to stop nginx processes${NC}"
+                echo "Please manually kill nginx processes and try again"
+                return 1
+            fi
+            echo -e "${GREEN}Stale nginx processes cleaned up${NC}"
+        fi
         
         # If nginx is in a failed state, reset it first
         if systemctl is-failed --quiet nginx; then
@@ -124,6 +242,9 @@ if ! command -v certbot &> /dev/null; then
 else
     echo "certbot is already installed"
 fi
+
+# Check if port 80 is available and handle conflicts
+check_port_80 || exit 1
 
 # Create nginx configuration
 echo "Creating nginx configuration for $DOMAIN_NAME..."
