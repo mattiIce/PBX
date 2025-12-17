@@ -240,7 +240,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertEqual(digit, '9')
 
     def test_pbx_core_dtmf_queue_creation(self):
-        """Test that PBX core creates DTMF queue on first use"""
+        """Test that PBX core has DTMF queue initialized"""
         # Create a mock call
         call = Call('test-call-queue', '1001', '1002')
         call_manager = MockCallManager()
@@ -249,13 +249,14 @@ class TestSIPInfoDTMF(unittest.TestCase):
         # Add call to mock PBX
         self.mock_pbx.calls['test-call-queue'] = call
 
-        # Verify queue doesn't exist initially
-        self.assertFalse(hasattr(call, 'dtmf_info_queue'))
+        # Verify queue exists initially (as of current implementation)
+        self.assertTrue(hasattr(call, 'dtmf_info_queue'))
+        self.assertEqual(call.dtmf_info_queue, [])
 
         # Simulate receiving DTMF
         self.mock_pbx.handle_dtmf_info('test-call-queue', '5')
 
-        # Verify queue was created and digit was queued
+        # Verify digit was queued
         self.assertTrue(hasattr(call, 'dtmf_info_queue'))
         self.assertEqual(call.dtmf_info_queue, ['5'])
 

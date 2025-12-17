@@ -304,11 +304,11 @@ class SessionBorderController:
                 
                 # Default to port-restricted for most home/office NATs
                 return NATType.PORT_RESTRICTED
-            except:
+            except (OSError, socket.error) as e:
                 sock.close()
                 # Symmetric NAT is most restrictive
                 return NATType.SYMMETRIC
-        except:
+        except (OSError, socket.error) as e:
             # If we can't determine, assume port-restricted (most common)
             return NATType.PORT_RESTRICTED
     
@@ -326,7 +326,7 @@ class SessionBorderController:
             if octets[0] == 192 and octets[1] == 168:
                 return True
             return False
-        except:
+        except (ValueError, IndexError):
             return False
     
     def allocate_relay(self, call_id: str, codec: str) -> Dict:
