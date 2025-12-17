@@ -509,8 +509,8 @@ def test_debug_pin_logging_emitted_when_enabled():
         handler = logging.StreamHandler(log_capture)
         handler.setLevel(logging.DEBUG)  # Capture all log levels
         
-        # We need to get the logger before creating the IVR to capture init warnings
-        temp_logger = logging.getLogger('PBX')
+        # We need to get the VM_IVR logger to capture init warnings
+        temp_logger = logging.getLogger('PBX.VM_IVR')
         temp_logger.addHandler(handler)
         
         ivr = voicemail.VoicemailIVR(vm_system, '1001')

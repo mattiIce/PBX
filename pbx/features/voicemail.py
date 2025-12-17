@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 from pbx.utils.config import Config
-from pbx.utils.logger import get_logger
+from pbx.utils.logger import get_logger, get_vm_ivr_logger
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -762,7 +762,7 @@ class VoicemailIVR:
         self.voicemail_system = voicemail_system
         self.extension_number = extension_number
         self.mailbox = voicemail_system.get_mailbox(extension_number)
-        self.logger = get_logger()
+        self.logger = get_vm_ivr_logger()  # Use dedicated VM IVR logger
 
         # IVR state
         self.state = self.STATE_WELCOME
