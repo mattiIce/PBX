@@ -807,6 +807,13 @@ class VoicemailIVR:
         """Handle welcome state"""
         # Transition to PIN entry automatically
         self.state = self.STATE_PIN_ENTRY
+        
+        # If the digit is a valid PIN digit (0-9), process it immediately
+        # to avoid losing the first digit
+        if digit in '0123456789':
+            return self._handle_pin_entry(digit)
+        
+        # Otherwise, just prompt for PIN entry (handles initialization with '*' or other non-digit)
         return {
             'action': 'play_prompt',
             'prompt': 'enter_pin',
