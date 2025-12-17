@@ -39,15 +39,32 @@ This PBX system is being developed for an **automotive manufacturing plant**. As
 
 ### Overall Status
 - **Total Features Tracked**: 64 features (removed 7 non-applicable: HIPAA, TCPA, Video Conferencing, Screen Sharing, 4K Video Support, Team Messaging, File Sharing)
-- **Completed** ✅: 55 features (86%)
-- **Planned**: 9 features (14%)
+- **Completed** ✅: 56 features (87.5%)
+- **Framework Implemented** ⚠️: 8 features (12.5%)
+- **Planned**: 0 features (0%)
 
-**Note**: Total = Completed + Planned.
+**Note**: All planned features now have either complete implementations or framework implementations ready for external service integration.
+
+### Framework Features (Ready for Enhancement)
+The following 8 features have complete backend frameworks and are ready for external service/library integration:
+1. Mobile Apps (iOS/Android) - Native app development required
+2. Mobile Number Portability - Mobile SIP client integration required
+3. Call Recording Analytics - AI service integration required
+4. Predictive Voicemail Drop - AMD engine integration required
+5. DNS SRV Failover - Production DNS SRV records required
+6. Session Border Controller (SBC) - STUN/TURN servers required
+7. Data Residency Controls - Multi-region storage backend required
+8. H.264/H.265 Video - PyAV/FFmpeg integration required
 
 ### Recently Completed (December 2025)
-1. **Conversational AI Assistant** (Dec 16) - Full database integration with intent detection and conversation tracking
-2. **Voice Biometrics** (Dec 16) - Full database integration with speaker verification and fraud detection
-3. **Call Quality Prediction** (Dec 16) - Full database integration with ML-based quality prediction and alerting
+1. **Speech-to-Text Transcription** (Dec 17) - Marked as completed (was already implemented in voicemail_transcription.py)
+2. **Framework Implementations** (Dec 17) - 8 features marked as framework-ready:
+   - Mobile Apps, Mobile Number Portability, Call Recording Analytics
+   - Predictive Voicemail Drop, DNS SRV Failover, Session Border Controller
+   - Data Residency Controls, H.264/H.265 Video
+3. **Conversational AI Assistant** (Dec 16) - Full database integration with intent detection and conversation tracking
+4. **Voice Biometrics** (Dec 16) - Full database integration with speaker verification and fraud detection
+5. **Call Quality Prediction** (Dec 16) - Full database integration with ML-based quality prediction and alerting
 4. **Predictive Dialing** (Dec 16) - Full database integration with campaign management and compliance
 5. **Business Intelligence Integration** (Dec 16) - Full BI tool export with admin UI
 6. **Call Tagging & Categorization** (Dec 16) - AI-powered call classification framework
@@ -99,9 +116,16 @@ Features with foundational implementations that can be extended:
 - **Conversational AI** (🔧 enhanced admin UI - configuration, live statistics, needs AI service integration)
 - **BI Integration** (🔧 enhanced admin UI - dataset browser, export functionality, needs BI tool credentials)
 - **Call Tagging** (🔧 enhanced admin UI - tag/rule management, analytics, needs AI classifier)
-- **Mobile Apps** (🔧 enhanced admin UI - device management, statistics, needs native app development)
+- **Mobile Apps** (⚠️ framework ready - device management, push notifications, needs native app development)
 - **Predictive Dialing** (🔧 enhanced admin UI - campaign management, statistics, needs dialer engine)
 - **Voice Biometrics** (🔧 enhanced admin UI - profile enrollment, verification tracking, needs biometric engine)
+- **Mobile Number Portability** (⚠️ framework ready - number mapping, simultaneous ring, needs mobile SIP client)
+- **Call Recording Analytics** (⚠️ framework ready - sentiment analysis, keyword detection, needs AI service)
+- **Predictive Voicemail Drop** (⚠️ framework ready - AMD framework, message drop, needs AMD engine)
+- **DNS SRV Failover** (⚠️ framework ready - SRV lookup, health monitoring, needs production DNS SRV records)
+- **Session Border Controller** (⚠️ framework ready - topology hiding, NAT traversal, needs STUN/TURN servers)
+- **Data Residency Controls** (⚠️ framework ready - region controls, compliance, needs multi-region storage)
+- **H.264/H.265 Video** (⚠️ framework ready - codec framework, encoding/decoding, needs PyAV/FFmpeg)
 
 ### High-Priority Next Steps
 1. **Mobile Apps** - Critical for modern workforce
@@ -231,8 +255,13 @@ Features with foundational implementations that can be extended:
   - Production Ready: Framework ready for spandsp/bcg729/libg722 integration
   - Impact: Significantly clearer voice calls with wideband audio
 
-- [ ] **H.264/H.265 Video** - Video codec support
-  - Requires: Video codec libraries
+- [⚠️] **H.264/H.265 Video** - Video codec support
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/video_codec.py
+  - Features: H.264/H.265 encoder/decoder framework, multiple profiles
+  - Codec Support: H.264 (baseline/main/high), H.265/HEVC
+  - Resolutions: SD (640x480), HD (1280x720), Full HD (1920x1080), 4K (3840x2160)
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: PyAV/FFmpeg integration for production video processing
   - Impact: Enable video calling features
 
 ---
@@ -375,9 +404,11 @@ Features with foundational implementations that can be extended:
   - Test Coverage: Code review passed, CodeQL security scan passed
   - Impact: Advanced reporting and analytics with multiple BI tool support
 
-- [ ] **Speech-to-Text Transcription** - Automatic call transcription
-  - Note: Already implemented in voicemail_transcription.py
-  - Status: ✅ Feature exists, marked as planned in error
+- [x] **Speech-to-Text Transcription** - Automatic call transcription
+  - Status: ✅ COMPLETED - Full implementation in pbx/features/voicemail_transcription.py
+  - Features: Vosk offline transcription and Google Cloud Speech-to-Text support
+  - Integration: Voicemail transcription with confidence scores
+  - Test Coverage: tests/test_voicemail_transcription.py (100% passing)
   - Impact: Searchable call archives, compliance
 
 - [x] **Call Tagging & Categorization** - AI-powered call classification
@@ -438,8 +469,14 @@ should remain disabled.
 
 ### Priority: HIGH (Modern Workforce)
 
-- [ ] **Mobile Apps (iOS/Android)** - Full-featured mobile clients
-  - Requires: Native mobile app development, push notifications
+- [⚠️] **Mobile Apps (iOS/Android)** - Full-featured mobile clients
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/mobile_apps.py
+  - Features: Device registration, push notifications (FCM/APNs), SIP registration
+  - Platforms: iOS (Swift/SwiftUI with PushKit, CallKit), Android (Kotlin with FCM)
+  - Backend Ready: REST APIs for device management and push notifications
+  - Database: Device tracking, user mappings, activity monitoring
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: Native mobile app development (iOS/Android)
   - Note: WebRTC browser calling works on mobile browsers as interim solution
   - Impact: Mobile workforce support
 
@@ -485,8 +522,14 @@ should remain disabled.
   - Documentation: VOICEMAIL_TRANSCRIPTION_GUIDE.md
   - Impact: Quick voicemail review with speech-to-text conversion
 
-- [ ] **Mobile Number Portability** - Use business number on mobile
-  - Requires: Mobile client, SIP registration
+- [⚠️] **Mobile Number Portability** - Use business number on mobile
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/mobile_number_portability.py
+  - Features: Number mapping, simultaneous ring, mobile-first routing
+  - Configuration: Per-extension mobile device mapping
+  - Routing: Simultaneous ring or mobile-first modes
+  - Integration: Works with mobile apps framework and SIP registration
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: Mobile SIP client integration
   - Impact: BYOD support
 
 ---
@@ -502,8 +545,14 @@ should remain disabled.
   - Permissions: Role-based supervisor access control
   - Impact: Enhanced training, quality assurance, and supervisor support
   
-- [ ] **Call Recording Analytics** - AI analysis of recorded calls
-  - Requires: ML analysis pipeline
+- [⚠️] **Call Recording Analytics** - AI analysis of recorded calls
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/call_recording_analytics.py
+  - Features: Sentiment analysis, keyword detection, topic extraction, call summarization
+  - Analysis Types: Sentiment scoring, keyword frequency, topic modeling, extractive summaries
+  - Database: Analysis results storage with timestamps and confidence scores
+  - Integration: Works with call_recording.py for automatic analysis
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: AI service integration (OpenAI, Google NL, AWS Transcribe)
   - Impact: Quality insights
 
 - [x] **Skills-Based Routing** - Route to agents with specific expertise
@@ -532,8 +581,15 @@ should remain disabled.
   - Test Coverage: Code review passed, CodeQL security scan passed
   - Impact: Improved agent utilization and efficiency with intelligent call distribution
 
-- [ ] **Predictive Voicemail Drop** - Auto-leave message on voicemail detection
-  - Requires: Answering machine detection
+- [⚠️] **Predictive Voicemail Drop** - Auto-leave message on voicemail detection
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/predictive_voicemail_drop.py
+  - Features: Answering machine detection, pre-recorded message drop, detection timeout
+  - Detection: Confidence threshold (default 0.85), max detection time (5s)
+  - Message Management: Upload and manage pre-recorded voicemail messages
+  - Campaign Integration: Works with predictive dialing campaigns
+  - Statistics: Drop success rate, detection accuracy tracking
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: AMD engine integration (Twilio, Plivo, custom ML model)
   - Impact: Outbound campaign efficiency
 
 ---
@@ -572,12 +628,26 @@ should remain disabled.
   - Test Coverage: Code review passed, CodeQL security scan passed
   - Impact: Multi-region disaster recovery with automatic and manual failover capabilities
 
-- [ ] **DNS SRV Failover** - Automatic server failover
-  - Requires: DNS SRV record support
+- [⚠️] **DNS SRV Failover** - Automatic server failover
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/dns_srv_failover.py
+  - Features: DNS SRV record lookup, priority-based selection, automatic failover
+  - SRV Support: Priority and weight-based server selection per RFC 2782
+  - Health Monitoring: Periodic health checks, failure detection, automatic recovery
+  - Failover: Automatic switch to backup servers on failure
+  - Configuration: Per-domain SRV configuration with health check intervals
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: Production DNS SRV records for SIP trunks
   - Impact: Automatic failover
 
-- [ ] **Session Border Controller (SBC)** - Enhanced security and NAT traversal
-  - Requires: SBC functionality implementation
+- [⚠️] **Session Border Controller (SBC)** - Enhanced security and NAT traversal
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/session_border_controller.py
+  - Features: Topology hiding, media relay, NAT traversal (STUN/TURN), security controls
+  - Security: SIP message validation, topology hiding, rate limiting, threat detection
+  - NAT: STUN and TURN support for NAT traversal
+  - Media: RTP media relay and transcoding capabilities
+  - Call Admission Control: Concurrent call limits, bandwidth management
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: Production deployment with STUN/TURN servers
   - Impact: Enterprise-grade security
 
 - [x] **Least-Cost Routing** - Automatic carrier selection for cost savings
@@ -734,8 +804,16 @@ should remain disabled.
   - Audio: Pre-recorded WAV files or text-to-speech
   - Impact: Legal compliance with recording disclosure laws
 
-- [ ] **Data Residency Controls** - Geographic data storage options
-  - Requires: Multi-region storage management
+- [⚠️] **Data Residency Controls** - Geographic data storage options
+  - Status: ⚠️ FRAMEWORK IMPLEMENTED - pbx/features/data_residency_controls.py
+  - Features: Region-based data storage, compliance controls, data classification
+  - Regions: Multi-region support with data sovereignty controls
+  - Data Types: Call recordings, voicemails, CDRs, user data, configuration
+  - Compliance: GDPR, data sovereignty, retention policies
+  - Storage: Configurable per-region storage backends
+  - Audit: Data access logging and compliance reporting
+  - Test Coverage: tests/test_planned_feature_frameworks.py
+  - Ready for: Multi-region storage backend integration
   - Impact: GDPR compliance
 
 **Note**: TCPA (telemarketing) compliance features have been removed as this system is for an automotive manufacturing plant with no outbound telemarketing operations.
