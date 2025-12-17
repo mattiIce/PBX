@@ -400,6 +400,15 @@ class PBXCore:
         else:
             self.threat_detector = None
 
+        # Initialize security runtime monitor (always enabled for FIPS compliance)
+        # Note: webhook_system is initialized earlier, so it's always available
+        from pbx.utils.security_monitor import get_security_monitor
+        self.security_monitor = get_security_monitor(
+            config=self.config,
+            webhook_system=self.webhook_system
+        )
+        self.logger.info("Security runtime monitor initialized")
+
         # Initialize DND scheduler if enabled
         if self.config.get('features.dnd_scheduling.enabled', False):
             from pbx.features.dnd_scheduling import get_dnd_scheduler
@@ -586,6 +595,14 @@ class PBXCore:
         """Start PBX system"""
         self.logger.info("Starting PBX system...")
 
+        # Enforce security requirements before starting
+        if hasattr(self, 'security_monitor'):
+            self.logger.info("Enforcing security requirements...")
+            if not self.security_monitor.enforce_security_requirements():
+                self.logger.error("CRITICAL: Security enforcement failed - system cannot start")
+                return False
+            self.logger.info("✓ Security requirements verified")
+
         # Start SIP server
         if not self.sip_server.start():
             self.logger.error("Failed to start SIP server")
@@ -602,6 +619,11 @@ class PBXCore:
         # Register SIP trunks
         self.trunk_system.register_all()
 
+        # Start security runtime monitor
+        if hasattr(self, 'security_monitor'):
+            self.security_monitor.start()
+            self.logger.info("Security runtime monitoring active")
+
         self.running = True
         self.logger.info("PBX system started successfully")
         return True
@@ -610,6 +632,10 @@ class PBXCore:
         """Stop PBX system"""
         self.logger.info("Stopping PBX system...")
         self.running = False
+
+        # Stop security monitor
+        if hasattr(self, 'security_monitor'):
+            self.security_monitor.stop()
 
         # Stop DND scheduler
         if self.dnd_scheduler:

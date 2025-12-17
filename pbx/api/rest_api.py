@@ -846,6 +846,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_mfa_methods(path)
             elif path == '/api/security/threat-summary':
                 self._handle_get_threat_summary()
+            elif path == '/api/security/compliance-status':
+                self._handle_get_security_compliance_status()
+            elif path == '/api/security/health':
+                self._handle_get_security_health()
             elif path.startswith('/api/security/check-ip/'):
                 self._handle_check_ip(path)
             elif path.startswith('/api/dnd/status/'):
@@ -4633,6 +4637,31 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'is_blocked': is_blocked,
                 'reason': reason
             })
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_security_compliance_status(self):
+        """Get FIPS and security compliance status"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'security_monitor'):
+            self._send_json({'error': 'Security monitor not available'}, 500)
+            return
+
+        try:
+            status = self.pbx_core.security_monitor.get_compliance_status()
+            self._send_json(status)
+        except Exception as e:
+            self._send_json({'error': str(e)}, 500)
+
+    def _handle_get_security_health(self):
+        """Get comprehensive security health check"""
+        if not self.pbx_core or not hasattr(self.pbx_core, 'security_monitor'):
+            self._send_json({'error': 'Security monitor not available'}, 500)
+            return
+
+        try:
+            # Perform security check
+            results = self.pbx_core.security_monitor.perform_security_check()
+            self._send_json(results)
         except Exception as e:
             self._send_json({'error': str(e)}, 500)
 
