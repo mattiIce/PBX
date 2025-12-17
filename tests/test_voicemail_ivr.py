@@ -588,6 +588,87 @@ def test_debug_pin_module_level_caching():
         restore_debug_vm_pin_env(original_value)
 
 
+def test_voicemail_pin_from_database():
+    """Test that voicemail PIN is loaded from database and verified correctly"""
+    print("Testing voicemail PIN from database...")
+    
+    import tempfile
+    from pbx.utils.database import DatabaseBackend, ExtensionDB
+    
+    # Create temporary database for testing
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db.close()
+    
+    try:
+        # Create test config with SQLite
+        config = Config('config.yml')
+        config.config['database'] = {
+            'type': 'sqlite',
+            'path': temp_db.name
+        }
+        
+        # Initialize database
+        db = DatabaseBackend(config)
+        assert db.connect() is True
+        assert db.create_tables() is True
+        
+        # Add extension with voicemail PIN to database
+        ext_db = ExtensionDB(db)
+        ext_db.add(
+            number='1537',
+            name='Test User',
+            password_hash='test_hash',
+            email='test@example.com',
+            voicemail_pin='4655'  # This will be hashed
+        )
+        
+        # Create voicemail system with database
+        vm_system = VoicemailSystem(
+            storage_path='test_voicemail',
+            config=config,
+            database=db
+        )
+        
+        # Get mailbox - should load PIN from database
+        mailbox = vm_system.get_mailbox('1537')
+        
+        # Verify PIN hash and salt were loaded
+        assert mailbox.pin_hash is not None, "PIN hash should be loaded from database"
+        assert mailbox.pin_salt is not None, "PIN salt should be loaded from database"
+        assert mailbox.pin is None, "Plaintext PIN should not be set when using database"
+        
+        # Verify correct PIN
+        assert mailbox.verify_pin('4655') is True, "Correct PIN should verify successfully"
+        
+        # Verify incorrect PIN
+        assert mailbox.verify_pin('0000') is False, "Incorrect PIN should fail verification"
+        assert mailbox.verify_pin('') is False, "Empty PIN should fail verification"
+        
+        # Test with IVR
+        ivr = VoicemailIVR(vm_system, '1537')
+        ivr.state = VoicemailIVR.STATE_PIN_ENTRY
+        
+        # Enter correct PIN
+        ivr.handle_dtmf('4')
+        ivr.handle_dtmf('6')
+        ivr.handle_dtmf('5')
+        ivr.handle_dtmf('5')
+        result = ivr.handle_dtmf('#')
+        
+        # Should accept PIN and transition to main menu
+        assert result['action'] == 'play_prompt', f"Expected play_prompt, got {result['action']}"
+        assert result['prompt'] == 'main_menu', f"Expected main_menu, got {result['prompt']}"
+        assert ivr.state == VoicemailIVR.STATE_MAIN_MENU
+        
+        db.disconnect()
+        print("✓ Voicemail PIN from database works correctly")
+        
+    finally:
+        # Cleanup
+        if os.path.exists(temp_db.name):
+            os.unlink(temp_db.name)
+
+
 def run_all_tests():
     """Run all tests in this module"""
     print("=" * 60)
@@ -607,6 +688,7 @@ def run_all_tests():
         test_voicemail_ivr_delete_message,
         test_voicemail_ivr_no_messages,
         test_voicemail_ivr_exit,
+        test_voicemail_pin_from_database,  # New test for database PIN verification
         # DEBUG_VM_PIN tests
         test_debug_pin_flag_disabled_by_default,
         test_debug_pin_flag_enabled_when_set,

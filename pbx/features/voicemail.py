@@ -58,16 +58,39 @@ class VoicemailBox:
         self.email_notifier = email_notifier
         self.database = database
         self.transcription_service = transcription_service
-        self.pin = None  # Voicemail PIN
+        self.pin = None  # Voicemail PIN (plaintext, for config file PINs)
+        self.pin_hash = None  # Voicemail PIN hash (for database PINs)
+        self.pin_salt = None  # Voicemail PIN salt (for database PINs)
         self.greeting_path = os.path.join(
             self.storage_path,
             GREETING_FILENAME)  # Custom greeting file
 
-        # Load PIN from extension config if available
-        if config:
+        # Load PIN from database first (if available), then fall back to config
+        pin_loaded = False
+        if database and database.enabled:
+            try:
+                from pbx.utils.database import ExtensionDB
+                ext_db = ExtensionDB(database)
+                db_extension = ext_db.get(extension_number)
+                if db_extension:
+                    self.pin_hash = db_extension.get('voicemail_pin_hash')
+                    self.pin_salt = db_extension.get('voicemail_pin_salt')
+                    if self.pin_hash and self.pin_salt:
+                        pin_loaded = True
+                        self.logger.debug(
+                            f"Loaded voicemail PIN hash from database for extension {extension_number}")
+            except Exception as e:
+                self.logger.error(
+                    f"Error loading voicemail PIN from database for extension {extension_number}: {e}")
+        
+        # Fall back to config file if PIN not loaded from database
+        if not pin_loaded and config:
             ext_config = config.get_extension(extension_number)
             if ext_config:
                 self.pin = ext_config.get('voicemail_pin')
+                if self.pin:
+                    self.logger.debug(
+                        f"Loaded voicemail PIN from config file for extension {extension_number}")
 
         # Create storage directory
         os.makedirs(self.storage_path, exist_ok=True)
@@ -552,7 +575,23 @@ class VoicemailBox:
         Returns:
             True if PIN is correct
         """
-        return self.pin and str(pin) == str(self.pin)
+        # First try hashed PIN from database (if available)
+        if self.pin_hash and self.pin_salt:
+            try:
+                from pbx.utils.encryption import get_encryption
+                enc = get_encryption()
+                return enc.verify_password(str(pin), self.pin_hash, self.pin_salt)
+            except Exception as e:
+                self.logger.error(
+                    f"Error verifying voicemail PIN hash for extension {self.extension_number}: {e}")
+                return False
+        
+        # Fall back to plaintext PIN from config (for backward compatibility)
+        if self.pin:
+            return str(pin) == str(self.pin)
+        
+        # No PIN configured
+        return False
 
     def has_custom_greeting(self):
         """
