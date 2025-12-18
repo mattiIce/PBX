@@ -220,8 +220,14 @@ class FindMeFollowMe:
             'updated_at': datetime.now()
         }
         
-        # Save to database
-        self._save_to_database(extension)
+        # Save to database if one is configured
+        if self.database and self.database.enabled:
+            save_result = self._save_to_database(extension)
+            if not save_result:
+                # Remove from memory if database save failed
+                del self.user_configs[extension]
+                self.logger.error(f"Failed to save FMFM config to database for {extension}")
+                return False
         
         self.logger.info(f"Set FMFM config for {extension}: {config['mode']} mode with {len(config['destinations'])} destinations")
         return True
