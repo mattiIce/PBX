@@ -9792,7 +9792,7 @@ class PBXAPIServer:
             if self.server:
                 try:
                     self.server.server_close()
-                except Exception as cleanup_error:
+                except (OSError, socket.error) as cleanup_error:
                     self.logger.debug(f"Error during cleanup: {cleanup_error}")
                 finally:
                     self.server = None
