@@ -9809,9 +9809,6 @@ class PBXAPIServer:
                             self.logger.debug(f"Error during server cleanup: {cleanup_error}")
                         self.server = None
                     
-                    # Clear thread reference
-                    self.server_thread = None
-                    
                     if attempt < max_retries - 1:
                         self.logger.warning(
                             f"Port {self.port} is in use, retrying in {retry_delay}s "
@@ -9836,12 +9833,10 @@ class PBXAPIServer:
                         return False
                 else:
                     # Other OSError, not address in use
-                    self.server_thread = None
                     self.logger.exception(f"Failed to start API server: {e}")
                     return False
                     
             except Exception as e:
-                self.server_thread = None
                 self.logger.exception(f"Failed to start API server: {e}")
                 return False
         
