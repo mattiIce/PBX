@@ -121,6 +121,38 @@ class TestFMFMSaveFailure(unittest.TestCase):
         loaded_config2 = fmfm2.get_config('1000')
         self.assertIsNotNone(loaded_config2, "Config should persist to database")
         self.assertEqual(loaded_config2['mode'], 'simultaneous')
+    
+    def test_set_config_with_fmfm_disabled_globally(self):
+        """Test that set_config returns False and logs error when FMFM is disabled globally"""
+        config = {
+            'features': {
+                'find_me_follow_me': {
+                    'enabled': False  # Disabled globally
+                }
+            }
+        }
+        
+        # Create FMFM with feature disabled
+        fmfm = FindMeFollowMe(config=config, database=None)
+        
+        fmfm_config = {
+            'mode': 'simultaneous',
+            'destinations': [
+                {'number': '1537', 'ring_time': 10},
+                {'number': '1519', 'ring_time': 10},
+                {'number': '1501', 'ring_time': 10}
+            ],
+            'enabled': True,
+            'no_answer_destination': '1537'
+        }
+        
+        # This should fail because FMFM is disabled globally
+        success = fmfm.set_config('8001', fmfm_config)
+        self.assertFalse(success, "set_config should return False when FMFM is disabled globally")
+        
+        # Config should not be saved
+        loaded_config = fmfm.get_config('8001')
+        self.assertIsNone(loaded_config, "Config should not be saved when FMFM is disabled globally")
 
 
 if __name__ == '__main__':
