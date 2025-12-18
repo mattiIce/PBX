@@ -1,5 +1,7 @@
 # SOC 2 Type 2 Implementation Summary
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#soc-2-type-2-compliance). Please refer to the "SOC 2 Type 2 Compliance" section in the consolidated guide.
+
 ## Overview
 
 This document describes the SOC 2 Type 2 compliance framework implementation in the PBX system. As of this update, the system focuses exclusively on SOC 2 Type 2 compliance, with PCI DSS and GDPR frameworks commented out as they are not required for US-based operations without payment card processing.

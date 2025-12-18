@@ -1,5 +1,7 @@
 # E911 Protection Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#e911-protection). Please refer to the "E911 Protection" section in the consolidated guide.
+
 ## Overview
 
 The PBX system includes a comprehensive E911 (Enhanced 911) protection system that prevents emergency calls from being placed during testing and development scenarios. This is a critical safety feature that ensures 911 calls are never accidentally placed during testing, which could:

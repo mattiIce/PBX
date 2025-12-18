@@ -1,5 +1,7 @@
 # STIR/SHAKEN Caller ID Authentication Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#stirshaken-authentication). Please refer to the "STIR/SHAKEN Authentication" section in the consolidated guide.
+
 ## Overview
 
 STIR/SHAKEN is a framework for authenticating caller ID information in Voice over IP (VoIP) telephone networks. It helps prevent caller ID spoofing by digitally signing call information using cryptographic certificates.
