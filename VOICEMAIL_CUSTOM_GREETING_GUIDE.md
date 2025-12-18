@@ -313,14 +313,212 @@ find voicemail/ -name "greeting.wav" -type f -delete
 - ✅ Fixed IVR session handling for greeting recording
 - ✅ Added temporary storage for greeting review
 
+## Debugging and Logging
+
+### VM IVR Dedicated Logging
+
+The Voicemail IVR system has its own dedicated log file separate from the main PBX logs, making it easier to troubleshoot voicemail-specific issues.
+
+**Log File Location**: `logs/vm_ivr.log`
+
+All voicemail IVR activity is logged to this dedicated file, including:
+- PIN entry and verification
+- IVR state transitions
+- DTMF digit processing
+- Menu navigation
+- Message playback
+- Voicemail actions (delete, save, etc.)
+- Greeting recording and management
+- Debug PIN logging (when DEBUG_VM_PIN=true)
+
+**Benefits**:
+- ✅ Easier troubleshooting - all VM IVR logs in one place
+- ✅ Reduced noise - main PBX log is cleaner
+- ✅ Better analysis - can analyze voicemail patterns separately
+- ✅ Improved debugging - sensitive PIN data stays in dedicated log
+
+**Viewing VM IVR Logs**:
+
+```bash
+# View recent VM IVR activity
+tail -f logs/vm_ivr.log
+
+# View last 50 lines
+tail -50 logs/vm_ivr.log
+
+# Search for specific extension
+grep "extension 1001" logs/vm_ivr.log
+
+# Search for PIN failures
+grep "INVALID" logs/vm_ivr.log
+
+# View greeting-related activity
+grep "greeting" logs/vm_ivr.log
+```
+
+### PIN Debug Logging
+
+For troubleshooting DTMF PIN recognition issues, enable detailed debug logging:
+
+**⚠️ Security Warning**: This feature logs sensitive PIN data and should **ONLY** be used for testing and troubleshooting purposes. **DO NOT enable this in production environments.**
+
+#### Enable Debug Logging
+
+**Method 1: Using .env file (Recommended)**
+
+Add to your `.env` file in the PBX root directory:
+
+```bash
+DEBUG_VM_PIN=true
+```
+
+Then restart the PBX:
+
+```bash
+python main.py
+```
+
+**Method 2: Inline environment variable**
+
+```bash
+DEBUG_VM_PIN=true python main.py
+```
+
+**Method 3: Export environment variable**
+
+```bash
+export DEBUG_VM_PIN=true
+python main.py
+```
+
+#### What Gets Logged
+
+When `DEBUG_VM_PIN=true` is set, you'll see detailed logging in `logs/vm_ivr.log`:
+
+**Initialization Warning**:
+```
+[VM IVR] ⚠️  PIN DEBUG LOGGING ENABLED for extension 1001 - TESTING ONLY!
+[VM IVR] ⚠️  Set DEBUG_VM_PIN=false to disable sensitive PIN logging
+```
+
+**Per-Digit Collection**:
+```
+[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '1' collected, current PIN buffer: '1'
+[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '2' collected, current PIN buffer: '12'
+[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '3' collected, current PIN buffer: '123'
+[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '4' collected, current PIN buffer: '1234'
+```
+
+**PIN Verification**:
+```
+[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Entered PIN: '1234'
+[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Expected PIN: '1234'
+[VM IVR PIN] PIN verification result: VALID
+```
+
+#### Disable Debug Logging
+
+```bash
+# In .env file, set:
+DEBUG_VM_PIN=false
+
+# Or remove the line entirely, then restart
+python main.py
+
+# Or unset the environment variable
+unset DEBUG_VM_PIN
+```
+
+#### Use Cases for Debug Logging
+
+1. **DTMF Detection Issues**: Verify which digits are actually being received by the IVR
+2. **PIN Configuration Problems**: Confirm the expected PIN matches what you configured
+3. **Timing Issues**: See if digits are being lost or duplicated
+4. **SIP INFO vs In-band DTMF**: Identify which DTMF method is working
+
+#### Diagnosing Common Issues
+
+**Issue: PIN buffer not accumulating**
+
+If the buffer shows only '1' for each digit press (not accumulating to '12', '123', etc.):
+- Indicates the IVR instance may be getting recreated
+- Or the entered_pin is being reset between digits
+- This is a bug that needs investigation
+
+**Issue: Digits missing from buffer**
+
+If some digits don't appear in the sequence (e.g., '1', '3', '4' but skipping '2'):
+- DTMF transmission lost packets
+- Phone DTMF duration too short
+- Try in-band DTMF instead of SIP INFO
+- Check phone DTMF configuration
+
+**Issue: Digits duplicated**
+
+If digits appear multiple times (e.g., '11', '112', '1123'):
+- DTMF debouncing issue
+- May need to adjust debounce timing
+- Check if phone is sending duplicate DTMF events
+
+**Issue: First digit lost**
+
+If the first digit you press doesn't appear in PIN buffer:
+- This was fixed in a recent update
+- Ensure you're running the latest version
+- The voicemail IVR now captures the first digit when transitioning from WELCOME state to PIN_ENTRY state
+
+### Regular Logging (Without Debug)
+
+Even without `DEBUG_VM_PIN` enabled, you still get useful (non-sensitive) logging in `logs/vm_ivr.log`:
+
+```
+[VM IVR PIN] # pressed, entered_pin length: 4
+[VM IVR PIN] PIN verification result: VALID
+```
+
+or
+
+```
+[VM IVR PIN] # pressed, entered_pin length: 4
+[VM IVR PIN] PIN verification result: INVALID
+[VM IVR PIN] ✗ Invalid PIN attempt 1/3
+```
+
+This shows you:
+- How many digits were entered
+- Whether verification passed or failed
+- Number of failed attempts
+
+### Log Rotation
+
+The `vm_ivr.log` file will grow over time. Consider implementing log rotation using:
+
+**Linux logrotate (recommended for production)**:
+
+```
+# /etc/logrotate.d/pbx-vm-ivr
+/path/to/PBX/logs/vm_ivr.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 pbx pbx
+}
+```
+
 ## Support
 
 For issues or questions:
-1. Check logs: `logs/pbx.log`
-2. Review test results: Run test suite
-3. Verify file permissions on voicemail directory
-4. Check RTP audio configuration
-5. Review SIP trace logs if calls aren't connecting
+1. Check logs: `logs/vm_ivr.log` (dedicated VM IVR log)
+2. Check logs: `logs/pbx.log` (main PBX log)
+3. Enable debug logging: `DEBUG_VM_PIN=true` for PIN issues
+4. Review test results: Run test suite
+5. Verify file permissions on voicemail directory
+6. Check RTP audio configuration
+7. Review SIP trace logs if calls aren't connecting
+8. See [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md) for DTMF troubleshooting
 
 ## Related Documentation
 

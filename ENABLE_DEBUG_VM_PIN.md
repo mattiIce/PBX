@@ -1,5 +1,7 @@
 # Quick Guide: Enable DEBUG_VM_PIN
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md#debugging-and-logging). Please refer to the "Debugging and Logging" section in that guide for the most up-to-date information.
+
 ## For Immediate Troubleshooting
 
 If you're experiencing DTMF PIN recognition issues in voicemail IVR, follow these steps to enable debug logging:

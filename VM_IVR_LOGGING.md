@@ -1,5 +1,7 @@
 # VM IVR Dedicated Logging
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md#debugging-and-logging). Please refer to the "Debugging and Logging" section in that guide for the most up-to-date information.
+
 ## Overview
 
 The Voicemail IVR system now has its own dedicated log file separate from the main PBX logs. This makes it easier to troubleshoot voicemail-specific issues without having to search through the entire PBX log.
