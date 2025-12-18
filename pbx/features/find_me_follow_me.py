@@ -394,10 +394,18 @@ class FindMeFollowMe:
     def delete_config(self, extension: str) -> bool:
         """Delete FMFM configuration for an extension"""
         if extension in self.user_configs:
+            # Save a backup in case we need to restore
+            backup_config = self.user_configs[extension].copy()
             del self.user_configs[extension]
             
-            # Delete from database
-            self._delete_from_database(extension)
+            # Delete from database if one is configured
+            if self.database and self.database.enabled:
+                delete_result = self._delete_from_database(extension)
+                if not delete_result:
+                    # Restore from backup if database delete failed
+                    self.user_configs[extension] = backup_config
+                    self.logger.error(f"Failed to delete FMFM config from database for {extension}")
+                    return False
             
             self.logger.info(f"Deleted FMFM config for {extension}")
             return True
