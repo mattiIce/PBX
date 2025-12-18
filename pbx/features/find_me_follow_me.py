@@ -133,32 +133,30 @@ class FindMeFollowMe:
             if self.database.db_type == 'postgresql':
                 cursor.execute("""
                     INSERT INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                     ON CONFLICT (extension) DO UPDATE SET
                         mode = EXCLUDED.mode,
                         enabled = EXCLUDED.enabled,
                         destinations = EXCLUDED.destinations,
                         no_answer_destination = EXCLUDED.no_answer_destination,
-                        updated_at = EXCLUDED.updated_at
+                        updated_at = CURRENT_TIMESTAMP
                 """, (
                     extension,
                     config.get('mode', 'sequential'),
                     config.get('enabled', True),
                     destinations_json,
-                    config.get('no_answer_destination'),
-                    datetime.now()
+                    config.get('no_answer_destination')
                 ))
             else:
                 cursor.execute("""
                     INSERT OR REPLACE INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """, (
                     extension,
                     config.get('mode', 'sequential'),
                     1 if config.get('enabled', True) else 0,
                     destinations_json,
-                    config.get('no_answer_destination'),
-                    datetime.now()
+                    config.get('no_answer_destination')
                 ))
             
             self.database.connection.commit()
