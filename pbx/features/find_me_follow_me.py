@@ -114,7 +114,13 @@ class FindMeFollowMe:
             self.logger.error(f"Error loading FMFM configs from database: {e}")
     
     def _save_to_database(self, extension: str):
-        """Save FMFM configuration to database"""
+        """
+        Save FMFM configuration to database
+        
+        Note: Uses SQL CURRENT_TIMESTAMP for updated_at field instead of 
+        datetime.now() to ensure compatibility between PostgreSQL and SQLite,
+        and to avoid timezone and datetime adapter issues.
+        """
         if not self.database or not self.database.enabled:
             return False
         
@@ -133,32 +139,30 @@ class FindMeFollowMe:
             if self.database.db_type == 'postgresql':
                 cursor.execute("""
                     INSERT INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                     ON CONFLICT (extension) DO UPDATE SET
                         mode = EXCLUDED.mode,
                         enabled = EXCLUDED.enabled,
                         destinations = EXCLUDED.destinations,
                         no_answer_destination = EXCLUDED.no_answer_destination,
-                        updated_at = EXCLUDED.updated_at
+                        updated_at = CURRENT_TIMESTAMP
                 """, (
                     extension,
                     config.get('mode', 'sequential'),
                     config.get('enabled', True),
                     destinations_json,
-                    config.get('no_answer_destination'),
-                    datetime.now()
+                    config.get('no_answer_destination')
                 ))
             else:
                 cursor.execute("""
                     INSERT OR REPLACE INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """, (
                     extension,
                     config.get('mode', 'sequential'),
                     1 if config.get('enabled', True) else 0,
                     destinations_json,
-                    config.get('no_answer_destination'),
-                    datetime.now()
+                    config.get('no_answer_destination')
                 ))
             
             self.database.connection.commit()
@@ -217,9 +221,12 @@ class FindMeFollowMe:
         
         self.user_configs[extension] = {
             **config,
-            'extension': extension,
-            'updated_at': datetime.now()
+            'extension': extension
         }
+        
+        # Add timestamp only if no database (otherwise database generates it)
+        if not (self.database and self.database.enabled):
+            self.user_configs[extension]['updated_at'] = datetime.now()
         
         # Save to database if one is configured
         if self.database and self.database.enabled:
