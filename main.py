@@ -159,9 +159,9 @@ if __name__ == "__main__":
             last_status_time = time.time()
             while running:
                 time.sleep(1)
-                # Display status every 10 seconds
+                # Display status every 10 minutes
                 current_time = time.time()
-                if current_time - last_status_time >= 10:
+                if current_time - last_status_time >= 600:
                     status = pbx.get_status()
                     print(
                         f"Status: {
