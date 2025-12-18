@@ -95,11 +95,16 @@ class DataResidencyControls:
             region: Region identifier
             config: Region configuration
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot configure region: Data residency controls feature is not enabled")
+            return False
+        
         self.region_configs[region] = config
         
         self.logger.info(f"Configured region: {region}")
         self.logger.info(f"  Storage path: {config.get('storage_path')}")
         self.logger.info(f"  Database: {config.get('database_server')}")
+        return True
     
     def set_category_region(self, category: DataCategory, region: StorageRegion):
         """
@@ -109,9 +114,14 @@ class DataResidencyControls:
             category: Data category
             region: Storage region
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot set category region: Data residency controls feature is not enabled")
+            return False
+        
         self.category_regions[category] = region
         
         self.logger.info(f"Set {category.value} to store in {region.value}")
+        return True
     
     def get_storage_location(self, category: str, user_region: str = None) -> Dict:
         """

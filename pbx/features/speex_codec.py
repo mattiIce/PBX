@@ -443,9 +443,15 @@ class SpeexCodecManager:
         Args:
             call_id: Call identifier
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot remove codec: Speex codec feature is not enabled")
+            return False
+        
         if call_id in self.codecs:
             del self.codecs[call_id]
             self.logger.debug(f"Removed Speex codec for call {call_id}")
+            return True
+        return False
     
     def get_all_codecs(self) -> Dict[str, SpeexCodec]:
         """

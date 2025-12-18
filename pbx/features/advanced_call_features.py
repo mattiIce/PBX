@@ -170,16 +170,27 @@ class AdvancedCallFeatures:
     
     def add_supervisor_permission(self, supervisor_id: str, extensions: List[str]):
         """Add monitoring permissions for a supervisor"""
+        if not self.enabled:
+            self.logger.error(f"Cannot add supervisor permission for {supervisor_id}: Advanced call features not enabled")
+            return False
+        
         if supervisor_id not in self.supervisor_permissions:
             self.supervisor_permissions[supervisor_id] = set()
         self.supervisor_permissions[supervisor_id].update(extensions)
         self.logger.info(f"Added monitoring permissions for {supervisor_id}: {extensions}")
+        return True
     
     def remove_supervisor_permission(self, supervisor_id: str, extensions: List[str]):
         """Remove monitoring permissions for a supervisor"""
+        if not self.enabled:
+            self.logger.error(f"Cannot remove supervisor permission for {supervisor_id}: Advanced call features not enabled")
+            return False
+        
         if supervisor_id in self.supervisor_permissions:
             self.supervisor_permissions[supervisor_id].difference_update(extensions)
             self.logger.info(f"Removed monitoring permissions for {supervisor_id}: {extensions}")
+            return True
+        return False
     
     def get_statistics(self) -> Dict:
         """Get advanced call features statistics"""

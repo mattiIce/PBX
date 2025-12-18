@@ -532,13 +532,23 @@ class SessionBorderController:
     
     def add_to_blacklist(self, ip: str):
         """Add IP to blacklist"""
+        if not self.enabled:
+            self.logger.error(f"Cannot add to blacklist: Session border controller feature is not enabled")
+            return False
+        
         self.blacklist.add(ip)
         self.logger.warning(f"Added {ip} to blacklist")
+        return True
     
     def add_to_whitelist(self, ip: str):
         """Add IP to whitelist"""
+        if not self.enabled:
+            self.logger.error(f"Cannot add to whitelist: Session border controller feature is not enabled")
+            return False
+        
         self.whitelist.add(ip)
         self.logger.info(f"Added {ip} to whitelist")
+        return True
     
     def get_statistics(self) -> Dict:
         """Get SBC statistics"""

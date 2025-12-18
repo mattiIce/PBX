@@ -640,6 +640,10 @@ class ConversationalAI:
                 - project_id: Google Cloud project ID for Dialogflow
                 - endpoint: Custom API endpoint
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot configure provider: Conversational AI feature is not enabled")
+            return False
+        
         self.provider = provider.lower()
         
         # Store API key securely using encryption utilities
@@ -691,6 +695,7 @@ class ConversationalAI:
             # In production: Initialize Azure Bot Service client
         
         self.logger.info(f"AI provider configured: {provider}")
+        return True
 
 
 # Global instance

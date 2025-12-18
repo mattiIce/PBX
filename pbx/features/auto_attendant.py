@@ -245,17 +245,28 @@ class AutoAttendant:
 
     def add_menu_option(self, digit, destination, description=''):
         """Add or update a menu option and persist to database"""
+        if not self.enabled:
+            self.logger.error(f"Cannot add menu option: Auto attendant feature is not enabled")
+            return False
+        
         self.menu_options[digit] = {
             'destination': destination,
             'description': description
         }
         self._save_menu_option_to_db(digit, destination, description)
+        return True
 
     def remove_menu_option(self, digit):
         """Remove a menu option and delete from database"""
+        if not self.enabled:
+            self.logger.error(f"Cannot remove menu option: Auto attendant feature is not enabled")
+            return False
+        
         if digit in self.menu_options:
             del self.menu_options[digit]
             self._delete_menu_option_from_db(digit)
+            return True
+        return False
 
     def is_enabled(self):
         """Check if auto attendant is enabled"""

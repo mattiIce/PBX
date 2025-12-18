@@ -532,6 +532,10 @@ class CallTagging:
             tag: Tag to apply
             category: Call category (optional)
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot add tagging rule: Call tagging feature is not enabled")
+            return False
+        
         rule = {
             'name': name,
             'keywords': keywords,
@@ -541,6 +545,7 @@ class CallTagging:
         self.tagging_rules.append(rule)
         
         self.logger.info(f"Added tagging rule: {name}")
+        return True
     
     def get_tag_statistics(self) -> Dict:
         """Get tag usage statistics"""
