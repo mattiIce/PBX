@@ -33,12 +33,19 @@ fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
 opuslib>=3.0.0  # Python bindings for Opus codec (requires libopus system library)
 
 # iLBC codec - Internet Low Bitrate Codec with packet loss concealment
-# Note: May require system libraries on some platforms
-pyilbc>=1.0.0  # iLBC codec support
+# NOTE: pyilbc is not currently available on PyPI. The iLBC codec framework is
+# implemented and will work for SDP negotiation, but actual encoding/decoding
+# requires a compatible library. The codec gracefully handles the missing library.
+# See ILBC_CODEC_GUIDE.md for alternative installation options.
+# pyilbc>=1.0.0  # iLBC codec support (NOT AVAILABLE ON PyPI)
 
 # Speex codec - Open source speech codec from Xiph.Org
-# Note: May require system libraries (libspeex) on some platforms  
-speex>=1.0.0  # Speex codec support
+# NOTE: speex requires system libraries (libspeex-dev) to build. The Speex codec
+# framework is implemented and will work for SDP negotiation, but actual encoding/
+# decoding requires the speex library and system dependencies. The codec gracefully
+# handles the missing library. See SPEEX_CODEC_GUIDE.md for installation options.
+# System install: sudo apt-get install libspeex-dev
+# speex>=0.9.1  # Speex codec support (requires libspeex-dev system library)
 
 # === FREE & OPEN-SOURCE AI/ML INTEGRATION ===
 
