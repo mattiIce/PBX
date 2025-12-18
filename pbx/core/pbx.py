@@ -943,6 +943,15 @@ class PBXCore:
         """
         return self.config.get('features.dtmf.payload_type', 101)
 
+    def _get_ilbc_mode(self):
+        """
+        Get iLBC mode from configuration
+        
+        Returns:
+            iLBC mode (20 or 30 ms) as integer (default: 30)
+        """
+        return self.config.get('codecs.ilbc.mode', 30)
+
     def route_call(self, from_header, to_header, call_id, message, from_addr):
         """
         Route call from one extension to another
@@ -1144,12 +1153,14 @@ class PBXCore:
             # Create new INVITE with PBX's RTP endpoint in SDP
             # Get DTMF payload type from config
             dtmf_payload_type = self._get_dtmf_payload_type()
+            ilbc_mode = self._get_ilbc_mode()
             callee_sdp_body = SDPBuilder.build_audio_sdp(
                 server_ip,
                 rtp_ports[0],
                 session_id=call_id,
                 codecs=codecs_for_callee,
-                dtmf_payload_type=dtmf_payload_type
+                dtmf_payload_type=dtmf_payload_type,
+                ilbc_mode=ilbc_mode
             )
 
             # Forward INVITE to callee
@@ -1313,12 +1324,14 @@ class PBXCore:
             # Build SDP for caller (with PBX RTP endpoint)
             # Get DTMF payload type from config
             dtmf_payload_type = self._get_dtmf_payload_type()
+            ilbc_mode = self._get_ilbc_mode()
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
                 session_id=call_id,
                 codecs=codecs_for_caller,
-                dtmf_payload_type=dtmf_payload_type
+                dtmf_payload_type=dtmf_payload_type,
+                ilbc_mode=ilbc_mode
             )
 
             # Build 200 OK for caller using original INVITE
@@ -1681,12 +1694,14 @@ class PBXCore:
             # Build SDP for the voicemail recording endpoint
             # Get DTMF payload type from config
             dtmf_payload_type = self._get_dtmf_payload_type()
+            ilbc_mode = self._get_ilbc_mode()
             voicemail_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
                 session_id=call_id,
                 codecs=codecs_for_caller,
-                dtmf_payload_type=dtmf_payload_type
+                dtmf_payload_type=dtmf_payload_type,
+                ilbc_mode=ilbc_mode
             )
 
             # Send 200 OK to answer the call for voicemail recording
@@ -2069,12 +2084,14 @@ class PBXCore:
         # Build SDP for answering, using phone-model-specific codecs
         # Get DTMF payload type from config
         dtmf_payload_type = self._get_dtmf_payload_type()
+        ilbc_mode = self._get_ilbc_mode()
         aa_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
             session_id=call_id,
             codecs=codecs_for_caller,
-            dtmf_payload_type=dtmf_payload_type
+            dtmf_payload_type=dtmf_payload_type,
+            ilbc_mode=ilbc_mode
         )
 
         # Send 200 OK to answer the call
@@ -2521,12 +2538,14 @@ class PBXCore:
         # Build SDP for answering, using phone-model-specific codecs
         # Get DTMF payload type from config
         dtmf_payload_type = self._get_dtmf_payload_type()
+        ilbc_mode = self._get_ilbc_mode()
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
             session_id=call_id,
             codecs=codecs_for_caller,
-            dtmf_payload_type=dtmf_payload_type
+            dtmf_payload_type=dtmf_payload_type,
+            ilbc_mode=ilbc_mode
         )
         self.logger.info(
             f"[VM Access] ✓ SDP built for response (RTP port: {
@@ -2715,12 +2734,14 @@ class PBXCore:
         # Build SDP for answering, using phone-model-specific codecs
         # Get DTMF payload type from config
         dtmf_payload_type = self._get_dtmf_payload_type()
+        ilbc_mode = self._get_ilbc_mode()
         paging_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
             session_id=call_id,
             codecs=codecs_for_caller,
-            dtmf_payload_type=dtmf_payload_type
+            dtmf_payload_type=dtmf_payload_type,
+            ilbc_mode=ilbc_mode
         )
 
         # Send 200 OK to answer the call

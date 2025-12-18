@@ -2,7 +2,7 @@
 Voice Biometrics
 Speaker authentication and fraud detection using voice analysis
 """
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 from enum import Enum
 from pbx.utils.logger import get_logger
@@ -20,6 +20,21 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
     np = None
+
+# pyAudioAnalysis for FREE open-source audio feature extraction
+try:
+    from pyAudioAnalysis import audioFeatureExtraction
+    from pyAudioAnalysis import audioBasicIO
+    PYAUDIO_ANALYSIS_AVAILABLE = True
+except ImportError:
+    PYAUDIO_ANALYSIS_AVAILABLE = False
+
+# librosa for advanced audio analysis
+try:
+    import librosa
+    LIBROSA_AVAILABLE = True
+except ImportError:
+    LIBROSA_AVAILABLE = False
 
 
 class BiometricStatus(Enum):
@@ -120,7 +135,18 @@ class VoiceBiometrics:
         self.logger.info(f"  Provider: {self.provider}")
         self.logger.info(f"  Verification threshold: {self.verification_threshold}")
         self.logger.info(f"  Fraud detection: {self.fraud_detection_enabled}")
+        self.logger.info(f"  pyAudioAnalysis available: {PYAUDIO_ANALYSIS_AVAILABLE}")
+        self.logger.info(f"  librosa available: {LIBROSA_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
+        
+        if not PYAUDIO_ANALYSIS_AVAILABLE:
+            self.logger.info("Install pyAudioAnalysis for FREE open-source speaker recognition:")
+            self.logger.info("  pip install pyAudioAnalysis")
+            self.logger.info("  System packages: sudo apt-get install python3-tk portaudio19-dev")
+        
+        if not LIBROSA_AVAILABLE:
+            self.logger.info("Install librosa for advanced audio analysis:")
+            self.logger.info("  pip install librosa soundfile")
     
     def create_profile(self, user_id: str, extension: str) -> VoiceProfile:
         """
@@ -533,7 +559,7 @@ class VoiceBiometrics:
     
     def _extract_voice_features(self, audio_data: bytes) -> Dict:
         """
-        Extract voice features from audio data
+        Extract voice features from audio data using pyAudioAnalysis and librosa
         
         Args:
             audio_data: Raw audio bytes (expected: 16-bit PCM)
@@ -545,88 +571,117 @@ class VoiceBiometrics:
             return {}
         
         try:
-            # Parse 16-bit PCM audio data
-            # Assume mono, 16-bit signed integers
+            # Parse 16-bit PCM audio data first
             sample_count = len(audio_data) // 2
             samples = []
             
             # Process in pairs of bytes (16-bit samples)
             for i in range(0, len(audio_data) - (len(audio_data) % 2), 2):
-                # Unpack 16-bit signed integer (little-endian)
                 sample = struct.unpack('<h', audio_data[i:i+2])[0]
                 samples.append(sample)
             
             if not samples:
                 return {}
             
-            # Extract basic voice features
             features = {}
             
-            # 1. Energy metrics
-            energy = sum(s * s for s in samples) / len(samples)
-            features['energy'] = energy
+            # Try pyAudioAnalysis for advanced feature extraction
+            if PYAUDIO_ANALYSIS_AVAILABLE and np is not None:
+                try:
+                    # Convert to numpy array and normalize
+                    audio_array = np.array(samples, dtype=np.float64) / 32768.0
+                    
+                    # Extract features using pyAudioAnalysis
+                    # Features include: ZCR, Energy, Energy Entropy, Spectral Centroid,
+                    # Spectral Spread, Spectral Entropy, Spectral Flux, Spectral Rolloff,
+                    # MFCCs, Chroma Vector, Chroma Deviation
+                    sample_rate = 16000  # Assuming 16kHz sample rate
+                    
+                    # Extract short-term features (frame-based)
+                    frame_size = int(sample_rate * 0.050)  # 50ms frames
+                    frame_step = int(sample_rate * 0.025)  # 25ms step
+                    
+                    if len(audio_array) >= frame_size:
+                        # Extract features - returns (features, feature_names)
+                        stFeatures = audioFeatureExtraction.stFeatureExtraction(
+                            audio_array, sample_rate, frame_size, frame_step
+                        )
+                        
+                        if stFeatures is not None and len(stFeatures) > 0:
+                            # Average features across all frames
+                            features['mfcc_mean'] = float(np.mean(stFeatures[0:13]))  # MFCCs
+                            features['zcr_mean'] = float(np.mean(stFeatures[0]))  # Zero Crossing Rate
+                            features['energy_mean'] = float(np.mean(stFeatures[1]))  # Energy
+                            features['spectral_centroid'] = float(np.mean(stFeatures[3]))
+                            features['spectral_spread'] = float(np.mean(stFeatures[4]))
+                            features['spectral_entropy'] = float(np.mean(stFeatures[5]))
+                            features['spectral_rolloff'] = float(np.mean(stFeatures[7]))
+                            
+                            self.logger.debug("Extracted features using pyAudioAnalysis")
+                            
+                except Exception as e:
+                    self.logger.debug(f"pyAudioAnalysis feature extraction failed: {e}")
             
-            # Energy variance (consistency)
-            chunk_size = max(1, len(samples) // 10)
-            chunk_energies = []
-            for i in range(0, len(samples), chunk_size):
-                chunk = samples[i:i+chunk_size]
-                if chunk:
-                    chunk_energy = sum(s * s for s in chunk) / len(chunk)
-                    chunk_energies.append(chunk_energy)
+            # Try librosa for additional features
+            if LIBROSA_AVAILABLE and np is not None and not features:
+                try:
+                    audio_array = np.array(samples, dtype=np.float32) / 32768.0
+                    sample_rate = 16000
+                    
+                    # Extract MFCCs (Mel-frequency cepstral coefficients)
+                    mfccs = librosa.feature.mfcc(y=audio_array, sr=sample_rate, n_mfcc=13)
+                    features['mfcc_mean'] = float(np.mean(mfccs))
+                    features['mfcc_std'] = float(np.std(mfccs))
+                    
+                    # Extract spectral features
+                    spectral_centroids = librosa.feature.spectral_centroid(y=audio_array, sr=sample_rate)
+                    features['spectral_centroid'] = float(np.mean(spectral_centroids))
+                    
+                    # Zero crossing rate
+                    zcr = librosa.feature.zero_crossing_rate(audio_array)
+                    features['zcr_mean'] = float(np.mean(zcr))
+                    
+                    self.logger.debug("Extracted features using librosa")
+                    
+                except Exception as e:
+                    self.logger.debug(f"librosa feature extraction failed: {e}")
             
-            if len(chunk_energies) > 1:
-                mean_energy = sum(chunk_energies) / len(chunk_energies)
-                variance = sum((e - mean_energy) ** 2 for e in chunk_energies) / len(chunk_energies)
-                features['energy_variance'] = variance / (mean_energy + 1e-6)
-            
-            # 2. Zero Crossing Rate (voice activity and pitch indication)
-            zero_crossings = 0
-            for i in range(len(samples) - 1):
-                if (samples[i] >= 0 and samples[i+1] < 0) or (samples[i] < 0 and samples[i+1] >= 0):
-                    zero_crossings += 1
-            features['zero_crossing_rate'] = zero_crossings / len(samples)
-            
-            # 3. Estimate pitch (fundamental frequency)
-            # Simple autocorrelation-based pitch detection
-            zcr = features['zero_crossing_rate']
-            # Rough pitch estimate from ZCR (assuming 16kHz sample rate)
-            estimated_pitch = zcr * 8000  # Half the sample rate
-            features['pitch'] = max(50, min(400, estimated_pitch))
-            
-            # 4. Spectral flatness (indicator of noise vs tonal content)
-            # Calculate using amplitude distribution
-            amplitude_bins = [0] * 10
-            max_amp = max(abs(s) for s in samples) or 1
-            for s in samples:
-                bin_idx = min(9, int(abs(s) / max_amp * 10))
-                amplitude_bins[bin_idx] += 1
-            
-            # Geometric mean / arithmetic mean using logarithms for numerical stability
-            non_zero_bins = [b for b in amplitude_bins if b > 0]
-            if non_zero_bins:
-                # Use logarithms to avoid overflow
-                log_sum = sum(math.log(b) for b in non_zero_bins)
-                geometric_mean = math.exp(log_sum / len(non_zero_bins))
-                arithmetic_mean = sum(non_zero_bins) / len(non_zero_bins)
-                features['spectral_flatness'] = geometric_mean / (arithmetic_mean + 1e-6)
-            
-            # 5. Dynamic range
-            min_sample = min(samples)
-            max_sample = max(samples)
-            features['dynamic_range'] = max_sample - min_sample
-            
-            # 6. Short-term energy variation (for voice naturalness)
-            short_energies = []
-            short_chunk = max(1, len(samples) // 50)
-            for i in range(0, len(samples), short_chunk):
-                chunk = samples[i:i+short_chunk]
-                if chunk:
-                    e = sum(s * s for s in chunk) / len(chunk)
-                    short_energies.append(e)
-            
-            if len(short_energies) > 1:
-                features['energy_variation'] = max(short_energies) / (min(short_energies) + 1e-6)
+            # Fallback to basic feature extraction if libraries not available
+            if not features:
+                # 1. Energy metrics
+                energy = sum(s * s for s in samples) / len(samples)
+                features['energy'] = energy
+                
+                # Energy variance (consistency)
+                chunk_size = max(1, len(samples) // 10)
+                chunk_energies = []
+                for i in range(0, len(samples), chunk_size):
+                    chunk = samples[i:i+chunk_size]
+                    if chunk:
+                        chunk_energy = sum(s * s for s in chunk) / len(chunk)
+                        chunk_energies.append(chunk_energy)
+                
+                if len(chunk_energies) > 1:
+                    mean_energy = sum(chunk_energies) / len(chunk_energies)
+                    variance = sum((e - mean_energy) ** 2 for e in chunk_energies) / len(chunk_energies)
+                    features['energy_variance'] = variance / (mean_energy + 1e-6)
+                
+                # 2. Zero Crossing Rate (voice activity and pitch indication)
+                zero_crossings = 0
+                for i in range(len(samples) - 1):
+                    if (samples[i] >= 0 and samples[i+1] < 0) or (samples[i] < 0 and samples[i+1] >= 0):
+                        zero_crossings += 1
+                features['zero_crossing_rate'] = zero_crossings / len(samples)
+                
+                # 3. Estimate pitch (fundamental frequency)
+                zcr = features['zero_crossing_rate']
+                estimated_pitch = zcr * 8000  # Half the sample rate
+                features['pitch'] = max(50, min(400, estimated_pitch))
+                
+                # 4. Dynamic range
+                min_sample = min(samples)
+                max_sample = max(samples)
+                features['dynamic_range'] = max_sample - min_sample
             
             return features
             
@@ -665,7 +720,9 @@ class VoiceBiometrics:
             'verification_success_rate': self.successful_verifications / max(1, self.total_verifications),
             'fraud_attempts_detected': self.fraud_attempts_detected,
             'provider': self.provider,
-            'enabled': self.enabled
+            'enabled': self.enabled,
+            'pyaudio_analysis_available': PYAUDIO_ANALYSIS_AVAILABLE,
+            'librosa_available': LIBROSA_AVAILABLE
         }
         
         # Add database statistics if available

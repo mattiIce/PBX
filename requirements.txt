@@ -47,13 +47,33 @@ opuslib>=3.0.0  # Python bindings for Opus codec (requires libopus system librar
 # Note: May require system libraries (libspeex) on some platforms  
 # speex>=1.0.0  # Uncomment to enable Speex codec
 
-# Voicemail transcription (FREE, offline speech recognition)
-vosk>=0.3.45
+# === FREE & OPEN-SOURCE AI/ML INTEGRATION ===
 
-# Machine Learning libraries (FREE, open source)
+# Speech Recognition (FREE, offline)
+vosk>=0.3.45  # Offline speech-to-text for voicemail transcription
+
+# Natural Language Processing (FREE, open source)
+spacy>=3.7.0  # Industrial-strength NLP for entity extraction, sentiment analysis
+# Download model: python -m spacy download en_core_web_sm
+nltk>=3.8.0  # Natural language toolkit for tokenization, lemmatization, intent detection
+# NLTK will auto-download required corpora on first use
+
+# Machine Learning (FREE, open source)
 numpy>=1.24.0  # Array operations and numerical computing
 scikit-learn>=1.3.0  # ML algorithms (classification, regression, clustering)
 scipy>=1.11.0  # Scientific computing and optimization
+
+# Audio Analysis (FREE, open source) - for voice biometrics
+pyAudioAnalysis>=0.3.14  # Audio feature extraction, speaker recognition, AMD
+# Requires: sudo apt-get install python3-tk portaudio19-dev
+librosa>=0.10.0  # Audio analysis and feature extraction
+soundfile>=0.12.0  # Audio file I/O
+
+# Video Codec Support (FREE, open source) - requires FFmpeg
+# System package: sudo apt-get install ffmpeg
+# Python bindings:
+# imageio-ffmpeg>=0.4.9  # FFmpeg wrapper for Python
+# av>=11.0.0  # PyAV - Pythonic binding for FFmpeg
 
 # Alternative cloud-based transcription provider (optional):
 # - google-cloud-speech (Google Cloud Speech-to-Text - requires paid API key)

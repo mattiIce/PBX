@@ -1,11 +1,27 @@
 """
 H.264/H.265 Video Codec Support
-Video codec support for video calling features
+Video codec support for video calling using FREE open-source FFmpeg
 """
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from enum import Enum
 from datetime import datetime
 from pbx.utils.logger import get_logger
+import subprocess
+import os
+
+# Try to import PyAV (Python binding for FFmpeg)
+try:
+    import av
+    PYAV_AVAILABLE = True
+except ImportError:
+    PYAV_AVAILABLE = False
+
+# Try to import imageio-ffmpeg (simpler FFmpeg wrapper)
+try:
+    import imageio_ffmpeg
+    IMAGEIO_FFMPEG_AVAILABLE = True
+except ImportError:
+    IMAGEIO_FFMPEG_AVAILABLE = False
 
 
 class VideoCodec(Enum):
@@ -39,12 +55,18 @@ class VideoCodecManager:
     """
     Video Codec Manager
     
-    Manages H.264/H.265 video codecs for video calling.
-    This framework is ready for integration with video codec libraries like:
-    - FFmpeg (libx264, libx265)
-    - OpenH264 (Cisco's open-source H.264)
-    - x265 (open-source H.265)
+    Manages H.264/H.265 video codecs for video calling using FREE open-source FFmpeg.
+    
+    Uses FREE open-source tools:
+    - FFmpeg (libx264, libx265) - industry-standard video processing
+    - PyAV - Pythonic binding for FFmpeg
+    - OpenH264 - Cisco's open-source H.264 codec
+    - x265 - open-source HEVC/H.265 encoder
+    - libvpx - VP8/VP9 codecs
+    
+    Can also integrate with:
     - GStreamer video plugins
+    - Hardware encoders (NVENC, QuickSync, etc.)
     """
     
     def __init__(self, config=None):
@@ -61,6 +83,9 @@ class VideoCodecManager:
         self.default_framerate = video_config.get('default_framerate', 30)
         self.default_bitrate = video_config.get('default_bitrate', 2000)  # kbps
         
+        # FFmpeg availability
+        self.ffmpeg_available = self._check_ffmpeg()
+        
         # Codec availability
         self.available_codecs = self._detect_available_codecs()
         
@@ -73,42 +98,85 @@ class VideoCodecManager:
         self.logger.info(f"  Default codec: {self.default_codec.value}")
         self.logger.info(f"  Default profile: {self.default_profile.value}")
         self.logger.info(f"  Default resolution: {self.default_resolution}")
+        self.logger.info(f"  FFmpeg available: {self.ffmpeg_available}")
+        self.logger.info(f"  PyAV available: {PYAV_AVAILABLE}")
         self.logger.info(f"  Available codecs: {', '.join(self.available_codecs)}")
         self.logger.info(f"  Enabled: {self.enabled}")
+        
+        if not self.ffmpeg_available:
+            self.logger.info("Install FFmpeg for video codec support:")
+            self.logger.info("  Ubuntu/Debian: sudo apt-get install ffmpeg")
+            self.logger.info("  macOS: brew install ffmpeg")
+        
+        if not PYAV_AVAILABLE:
+            self.logger.info("Install PyAV for Python FFmpeg bindings:")
+            self.logger.info("  pip install av")
+    
+    def _check_ffmpeg(self) -> bool:
+        """Check if FFmpeg is available on the system"""
+        try:
+            result = subprocess.run(['ffmpeg', '-version'],
+                                   capture_output=True, text=True, timeout=5)
+            return result.returncode == 0
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return False
     
     def _detect_available_codecs(self) -> list:
         """
-        Detect which video codecs are available
+        Detect which video codecs are available using FFmpeg
         
         Checks for installed codec libraries and returns list of supported codecs.
-        In production, this would check for:
-        - FFmpeg (libavcodec) - supports H.264, H.265, VP8, VP9
-        - OpenH264 - Cisco's open source H.264 codec
-        - x265 - HEVC/H.265 encoder
-        - libvpx - VP8/VP9 codecs
+        Uses FREE open-source FFmpeg to detect:
+        - H.264 (libx264, openh264)
+        - H.265 (libx265)
+        - VP8/VP9 (libvpx)
+        - AV1 (libaom)
         
         Returns:
             list: List of available codec names
         """
         available = []
         
-        # Try to detect FFmpeg
-        try:
-            import subprocess
-            result = subprocess.run(['ffmpeg', '-version'], 
-                                   capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                self.logger.info("FFmpeg detected")
-                # FFmpeg supports multiple codecs
-                available.extend(['H.264', 'H.265', 'VP8', 'VP9'])
-        except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
-            self.logger.debug(f"FFmpeg not found: {e}")
+        # Check FFmpeg for codec support
+        if self.ffmpeg_available:
+            try:
+                # Query FFmpeg for available encoders
+                result = subprocess.run(['ffmpeg', '-encoders'],
+                                       capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    output = result.stdout
+                    
+                    # Check for H.264 encoders
+                    if 'libx264' in output or 'h264' in output.lower():
+                        available.append('H.264')
+                        self.logger.debug("H.264 codec available (libx264)")
+                    
+                    # Check for H.265 encoders
+                    if 'libx265' in output or 'hevc' in output.lower():
+                        available.append('H.265')
+                        self.logger.debug("H.265 codec available (libx265)")
+                    
+                    # Check for VP8/VP9
+                    if 'libvpx' in output or 'vp8' in output.lower():
+                        available.append('VP8')
+                        self.logger.debug("VP8 codec available (libvpx)")
+                    
+                    if 'libvpx-vp9' in output or 'vp9' in output.lower():
+                        available.append('VP9')
+                        self.logger.debug("VP9 codec available (libvpx-vp9)")
+                    
+                    # Check for AV1
+                    if 'libaom' in output or 'av1' in output.lower():
+                        available.append('AV1')
+                        self.logger.debug("AV1 codec available (libaom)")
+                    
+            except (subprocess.TimeoutExpired, Exception) as e:
+                self.logger.debug(f"FFmpeg encoder detection error: {e}")
         
         # Try to detect OpenH264
         try:
             import ctypes
             # Try to load OpenH264 library
-            # On Linux: libopenh264.so, On Windows: openh264.dll, On Mac: libopenh264.dylib
             for lib_name in ['libopenh264.so', 'openh264.dll', 'libopenh264.dylib']:
                 try:
                     ctypes.CDLL(lib_name)
@@ -124,7 +192,7 @@ class VideoCodecManager:
         # Try to detect x265
         try:
             result = subprocess.run(['x265', '--version'],
-                                   capture_output=True, text=True, timeout=10)
+                                   capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 self.logger.info("x265 encoder detected")
                 if 'H.265' not in available:
@@ -132,10 +200,9 @@ class VideoCodecManager:
         except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
             self.logger.debug(f"x265 not found: {e}")
         
-        # If nothing detected, provide fallback
+        # If nothing detected, provide framework placeholders
         if not available:
             self.logger.warning("No video codec libraries detected")
-            self.logger.warning("Install FFmpeg for video codec support")
             # Still add H.264 as placeholder for framework purposes
             available.append('H.264')
         
@@ -144,7 +211,7 @@ class VideoCodecManager:
     def encode_frame(self, frame_data: bytes, codec: str = None, 
                     resolution: tuple = None, bitrate: int = None) -> Optional[bytes]:
         """
-        Encode video frame
+        Encode video frame using FFmpeg/PyAV
         
         Args:
             frame_data: Raw video frame (YUV or RGB)

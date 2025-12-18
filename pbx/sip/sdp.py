@@ -174,7 +174,7 @@ class SDPBuilder:
     """Helper to build SDP messages"""
 
     @staticmethod
-    def build_audio_sdp(local_ip, local_port, session_id="0", codecs=None, dtmf_payload_type=101):
+    def build_audio_sdp(local_ip, local_port, session_id="0", codecs=None, dtmf_payload_type=101, ilbc_mode=30):
         """
         Build SDP for audio call
 
@@ -187,6 +187,7 @@ class SDPBuilder:
                    Standard payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
             dtmf_payload_type: Payload type for RFC2833 telephone-event (default: 101)
                    Can be configured to use alternative payload types (96-127) if needed
+            ilbc_mode: iLBC frame duration in milliseconds - 20ms (15.2 kbps) or 30ms (13.33 kbps, default: 30)
 
         Returns:
             SDP body as string
@@ -250,9 +251,8 @@ class SDPBuilder:
         # If both iLBC and Speex narrowband are enabled, ensure distinct payload types
         if '97' in codecs:
             attributes.append('rtpmap:97 iLBC/8000')
-            # Default to 30ms mode (13.33 kbps)
-            # TODO: Read mode from config
-            attributes.append('fmtp:97 mode=30')
+            # Use configured mode from config (20ms or 30ms)
+            attributes.append(f'fmtp:97 mode={ilbc_mode}')
         
         # Speex - Open source speech codec (dynamic PT)
         # Use distinct payload types for each bandwidth mode
