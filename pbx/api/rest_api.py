@@ -9792,33 +9792,33 @@ class PBXAPIServer:
                         self.logger.info(
                             f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
-            # Start in separate thread
-            self.server_thread = threading.Thread(target=self._run)
-            self.server_thread.daemon = True
-            self.server_thread.start()
+                # Start in separate thread
+                self.server_thread = threading.Thread(target=self._run)
+                self.server_thread.daemon = True
+                self.server_thread.start()
 
-            return True
-        except Exception as e:
-            self.logger.error(f"Failed to start API server: {e}")
-            import traceback
-            traceback.print_exc()
-            
-            # Reset running flag to ensure consistent state
-            self.running = False
-            
-            # Clean up any partially created server to avoid leaving socket in bad state
-            if self.server:
-                try:
-                    self.server.server_close()
-                except OSError as e:
-                    self.logger.debug(f"Error during cleanup: {e}")
-                finally:
-                    self.server = None
-            
-            # Clear thread reference as well since start failed
-            self.server_thread = None
-            
-            return False
+                return True
+            except Exception as e:
+                self.logger.error(f"Failed to start API server: {e}")
+                import traceback
+                traceback.print_exc()
+                
+                # Reset running flag to ensure consistent state
+                self.running = False
+                
+                # Clean up any partially created server to avoid leaving socket in bad state
+                if self.server:
+                    try:
+                        self.server.server_close()
+                    except OSError as e:
+                        self.logger.debug(f"Error during cleanup: {e}")
+                    finally:
+                        self.server = None
+                
+                # Clear thread reference as well since start failed
+                self.server_thread = None
+                
+                return False
 
     def _run(self):
         """Run server"""
