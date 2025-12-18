@@ -9382,6 +9382,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 class ReusableHTTPServer(HTTPServer):
     """HTTPServer that allows immediate socket reuse after restart"""
     allow_reuse_address = True
+    
+    def server_bind(self):
+        """Override server_bind to explicitly set socket options for better reusability"""
+        import socket
+        # Explicitly set SO_REUSEADDR to ensure socket can be reused immediately
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Call parent's server_bind
+        HTTPServer.server_bind(self)
 
 
 class PBXAPIServer:
@@ -9400,6 +9408,7 @@ class PBXAPIServer:
         self.host = host
         self.port = port
         self.server = None
+        self.server_thread = None
         self.logger = get_logger()
         self.running = False
         self.ssl_enabled = False
@@ -9770,15 +9779,25 @@ class PBXAPIServer:
                         f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
             # Start in separate thread
-            server_thread = threading.Thread(target=self._run)
-            server_thread.daemon = True
-            server_thread.start()
+            self.server_thread = threading.Thread(target=self._run)
+            self.server_thread.daemon = True
+            self.server_thread.start()
 
             return True
         except Exception as e:
             self.logger.error(f"Failed to start API server: {e}")
             import traceback
             traceback.print_exc()
+            
+            # Clean up any partially created server to avoid leaving socket in bad state
+            if hasattr(self, 'server') and self.server:
+                try:
+                    self.server.server_close()
+                except Exception as cleanup_error:
+                    self.logger.debug(f"Error during cleanup: {cleanup_error}")
+                finally:
+                    self.server = None
+            
             return False
 
     def _run(self):
@@ -9797,9 +9816,19 @@ class PBXAPIServer:
     def stop(self):
         """Stop API server"""
         self.running = False
+        
+        # Wait for server thread to finish with timeout
+        if self.server_thread and self.server_thread.is_alive():
+            # The thread should exit on its own when running=False
+            # Wait up to 2 seconds for it to finish
+            self.server_thread.join(timeout=2.0)
+            if self.server_thread.is_alive():
+                self.logger.warning("API server thread did not stop cleanly")
+        
         if self.server:
             try:
                 self.server.server_close()
             except (OSError, socket.error) as e:
                 self.logger.error(f"Error closing API server: {e}")
+        
         self.logger.info("API server stopped")
