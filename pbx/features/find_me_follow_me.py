@@ -203,6 +203,7 @@ class FindMeFollowMe:
             True if successful
         """
         if not self.enabled:
+            self.logger.error(f"Cannot set FMFM config for {extension}: Find Me/Follow Me feature is not enabled globally")
             return False
         
         required_fields = ['mode', 'destinations']
