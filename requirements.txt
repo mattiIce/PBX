@@ -5,8 +5,8 @@ PyYAML>=5.4  # Updated from 5.1 for security fix
 cryptography>=42.0.4  # Updated from 41.0.0 for security fixes
 
 # Production SIP/RTP support (FREE, open source)
-aiortc>=1.6.0  # WebRTC support
-twisted>=23.10.0  # Async networking
+aiortc>=1.6.0  # WebRTC support (browser-based calling)
+twisted>=23.10.0  # Async networking (SIP protocol handling)
 
 # Enhanced audio processing (FREE, open source)
 pydub>=0.25.1  # Audio manipulation
@@ -48,7 +48,8 @@ vosk>=0.3.45  # Offline speech-to-text for voicemail transcription
 # Natural Language Processing (FREE, open source)
 spacy>=3.7.0  # Industrial-strength NLP for entity extraction, sentiment analysis
 # Download model: python -m spacy download en_core_web_sm
-nltk>=3.9  # Updated from 3.8.0 for security fix - Natural language toolkit for tokenization, lemmatization, intent detection
+nltk>=3.9  # Updated from 3.8.0 for security fix
+# Natural language toolkit for tokenization, lemmatization, intent detection
 # NLTK will auto-download required corpora on first use
 
 # Machine Learning (FREE, open source)
