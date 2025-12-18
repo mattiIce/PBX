@@ -6365,3 +6365,264 @@ function showUpdateLocationModal() {
 function updateExtensionLocation(extension) {
     // Coming soon
 }
+
+// ============================================================================
+// Click-to-Dial Functions
+// ============================================================================
+
+/**
+ * Load all click-to-dial configurations
+ */
+async function loadClickToDialConfigs() {
+    try {
+        const response = await fetch(`${API_BASE}/api/framework/click-to-dial/configs`);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Error loading click-to-dial configs:', data.error);
+            return;
+        }
+        
+        // Populate extension selects
+        const extensionSelect = document.getElementById('ctd-extension-select');
+        const historyExtensionSelect = document.getElementById('ctd-history-extension');
+        
+        if (extensionSelect && currentExtensions) {
+            extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+            currentExtensions.forEach(ext => {
+                const option = document.createElement('option');
+                option.value = ext.number;
+                option.textContent = `${ext.number} - ${ext.name}`;
+                extensionSelect.appendChild(option);
+            });
+        }
+        
+        if (historyExtensionSelect && currentExtensions) {
+            historyExtensionSelect.innerHTML = '<option value="">All Extensions</option>';
+            currentExtensions.forEach(ext => {
+                const option = document.createElement('option');
+                option.value = ext.number;
+                option.textContent = `${ext.number} - ${ext.name}`;
+                historyExtensionSelect.appendChild(option);
+            });
+        }
+        
+        // Populate configurations table
+        const tbody = document.getElementById('ctd-configs-table');
+        if (!tbody) return;
+        
+        if (!data.configs || data.configs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No configurations found. Configure extensions above.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.configs.map(config => `
+            <tr>
+                <td>${escapeHtml(config.extension)}</td>
+                <td><span class="status-badge ${config.enabled ? 'success' : 'error'}">${config.enabled ? '✓ Enabled' : '✗ Disabled'}</span></td>
+                <td>${config.default_caller_id ? escapeHtml(config.default_caller_id) : '-'}</td>
+                <td>${config.auto_answer ? '✓ Yes' : '✗ No'}</td>
+                <td>${config.browser_notification ? '✓ Yes' : '✗ No'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editClickToDialConfig('${escapeHtml(config.extension)}')">Edit</button>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading click-to-dial configs:', error);
+        displayError(error, 'Loading click-to-dial configurations');
+    }
+}
+
+/**
+ * Load click-to-dial configuration for specific extension
+ */
+async function loadClickToDialConfig() {
+    const extension = document.getElementById('ctd-extension-select')?.value;
+    
+    if (!extension) {
+        document.getElementById('ctd-config-section').style.display = 'none';
+        document.getElementById('ctd-no-extension').style.display = 'block';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/framework/click-to-dial/config/${extension}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Error loading config:', data.error);
+            // Show default config for new extension
+            document.getElementById('ctd-current-extension').textContent = extension;
+            document.getElementById('ctd-enabled').checked = true;
+            document.getElementById('ctd-caller-id').value = '';
+            document.getElementById('ctd-auto-answer').checked = false;
+            document.getElementById('ctd-browser-notification').checked = true;
+        } else {
+            document.getElementById('ctd-current-extension').textContent = extension;
+            document.getElementById('ctd-enabled').checked = data.config.enabled;
+            document.getElementById('ctd-caller-id').value = data.config.default_caller_id || '';
+            document.getElementById('ctd-auto-answer').checked = data.config.auto_answer;
+            document.getElementById('ctd-browser-notification').checked = data.config.browser_notification;
+        }
+        
+        document.getElementById('ctd-config-section').style.display = 'block';
+        document.getElementById('ctd-no-extension').style.display = 'none';
+        
+    } catch (error) {
+        console.error('Error loading click-to-dial config:', error);
+        displayError(error, 'Loading click-to-dial configuration');
+    }
+}
+
+/**
+ * Save click-to-dial configuration
+ */
+async function saveClickToDialConfig(event) {
+    event.preventDefault();
+    
+    const extension = document.getElementById('ctd-current-extension')?.textContent;
+    if (!extension) {
+        showNotification('No extension selected', 'error');
+        return;
+    }
+    
+    const config = {
+        enabled: document.getElementById('ctd-enabled').checked,
+        default_caller_id: document.getElementById('ctd-caller-id').value.trim() || null,
+        auto_answer: document.getElementById('ctd-auto-answer').checked,
+        browser_notification: document.getElementById('ctd-browser-notification').checked
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/framework/click-to-dial/config/${extension}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showNotification(`Error: ${data.error}`, 'error');
+        } else {
+            showNotification('Configuration saved successfully', 'success');
+            loadClickToDialConfigs();
+        }
+    } catch (error) {
+        console.error('Error saving config:', error);
+        displayError(error, 'Saving click-to-dial configuration');
+        showNotification('Error saving configuration', 'error');
+    }
+}
+
+/**
+ * Edit click-to-dial configuration for extension
+ */
+async function editClickToDialConfig(extension) {
+    // Set the extension in the select
+    const select = document.getElementById('ctd-extension-select');
+    if (select) {
+        select.value = extension;
+        await loadClickToDialConfig();
+        // Scroll to config section
+        document.getElementById('ctd-config-section').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+/**
+ * Initiate a click-to-dial call
+ */
+async function initiateClickToDial() {
+    const extension = document.getElementById('ctd-extension-select')?.value;
+    const phoneNumber = document.getElementById('ctd-phone-number')?.value.trim();
+    
+    if (!extension) {
+        showNotification('Please select an extension', 'error');
+        return;
+    }
+    
+    if (!phoneNumber) {
+        showNotification('Please enter a phone number', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/framework/click-to-dial/call/${extension}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                destination: phoneNumber
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showNotification(`Error: ${data.error}`, 'error');
+        } else {
+            showNotification(`Call initiated from extension ${extension} to ${phoneNumber}`, 'success');
+            // Clear the phone number field
+            document.getElementById('ctd-phone-number').value = '';
+            // Reload history after a short delay
+            setTimeout(() => loadClickToDialHistory(), 1000);
+        }
+    } catch (error) {
+        console.error('Error initiating call:', error);
+        displayError(error, 'Initiating click-to-dial call');
+        showNotification('Error initiating call', 'error');
+    }
+}
+
+/**
+ * Load click-to-dial history for extension
+ */
+async function loadClickToDialHistory() {
+    const extension = document.getElementById('ctd-history-extension')?.value;
+    const tbody = document.getElementById('ctd-history-table');
+    
+    if (!tbody) return;
+    
+    if (!extension) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Select an extension to view history</td></tr>';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/framework/click-to-dial/history/${extension}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Error: ${escapeHtml(data.error)}</td></tr>`;
+            return;
+        }
+        
+        if (!data.history || data.history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No call history found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.history.map(call => {
+            const timestamp = new Date(call.timestamp).toLocaleString();
+            const duration = call.duration ? `${call.duration}s` : '-';
+            const statusClass = call.status === 'completed' ? 'success' : 
+                               call.status === 'failed' ? 'error' : 'warning';
+            
+            return `
+                <tr>
+                    <td>${timestamp}</td>
+                    <td>${escapeHtml(call.extension)}</td>
+                    <td>${escapeHtml(call.destination)}</td>
+                    <td>${duration}</td>
+                    <td><span class="status-badge ${statusClass}">${escapeHtml(call.status)}</span></td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading history:', error);
+        displayError(error, 'Loading click-to-dial history');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading history</td></tr>';
+    }
+}
