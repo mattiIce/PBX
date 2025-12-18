@@ -9385,7 +9385,6 @@ class ReusableHTTPServer(HTTPServer):
     
     def server_bind(self):
         """Override server_bind to explicitly set socket options for better reusability"""
-        import socket
         # Explicitly set SO_REUSEADDR to ensure socket can be reused immediately
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # Call parent's server_bind
@@ -9790,7 +9789,7 @@ class PBXAPIServer:
             traceback.print_exc()
             
             # Clean up any partially created server to avoid leaving socket in bad state
-            if hasattr(self, 'server') and self.server:
+            if self.server:
                 try:
                     self.server.server_close()
                 except Exception as cleanup_error:
