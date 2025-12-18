@@ -56,19 +56,38 @@ iLBC (Internet Low Bitrate Codec) is a free, royalty-free speech codec designed 
 
 ### Prerequisites
 
-```bash
-# Install Python iLBC library
-pip install pyilbc
+**⚠️ IMPORTANT: pyilbc Library Status**
 
-# On some systems, you may need to install system libraries first
-# Ubuntu/Debian:
-sudo apt-get install build-essential python3-dev
+The `pyilbc` package is **not currently available on PyPI**. The iLBC codec framework in this PBX system is fully implemented for SDP negotiation and call setup, but actual audio encoding/decoding requires a compatible library.
 
-# macOS:
-brew install python3
+**Current Status:**
+- ✅ iLBC codec framework is implemented and working
+- ✅ SDP negotiation and codec advertising works
+- ✅ System gracefully handles missing pyilbc library
+- ❌ Audio encoding/decoding requires pyilbc (not available)
 
-# Note: pyilbc includes the iLBC codec library
-```
+**Alternative Options:**
+
+1. **Use Other Codecs**: The PBX supports multiple codecs that are fully functional:
+   - Opus (opuslib) - Modern, high-quality codec
+   - Speex (speex) - Open source speech codec
+   - G.711 (PCMU/PCMA) - Built-in, no library needed
+   - G.722 - Wideband codec
+
+2. **Future Installation** (when pyilbc becomes available):
+   ```bash
+   # This will work when pyilbc is published to PyPI
+   pip install pyilbc
+   
+   # On some systems, you may need to install system libraries first
+   # Ubuntu/Debian:
+   sudo apt-get install build-essential python3-dev
+   
+   # macOS:
+   brew install python3
+   ```
+
+3. **Custom Build**: Advanced users can build iLBC bindings from source if needed
 
 ### Enable in PBX
 
@@ -265,20 +284,26 @@ grep -A 3 "ilbc:" config.yml
 
 ### Problem: "pyilbc not available" warning
 
-**Symptom**: Warning message on startup
+**Symptom**: Warning message on startup: `"pyilbc library not available - iLBC codec will be negotiated but encoding/decoding will not work"`
+
+**Cause**: The `pyilbc` package is not currently available on PyPI.
 
 **Solution**:
-```bash
-# Install pyilbc
-pip install pyilbc
 
-# If compilation fails:
-sudo apt-get install build-essential python3-dev
-pip install pyilbc
+This warning is **expected and normal**. The iLBC codec framework is working correctly for SDP negotiation, but audio encoding/decoding is not available without the pyilbc library.
 
-# Verify installation
-python -c "import pyilbc; print('iLBC available')"
-```
+**Options**:
+1. **Ignore the warning**: The system will work fine with other codecs (Opus, Speex, G.711, G.722)
+2. **Disable iLBC in config**: If you don't need iLBC codec negotiation, disable it:
+   ```yaml
+   codecs:
+     ilbc:
+       enabled: false
+   ```
+3. **Wait for pyilbc**: When the package becomes available on PyPI, you can install it:
+   ```bash
+   pip install pyilbc  # Not currently available
+   ```
 
 ### Problem: Poor audio quality
 
@@ -364,8 +389,8 @@ class ILBCCodecManager:
 
 ### External Links
 - [Global IP Solutions (GIPS)](https://www.gipscorp.com/) - Original iLBC developer
-- [pyilbc on PyPI](https://pypi.org/project/pyilbc/) - Python bindings
 - [WebRTC iLBC](https://webrtc.org/) - iLBC in WebRTC
+- **Note**: pyilbc Python bindings are not currently available on PyPI
 
 ### Related PBX Documentation
 - [CODEC_COMPARISON_GUIDE.md](CODEC_COMPARISON_GUIDE.md) - Compare all codecs
@@ -374,12 +399,21 @@ class ILBCCodecManager:
 
 ## Conclusion
 
-iLBC is an excellent choice for VoIP deployments where packet loss is a concern. Its royalty-free status, low computational requirements, and built-in packet loss concealment make it ideal for mobile, wireless, and unreliable network scenarios. While not offering the quality of G.711 or the efficiency of Opus, iLBC fills a valuable niche for robust VoIP in challenging network conditions.
+iLBC is an excellent choice for VoIP deployments where packet loss is a concern. Its royalty-free status, low computational requirements, and built-in packet loss concealment make it ideal for mobile, wireless, and unreliable network scenarios.
+
+**Current Implementation Status:**
+- ✅ iLBC codec framework fully implemented
+- ✅ SDP negotiation and codec advertising working
+- ⚠️ Audio encoding/decoding requires pyilbc library (not available on PyPI)
+- ✅ System gracefully handles missing library with appropriate warnings
+- 💡 Consider using Opus or Speex codecs as fully-functional alternatives
+
+While the pyilbc library is not currently available, the framework is ready to support it when it becomes available. In the meantime, the PBX system offers excellent alternatives like Opus, Speex, and G.711 that are fully functional.
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: December 17, 2024  
-**Status**: ✅ Framework Ready (requires pyilbc for encoding/decoding)
+**Version**: 1.1  
+**Last Updated**: December 18, 2024  
+**Status**: ⚠️ Framework Ready (pyilbc library not available on PyPI)
 
 **Built with ❤️ for robust VoIP communications**
