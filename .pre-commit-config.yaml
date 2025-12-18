@@ -1,0 +1,110 @@
+# Pre-commit hooks for PBX System
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+        exclude: '\.wav$'
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: name-tests-test
+        args: ['--pytest-test-first']
+        exclude: '^tests/conftest\.py$'
+
+  # Python code formatting with Black
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: ['--line-length=100']
+
+  # Import sorting with isort
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile=black', '--line-length=100']
+
+  # Linting with flake8
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: ['--config=.flake8']
+        additional_dependencies:
+          - flake8-docstrings
+          - flake8-bugbear
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        args: ['--config-file=mypy.ini']
+        additional_dependencies:
+          - types-PyYAML
+          - types-requests
+        exclude: '^(tests/|setup\.py|run_tests\.py)'
+
+  # Security linting with bandit
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: ['-r', 'pbx/', '-ll']
+        exclude: 'tests/'
+
+  # Check for common security issues
+  - repo: https://github.com/PyCQA/safety
+    rev: v3.0.1
+    hooks:
+      - id: safety
+        args: ['check', '--json']
+        language_version: python3
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args: ['-d', '{extends: default, rules: {line-length: {max: 120}, document-start: disable}}']
+        exclude: '(config.*\.yml|test_config\.yml)'
+
+  # Markdown linting
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.12.0
+    hooks:
+      - id: markdownlint
+        args: ['--style', '.markdownlint.json']
+        exclude: '^(CHANGELOG\.md|docs/)'
+
+# Configuration for specific file types
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [safety]  # Skip safety in CI as it requires network access
+  submodules: false
