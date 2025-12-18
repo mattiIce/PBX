@@ -9382,13 +9382,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 class ReusableHTTPServer(HTTPServer):
     """HTTPServer that allows immediate socket reuse after restart"""
     allow_reuse_address = True
-    
-    def server_bind(self):
-        """Override server_bind to explicitly set socket options for better reusability"""
-        # Explicitly set SO_REUSEADDR to ensure socket can be reused immediately
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # Call parent's server_bind
-        HTTPServer.server_bind(self)
 
 
 class PBXAPIServer:
