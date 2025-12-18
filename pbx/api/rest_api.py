@@ -9785,7 +9785,7 @@ class PBXAPIServer:
             if self.server:
                 try:
                     self.server.server_close()
-                except (OSError, socket.error) as cleanup_error:
+                except OSError as cleanup_error:
                     self.logger.debug(f"Error during cleanup: {cleanup_error}")
                 finally:
                     self.server = None
@@ -9826,7 +9826,7 @@ class PBXAPIServer:
         if self.server:
             try:
                 self.server.server_close()
-            except (OSError, socket.error) as e:
+            except OSError as e:
                 self.logger.error(f"Error closing API server: {e}")
         
         self.logger.info("API server stopped")
