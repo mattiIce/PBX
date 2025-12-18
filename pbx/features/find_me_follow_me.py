@@ -221,9 +221,12 @@ class FindMeFollowMe:
         
         self.user_configs[extension] = {
             **config,
-            'extension': extension,
-            'updated_at': datetime.now()
+            'extension': extension
         }
+        
+        # Add timestamp only if no database (otherwise database generates it)
+        if not (self.database and self.database.enabled):
+            self.user_configs[extension]['updated_at'] = datetime.now()
         
         # Save to database if one is configured
         if self.database and self.database.enabled:
