@@ -13,6 +13,7 @@ import re
 import shutil
 import socket
 import ssl
+import subprocess
 import tempfile
 import threading
 import time
@@ -9402,6 +9403,58 @@ class ReusableHTTPServer(HTTPServer):
         super().server_bind()
 
 
+def get_process_using_port(port):
+    """
+    Detect what process is using a specific port
+    
+    Args:
+        port (int): Port number to check
+        
+    Returns:
+        str: Description of the process using the port, or None if not found
+    """
+    try:
+        # Try lsof first (most reliable)
+        result = subprocess.run(
+            ['lsof', '-i', f':{port}', '-n', '-P'],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        if result.returncode == 0 and result.stdout:
+            lines = result.stdout.strip().split('\n')
+            if len(lines) > 1:
+                # Parse the second line (first data line after header)
+                parts = lines[1].split()
+                if len(parts) >= 2:
+                    process_name = parts[0]
+                    pid = parts[1]
+                    return f"{process_name} (PID: {pid})"
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    
+    try:
+        # Fallback to netstat
+        result = subprocess.run(
+            ['netstat', '-tulpn'],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        if result.returncode == 0:
+            for line in result.stdout.split('\n'):
+                if f':{port}' in line and 'LISTEN' in line:
+                    # Try to extract process info
+                    parts = line.split()
+                    if len(parts) >= 7:
+                        process_info = parts[6]
+                        return process_info
+    except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
+        pass
+    
+    return None
+
+
 class PBXAPIServer:
     """REST API server for PBX with HTTPS support"""
 
@@ -9739,7 +9792,8 @@ class PBXAPIServer:
     def start(self):
         """Start API server with retry logic for address binding"""
         max_retries = 3
-        retry_delay = 1  # Initial delay in seconds
+        retry_delay = 2  # Initial delay in seconds
+        last_exception = None
         
         for attempt in range(max_retries):
             try:
@@ -9798,9 +9852,87 @@ class PBXAPIServer:
                 self.server_thread.start()
 
                 return True
+                
+            except OSError as e:
+                last_exception = e
+                
+                # Reset running flag to ensure consistent state
+                self.running = False
+                
+                # Clean up any partially created server to avoid leaving socket in bad state
+                if self.server:
+                    try:
+                        self.server.server_close()
+                    except OSError as cleanup_err:
+                        self.logger.debug(f"Error during cleanup: {cleanup_err}")
+                    finally:
+                        self.server = None
+                
+                # Clear thread reference as well since start failed
+                self.server_thread = None
+                
+                # Check if this is an "Address already in use" error
+                if e.errno == errno.EADDRINUSE:
+                    # Try to detect what process is using the port
+                    process_info = get_process_using_port(self.port)
+                    
+                    if attempt < max_retries - 1:
+                        # Not the last attempt - log and retry
+                        self.logger.warning(
+                            f"Port {self.port} is already in use (attempt {attempt + 1}/{max_retries})"
+                        )
+                        if process_info:
+                            self.logger.warning(f"  Port is being used by: {process_info}")
+                        self.logger.warning(f"  Retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                        continue
+                    else:
+                        # Last attempt failed - provide detailed error
+                        self.logger.error("=" * 80)
+                        self.logger.error("API SERVER PORT CONFLICT")
+                        self.logger.error("=" * 80)
+                        self.logger.error(f"Failed to start API server: Port {self.port} is already in use")
+                        self.logger.error("")
+                        
+                        if process_info:
+                            self.logger.error(f"Port {self.port} is currently being used by:")
+                            self.logger.error(f"  {process_info}")
+                            self.logger.error("")
+                        
+                        self.logger.error("To resolve this issue:")
+                        self.logger.error("  1. Stop the process using the port:")
+                        self.logger.error(f"     sudo lsof -ti:{self.port} | xargs kill -9")
+                        self.logger.error("     OR")
+                        self.logger.error(f"     sudo fuser -k {self.port}/tcp")
+                        self.logger.error("")
+                        self.logger.error("  2. Change the API port in config.yml:")
+                        self.logger.error("     api:")
+                        self.logger.error("       port: <different_port>")
+                        self.logger.error("")
+                        self.logger.error("  3. Check if another PBX instance is running:")
+                        self.logger.error("     ps aux | grep python.*main.py")
+                        self.logger.error("=" * 80)
+                        
+                        return False
+                else:
+                    # Different OSError - log and retry
+                    if attempt < max_retries - 1:
+                        self.logger.warning(
+                            f"Failed to bind to port {self.port}: {e} (attempt {attempt + 1}/{max_retries})"
+                        )
+                        self.logger.warning(f"  Retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                        continue
+                    else:
+                        self.logger.error(f"Failed to start API server: {e}")
+                        traceback.print_exc()
+                        return False
+                        
             except Exception as e:
+                last_exception = e
                 self.logger.error(f"Failed to start API server: {e}")
-                import traceback
                 traceback.print_exc()
                 
                 # Reset running flag to ensure consistent state
@@ -9810,15 +9942,22 @@ class PBXAPIServer:
                 if self.server:
                     try:
                         self.server.server_close()
-                    except OSError as e:
-                        self.logger.debug(f"Error during cleanup: {e}")
+                    except OSError as cleanup_err:
+                        self.logger.debug(f"Error during cleanup: {cleanup_err}")
                     finally:
                         self.server = None
                 
                 # Clear thread reference as well since start failed
                 self.server_thread = None
                 
+                # For non-OSError exceptions, don't retry
                 return False
+        
+        # If we get here, all retries failed
+        self.logger.error(f"Failed to start API server after {max_retries} attempts")
+        if last_exception:
+            self.logger.error(f"Last error: {last_exception}")
+        return False
 
     def _run(self):
         """Run server"""
