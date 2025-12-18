@@ -114,7 +114,13 @@ class FindMeFollowMe:
             self.logger.error(f"Error loading FMFM configs from database: {e}")
     
     def _save_to_database(self, extension: str):
-        """Save FMFM configuration to database"""
+        """
+        Save FMFM configuration to database
+        
+        Note: Uses SQL CURRENT_TIMESTAMP for updated_at field instead of 
+        datetime.now() to ensure compatibility between PostgreSQL and SQLite,
+        and to avoid timezone and datetime adapter issues.
+        """
         if not self.database or not self.database.enabled:
             return False
         
