@@ -1318,13 +1318,40 @@ function initializeForms() {
     }
 }
 
-// Notification System - Disabled (no users yet)
+// Notification System
 function showNotification(message, type = 'info') {
-    // Notifications disabled - no users to notify yet
-    // Errors are still logged to console for debugging
-    if (type === 'error') {
-        console.error('Error:', message);
-    }
+    // Log to console for debugging
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        max-width: 400px;
+        padding: 15px 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideInRight 0.3s ease-out;
+        font-size: 14px;
+        line-height: 1.4;
+    `;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
+    notification.innerHTML = `<strong>${icon}</strong> ${message}`;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
 }
 
 // Add slide animations
@@ -4370,7 +4397,9 @@ function clearLCRRates() {
 // ============================================================================
 
 function loadFMFMExtensions() {
-    fetch('/api/fmfm/extensions')
+    fetch('/api/fmfm/extensions', {
+        headers: getAuthHeaders()
+    })
         .then(response => response.json())
         .then(data => {
             if (data.extensions) {
@@ -4468,10 +4497,14 @@ function addFMFMDestinationRow() {
 function saveFMFMConfig(event) {
     event.preventDefault();
     
+    console.log('saveFMFMConfig called');
+    
     const extension = document.getElementById('fmfm-extension').value;
     const mode = document.getElementById('fmfm-mode').value;
     const enabled = document.getElementById('fmfm-enabled').checked;
     const noAnswer = document.getElementById('fmfm-no-answer').value;
+    
+    console.log('FMFM form values:', { extension, mode, enabled, noAnswer });
     
     // Collect destinations
     const destNumbers = Array.from(document.querySelectorAll('.fmfm-dest-number'));
@@ -4481,6 +4514,8 @@ function saveFMFMConfig(event) {
         number: input.value,
         ring_time: parseInt(destRingTimes[idx].value) || 20
     })).filter(d => d.number);
+    
+    console.log('FMFM destinations collected:', destinations);
     
     if (destinations.length === 0) {
         showNotification('At least one destination is required', 'error');
@@ -4498,13 +4533,19 @@ function saveFMFMConfig(event) {
         configData.no_answer_destination = noAnswer;
     }
     
+    console.log('FMFM config data to send:', configData);
+    
     fetch('/api/fmfm/config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(configData)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('FMFM save response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('FMFM save response data:', data);
         if (data.success) {
             showNotification(`FMFM configured for extension ${extension}`, 'success');
             closeAddFMFMModal();
@@ -4515,6 +4556,7 @@ function saveFMFMConfig(event) {
     })
     .catch(error => {
         console.error('Error saving FMFM config:', error);
+        displayError(error, 'Saving FMFM configuration');
         showNotification('Error saving FMFM configuration', 'error');
     });
 }
@@ -4551,7 +4593,8 @@ function deleteFMFMConfig(extension) {
     }
     
     fetch(`/api/fmfm/config/${extension}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders()
     })
     .then(response => response.json())
     .then(data => {
