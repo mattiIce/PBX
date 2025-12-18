@@ -1,5 +1,7 @@
 # WebRTC Admin Phone - Zultys ZIP33G Alignment
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md#zultys-phone-alignment). Please refer to the "Zultys Phone Alignment" section in that guide for the most up-to-date information.
+
 ## Overview
 This document describes the changes made to align the WebRTC browser phone (admin phone) with the Zultys ZIP33G phone configuration to ensure consistent behavior and settings across both phone types.
 

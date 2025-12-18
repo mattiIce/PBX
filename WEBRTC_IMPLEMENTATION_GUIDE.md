@@ -1,5 +1,7 @@
 # WebRTC Browser Calling - Implementation Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on WebRTC browser calling.
+
 ## Overview
 
 The WebRTC Browser Calling feature enables users to make and receive calls directly from their web browser without installing any software. This guide explains how the WebRTC implementation works and how to use it.
