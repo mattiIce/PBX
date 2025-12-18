@@ -130,6 +130,39 @@ a=rtpmap:0 PCMU/8000
     print("  ✓ Media-level connection works")
 
 
+def test_ilbc_mode_configuration():
+    """Test iLBC mode configuration in SDP"""
+    print("Testing iLBC mode configuration...")
+
+    # Test with default mode (30ms)
+    sdp_body_30 = SDPBuilder.build_audio_sdp(
+        local_ip='192.168.1.14',
+        local_port=10000,
+        session_id='test-ilbc-30',
+        codecs=['97'],  # iLBC codec
+        ilbc_mode=30
+    )
+
+    assert 'rtpmap:97 iLBC/8000' in sdp_body_30, "SDP should contain iLBC codec"
+    assert 'fmtp:97 mode=30' in sdp_body_30, "SDP should contain mode=30 for iLBC"
+
+    print("  ✓ iLBC mode=30 configuration works")
+
+    # Test with 20ms mode
+    sdp_body_20 = SDPBuilder.build_audio_sdp(
+        local_ip='192.168.1.14',
+        local_port=10000,
+        session_id='test-ilbc-20',
+        codecs=['97'],  # iLBC codec
+        ilbc_mode=20
+    )
+
+    assert 'rtpmap:97 iLBC/8000' in sdp_body_20, "SDP should contain iLBC codec"
+    assert 'fmtp:97 mode=20' in sdp_body_20, "SDP should contain mode=20 for iLBC"
+
+    print("  ✓ iLBC mode=20 configuration works")
+
+
 def run_all_tests():
     """Run all SDP tests"""
     print("=" * 60)
@@ -141,7 +174,8 @@ def run_all_tests():
         test_sdp_parsing,
         test_sdp_audio_info,
         test_sdp_building,
-        test_sdp_media_level_connection
+        test_sdp_media_level_connection,
+        test_ilbc_mode_configuration
     ]
 
     passed = 0
