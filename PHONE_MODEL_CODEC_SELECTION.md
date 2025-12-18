@@ -1,5 +1,7 @@
 # Phone Model-Specific Codec Selection
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on phone-specific codec selection.
+
 ## Overview
 
 The PBX server now automatically selects appropriate codecs based on the phone model when establishing calls. This ensures optimal compatibility and audio quality for different Zultys phone models.

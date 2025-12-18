@@ -1,5 +1,7 @@
 # G.729 and G.726 Codec Support Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on all codecs including G.729 and G.726.
+
 This guide explains the G.729 and G.726 codec support in the PBX system, including configuration, capabilities, and limitations.
 
 ## Overview

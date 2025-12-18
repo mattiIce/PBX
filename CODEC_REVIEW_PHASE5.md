@@ -1,5 +1,7 @@
 # Phase 5: Internal Codec Review Results
 
+> **📋 NOTE**: For current codec implementation documentation, see [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md) which consolidates all codec guides into a single comprehensive reference.
+
 **Date**: December 17, 2024
 
 ## Discovered Codec Implementations
