@@ -388,8 +388,6 @@ class ILBCCodecManager:
 - [RFC 3952](https://tools.ietf.org/html/rfc3952) - RTP Payload Format for iLBC
 
 ### External Links
-- [RFC 3951](https://tools.ietf.org/html/rfc3951) - iLBC Codec Definition
-- [RFC 3952](https://tools.ietf.org/html/rfc3952) - RTP Payload Format for iLBC
 - [Global IP Solutions (GIPS)](https://www.gipscorp.com/) - Original iLBC developer
 - [WebRTC iLBC](https://webrtc.org/) - iLBC in WebRTC
 - **Note**: pyilbc Python bindings are not currently available on PyPI
