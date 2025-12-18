@@ -1,5 +1,7 @@
 # Voicemail Transcription with Vosk (FREE, Offline)
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [VOICEMAIL_TRANSCRIPTION_GUIDE.md](VOICEMAIL_TRANSCRIPTION_GUIDE.md). Please refer to the main transcription guide which now includes comprehensive Vosk documentation.
+
 The PBX system now supports **FREE, offline voicemail transcription** using Vosk speech recognition. No API keys, no subscriptions, no cloud dependencies!
 
 ## Features

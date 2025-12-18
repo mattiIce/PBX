@@ -1,5 +1,7 @@
 # Kari's Law Compliance Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#karis-law-compliance). Please refer to the "Kari's Law Compliance" section in the consolidated guide.
+
 ## Overview
 
 This PBX system implements **Kari's Law** compliance, which is a federal requirement under 47 CFR § 9.16 for multi-line telephone systems (MLTS). 

@@ -1,5 +1,7 @@
 # Voicemail PIN Debug Logging
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md#debugging-and-logging). Please refer to the "Debugging and Logging" section in that guide for the most up-to-date information.
+
 ## Overview
 
 This feature provides detailed console logging to help troubleshoot DTMF PIN recognition issues in the voicemail IVR system.

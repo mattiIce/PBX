@@ -1,5 +1,7 @@
 # WebRTC Verbose Logging Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md#debugging-and-logging). Please refer to the "Debugging and Logging" section in that guide for the most up-to-date information.
+
 This guide explains how to enable verbose logging for the WebRTC phone feature to debug call failures.
 
 ## Overview

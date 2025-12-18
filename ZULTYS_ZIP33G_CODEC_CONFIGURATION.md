@@ -1,5 +1,7 @@
 # Zultys ZIP33G vs ZIP37G Codec Configuration
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on Zultys phone codec configuration.
+
 ## Date
 December 11, 2025
 

@@ -1,5 +1,7 @@
 # Security Summary
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md). Please refer to the consolidated guide for the most up-to-date security information.
+
 ## CodeQL Analysis Results
 
 ### Findings

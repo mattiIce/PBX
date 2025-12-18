@@ -1,5 +1,7 @@
 # WebRTC Browser Phone - User Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on using the WebRTC browser phone.
+
 ## Overview
 
 The WebRTC Browser Phone feature allows you to make and receive phone calls directly from your web browser without needing a physical desk phone. This is perfect for working from home or when you don't have access to your office phone.

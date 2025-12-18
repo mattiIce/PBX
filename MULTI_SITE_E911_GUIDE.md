@@ -1,5 +1,7 @@
 # Multi-Site E911 Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#multi-site-e911). Please refer to the "Multi-Site E911" section in the consolidated guide.
+
 **Last Updated**: December 15, 2025  
 **Status**: ✅ Production Ready  
 **Feature**: Multi-Site Emergency Call Routing

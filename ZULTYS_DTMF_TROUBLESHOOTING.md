@@ -1,5 +1,7 @@
 # Zultys ZIP33G/ZIP37G DTMF Troubleshooting Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on Zultys DTMF troubleshooting.
+
 ## Overview
 
 This guide addresses DTMF (Dual-Tone Multi-Frequency) issues with Zultys ZIP33G and ZIP37G phones when accessing voicemail and auto-attendant features on the PBX system.

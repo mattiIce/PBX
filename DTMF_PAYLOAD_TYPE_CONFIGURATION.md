@@ -1,5 +1,7 @@
 # DTMF Payload Type Configuration Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on DTMF configuration and troubleshooting.
+
 ## Quick Start
 
 **Not sure which payload type to use?** Run the interactive selector tool:
