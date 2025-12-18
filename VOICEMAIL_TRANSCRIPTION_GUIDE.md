@@ -38,6 +38,15 @@ The voicemail transcription feature automatically converts voicemail messages to
 - **Setup**: Requires Google Cloud credentials
 - **Library**: `google-cloud-speech` Python package
 
+### Vosk (FREE, Offline)
+
+- **Model**: Open-source speech recognition
+- **Accuracy**: Good for most voicemail transcription needs
+- **Cost**: FREE - No API costs
+- **Setup**: Download language model
+- **Library**: `vosk` Python package
+- **Privacy**: Audio never leaves your server (fully offline)
+
 ---
 
 ## Installation
@@ -54,6 +63,11 @@ pip install openai
 #### For Google Cloud Speech-to-Text:
 ```bash
 pip install google-cloud-speech
+```
+
+#### For Vosk (FREE, Offline):
+```bash
+pip install vosk
 ```
 
 ### 2. Configure Credentials
@@ -75,6 +89,35 @@ export TRANSCRIPTION_API_KEY="your-openai-api-key"
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
 ```
 
+#### Vosk Setup (FREE, Offline):
+1. Download a language model from https://alphacephei.com/vosk/models
+2. Extract the model to a directory (e.g., `models/vosk-model-small-en-us-0.15`)
+3. No API key needed!
+
+**Recommended English Models**:
+
+**Small Model (40 MB) - Fast, Good for Most Uses:**
+```bash
+mkdir -p models
+cd models
+wget https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+unzip vosk-model-small-en-us-0.15.zip
+rm vosk-model-small-en-us-0.15.zip
+cd ..
+```
+
+**Large Model (1.8 GB) - More Accurate:**
+```bash
+mkdir -p models
+cd models
+wget https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip
+unzip vosk-model-en-us-0.22.zip
+rm vosk-model-en-us-0.22.zip
+cd ..
+```
+
+**Other Languages**: Visit https://alphacephei.com/vosk/models for Spanish, French, German, Russian, Chinese, and more!
+
 ### 3. Enable in Configuration
 
 Edit `config.yml`:
@@ -83,8 +126,9 @@ Edit `config.yml`:
 features:
   voicemail_transcription:
     enabled: true
-    provider: openai  # or 'google'
+    provider: openai  # Options: 'openai', 'google', or 'vosk'
     api_key: ${TRANSCRIPTION_API_KEY}  # Only needed for OpenAI
+    vosk_model_path: models/vosk-model-small-en-us-0.15  # Only needed for Vosk
 ```
 
 ---
@@ -97,7 +141,42 @@ features:
 features:
   voicemail_transcription:
     enabled: true              # Enable/disable transcription
-    provider: openai           # Provider: 'openai' or 'google'
+    provider: openai           # Provider: 'openai', 'google', or 'vosk'
+    api_key: ${TRANSCRIPTION_API_KEY}  # OpenAI API key (from .env)
+    vosk_model_path: models/vosk-model-small-en-us-0.15  # Path to Vosk model
+    language: en-US            # Language code (for Google/OpenAI)
+    include_in_email: true     # Include transcription in email notifications
+```
+
+### Provider-Specific Configuration
+
+#### OpenAI Whisper
+```yaml
+features:
+  voicemail_transcription:
+    enabled: true
+    provider: openai
+    api_key: ${TRANSCRIPTION_API_KEY}
+```
+
+#### Google Cloud Speech-to-Text
+```yaml
+features:
+  voicemail_transcription:
+    enabled: true
+    provider: google
+    language: en-US
+    # Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+```
+
+#### Vosk (FREE, Offline)
+```yaml
+features:
+  voicemail_transcription:
+    enabled: true
+    provider: vosk
+    vosk_model_path: models/vosk-model-small-en-us-0.15
+```
     api_key: ${TRANSCRIPTION_API_KEY}  # API key (OpenAI only)
 ```
 
@@ -526,6 +605,9 @@ if result['success']:
 
 - [OpenAI Whisper API](https://platform.openai.com/docs/guides/speech-to-text)
 - [Google Cloud Speech-to-Text](https://cloud.google.com/speech-to-text/docs)
+- [Vosk Project](https://alphacephei.com/vosk/)
+- [Vosk Models](https://alphacephei.com/vosk/models)
+- [Vosk GitHub](https://github.com/alphacep/vosk-api)
 
 ### Troubleshooting Resources
 
@@ -558,10 +640,44 @@ A: Yes, but the language setting is system-wide. OpenAI Whisper auto-detects lan
 A: Both providers offer 90-95% accuracy for clear audio. Accuracy depends on audio quality, accent, background noise, and language.
 
 **Q: Can I use local/on-premise speech-to-text?**  
-A: Not currently, but you can extend the `VoicemailTranscriptionService` class to add custom providers.
+A: Yes! Use Vosk for completely FREE, offline transcription. No API keys or internet required.
+
+**Q: Which provider should I choose?**  
+A: 
+- **Vosk**: Best for privacy, offline use, no costs. Good accuracy for most needs.
+- **OpenAI Whisper**: Best overall accuracy, handles accents well. Requires API key and internet.
+- **Google Cloud**: Excellent accuracy with confidence scores. Requires credentials and internet.
+
+**Q: What are the costs?**  
+A: 
+- **Vosk**: FREE (one-time model download)
+- **OpenAI**: ~$0.006 per minute
+- **Google Cloud**: ~$0.006 per minute
 
 **Q: Does transcription affect call quality or performance?**  
 A: No. Transcription happens asynchronously after the call ends and doesn't affect real-time call processing.
+
+### Vosk-Specific FAQ
+
+**Q: How accurate is Vosk compared to cloud providers?**  
+A: Vosk provides 85-90% accuracy (small model) to 90-95% (large model), compared to 90-95% for cloud providers. For most business voicemail, the small model is sufficient.
+
+**Q: Does Vosk work offline?**  
+A: Yes! That's the main advantage. Once you download the model, no internet connection is needed.
+
+**Q: Which Vosk model should I use?**  
+A: Start with the small model (40 MB). It's fast and accurate enough for most voicemail. Upgrade to the large model (1.8 GB) only if you need higher accuracy.
+
+**Q: Can I use Vosk for languages other than English?**  
+A: Yes! Vosk has models for 20+ languages including Spanish, French, German, Russian, Chinese, and more. Download from https://alphacephei.com/vosk/models
+
+**Q: What are Vosk's resource requirements?**  
+A: 
+- Small model: ~100 MB RAM, real-time transcription on most CPUs
+- Large model: ~1 GB RAM, may take 2-3x real-time on older CPUs
+
+**Q: Can I switch between providers?**  
+A: Yes! Just change the `provider` in config.yml and restart the PBX. Each provider works independently.
 
 ---
 
