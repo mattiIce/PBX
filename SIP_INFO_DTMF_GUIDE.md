@@ -1,5 +1,7 @@
 # SIP INFO DTMF Support Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on SIP INFO DTMF support.
+
 ## Overview
 
 The PBX system now supports DTMF (touch-tone) signaling via **SIP INFO** messages in addition to in-band audio detection. This guide explains the implementation and how to configure phones to use SIP INFO for DTMF.

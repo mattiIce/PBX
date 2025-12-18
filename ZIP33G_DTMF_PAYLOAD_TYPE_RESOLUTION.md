@@ -1,5 +1,7 @@
 # ZIP33G DTMF Payload Type Issue - Resolution Summary
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on DTMF payload type configuration.
+
 ## Issue Description
 
 **Question**: Could the DTMF issue be related to using DTMF payload type 101 by default on the 33G's?

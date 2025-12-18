@@ -1,5 +1,7 @@
 # RFC 2833 DTMF Implementation Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md). Please refer to the consolidated guide for the most up-to-date information on RFC 2833 implementation.
+
 **Date**: December 9, 2024  
 **Status**: ✅ **FULLY IMPLEMENTED**
 
