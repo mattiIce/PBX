@@ -49,6 +49,8 @@ features:
   music_on_hold: true
   presence: true
   voicemail: true
+  find_me_follow_me:
+    enabled: true
 integrations:
   active_directory:
     auto_provision: true

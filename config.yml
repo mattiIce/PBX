@@ -296,6 +296,10 @@ features:
     require_pin: true                  # Require voicemail PIN for login
     allow_concurrent_logins: false     # Allow same extension on multiple devices
     auto_logout_timeout: 28800         # Auto-logout after inactivity (8 hours)
+  
+  # Find Me/Follow Me - Ring multiple destinations sequentially or simultaneously
+  find_me_follow_me:
+    enabled: true                      # Enable Find Me/Follow Me feature
 recording:
   auto_record: false
   storage_path: recordings
