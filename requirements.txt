@@ -1,29 +1,24 @@
 # Core dependencies for PBX system
-PyYAML>=5.1
+PyYAML>=5.4  # Updated from 5.1 for security fix
 
 # FIPS-compliant encryption (Required for FIPS mode)
-cryptography>=41.0.0
+cryptography>=42.0.4  # Updated from 41.0.0 for security fixes
 
-# Optional dependencies for enhanced features:
-# For production SIP/RTP, consider:
-# - pjsua (PJSIP Python bindings)
-# - aiortc (WebRTC support)
-# - twisted (Async networking)
+# Production SIP/RTP support (FREE, open source)
+aiortc>=1.6.0  # WebRTC support
+twisted>=23.10.0  # Async networking
 
-# For enhanced audio processing:
-# - pydub (Audio manipulation)
-# - sounddevice (Audio I/O)
+# Enhanced audio processing (FREE, open source)
+pydub>=0.25.1  # Audio manipulation
+sounddevice>=0.4.6  # Audio I/O
 
-# For voice prompt generation (optional):
-# System packages required: espeak, ffmpeg
-#   sudo apt-get install espeak ffmpeg
-# Python packages for cloud TTS (optional):
-# - gTTS (Google Text-to-Speech, requires internet)
-# - pyttsx3 (Offline TTS)
-# - pydub (Audio conversion)
+# Voice prompt generation (FREE, open source)
+# System packages: sudo apt-get install espeak ffmpeg
+gTTS>=2.4.0  # Google Text-to-Speech (FREE, requires internet)
+pyttsx3>=2.90  # Offline TTS (uses espeak)
 
-# For database backend:
-# - sqlalchemy (ORM)
+# Database backend (FREE, open source)
+sqlalchemy>=2.0.0  # ORM
 psycopg2-binary>=2.9.0  # PostgreSQL adapter for Python
 
 # For enterprise integrations (Teams, Outlook, Zoom):
@@ -38,14 +33,12 @@ fido2>=1.1.0  # FIDO2/WebAuthn library for hardware security keys
 opuslib>=3.0.0  # Python bindings for Opus codec (requires libopus system library)
 
 # iLBC codec - Internet Low Bitrate Codec with packet loss concealment
-# Install: pip install pyilbc
 # Note: May require system libraries on some platforms
-# pyilbc>=1.0.0  # Uncomment to enable iLBC codec
+pyilbc>=1.0.0  # iLBC codec support
 
 # Speex codec - Open source speech codec from Xiph.Org
-# Install: pip install speex
 # Note: May require system libraries (libspeex) on some platforms  
-# speex>=1.0.0  # Uncomment to enable Speex codec
+speex>=1.0.0  # Speex codec support
 
 # === FREE & OPEN-SOURCE AI/ML INTEGRATION ===
 
@@ -55,7 +48,7 @@ vosk>=0.3.45  # Offline speech-to-text for voicemail transcription
 # Natural Language Processing (FREE, open source)
 spacy>=3.7.0  # Industrial-strength NLP for entity extraction, sentiment analysis
 # Download model: python -m spacy download en_core_web_sm
-nltk>=3.8.0  # Natural language toolkit for tokenization, lemmatization, intent detection
+nltk>=3.9  # Updated from 3.8.0 for security fix - Natural language toolkit for tokenization, lemmatization, intent detection
 # NLTK will auto-download required corpora on first use
 
 # Machine Learning (FREE, open source)
@@ -71,17 +64,13 @@ soundfile>=0.12.0  # Audio file I/O
 
 # Video Codec Support (FREE, open source) - requires FFmpeg
 # System package: sudo apt-get install ffmpeg
-# Python bindings:
-# imageio-ffmpeg>=0.4.9  # FFmpeg wrapper for Python
-# av>=11.0.0  # PyAV - Pythonic binding for FFmpeg
+imageio-ffmpeg>=0.4.9  # FFmpeg wrapper for Python
+av>=11.0.0  # PyAV - Pythonic binding for FFmpeg
 
-# Alternative cloud-based transcription provider (optional):
-# - google-cloud-speech (Google Cloud Speech-to-Text - requires paid API key)
+# Web interface (FREE, open source)
+flask>=3.0.0  # Web framework
+websockets>=12.0  # Real-time updates (already installed by vosk)
 
-# For web interface:
-# - flask or fastapi (Web framework)
-# - websockets (Real-time updates)
-
-# For monitoring:
-# - prometheus-client (Metrics)
-# - redis (Caching/queues)
+# Monitoring (FREE, open source)
+prometheus-client>=0.19.0  # Metrics collection
+redis>=5.0.0  # Caching/queues
