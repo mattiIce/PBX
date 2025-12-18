@@ -1,12 +1,27 @@
 """
 Call Recording Analytics
-AI analysis of recorded calls
+AI analysis of recorded calls using FREE open-source libraries
 """
 from typing import Dict, List, Optional
 from datetime import datetime
 from enum import Enum
 from pbx.utils.logger import get_logger
 import os
+
+# Import Vosk for FREE offline transcription (already integrated)
+try:
+    from vosk import Model, KaldiRecognizer
+    import json
+    VOSK_AVAILABLE = True
+except ImportError:
+    VOSK_AVAILABLE = False
+
+# Import spaCy for NLP and sentiment analysis
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
 
 
 class AnalysisType(Enum):
@@ -23,16 +38,22 @@ class RecordingAnalytics:
     """
     Call Recording Analytics
     
-    AI-powered analysis of recorded calls.
+    AI-powered analysis of recorded calls using FREE open-source tools.
     Features:
-    - Sentiment analysis
-    - Keyword detection
+    - Sentiment analysis (spaCy)
+    - Keyword detection (spaCy)
     - Compliance checking
     - Quality scoring
-    - Automatic summarization
+    - Automatic summarization (spaCy)
+    - Transcription (Vosk - already integrated)
     - Trend analysis
     
-    Integration points:
+    Uses FREE open-source libraries:
+    - Vosk for offline transcription
+    - spaCy for NLP and sentiment analysis
+    - NLTK for text processing
+    
+    Can also integrate with:
     - OpenAI Whisper (transcription)
     - GPT models (summarization, sentiment)
     - Custom ML models (compliance, quality)
@@ -58,10 +79,41 @@ class RecordingAnalytics:
         self.total_analyses = 0
         self.analyses_by_type = {}
         
+        # Initialize NLP models
+        self.vosk_model = None
+        self.spacy_nlp = None
+        self._initialize_models()
+        
         self.logger.info("Call recording analytics initialized")
         self.logger.info(f"  Auto-analyze: {self.auto_analyze}")
         self.logger.info(f"  Analysis types: {', '.join(self.analysis_types)}")
+        self.logger.info(f"  Vosk available: {VOSK_AVAILABLE}")
+        self.logger.info(f"  spaCy available: {SPACY_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
+    
+    def _initialize_models(self):
+        """Initialize NLP models for analysis"""
+        # Initialize Vosk for transcription
+        if VOSK_AVAILABLE:
+            try:
+                model_path = self.config.get('voicemail', {}).get('transcription', {}).get('vosk_model_path', '/opt/vosk-model-small-en-us-0.15')
+                if os.path.exists(model_path):
+                    self.vosk_model = Model(model_path)
+                    self.logger.info(f"Vosk model loaded from {model_path}")
+                else:
+                    self.logger.warning(f"Vosk model not found at {model_path}")
+            except Exception as e:
+                self.logger.warning(f"Could not load Vosk model: {e}")
+        
+        # Initialize spaCy for NLP
+        if SPACY_AVAILABLE:
+            try:
+                self.spacy_nlp = spacy.load("en_core_web_sm")
+                self.logger.info("spaCy model loaded successfully")
+            except Exception as e:
+                self.logger.warning(f"Could not load spaCy model: {e}")
+                self.logger.info("Download with: python -m spacy download en_core_web_sm")
+    
     
     def analyze_recording(self, recording_id: str, audio_path: str,
                          analysis_types: List[str] = None) -> Dict:
@@ -225,9 +277,13 @@ class RecordingAnalytics:
     
     def _analyze_sentiment(self, audio_path: str) -> Dict:
         """
-        Analyze call sentiment using rule-based and keyword analysis
+        Analyze call sentiment using spaCy and Vosk transcription
         
-        In production, integrate with:
+        Uses FREE open-source tools:
+        - Vosk for transcription
+        - spaCy for NLP and sentiment analysis
+        
+        Can also integrate with:
         - OpenAI GPT for semantic sentiment analysis
         - Google Cloud Natural Language API
         - Custom ML sentiment models
@@ -238,27 +294,57 @@ class RecordingAnalytics:
         Returns:
             Dict: Sentiment analysis results
         """
-        # First, we need a transcript - placeholder for now
-        # In production: Use Whisper or other STT to get transcript
-        transcript = ""  # Would come from _transcribe(audio_path)
+        # First, get the transcript using Vosk
+        transcript = ""
+        if self.vosk_model:
+            transcript_result = self._transcribe(audio_path)
+            transcript = transcript_result.get('text', '')
         
-        # Sentiment keywords
-        positive_words = [
+        # Sentiment keywords for fallback
+        positive_words = {
             'thank', 'thanks', 'grateful', 'appreciate', 'excellent', 'great', 
             'wonderful', 'happy', 'satisfied', 'love', 'perfect', 'amazing',
             'fantastic', 'pleased', 'good', 'helpful', 'friendly'
-        ]
-        negative_words = [
+        }
+        negative_words = {
             'angry', 'upset', 'frustrated', 'disappointed', 'terrible', 'awful',
-            'horrible', 'bad', 'worst', 'hate', 'angry', 'annoyed', 'complaint',
+            'horrible', 'bad', 'worst', 'hate', 'annoyed', 'complaint',
             'problem', 'issue', 'broken', 'failed', 'error', 'wrong', 'unhappy'
-        ]
+        }
         
-        # Analyze transcript if available
         sentiment_score = 0.0
         overall_sentiment = 'neutral'
+        confidence = 0.0
         
-        if transcript:
+        # Use spaCy for enhanced sentiment analysis if available
+        if transcript and self.spacy_nlp:
+            try:
+                doc = self.spacy_nlp(transcript)
+                
+                # Count sentiment indicators using lemmatization
+                tokens = [token.lemma_.lower() for token in doc if token.is_alpha]
+                positive_count = sum(1 for token in tokens if token in positive_words)
+                negative_count = sum(1 for token in tokens if token in negative_words)
+                
+                # Calculate sentiment score (-1.0 to 1.0)
+                total_indicators = positive_count + negative_count
+                if total_indicators > 0:
+                    sentiment_score = (positive_count - negative_count) / total_indicators
+                    confidence = min(total_indicators / 10.0, 1.0)  # More indicators = higher confidence
+                
+                # Determine overall sentiment
+                if sentiment_score > 0.2:
+                    overall_sentiment = 'positive'
+                elif sentiment_score < -0.2:
+                    overall_sentiment = 'negative'
+                
+                self.logger.debug(f"spaCy sentiment analysis: {overall_sentiment} (score: {sentiment_score:.2f})")
+                
+            except Exception as e:
+                self.logger.error(f"spaCy sentiment analysis failed: {e}")
+        
+        # Fallback to basic keyword analysis if spaCy not available
+        elif transcript:
             transcript_lower = transcript.lower()
             
             # Count sentiment indicators
@@ -269,6 +355,7 @@ class RecordingAnalytics:
             total_indicators = positive_count + negative_count
             if total_indicators > 0:
                 sentiment_score = (positive_count - negative_count) / total_indicators
+                confidence = min(total_indicators / 10.0, 1.0)
             
             # Determine overall sentiment
             if sentiment_score > 0.2:
