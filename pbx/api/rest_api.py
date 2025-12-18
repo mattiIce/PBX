@@ -9790,6 +9790,9 @@ class PBXAPIServer:
                 finally:
                     self.server = None
             
+            # Clear thread reference as well since start failed
+            self.server_thread = None
+            
             return False
 
     def _run(self):
@@ -9816,6 +9819,9 @@ class PBXAPIServer:
             self.server_thread.join(timeout=2.0)
             if self.server_thread.is_alive():
                 self.logger.warning("API server thread did not stop cleanly")
+        
+        # Clear thread reference regardless of whether it stopped cleanly
+        self.server_thread = None
         
         if self.server:
             try:
