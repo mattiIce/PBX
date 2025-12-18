@@ -354,6 +354,10 @@ class LeastCostRouting:
             minimum_seconds: Minimum billable seconds
             billing_increment: Billing increment
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot add rate: Least cost routing feature is not enabled")
+            return False
+        
         dial_pattern = DialPattern(pattern, description)
         rate_entry = RateEntry(
             trunk_id=trunk_id,
@@ -370,6 +374,7 @@ class LeastCostRouting:
                              connection_fee, minimum_seconds, billing_increment)
         
         self.logger.info(f"Added LCR rate: {description} via {trunk_id} at ${rate_per_minute}/min")
+        return True
     
     def add_time_based_rate(self, name: str, start_hour: int, start_minute: int,
                             end_hour: int, end_minute: int, days: List[int],
@@ -386,6 +391,10 @@ class LeastCostRouting:
             days: Days of week (0=Monday, 6=Sunday)
             multiplier: Rate multiplier
         """
+        if not self.enabled:
+            self.logger.error(f"Cannot add time-based rate: Least cost routing feature is not enabled")
+            return False
+        
         start_time = time(start_hour, start_minute)
         end_time = time(end_hour, end_minute)
         
@@ -403,6 +412,7 @@ class LeastCostRouting:
                                    end_minute, days, multiplier)
         
         self.logger.info(f"Added time-based rate: {name} ({multiplier}x)")
+        return True
     
     def get_applicable_rates(self, dialed_number: str) -> List[Tuple[str, float]]:
         """

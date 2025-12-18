@@ -254,8 +254,16 @@ class CallBlending:
     
     def set_agent_available(self, agent_id: str, available: bool):
         """Set agent availability"""
+        if not self.enabled:
+            self.logger.error(f"Cannot set agent availability: Call blending feature is not enabled")
+            return False
+        
         if agent_id in self.agents:
             self.agents[agent_id].available = available
+            return True
+        
+        self.logger.warning(f"Agent {agent_id} not found in call blending system")
+        return False
     
     def register_agent(self, agent_id: str, extension: str, mode: str = 'blended') -> Dict:
         """
