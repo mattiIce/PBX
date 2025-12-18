@@ -6436,14 +6436,26 @@ async function loadClickToDialConfigs() {
 }
 
 /**
+ * Helper function to toggle click-to-dial config sections
+ */
+function toggleClickToDialConfigSections(showConfig) {
+    const configSection = document.getElementById('ctd-config-section');
+    const noExtensionSection = document.getElementById('ctd-no-extension');
+    
+    if (configSection && noExtensionSection) {
+        configSection.style.display = showConfig ? 'block' : 'none';
+        noExtensionSection.style.display = showConfig ? 'none' : 'block';
+    }
+}
+
+/**
  * Load click-to-dial configuration for specific extension
  */
 async function loadClickToDialConfig() {
     const extension = document.getElementById('ctd-extension-select')?.value;
     
     if (!extension) {
-        document.getElementById('ctd-config-section').style.display = 'none';
-        document.getElementById('ctd-no-extension').style.display = 'block';
+        toggleClickToDialConfigSections(false);
         return;
     }
     
@@ -6467,8 +6479,7 @@ async function loadClickToDialConfig() {
             document.getElementById('ctd-browser-notification').checked = data.config.browser_notification;
         }
         
-        document.getElementById('ctd-config-section').style.display = 'block';
-        document.getElementById('ctd-no-extension').style.display = 'none';
+        toggleClickToDialConfigSections(true);
         
     } catch (error) {
         console.error('Error loading click-to-dial config:', error);
@@ -6589,6 +6600,15 @@ async function loadClickToDialHistory() {
         return;
     }
     
+    // Status to CSS class mapping
+    const statusClassMap = {
+        'completed': 'success',
+        'failed': 'error',
+        'cancelled': 'warning',
+        'busy': 'warning',
+        'no-answer': 'warning'
+    };
+    
     try {
         const response = await fetch(`${API_BASE}/api/framework/click-to-dial/history/${extension}`);
         const data = await response.json();
@@ -6606,8 +6626,7 @@ async function loadClickToDialHistory() {
         tbody.innerHTML = data.history.map(call => {
             const timestamp = new Date(call.timestamp).toLocaleString();
             const duration = call.duration ? `${call.duration}s` : '-';
-            const statusClass = call.status === 'completed' ? 'success' : 
-                               call.status === 'failed' ? 'error' : 'warning';
+            const statusClass = statusClassMap[call.status] || 'warning';
             
             return `
                 <tr>
