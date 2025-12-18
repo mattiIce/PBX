@@ -18,6 +18,13 @@ except ImportError:
     SKLEARN_AVAILABLE = False
     np = None
 
+# spaCy for advanced NLP (entity extraction, sentiment analysis)
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+
 
 class CallCategory(Enum):
     """Predefined call categories"""
@@ -97,10 +104,15 @@ class CallTagging:
         self.MIN_CLASSIFICATION_PROBABILITY = 0.1  # Minimum probability to include in results
         self._initialize_ml_classifier()
         
+        # spaCy NLP model
+        self.nlp_model = None
+        self._initialize_spacy()
+        
         self.logger.info("Call tagging system initialized")
         self.logger.info(f"  Auto-tagging: {self.auto_tag_enabled}")
         self.logger.info(f"  Min confidence: {self.min_confidence}")
         self.logger.info(f"  ML classifier: {self.ml_classifier is not None}")
+        self.logger.info(f"  spaCy NLP: {self.nlp_model is not None}")
         self.logger.info(f"  Enabled: {self.enabled}")
     
     def _initialize_default_rules(self):
@@ -199,6 +211,23 @@ class CallTagging:
         except Exception as e:
             self.logger.warning(f"Could not initialize ML classifier: {e}")
             self.ml_classifier = None
+    
+    def _initialize_spacy(self):
+        """Initialize spaCy NLP model for advanced text analysis"""
+        if not SPACY_AVAILABLE:
+            self.logger.info("spaCy not available - install with: pip install spacy")
+            self.logger.info("Then download model: python -m spacy download en_core_web_sm")
+            return
+        
+        try:
+            # Try to load English model
+            self.nlp_model = spacy.load("en_core_web_sm")
+            self.logger.info("spaCy NLP model loaded successfully (en_core_web_sm)")
+        except Exception as e:
+            self.logger.warning(f"Could not load spaCy model: {e}")
+            self.logger.info("Download with: python -m spacy download en_core_web_sm")
+            self.nlp_model = None
+    
     def tag_call(self, call_id: str, tag: str, source: TagSource = TagSource.MANUAL,
                  confidence: float = 1.0) -> bool:
         """
@@ -297,7 +326,7 @@ class CallTagging:
     
     def _classify_with_ai(self, transcript: str) -> List[tuple]:
         """
-        Classify call using AI/ML with scikit-learn
+        Classify call using AI/ML with scikit-learn and spaCy
         
         Args:
             transcript: Call transcript
@@ -306,6 +335,36 @@ class CallTagging:
             List[tuple]: List of (tag, confidence) tuples
         """
         results = []
+        
+        # Use spaCy for enhanced classification if available
+        if self.nlp_model is not None:
+            try:
+                # Extract entities for context
+                entities = self.extract_entities_with_spacy(transcript)
+                
+                # Analyze sentiment
+                sentiment = self.analyze_sentiment_with_spacy(transcript)
+                
+                # Add sentiment-based tag if strong signal
+                if sentiment['confidence'] > 0.7:
+                    if sentiment['sentiment'] == 'negative':
+                        results.append(('complaint', sentiment['confidence'] * 0.9))
+                    elif sentiment['sentiment'] == 'positive':
+                        results.append(('satisfied', sentiment['confidence'] * 0.8))
+                
+                # Add tags based on detected entities
+                if 'ORG' in entities and len(entities['ORG']) > 0:
+                    # Mentions of organizations might indicate partnership/sales
+                    results.append(('sales', 0.6))
+                
+                if 'MONEY' in entities:
+                    # Money mentions suggest billing or sales
+                    results.append(('billing', 0.7))
+                
+                self.logger.debug(f"spaCy classification added {len(results)} tags")
+                
+            except Exception as e:
+                self.logger.warning(f"spaCy classification failed: {e}")
         
         # Use ML classifier if available (85-92% accuracy)
         if SKLEARN_AVAILABLE and self.ml_classifier is not None and self.tfidf_vectorizer is not None:
@@ -669,6 +728,121 @@ class CallTagging:
         
         return False
     
+    def extract_entities_with_spacy(self, text: str) -> Dict[str, List[str]]:
+        """
+        Extract named entities using spaCy
+        
+        Args:
+            text: Text to analyze
+            
+        Returns:
+            Dict mapping entity types to lists of entities
+        """
+        if not self.nlp_model:
+            return {}
+        
+        try:
+            doc = self.nlp_model(text)
+            entities = {}
+            
+            for ent in doc.ents:
+                if ent.label_ not in entities:
+                    entities[ent.label_] = []
+                entities[ent.label_].append(ent.text)
+            
+            return entities
+        except Exception as e:
+            self.logger.error(f"Entity extraction error: {e}")
+            return {}
+    
+    def analyze_sentiment_with_spacy(self, text: str) -> Dict:
+        """
+        Analyze sentiment using spaCy and rule-based approach
+        
+        Args:
+            text: Text to analyze
+            
+        Returns:
+            Dict with sentiment, score, and confidence
+        """
+        if not self.nlp_model:
+            return {'sentiment': 'neutral', 'score': 0.0, 'confidence': 0.0}
+        
+        try:
+            doc = self.nlp_model(text)
+            
+            # Simple rule-based sentiment scoring
+            positive_words = {'good', 'great', 'excellent', 'happy', 'satisfied', 'love', 
+                            'wonderful', 'fantastic', 'amazing', 'perfect', 'best', 'thank'}
+            negative_words = {'bad', 'terrible', 'awful', 'hate', 'worst', 'horrible', 
+                            'disappointed', 'angry', 'frustrated', 'problem', 'issue', 'broken'}
+            
+            tokens = [token.text.lower() for token in doc]
+            pos_count = sum(1 for word in tokens if word in positive_words)
+            neg_count = sum(1 for word in tokens if word in negative_words)
+            
+            total = pos_count + neg_count
+            if total == 0:
+                return {'sentiment': 'neutral', 'score': 0.0, 'confidence': 0.5}
+            
+            score = (pos_count - neg_count) / total
+            
+            if score > 0.2:
+                sentiment = 'positive'
+            elif score < -0.2:
+                sentiment = 'negative'
+            else:
+                sentiment = 'neutral'
+            
+            confidence = min(abs(score) + 0.5, 1.0)
+            
+            return {
+                'sentiment': sentiment,
+                'score': score,
+                'confidence': confidence,
+                'positive_count': pos_count,
+                'negative_count': neg_count
+            }
+        except Exception as e:
+            self.logger.error(f"Sentiment analysis error: {e}")
+            return {'sentiment': 'neutral', 'score': 0.0, 'confidence': 0.0}
+    
+    def extract_key_phrases_with_spacy(self, text: str, max_phrases: int = 10) -> List[str]:
+        """
+        Extract key phrases using spaCy noun chunks
+        
+        Args:
+            text: Text to analyze
+            max_phrases: Maximum number of phrases to return
+            
+        Returns:
+            List of key phrases
+        """
+        if not self.nlp_model:
+            return []
+        
+        try:
+            doc = self.nlp_model(text)
+            
+            # Extract noun chunks as key phrases
+            phrases = []
+            for chunk in doc.noun_chunks:
+                if len(chunk.text.split()) >= 2:  # Only multi-word phrases
+                    phrases.append(chunk.text.lower())
+            
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_phrases = []
+            for phrase in phrases:
+                if phrase not in seen:
+                    seen.add(phrase)
+                    unique_phrases.append(phrase)
+            
+            return unique_phrases[:max_phrases]
+        except Exception as e:
+            self.logger.error(f"Key phrase extraction error: {e}")
+            return []
+    
     def get_statistics(self) -> Dict:
         """Get overall tagging statistics"""
         return {
@@ -679,7 +853,8 @@ class CallTagging:
             'auto_tags_created': self.auto_tags_created,
             'manual_tags_created': self.manual_tags_created,
             'custom_tags_count': len(self.custom_tags),
-            'tagging_rules_count': len(self.tagging_rules)
+            'tagging_rules_count': len(self.tagging_rules),
+            'spacy_available': self.nlp_model is not None
         }
 
 

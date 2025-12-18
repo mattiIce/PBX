@@ -2,9 +2,20 @@
 Conversational AI Assistant
 Auto-responses and smart call handling using AI
 """
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 from pbx.utils.logger import get_logger
+import re
+
+# NLTK for natural language processing
+try:
+    import nltk
+    from nltk.tokenize import word_tokenize, sent_tokenize
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    NLTK_AVAILABLE = True
+except ImportError:
+    NLTK_AVAILABLE = False
 
 
 class ConversationContext:
@@ -56,7 +67,7 @@ class ConversationalAI:
         # Configuration
         ai_config = self.config.get('features', {}).get('conversational_ai', {})
         self.enabled = ai_config.get('enabled', False)
-        self.provider = ai_config.get('provider', 'openai')  # openai, dialogflow, lex, azure
+        self.provider = ai_config.get('provider', 'nltk')  # nltk (free), openai, dialogflow, lex, azure
         self.model = ai_config.get('model', 'gpt-4')
         self.max_tokens = ai_config.get('max_tokens', 150)
         self.temperature = ai_config.get('temperature', 0.7)
@@ -72,6 +83,11 @@ class ConversationalAI:
         self.total_messages_processed = 0
         self.intents_detected = {}
         
+        # NLTK components
+        self.lemmatizer = None
+        self.stop_words = None
+        self._initialize_nltk()
+        
         # Initialize database if available
         if self.db_backend and self.db_backend.enabled:
             try:
@@ -85,7 +101,45 @@ class ConversationalAI:
         self.logger.info("Conversational AI assistant initialized")
         self.logger.info(f"  Provider: {self.provider}")
         self.logger.info(f"  Model: {self.model}")
+        self.logger.info(f"  NLTK available: {NLTK_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
+    
+    def _initialize_nltk(self):
+        """Initialize NLTK components for NLP processing"""
+        if not NLTK_AVAILABLE:
+            self.logger.info("NLTK not available - install with: pip install nltk")
+            return
+        
+        try:
+            # Download required resources if not already present
+            try:
+                nltk.data.find('tokenizers/punkt')
+            except LookupError:
+                self.logger.info("Downloading NLTK punkt tokenizer...")
+                nltk.download('punkt', quiet=True)
+            
+            try:
+                nltk.data.find('corpora/stopwords')
+            except LookupError:
+                self.logger.info("Downloading NLTK stopwords...")
+                nltk.download('stopwords', quiet=True)
+            
+            try:
+                nltk.data.find('corpora/wordnet')
+            except LookupError:
+                self.logger.info("Downloading NLTK wordnet...")
+                nltk.download('wordnet', quiet=True)
+            
+            # Initialize components
+            self.lemmatizer = WordNetLemmatizer()
+            self.stop_words = set(stopwords.words('english'))
+            
+            self.logger.info("NLTK components initialized successfully")
+            
+        except Exception as e:
+            self.logger.warning(f"Could not initialize NLTK: {e}")
+            self.lemmatizer = None
+            self.stop_words = None
     
     def start_conversation(self, call_id: str, caller_id: str) -> ConversationContext:
         """
@@ -312,12 +366,13 @@ class ConversationalAI:
     
     def detect_intent(self, text: str) -> str:
         """
-        Detect user intent from text using pattern matching and keyword analysis
+        Detect user intent from text using NLTK and pattern matching
         
-        In production, this should integrate with:
+        Uses free/open-source NLTK for NLP processing, with fallback to pattern matching.
+        In production, can also integrate with:
+        - Rasa for open-source intent classification
         - OpenAI GPT for semantic understanding
         - Dialogflow for intent classification
-        - AWS Lex for conversational AI
         
         Args:
             text: User's input text
@@ -327,7 +382,41 @@ class ConversationalAI:
         """
         text_lower = text.lower()
         
-        # Intent patterns with priority (most specific first)
+        # Use NLTK for enhanced intent detection if available
+        if NLTK_AVAILABLE and self.lemmatizer and self.stop_words:
+            try:
+                # Tokenize and lemmatize
+                tokens = word_tokenize(text_lower)
+                lemmatized = [self.lemmatizer.lemmatize(token) for token in tokens 
+                             if token.isalpha() and token not in self.stop_words]
+                
+                # Enhanced intent patterns with lemmatized keywords
+                nltk_intent_patterns = [
+                    (['emergency', 'urgent', 'help'], 'emergency_request'),
+                    (['transfer', 'speak', 'talk', 'connect'], 'transfer_request'),
+                    (['sale', 'purchase', 'buy', 'order'], 'sales_department'),
+                    (['support', 'technical', 'help', 'problem'], 'support_department'),
+                    (['billing', 'payment', 'invoice', 'account'], 'billing_department'),
+                    (['hour', 'open', 'available', 'schedule'], 'business_hours_inquiry'),
+                    (['location', 'address', 'direction'], 'location_inquiry'),
+                    (['price', 'cost'], 'pricing_inquiry'),
+                    (['voicemail', 'message'], 'voicemail_request'),
+                    (['call', 'callback'], 'callback_request'),
+                    (['complaint', 'complain', 'unhappy'], 'complaint'),
+                    (['cancel', 'nevermind', 'forget'], 'cancel_request'),
+                    (['thank', 'appreciate'], 'gratitude'),
+                    (['yes', 'yeah', 'sure', 'okay'], 'affirmation'),
+                    (['no', 'nope'], 'negation'),
+                ]
+                
+                # Check NLTK-enhanced patterns
+                for keywords, intent in nltk_intent_patterns:
+                    if any(keyword in lemmatized for keyword in keywords):
+                        return intent
+            except Exception as e:
+                self.logger.debug(f"NLTK intent detection failed: {e}, falling back to patterns")
+        
+        # Standard intent patterns with priority (most specific first)
         intent_patterns = [
             # Emergency/urgent
             (['emergency', 'urgent', '911', 'help now'], 'emergency_request'),
@@ -442,6 +531,36 @@ class ConversationalAI:
         
         return entities
     
+    def tokenize_with_nltk(self, text: str) -> List[str]:
+        """
+        Tokenize text using NLTK with lemmatization and stop word removal
+        
+        Args:
+            text: Text to tokenize
+            
+        Returns:
+            List[str]: Processed tokens
+        """
+        if not NLTK_AVAILABLE or not self.lemmatizer or not self.stop_words:
+            # Fallback to simple tokenization
+            return text.lower().split()
+        
+        try:
+            # Tokenize
+            tokens = word_tokenize(text.lower())
+            
+            # Remove punctuation and stopwords, then lemmatize
+            processed = [
+                self.lemmatizer.lemmatize(token)
+                for token in tokens
+                if token.isalpha() and token not in self.stop_words
+            ]
+            
+            return processed
+        except Exception as e:
+            self.logger.error(f"NLTK tokenization error: {e}")
+            return text.lower().split()
+    
     def end_conversation(self, call_id: str):
         """
         End a conversation
@@ -476,7 +595,8 @@ class ConversationalAI:
             'intents_detected': self.intents_detected,
             'provider': self.provider,
             'model': self.model,
-            'enabled': self.enabled
+            'enabled': self.enabled,
+            'nltk_available': NLTK_AVAILABLE and self.lemmatizer is not None
         }
         
         # Add database statistics if available
