@@ -9418,6 +9418,7 @@ class PBXAPIServer:
         self.host = host
         self.port = port
         self.server = None
+        self.server_thread = None
         self.logger = get_logger()
         self.running = False
         self.ssl_enabled = False
@@ -9792,9 +9793,9 @@ class PBXAPIServer:
                             f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
                 # Start in separate thread
-                server_thread = threading.Thread(target=self._run)
-                server_thread.daemon = True
-                server_thread.start()
+                self.server_thread = threading.Thread(target=self._run)
+                self.server_thread.daemon = True
+                self.server_thread.start()
 
                 return True
                 
@@ -9857,9 +9858,24 @@ class PBXAPIServer:
     def stop(self):
         """Stop API server"""
         self.running = False
+        
+        # Wait for server thread to finish with timeout
+        if self.server_thread and self.server_thread.is_alive():
+            # The thread should exit on its own when running=False
+            # Wait up to 2 seconds for it to finish
+            self.server_thread.join(timeout=2.0)
+            if self.server_thread.is_alive():
+                self.logger.warning("API server thread did not stop cleanly")
+        
+        # Clear thread reference regardless of whether it stopped cleanly
+        self.server_thread = None
+        
         if self.server:
             try:
                 self.server.server_close()
-            except (OSError, socket.error) as e:
+            except OSError as e:
                 self.logger.error(f"Error closing API server: {e}")
+            finally:
+                self.server = None
+        
         self.logger.info("API server stopped")
