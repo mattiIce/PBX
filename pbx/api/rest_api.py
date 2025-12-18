@@ -1132,41 +1132,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({'error': str(e)}, 500)
 
     def _handle_root(self):
-        """Handle root path"""
-        self._set_headers(content_type='text/html')
-        html = """
-        <html>
-        <head><title>InHouse PBX API</title></head>
-        <body>
-            <h1>InHouse PBX System API</h1>
-            <h2>Available Endpoints:</h2>
-            <ul>
-                <li>GET /api/status - System status</li>
-                <li>GET /api/extensions - List extensions</li>
-                <li>GET /api/calls - List active calls</li>
-                <li>GET /api/statistics?days=7 - Get dashboard statistics and analytics</li>
-                <li>GET /api/provisioning/devices - List provisioned devices</li>
-                <li>GET /api/provisioning/vendors - List supported vendors</li>
-                <li>POST /api/provisioning/devices - Register a device</li>
-                <li>DELETE /api/provisioning/devices/{mac} - Unregister a device</li>
-                <li>GET /provision/{mac}.cfg - Get device configuration</li>
-                <li>GET /api/provisioning/templates - List all provisioning templates</li>
-                <li>GET /api/provisioning/templates/{vendor}/{model} - Get template content</li>
-                <li>POST /api/provisioning/templates/{vendor}/{model}/export - Export template to file</li>
-                <li>PUT /api/provisioning/templates/{vendor}/{model} - Update template content</li>
-                <li>POST /api/provisioning/reload-templates - Reload all templates from disk</li>
-                <li>GET /api/registered-phones - List all registered phones (MAC/IP tracking)</li>
-                <li>GET /api/registered-phones/with-mac - List registered phones with MAC addresses from provisioning</li>
-                <li>GET /api/registered-phones/extension/{number} - List registered phones for extension</li>
-                <li>GET /api/phone-lookup/{mac_or_ip} - Unified lookup by MAC or IP address with correlation</li>
-                <li>GET /api/integrations/ad/search?q={query}&max_results={max} - Search Active Directory users by name, email, or telephoneNumber</li>
-                <li>GET /api/integrations/ad/status - Get Active Directory integration status</li>
-                <li>POST /api/integrations/ad/sync - Manually sync users from Active Directory</li>
-            </ul>
-        </body>
-        </html>
-        """
-        self.wfile.write(html.encode())
+        """Handle root path - redirect to admin panel"""
+        self.send_response(302)
+        self.send_header('Location', '/admin')
+        self.end_headers()
 
     def _handle_status(self):
         """Get PBX status"""
