@@ -44,11 +44,30 @@ cd PBX
 ```
 
 ### 3. Install Python Dependencies
+
+#### Basic Installation (Core Features Only)
 ```bash
-pip3 install -r requirements.txt
-# or
 pip3 install pyyaml
 ```
+
+#### Full Installation (All Features)
+For systems where pip is externally managed (Debian/Ubuntu):
+```bash
+# Use the provided installation script which handles system package conflicts
+./install_requirements.sh
+
+# Or manually with the appropriate flags:
+pip3 install -r requirements.txt --break-system-packages --ignore-installed typing_extensions
+```
+
+For other systems or virtual environments:
+```bash
+pip3 install -r requirements.txt
+```
+
+**Note**: On Debian/Ubuntu systems, `typing_extensions` is managed by the system package manager.
+The `--ignore-installed` flag allows pip to use the system-provided version (4.10.0),
+which is compatible with Python 3.12 and all required packages.
 
 ### 4. Configure Firewall
 

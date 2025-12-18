@@ -96,6 +96,13 @@ cd PBX
 
 2. Install dependencies:
 ```bash
+# For Debian/Ubuntu systems (with system-managed packages):
+./install_requirements.sh
+
+# Or manually:
+pip install -r requirements.txt --break-system-packages --ignore-installed typing_extensions
+
+# For other systems or virtual environments:
 pip install -r requirements.txt
 ```
 
