@@ -1396,6 +1396,192 @@
             </div>
         </div>
 
+        <!-- Click-to-Dial Tab -->
+        <div id="click-to-dial" class="tab-content">
+            <div class="section-header">
+                <h2>📲 Click-to-Dial</h2>
+                <button class="btn btn-primary" onclick="loadClickToDialConfigs()">🔄 Refresh</button>
+            </div>
+
+            <div class="info-box" style="margin-bottom: 20px;">
+                <h3>ℹ️ About Click-to-Dial</h3>
+                <p><strong>Click-to-Dial</strong> enables one-click calling from web browsers, CRM systems, and business applications. Users can initiate calls by clicking phone numbers on web pages or in applications.</p>
+                <ul>
+                    <li><strong>Browser Extension:</strong> Call any phone number with a single click</li>
+                    <li><strong>CRM Integration:</strong> Automatically dial contacts from your CRM</li>
+                    <li><strong>Auto-Answer:</strong> Optional automatic answer for outbound calls</li>
+                    <li><strong>Call History:</strong> Track all click-to-dial initiated calls</li>
+                    <li><strong>Custom Caller ID:</strong> Set default caller ID for outbound calls</li>
+                </ul>
+            </div>
+
+            <!-- Quick Dial Section -->
+            <div class="config-section">
+                <h3>📞 Quick Dial</h3>
+                <div style="max-width: 600px;">
+                    <div class="form-group">
+                        <label>Extension to Use:</label>
+                        <select id="ctd-extension-select" onchange="loadClickToDialConfig()">
+                            <option value="">Select Extension</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number to Call:</label>
+                        <input type="tel" id="ctd-phone-number" placeholder="+1-555-0100" pattern="[0-9+\-() ]+">
+                        <small>Enter the phone number you want to call</small>
+                    </div>
+                    <button class="btn btn-success" onclick="initiateClickToDial()" style="width: 100%; padding: 15px; font-size: 16px;">
+                        📞 Call Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Extension Configuration -->
+            <div class="config-section">
+                <h3>⚙️ Extension Settings</h3>
+                <div id="ctd-config-section" style="display: none;">
+                    <form id="ctd-config-form" onsubmit="saveClickToDialConfig(event)">
+                        <div class="form-group">
+                            <label>Extension: <span id="ctd-current-extension"></span></label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ctd-enabled" checked>
+                                Enable Click-to-Dial for this Extension
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Default Caller ID (Optional):</label>
+                            <input type="text" id="ctd-caller-id" placeholder="+1-555-0100">
+                            <small>Override default caller ID for outbound calls</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ctd-auto-answer">
+                                Auto-Answer Outbound Calls
+                            </label>
+                            <small style="display: block; margin-top: 5px;">Automatically answer when the call connects (requires compatible phone)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ctd-browser-notification" checked>
+                                Enable Browser Notifications
+                            </label>
+                            <small style="display: block; margin-top: 5px;">Show desktop notifications for call status</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
+                    </form>
+                </div>
+                <div id="ctd-no-extension" class="info-box">
+                    <p>Select an extension from the Quick Dial section above to configure settings.</p>
+                </div>
+            </div>
+
+            <!-- Per-Extension Configurations -->
+            <div class="config-section">
+                <h3>📋 All Extension Configurations</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Extension</th>
+                                <th>Enabled</th>
+                                <th>Caller ID</th>
+                                <th>Auto-Answer</th>
+                                <th>Notifications</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ctd-configs-table">
+                            <tr>
+                                <td colspan="6" class="loading">Click "Refresh" to load configurations</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Call History -->
+            <div class="config-section">
+                <h3>📜 Click-to-Dial History</h3>
+                <div class="form-group" style="max-width: 400px;">
+                    <label>Filter by Extension:</label>
+                    <select id="ctd-history-extension" onchange="loadClickToDialHistory()">
+                        <option value="">All Extensions</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Extension</th>
+                                <th>Destination</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ctd-history-table">
+                            <tr>
+                                <td colspan="5" class="loading">Select an extension to view history</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Integration Guide -->
+            <div class="config-section">
+                <h3>🔌 Integration Guide</h3>
+                <div class="info-box">
+                    <h4>Browser Extension</h4>
+                    <p>Install our browser extension to enable click-to-dial on any webpage:</p>
+                    <ol>
+                        <li>Download the extension from your browser's extension store</li>
+                        <li>Configure your PBX server URL and credentials</li>
+                        <li>Select your default extension</li>
+                        <li>Click any phone number on a webpage to dial</li>
+                    </ol>
+                    
+                    <h4 style="margin-top: 20px;">API Integration</h4>
+                    <p>Integrate click-to-dial into your applications using the REST API:</p>
+                    <div class="code-block" style="background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">// Initiate a call
+POST /api/framework/click-to-dial/call/{extension}
+Content-Type: application/json
+
+{
+    "destination": "+1-555-0100",
+    "caller_id": "+1-555-0200"  // Optional
+}
+
+// Get configuration
+GET /api/framework/click-to-dial/config/{extension}
+
+// Update configuration
+POST /api/framework/click-to-dial/config/{extension}
+Content-Type: application/json
+
+{
+    "enabled": true,
+    "default_caller_id": "+1-555-0200",
+    "auto_answer": false,
+    "browser_notification": true
+}</pre>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">CRM Integration</h4>
+                    <p>Click-to-dial works seamlessly with CRM systems:</p>
+                    <ul>
+                        <li><strong>Salesforce:</strong> Use our Salesforce Lightning component</li>
+                        <li><strong>HubSpot:</strong> Install the HubSpot integration app</li>
+                        <li><strong>Zendesk:</strong> Enable in Zendesk Apps Marketplace</li>
+                        <li><strong>Custom CRM:</strong> Use the REST API for integration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <!-- Hot Desking Tab -->
         <div id="hot-desking" class="tab-content">
             <h2>🔄 Hot Desking</h2>
