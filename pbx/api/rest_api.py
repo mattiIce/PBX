@@ -9408,7 +9408,7 @@ def get_process_using_port(port):
     Detect what process is using a specific port
     
     Args:
-        port: Port number to check
+        port (int): Port number to check
         
     Returns:
         str: Description of the process using the port, or None if not found
@@ -9927,14 +9927,12 @@ class PBXAPIServer:
                         continue
                     else:
                         self.logger.error(f"Failed to start API server: {e}")
-                        import traceback
                         traceback.print_exc()
                         return False
                         
             except Exception as e:
                 last_exception = e
                 self.logger.error(f"Failed to start API server: {e}")
-                import traceback
                 traceback.print_exc()
                 
                 # Reset running flag to ensure consistent state
