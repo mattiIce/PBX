@@ -178,7 +178,8 @@ def print_dependency_report(report: Dict[str, List], verbose: bool = False) -> N
         else:
             # Concise output - just count
             count = len(missing_optional)
-            print(f"⚠ {count} optional dependencies missing (use --verbose to see details)")
+            dependency_word = "dependency" if count == 1 else "dependencies"
+            print(f"⚠ {count} optional {dependency_word} missing (use --verbose to see details)")
     else:
         if verbose:
             print("\n✓ All optional dependencies installed")
