@@ -308,13 +308,20 @@ class FindMeFollowMe:
             }
         
         config = self.user_configs[extension]
+        original_destinations = config['destinations'].copy()
         config['destinations'].append({
             'number': number,
             'ring_time': ring_time
         })
         
-        # Save to database
-        self._save_to_database(extension)
+        # Save to database if one is configured
+        if self.database and self.database.enabled:
+            save_result = self._save_to_database(extension)
+            if not save_result:
+                # Revert the change if database save failed
+                config['destinations'] = original_destinations
+                self.logger.error(f"Failed to save FMFM config to database for {extension}")
+                return False
         
         self.logger.info(f"Added FMFM destination for {extension}: {number}")
         return True
@@ -325,6 +332,7 @@ class FindMeFollowMe:
             return False
         
         config = self.user_configs[extension]
+        original_destinations = config['destinations'].copy()
         original_count = len(config['destinations'])
         config['destinations'] = [
             d for d in config['destinations']
@@ -333,8 +341,14 @@ class FindMeFollowMe:
         
         removed = original_count - len(config['destinations'])
         if removed > 0:
-            # Save to database
-            self._save_to_database(extension)
+            # Save to database if one is configured
+            if self.database and self.database.enabled:
+                save_result = self._save_to_database(extension)
+                if not save_result:
+                    # Revert the change if database save failed
+                    config['destinations'] = original_destinations
+                    self.logger.error(f"Failed to save FMFM config to database for {extension}")
+                    return False
             
             self.logger.info(f"Removed {removed} FMFM destination(s) for {extension}: {number}")
             return True
@@ -346,8 +360,14 @@ class FindMeFollowMe:
         if extension in self.user_configs:
             self.user_configs[extension]['enabled'] = True
             
-            # Save to database
-            self._save_to_database(extension)
+            # Save to database if one is configured
+            if self.database and self.database.enabled:
+                save_result = self._save_to_database(extension)
+                if not save_result:
+                    # Revert the change if database save failed
+                    self.user_configs[extension]['enabled'] = False
+                    self.logger.error(f"Failed to save FMFM config to database for {extension}")
+                    return False
             
             self.logger.info(f"Enabled FMFM for {extension}")
             return True
@@ -358,8 +378,14 @@ class FindMeFollowMe:
         if extension in self.user_configs:
             self.user_configs[extension]['enabled'] = False
             
-            # Save to database
-            self._save_to_database(extension)
+            # Save to database if one is configured
+            if self.database and self.database.enabled:
+                save_result = self._save_to_database(extension)
+                if not save_result:
+                    # Revert the change if database save failed
+                    self.user_configs[extension]['enabled'] = True
+                    self.logger.error(f"Failed to save FMFM config to database for {extension}")
+                    return False
             
             self.logger.info(f"Disabled FMFM for {extension}")
             return True
