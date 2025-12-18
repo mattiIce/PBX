@@ -1,5 +1,7 @@
 # Ubuntu Server FIPS 140-2 Deployment Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md#ubuntu-fips-deployment). Please refer to the "Ubuntu FIPS Deployment" section in the consolidated guide.
+
 ## Overview
 
 This guide provides step-by-step instructions for deploying the PBX system on Ubuntu Server with FIPS 140-2 compliance enabled. It covers system-level FIPS configuration, application deployment, and verification.

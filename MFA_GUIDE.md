@@ -1,5 +1,7 @@
 # Multi-Factor Authentication (MFA) Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md#multi-factor-authentication-mfa). Please refer to the "Multi-Factor Authentication" section in the consolidated guide.
+
 ## Overview
 
 The PBX system supports comprehensive Multi-Factor Authentication (MFA) to enhance security for user accounts. Multiple authentication methods are supported to accommodate different security requirements and user preferences.

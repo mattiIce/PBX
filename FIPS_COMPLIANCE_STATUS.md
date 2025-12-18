@@ -1,5 +1,7 @@
 # FIPS 140-2 Compliance Status
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md#fips-140-2-compliance). Please refer to the "FIPS 140-2 Compliance" section in the consolidated guide.
+
 **Date**: 2025-12-12  
 **Project**: InHouse PBX System  
 **Status**: ✅ **FIPS 140-2 COMPLIANT (Application Level)**

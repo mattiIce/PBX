@@ -1,5 +1,7 @@
 # Security Implementation Guide
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md). Please refer to the consolidated guide for the most up-to-date security implementation information.
+
 ## Overview
 
 This document describes the comprehensive security features implemented in the PBX system, including FIPS 140-2 compliance, password policies, rate limiting, and audit logging.

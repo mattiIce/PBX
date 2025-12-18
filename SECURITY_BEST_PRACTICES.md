@@ -1,5 +1,7 @@
 # Security Best Practices for PBX System
 
+> **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md). Please refer to the consolidated guide for the most up-to-date security best practices.
+
 ## Overview
 
 This document outlines security best practices for deploying and maintaining the PBX system in production environments.
