@@ -1,0 +1,159 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pbx-system"
+version = "1.0.0"
+description = "A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built in Python"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "PBX System Contributors"}
+]
+keywords = ["pbx", "voip", "sip", "telephony", "communication"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Telecommunications Industry",
+    "Topic :: Communications :: Telephony",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: POSIX :: Linux",
+]
+
+dependencies = [
+    "PyYAML>=5.4",
+    "cryptography>=42.0.4",
+    "aiortc>=1.6.0",
+    "twisted>=23.10.0",
+    "pydub>=0.25.1",
+    "sounddevice>=0.4.6",
+    "gTTS>=2.4.0",
+    "pyttsx3>=2.90",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.0",
+    "requests>=2.31.0",
+    "msal>=1.24.0",
+    "fido2>=1.1.0",
+    "opuslib>=3.0.0",
+    "vosk>=0.3.45",
+    "spacy>=3.7.0",
+    "nltk>=3.9",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.11.0",
+    "pyAudioAnalysis>=0.3.14",
+    "librosa>=0.10.0",
+    "soundfile>=0.12.0",
+    "imageio-ffmpeg>=0.4.9",
+    "av>=11.0.0",
+    "flask>=3.0.0",
+    "websockets>=12.0",
+    "prometheus-client>=0.19.0",
+    "redis>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "pylint>=3.0.0",
+    "flake8>=6.1.0",
+    "black>=23.0.0",
+    "mypy>=1.5.0",
+    "isort>=5.12.0",
+    "pre-commit>=3.4.0",
+]
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[project.scripts]
+pbx-server = "pbx.main:main"
+
+[project.urls]
+Homepage = "https://github.com/mattiIce/PBX"
+Documentation = "https://github.com/mattiIce/PBX/blob/main/README.md"
+Repository = "https://github.com/mattiIce/PBX"
+Issues = "https://github.com/mattiIce/PBX/issues"
+
+[tool.setuptools]
+packages = ["pbx", "pbx.api", "pbx.core", "pbx.features", "pbx.integrations", "pbx.rtp", "pbx.sip", "pbx.utils"]
+
+[tool.setuptools.package-data]
+pbx = ["py.typed"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = ["pbx"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
