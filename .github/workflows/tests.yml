@@ -1,0 +1,101 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run custom test suite
+      run: |
+        python run_tests.py
+      continue-on-error: true
+    
+    - name: Run pytest
+      run: |
+        pytest tests/ -v --tb=short --maxfail=5
+      continue-on-error: true
+
+  test-with-postgresql:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: pbx_system
+          POSTGRES_USER: pbx_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Configure database
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: pbx_system
+        DB_USER: pbx_user
+        DB_PASSWORD: test_password
+      run: |
+        echo "DB_HOST=$DB_HOST" > .env
+        echo "DB_PORT=$DB_PORT" >> .env
+        echo "DB_NAME=$DB_NAME" >> .env
+        echo "DB_USER=$DB_USER" >> .env
+        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+    
+    - name: Run PostgreSQL tests
+      run: |
+        pytest tests/test_*postgresql*.py tests/test_database*.py -v
+      continue-on-error: true

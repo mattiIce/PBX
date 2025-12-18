@@ -1,0 +1,42 @@
+# Include documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include CODE_OF_CONDUCT.md
+
+# Include example files
+include .env.example
+include config.yml
+include test_config.yml
+include config_att_sip.yml
+include config_comcast_sip.yml
+
+# Include requirements files
+include requirements.txt
+include requirements-dev.txt
+
+# Include scripts
+recursive-include scripts *.py *.sh
+recursive-include examples *.py
+
+# Include templates and static files
+recursive-include provisioning_templates *
+recursive-include admin *.html *.css *.js
+recursive-include moh *.wav
+recursive-include voicemail_prompts .gitkeep
+recursive-include auto_attendant .gitkeep
+
+# Include tests
+recursive-include tests *.py
+
+# Include documentation
+recursive-include docs *.md
+
+# Exclude generated files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *~
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *.log
