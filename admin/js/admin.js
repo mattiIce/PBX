@@ -1343,7 +1343,7 @@ function showNotification(message, type = 'info') {
     `;
     
     const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
-    notification.innerHTML = `<strong>${icon}</strong> ${message}`;
+    notification.innerHTML = `<strong>${icon}</strong> ${escapeHtml(message)}`;
     
     document.body.appendChild(notification);
     
