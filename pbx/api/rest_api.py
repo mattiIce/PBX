@@ -9781,6 +9781,9 @@ class PBXAPIServer:
             import traceback
             traceback.print_exc()
             
+            # Reset running flag to ensure consistent state
+            self.running = False
+            
             # Clean up any partially created server to avoid leaving socket in bad state
             if self.server:
                 try:

@@ -127,6 +127,20 @@ def test_failed_start_cleanup():
         api_server1.stop()
         return False
     print("  ✓ Failed server properly cleaned up")
+    
+    # Verify running flag was reset
+    if api_server2.running:
+        print("  ✗ Failed server didn't reset running flag")
+        api_server1.stop()
+        return False
+    print("  ✓ Failed server reset running flag")
+    
+    # Verify thread reference was cleared
+    if api_server2.server_thread is not None:
+        print("  ✗ Failed server didn't clear thread reference")
+        api_server1.stop()
+        return False
+    print("  ✓ Failed server cleared thread reference")
 
     # Stop the first server
     print("3. Stopping first server...")
