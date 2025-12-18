@@ -9792,55 +9792,33 @@ class PBXAPIServer:
                         self.logger.info(
                             f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/")
 
-                # Start in separate thread
-                self.server_thread = threading.Thread(target=self._run)
-                self.server_thread.daemon = True
-                self.server_thread.start()
+            # Start in separate thread
+            self.server_thread = threading.Thread(target=self._run)
+            self.server_thread.daemon = True
+            self.server_thread.start()
 
-                return True
-                
-            except OSError as e:
-                if e.errno == errno.EADDRINUSE:  # Address already in use
-                    # Clean up the failed server object
-                    if hasattr(self, 'server') and self.server:
-                        try:
-                            self.server.server_close()
-                        except OSError as cleanup_error:
-                            self.logger.debug(f"Error during server cleanup: {cleanup_error}")
-                        self.server = None
-                    
-                    if attempt < max_retries - 1:
-                        self.logger.warning(
-                            f"Port {self.port} is in use, retrying in {retry_delay}s "
-                            f"(attempt {attempt + 1}/{max_retries})...")
-                        time.sleep(retry_delay)
-                        retry_delay *= 2  # Exponential backoff
-                    else:
-                        self.logger.error(f"Failed to start API server after {max_retries} attempts: {e}")
-                        self.logger.error(
-                            f"Port {self.port} is in use. This may be caused by:")
-                        self.logger.error(
-                            f"  1. Another instance of PBX is already running")
-                        self.logger.error(
-                            f"  2. A previous instance did not shut down cleanly")
-                        self.logger.error(
-                            f"  3. Another service is using port {self.port}")
-                        self.logger.error(f"To resolve:")
-                        self.logger.error(
-                            f"  - Check for running processes: sudo lsof -i :{self.port}")
-                        self.logger.error(
-                            f"  - Or change the port in config.yml")
-                        return False
-                else:
-                    # Other OSError, not address in use
-                    self.logger.exception(f"Failed to start API server: {e}")
-                    return False
-                    
-            except Exception as e:
-                self.logger.exception(f"Failed to start API server: {e}")
-                return False
-        
-        return False
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to start API server: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Reset running flag to ensure consistent state
+            self.running = False
+            
+            # Clean up any partially created server to avoid leaving socket in bad state
+            if self.server:
+                try:
+                    self.server.server_close()
+                except OSError as e:
+                    self.logger.debug(f"Error during cleanup: {e}")
+                finally:
+                    self.server = None
+            
+            # Clear thread reference as well since start failed
+            self.server_thread = None
+            
+            return False
 
     def _run(self):
         """Run server"""
