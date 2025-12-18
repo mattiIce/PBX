@@ -191,6 +191,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Handle POST requests"""
         parsed = urlparse(self.path)
         path = parsed.path
+        
+        # Log all POST requests for debugging
+        self.logger.debug(f"POST request received: {path}")
 
         try:
             if path == '/api/auth/login':
@@ -6320,32 +6323,40 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_set_fmfm_config(self):
         """Set FMFM configuration for an extension"""
+        self.logger.info("Received FMFM config save request")
+        
         if self.pbx_core and hasattr(self.pbx_core, 'find_me_follow_me'):
             try:
                 content_length = int(self.headers['Content-Length'])
                 body = self.rfile.read(content_length)
                 data = json.loads(body.decode('utf-8'))
+                
+                self.logger.info(f"FMFM config data: {data}")
 
                 extension = data.get('extension')
                 if not extension:
+                    self.logger.warning("FMFM config request missing extension")
                     self._send_json({'error': 'Extension required'}, 400)
                     return
 
                 success = self.pbx_core.find_me_follow_me.set_config(extension, data)
                 
                 if success:
+                    self.logger.info(f"Successfully configured FMFM for extension {extension}")
                     self._send_json({
                         'success': True,
                         'message': f'FMFM configured for extension {extension}',
                         'config': self.pbx_core.find_me_follow_me.get_config(extension)
                     })
                 else:
+                    self.logger.error(f"Failed to set FMFM configuration for extension {extension}")
                     self._send_json({'error': 'Failed to set FMFM configuration'}, 500)
 
             except Exception as e:
                 self.logger.error(f"Error setting FMFM config: {e}")
                 self._send_json({'error': f'Error setting FMFM config: {str(e)}'}, 500)
         else:
+            self.logger.error("Find Me/Follow Me not initialized")
             self._send_json({'error': 'Find Me/Follow Me not initialized'}, 500)
 
     def _handle_add_fmfm_destination(self):
