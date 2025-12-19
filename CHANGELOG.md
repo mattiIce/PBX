@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Core PBX Features
 - SIP Protocol Support - Full Session Initiation Protocol implementation
-- RTP Media Handling - Real-time Protocol for audio streaming
+- RTP Media Handling - Real-time Transport Protocol for audio streaming
 - Extension Management - User registration and authentication
 - Call Routing - Intelligent call routing based on dialplan rules
 - Call Management - Hold, resume, transfer, and forward calls
