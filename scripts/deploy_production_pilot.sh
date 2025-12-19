@@ -143,7 +143,9 @@ install_dependencies() {
     fi
     
     apt-get update
-    apt-get install -y \
+    # Suppress Python SyntaxWarnings during package installation (e.g., from fail2ban)
+    # These warnings are from the packages themselves, not our code
+    PYTHONWARNINGS="ignore::SyntaxWarning" apt-get install -y \
         postgresql \
         postgresql-contrib \
         python3-pip \
