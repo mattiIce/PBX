@@ -59,9 +59,9 @@ It also applies when an individual is officially representing the project in pub
 
 If you experience or witness unacceptable behavior, please report it promptly:
 
-- **GitHub Issues**: Open a confidential issue in the repository
-- **Maintainer Contact**: Reach out directly to project maintainers
-- **Email**: Contact the project team through official channels
+- **Maintainer Contact**: Reach out directly to project maintainers through GitHub direct messages or email
+- **GitHub Issues**: For non-sensitive reports, you may open a public issue in the repository
+- **Email**: Contact the project team through official channels for confidential matters
 
 When reporting, please include:
 - Description of the incident
@@ -85,8 +85,8 @@ All reports will be reviewed confidentially and addressed promptly.
 
 For questions about this Code of Conduct or to report issues:
 
-- **GitHub Issues**: [https://github.com/mattiIce/PBX/issues](https://github.com/mattiIce/PBX/issues)
-- **Project Maintainers**: Contact through GitHub repository
+- **Project Maintainers**: Contact directly through GitHub for confidential matters
+- **Public Inquiries**: [https://github.com/mattiIce/PBX/issues](https://github.com/mattiIce/PBX/issues) for general questions
 
 ## Attribution
 
