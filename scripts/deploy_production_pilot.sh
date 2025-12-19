@@ -228,6 +228,8 @@ configure_firewall() {
         log_info "  - Allow HTTPS (443)"
         log_info "  - Allow SIP (5060/UDP)"
         log_info "  - Allow RTP (10000-20000/UDP)"
+        log_info "  - Allow Prometheus (9090)"
+        log_info "  - Allow Node Exporter (9100)"
         return 0
     fi
     
@@ -254,6 +256,10 @@ configure_firewall() {
     
     # Allow WebRTC signaling
     ufw allow 8443/tcp
+    
+    # Allow Prometheus and Node Exporter (for monitoring)
+    ufw allow 9090/tcp
+    ufw allow 9100/tcp
     
     # Enable firewall
     ufw --force enable
@@ -401,7 +407,7 @@ server {
     server_name _;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -414,6 +420,24 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+    }
+
+    # Prometheus monitoring
+    location /prometheus/ {
+        proxy_pass http://127.0.0.1:9090/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Node Exporter metrics
+    location /metrics {
+        proxy_pass http://127.0.0.1:9100/metrics;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 EOF
@@ -464,8 +488,8 @@ NEXT STEPS:
 
 MONITORING:
 -----------
-- Prometheus: http://localhost:9090
-- Node Exporter: http://localhost:9100/metrics
+- Prometheus: http://localhost:9090 or http://your-domain/prometheus/
+- Node Exporter: http://localhost:9100/metrics or http://your-domain/metrics
 - System logs: /var/log/pbx-deployment.log
 - Backup logs: /var/log/pbx-backup.log
 
