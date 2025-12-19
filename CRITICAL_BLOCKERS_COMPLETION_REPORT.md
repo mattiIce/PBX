@@ -73,10 +73,18 @@ python scripts/test_webrtc_audio.py --verbose --browser Chrome --codec opus
 1. PostgreSQL database (with pbx user and database)
 2. Python virtual environment with dependencies
 3. Nginx reverse proxy (ports 80/443)
-4. UFW firewall (properly configured for SIP/RTP)
+4. UFW firewall (properly configured for SIP/RTP/monitoring)
 5. Backup system (daily at 2 AM, 7-day retention)
-6. Prometheus monitoring (port 9090)
-7. Systemd service (auto-restart on failure)
+6. Prometheus monitoring (port 9090, accessible via /prometheus/)
+7. Node Exporter (port 9100, accessible via /metrics)
+8. Systemd service (auto-restart on failure)
+
+**Recent Fixes** (December 19, 2025):
+- Fixed Prometheus accessibility (added nginx proxy configuration for /prometheus/)
+- Fixed Node Exporter accessibility (added nginx proxy configuration for /metrics)
+- Fixed PBX backend proxy (corrected port from 8000 to 8080)
+- Added firewall rules for monitoring ports (9090, 9100)
+- Created migration guide: `MONITORING_ACCESS_FIX.md`
 
 **Usage**:
 ```bash
