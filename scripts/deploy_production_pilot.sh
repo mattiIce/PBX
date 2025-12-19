@@ -345,7 +345,7 @@ Type=simple
 User=pbx
 Group=pbx
 WorkingDirectory=$PROJECT_ROOT
-Environment="PATH=$PROJECT_ROOT/venv/bin"
+Environment="PATH=$PROJECT_ROOT/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ExecStart=$PROJECT_ROOT/venv/bin/python $PROJECT_ROOT/main.py
 Restart=always
 RestartSec=10
@@ -373,8 +373,8 @@ EOF
     log_info "Installing systemd service..."
     cp "$PROJECT_ROOT/pbx.service" /etc/systemd/system/pbx.service
     
-    # Create pbx user if doesn't exist
-    id -u pbx &>/dev/null || useradd -r -s /bin/false pbx
+    # Create pbx user if doesn't exist (with enhanced security)
+    id -u pbx &>/dev/null || useradd -r -s /bin/false -M -d /nonexistent pbx
     
     # Set permissions
     chown -R pbx:pbx "$PROJECT_ROOT"
