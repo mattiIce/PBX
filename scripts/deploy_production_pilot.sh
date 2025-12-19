@@ -329,30 +329,52 @@ setup_systemd_service() {
     
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would create systemd service for PBX"
+        log_info "[DRY RUN] Would populate $PROJECT_ROOT/pbx.service template"
         return 0
     fi
     
-    cat > /etc/systemd/system/pbx.service << EOF
+    # First, populate the repository's pbx.service template file
+    log_info "Populating pbx.service template in repository..."
+    cat > "$PROJECT_ROOT/pbx.service" << EOF
 [Unit]
 Description=PBX System
-After=network.target postgresql.service
+After=network.target postgresql.service redis.service
 
 [Service]
 Type=simple
 User=pbx
 Group=pbx
 WorkingDirectory=$PROJECT_ROOT
-Environment="PATH=$PROJECT_ROOT/venv/bin"
-ExecStart=$PROJECT_ROOT/venv/bin/python main.py
+Environment="PATH=$PROJECT_ROOT/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=$PROJECT_ROOT/venv/bin/python $PROJECT_ROOT/main.py
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=$PROJECT_ROOT/logs $PROJECT_ROOT/recordings $PROJECT_ROOT/voicemail $PROJECT_ROOT/cdr $PROJECT_ROOT/moh
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
 
 [Install]
 WantedBy=multi-user.target
 EOF
     
-    # Create pbx user if doesn't exist
-    id -u pbx &>/dev/null || useradd -r -s /bin/false pbx
+    log_success "Repository pbx.service template populated"
+    
+    # Now copy it to systemd directory
+    log_info "Installing systemd service..."
+    cp "$PROJECT_ROOT/pbx.service" /etc/systemd/system/pbx.service
+    
+    # Create pbx user if doesn't exist (with enhanced security)
+    id -u pbx &>/dev/null || useradd -r -s /bin/false -M -d /nonexistent pbx
     
     # Set permissions
     chown -R pbx:pbx "$PROJECT_ROOT"
@@ -361,7 +383,7 @@ EOF
     systemctl daemon-reload
     systemctl enable pbx.service
     
-    log_success "Systemd service configured"
+    log_success "Systemd service configured and installed"
 }
 
 # Setup Nginx reverse proxy
