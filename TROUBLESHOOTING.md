@@ -574,10 +574,10 @@ The service file is missing the `WorkingDirectory` directive or it points to a n
 # Edit service file
 sudo nano /etc/systemd/system/pbx.service
 
-# Ensure it includes WorkingDirectory:
+# Ensure it includes WorkingDirectory and uses absolute paths:
 # [Service]
 # WorkingDirectory=/root/PBX  # or your actual PBX path
-# ExecStart=/root/PBX/venv/bin/python main.py
+# ExecStart=/root/PBX/venv/bin/python /root/PBX/main.py
 
 # Reload and restart
 sudo systemctl daemon-reload
