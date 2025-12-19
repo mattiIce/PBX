@@ -1,0 +1,26 @@
+[Unit]
+Description=PBX System
+After=network.target
+
+[Service]
+Type=simple
+# IMPORTANT: Update these paths to match your PBX installation directory
+# Common locations: /opt/pbx, /usr/local/pbx, /home/username/PBX, /root/PBX
+WorkingDirectory=/root/PBX
+ExecStart=/root/PBX/venv/bin/python /root/PBX/main.py
+# IMPORTANT: Update this to the user who owns the PBX files
+# For better security, create a dedicated 'pbx' user:
+#   sudo useradd -r -s /bin/false pbx
+#   sudo chown -R pbx:pbx /opt/pbx
+#   User=pbx
+#   Group=pbx
+# For testing/development with root user:
+User=root
+Group=root
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -24,6 +24,7 @@ Choose the guide that fits your deployment scenario:
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-step deployment guide for specific server setup
 - **[UBUNTU_SETUP_GUIDE.md](UBUNTU_SETUP_GUIDE.md)** - Complete Ubuntu 24.04 LTS setup with all databases and services
 - **[POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)** - PostgreSQL database configuration for advanced features
+- **[SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md)** - Systemd service installation and troubleshooting
 
 ## Feature Documentation
 

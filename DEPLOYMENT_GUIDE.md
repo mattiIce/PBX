@@ -313,13 +313,34 @@ Press `Ctrl+C` in the terminal running the PBX.
 
 To keep the PBX running even after you log out, set it up as a systemd service.
 
-### 7.1 Create Service File
+### 7.1 Install Service File
+
+A template service file is provided in the repository. Edit and install it:
+
+```bash
+# Edit the template to match your installation
+nano pbx.service
+
+# Copy to systemd directory
+sudo cp pbx.service /etc/systemd/system/
+```
+
+**⚠️ IMPORTANT:** Edit `pbx.service` and update:
+- `WorkingDirectory`: Your PBX installation path (e.g., `/root/PBX`, `/opt/pbx`, `/home/username/PBX`)
+- `ExecStart`: Path to your Python executable and main.py
+- `User` and `Group`: User/group that owns the PBX files
+
+See [SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md) for detailed instructions and troubleshooting.
+
+### 7.2 Alternative: Manual Creation
+
+If you prefer to create the service file manually:
 
 ```bash
 sudo nano /etc/systemd/system/pbx.service
 ```
 
-### 7.2 Add This Content
+Add this content (update paths as needed):
 
 ```ini
 [Unit]
@@ -339,10 +360,6 @@ StandardError=journal
 [Install]
 WantedBy=multi-user.target
 ```
-
-**⚠️ IMPORTANT:** Replace:
-- `YOUR_USERNAME` with your actual username
-- `/home/YOUR_USERNAME/PBX` with your actual installation path
 
 ### 7.3 Enable and Start Service
 

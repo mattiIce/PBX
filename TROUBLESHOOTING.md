@@ -559,7 +559,34 @@ python3 main.py
 
 **Common Issues:**
 
-**1. Port Already in Use**
+**1. CHDIR Error (Exit Code 200)**
+```bash
+# Check service status - look for "status=200/CHDIR"
+sudo systemctl status pbx
+
+# This means WorkingDirectory is missing or incorrect
+```
+
+**Solution:**
+The service file is missing the `WorkingDirectory` directive or it points to a non-existent directory.
+
+```bash
+# Edit service file
+sudo nano /etc/systemd/system/pbx.service
+
+# Ensure it includes WorkingDirectory and uses absolute paths:
+# [Service]
+# WorkingDirectory=/root/PBX  # or your actual PBX path
+# ExecStart=/root/PBX/venv/bin/python /root/PBX/main.py
+
+# Reload and restart
+sudo systemctl daemon-reload
+sudo systemctl restart pbx
+```
+
+See [SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md) for detailed service configuration.
+
+**2. Port Already in Use**
 ```bash
 # Find what's using port 5060
 sudo lsof -i :5060
@@ -567,13 +594,13 @@ sudo lsof -i :5060
 # Kill the process or change PBX port
 ```
 
-**2. Missing Dependencies**
+**3. Missing Dependencies**
 ```bash
 # Reinstall requirements
 pip3 install -r requirements.txt
 ```
 
-**3. Permission Errors**
+**4. Permission Errors**
 ```bash
 # Check file permissions
 ls -la ~/PBX
