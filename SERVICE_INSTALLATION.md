@@ -82,19 +82,23 @@ sudo journalctl -u pbx -b
 
 ## Using Virtual Environment
 
-If you're using a Python virtual environment (recommended), update the `ExecStart` line:
+The default service file uses system Python (`/usr/bin/python3`), which works with the standard installation process.
+
+If you're using a Python virtual environment, update the `ExecStart` line:
 
 ```ini
-ExecStart=/root/PBX/venv/bin/python /root/PBX/main.py
+ExecStart=/root/PBX/venv/bin/python3 /root/PBX/main.py
 ```
 
 Or:
 
 ```ini
-ExecStart=/opt/pbx/venv/bin/python /opt/pbx/main.py
+ExecStart=/opt/pbx/venv/bin/python3 /opt/pbx/main.py
 ```
 
 **Important**: Always use absolute paths in the service file.
+
+**Note**: The standard installation uses `install_requirements.sh`, which installs packages system-wide (not in a venv), so the default `/usr/bin/python3` works out of the box.
 
 ## See Also
 
