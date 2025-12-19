@@ -25,11 +25,7 @@ class MockPBXCore:
         self.config = config
 
     def get_status(self):
-        return {
-            'registered_extensions': 0,
-            'active_calls': 0,
-            'uptime': 0
-        }
+        return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
 def test_ssl_configuration():
@@ -42,15 +38,15 @@ def test_ssl_configuration():
     config = Config("test_config.yml")
 
     # Check if SSL config is present
-    ssl_config = config.get('api.ssl', {})
+    ssl_config = config.get("api.ssl", {})
     print(f"✓ SSL config loaded: {ssl_config}")
 
-    ssl_enabled = ssl_config.get('enabled', False)
+    ssl_enabled = ssl_config.get("enabled", False)
     print(f"  SSL enabled: {ssl_enabled}")
 
     if ssl_enabled:
-        cert_file = ssl_config.get('cert_file', 'certs/server.crt')
-        key_file = ssl_config.get('key_file', 'certs/server.key')
+        cert_file = ssl_config.get("cert_file", "certs/server.crt")
+        key_file = ssl_config.get("key_file", "certs/server.key")
         print(f"  Certificate file: {cert_file}")
         print(f"  Key file: {key_file}")
 
@@ -81,7 +77,7 @@ def test_api_server_with_ssl_disabled():
     mock_pbx = MockPBXCore(config)
 
     # Create API server
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=8081)
+    api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8081)
 
     print(f"  SSL enabled: {api_server.ssl_enabled}")
     print(f"  SSL context: {api_server.ssl_context}")
@@ -163,12 +159,12 @@ def test_api_server_with_ssl_enabled():
     original_get = config.get
 
     def mock_get(key, default=None):
-        if key == 'api.ssl':
+        if key == "api.ssl":
             return {
-                'enabled': True,
-                'cert_file': cert_file,
-                'key_file': key_file,
-                'ca': {'enabled': False}
+                "enabled": True,
+                "cert_file": cert_file,
+                "key_file": key_file,
+                "ca": {"enabled": False},
             }
         return original_get(key, default)
 
@@ -177,7 +173,7 @@ def test_api_server_with_ssl_enabled():
     mock_pbx = MockPBXCore(config)
 
     # Create API server
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=8082)
+    api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8082)
 
     print(f"  SSL enabled: {api_server.ssl_enabled}")
     print(f"  SSL context: {api_server.ssl_context is not None}")
@@ -227,12 +223,12 @@ def test_https_connection():
     original_get = config.get
 
     def mock_get(key, default=None):
-        if key == 'api.ssl':
+        if key == "api.ssl":
             return {
-                'enabled': True,
-                'cert_file': cert_file,
-                'key_file': key_file,
-                'ca': {'enabled': False}
+                "enabled": True,
+                "cert_file": cert_file,
+                "key_file": key_file,
+                "ca": {"enabled": False},
             }
         return original_get(key, default)
 
@@ -241,7 +237,7 @@ def test_https_connection():
     mock_pbx = MockPBXCore(config)
 
     # Create and start API server
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=8083)
+    api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8083)
 
     print("  Starting HTTPS API server...")
     if not api_server.start():
@@ -269,7 +265,7 @@ def test_https_connection():
             print(f"  ✓ HTTPS request successful")
             print(f"  Response: {data}")
 
-            if 'registered_extensions' in data:
+            if "registered_extensions" in data:
                 print("  ✓ API response is valid")
             else:
                 print("  ✗ Invalid API response")
@@ -279,6 +275,7 @@ def test_https_connection():
     except Exception as e:
         print(f"  ✗ HTTPS connection failed: {e}")
         import traceback
+
         traceback.print_exc()
         api_server.stop()
         return False
@@ -321,6 +318,7 @@ def main():
             failed += 1
             print(f"✗ Test error in {test_name}: {e}\n")
             import traceback
+
             traceback.print_exc()
 
     print("=" * 60)

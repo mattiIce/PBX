@@ -8,12 +8,11 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.email_notification import EmailNotifier
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
-
 
 
 def test_email_notifier_config():
@@ -21,29 +20,31 @@ def test_email_notifier_config():
     print("Testing email notifier configuration...")
 
     # Create a test config file
-    config = Config('config.yml')
+    config = Config("config.yml")
 
     # Check SMTP settings (values come from .env on server)
-    assert config.get('voicemail.email_notifications') is True
+    assert config.get("voicemail.email_notifications") is True
     # SMTP host should be set (actual value from .env)
-    smtp_host = config.get('voicemail.smtp.host')
+    smtp_host = config.get("voicemail.smtp.host")
     assert smtp_host is not None, "SMTP host should be set"
     # Port should be an integer after env variable resolution
-    smtp_port = config.get('voicemail.smtp.port')
-    assert smtp_port == 587 or smtp_port == '587', f"Expected port 587, got {smtp_port} (type: {
+    smtp_port = config.get("voicemail.smtp.port")
+    assert (
+        smtp_port == 587 or smtp_port == "587"
+    ), f"Expected port 587, got {smtp_port} (type: {
         type(smtp_port)})"
-    assert config.get('voicemail.smtp.use_tls')
+    assert config.get("voicemail.smtp.use_tls")
     # Username should be set (actual value from .env)
-    smtp_username = config.get('voicemail.smtp.username')
+    smtp_username = config.get("voicemail.smtp.username")
     assert smtp_username is not None, "SMTP username should be set"
 
     # Check email settings
-    assert config.get('voicemail.email.from_address') == "Voicemail@albl.com"
-    assert config.get('voicemail.email.from_name') == "ABCo Voicemail"
+    assert config.get("voicemail.email.from_address") == "Voicemail@albl.com"
+    assert config.get("voicemail.email.from_name") == "ABCo Voicemail"
 
     # Check reminder settings
-    assert config.get('voicemail.reminders.enabled')
-    assert config.get('voicemail.reminders.time') == "09:00"
+    assert config.get("voicemail.reminders.enabled")
+    assert config.get("voicemail.reminders.time") == "09:00"
 
     print("✓ Email notifier configuration loads correctly")
 
@@ -52,14 +53,16 @@ def test_email_notifier_initialization():
     """Test email notifier initialization"""
     print("Testing email notifier initialization...")
 
-    config = Config('config.yml')
+    config = Config("config.yml")
     notifier = EmailNotifier(config)
 
     assert notifier.enabled is True
     # SMTP host may be empty if .env is not present (defaults to empty string)
     # On production server with .env, it will have a value
     # Port should be an integer
-    assert notifier.smtp_port == 587 or notifier.smtp_port == '587', f"Expected port 587, got {
+    assert (
+        notifier.smtp_port == 587 or notifier.smtp_port == "587"
+    ), f"Expected port 587, got {
         notifier.smtp_port}"
     assert notifier.use_tls
     assert notifier.from_address == "Voicemail@albl.com"
@@ -76,7 +79,7 @@ def test_voicemail_with_email():
     temp_dir = tempfile.mkdtemp()
 
     try:
-        config = Config('config.yml')
+        config = Config("config.yml")
         vm_system = VoicemailSystem(storage_path=temp_dir, config=config)
 
         # Check that email notifier is initialized
@@ -84,12 +87,9 @@ def test_voicemail_with_email():
         assert vm_system.email_notifier.enabled is True
 
         # Save a test message (won't actually send email without SMTP server)
-        test_audio = b'RIFF' + b'\x00' * 100
+        test_audio = b"RIFF" + b"\x00" * 100
         message_id = vm_system.save_message(
-            extension_number="1001",
-            caller_id="1002",
-            audio_data=test_audio,
-            duration=30
+            extension_number="1001", caller_id="1002", audio_data=test_audio, duration=30
         )
 
         assert message_id is not None
@@ -116,10 +116,10 @@ def test_no_answer_timeout_config():
     """Test no-answer timeout configuration"""
     print("Testing no-answer timeout configuration...")
 
-    config = Config('config.yml')
+    config = Config("config.yml")
 
     # Check no-answer timeout setting
-    timeout = config.get('voicemail.no_answer_timeout')
+    timeout = config.get("voicemail.no_answer_timeout")
     assert timeout is not None
     assert timeout == 30
 

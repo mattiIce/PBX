@@ -18,28 +18,28 @@ def test_phone_book_auto_sync_after_ad_sync():
     class MockDatabase:
         def __init__(self):
             self.enabled = True
-            self.db_type = 'sqlite'
+            self.db_type = "sqlite"
             self.extensions = []
 
         def fetch_all(self, query, params=None):
             """Mock fetch_all for extensions table"""
-            if 'extensions' in query and 'ad_synced' in query:
+            if "extensions" in query and "ad_synced" in query:
                 # Return AD-synced extensions
                 return [
                     {
-                        'number': '1001',
-                        'name': 'John Doe',
-                        'email': 'john@example.com',
-                        'ad_synced': True
+                        "number": "1001",
+                        "name": "John Doe",
+                        "email": "john@example.com",
+                        "ad_synced": True,
                     },
                     {
-                        'number': '1002',
-                        'name': 'Jane Smith',
-                        'email': 'jane@example.com',
-                        'ad_synced': True
-                    }
+                        "number": "1002",
+                        "name": "Jane Smith",
+                        "email": "jane@example.com",
+                        "ad_synced": True,
+                    },
                 ]
-            elif 'phone_book' in query:
+            elif "phone_book" in query:
                 # Return existing phone book entries
                 return []
             return []
@@ -48,20 +48,15 @@ def test_phone_book_auto_sync_after_ad_sync():
             """Mock execute for INSERT/UPDATE"""
             return True
 
-        def _execute_with_context(
-                self,
-                query,
-                context,
-                params=None,
-                critical=True):
+        def _execute_with_context(self, query, context, params=None, critical=True):
             """Mock execute with context"""
             return True
 
     class MockConfig:
         def get(self, key, default=None):
             config_map = {
-                'features.phone_book.enabled': True,
-                'features.phone_book.auto_sync_from_ad': True,
+                "features.phone_book.enabled": True,
+                "features.phone_book.auto_sync_from_ad": True,
             }
             return config_map.get(key, default)
 
@@ -95,16 +90,17 @@ def test_phone_book_auto_sync_after_ad_sync():
 
     # Verify that phone book synced entries
     assert synced_count == 2, f"Should have synced 2 entries, got {synced_count}"
-    assert len(
-        phone_book.entries) == 2, f"Should have 2 entries in phone book, got {
+    assert (
+        len(phone_book.entries) == 2
+    ), f"Should have 2 entries in phone book, got {
         len(
             phone_book.entries)}"
 
     # Verify the entries are correct
-    assert '1001' in phone_book.entries, "Extension 1001 should be in phone book"
-    assert '1002' in phone_book.entries, "Extension 1002 should be in phone book"
-    assert phone_book.entries['1001']['name'] == 'John Doe', "Name should match"
-    assert phone_book.entries['1002']['name'] == 'Jane Smith', "Name should match"
+    assert "1001" in phone_book.entries, "Extension 1001 should be in phone book"
+    assert "1002" in phone_book.entries, "Extension 1002 should be in phone book"
+    assert phone_book.entries["1001"]["name"] == "John Doe", "Name should match"
+    assert phone_book.entries["1002"]["name"] == "Jane Smith", "Name should match"
 
     print("✓ Phone book auto-sync after AD sync works correctly")
     return True
@@ -117,7 +113,7 @@ def test_phone_book_sync_disabled():
     class MockDatabase:
         def __init__(self):
             self.enabled = True
-            self.db_type = 'sqlite'
+            self.db_type = "sqlite"
 
         def fetch_all(self, query, params=None):
             return []
@@ -125,19 +121,14 @@ def test_phone_book_sync_disabled():
         def execute(self, query, params=None):
             return True
 
-        def _execute_with_context(
-                self,
-                query,
-                context,
-                params=None,
-                critical=True):
+        def _execute_with_context(self, query, context, params=None, critical=True):
             return True
 
     class MockConfig:
         def get(self, key, default=None):
             config_map = {
-                'features.phone_book.enabled': True,
-                'features.phone_book.auto_sync_from_ad': False,  # Disabled
+                "features.phone_book.enabled": True,
+                "features.phone_book.auto_sync_from_ad": False,  # Disabled
             }
             return config_map.get(key, default)
 
@@ -183,8 +174,7 @@ def run_all_tests():
 
     print("\n" + "=" * 70)
     if all(results):
-        print(
-            f"✅ All phone book AD sync tests passed! ({len(results)}/{len(results)})")
+        print(f"✅ All phone book AD sync tests passed! ({len(results)}/{len(results)})")
         return True
     else:
         print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")

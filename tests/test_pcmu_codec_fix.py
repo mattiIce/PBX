@@ -16,7 +16,6 @@ from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import WAV_FORMAT_PCM, pcm16_to_ulaw
 
 
-
 def create_test_pcm_wav(sample_rate=8000, duration_samples=800):
     """
     Create a test PCM WAV file
@@ -29,34 +28,34 @@ def create_test_pcm_wav(sample_rate=8000, duration_samples=800):
         Path to created WAV file
     """
     # Create temporary file
-    fd, path = tempfile.mkstemp(suffix='.wav')
+    fd, path = tempfile.mkstemp(suffix=".wav")
 
-    with os.fdopen(fd, 'wb') as f:
+    with os.fdopen(fd, "wb") as f:
         # Write WAV header
         # RIFF header
-        f.write(b'RIFF')
-        f.write(struct.pack('<I', 36 + duration_samples * 2))  # File size - 8
-        f.write(b'WAVE')
+        f.write(b"RIFF")
+        f.write(struct.pack("<I", 36 + duration_samples * 2))  # File size - 8
+        f.write(b"WAVE")
 
         # fmt chunk
-        f.write(b'fmt ')
-        f.write(struct.pack('<I', 16))  # fmt chunk size
-        f.write(struct.pack('<H', WAV_FORMAT_PCM))  # audio format (PCM)
-        f.write(struct.pack('<H', 1))  # num channels (mono)
-        f.write(struct.pack('<I', sample_rate))  # sample rate
-        f.write(struct.pack('<I', sample_rate * 2))  # byte rate
-        f.write(struct.pack('<H', 2))  # block align
-        f.write(struct.pack('<H', 16))  # bits per sample
+        f.write(b"fmt ")
+        f.write(struct.pack("<I", 16))  # fmt chunk size
+        f.write(struct.pack("<H", WAV_FORMAT_PCM))  # audio format (PCM)
+        f.write(struct.pack("<H", 1))  # num channels (mono)
+        f.write(struct.pack("<I", sample_rate))  # sample rate
+        f.write(struct.pack("<I", sample_rate * 2))  # byte rate
+        f.write(struct.pack("<H", 2))  # block align
+        f.write(struct.pack("<H", 16))  # bits per sample
 
         # data chunk
-        f.write(b'data')
-        f.write(struct.pack('<I', duration_samples * 2))  # data size
+        f.write(b"data")
+        f.write(struct.pack("<I", duration_samples * 2))  # data size
 
         # Write PCM samples (simple sine wave)
         for i in range(duration_samples):
             # Generate a 440 Hz tone
             sample = int(16000 * math.sin(2 * math.pi * 440 * i / sample_rate))
-            f.write(struct.pack('<h', sample))
+            f.write(struct.pack("<h", sample))
 
     return path
 
@@ -74,18 +73,14 @@ def test_pcm_to_pcmu_conversion():
 
     # Create test PCM file at 16kHz
     print("\n2. Creating test PCM WAV file (16kHz, 16-bit)...")
-    pcm_file_16k = create_test_pcm_wav(
-        sample_rate=16000, duration_samples=1600)
+    pcm_file_16k = create_test_pcm_wav(sample_rate=16000, duration_samples=1600)
     print(f"   Created: {pcm_file_16k}")
 
     try:
         # Test 8kHz PCM file
         print("\n3. Testing 8kHz PCM file playback...")
         player = RTPPlayer(
-            local_port=20000,
-            remote_host="127.0.0.1",
-            remote_port=20001,
-            call_id="test_call_8k"
+            local_port=20000, remote_host="127.0.0.1", remote_port=20001, call_id="test_call_8k"
         )
         player.start()
 
@@ -103,10 +98,7 @@ def test_pcm_to_pcmu_conversion():
         # Test 16kHz PCM file
         print("\n4. Testing 16kHz PCM file playback...")
         player = RTPPlayer(
-            local_port=20004,
-            remote_host="127.0.0.1",
-            remote_port=20005,
-            call_id="test_call_16k"
+            local_port=20004, remote_host="127.0.0.1", remote_port=20005, call_id="test_call_16k"
         )
         player.start()
 
@@ -115,8 +107,7 @@ def test_pcm_to_pcmu_conversion():
         player.stop()
 
         if result:
-            print(
-                "   ✓ 16kHz PCM file played successfully (downsampled and converted to PCMU)")
+            print("   ✓ 16kHz PCM file played successfully (downsampled and converted to PCMU)")
         else:
             print("   ✗ Failed to play 16kHz PCM file")
             return False
@@ -126,7 +117,7 @@ def test_pcm_to_pcmu_conversion():
         test_pcm_data = bytearray()
         for i in range(100):
             sample = int(8000 * math.sin(2 * math.pi * 440 * i / 8000))
-            test_pcm_data.extend(struct.pack('<h', sample))
+            test_pcm_data.extend(struct.pack("<h", sample))
 
         ulaw_data = pcm16_to_ulaw(bytes(test_pcm_data))
 
@@ -134,11 +125,13 @@ def test_pcm_to_pcmu_conversion():
             print(
                 f"   ✓ Manual conversion successful: {
                     len(test_pcm_data)} bytes PCM -> {
-                    len(ulaw_data)} bytes PCMU")
+                    len(ulaw_data)} bytes PCMU"
+            )
         else:
             print(
                 f"   ✗ Manual conversion failed: expected 100 bytes, got {
-                    len(ulaw_data)} bytes")
+                    len(ulaw_data)} bytes"
+            )
             return False
 
         print("\n" + "=" * 60)
@@ -160,6 +153,6 @@ def test_pcm_to_pcmu_conversion():
             os.remove(pcm_file_16k)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = test_pcm_to_pcmu_conversion()
     sys.exit(0 if success else 1)

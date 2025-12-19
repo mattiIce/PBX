@@ -2,6 +2,7 @@
 Paging System Feature
 Provides support for overhead paging via digital-to-analog converters
 """
+
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -38,21 +39,16 @@ class PagingSystem:
         self.logger = get_logger()
         self.config = config
         self.database = database
-        self.enabled = config.get('features.paging.enabled', False)
+        self.enabled = config.get("features.paging.enabled", False)
 
         # Paging configuration
-        self.paging_prefix = config.get(
-            'features.paging.prefix',
-            '7')  # Dial 7xx for paging
-        self.zones = config.get('features.paging.zones', [])
-        self.all_call_extension = config.get(
-            'features.paging.all_call_extension', '700')
+        self.paging_prefix = config.get("features.paging.prefix", "7")  # Dial 7xx for paging
+        self.zones = config.get("features.paging.zones", [])
+        self.all_call_extension = config.get("features.paging.all_call_extension", "700")
 
         # Digital-to-analog converter settings
-        self.dac_type = config.get(
-            'features.paging.dac_type',
-            'sip_gateway')  # or 'analog_gateway'
-        self.dac_devices = config.get('features.paging.dac_devices', [])
+        self.dac_type = config.get("features.paging.dac_type", "sip_gateway")  # or 'analog_gateway'
+        self.dac_devices = config.get("features.paging.dac_devices", [])
 
         # Active paging sessions
         self.active_pages = {}  # {page_id: page_info}
@@ -63,7 +59,8 @@ class PagingSystem:
             self.logger.info(f"All-call extension: {self.all_call_extension}")
             self.logger.info(f"Configured zones: {len(self.zones)}")
             self.logger.warning(
-                "NOTE: This is a stub implementation. Full paging requires hardware integration.")
+                "NOTE: This is a stub implementation. Full paging requires hardware integration."
+            )
         else:
             self.logger.info("Paging system disabled")
 
@@ -104,15 +101,12 @@ class PagingSystem:
             return None
 
         for zone in self.zones:
-            if zone.get('extension') == extension:
+            if zone.get("extension") == extension:
                 return zone
 
         return None
 
-    def initiate_page(
-            self,
-            from_extension: str,
-            to_extension: str) -> Optional[str]:
+    def initiate_page(self, from_extension: str, to_extension: str) -> Optional[str]:
         """
         Initiate a paging call
 
@@ -128,8 +122,7 @@ class PagingSystem:
             return None
 
         if not self.is_paging_extension(to_extension):
-            self.logger.warning(
-                f"Extension {to_extension} is not a paging extension")
+            self.logger.warning(f"Extension {to_extension} is not a paging extension")
             return None
 
         # Generate page ID with UUID to ensure uniqueness
@@ -143,27 +136,25 @@ class PagingSystem:
             zone = self.get_zone_for_extension(to_extension)
             if zone:
                 zones = [zone]
-                zone_names = zone.get('name', to_extension)
+                zone_names = zone.get("name", to_extension)
             else:
-                self.logger.warning(
-                    f"No zone configured for extension {to_extension}")
+                self.logger.warning(f"No zone configured for extension {to_extension}")
                 return None
 
         # Store page information
         page_info = {
-            'page_id': page_id,
-            'from_extension': from_extension,
-            'to_extension': to_extension,
-            'zones': zones,
-            'zone_names': zone_names,
-            'started_at': datetime.now(),
-            'status': 'active'
+            "page_id": page_id,
+            "from_extension": from_extension,
+            "to_extension": to_extension,
+            "zones": zones,
+            "zone_names": zone_names,
+            "started_at": datetime.now(),
+            "status": "active",
         }
 
         self.active_pages[page_id] = page_info
 
-        self.logger.info(
-            f"Paging initiated: {from_extension} -> {zone_names} (Page ID: {page_id})")
+        self.logger.info(f"Paging initiated: {from_extension} -> {zone_names} (Page ID: {page_id})")
 
         # Note: Actual audio routing is handled by PBX core's _handle_paging() and _paging_session() methods
         # The core PBX will:
@@ -194,8 +185,8 @@ class PagingSystem:
             return False
 
         page_info = self.active_pages[page_id]
-        page_info['status'] = 'ended'
-        page_info['ended_at'] = datetime.now()
+        page_info["status"] = "ended"
+        page_info["ended_at"] = datetime.now()
 
         self.logger.info(f"Page ended: {page_id} ({page_info['zone_names']})")
 
@@ -249,8 +240,9 @@ class PagingSystem:
 
         return self.zones
 
-    def add_zone(self, extension: str, name: str, description: str = None,
-                 dac_device: str = None) -> bool:
+    def add_zone(
+        self, extension: str, name: str, description: str = None, dac_device: str = None
+    ) -> bool:
         """
         Add a paging zone (runtime configuration)
 
@@ -267,16 +259,16 @@ class PagingSystem:
             return False
 
         zone = {
-            'extension': extension,
-            'name': name,
-            'description': description,
-            'dac_device': dac_device,
-            'created_at': datetime.now()
+            "extension": extension,
+            "name": name,
+            "description": description,
+            "dac_device": dac_device,
+            "created_at": datetime.now(),
         }
 
         # Check if zone already exists
         for existing_zone in self.zones:
-            if existing_zone.get('extension') == extension:
+            if existing_zone.get("extension") == extension:
                 self.logger.warning(f"Zone {extension} already exists")
                 return False
 
@@ -302,18 +294,22 @@ class PagingSystem:
             return False
 
         for i, zone in enumerate(self.zones):
-            if zone.get('extension') == extension:
+            if zone.get("extension") == extension:
                 removed_zone = self.zones.pop(i)
-                self.logger.info(
-                    f"Removed paging zone: {extension} - {removed_zone.get('name')}")
+                self.logger.info(f"Removed paging zone: {extension} - {removed_zone.get('name')}")
                 return True
 
         self.logger.warning(f"Zone {extension} not found")
         return False
 
-    def configure_dac_device(self, device_id: str, device_type: str,
-                             sip_uri: str = None, ip_address: str = None,
-                             port: int = 5060) -> bool:
+    def configure_dac_device(
+        self,
+        device_id: str,
+        device_type: str,
+        sip_uri: str = None,
+        ip_address: str = None,
+        port: int = 5060,
+    ) -> bool:
         """
         Configure a digital-to-analog converter device
 
@@ -331,17 +327,17 @@ class PagingSystem:
             return False
 
         device = {
-            'device_id': device_id,
-            'device_type': device_type,
-            'sip_uri': sip_uri,
-            'ip_address': ip_address,
-            'port': port,
-            'configured_at': datetime.now()
+            "device_id": device_id,
+            "device_type": device_type,
+            "sip_uri": sip_uri,
+            "ip_address": ip_address,
+            "port": port,
+            "configured_at": datetime.now(),
         }
 
         # Check if device already exists
         for existing_device in self.dac_devices:
-            if existing_device.get('device_id') == device_id:
+            if existing_device.get("device_id") == device_id:
                 self.logger.warning(f"DAC device {device_id} already exists")
                 return False
 

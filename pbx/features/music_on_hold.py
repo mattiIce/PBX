@@ -2,6 +2,7 @@
 Music on Hold (MOH) System
 Plays audio while calls are on hold
 """
+
 import os
 import random
 
@@ -44,7 +45,8 @@ class MusicOnHold:
                         self.classes[item] = audio_files
                         self.logger.info(
                             f"Loaded MOH class '{item}' with {
-                                len(audio_files)} files")
+                                len(audio_files)} files"
+                        )
 
     def _scan_audio_files(self, directory):
         """
@@ -56,7 +58,7 @@ class MusicOnHold:
         Returns:
             List of audio file paths
         """
-        audio_extensions = ['.wav', '.mp3', '.ogg', '.flac', '.aac']
+        audio_extensions = [".wav", ".mp3", ".ogg", ".flac", ".aac"]
         audio_files = []
 
         for filename in os.listdir(directory):
@@ -88,10 +90,10 @@ class MusicOnHold:
         # Select random file
         audio_file = random.choice(audio_files)
         self.active_sessions[call_id] = {
-            'class': moh_class,
-            'file': audio_file,
-            'files': audio_files,
-            'index': audio_files.index(audio_file)
+            "class": moh_class,
+            "file": audio_file,
+            "files": audio_files,
+            "index": audio_files.index(audio_file),
         }
 
         self.logger.debug(f"Started MOH for call {call_id}: {audio_file}")
@@ -123,11 +125,11 @@ class MusicOnHold:
         if not session:
             return None
 
-        files = session['files']
-        index = (session['index'] + 1) % len(files)
+        files = session["files"]
+        index = (session["index"] + 1) % len(files)
 
-        session['index'] = index
-        session['file'] = files[index]
+        session["index"] = index
+        session["file"] = files[index]
 
         return files[index]
 
@@ -142,7 +144,8 @@ class MusicOnHold:
         self.classes[class_name] = files
         self.logger.info(
             f"Added MOH class '{class_name}' with {
-                len(files)} files")
+                len(files)} files"
+        )
 
     def get_classes(self):
         """Get list of available MOH classes"""

@@ -17,7 +17,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pbx.rtp.handler import RTPRelay
 
 
-
 def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):
     """Build a simple RTP packet for testing"""
     version = 2
@@ -30,8 +29,8 @@ def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):
     byte0 = (version << 6) | (padding << 5) | (extension << 4) | csrc_count
     byte1 = (marker << 7) | (payload_type & 0x7F)
 
-    header = struct.pack('!BBHII', byte0, byte1, sequence, timestamp, ssrc)
-    payload = b'A' * 160  # 160 bytes of audio data
+    header = struct.pack("!BBHII", byte0, byte1, sequence, timestamp, ssrc)
+    payload = b"A" * 160  # 160 bytes of audio data
 
     return header + payload
 
@@ -70,13 +69,13 @@ def test_symmetric_rtp():
     #         Phone B sends from 127.0.0.1:45001
     print("\n3. Creating test endpoints (simulating NAT)...")
     sock_a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock_a.bind(('127.0.0.1', 45000))
+    sock_a.bind(("127.0.0.1", 45000))
 
     sock_b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock_b.bind(('127.0.0.1', 45001))
+    sock_b.bind(("127.0.0.1", 45001))
 
-    actual_a = ('127.0.0.1', 45000)
-    actual_b = ('127.0.0.1', 45001)
+    actual_a = ("127.0.0.1", 45000)
+    actual_b = ("127.0.0.1", 45001)
     print(f"   ✓ Actual endpoint A: {actual_a} (different from SDP)")
     print(f"   ✓ Actual endpoint B: {actual_b} (different from SDP)")
 
@@ -86,11 +85,11 @@ def test_symmetric_rtp():
     # Test: Send packet from A to relay
     print("\n4. Sending RTP packet from A to relay...")
     packet_a = build_rtp_packet(sequence=1, timestamp=0)
-    sock_a.sendto(packet_a, ('127.0.0.1', rtp_ports[0]))
+    sock_a.sendto(packet_a, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.1)
 
     # The relay should learn A's actual address
-    relay_handler = relay.active_relays[call_id]['handler']
+    relay_handler = relay.active_relays[call_id]["handler"]
     if relay_handler.learned_a:
         print(f"   ✓ Relay learned endpoint A: {relay_handler.learned_a}")
     else:
@@ -100,7 +99,7 @@ def test_symmetric_rtp():
     # Test: Send packet from B to relay
     print("\n5. Sending RTP packet from B to relay...")
     packet_b = build_rtp_packet(sequence=1, timestamp=0)
-    sock_b.sendto(packet_b, ('127.0.0.1', rtp_ports[0]))
+    sock_b.sendto(packet_b, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.1)
 
     # The relay should learn B's actual address
@@ -119,7 +118,7 @@ def test_symmetric_rtp():
 
     # Send from A, should receive at B
     packet_from_a = build_rtp_packet(sequence=2, timestamp=160)
-    sock_a.sendto(packet_from_a, ('127.0.0.1', rtp_ports[0]))
+    sock_a.sendto(packet_from_a, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.05)
 
     try:
@@ -135,7 +134,7 @@ def test_symmetric_rtp():
 
     # Send from B, should receive at A
     packet_from_b = build_rtp_packet(sequence=2, timestamp=160)
-    sock_b.sendto(packet_from_b, ('127.0.0.1', rtp_ports[0]))
+    sock_b.sendto(packet_from_b, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.05)
 
     try:
@@ -169,6 +168,6 @@ def test_symmetric_rtp():
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = test_symmetric_rtp()
     sys.exit(0 if success else 1)

@@ -2,6 +2,7 @@
 TLS/SRTP Support for FIPS-compliant encrypted communications
 Provides SIPS (SIP over TLS) and SRTP (Secure RTP) functionality
 """
+
 import ssl
 
 from pbx.utils.logger import get_logger
@@ -9,6 +10,7 @@ from pbx.utils.logger import get_logger
 # Check if cryptography library is available for SRTP
 try:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
@@ -51,19 +53,18 @@ class TLSManager:
                 # Configure FIPS-approved cipher suites
                 # These are AES-based ciphers approved by FIPS 140-2
                 fips_ciphers = [
-                    'ECDHE-RSA-AES256-GCM-SHA384',
-                    'ECDHE-RSA-AES128-GCM-SHA256',
-                    'AES256-GCM-SHA384',
-                    'AES128-GCM-SHA256'
+                    "ECDHE-RSA-AES256-GCM-SHA384",
+                    "ECDHE-RSA-AES128-GCM-SHA256",
+                    "AES256-GCM-SHA384",
+                    "AES128-GCM-SHA256",
                 ]
-                self.ssl_context.set_ciphers(':'.join(fips_ciphers))
+                self.ssl_context.set_ciphers(":".join(fips_ciphers))
 
                 # Require TLS 1.2 or higher (FIPS requirement)
                 self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
             else:
                 # Use strong ciphers but not limited to FIPS
-                self.ssl_context.set_ciphers(
-                    'HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4')
+                self.ssl_context.set_ciphers("HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4")
                 self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
 
             # Additional security settings
@@ -72,9 +73,7 @@ class TLSManager:
             self.ssl_context.options |= ssl.OP_NO_TLSv1
             self.ssl_context.options |= ssl.OP_NO_TLSv1_1
 
-            self.logger.info(
-                f"TLS context created (FIPS mode: {self.fips_mode})"
-            )
+            self.logger.info(f"TLS context created (FIPS mode: {self.fips_mode})")
 
         except Exception as e:
             self.logger.error(f"Failed to create SSL context: {e}")
@@ -97,9 +96,7 @@ class TLSManager:
 
         try:
             ssl_socket = self.ssl_context.wrap_socket(
-                socket,
-                server_side=server_side,
-                do_handshake_on_connect=True
+                socket, server_side=server_side, do_handshake_on_connect=True
             )
             return ssl_socket
         except Exception as e:
@@ -130,8 +127,7 @@ class SRTPManager:
 
         if not CRYPTO_AVAILABLE:
             self.logger.warning(
-                "SRTP requires cryptography library. "
-                "Install with: pip install cryptography"
+                "SRTP requires cryptography library. " "Install with: pip install cryptography"
             )
 
     def create_session(self, call_id, master_key, master_salt):
@@ -147,16 +143,15 @@ class SRTPManager:
             True if session created
         """
         if not CRYPTO_AVAILABLE:
-            self.logger.error(
-                "SRTP not available - cryptography library required")
+            self.logger.error("SRTP not available - cryptography library required")
             return False
 
         try:
             # Store session keys
             self.sessions[call_id] = {
-                'master_key': master_key,
-                'master_salt': master_salt,
-                'cipher': AESGCM(master_key)
+                "master_key": master_key,
+                "master_salt": master_salt,
+                "cipher": AESGCM(master_key),
             }
 
             self.logger.info(f"Created SRTP session for call {call_id}")
@@ -185,10 +180,10 @@ class SRTPManager:
 
         try:
             # Create nonce from sequence number and salt
-            nonce = self._derive_nonce(session['master_salt'], sequence_number)
+            nonce = self._derive_nonce(session["master_salt"], sequence_number)
 
             # Encrypt using AES-GCM (FIPS-approved)
-            cipher = session['cipher']
+            cipher = session["cipher"]
             encrypted = cipher.encrypt(nonce, rtp_packet, None)
 
             return encrypted
@@ -216,10 +211,10 @@ class SRTPManager:
 
         try:
             # Create nonce
-            nonce = self._derive_nonce(session['master_salt'], sequence_number)
+            nonce = self._derive_nonce(session["master_salt"], sequence_number)
 
             # Decrypt using AES-GCM
-            cipher = session['cipher']
+            cipher = session["cipher"]
             decrypted = cipher.decrypt(nonce, encrypted_packet, None)
 
             return decrypted
@@ -254,7 +249,7 @@ class SRTPManager:
 
         # XOR with packet index (sequence number extended to 48 bits)
         # Place sequence number in the middle of nonce for better distribution
-        seq_bytes = sequence_number.to_bytes(6, 'big')
+        seq_bytes = sequence_number.to_bytes(6, "big")
         for i in range(6):
             nonce[i + 3] ^= seq_bytes[i]
 

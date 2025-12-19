@@ -1,6 +1,7 @@
 """
 Extension management and registry
 """
+
 from datetime import datetime
 
 from pbx.utils.encryption import get_encryption
@@ -65,7 +66,7 @@ class ExtensionRegistry:
         self.extensions = {}
 
         # Initialize encryption for FIPS-compliant password handling
-        fips_mode = config.get('security.fips_mode', False)
+        fips_mode = config.get("security.fips_mode", False)
         self.encryption = get_encryption(fips_mode)
 
         # Load extensions (from database if available, otherwise from config)
@@ -82,19 +83,19 @@ class ExtensionRegistry:
         Returns:
             Extension object
         """
-        number = db_extension['number']
-        name = db_extension['name']
+        number = db_extension["number"]
+        name = db_extension["name"]
 
         # Create config dict from database data
         ext_config = {
-            'number': number,
-            'name': name,
-            'email': db_extension.get('email', ''),
-            'password_hash': db_extension.get('password_hash', ''),
-            'allow_external': db_extension.get('allow_external', True),
-            'voicemail_pin_hash': db_extension.get('voicemail_pin_hash', ''),
-            'ad_synced': db_extension.get('ad_synced', False),
-            'is_admin': db_extension.get('is_admin', False),
+            "number": number,
+            "name": name,
+            "email": db_extension.get("email", ""),
+            "password_hash": db_extension.get("password_hash", ""),
+            "allow_external": db_extension.get("allow_external", True),
+            "voicemail_pin_hash": db_extension.get("voicemail_pin_hash", ""),
+            "ad_synced": db_extension.get("ad_synced", False),
+            "is_admin": db_extension.get("is_admin", False),
         }
 
         return Extension(number, name, ext_config)
@@ -106,41 +107,47 @@ class ExtensionRegistry:
         # text.
         if not self.database or not self.database.enabled:
             self.logger.error(
-                "Database is not enabled. Extensions can only be loaded from database.")
+                "Database is not enabled. Extensions can only be loaded from database."
+            )
             self.logger.error(
-                "Please enable database in config.yml and run: python scripts/init_database.py")
+                "Please enable database in config.yml and run: python scripts/init_database.py"
+            )
             self.logger.error(
-                "Then add extensions using the admin panel or: python scripts/migrate_extensions_to_db.py")
+                "Then add extensions using the admin panel or: python scripts/migrate_extensions_to_db.py"
+            )
             return
 
         try:
             from pbx.utils.database import ExtensionDB
+
             ext_db = ExtensionDB(self.database)
             db_extensions = ext_db.get_all()
 
             if db_extensions:
                 self.logger.info(
                     f"Loading {
-                        len(db_extensions)} extensions from database")
+                        len(db_extensions)} extensions from database"
+                )
                 for ext_data in db_extensions:
-                    number = ext_data['number']
-                    name = ext_data['name']
+                    number = ext_data["number"]
+                    name = ext_data["name"]
 
                     # Create Extension object from database data using helper
                     # method
                     extension = self.create_extension_from_db(ext_data)
                     self.extensions[number] = extension
 
-                    ad_marker = " [AD]" if ext_data.get('ad_synced') else ""
-                    self.logger.info(
-                        f"Loaded extension {number} ({name}){ad_marker}")
+                    ad_marker = " [AD]" if ext_data.get("ad_synced") else ""
+                    self.logger.info(f"Loaded extension {number} ({name}){ad_marker}")
             else:
                 self.logger.warning("No extensions found in database")
                 self.logger.warning(
-                    "Add extensions using the admin panel or run: python scripts/migrate_extensions_to_db.py")
+                    "Add extensions using the admin panel or run: python scripts/migrate_extensions_to_db.py"
+                )
         except Exception as e:
             self.logger.error(f"Error loading extensions from database: {e}")
             import traceback
+
             self.logger.error(traceback.format_exc())
 
     def reload(self):
@@ -257,18 +264,16 @@ class ExtensionRegistry:
         """
         extension = self.get(number)
         if extension:
-            config_password = extension.config.get('password')
+            config_password = extension.config.get("password")
 
             # Check if password is already hashed (contains salt)
-            password_hash = extension.config.get('password_hash')
-            password_salt = extension.config.get('password_salt')
+            password_hash = extension.config.get("password_hash")
+            password_salt = extension.config.get("password_salt")
 
             if password_hash and password_salt:
                 # Use FIPS-compliant verification
                 try:
-                    return self.encryption.verify_password(
-                        password, password_hash, password_salt
-                    )
+                    return self.encryption.verify_password(password, password_hash, password_salt)
                 except Exception as e:
                     self.logger.error(f"Error verifying password: {e}")
                     return False
@@ -280,10 +285,11 @@ class ExtensionRegistry:
                     "consider migrating to hashed passwords"
                 )
                 import secrets
+
                 if isinstance(password, str):
-                    password = password.encode('utf-8')
+                    password = password.encode("utf-8")
                 if isinstance(config_password, str):
-                    config_password = config_password.encode('utf-8')
+                    config_password = config_password.encode("utf-8")
                 return secrets.compare_digest(password, config_password)
         return False
 
@@ -300,10 +306,9 @@ class ExtensionRegistry:
         """
         extension = self.get(number)
         if extension:
-            password_hash, password_salt = self.encryption.hash_password(
-                password)
-            extension.config['password_hash'] = password_hash
-            extension.config['password_salt'] = password_salt
+            password_hash, password_salt = self.encryption.hash_password(password)
+            extension.config["password_hash"] = password_hash
+            extension.config["password_salt"] = password_salt
             self.logger.info(f"Hashed password for extension {number}")
             return True
         return False

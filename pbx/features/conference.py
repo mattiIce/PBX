@@ -1,6 +1,7 @@
 """
 Conference calling system
 """
+
 from pbx.utils.logger import get_logger
 
 
@@ -35,11 +36,7 @@ class ConferenceRoom:
             self.logger.warning(f"Conference room {self.room_number} is full")
             return False
 
-        participant = {
-            'extension': extension,
-            'call_id': call_id,
-            'muted': False
-        }
+        participant = {"extension": extension, "call_id": call_id, "muted": False}
 
         self.participants.append(participant)
         self.logger.info(f"Added {extension} to conference {self.room_number}")
@@ -56,27 +53,28 @@ class ConferenceRoom:
             True if removed
         """
         for i, participant in enumerate(self.participants):
-            if participant['extension'] == extension:
+            if participant["extension"] == extension:
                 self.participants.pop(i)
                 self.logger.info(
                     f"Removed {extension} from conference {
-                        self.room_number}")
+                        self.room_number}"
+                )
                 return True
         return False
 
     def mute_participant(self, extension):
         """Mute participant"""
         for participant in self.participants:
-            if participant['extension'] == extension:
-                participant['muted'] = True
+            if participant["extension"] == extension:
+                participant["muted"] = True
                 return True
         return False
 
     def unmute_participant(self, extension):
         """Unmute participant"""
         for participant in self.participants:
-            if participant['extension'] == extension:
-                participant['muted'] = False
+            if participant["extension"] == extension:
+                participant["muted"] = False
                 return True
         return False
 
@@ -109,8 +107,7 @@ class ConferenceSystem:
             ConferenceRoom object
         """
         if room_number not in self.rooms:
-            self.rooms[room_number] = ConferenceRoom(
-                room_number, max_participants)
+            self.rooms[room_number] = ConferenceRoom(room_number, max_participants)
             self.logger.info(f"Created conference room {room_number}")
         return self.rooms[room_number]
 
@@ -162,8 +159,7 @@ class ConferenceSystem:
             # Clean up empty rooms
             if room.is_empty():
                 del self.rooms[room_number]
-                self.logger.info(
-                    f"Removed empty conference room {room_number}")
+                self.logger.info(f"Removed empty conference room {room_number}")
 
             return result
         return False

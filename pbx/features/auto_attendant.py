@@ -2,6 +2,7 @@
 Auto Attendant (IVR) System for PBX
 Provides automated call answering and menu navigation
 """
+
 import os
 import sqlite3
 import threading
@@ -13,6 +14,7 @@ from pbx.utils.logger import get_logger
 
 class AAState(Enum):
     """Auto Attendant states"""
+
     WELCOME = "welcome"
     MAIN_MENU = "main_menu"
     TRANSFERRING = "transferring"
@@ -47,59 +49,60 @@ class AutoAttendant:
         self.pbx_core = pbx_core
 
         # Database connection
-        self.db_path = config.get('database', {}).get('path', 'pbx.db') if config else 'pbx.db'
+        self.db_path = config.get("database", {}).get("path", "pbx.db") if config else "pbx.db"
         self._init_database()
 
         # Get auto attendant configuration - try database first, then config file
-        aa_config = config.get('auto_attendant', {}) if config else {}
-        
+        aa_config = config.get("auto_attendant", {}) if config else {}
+
         # Load from database if available, otherwise use config defaults
         db_config = self._load_config_from_db()
         if db_config:
-            self.enabled = db_config.get('enabled', True)
-            self.extension = db_config.get('extension', '0')
-            self.timeout = db_config.get('timeout', 10)
-            self.max_retries = db_config.get('max_retries', 3)
-            self.audio_path = db_config.get('audio_path', 'auto_attendant')
+            self.enabled = db_config.get("enabled", True)
+            self.extension = db_config.get("extension", "0")
+            self.timeout = db_config.get("timeout", 10)
+            self.max_retries = db_config.get("max_retries", 3)
+            self.audio_path = db_config.get("audio_path", "auto_attendant")
         else:
             # Use config file defaults and save to database
-            self.enabled = aa_config.get('enabled', True)
-            self.extension = aa_config.get('extension', '0')
-            self.timeout = aa_config.get('timeout', 10)
-            self.max_retries = aa_config.get('max_retries', 3)
-            self.audio_path = aa_config.get('audio_path', 'auto_attendant')
+            self.enabled = aa_config.get("enabled", True)
+            self.extension = aa_config.get("extension", "0")
+            self.timeout = aa_config.get("timeout", 10)
+            self.max_retries = aa_config.get("max_retries", 3)
+            self.audio_path = aa_config.get("audio_path", "auto_attendant")
             self._save_config_to_db()
 
         # Menu options mapping - load from database
         self.menu_options = {}
         self._load_menu_options_from_db()
-        
+
         # If no menu options in database, load from config and save
         if not self.menu_options:
-            menu_items = aa_config.get('menu_options', [])
+            menu_items = aa_config.get("menu_options", [])
             for item in menu_items:
-                digit = str(item.get('digit'))
-                destination = item.get('destination')
-                description = item.get('description', '')
-                self.menu_options[digit] = {
-                    'destination': destination,
-                    'description': description
-                }
+                digit = str(item.get("digit"))
+                destination = item.get("destination")
+                description = item.get("description", "")
+                self.menu_options[digit] = {"destination": destination, "description": description}
             # Save to database
             if self.menu_options:
                 for digit, option in self.menu_options.items():
-                    self._save_menu_option_to_db(digit, option['destination'], option['description'])
+                    self._save_menu_option_to_db(
+                        digit, option["destination"], option["description"]
+                    )
 
         # Create audio directory if it doesn't exist
         if not os.path.exists(self.audio_path):
             os.makedirs(self.audio_path)
             self.logger.info(
                 f"Created auto attendant audio directory: {
-                    self.audio_path}")
+                    self.audio_path}"
+            )
 
         self.logger.info(
             f"Auto Attendant initialized on extension {
-                self.extension}")
+                self.extension}"
+        )
         self.logger.info(f"Menu options: {len(self.menu_options)}")
 
     def _init_database(self):
@@ -107,9 +110,10 @@ class AutoAttendant:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            
+
             # Create auto_attendant_config table
-            cursor.execute('''
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS auto_attendant_config (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     enabled BOOLEAN DEFAULT 1,
@@ -119,10 +123,12 @@ class AutoAttendant:
                     audio_path TEXT DEFAULT 'auto_attendant',
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            ''')
-            
+            """
+            )
+
             # Create auto_attendant_menu_options table
-            cursor.execute('''
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS auto_attendant_menu_options (
                     digit TEXT PRIMARY KEY,
                     destination TEXT NOT NULL,
@@ -130,8 +136,9 @@ class AutoAttendant:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            ''')
-            
+            """
+            )
+
             conn.commit()
             conn.close()
             self.logger.info("Auto attendant database tables initialized")
@@ -143,17 +150,19 @@ class AutoAttendant:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute('SELECT enabled, extension, timeout, max_retries, audio_path FROM auto_attendant_config WHERE id = 1')
+            cursor.execute(
+                "SELECT enabled, extension, timeout, max_retries, audio_path FROM auto_attendant_config WHERE id = 1"
+            )
             row = cursor.fetchone()
             conn.close()
-            
+
             if row:
                 return {
-                    'enabled': bool(row[0]),
-                    'extension': row[1],
-                    'timeout': row[2],
-                    'max_retries': row[3],
-                    'audio_path': row[4]
+                    "enabled": bool(row[0]),
+                    "extension": row[1],
+                    "timeout": row[2],
+                    "max_retries": row[3],
+                    "audio_path": row[4],
                 }
             return None
         except Exception as e:
@@ -165,13 +174,16 @@ class AutoAttendant:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            
+
             # Use INSERT OR REPLACE to handle both insert and update
-            cursor.execute('''
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO auto_attendant_config (id, enabled, extension, timeout, max_retries, audio_path, updated_at)
                 VALUES (1, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (self.enabled, self.extension, self.timeout, self.max_retries, self.audio_path))
-            
+            """,
+                (self.enabled, self.extension, self.timeout, self.max_retries, self.audio_path),
+            )
+
             conn.commit()
             conn.close()
             self.logger.info("Auto attendant config saved to database")
@@ -183,32 +195,34 @@ class AutoAttendant:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute('SELECT digit, destination, description FROM auto_attendant_menu_options')
+            cursor.execute(
+                "SELECT digit, destination, description FROM auto_attendant_menu_options"
+            )
             rows = cursor.fetchall()
             conn.close()
-            
+
             for row in rows:
-                self.menu_options[row[0]] = {
-                    'destination': row[1],
-                    'description': row[2] or ''
-                }
-            
+                self.menu_options[row[0]] = {"destination": row[1], "description": row[2] or ""}
+
             if rows:
                 self.logger.info(f"Loaded {len(rows)} menu options from database")
         except Exception as e:
             self.logger.error(f"Error loading menu options from database: {e}")
 
-    def _save_menu_option_to_db(self, digit, destination, description=''):
+    def _save_menu_option_to_db(self, digit, destination, description=""):
         """Save a menu option to database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            
-            cursor.execute('''
+
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO auto_attendant_menu_options (digit, destination, description, updated_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (digit, destination, description))
-            
+            """,
+                (digit, destination, description),
+            )
+
             conn.commit()
             conn.close()
             self.logger.info(f"Menu option {digit} saved to database")
@@ -220,7 +234,7 @@ class AutoAttendant:
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM auto_attendant_menu_options WHERE digit = ?', (digit,))
+            cursor.execute("DELETE FROM auto_attendant_menu_options WHERE digit = ?", (digit,))
             conn.commit()
             conn.close()
             self.logger.info(f"Menu option {digit} deleted from database")
@@ -229,30 +243,27 @@ class AutoAttendant:
 
     def update_config(self, **kwargs):
         """Update configuration and persist to database"""
-        if 'enabled' in kwargs:
-            self.enabled = bool(kwargs['enabled'])
-        if 'extension' in kwargs:
-            self.extension = str(kwargs['extension'])
-        if 'timeout' in kwargs:
-            self.timeout = int(kwargs['timeout'])
-        if 'max_retries' in kwargs:
-            self.max_retries = int(kwargs['max_retries'])
-        if 'audio_path' in kwargs:
-            self.audio_path = str(kwargs['audio_path'])
-        
+        if "enabled" in kwargs:
+            self.enabled = bool(kwargs["enabled"])
+        if "extension" in kwargs:
+            self.extension = str(kwargs["extension"])
+        if "timeout" in kwargs:
+            self.timeout = int(kwargs["timeout"])
+        if "max_retries" in kwargs:
+            self.max_retries = int(kwargs["max_retries"])
+        if "audio_path" in kwargs:
+            self.audio_path = str(kwargs["audio_path"])
+
         # Save to database
         self._save_config_to_db()
 
-    def add_menu_option(self, digit, destination, description=''):
+    def add_menu_option(self, digit, destination, description=""):
         """Add or update a menu option and persist to database"""
         if not self.enabled:
             self.logger.error(f"Cannot add menu option: Auto attendant feature is not enabled")
             return False
-        
-        self.menu_options[digit] = {
-            'destination': destination,
-            'description': description
-        }
+
+        self.menu_options[digit] = {"destination": destination, "description": description}
         self._save_menu_option_to_db(digit, destination, description)
         return True
 
@@ -261,7 +272,7 @@ class AutoAttendant:
         if not self.enabled:
             self.logger.error(f"Cannot remove menu option: Auto attendant feature is not enabled")
             return False
-        
+
         if digit in self.menu_options:
             del self.menu_options[digit]
             self._delete_menu_option_from_db(digit)
@@ -288,23 +299,24 @@ class AutoAttendant:
             dict: Initial action with audio file to play
         """
         self.logger.info(
-            f"Starting auto attendant session for call {call_id} from {from_extension}")
+            f"Starting auto attendant session for call {call_id} from {from_extension}"
+        )
 
         # Initialize session state - start in MAIN_MENU to accept DTMF input
         session = {
-            'state': AAState.MAIN_MENU,
-            'call_id': call_id,
-            'from_extension': from_extension,
-            'retry_count': 0,
-            'last_input_time': time.time()
+            "state": AAState.MAIN_MENU,
+            "call_id": call_id,
+            "from_extension": from_extension,
+            "retry_count": 0,
+            "last_input_time": time.time(),
         }
 
         # Return welcome greeting action
         return {
-            'action': 'play',
-            'file': self._get_audio_file('welcome'),
-            'next_state': AAState.MAIN_MENU,
-            'session': session
+            "action": "play",
+            "file": self._get_audio_file("welcome"),
+            "next_state": AAState.MAIN_MENU,
+            "session": session,
         }
 
     def handle_dtmf(self, session, digit):
@@ -318,24 +330,19 @@ class AutoAttendant:
         Returns:
             dict: Action to take (play audio, transfer, etc.)
         """
-        current_state = session.get('state')
-        self.logger.debug(
-            f"Auto Attendant DTMF: {digit} in state {current_state}")
+        current_state = session.get("state")
+        self.logger.debug(f"Auto Attendant DTMF: {digit} in state {current_state}")
 
         # Update input time
-        session['last_input_time'] = time.time()
+        session["last_input_time"] = time.time()
 
         if current_state == AAState.MAIN_MENU:
             return self._handle_menu_input(session, digit)
 
         elif current_state == AAState.INVALID:
             # After invalid input, any key returns to menu
-            session['state'] = AAState.MAIN_MENU
-            return {
-                'action': 'play',
-                'file': self._get_audio_file('main_menu'),
-                'session': session
-            }
+            session["state"] = AAState.MAIN_MENU
+            return {"action": "play", "file": self._get_audio_file("main_menu"), "session": session}
 
         # Default: invalid input
         return self._handle_invalid_input(session)
@@ -352,30 +359,26 @@ class AutoAttendant:
         """
         self.logger.warning(
             f"Auto attendant timeout for call {
-                session.get('call_id')}")
+                session.get('call_id')}"
+        )
 
-        session['retry_count'] += 1
+        session["retry_count"] += 1
 
-        if session['retry_count'] >= self.max_retries:
+        if session["retry_count"] >= self.max_retries:
             # Too many retries, transfer to operator or disconnect
-            session['state'] = AAState.ENDED
-            operator_ext = self.config.get(
-                'auto_attendant.operator_extension', '1001')
+            session["state"] = AAState.ENDED
+            operator_ext = self.config.get("auto_attendant.operator_extension", "1001")
 
             return {
-                'action': 'transfer',
-                'destination': operator_ext,
-                'reason': 'timeout',
-                'session': session
+                "action": "transfer",
+                "destination": operator_ext,
+                "reason": "timeout",
+                "session": session,
             }
 
         # Play timeout message and return to menu
-        session['state'] = AAState.MAIN_MENU
-        return {
-            'action': 'play',
-            'file': self._get_audio_file('timeout'),
-            'session': session
-        }
+        session["state"] = AAState.MAIN_MENU
+        return {"action": "play", "file": self._get_audio_file("timeout"), "session": session}
 
     def _handle_menu_input(self, session, digit):
         """
@@ -390,16 +393,12 @@ class AutoAttendant:
         """
         if digit in self.menu_options:
             option = self.menu_options[digit]
-            destination = option['destination']
+            destination = option["destination"]
 
             self.logger.info(f"Auto attendant: transferring to {destination}")
-            session['state'] = AAState.TRANSFERRING
+            session["state"] = AAState.TRANSFERRING
 
-            return {
-                'action': 'transfer',
-                'destination': destination,
-                'session': session
-            }
+            return {"action": "transfer", "destination": destination, "session": session}
 
         # Invalid option
         return self._handle_invalid_input(session)
@@ -414,27 +413,22 @@ class AutoAttendant:
         Returns:
             dict: Action to play invalid message
         """
-        session['retry_count'] += 1
+        session["retry_count"] += 1
 
-        if session['retry_count'] >= self.max_retries:
+        if session["retry_count"] >= self.max_retries:
             # Too many invalid attempts
-            session['state'] = AAState.ENDED
-            operator_ext = self.config.get(
-                'auto_attendant.operator_extension', '1001')
+            session["state"] = AAState.ENDED
+            operator_ext = self.config.get("auto_attendant.operator_extension", "1001")
 
             return {
-                'action': 'transfer',
-                'destination': operator_ext,
-                'reason': 'invalid_input',
-                'session': session
+                "action": "transfer",
+                "destination": operator_ext,
+                "reason": "invalid_input",
+                "session": session,
             }
 
-        session['state'] = AAState.INVALID
-        return {
-            'action': 'play',
-            'file': self._get_audio_file('invalid'),
-            'session': session
-        }
+        session["state"] = AAState.INVALID
+        return {"action": "play", "file": self._get_audio_file("invalid"), "session": session}
 
     def _get_audio_file(self, prompt_type):
         """
@@ -453,8 +447,7 @@ class AutoAttendant:
 
         # If no recorded file, we'll generate tone-based prompt
         # This will be handled by the audio utils
-        self.logger.debug(
-            f"No audio file found for {prompt_type}, will use generated prompt")
+        self.logger.debug(f"No audio file found for {prompt_type}, will use generated prompt")
         return None
 
     def get_menu_text(self):
@@ -476,12 +469,12 @@ class AutoAttendant:
         Args:
             session: Session to end
         """
-        call_id = session.get('call_id')
+        call_id = session.get("call_id")
         self.logger.info(f"Ending auto attendant session for call {call_id}")
-        session['state'] = AAState.ENDED
+        session["state"] = AAState.ENDED
 
 
-def generate_auto_attendant_prompts(output_dir='auto_attendant'):
+def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     """
     Generate audio prompts for auto attendant
 
@@ -499,8 +492,7 @@ def generate_auto_attendant_prompts(output_dir='auto_attendant'):
     logger = get_logger()
 
     logger.warning("This function generates TONE prompts (not voice).")
-    logger.warning(
-        "For REAL VOICE prompts, use: python3 scripts/generate_espeak_voices.py")
+    logger.warning("For REAL VOICE prompts, use: python3 scripts/generate_espeak_voices.py")
     logger.warning("Continuing with tone generation...")
 
     # Create output directory
@@ -510,11 +502,11 @@ def generate_auto_attendant_prompts(output_dir='auto_attendant'):
 
     # Define prompts to generate
     prompts = {
-        'welcome': 'auto_attendant_welcome',
-        'main_menu': 'auto_attendant_menu',
-        'invalid': 'invalid_option',
-        'timeout': 'timeout',
-        'transferring': 'transferring'
+        "welcome": "auto_attendant_welcome",
+        "main_menu": "auto_attendant_menu",
+        "invalid": "invalid_option",
+        "timeout": "timeout",
+        "transferring": "transferring",
     }
 
     for prompt_name, prompt_type in prompts.items():
@@ -525,7 +517,7 @@ def generate_auto_attendant_prompts(output_dir='auto_attendant'):
             wav_data = generate_voice_prompt(prompt_type)
 
             # Write to file
-            with open(output_file, 'wb') as f:
+            with open(output_file, "wb") as f:
                 f.write(wav_data)
 
             logger.info(f"Generated {output_file}")

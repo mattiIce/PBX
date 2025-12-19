@@ -2,6 +2,7 @@
 FIPS-compliant encryption utilities
 Provides FIPS 140-2 compliant cryptographic operations for the PBX system
 """
+
 import base64
 import hashlib
 import secrets
@@ -13,6 +14,7 @@ try:
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
@@ -49,28 +51,28 @@ class FIPSEncryption:
                 "FIPS 140-2 compliance requires the cryptography library for:\n"
                 "  - PBKDF2-HMAC-SHA256 password hashing\n"
                 "  - AES-256-GCM encryption\n"
-                "  - Secure key derivation")
+                "  - Secure key derivation"
+            )
 
             if enforce_fips:
                 self.logger.error(error_msg)
                 raise ImportError(
                     "FIPS mode enforcement failed: cryptography library not available. "
-                    "Install with: pip install cryptography")
+                    "Install with: pip install cryptography"
+                )
             else:
                 self.logger.warning(error_msg)
-                self.logger.warning(
-                    "Falling back to standard library (non-FIPS compliant)")
+                self.logger.warning("Falling back to standard library (non-FIPS compliant)")
 
         if fips_mode and CRYPTO_AVAILABLE:
             self.logger.info("FIPS 140-2 compliant encryption ENABLED")
-            self.logger.info(
-                "  ✓ Using PBKDF2-HMAC-SHA256 for password hashing")
+            self.logger.info("  ✓ Using PBKDF2-HMAC-SHA256 for password hashing")
             self.logger.info("  ✓ Using AES-256-GCM for data encryption")
             self.logger.info(
-                "  ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)")
+                "  ✓ 600,000 iterations for key derivation (OWASP 2024 recommendation)"
+            )
         elif not fips_mode:
-            self.logger.warning(
-                "FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
+            self.logger.warning("FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
 
     def _pad_password(self, password, salt):
         """
@@ -85,8 +87,7 @@ class FIPSEncryption:
         """
         if len(password) < self.MIN_PASSWORD_LENGTH:
             # Pad with salt bytes to ensure uniqueness (salt is already random)
-            password = password + b':' + \
-                salt[:self.MIN_PASSWORD_LENGTH - len(password) - 1]
+            password = password + b":" + salt[: self.MIN_PASSWORD_LENGTH - len(password) - 1]
         return password
 
     def hash_password(self, password, salt=None):
@@ -105,10 +106,10 @@ class FIPSEncryption:
             salt = secrets.token_bytes(32)
 
         if isinstance(password, str):
-            password = password.encode('utf-8')
+            password = password.encode("utf-8")
 
         if isinstance(salt, str):
-            salt = salt.encode('utf-8')
+            salt = salt.encode("utf-8")
 
         # Pad short passwords to meet OpenSSL 3.x FIPS requirements
         password = self._pad_password(password, salt)
@@ -119,18 +120,15 @@ class FIPSEncryption:
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=600000  # OWASP 2024 recommendation
+                iterations=600000,  # OWASP 2024 recommendation
             )
             hashed = kdf.derive(password)
         else:
             # Fallback to hashlib (still secure, but may not be FIPS certified)
-            hashed = hashlib.pbkdf2_hmac('sha256', password, salt, 600000)
+            hashed = hashlib.pbkdf2_hmac("sha256", password, salt, 600000)
 
         # Return base64-encoded strings for storage
-        return (
-            base64.b64encode(hashed).decode('utf-8'),
-            base64.b64encode(salt).decode('utf-8')
-        )
+        return (base64.b64encode(hashed).decode("utf-8"), base64.b64encode(salt).decode("utf-8"))
 
     def verify_password(self, password, hashed_password, salt):
         """
@@ -178,10 +176,10 @@ class FIPSEncryption:
             )
 
         if isinstance(data, str):
-            data = data.encode('utf-8')
+            data = data.encode("utf-8")
 
         if isinstance(key, str):
-            key = key.encode('utf-8')
+            key = key.encode("utf-8")
 
         # Validate key length - must be exactly 32 bytes for AES-256
         if len(key) != 32:
@@ -194,10 +192,7 @@ class FIPSEncryption:
         nonce = secrets.token_bytes(12)
 
         # Create cipher
-        cipher = Cipher(
-            algorithms.AES(key),
-            modes.GCM(nonce)
-        )
+        cipher = Cipher(algorithms.AES(key), modes.GCM(nonce))
         encryptor = cipher.encryptor()
 
         # Encrypt data
@@ -205,9 +200,9 @@ class FIPSEncryption:
 
         # Return encrypted data, nonce, and authentication tag
         return (
-            base64.b64encode(ciphertext).decode('utf-8'),
-            base64.b64encode(nonce).decode('utf-8'),
-            base64.b64encode(encryptor.tag).decode('utf-8')
+            base64.b64encode(ciphertext).decode("utf-8"),
+            base64.b64encode(nonce).decode("utf-8"),
+            base64.b64encode(encryptor.tag).decode("utf-8"),
         )
 
     def decrypt_data(self, encrypted_data, nonce, tag, key):
@@ -238,7 +233,7 @@ class FIPSEncryption:
         tag = base64.b64decode(tag)
 
         if isinstance(key, str):
-            key = key.encode('utf-8')
+            key = key.encode("utf-8")
 
         # Validate key length
         if len(key) != 32:
@@ -247,10 +242,7 @@ class FIPSEncryption:
             )
 
         # Create cipher
-        cipher = Cipher(
-            algorithms.AES(key),
-            modes.GCM(nonce, tag)
-        )
+        cipher = Cipher(algorithms.AES(key), modes.GCM(nonce, tag))
         decryptor = cipher.decryptor()
 
         # Decrypt data
@@ -269,7 +261,7 @@ class FIPSEncryption:
             Base64-encoded token
         """
         token = secrets.token_bytes(length)
-        return base64.b64encode(token).decode('utf-8')
+        return base64.b64encode(token).decode("utf-8")
 
     def derive_key(self, password, salt=None, key_length=32):
         """
@@ -287,10 +279,10 @@ class FIPSEncryption:
             salt = secrets.token_bytes(32)
 
         if isinstance(password, str):
-            password = password.encode('utf-8')
+            password = password.encode("utf-8")
 
         if isinstance(salt, str):
-            salt = salt.encode('utf-8')
+            salt = salt.encode("utf-8")
 
         # Pad short passwords to meet OpenSSL 3.x FIPS requirements
         password = self._pad_password(password, salt)
@@ -301,13 +293,12 @@ class FIPSEncryption:
                 algorithm=hashes.SHA256(),
                 length=key_length,
                 salt=salt,
-                iterations=600000  # OWASP 2024 recommendation
+                iterations=600000,  # OWASP 2024 recommendation
             )
             derived = kdf.derive(password)
         else:
             # Fallback to hashlib
-            derived = hashlib.pbkdf2_hmac(
-                'sha256', password, salt, 600000, dklen=key_length)
+            derived = hashlib.pbkdf2_hmac("sha256", password, salt, 600000, dklen=key_length)
 
         return derived, salt
 
@@ -322,7 +313,7 @@ class FIPSEncryption:
             Hex-encoded hash
         """
         if isinstance(data, str):
-            data = data.encode('utf-8')
+            data = data.encode("utf-8")
 
         if self.fips_mode and CRYPTO_AVAILABLE:
             # Use cryptography library for FIPS compliance

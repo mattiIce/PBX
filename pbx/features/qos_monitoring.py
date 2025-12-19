@@ -2,6 +2,7 @@
 QoS (Quality of Service) Monitoring System
 Tracks call quality metrics including jitter, packet loss, latency, and MOS scores
 """
+
 import threading
 import time
 from collections import deque
@@ -55,8 +56,9 @@ class QoSMetrics:
         # Lock for thread safety
         self.lock = threading.Lock()
 
-    def update_packet_received(self, sequence_number: int, timestamp: int,
-                               payload_size: int) -> None:
+    def update_packet_received(
+        self, sequence_number: int, timestamp: int, payload_size: int
+    ) -> None:
         """
         Update metrics when a packet is received
 
@@ -98,8 +100,7 @@ class QoSMetrics:
                 # For accurate jitter, the clock rate should be provided per-codec
                 # Using 8kHz as default for telephony codecs (G.711)
                 clock_rate = 8.0  # kHz (could be made configurable per codec)
-                timestamp_delta = (
-                    timestamp - self.last_packet_timestamp) / clock_rate
+                timestamp_delta = (timestamp - self.last_packet_timestamp) / clock_rate
 
                 # Jitter is the absolute difference
                 jitter = abs(arrival_delta - timestamp_delta)
@@ -113,13 +114,11 @@ class QoSMetrics:
                     self.max_jitter = jitter
 
                 # Calculate average jitter
-                self.avg_jitter = sum(self.jitter_samples) / \
-                    len(self.jitter_samples)
+                self.avg_jitter = sum(self.jitter_samples) / len(self.jitter_samples)
 
             # Update tracking variables
             self.last_sequence_number = sequence_number
-            self.expected_sequence = (
-                sequence_number + 1) & 0xFFFF  # Wrap at 16 bits
+            self.expected_sequence = (sequence_number + 1) & 0xFFFF  # Wrap at 16 bits
             self.last_packet_timestamp = timestamp
             self.last_arrival_time = current_time
 
@@ -145,8 +144,7 @@ class QoSMetrics:
             if latency_ms > self.max_latency:
                 self.max_latency = latency_ms
 
-            self.avg_latency = sum(self.latency_samples) / \
-                len(self.latency_samples)
+            self.avg_latency = sum(self.latency_samples) / len(self.latency_samples)
 
             # Recalculate MOS score
             self._calculate_mos()
@@ -170,10 +168,9 @@ class QoSMetrics:
 
         # Impact of packet loss (aggressive penalty)
         if self.packets_received > 0:
-            loss_rate = (self.packets_lost /
-                         (self.packets_received + self.packets_lost)) * 100
+            loss_rate = (self.packets_lost / (self.packets_received + self.packets_lost)) * 100
             # ~2.5 R-factor reduction per 1% loss
-            r_factor -= (loss_rate * 2.5)
+            r_factor -= loss_rate * 2.5
 
         # Impact of latency (one-way delay)
         if self.latency_samples:
@@ -194,8 +191,9 @@ class QoSMetrics:
         elif r_factor > 100:
             self.mos_score = 4.5
         else:
-            self.mos_score = 1 + 0.035 * r_factor + 0.000007 * \
-                r_factor * (r_factor - 60) * (100 - r_factor)
+            self.mos_score = (
+                1 + 0.035 * r_factor + 0.000007 * r_factor * (r_factor - 60) * (100 - r_factor)
+            )
 
             # Clamp to valid range
             self.mos_score = max(1.0, min(5.0, self.mos_score))
@@ -228,21 +226,21 @@ class QoSMetrics:
                 loss_percentage = (self.packets_lost / total_packets) * 100
 
             return {
-                'call_id': self.call_id,
-                'start_time': self.start_time.isoformat(),
-                'end_time': self.end_time.isoformat() if self.end_time else None,
-                'duration_seconds': round(duration, 2),
-                'packets_sent': self.packets_sent,
-                'packets_received': self.packets_received,
-                'packets_lost': self.packets_lost,
-                'packets_out_of_order': self.packets_out_of_order,
-                'packet_loss_percentage': round(loss_percentage, 2),
-                'jitter_avg_ms': round(self.avg_jitter, 2),
-                'jitter_max_ms': round(self.max_jitter, 2),
-                'latency_avg_ms': round(self.avg_latency, 2),
-                'latency_max_ms': round(self.max_latency, 2),
-                'mos_score': round(self.mos_score, 2),
-                'quality_rating': self._get_quality_rating()
+                "call_id": self.call_id,
+                "start_time": self.start_time.isoformat(),
+                "end_time": self.end_time.isoformat() if self.end_time else None,
+                "duration_seconds": round(duration, 2),
+                "packets_sent": self.packets_sent,
+                "packets_received": self.packets_received,
+                "packets_lost": self.packets_lost,
+                "packets_out_of_order": self.packets_out_of_order,
+                "packet_loss_percentage": round(loss_percentage, 2),
+                "jitter_avg_ms": round(self.avg_jitter, 2),
+                "jitter_max_ms": round(self.max_jitter, 2),
+                "latency_avg_ms": round(self.avg_latency, 2),
+                "latency_max_ms": round(self.max_latency, 2),
+                "mos_score": round(self.mos_score, 2),
+                "quality_rating": self._get_quality_rating(),
             }
 
     def _get_quality_rating(self) -> str:
@@ -281,10 +279,10 @@ class QoSMonitor:
         self.active_calls = {}  # call_id -> QoSMetrics
         self.historical_data = []  # List of completed call metrics
         self.alert_thresholds = {
-            'mos_min': 3.5,  # Alert if MOS drops below this
-            'packet_loss_max': 2.0,  # Alert if packet loss exceeds this percentage
-            'jitter_max': 50.0,  # Alert if jitter exceeds this (ms)
-            'latency_max': 300.0  # Alert if latency exceeds this (ms)
+            "mos_min": 3.5,  # Alert if MOS drops below this
+            "packet_loss_max": 2.0,  # Alert if packet loss exceeds this percentage
+            "jitter_max": 50.0,  # Alert if jitter exceeds this (ms)
+            "latency_max": 300.0,  # Alert if latency exceeds this (ms)
         }
         self.alerts = []  # List of quality alerts
         self.max_historical_records = 10000  # Keep last 10k calls
@@ -304,8 +302,7 @@ class QoSMonitor:
         """
         with self.lock:
             if call_id in self.active_calls:
-                self.logger.warning(
-                    f"QoS monitoring already active for call {call_id}")
+                self.logger.warning(f"QoS monitoring already active for call {call_id}")
                 return self.active_calls[call_id]
 
             metrics = QoSMetrics(call_id)
@@ -325,8 +322,7 @@ class QoSMonitor:
         """
         with self.lock:
             if call_id not in self.active_calls:
-                self.logger.warning(
-                    f"No QoS monitoring active for call {call_id}")
+                self.logger.warning(f"No QoS monitoring active for call {call_id}")
                 return None
 
             metrics = self.active_calls[call_id]
@@ -346,7 +342,8 @@ class QoSMonitor:
 
             self.logger.info(
                 f"Stopped QoS monitoring for call {call_id}, MOS: {
-                    summary['mos_score']}")
+                    summary['mos_score']}"
+            )
 
             # Store in database if available
             self._store_metrics(summary)
@@ -377,11 +374,11 @@ class QoSMonitor:
             List of dictionaries containing metrics for each active call
         """
         with self.lock:
-            return [metrics.get_summary()
-                    for metrics in self.active_calls.values()]
+            return [metrics.get_summary() for metrics in self.active_calls.values()]
 
-    def get_historical_metrics(self, limit: int = 100,
-                               min_mos: Optional[float] = None) -> List[Dict]:
+    def get_historical_metrics(
+        self, limit: int = 100, min_mos: Optional[float] = None
+    ) -> List[Dict]:
         """
         Get historical QoS metrics
 
@@ -396,7 +393,7 @@ class QoSMonitor:
             data = self.historical_data[-limit:]
 
             if min_mos is not None:
-                data = [d for d in data if d['mos_score'] >= min_mos]
+                data = [d for d in data if d["mos_score"] >= min_mos]
 
             return data
 
@@ -436,32 +433,27 @@ class QoSMonitor:
         with self.lock:
             if not self.historical_data:
                 return {
-                    'total_calls': 0,
-                    'average_mos': 0.0,
-                    'calls_with_issues': 0,
-                    'total_alerts': len(self.alerts),
-                    'active_calls': len(self.active_calls)
+                    "total_calls": 0,
+                    "average_mos": 0.0,
+                    "calls_with_issues": 0,
+                    "total_alerts": len(self.alerts),
+                    "active_calls": len(self.active_calls),
                 }
 
             total_calls = len(self.historical_data)
-            avg_mos = sum(d['mos_score']
-                          for d in self.historical_data) / total_calls
+            avg_mos = sum(d["mos_score"] for d in self.historical_data) / total_calls
             calls_with_issues = sum(
-                1 for d in self.historical_data if d['mos_score'] < self.alert_thresholds['mos_min'])
+                1 for d in self.historical_data if d["mos_score"] < self.alert_thresholds["mos_min"]
+            )
 
             return {
-                'total_calls': total_calls,
-                'average_mos': round(
-                    avg_mos,
-                    2),
-                'calls_with_issues': calls_with_issues,
-                'issue_percentage': round(
-                    (calls_with_issues / total_calls) * 100,
-                    2),
-                'total_alerts': len(
-                    self.alerts),
-                'active_calls': len(
-                    self.active_calls)}
+                "total_calls": total_calls,
+                "average_mos": round(avg_mos, 2),
+                "calls_with_issues": calls_with_issues,
+                "issue_percentage": round((calls_with_issues / total_calls) * 100, 2),
+                "total_alerts": len(self.alerts),
+                "active_calls": len(self.active_calls),
+            }
 
     def _check_quality_alerts(self, summary: Dict) -> None:
         """
@@ -473,52 +465,60 @@ class QoSMonitor:
         alerts_generated = []
 
         # Check MOS score
-        if summary['mos_score'] < self.alert_thresholds['mos_min']:
+        if summary["mos_score"] < self.alert_thresholds["mos_min"]:
             alerts_generated.append(
                 {
-                    'type': 'low_mos',
-                    'severity': 'warning',
-                    'message': f"Low MOS score: {
+                    "type": "low_mos",
+                    "severity": "warning",
+                    "message": f"Low MOS score: {
                         summary['mos_score']} (threshold: {
                         self.alert_thresholds['mos_min']})",
-                    'call_id': summary['call_id'],
-                    'timestamp': datetime.now().isoformat()})
+                    "call_id": summary["call_id"],
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         # Check packet loss
-        if summary['packet_loss_percentage'] > self.alert_thresholds['packet_loss_max']:
+        if summary["packet_loss_percentage"] > self.alert_thresholds["packet_loss_max"]:
             alerts_generated.append(
                 {
-                    'type': 'high_packet_loss',
-                    'severity': 'error',
-                    'message': f"High packet loss: {
+                    "type": "high_packet_loss",
+                    "severity": "error",
+                    "message": f"High packet loss: {
                         summary['packet_loss_percentage']}% (threshold: {
                         self.alert_thresholds['packet_loss_max']}%)",
-                    'call_id': summary['call_id'],
-                    'timestamp': datetime.now().isoformat()})
+                    "call_id": summary["call_id"],
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         # Check jitter
-        if summary['jitter_avg_ms'] > self.alert_thresholds['jitter_max']:
+        if summary["jitter_avg_ms"] > self.alert_thresholds["jitter_max"]:
             alerts_generated.append(
                 {
-                    'type': 'high_jitter',
-                    'severity': 'warning',
-                    'message': f"High jitter: {
+                    "type": "high_jitter",
+                    "severity": "warning",
+                    "message": f"High jitter: {
                         summary['jitter_avg_ms']}ms (threshold: {
                         self.alert_thresholds['jitter_max']}ms)",
-                    'call_id': summary['call_id'],
-                    'timestamp': datetime.now().isoformat()})
+                    "call_id": summary["call_id"],
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         # Check latency
-        if summary['latency_avg_ms'] > self.alert_thresholds['latency_max']:
+        if summary["latency_avg_ms"] > self.alert_thresholds["latency_max"]:
             alerts_generated.append(
                 {
-                    'type': 'high_latency',
-                    'severity': 'warning',
-                    'message': f"High latency: {
+                    "type": "high_latency",
+                    "severity": "warning",
+                    "message": f"High latency: {
                         summary['latency_avg_ms']}ms (threshold: {
                         self.alert_thresholds['latency_max']}ms)",
-                    'call_id': summary['call_id'],
-                    'timestamp': datetime.now().isoformat()})
+                    "call_id": summary["call_id"],
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         # Add alerts to list
         for alert in alerts_generated:
@@ -537,7 +537,7 @@ class QoSMonitor:
             summary: QoS metrics summary
         """
         try:
-            if hasattr(self.pbx, 'db') and self.pbx.db and self.pbx.db.enabled:
+            if hasattr(self.pbx, "db") and self.pbx.db and self.pbx.db.enabled:
                 # Store in database
                 query = """
                     INSERT INTO qos_metrics
@@ -549,26 +549,27 @@ class QoSMonitor:
                 """
 
                 params = (
-                    summary['call_id'],
-                    summary['start_time'],
-                    summary['end_time'],
-                    summary['duration_seconds'],
-                    summary['packets_sent'],
-                    summary['packets_received'],
-                    summary['packets_lost'],
-                    summary['packet_loss_percentage'],
-                    summary['jitter_avg_ms'],
-                    summary['jitter_max_ms'],
-                    summary['latency_avg_ms'],
-                    summary['latency_max_ms'],
-                    summary['mos_score'],
-                    summary['quality_rating']
+                    summary["call_id"],
+                    summary["start_time"],
+                    summary["end_time"],
+                    summary["duration_seconds"],
+                    summary["packets_sent"],
+                    summary["packets_received"],
+                    summary["packets_lost"],
+                    summary["packet_loss_percentage"],
+                    summary["jitter_avg_ms"],
+                    summary["jitter_max_ms"],
+                    summary["latency_avg_ms"],
+                    summary["latency_max_ms"],
+                    summary["mos_score"],
+                    summary["quality_rating"],
                 )
 
                 self.pbx.db.execute(query, params)
                 self.logger.debug(
                     f"Stored QoS metrics for call {
-                        summary['call_id']} in database")
+                        summary['call_id']} in database"
+                )
         except Exception as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
 
@@ -583,4 +584,5 @@ class QoSMonitor:
             self.alert_thresholds.update(thresholds)
             self.logger.info(
                 f"Updated QoS alert thresholds: {
-                    self.alert_thresholds}")
+                    self.alert_thresholds}"
+            )

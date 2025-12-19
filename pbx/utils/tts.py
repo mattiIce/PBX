@@ -2,6 +2,7 @@
 Text-to-Speech utilities for PBX voice prompt generation
 Uses gTTS (Google Text-to-Speech) for natural American English voices
 """
+
 import os
 import subprocess
 import tempfile
@@ -12,6 +13,7 @@ from pbx.utils.logger import get_logger
 try:
     from gtts import gTTS
     from pydub import AudioSegment
+
     GTTS_AVAILABLE = True
 except ImportError as e:
     GTTS_AVAILABLE = False
@@ -33,18 +35,18 @@ def get_tts_requirements():
 def _generate_mp3(text, language, tld, slow):
     """
     Generate MP3 file from text using gTTS
-    
+
     Args:
         text: Text to convert
         language: Language code
         tld: Top-level domain for accent
         slow: Slow speech rate flag
-        
+
     Returns:
         Path to temporary MP3 file
     """
     tts = gTTS(text=text, tld=tld, lang=language, slow=slow)
-    with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_mp3:
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_mp3:
         temp_mp3_path = temp_mp3.name
         tts.save(temp_mp3_path)
     return temp_mp3_path
@@ -53,11 +55,11 @@ def _generate_mp3(text, language, tld, slow):
 def _convert_to_telephony_audio(mp3_path, sample_rate):
     """
     Convert MP3 to telephony format audio (16-bit, mono, specified sample rate)
-    
+
     Args:
         mp3_path: Path to MP3 file
         sample_rate: Target sample rate in Hz
-        
+
     Returns:
         AudioSegment in telephony format
     """
@@ -71,33 +73,43 @@ def _convert_to_telephony_audio(mp3_path, sample_rate):
 def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
     """
     Encode PCM WAV to G.722 using ffmpeg
-    
+
     Args:
         pcm_wav_path: Path to PCM WAV file
         output_file: Output G.722 file path
         sample_rate: Sample rate in Hz
-        
+
     Returns:
         True if successful, False otherwise
     """
     try:
-        result = subprocess.run([
-            'ffmpeg', '-y',  # Overwrite output
-            '-i', pcm_wav_path,  # Input PCM WAV
-            '-ar', str(sample_rate),  # Sample rate
-            '-ac', '1',  # Mono
-            '-acodec', 'g722',  # G.722 codec
-            output_file  # Output file
-        ], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-y",  # Overwrite output
+                "-i",
+                pcm_wav_path,  # Input PCM WAV
+                "-ar",
+                str(sample_rate),  # Sample rate
+                "-ac",
+                "1",  # Mono
+                "-acodec",
+                "g722",  # G.722 codec
+                output_file,  # Output file
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
 
         if result.returncode != 0:
             logger.debug(f"ffmpeg G.722 encoding failed (full error): {result.stderr}")
             logger.warning(f"ffmpeg G.722 encoding failed: {result.stderr[:200]}...")
             return False
-        
+
         logger.debug("Successfully encoded to G.722 using ffmpeg")
         return True
-        
+
     except subprocess.TimeoutExpired as e:
         logger.warning(f"ffmpeg G.722 encoding timed out after 30s: {e}")
         return False
@@ -113,43 +125,38 @@ def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
 def _export_audio(audio, output_file, convert_to_g722, sample_rate):
     """
     Export audio to output file, optionally converting to G.722
-    
+
     Args:
         audio: AudioSegment to export
         output_file: Output file path
         convert_to_g722: Whether to convert to G.722
         sample_rate: Sample rate in Hz
-        
+
     Returns:
         Path to temporary PCM WAV file (if created) or None
     """
     temp_wav_path = None
-    
+
     if convert_to_g722:
         # Export to temporary PCM WAV first
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_wav:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
             temp_wav_path = temp_wav.name
-            audio.export(temp_wav_path, format='wav')
-        
+            audio.export(temp_wav_path, format="wav")
+
         # Try to encode to G.722, fallback to PCM if fails
         if not _encode_g722_with_ffmpeg(temp_wav_path, output_file, sample_rate):
             logger.warning("Falling back to PCM WAV format")
-            audio.export(output_file, format='wav')
+            audio.export(output_file, format="wav")
     else:
         # Export as PCM WAV directly (recommended for maximum quality)
-        audio.export(output_file, format='wav')
-    
+        audio.export(output_file, format="wav")
+
     return temp_wav_path
 
 
 def text_to_wav_telephony(
-        text,
-        output_file,
-        language='en',
-        tld='com',
-        slow=False,
-        sample_rate=8000,
-        convert_to_g722=False):
+    text, output_file, language="en", tld="com", slow=False, sample_rate=8000, convert_to_g722=False
+):
     """
     Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
 
@@ -183,19 +190,19 @@ def text_to_wav_telephony(
 
     temp_mp3_path = None
     temp_wav_path = None
-    
+
     try:
         # Generate MP3 from text
         temp_mp3_path = _generate_mp3(text, language, tld, slow)
-        
+
         # Convert to telephony audio format
         audio = _convert_to_telephony_audio(temp_mp3_path, sample_rate)
-        
+
         # Export audio (with optional G.722 encoding)
         temp_wav_path = _export_audio(audio, output_file, convert_to_g722, sample_rate)
-        
+
         return True
-        
+
     except Exception as e:
         logger.error(f"Error generating TTS for '{text}': {e}")
         raise
@@ -236,16 +243,15 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
 
     for filename, text in prompts.items():
         # Substitute company name if present
-        if company_name and '{company_name}' in text:
-            text = text.replace('{company_name}', company_name)
+        if company_name and "{company_name}" in text:
+            text = text.replace("{company_name}", company_name)
 
         output_file = os.path.join(
-            output_dir,
-            filename if filename.endswith('.wav') else f'{filename}.wav')
+            output_dir, filename if filename.endswith(".wav") else f"{filename}.wav"
+        )
 
         try:
-            if text_to_wav_telephony(
-                    text, output_file, sample_rate=sample_rate):
+            if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):
                 file_size = os.path.getsize(output_file)
                 logger.info(f"Generated {filename}: {file_size:,} bytes")
                 success_count += 1

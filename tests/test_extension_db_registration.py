@@ -7,12 +7,11 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB, RegisteredPhonesDB
-
 
 
 def test_database_extension_registration():
@@ -21,10 +20,7 @@ def test_database_extension_registration():
 
     # Create PBX with in-memory database
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to test database"
@@ -42,7 +38,7 @@ def test_database_extension_registration():
         number="9999",
         name="Test Database Extension",
         password_hash="test_hash_123",
-        email="test@example.com"
+        email="test@example.com",
     )
     assert success, "Failed to add extension to database"
     print("  ✓ Added extension 9999 to database")
@@ -50,12 +46,12 @@ def test_database_extension_registration():
     # Verify it's in the database
     db_ext = pbx.extension_db.get("9999")
     assert db_ext is not None, "Extension not found in database"
-    assert db_ext['number'] == "9999", "Wrong extension number"
+    assert db_ext["number"] == "9999", "Wrong extension number"
     print(f"  ✓ Extension verified in database: {db_ext['name']}")
 
     # Now try to register this extension
     from_header = '"Test DB Phone" <sip:9999@192.168.1.200>'
-    addr = ('192.168.1.200', 5060)
+    addr = ("192.168.1.200", 5060)
     user_agent = "Test Phone"
     contact = "<sip:9999@192.168.1.200:5060>"
 
@@ -72,7 +68,7 @@ def test_database_extension_registration():
     # Verify phone tracking was also stored
     phones = pbx.registered_phones_db.get_by_extension("9999")
     assert len(phones) >= 1, "Phone not tracked in database"
-    assert phones[0]['ip_address'] == "192.168.1.200", "Wrong IP address"
+    assert phones[0]["ip_address"] == "192.168.1.200", "Wrong IP address"
     print(f"  ✓ Phone tracked in database: IP={phones[0]['ip_address']}")
 
     print("✓ Database-based extension registration works")
@@ -98,7 +94,7 @@ def test_config_extension_still_works():
 
     # Try to register this existing database extension
     from_header = f'"{test_ext_name}" <sip:{test_ext_number}@192.168.1.100>'
-    addr = ('192.168.1.100', 5060)
+    addr = ("192.168.1.100", 5060)
     user_agent = "Test Phone"
     contact = f"<sip:{test_ext_number}@192.168.1.100:5060>"
 
@@ -121,10 +117,7 @@ def test_unknown_extension_rejected():
 
     # Create PBX with in-memory database
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to test database"
@@ -137,7 +130,7 @@ def test_unknown_extension_rejected():
 
     # Try to register an extension that doesn't exist (not in DB or config)
     from_header = '"Unknown Extension" <sip:8888@192.168.1.150>'
-    addr = ('192.168.1.150', 5060)
+    addr = ("192.168.1.150", 5060)
     user_agent = "Test Phone"
     contact = "<sip:8888@192.168.1.150:5060>"
 
@@ -160,10 +153,7 @@ def test_database_priority():
 
     # Create PBX with in-memory database
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to test database"
@@ -180,14 +170,14 @@ def test_database_priority():
         number="1001",
         name="Database Version of 1001",
         password_hash="db_hash_456",
-        email="db1001@example.com"
+        email="db1001@example.com",
     )
     assert success, "Failed to add extension to database"
     print("  ✓ Added extension 1001 to database (also exists in config)")
 
     # Now register - should use database version
     from_header = '"Priority Test" <sip:1001@192.168.1.100>'
-    addr = ('192.168.1.100', 5060)
+    addr = ("192.168.1.100", 5060)
     user_agent = "Test Phone"
     contact = "<sip:1001@192.168.1.100:5060>"
 
@@ -198,7 +188,7 @@ def test_database_priority():
     # Verify database extension was used (by checking it exists in DB)
     db_ext = pbx.extension_db.get("1001")
     assert db_ext is not None, "Extension should exist in database"
-    assert db_ext['name'] == "Database Version of 1001", "Database version should be used"
+    assert db_ext["name"] == "Database Version of 1001", "Database version should be used"
     print("  ✓ Database version was prioritized")
 
     print("✓ Database priority over config works")
@@ -223,11 +213,13 @@ def run_all_tests():
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

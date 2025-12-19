@@ -2,6 +2,7 @@
 Call recording system
 Records audio from calls for compliance, quality assurance, and training
 """
+
 import os
 import wave
 from datetime import datetime
@@ -54,7 +55,8 @@ class CallRecording:
         self.logger.info(
             f"Started recording call {
                 self.call_id} to {
-                self.file_path}")
+                self.file_path}"
+        )
         return self.file_path
 
     def add_audio(self, audio_data):
@@ -77,7 +79,7 @@ class CallRecording:
         # Save audio buffer to WAV file
         if self.audio_buffer and self.file_path:
             try:
-                with wave.open(self.file_path, 'wb') as wav_file:
+                with wave.open(self.file_path, "wb") as wav_file:
                     wav_file.setnchannels(1)  # Mono
                     wav_file.setsampwidth(2)  # 16-bit
                     wav_file.setframerate(8000)  # 8kHz for telephony
@@ -160,10 +162,10 @@ class CallRecordingSystem:
             # Save metadata
             if file_path:
                 metadata = {
-                    'call_id': call_id,
-                    'file_path': file_path,
-                    'duration': recording.get_duration(),
-                    'timestamp': recording.start_time
+                    "call_id": call_id,
+                    "file_path": file_path,
+                    "duration": recording.get_duration(),
+                    "timestamp": recording.start_time,
                 }
                 self.recording_metadata.append(metadata)
 

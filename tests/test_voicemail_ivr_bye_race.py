@@ -12,16 +12,14 @@ import threading
 import time
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 
-
-
 # Test constants
-TEST_AUDIO_DATA = b'test audio data'
+TEST_AUDIO_DATA = b"test audio data"
 TEST_MESSAGE_DURATION = 10
 
 
@@ -37,36 +35,36 @@ def test_ivr_handles_early_call_termination():
     """
     print("Testing IVR handles early call termination...")
 
-    config = Config('config.yml')
-    vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+    config = Config("config.yml")
+    vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox with PIN
-    mailbox = vm_system.get_mailbox('1001')
-    mailbox.set_pin('1234')
+    mailbox = vm_system.get_mailbox("1001")
+    mailbox.set_pin("1234")
 
     # Create IVR instance
-    ivr = VoicemailIVR(vm_system, '1001')
+    ivr = VoicemailIVR(vm_system, "1001")
     ivr.state = VoicemailIVR.STATE_PIN_ENTRY
 
     # Create a mock call object
-    call = Call('test-call-123', '1001', '*97')
+    call = Call("test-call-123", "1001", "*97")
     call.state = CallState.CONNECTED
 
     # Enter PIN digits
-    ivr.handle_dtmf('1')
-    ivr.handle_dtmf('2')
-    ivr.handle_dtmf('3')
-    ivr.handle_dtmf('4')
+    ivr.handle_dtmf("1")
+    ivr.handle_dtmf("2")
+    ivr.handle_dtmf("3")
+    ivr.handle_dtmf("4")
 
     # Now simulate the scenario:
     # 1. User presses # to complete PIN entry
     # 2. IVR would normally transition to main menu and return play_prompt
     # action
-    result = ivr.handle_dtmf('#')
+    result = ivr.handle_dtmf("#")
 
     # Verify IVR transitioned to main menu state
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU, "Should be in main menu state"
-    assert result['action'] == 'play_prompt', "Should return play_prompt action"
+    assert result["action"] == "play_prompt", "Should return play_prompt action"
 
     # 3. Simulate BYE request coming in (call terminates)
     call.end()
@@ -86,30 +84,27 @@ def test_ivr_handles_call_termination_during_message_playback():
     """
     print("Testing IVR handles call termination during message playback...")
 
-    config = Config('config.yml')
-    vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+    config = Config("config.yml")
+    vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox with a message
-    mailbox = vm_system.get_mailbox('1001')
-    mailbox.save_message(
-        '1002',
-        TEST_AUDIO_DATA,
-        duration=TEST_MESSAGE_DURATION)
+    mailbox = vm_system.get_mailbox("1001")
+    mailbox.save_message("1002", TEST_AUDIO_DATA, duration=TEST_MESSAGE_DURATION)
 
     # Create IVR instance in main menu
-    ivr = VoicemailIVR(vm_system, '1001')
+    ivr = VoicemailIVR(vm_system, "1001")
     ivr.state = VoicemailIVR.STATE_MAIN_MENU
 
     # Create a mock call object
-    call = Call('test-call-456', '1001', '*97')
+    call = Call("test-call-456", "1001", "*97")
     call.state = CallState.CONNECTED
 
     # Press 1 to listen to messages
-    result = ivr.handle_dtmf('1')
+    result = ivr.handle_dtmf("1")
 
     # Should transition to playing message
     assert ivr.state == VoicemailIVR.STATE_PLAYING_MESSAGE
-    assert result['action'] == 'play_message'
+    assert result["action"] == "play_message"
 
     # Simulate call termination during playback
     call.end()
@@ -126,23 +121,23 @@ def test_ivr_handles_hangup_action_with_ended_call():
     """
     print("Testing IVR handles hangup action with ended call...")
 
-    config = Config('config.yml')
-    vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+    config = Config("config.yml")
+    vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Create IVR instance in main menu
-    ivr = VoicemailIVR(vm_system, '1001')
+    ivr = VoicemailIVR(vm_system, "1001")
     ivr.state = VoicemailIVR.STATE_MAIN_MENU
 
     # Create a mock call object
-    call = Call('test-call-789', '1001', '*97')
+    call = Call("test-call-789", "1001", "*97")
     call.state = CallState.CONNECTED
 
     # Press * to exit (hangup action)
-    result = ivr.handle_dtmf('*')
+    result = ivr.handle_dtmf("*")
 
     # Should return hangup action and transition to goodbye state
-    assert result['action'] == 'hangup'
-    assert result['prompt'] == 'goodbye'
+    assert result["action"] == "hangup"
+    assert result["prompt"] == "goodbye"
     assert ivr.state == VoicemailIVR.STATE_GOODBYE
 
     # Simulate call already ended before goodbye prompt can play
@@ -160,31 +155,31 @@ def test_pin_entry_clears_after_processing():
     """
     print("Testing PIN is cleared after verification...")
 
-    config = Config('config.yml')
-    vm_system = VoicemailSystem(storage_path='test_voicemail', config=config)
+    config = Config("config.yml")
+    vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox with PIN
-    mailbox = vm_system.get_mailbox('1001')
-    mailbox.set_pin('1234')
+    mailbox = vm_system.get_mailbox("1001")
+    mailbox.set_pin("1234")
 
     # Create IVR instance
-    ivr = VoicemailIVR(vm_system, '1001')
+    ivr = VoicemailIVR(vm_system, "1001")
     ivr.state = VoicemailIVR.STATE_PIN_ENTRY
 
     # Enter PIN digits
-    ivr.handle_dtmf('1')
-    ivr.handle_dtmf('2')
-    ivr.handle_dtmf('3')
-    ivr.handle_dtmf('4')
+    ivr.handle_dtmf("1")
+    ivr.handle_dtmf("2")
+    ivr.handle_dtmf("3")
+    ivr.handle_dtmf("4")
 
     # Verify PIN is being collected
-    assert ivr.entered_pin == '1234', "PIN should be collected"
+    assert ivr.entered_pin == "1234", "PIN should be collected"
 
     # Press # to complete PIN entry
-    result = ivr.handle_dtmf('#')
+    result = ivr.handle_dtmf("#")
 
     # Verify PIN was cleared after verification (security)
-    assert ivr.entered_pin == '', "PIN should be cleared after verification"
+    assert ivr.entered_pin == "", "PIN should be cleared after verification"
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU, "Should transition to main menu"
 
     print("✓ PIN is properly cleared after verification")
@@ -214,6 +209,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

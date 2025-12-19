@@ -8,10 +8,9 @@ import sys
 from io import StringIO
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.webrtc import WebRTCGateway, WebRTCSignalingServer
-
 
 
 def test_verbose_logging_disabled():
@@ -21,9 +20,9 @@ def test_verbose_logging_disabled():
     class MockConfig:
         def get(self, key, default=None):
             config_map = {
-                'features.webrtc.enabled': True,
-                'features.webrtc.verbose_logging': False,  # Disabled
-                'features.webrtc.session_timeout': 300
+                "features.webrtc.enabled": True,
+                "features.webrtc.verbose_logging": False,  # Disabled
+                "features.webrtc.session_timeout": 300,
             }
             return config_map.get(key, default)
 
@@ -46,10 +45,10 @@ def test_verbose_logging_enabled():
     class MockConfig:
         def get(self, key, default=None):
             config_map = {
-                'features.webrtc.enabled': True,
-                'features.webrtc.verbose_logging': True,  # Enabled
-                'features.webrtc.session_timeout': 300,
-                'features.webrtc.stun_servers': ['stun:stun.example.com:19302']
+                "features.webrtc.enabled": True,
+                "features.webrtc.verbose_logging": True,  # Enabled
+                "features.webrtc.session_timeout": 300,
+                "features.webrtc.stun_servers": ["stun:stun.example.com:19302"],
             }
             return config_map.get(key, default)
 
@@ -61,6 +60,7 @@ def test_verbose_logging_enabled():
     handler.setLevel(logging.INFO)
 
     from pbx.utils.logger import get_logger
+
     logger = get_logger()
     logger.addHandler(handler)
 
@@ -70,13 +70,14 @@ def test_verbose_logging_enabled():
     assert signaling.verbose_logging, "Verbose logging should be enabled"
 
     # Create a session to test verbose logging
-    session = signaling.create_session('1001')
+    session = signaling.create_session("1001")
 
     # Get log output
     log_output = log_stream.getvalue()
 
     # Verify verbose logging output exists
-    assert '[VERBOSE]' in log_output or 'verbose logging ENABLED' in log_output.lower(
+    assert (
+        "[VERBOSE]" in log_output or "verbose logging ENABLED" in log_output.lower()
     ), f"Should have verbose log messages. Log output: {log_output}"
 
     signaling.stop()
@@ -94,9 +95,9 @@ def test_verbose_logging_in_offer_handling():
     class MockConfig:
         def get(self, key, default=None):
             config_map = {
-                'features.webrtc.enabled': True,
-                'features.webrtc.verbose_logging': True,
-                'features.webrtc.session_timeout': 300
+                "features.webrtc.enabled": True,
+                "features.webrtc.verbose_logging": True,
+                "features.webrtc.session_timeout": 300,
             }
             return config_map.get(key, default)
 
@@ -108,13 +109,14 @@ def test_verbose_logging_in_offer_handling():
     handler.setLevel(logging.INFO)
 
     from pbx.utils.logger import get_logger
+
     logger = get_logger()
     logger.addHandler(handler)
 
     signaling = WebRTCSignalingServer(config)
 
     # Create session
-    session = signaling.create_session('1001')
+    session = signaling.create_session("1001")
 
     # Handle an offer
     test_sdp = """v=0
@@ -132,10 +134,10 @@ a=rtpmap:0 PCMU/8000
     log_output = log_stream.getvalue()
 
     # Verify verbose logging output includes SDP details
-    assert '[VERBOSE]' in log_output, \
-        f"Should have [VERBOSE] tag in logs. Log output: {log_output}"
-    assert 'SDP offer received' in log_output or 'Full SDP offer' in log_output, \
-        f"Should have SDP offer details in logs. Log output: {log_output}"
+    assert "[VERBOSE]" in log_output, f"Should have [VERBOSE] tag in logs. Log output: {log_output}"
+    assert (
+        "SDP offer received" in log_output or "Full SDP offer" in log_output
+    ), f"Should have SDP offer details in logs. Log output: {log_output}"
 
     signaling.stop()
     logger.removeHandler(handler)
@@ -150,10 +152,7 @@ def test_gateway_verbose_logging():
 
     class MockConfig:
         def get(self, key, default=None):
-            config_map = {
-                'features.webrtc.enabled': True,
-                'features.webrtc.verbose_logging': True
-            }
+            config_map = {"features.webrtc.enabled": True, "features.webrtc.verbose_logging": True}
             return config_map.get(key, default)
 
     config = MockConfig()
@@ -172,6 +171,7 @@ def test_gateway_verbose_logging():
     handler.setLevel(logging.INFO)
 
     from pbx.utils.logger import get_logger
+
     logger = get_logger()
     logger.addHandler(handler)
 
@@ -184,7 +184,8 @@ def test_gateway_verbose_logging():
     log_output = log_stream.getvalue()
 
     # Verify gateway initialization logged correctly
-    assert '[VERBOSE]' in log_output or 'verbose logging ENABLED' in log_output.lower(
+    assert (
+        "[VERBOSE]" in log_output or "verbose logging ENABLED" in log_output.lower()
     ), f"Gateway should log verbose mode. Log output: {log_output}"
 
     signaling.stop()
@@ -194,7 +195,7 @@ def test_gateway_verbose_logging():
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("======================================================================")
     print("Testing WebRTC Verbose Logging Feature")
     print("======================================================================")
@@ -216,6 +217,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"✗ Test failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

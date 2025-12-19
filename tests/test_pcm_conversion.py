@@ -1,13 +1,14 @@
 """
 Test PCM to G.722 conversion functionality
 """
+
 import os
 import struct
 import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 def test_pcm16_to_g722_conversion():
@@ -17,9 +18,9 @@ def test_pcm16_to_g722_conversion():
     # Create a simple test PCM signal (16-bit little-endian signed)
     # Let's create a few samples with known values
     test_samples = [0, 1000, -1000, 8000, -8000, 16000, -16000, 32767, -32768]
-    pcm_data = b''
+    pcm_data = b""
     for sample in test_samples:
-        pcm_data += struct.pack('<h', sample)
+        pcm_data += struct.pack("<h", sample)
 
     # Convert to G.722 at 8kHz (will be upsampled to 16kHz)
     g722_data = pcm16_to_g722(pcm_data, sample_rate=8000)
@@ -44,19 +45,14 @@ def test_pcm_wav_to_g722_with_rtp():
     from pbx.utils.audio import build_wav_header, generate_beep_tone
 
     # Create a temporary PCM WAV file
-    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
         temp_path = temp_file.name
 
         # Generate test audio (16-bit PCM)
-        pcm_data = generate_beep_tone(
-            frequency=1000, duration_ms=100, sample_rate=8000)
+        pcm_data = generate_beep_tone(frequency=1000, duration_ms=100, sample_rate=8000)
 
         # Build WAV header for PCM format (audio_format=1)
-        header = build_wav_header(
-            len(pcm_data),
-            sample_rate=8000,
-            channels=1,
-            bits_per_sample=16)
+        header = build_wav_header(len(pcm_data), sample_rate=8000, channels=1, bits_per_sample=16)
 
         # Write complete WAV file
         temp_file.write(header + pcm_data)
@@ -66,9 +62,9 @@ def test_pcm_wav_to_g722_with_rtp():
         # None)
         player = RTPPlayer(
             local_port=20000,
-            remote_host='127.0.0.1',
+            remote_host="127.0.0.1",
             remote_port=20002,
-            call_id='test_pcm_conversion'
+            call_id="test_pcm_conversion",
         )
 
         # Start the player
@@ -100,7 +96,7 @@ def test_ulaw_wav_still_works():
     from pbx.rtp.handler import RTPPlayer
 
     # Create a temporary μ-law WAV file
-    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
         temp_path = temp_file.name
 
         # Create some dummy μ-law audio data
@@ -108,23 +104,23 @@ def test_ulaw_wav_still_works():
         ulaw_data = bytes([0xFF, 0xFE, 0xFD, 0xFC] * 100)
 
         # Build WAV header for μ-law format (audio_format=7)
-        header = b'RIFF'
-        header += struct.pack('<I', 36 + len(ulaw_data))  # File size - 8
-        header += b'WAVE'
-        header += b'fmt '
+        header = b"RIFF"
+        header += struct.pack("<I", 36 + len(ulaw_data))  # File size - 8
+        header += b"WAVE"
+        header += b"fmt "
         # Subchunk1Size (18 for non-PCM formats)
-        header += struct.pack('<I', 18)
-        header += struct.pack('<H', 7)  # AudioFormat (7 for μ-law)
-        header += struct.pack('<H', 1)  # NumChannels (mono)
-        header += struct.pack('<I', 8000)  # SampleRate
+        header += struct.pack("<I", 18)
+        header += struct.pack("<H", 7)  # AudioFormat (7 for μ-law)
+        header += struct.pack("<H", 1)  # NumChannels (mono)
+        header += struct.pack("<I", 8000)  # SampleRate
         # ByteRate (sample_rate * channels * bytes_per_sample)
-        header += struct.pack('<I', 8000)
+        header += struct.pack("<I", 8000)
         # BlockAlign (channels * bytes_per_sample)
-        header += struct.pack('<H', 1)
-        header += struct.pack('<H', 8)  # BitsPerSample (8 for μ-law)
-        header += struct.pack('<H', 0)  # ExtraParamSize (0 for μ-law)
-        header += b'data'
-        header += struct.pack('<I', len(ulaw_data))  # Data chunk size
+        header += struct.pack("<H", 1)
+        header += struct.pack("<H", 8)  # BitsPerSample (8 for μ-law)
+        header += struct.pack("<H", 0)  # ExtraParamSize (0 for μ-law)
+        header += b"data"
+        header += struct.pack("<I", len(ulaw_data))  # Data chunk size
 
         # Write complete WAV file
         temp_file.write(header + ulaw_data)
@@ -133,9 +129,9 @@ def test_ulaw_wav_still_works():
         # Create RTP player
         player = RTPPlayer(
             local_port=20004,
-            remote_host='127.0.0.1',
+            remote_host="127.0.0.1",
             remote_port=20006,
-            call_id='test_ulaw_playback'
+            call_id="test_ulaw_playback",
         )
 
         # Start the player

@@ -9,7 +9,7 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 def test_voicemail_access_contact_header_code_review():
@@ -22,34 +22,30 @@ def test_voicemail_access_contact_header_code_review():
     print("Testing voicemail access Contact header code...")
 
     # Read the source code
-    pbx_file = os.path.join(
-        os.path.dirname(__file__),
-        '..',
-        'pbx',
-        'core',
-        'pbx.py')
+    pbx_file = os.path.join(os.path.dirname(__file__), "..", "pbx", "core", "pbx.py")
 
-    with open(pbx_file, 'r') as f:
+    with open(pbx_file, "r") as f:
         content = f.read()
 
     # Find the _handle_voicemail_access method
-    start_idx = content.find('def _handle_voicemail_access(')
+    start_idx = content.find("def _handle_voicemail_access(")
     assert start_idx != -1, "Could not find _handle_voicemail_access method"
 
     # Get the method content (simplified check)
-    method_end = content.find('\n    def ', start_idx + 1)
+    method_end = content.find("\n    def ", start_idx + 1)
     if method_end == -1:
         method_end = len(content)
     method_content = content[start_idx:method_end]
 
     # Find where target_ext is defined (removing asterisk)
-    assert 'target_ext = to_ext[1:]' in method_content, \
-        "Should define target_ext by removing asterisk from to_ext"
+    assert (
+        "target_ext = to_ext[1:]" in method_content
+    ), "Should define target_ext by removing asterisk from to_ext"
 
     # Find where Contact header is built
     contact_header_lines = []
-    for line in method_content.split('\n'):
-        if 'contact_uri' in line.lower() and 'sip:' in line:
+    for line in method_content.split("\n"):
+        if "contact_uri" in line.lower() and "sip:" in line:
             contact_header_lines.append(line.strip())
 
     assert len(contact_header_lines) > 0, "Should have Contact header construction"
@@ -58,12 +54,14 @@ def test_voicemail_access_contact_header_code_review():
     contact_line = contact_header_lines[0]
 
     # The bug was using to_ext (with asterisk), fix should use target_ext
-    assert 'target_ext' in contact_line, \
-        f"Contact header should use target_ext (without asterisk), found: {contact_line}"
+    assert (
+        "target_ext" in contact_line
+    ), f"Contact header should use target_ext (without asterisk), found: {contact_line}"
 
     # Check that to_ext is not used in the f-string interpolation
-    assert 'to_ext}' not in contact_line and 'to_ext @' not in contact_line, \
-        f"Contact header should NOT use to_ext (with asterisk), found: {contact_line}"
+    assert (
+        "to_ext}" not in contact_line and "to_ext @" not in contact_line
+    ), f"Contact header should NOT use to_ext (with asterisk), found: {contact_line}"
 
     print(f"  ✓ Contact header code is correct: uses target_ext")
     print(f"  ✓ Found: {contact_line}")
@@ -77,43 +75,37 @@ def test_contact_header_pattern_consistency():
     print("Testing Contact header pattern consistency...")
 
     # Read the source code
-    pbx_file = os.path.join(
-        os.path.dirname(__file__),
-        '..',
-        'pbx',
-        'core',
-        'pbx.py')
+    pbx_file = os.path.join(os.path.dirname(__file__), "..", "pbx", "core", "pbx.py")
 
-    with open(pbx_file, 'r') as f:
+    with open(pbx_file, "r") as f:
         content = f.read()
 
     # Check various voicemail-related methods use extension without prefix
     methods_to_check = [
-        ('_handle_voicemail_access', 'target_ext'),
-        ('_handle_voicemail_deposit', 'to_extension'),
+        ("_handle_voicemail_access", "target_ext"),
+        ("_handle_voicemail_deposit", "to_extension"),
     ]
 
     for method_name, expected_var in methods_to_check:
-        start_idx = content.find(f'def {method_name}(')
+        start_idx = content.find(f"def {method_name}(")
         if start_idx == -1:
             print(f"  ⓘ Method {method_name} not found (may not exist)")
             continue
 
-        method_end = content.find('\n    def ', start_idx + 1)
+        method_end = content.find("\n    def ", start_idx + 1)
         if method_end == -1:
             method_end = len(content)
         method_content = content[start_idx:method_end]
 
         # Look for Contact header construction
         has_contact = False
-        for line in method_content.split('\n'):
-            if 'contact_uri' in line.lower() and 'sip:' in line:
+        for line in method_content.split("\n"):
+            if "contact_uri" in line.lower() and "sip:" in line:
                 has_contact = True
                 # Verify it uses extension variable (not the prefixed version)
                 # Check if to_ext is used in the SIP URI context
-                if 'to_ext}' in line and 'sip:{to_ext}' in line:
-                    print(
-                        f"  ⚠ Warning: {method_name} may have asterisk in Contact")
+                if "to_ext}" in line and "sip:{to_ext}" in line:
+                    print(f"  ⚠ Warning: {method_name} may have asterisk in Contact")
                 else:
                     print(f"  ✓ {method_name} Contact header looks good")
                 break
@@ -147,6 +139,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
             print()

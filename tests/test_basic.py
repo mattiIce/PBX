@@ -6,12 +6,11 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallManager, CallState
 from pbx.features.extensions import Extension
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
-
 
 
 def test_sip_message_parsing():
@@ -21,7 +20,7 @@ def test_sip_message_parsing():
     raw_message = (
         "INVITE sip:1002@pbx.local SIP/2.0\r\n"
         "Via: SIP/2.0/UDP 192.168.1.100:5060\r\n"
-        "From: \"Alice\" <sip:1001@pbx.local>\r\n"
+        'From: "Alice" <sip:1001@pbx.local>\r\n'
         "To: <sip:1002@pbx.local>\r\n"
         "Call-ID: test-call-123\r\n"
         "CSeq: 1 INVITE\r\n"
@@ -32,10 +31,13 @@ def test_sip_message_parsing():
     msg = SIPMessage(raw_message)
 
     assert msg.method == "INVITE", f"Expected INVITE, got {msg.method}"
-    assert msg.uri == "sip:1002@pbx.local", f"Expected sip:1002@pbx.local, got {
+    assert (
+        msg.uri == "sip:1002@pbx.local"
+    ), f"Expected sip:1002@pbx.local, got {
         msg.uri}"
-    assert msg.get_header(
-        "Call-ID") == "test-call-123", f"Expected test-call-123, got {msg.get_header('Call-ID')}"
+    assert (
+        msg.get_header("Call-ID") == "test-call-123"
+    ), f"Expected test-call-123, got {msg.get_header('Call-ID')}"
     assert msg.is_request(), "Expected message to be a request"
 
     print("✓ SIP message parsing works")
@@ -51,7 +53,7 @@ def test_sip_message_building():
         from_addr="<sip:1001@pbx.local>",
         to_addr="<sip:1001@pbx.local>",
         call_id="register-123",
-        cseq=1
+        cseq=1,
     )
 
     msg_str = msg.build()
@@ -105,10 +107,7 @@ def test_extension():
     """Test extension functionality"""
     print("Testing extensions...")
 
-    ext = Extension("1001", "Test Extension", {
-        'password': 'testpass',
-        'allow_external': True
-    })
+    ext = Extension("1001", "Test Extension", {"password": "testpass", "allow_external": True})
 
     assert ext.number == "1001"
     assert ext.name == "Test Extension"
@@ -142,14 +141,13 @@ def test_config():
     config = Config("config.yml")
 
     # Test basic config access
-    sip_port = config.get('server.sip_port')
+    sip_port = config.get("server.sip_port")
     assert sip_port == 5060, f"Expected port 5060, got {sip_port}"
 
     # Note: Extensions are now stored in the database, not in config.yml
     # So we no longer check for extensions in config
     extensions = config.get_extensions()
-    assert isinstance(
-        extensions, list), "Extensions should be a list (empty if using database)"
+    assert isinstance(extensions, list), "Extensions should be a list (empty if using database)"
 
     print("✓ Configuration works")
 
@@ -166,7 +164,7 @@ def run_all_tests():
         test_sip_message_building,
         test_call_management,
         test_extension,
-        test_config
+        test_config,
     ]
 
     passed = 0

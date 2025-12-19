@@ -19,11 +19,11 @@ exclude =
     cdr,
 
 # Ignore specific errors
-ignore =
-    E203,  # whitespace before ':' (conflicts with black)
-    E501,  # line too long (handled by black)
-    W503,  # line break before binary operator (conflicts with black)
-    E402,  # module level import not at top of file (needed for env loading)
+# E203: whitespace before ':' (conflicts with black)
+# E501: line too long (handled by black)
+# W503: line break before binary operator (conflicts with black)
+# E402: module level import not at top of file (needed for env loading)
+ignore = E203,E501,W503,E402
 
 per-file-ignores =
     __init__.py:F401

@@ -22,14 +22,13 @@ Proprietary Integrations (Optional, require licenses):
 # Export all integration classes
 __all__ = [
     # Open Source Integrations (Free)
-    'JitsiIntegration',
-    'EspoCRMIntegration', 
-    'MatrixIntegration',
-    
+    "JitsiIntegration",
+    "EspoCRMIntegration",
+    "MatrixIntegration",
     # Proprietary Integrations (Optional)
-    'ZoomIntegration',
-    'TeamsIntegration',
-    'OutlookIntegration',
-    'ActiveDirectoryIntegration',
-    'LansweeperIntegration'
+    "ZoomIntegration",
+    "TeamsIntegration",
+    "OutlookIntegration",
+    "ActiveDirectoryIntegration",
+    "LansweeperIntegration",
 ]

@@ -7,6 +7,7 @@ Supported MFA Methods:
 2. YubiKey OTP - YubiKey hardware tokens via YubiCloud
 3. FIDO2/WebAuthn - Hardware security keys (YubiKey, etc.)
 """
+
 import base64
 import hashlib
 import hmac
@@ -31,11 +32,7 @@ class TOTPGenerator:
     Implements RFC 6238 TOTP algorithm
     """
 
-    def __init__(
-            self,
-            secret: bytes = None,
-            period: int = 30,
-            digits: int = 6):
+    def __init__(self, secret: bytes = None, period: int = 30, digits: int = 6):
         """
         Initialize TOTP generator
 
@@ -68,8 +65,7 @@ class TOTPGenerator:
         # Generate HOTP
         return self._hotp(counter)
 
-    def verify(self, code: str, timestamp: Optional[int] = None,
-               window: int = 1) -> bool:
+    def verify(self, code: str, timestamp: Optional[int] = None, window: int = 1) -> bool:
         """
         Verify TOTP code with time window
 
@@ -105,18 +101,18 @@ class TOTPGenerator:
             HOTP code as string
         """
         # Convert counter to 8-byte big-endian
-        counter_bytes = struct.pack('>Q', counter)
+        counter_bytes = struct.pack(">Q", counter)
 
         # Calculate HMAC-SHA1
         hmac_hash = hmac.new(self.secret, counter_bytes, hashlib.sha1).digest()
 
         # Dynamic truncation
         offset = hmac_hash[-1] & 0x0F
-        truncated = struct.unpack('>I', hmac_hash[offset:offset + 4])[0]
+        truncated = struct.unpack(">I", hmac_hash[offset : offset + 4])[0]
         truncated &= 0x7FFFFFFF
 
         # Generate code with specified digits
-        code = truncated % (10 ** self.digits)
+        code = truncated % (10**self.digits)
 
         # Pad with leading zeros
         return str(code).zfill(self.digits)
@@ -141,10 +137,7 @@ class TOTPGenerator:
 
         return result == 0
 
-    def get_provisioning_uri(
-            self,
-            account_name: str,
-            issuer: str = "PBX System") -> str:
+    def get_provisioning_uri(self, account_name: str, issuer: str = "PBX System") -> str:
         """
         Generate provisioning URI for QR code
 
@@ -156,7 +149,7 @@ class TOTPGenerator:
             otpauth:// URI for QR code generation
         """
         # Encode secret as base32 (standard for TOTP apps)
-        secret_b32 = base64.b32encode(self.secret).decode('utf-8').rstrip('=')
+        secret_b32 = base64.b32encode(self.secret).decode("utf-8").rstrip("=")
 
         uri = f"otpauth://totp/{issuer}:{account_name}?secret={secret_b32}&issuer={issuer}&period={
             self.period}&digits={
@@ -172,11 +165,11 @@ class YubiKeyOTPVerifier:
 
     # YubiCloud validation servers
     YUBICO_SERVERS = [
-        'https://api.yubico.com/wsapi/2.0/verify',
-        'https://api2.yubico.com/wsapi/2.0/verify',
-        'https://api3.yubico.com/wsapi/2.0/verify',
-        'https://api4.yubico.com/wsapi/2.0/verify',
-        'https://api5.yubico.com/wsapi/2.0/verify',
+        "https://api.yubico.com/wsapi/2.0/verify",
+        "https://api2.yubico.com/wsapi/2.0/verify",
+        "https://api3.yubico.com/wsapi/2.0/verify",
+        "https://api4.yubico.com/wsapi/2.0/verify",
+        "https://api5.yubico.com/wsapi/2.0/verify",
     ]
 
     def __init__(self, client_id: str = None, api_key: str = None):
@@ -187,7 +180,7 @@ class YubiKeyOTPVerifier:
             client_id: YubiCloud API client ID (optional for testing)
             api_key: YubiCloud API secret key (optional for testing)
         """
-        self.client_id = client_id or '1'  # Default test client ID
+        self.client_id = client_id or "1"  # Default test client ID
         self.api_key = api_key
         self.logger = get_logger()
 
@@ -206,15 +199,14 @@ class YubiKeyOTPVerifier:
             return False, "Invalid OTP format (must be 44 characters)"
 
         # Check if OTP contains only valid ModHex characters
-        modhex_chars = set('cbdefghijklnrtuv')
+        modhex_chars = set("cbdefghijklnrtuv")
         if not all(c in modhex_chars for c in otp.lower()):
             return False, "Invalid OTP format (contains invalid characters)"
 
         # Extract YubiKey public ID (first 12 characters)
         public_id = otp[:12]
 
-        self.logger.info(
-            f"YubiKey OTP verification requested for device: {public_id}")
+        self.logger.info(f"YubiKey OTP verification requested for device: {public_id}")
 
         # Verify via YubiCloud API
         return self._verify_via_yubico(otp)
@@ -246,32 +238,28 @@ class YubiKeyOTPVerifier:
         """
         try:
             # Generate random nonce for replay protection
-            nonce = base64.b64encode(secrets.token_bytes(16)).decode('utf-8')
+            nonce = base64.b64encode(secrets.token_bytes(16)).decode("utf-8")
 
             # Build request parameters
             params = {
-                'id': self.client_id,
-                'otp': otp,
-                'nonce': nonce,
-                'timestamp': '1',  # Request timestamp in response
-                'sl': '50',  # Sync level - percentage of servers that must sync
+                "id": self.client_id,
+                "otp": otp,
+                "nonce": nonce,
+                "timestamp": "1",  # Request timestamp in response
+                "sl": "50",  # Sync level - percentage of servers that must sync
             }
 
             # Add HMAC signature if API key is provided
             if self.api_key:
                 # Sort parameters alphabetically for signature
                 sorted_params = sorted(params.items())
-                param_string = '&'.join(f'{k}={v}' for k, v in sorted_params)
+                param_string = "&".join(f"{k}={v}" for k, v in sorted_params)
 
                 # Generate HMAC-SHA1 signature
                 api_key_bytes = base64.b64decode(self.api_key)
-                signature = hmac.new(
-                    api_key_bytes,
-                    param_string.encode('utf-8'),
-                    hashlib.sha1)
-                signature_b64 = base64.b64encode(
-                    signature.digest()).decode('utf-8')
-                params['h'] = signature_b64
+                signature = hmac.new(api_key_bytes, param_string.encode("utf-8"), hashlib.sha1)
+                signature_b64 = base64.b64encode(signature.digest()).decode("utf-8")
+                params["h"] = signature_b64
 
             # Try each validation server (for redundancy)
             servers = self.YUBICO_SERVERS.copy()
@@ -287,78 +275,71 @@ class YubiKeyOTPVerifier:
                     # Make HTTP request with timeout
                     request = urllib.request.Request(full_url)
                     with urllib.request.urlopen(request, timeout=5) as response:
-                        response_data = response.read().decode('utf-8')
+                        response_data = response.read().decode("utf-8")
 
                     # Parse response (key=value pairs separated by newlines)
                     response_dict = {}
-                    for line in response_data.strip().split('\n'):
-                        if '=' in line:
-                            key, value = line.split('=', 1)
+                    for line in response_data.strip().split("\n"):
+                        if "=" in line:
+                            key, value = line.split("=", 1)
                             response_dict[key.strip()] = value.strip()
 
                     # Verify nonce matches
-                    if response_dict.get('nonce') != nonce:
-                        self.logger.warning(
-                            f"Nonce mismatch in YubiCloud response")
+                    if response_dict.get("nonce") != nonce:
+                        self.logger.warning(f"Nonce mismatch in YubiCloud response")
                         continue
 
                     # Verify HMAC signature if we have an API key
-                    if self.api_key and 'h' in response_dict:
-                        response_signature = response_dict.pop('h')
+                    if self.api_key and "h" in response_dict:
+                        response_signature = response_dict.pop("h")
 
                         # Sort response parameters for signature verification
                         sorted_response = sorted(response_dict.items())
-                        response_string = '&'.join(
-                            f'{k}={v}' for k, v in sorted_response)
+                        response_string = "&".join(f"{k}={v}" for k, v in sorted_response)
 
                         # Calculate expected signature
                         expected_signature = hmac.new(
-                            api_key_bytes,
-                            response_string.encode('utf-8'),
-                            hashlib.sha1
+                            api_key_bytes, response_string.encode("utf-8"), hashlib.sha1
                         )
                         expected_signature_b64 = base64.b64encode(
-                            expected_signature.digest()).decode('utf-8')
+                            expected_signature.digest()
+                        ).decode("utf-8")
 
                         if response_signature != expected_signature_b64:
-                            self.logger.warning(
-                                "HMAC signature mismatch in YubiCloud response")
+                            self.logger.warning("HMAC signature mismatch in YubiCloud response")
                             continue
 
                     # Check status
-                    status = response_dict.get('status')
+                    status = response_dict.get("status")
 
-                    if status == 'OK':
+                    if status == "OK":
                         # Verify OTP matches
-                        if response_dict.get('otp') == otp:
-                            self.logger.info(
-                                f"YubiKey OTP verified successfully via {server_url}")
+                        if response_dict.get("otp") == otp:
+                            self.logger.info(f"YubiKey OTP verified successfully via {server_url}")
                             return True, None
                         else:
                             return False, "OTP mismatch in response"
-                    elif status == 'REPLAYED_OTP':
+                    elif status == "REPLAYED_OTP":
                         return False, "OTP has been used before (replay detected)"
-                    elif status == 'BAD_OTP':
+                    elif status == "BAD_OTP":
                         return False, "Invalid OTP format or signature"
-                    elif status == 'NO_SUCH_CLIENT':
+                    elif status == "NO_SUCH_CLIENT":
                         return False, "Invalid client ID"
-                    elif status == 'BAD_SIGNATURE':
+                    elif status == "BAD_SIGNATURE":
                         return False, "Invalid request signature"
-                    elif status == 'MISSING_PARAMETER':
+                    elif status == "MISSING_PARAMETER":
                         return False, "Missing required parameter"
-                    elif status == 'OPERATION_NOT_ALLOWED':
+                    elif status == "OPERATION_NOT_ALLOWED":
                         return False, "Operation not allowed for this client"
                     else:
                         # Backend errors - try next server
                         last_error = f"Backend error: {status}"
-                        self.logger.warning(
-                            f"YubiCloud server {server_url} returned: {status}")
+                        self.logger.warning(f"YubiCloud server {server_url} returned: {status}")
                         continue
 
                 except urllib.error.URLError as e:
                     last_error = f"Network error: {str(e)}"
-                    self.logger.warning(
-                        f"Failed to connect to {server_url}: {e}")
+                    self.logger.warning(f"Failed to connect to {server_url}: {e}")
                     continue
                 except Exception as e:
                     last_error = f"Error: {str(e)}"
@@ -395,18 +376,19 @@ class FIDO2Verifier:
         try:
             from fido2.server import Fido2Server
             from fido2.webauthn import PublicKeyCredentialRpEntity
+
             self.Fido2Server = Fido2Server
             self.PublicKeyCredentialRpEntity = PublicKeyCredentialRpEntity
             self.fido2_available = True
         except ImportError:
             self.logger.warning(
-                "fido2 library not available - FIDO2 verification will use basic mode")
+                "fido2 library not available - FIDO2 verification will use basic mode"
+            )
             self.fido2_available = False
 
-    def register_credential(self,
-                            extension_number: str,
-                            credential_data: dict) -> Tuple[bool,
-                                                            Optional[str]]:
+    def register_credential(
+        self, extension_number: str, credential_data: dict
+    ) -> Tuple[bool, Optional[str]]:
         """
         Register FIDO2 credential
 
@@ -422,8 +404,8 @@ class FIDO2Verifier:
             Tuple of (success, credential_id or error_message)
         """
         try:
-            credential_id = credential_data.get('credential_id')
-            public_key = credential_data.get('public_key')
+            credential_id = credential_data.get("credential_id")
+            public_key = credential_data.get("public_key")
 
             if not credential_id or not public_key:
                 return False, "Missing credential_id or public_key"
@@ -440,17 +422,18 @@ class FIDO2Verifier:
 
                     # Validate credential ID length (typical range: 16-1024
                     # bytes)
-                    if len(credential_id_bytes) < 16 or len(
-                            credential_id_bytes) > 1024:
+                    if len(credential_id_bytes) < 16 or len(credential_id_bytes) > 1024:
                         return False, "Invalid credential_id length"
 
                     self.logger.info(
-                        f"FIDO2 credential validated and registered for extension {extension_number}")
+                        f"FIDO2 credential validated and registered for extension {extension_number}"
+                    )
                 except Exception as e:
                     return False, f"Invalid credential format: {str(e)}"
             else:
                 self.logger.info(
-                    f"FIDO2 credential registered for extension {extension_number} (basic mode)")
+                    f"FIDO2 credential registered for extension {extension_number} (basic mode)"
+                )
 
             return True, credential_id
 
@@ -458,12 +441,9 @@ class FIDO2Verifier:
             self.logger.error(f"FIDO2 registration failed: {e}")
             return False, str(e)
 
-    def verify_assertion(self,
-                         credential_id: str,
-                         assertion_data: dict,
-                         public_key: bytes,
-                         challenge: str = None) -> Tuple[bool,
-                                                         Optional[str]]:
+    def verify_assertion(
+        self, credential_id: str, assertion_data: dict, public_key: bytes, challenge: str = None
+    ) -> Tuple[bool, Optional[str]]:
         """
         Verify FIDO2 authentication assertion
 
@@ -481,12 +461,15 @@ class FIDO2Verifier:
         """
         try:
             # Extract assertion components
-            authenticator_data = assertion_data.get('authenticator_data')
-            signature = assertion_data.get('signature')
-            client_data_json = assertion_data.get('client_data_json')
+            authenticator_data = assertion_data.get("authenticator_data")
+            signature = assertion_data.get("signature")
+            client_data_json = assertion_data.get("client_data_json")
 
             if not all([authenticator_data, signature, client_data_json]):
-                return False, "Missing required assertion data (authenticator_data, signature, or client_data_json)"
+                return (
+                    False,
+                    "Missing required assertion data (authenticator_data, signature, or client_data_json)",
+                )
 
             # Decode base64-encoded data
             try:
@@ -500,7 +483,7 @@ class FIDO2Verifier:
                         client_data_json = base64.b64decode(client_data_json)
                     except Exception:
                         # If that fails, assume it's already a JSON string
-                        client_data_json = client_data_json.encode('utf-8')
+                        client_data_json = client_data_json.encode("utf-8")
                 if isinstance(public_key, str):
                     public_key = base64.b64decode(public_key)
             except Exception as e:
@@ -518,28 +501,31 @@ class FIDO2Verifier:
                     try:
                         client_data = json_lib.loads(client_data_json)
                     except (json_lib.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
-                        return False, f"Invalid client_data_json format: {
-                            str(e)}"
+                        return (
+                            False,
+                            f"Invalid client_data_json format: {
+                            str(e)}",
+                        )
 
                     # Verify challenge if provided
                     if challenge:
-                        received_challenge = client_data.get('challenge', '')
+                        received_challenge = client_data.get("challenge", "")
                         if received_challenge != challenge:
                             return False, "Challenge mismatch"
 
                     # Verify origin (check if it matches rp_id)
-                    origin = client_data.get('origin', '')
+                    origin = client_data.get("origin", "")
                     if self.rp_id not in origin:
                         self.logger.warning(
                             f"Origin {origin} does not match RP ID {
-                                self.rp_id}")
+                                self.rp_id}"
+                        )
 
                     # Parse authenticator data
                     auth_data = AuthenticatorData(authenticator_data)
 
                     # Verify RP ID hash
-                    expected_rp_id_hash = hashlib.sha256(
-                        self.rp_id.encode('utf-8')).digest()
+                    expected_rp_id_hash = hashlib.sha256(self.rp_id.encode("utf-8")).digest()
                     if auth_data.rp_id_hash != expected_rp_id_hash:
                         return False, "RP ID hash mismatch"
 
@@ -557,18 +543,21 @@ class FIDO2Verifier:
                     # Verify signature
                     # The signed data is: authenticator_data ||
                     # hash(client_data_json)
-                    client_data_hash = hashlib.sha256(
-                        client_data_json).digest()
+                    client_data_hash = hashlib.sha256(client_data_json).digest()
                     signed_data = authenticator_data + client_data_hash
 
                     try:
                         cose_key.verify(signed_data, signature)
                         self.logger.info(
-                            f"FIDO2 assertion verified successfully for credential {credential_id}")
+                            f"FIDO2 assertion verified successfully for credential {credential_id}"
+                        )
                         return True, None
                     except Exception as e:
-                        return False, f"Signature verification failed: {
-                            str(e)}"
+                        return (
+                            False,
+                            f"Signature verification failed: {
+                            str(e)}",
+                        )
 
                 except Exception as e:
                     self.logger.error(f"FIDO2 verification error: {e}")
@@ -577,15 +566,17 @@ class FIDO2Verifier:
                 # Basic verification without fido2 library
                 # At minimum, check that all required data is present and looks
                 # valid
-                if len(
-                        authenticator_data) < 37:  # Minimum size: 32 (RP ID hash) + 1 (flags) + 4 (counter)
+                if (
+                    len(authenticator_data) < 37
+                ):  # Minimum size: 32 (RP ID hash) + 1 (flags) + 4 (counter)
                     return False, "Invalid authenticator_data length"
 
                 if len(signature) < 64:  # Minimum reasonable signature length
                     return False, "Invalid signature length"
 
                 self.logger.info(
-                    f"FIDO2 assertion verified (basic mode) for credential {credential_id}")
+                    f"FIDO2 assertion verified (basic mode) for credential {credential_id}"
+                )
                 return True, None
 
         except Exception as e:
@@ -600,7 +591,7 @@ class FIDO2Verifier:
             Base64-encoded challenge (URL-safe, no padding)
         """
         challenge = secrets.token_bytes(32)
-        return base64.urlsafe_b64encode(challenge).decode('utf-8').rstrip('=')
+        return base64.urlsafe_b64encode(challenge).decode("utf-8").rstrip("=")
 
 
 class MFAManager:
@@ -622,33 +613,29 @@ class MFAManager:
         self.config = config or {}
 
         # Get FIPS mode from config
-        fips_mode = self.config.get('security.fips_mode', True)
-        enforce_fips = self.config.get('security.enforce_fips', True)
+        fips_mode = self.config.get("security.fips_mode", True)
+        enforce_fips = self.config.get("security.enforce_fips", True)
         self.encryption = get_encryption(fips_mode, enforce_fips)
 
         # MFA configuration
-        self.enabled = self.config.get('security.mfa.enabled', True)
-        self.required = self.config.get('security.mfa.required', False)
-        self.backup_codes_count = self.config.get(
-            'security.mfa.backup_codes', 10)
+        self.enabled = self.config.get("security.mfa.enabled", True)
+        self.required = self.config.get("security.mfa.required", False)
+        self.backup_codes_count = self.config.get("security.mfa.backup_codes", 10)
 
         # YubiKey configuration
-        self.yubikey_enabled = self.config.get(
-            'security.mfa.yubikey.enabled', False)
-        yubikey_client_id = self.config.get('security.mfa.yubikey.client_id')
-        yubikey_api_key = self.config.get('security.mfa.yubikey.api_key')
+        self.yubikey_enabled = self.config.get("security.mfa.yubikey.enabled", False)
+        yubikey_client_id = self.config.get("security.mfa.yubikey.client_id")
+        yubikey_api_key = self.config.get("security.mfa.yubikey.api_key")
 
         # Initialize YubiKey verifier if enabled
         if self.yubikey_enabled:
-            self.yubikey_verifier = YubiKeyOTPVerifier(
-                yubikey_client_id, yubikey_api_key)
+            self.yubikey_verifier = YubiKeyOTPVerifier(yubikey_client_id, yubikey_api_key)
             self.logger.info("YubiKey OTP support enabled")
         else:
             self.yubikey_verifier = None
 
         # FIDO2 configuration
-        self.fido2_enabled = self.config.get(
-            'security.mfa.fido2.enabled', False)
+        self.fido2_enabled = self.config.get("security.mfa.fido2.enabled", False)
 
         # Initialize FIDO2 verifier if enabled
         if self.fido2_enabled:
@@ -664,7 +651,8 @@ class MFAManager:
     def _initialize_schema(self):
         """Initialize MFA database tables"""
         # MFA secrets table
-        mfa_secrets_table = """
+        mfa_secrets_table = (
+            """
         CREATE TABLE IF NOT EXISTS mfa_secrets (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) UNIQUE NOT NULL,
@@ -676,7 +664,9 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS mfa_secrets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             extension_number VARCHAR(20) UNIQUE NOT NULL,
@@ -689,9 +679,11 @@ class MFAManager:
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         # MFA backup codes table
-        backup_codes_table = """
+        backup_codes_table = (
+            """
         CREATE TABLE IF NOT EXISTS mfa_backup_codes (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) NOT NULL,
@@ -701,7 +693,9 @@ class MFAManager:
             used_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS mfa_backup_codes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             extension_number VARCHAR(20) NOT NULL,
@@ -712,9 +706,11 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         # YubiKey registered devices table
-        yubikey_devices_table = """
+        yubikey_devices_table = (
+            """
         CREATE TABLE IF NOT EXISTS mfa_yubikey_devices (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) NOT NULL,
@@ -724,7 +720,9 @@ class MFAManager:
             last_used TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS mfa_yubikey_devices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             extension_number VARCHAR(20) NOT NULL,
@@ -735,9 +733,11 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         # FIDO2 credentials table
-        fido2_credentials_table = """
+        fido2_credentials_table = (
+            """
         CREATE TABLE IF NOT EXISTS mfa_fido2_credentials (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) NOT NULL,
@@ -748,7 +748,9 @@ class MFAManager:
             last_used TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS mfa_fido2_credentials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             extension_number VARCHAR(20) NOT NULL,
@@ -760,21 +762,18 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         try:
             self.database.execute(mfa_secrets_table)
             self.database.execute(backup_codes_table)
             self.database.execute(yubikey_devices_table)
             self.database.execute(fido2_credentials_table)
-            self.logger.info(
-                "MFA database schema initialized (TOTP, YubiKey, FIDO2)")
+            self.logger.info("MFA database schema initialized (TOTP, YubiKey, FIDO2)")
         except Exception as e:
             self.logger.error(f"Failed to initialize MFA schema: {e}")
 
-    def enroll_user(self,
-                    extension_number: str) -> Tuple[bool,
-                                                    Optional[str],
-                                                    Optional[list]]:
+    def enroll_user(self, extension_number: str) -> Tuple[bool, Optional[str], Optional[list]]:
         """
         Enroll user in MFA
 
@@ -800,13 +799,16 @@ class MFAManager:
             # Store all components as a combined encrypted blob in format:
             # nonce|tag|encrypted_data
             import base64
+
             encrypted_data, nonce, tag = nonce_tag_data  # Explicit unpacking for clarity
             secret_encrypted = base64.b64encode(
-                nonce.encode('utf-8') + b'|' +
-                tag.encode('utf-8') + b'|' +
-                encrypted_data.encode('utf-8')
-            ).decode('utf-8')
-            salt = base64.b64encode(salt).decode('utf-8')
+                nonce.encode("utf-8")
+                + b"|"
+                + tag.encode("utf-8")
+                + b"|"
+                + encrypted_data.encode("utf-8")
+            ).decode("utf-8")
+            salt = base64.b64encode(salt).decode("utf-8")
 
             # Generate backup codes
             backup_codes = self._generate_backup_codes()
@@ -814,63 +816,80 @@ class MFAManager:
             # Store in database
             if self.database and self.database.enabled:
                 # Check if already enrolled
-                query = "SELECT id, enabled FROM mfa_secrets WHERE extension_number = %s" if self.database.db_type == 'postgresql' else \
-                        "SELECT id, enabled FROM mfa_secrets WHERE extension_number = ?"
+                query = (
+                    "SELECT id, enabled FROM mfa_secrets WHERE extension_number = %s"
+                    if self.database.db_type == "postgresql"
+                    else "SELECT id, enabled FROM mfa_secrets WHERE extension_number = ?"
+                )
                 result = self.database.fetch_all(query, (extension_number,))
 
                 if result:
                     # Update existing enrollment
-                    update_query = """
+                    update_query = (
+                        """
                     UPDATE mfa_secrets
                     SET secret_encrypted = %s, secret_salt = %s, enabled = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE extension_number = %s
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     UPDATE mfa_secrets
                     SET secret_encrypted = ?, secret_salt = ?, enabled = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE extension_number = ?
                     """
+                    )
                     self.database.execute(
-                        update_query, (secret_encrypted, salt, False, extension_number))
+                        update_query, (secret_encrypted, salt, False, extension_number)
+                    )
                 else:
                     # Insert new enrollment
-                    insert_query = """
+                    insert_query = (
+                        """
                     INSERT INTO mfa_secrets (extension_number, secret_encrypted, secret_salt, enabled)
                     VALUES (%s, %s, %s, %s)
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     INSERT INTO mfa_secrets (extension_number, secret_encrypted, secret_salt, enabled)
                     VALUES (?, ?, ?, ?)
                     """
+                    )
                     self.database.execute(
-                        insert_query, (extension_number, secret_encrypted, salt, False))
+                        insert_query, (extension_number, secret_encrypted, salt, False)
+                    )
 
                 # Delete old backup codes
-                delete_query = "DELETE FROM mfa_backup_codes WHERE extension_number = %s" if self.database.db_type == 'postgresql' else \
-                               "DELETE FROM mfa_backup_codes WHERE extension_number = ?"
+                delete_query = (
+                    "DELETE FROM mfa_backup_codes WHERE extension_number = %s"
+                    if self.database.db_type == "postgresql"
+                    else "DELETE FROM mfa_backup_codes WHERE extension_number = ?"
+                )
                 self.database.execute(delete_query, (extension_number,))
 
                 # Store backup codes
                 for code in backup_codes:
                     code_hash, code_salt = self.encryption.hash_password(code)
-                    insert_query = """
+                    insert_query = (
+                        """
                     INSERT INTO mfa_backup_codes (extension_number, code_hash, code_salt)
                     VALUES (%s, %s, %s)
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     INSERT INTO mfa_backup_codes (extension_number, code_hash, code_salt)
                     VALUES (?, ?, ?)
                     """
-                    self.database.execute(
-                        insert_query, (extension_number, code_hash, code_salt))
+                    )
+                    self.database.execute(insert_query, (extension_number, code_hash, code_salt))
 
             # Generate provisioning URI
             provisioning_uri = totp.get_provisioning_uri(extension_number)
 
-            self.logger.info(
-                f"MFA enrollment initiated for extension {extension_number}")
+            self.logger.info(f"MFA enrollment initiated for extension {extension_number}")
             return True, provisioning_uri, backup_codes
 
         except Exception as e:
-            self.logger.error(
-                f"MFA enrollment failed for {extension_number}: {e}")
+            self.logger.error(f"MFA enrollment failed for {extension_number}: {e}")
             return False, None, None
 
     def verify_enrollment(self, extension_number: str, code: str) -> bool:
@@ -900,27 +919,28 @@ class MFAManager:
             if totp.verify(code):
                 # Activate MFA
                 if self.database and self.database.enabled:
-                    update_query = """
+                    update_query = (
+                        """
                     UPDATE mfa_secrets
                     SET enabled = %s, enrolled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
                     WHERE extension_number = %s
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     UPDATE mfa_secrets
                     SET enabled = ?, enrolled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
                     WHERE extension_number = ?
                     """
-                    self.database.execute(
-                        update_query, (True, extension_number))
+                    )
+                    self.database.execute(update_query, (True, extension_number))
 
-                self.logger.info(
-                    f"MFA activated for extension {extension_number}")
+                self.logger.info(f"MFA activated for extension {extension_number}")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.error(
-                f"MFA enrollment verification failed for {extension_number}: {e}")
+            self.logger.error(f"MFA enrollment verification failed for {extension_number}: {e}")
             return False
 
     def verify_code(self, extension_number: str, code: str) -> bool:
@@ -966,8 +986,7 @@ class MFAManager:
             return False
 
         except Exception as e:
-            self.logger.error(
-                f"MFA verification failed for {extension_number}: {e}")
+            self.logger.error(f"MFA verification failed for {extension_number}: {e}")
             return False
 
     def is_enabled_for_user(self, extension_number: str) -> bool:
@@ -984,18 +1003,20 @@ class MFAManager:
             return False
 
         try:
-            query = "SELECT enabled FROM mfa_secrets WHERE extension_number = %s" if self.database.db_type == 'postgresql' else \
-                    "SELECT enabled FROM mfa_secrets WHERE extension_number = ?"
+            query = (
+                "SELECT enabled FROM mfa_secrets WHERE extension_number = %s"
+                if self.database.db_type == "postgresql"
+                else "SELECT enabled FROM mfa_secrets WHERE extension_number = ?"
+            )
             result = self.database.fetch_all(query, (extension_number,))
 
             if result and len(result) > 0:
-                return bool(result[0].get('enabled', False))
+                return bool(result[0].get("enabled", False))
 
             return False
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to check MFA status for {extension_number}: {e}")
+            self.logger.error(f"Failed to check MFA status for {extension_number}: {e}")
             return False
 
     def disable_for_user(self, extension_number: str) -> bool:
@@ -1012,27 +1033,31 @@ class MFAManager:
             return False
 
         try:
-            update_query = """
+            update_query = (
+                """
             UPDATE mfa_secrets
             SET enabled = %s, updated_at = CURRENT_TIMESTAMP
             WHERE extension_number = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             UPDATE mfa_secrets
             SET enabled = ?, updated_at = CURRENT_TIMESTAMP
             WHERE extension_number = ?
             """
+            )
             self.database.execute(update_query, (False, extension_number))
 
             self.logger.info(f"MFA disabled for extension {extension_number}")
             return True
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to disable MFA for {extension_number}: {e}")
+            self.logger.error(f"Failed to disable MFA for {extension_number}: {e}")
             return False
 
-    def enroll_yubikey(self, extension_number: str, otp: str,
-                       device_name: str = None) -> Tuple[bool, Optional[str]]:
+    def enroll_yubikey(
+        self, extension_number: str, otp: str, device_name: str = None
+    ) -> Tuple[bool, Optional[str]]:
         """
         Enroll YubiKey device for user
 
@@ -1062,43 +1087,46 @@ class MFAManager:
                 return False, "Could not extract YubiKey public ID"
 
             # Check if already enrolled
-            query = """
+            query = (
+                """
             SELECT id FROM mfa_yubikey_devices
             WHERE public_id = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT id FROM mfa_yubikey_devices
             WHERE public_id = ?
             """
+            )
             result = self.database.fetch_all(query, (public_id,))
 
             if result:
                 return False, "YubiKey already enrolled"
 
             # Insert device
-            insert_query = """
+            insert_query = (
+                """
             INSERT INTO mfa_yubikey_devices (extension_number, public_id, device_name)
             VALUES (%s, %s, %s)
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             INSERT INTO mfa_yubikey_devices (extension_number, public_id, device_name)
             VALUES (?, ?, ?)
             """
-            self.database.execute(
-                insert_query, (extension_number, public_id, device_name))
+            )
+            self.database.execute(insert_query, (extension_number, public_id, device_name))
 
-            self.logger.info(
-                f"YubiKey {public_id} enrolled for extension {extension_number}")
+            self.logger.info(f"YubiKey {public_id} enrolled for extension {extension_number}")
             return True, None
 
         except Exception as e:
-            self.logger.error(
-                f"YubiKey enrollment failed for {extension_number}: {e}")
+            self.logger.error(f"YubiKey enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
-    def enroll_fido2(self,
-                     extension_number: str,
-                     credential_data: dict,
-                     device_name: str = None) -> Tuple[bool,
-                                                       Optional[str]]:
+    def enroll_fido2(
+        self, extension_number: str, credential_data: dict, device_name: str = None
+    ) -> Tuple[bool, Optional[str]]:
         """
         Enroll FIDO2/WebAuthn credential for user
 
@@ -1119,40 +1147,43 @@ class MFAManager:
         try:
             # Register credential
             success, result = self.fido2_verifier.register_credential(
-                extension_number, credential_data)
+                extension_number, credential_data
+            )
             if not success:
                 return False, result
 
             credential_id = result
-            public_key = credential_data.get('public_key')
+            public_key = credential_data.get("public_key")
 
             # Store in database
-            insert_query = """
+            insert_query = (
+                """
             INSERT INTO mfa_fido2_credentials (extension_number, credential_id, public_key, device_name)
             VALUES (%s, %s, %s, %s)
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             INSERT INTO mfa_fido2_credentials (extension_number, credential_id, public_key, device_name)
             VALUES (?, ?, ?, ?)
             """
+            )
             # Convert public_key to JSON string if it's a dict/bytes
             if isinstance(public_key, (dict, bytes)):
-                public_key = json.dumps(public_key) if isinstance(
-                    public_key, dict) else base64.b64encode(public_key).decode('utf-8')
+                public_key = (
+                    json.dumps(public_key)
+                    if isinstance(public_key, dict)
+                    else base64.b64encode(public_key).decode("utf-8")
+                )
 
             self.database.execute(
-                insert_query,
-                (extension_number,
-                 credential_id,
-                 public_key,
-                 device_name))
+                insert_query, (extension_number, credential_id, public_key, device_name)
+            )
 
-            self.logger.info(
-                f"FIDO2 credential enrolled for extension {extension_number}")
+            self.logger.info(f"FIDO2 credential enrolled for extension {extension_number}")
             return True, None
 
         except Exception as e:
-            self.logger.error(
-                f"FIDO2 enrollment failed for {extension_number}: {e}")
+            self.logger.error(f"FIDO2 enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
     def get_enrolled_methods(self, extension_number: str) -> Dict[str, List]:
@@ -1171,67 +1202,71 @@ class MFAManager:
                 'backup_codes': int (count of unused codes)
             }
         """
-        methods = {
-            'totp': False,
-            'yubikeys': [],
-            'fido2': [],
-            'backup_codes': 0
-        }
+        methods = {"totp": False, "yubikeys": [], "fido2": [], "backup_codes": 0}
 
         if not self.database or not self.database.enabled:
             return methods
 
         try:
             # Check TOTP
-            methods['totp'] = self.is_enabled_for_user(extension_number)
+            methods["totp"] = self.is_enabled_for_user(extension_number)
 
             # Get YubiKeys
             if self.yubikey_enabled:
-                query = """
+                query = (
+                    """
                 SELECT public_id, device_name, enrolled_at
                 FROM mfa_yubikey_devices
                 WHERE extension_number = %s
-                """ if self.database.db_type == 'postgresql' else """
+                """
+                    if self.database.db_type == "postgresql"
+                    else """
                 SELECT public_id, device_name, enrolled_at
                 FROM mfa_yubikey_devices
                 WHERE extension_number = ?
                 """
-                methods['yubikeys'] = self.database.fetch_all(
-                    query, (extension_number,))
+                )
+                methods["yubikeys"] = self.database.fetch_all(query, (extension_number,))
 
             # Get FIDO2 credentials
             if self.fido2_enabled:
-                query = """
+                query = (
+                    """
                 SELECT credential_id, device_name, enrolled_at
                 FROM mfa_fido2_credentials
                 WHERE extension_number = %s
-                """ if self.database.db_type == 'postgresql' else """
+                """
+                    if self.database.db_type == "postgresql"
+                    else """
                 SELECT credential_id, device_name, enrolled_at
                 FROM mfa_fido2_credentials
                 WHERE extension_number = ?
                 """
-                methods['fido2'] = self.database.fetch_all(
-                    query, (extension_number,))
+                )
+                methods["fido2"] = self.database.fetch_all(query, (extension_number,))
 
             # Get backup code count
-            query = """
+            query = (
+                """
             SELECT COUNT(*) as count
             FROM mfa_backup_codes
             WHERE extension_number = %s AND used = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT COUNT(*) as count
             FROM mfa_backup_codes
             WHERE extension_number = ? AND used = ?
             """
+            )
             result = self.database.fetch_one(query, (extension_number, False))
             if result:
-                methods['backup_codes'] = result.get('count', 0)
+                methods["backup_codes"] = result.get("count", 0)
 
             return methods
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to get enrolled methods for {extension_number}: {e}")
+            self.logger.error(f"Failed to get enrolled methods for {extension_number}: {e}")
             return methods
 
     def _verify_yubikey_otp(self, extension_number: str, otp: str) -> bool:
@@ -1249,45 +1284,50 @@ class MFAManager:
                 return False
 
             # Check if device is enrolled for this user
-            query = """
+            query = (
+                """
             SELECT id FROM mfa_yubikey_devices
             WHERE extension_number = %s AND public_id = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT id FROM mfa_yubikey_devices
             WHERE extension_number = ? AND public_id = ?
             """
-            result = self.database.fetch_all(
-                query, (extension_number, public_id))
+            )
+            result = self.database.fetch_all(query, (extension_number, public_id))
 
             if not result:
                 self.logger.warning(
-                    f"YubiKey {public_id} not enrolled for extension {extension_number}")
+                    f"YubiKey {public_id} not enrolled for extension {extension_number}"
+                )
                 return False
 
             # Verify OTP with YubiCloud
             valid, error = self.yubikey_verifier.verify_otp(otp)
             if valid:
                 # Update last used timestamp
-                update_query = """
+                update_query = (
+                    """
                 UPDATE mfa_yubikey_devices
                 SET last_used = CURRENT_TIMESTAMP
                 WHERE extension_number = %s AND public_id = %s
-                """ if self.database.db_type == 'postgresql' else """
+                """
+                    if self.database.db_type == "postgresql"
+                    else """
                 UPDATE mfa_yubikey_devices
                 SET last_used = CURRENT_TIMESTAMP
                 WHERE extension_number = ? AND public_id = ?
                 """
-                self.database.execute(
-                    update_query, (extension_number, public_id))
-                self.logger.info(
-                    f"YubiKey OTP verified for extension {extension_number}")
+                )
+                self.database.execute(update_query, (extension_number, public_id))
+                self.logger.info(f"YubiKey OTP verified for extension {extension_number}")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.error(
-                f"YubiKey verification failed for {extension_number}: {e}")
+            self.logger.error(f"YubiKey verification failed for {extension_number}: {e}")
             return False
 
     def _get_secret(self, extension_number: str) -> Optional[bytes]:
@@ -1296,96 +1336,102 @@ class MFAManager:
             return None
 
         try:
-            query = """
+            query = (
+                """
             SELECT secret_encrypted, secret_salt
             FROM mfa_secrets
             WHERE extension_number = %s AND enabled = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT secret_encrypted, secret_salt
             FROM mfa_secrets
             WHERE extension_number = ? AND enabled = ?
             """
+            )
             result = self.database.fetch_all(query, (extension_number, True))
 
             if result and len(result) > 0:
-                encrypted = result[0]['secret_encrypted']
-                salt_b64 = result[0]['secret_salt']
+                encrypted = result[0]["secret_encrypted"]
+                salt_b64 = result[0]["secret_salt"]
 
                 # Decode salt and derive key from extension number
                 import base64
+
                 salt = base64.b64decode(salt_b64)
                 key, _ = self.encryption.derive_key(extension_number, salt)
 
                 # Decode encrypted data that contains nonce|tag|encrypted_data
                 combined = base64.b64decode(encrypted)
-                parts = combined.split(b'|')
+                parts = combined.split(b"|")
                 if len(parts) != 3:
                     self.logger.error("Invalid encrypted secret format")
                     return None
 
-                nonce = parts[0].decode('utf-8')
-                tag = parts[1].decode('utf-8')
-                encrypted_data = parts[2].decode('utf-8')
+                nonce = parts[0].decode("utf-8")
+                tag = parts[1].decode("utf-8")
+                encrypted_data = parts[2].decode("utf-8")
 
                 # Decrypt using the proper method signature
-                return self.encryption.decrypt_data(
-                    encrypted_data, nonce, tag, key)
+                return self.encryption.decrypt_data(encrypted_data, nonce, tag, key)
 
             return None
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to get secret for {extension_number}: {e}")
+            self.logger.error(f"Failed to get secret for {extension_number}: {e}")
             return None
 
-    def _get_secret_for_enrollment(
-            self, extension_number: str) -> Optional[bytes]:
+    def _get_secret_for_enrollment(self, extension_number: str) -> Optional[bytes]:
         """Get decrypted secret for user during enrollment (doesn't check enabled status)"""
         if not self.database or not self.database.enabled:
             return None
 
         try:
-            query = """
+            query = (
+                """
             SELECT secret_encrypted, secret_salt
             FROM mfa_secrets
             WHERE extension_number = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT secret_encrypted, secret_salt
             FROM mfa_secrets
             WHERE extension_number = ?
             """
+            )
             result = self.database.fetch_all(query, (extension_number,))
 
             if result and len(result) > 0:
-                encrypted = result[0]['secret_encrypted']
-                salt_b64 = result[0]['secret_salt']
+                encrypted = result[0]["secret_encrypted"]
+                salt_b64 = result[0]["secret_salt"]
 
                 # Decode salt and derive key from extension number
                 import base64
+
                 salt = base64.b64decode(salt_b64)
                 key, _ = self.encryption.derive_key(extension_number, salt)
 
                 # Decode encrypted data that contains nonce|tag|encrypted_data
                 combined = base64.b64decode(encrypted)
-                parts = combined.split(b'|')
+                parts = combined.split(b"|")
                 if len(parts) != 3:
                     self.logger.error("Invalid encrypted secret format")
                     return None
 
-                nonce = parts[0].decode('utf-8')
-                tag = parts[1].decode('utf-8')
-                encrypted_data = parts[2].decode('utf-8')
+                nonce = parts[0].decode("utf-8")
+                tag = parts[1].decode("utf-8")
+                encrypted_data = parts[2].decode("utf-8")
 
                 # Decrypt using the proper method signature
-                return self.encryption.decrypt_data(
-                    encrypted_data, nonce, tag, key)
+                return self.encryption.decrypt_data(encrypted_data, nonce, tag, key)
 
             return None
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to get secret for enrollment {extension_number}: {e}")
+            self.logger.error(f"Failed to get secret for enrollment {extension_number}: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -1396,42 +1442,47 @@ class MFAManager:
 
         try:
             # Get unused backup codes
-            query = """
+            query = (
+                """
             SELECT id, code_hash, code_salt
             FROM mfa_backup_codes
             WHERE extension_number = %s AND used = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT id, code_hash, code_salt
             FROM mfa_backup_codes
             WHERE extension_number = ? AND used = ?
             """
+            )
             codes = self.database.fetch_all(query, (extension_number, False))
 
             # Check each code
             for row in codes:
-                if self.encryption.verify_password(
-                        code, row['code_hash'], row['code_salt']):
+                if self.encryption.verify_password(code, row["code_hash"], row["code_salt"]):
                     # Mark as used
-                    update_query = """
+                    update_query = (
+                        """
                     UPDATE mfa_backup_codes
                     SET used = %s, used_at = CURRENT_TIMESTAMP
                     WHERE id = %s
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     UPDATE mfa_backup_codes
                     SET used = ?, used_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                     """
-                    self.database.execute(update_query, (True, row['id']))
+                    )
+                    self.database.execute(update_query, (True, row["id"]))
 
-                    self.logger.info(
-                        f"Backup code used for extension {extension_number}")
+                    self.logger.info(f"Backup code used for extension {extension_number}")
                     return True
 
             return False
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to verify backup code for {extension_number}: {e}")
+            self.logger.error(f"Failed to verify backup code for {extension_number}: {e}")
             return False
 
     def _update_last_used(self, extension_number: str):
@@ -1440,19 +1491,22 @@ class MFAManager:
             return
 
         try:
-            update_query = """
+            update_query = (
+                """
             UPDATE mfa_secrets
             SET last_used = CURRENT_TIMESTAMP
             WHERE extension_number = %s
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             UPDATE mfa_secrets
             SET last_used = CURRENT_TIMESTAMP
             WHERE extension_number = ?
             """
+            )
             self.database.execute(update_query, (extension_number,))
         except Exception as e:
-            self.logger.error(
-                f"Failed to update last used for {extension_number}: {e}")
+            self.logger.error(f"Failed to update last used for {extension_number}: {e}")
 
     def _generate_backup_codes(self, count: int = None) -> list:
         """Generate random backup codes"""
@@ -1464,8 +1518,7 @@ class MFAManager:
             # Generate 8-character alphanumeric code
             # Excludes potentially confusing characters: 0 (zero), O (letter O), I (letter I), 1 (one)
             # This prevents user confusion when manually entering codes
-            code = ''.join(
-                secrets.choice('ABCDEFGHJKLMNPQRSTUVWXYZ23456789') for _ in range(8))
+            code = "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(8))
             # Format as XXXX-XXXX for readability
             formatted = f"{code[:4]}-{code[4:]}"
             codes.append(formatted)

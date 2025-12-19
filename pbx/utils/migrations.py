@@ -2,6 +2,7 @@
 Database migration system for PBX features
 Manages schema versioning and migrations
 """
+
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -28,23 +29,27 @@ class MigrationManager:
     def _build_migration_sql(self, template: str) -> str:
         """
         Build database-specific SQL from a template
-        
+
         Converts template placeholders to database-specific syntax.
-        
+
         Args:
             template: SQL template with placeholders
-            
+
         Returns:
             Database-specific SQL string
         """
         replacements = {
-            '{SERIAL}': 'SERIAL PRIMARY KEY' if self.db.db_type == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT',
-            '{BOOLEAN_TRUE}': 'TRUE' if self.db.db_type == 'postgresql' else '1',
-            '{BOOLEAN_FALSE}': 'FALSE' if self.db.db_type == 'postgresql' else '0',
-            '{BYTEA}': 'BYTEA' if self.db.db_type == 'postgresql' else 'BLOB',
-            '{TEXT}': 'TEXT',
+            "{SERIAL}": (
+                "SERIAL PRIMARY KEY"
+                if self.db.db_type == "postgresql"
+                else "INTEGER PRIMARY KEY AUTOINCREMENT"
+            ),
+            "{BOOLEAN_TRUE}": "TRUE" if self.db.db_type == "postgresql" else "1",
+            "{BOOLEAN_FALSE}": "FALSE" if self.db.db_type == "postgresql" else "0",
+            "{BYTEA}": "BYTEA" if self.db.db_type == "postgresql" else "BLOB",
+            "{TEXT}": "TEXT",
         }
-        
+
         result = template
         for placeholder, value in replacements.items():
             result = result.replace(placeholder, value)
@@ -59,16 +64,12 @@ class MigrationManager:
             name: Migration name/description
             sql: SQL to execute
         """
-        self.migrations.append({
-            'version': version,
-            'name': name,
-            'sql': sql
-        })
+        self.migrations.append({"version": version, "name": name, "sql": sql})
 
     def init_migrations_table(self):
         """Create migrations tracking table if it doesn't exist"""
         try:
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 sql = """
                 CREATE TABLE IF NOT EXISTS schema_migrations (
                     version INTEGER PRIMARY KEY,
@@ -100,11 +101,9 @@ class MigrationManager:
             int: Current version number
         """
         try:
-            result = self.db.fetch_one(
-                "SELECT MAX(version) as max_version FROM schema_migrations"
-            )
-            if result and result.get('max_version') is not None:
-                return result['max_version']
+            result = self.db.fetch_one("SELECT MAX(version) as max_version FROM schema_migrations")
+            if result and result.get("max_version") is not None:
+                return result["max_version"]
             return 0
         except Exception as e:
             self.logger.warning(f"Could not get current version: {e}")
@@ -125,16 +124,13 @@ class MigrationManager:
             current_version = self.get_current_version()
 
             # Sort migrations by version
-            self.migrations.sort(key=lambda x: x['version'])
+            self.migrations.sort(key=lambda x: x["version"])
 
             # Filter migrations to apply
-            pending = [
-                m for m in self.migrations
-                if m['version'] > current_version
-            ]
+            pending = [m for m in self.migrations if m["version"] > current_version]
 
             if target_version:
-                pending = [m for m in pending if m['version'] <= target_version]
+                pending = [m for m in pending if m["version"] <= target_version]
 
             if not pending:
                 self.logger.info("No pending migrations")
@@ -143,19 +139,19 @@ class MigrationManager:
             self.logger.info(f"Applying {len(pending)} migrations...")
 
             for migration in pending:
-                self.logger.info(
-                    f"Applying migration {migration['version']}: {migration['name']}"
-                )
+                self.logger.info(f"Applying migration {migration['version']}: {migration['name']}")
 
                 # Execute migration SQL
-                self.db.execute(migration['sql'])
+                self.db.execute(migration["sql"])
 
                 # Record migration
                 self.db.execute(
-                    "INSERT INTO schema_migrations (version, name) VALUES (?, ?)"
-                    if self.db.db_type == 'sqlite'
-                    else "INSERT INTO schema_migrations (version, name) VALUES (%s, %s)",
-                    (migration['version'], migration['name'])
+                    (
+                        "INSERT INTO schema_migrations (version, name) VALUES (?, ?)"
+                        if self.db.db_type == "sqlite"
+                        else "INSERT INTO schema_migrations (version, name) VALUES (%s, %s)"
+                    ),
+                    (migration["version"], migration["name"]),
                 )
 
                 self.logger.info(f"✓ Migration {migration['version']} applied")
@@ -176,30 +172,34 @@ class MigrationManager:
         """
         try:
             current_version = self.get_current_version()
-            
+
             # Get applied migrations
             applied = self.db.fetch_all(
                 "SELECT version, name, applied_at FROM schema_migrations ORDER BY version"
             )
-            applied_versions = {row['version']: row for row in (applied or [])}
+            applied_versions = {row["version"]: row for row in (applied or [])}
 
             status = []
-            for migration in sorted(self.migrations, key=lambda x: x['version']):
-                version = migration['version']
+            for migration in sorted(self.migrations, key=lambda x: x["version"]):
+                version = migration["version"]
                 if version in applied_versions:
-                    status.append({
-                        'version': version,
-                        'name': migration['name'],
-                        'status': 'applied',
-                        'applied_at': applied_versions[version]['applied_at']
-                    })
+                    status.append(
+                        {
+                            "version": version,
+                            "name": migration["name"],
+                            "status": "applied",
+                            "applied_at": applied_versions[version]["applied_at"],
+                        }
+                    )
                 else:
-                    status.append({
-                        'version': version,
-                        'name': migration['name'],
-                        'status': 'pending',
-                        'applied_at': None
-                    })
+                    status.append(
+                        {
+                            "version": version,
+                            "name": migration["name"],
+                            "status": "pending",
+                            "applied_at": None,
+                        }
+                    )
 
             return status
         except Exception as e:
@@ -215,7 +215,11 @@ def register_all_migrations(manager: MigrationManager):
         manager: MigrationManager instance
     """
     # Migration 1000: AI-Powered Features Framework
-    manager.register_migration(1000, "AI Features Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1000,
+        "AI Features Framework",
+        manager._build_migration_sql(
+            """
         -- Real-time speech analytics
         CREATE TABLE IF NOT EXISTS speech_analytics_configs (
             id {SERIAL},
@@ -262,10 +266,16 @@ def register_all_migrations(manager: MigrationManager):
             prediction_accuracy FLOAT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1001: Video Conferencing Framework
-    manager.register_migration(1001, "Video Conferencing Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1001,
+        "Video Conferencing Framework",
+        manager._build_migration_sql(
+            """
         -- Video conferencing rooms
         CREATE TABLE IF NOT EXISTS video_conference_rooms (
             id {SERIAL},
@@ -302,10 +312,16 @@ def register_all_migrations(manager: MigrationManager):
             max_bitrate INTEGER DEFAULT 2000,
             min_bitrate INTEGER DEFAULT 500
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1002: Emergency Services Framework
-    manager.register_migration(1002, "Emergency Services Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1002,
+        "Emergency Services Framework",
+        manager._build_migration_sql(
+            """
         -- Nomadic E911 locations
         CREATE TABLE IF NOT EXISTS nomadic_e911_locations (
             id {SERIAL},
@@ -347,10 +363,16 @@ def register_all_migrations(manager: MigrationManager):
             elin VARCHAR(20),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1003: Analytics & Reporting Framework
-    manager.register_migration(1003, "Analytics & Reporting Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1003,
+        "Analytics & Reporting Framework",
+        manager._build_migration_sql(
+            """
         -- BI integration configs
         CREATE TABLE IF NOT EXISTS bi_integration_configs (
             id {SERIAL},
@@ -381,10 +403,16 @@ def register_all_migrations(manager: MigrationManager):
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             auto_assigned BOOLEAN DEFAULT {BOOLEAN_FALSE}
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1004: Integration Framework
-    manager.register_migration(1004, "Integration Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1004,
+        "Integration Framework",
+        manager._build_migration_sql(
+            """
         -- HubSpot integration
         CREATE TABLE IF NOT EXISTS hubspot_integration (
             id {SERIAL},
@@ -419,10 +447,16 @@ def register_all_migrations(manager: MigrationManager):
             details TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1005: Mobile Framework
-    manager.register_migration(1005, "Mobile Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1005,
+        "Mobile Framework",
+        manager._build_migration_sql(
+            """
         -- Mobile app installations
         CREATE TABLE IF NOT EXISTS mobile_app_installations (
             id {SERIAL},
@@ -447,10 +481,16 @@ def register_all_migrations(manager: MigrationManager):
             port_date TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1006: Advanced Call Features Framework
-    manager.register_migration(1006, "Advanced Call Features Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1006,
+        "Advanced Call Features Framework",
+        manager._build_migration_sql(
+            """
         -- Call blending configurations
         CREATE TABLE IF NOT EXISTS call_blending_configs (
             id {SERIAL},
@@ -482,10 +522,16 @@ def register_all_migrations(manager: MigrationManager):
             quality_score FLOAT,
             analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1007: SIP Trunking Framework
-    manager.register_migration(1007, "SIP Trunking Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1007,
+        "SIP Trunking Framework",
+        manager._build_migration_sql(
+            """
         -- Geographic redundancy
         CREATE TABLE IF NOT EXISTS trunk_geographic_regions (
             id {SERIAL},
@@ -519,10 +565,16 @@ def register_all_migrations(manager: MigrationManager):
             security_profiles TEXT,
             enabled BOOLEAN DEFAULT {BOOLEAN_TRUE}
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1008: Collaboration Framework
-    manager.register_migration(1008, "Collaboration Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1008,
+        "Collaboration Framework",
+        manager._build_migration_sql(
+            """
         -- Team messaging
         CREATE TABLE IF NOT EXISTS team_messaging_channels (
             id {SERIAL},
@@ -563,11 +615,17 @@ def register_all_migrations(manager: MigrationManager):
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1009: Compliance Framework (SOC 2 Type 2 only)
     # Note: PCI DSS and GDPR tables commented out as not required
-    manager.register_migration(1009, "Compliance Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1009,
+        "Compliance Framework",
+        manager._build_migration_sql(
+            """
         -- SOC 2 Type 2 enhanced
         CREATE TABLE IF NOT EXISTS soc2_controls (
             id {SERIAL},
@@ -588,10 +646,16 @@ def register_all_migrations(manager: MigrationManager):
             encryption_required BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """))
+    """
+        ),
+    )
 
     # Migration 1010: Click-to-Dial Framework
-    manager.register_migration(1010, "Click-to-Dial Framework", manager._build_migration_sql("""
+    manager.register_migration(
+        1010,
+        "Click-to-Dial Framework",
+        manager._build_migration_sql(
+            """
         -- Click-to-dial configurations
         CREATE TABLE IF NOT EXISTS click_to_dial_configs (
             id {SERIAL},
@@ -614,4 +678,6 @@ def register_all_migrations(manager: MigrationManager):
             connected_at TIMESTAMP,
             status VARCHAR(20)
         );
-    """))
+    """
+        ),
+    )

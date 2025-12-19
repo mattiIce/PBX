@@ -7,11 +7,10 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
-
 
 
 def test_ad_search_users_method():
@@ -22,15 +21,15 @@ def test_ad_search_users_method():
     ad_integration = ActiveDirectoryIntegration(config)
 
     # Verify the method exists
-    assert hasattr(
-        ad_integration, 'search_users'), "AD integration should have search_users method"
+    assert hasattr(ad_integration, "search_users"), "AD integration should have search_users method"
 
     # Check the method signature
     import inspect
+
     sig = inspect.signature(ad_integration.search_users)
     params = list(sig.parameters.keys())
-    assert 'query' in params, "search_users should accept 'query' parameter"
-    assert 'max_results' in params, "search_users should accept 'max_results' parameter"
+    assert "query" in params, "search_users should accept 'query' parameter"
+    assert "max_results" in params, "search_users should accept 'max_results' parameter"
 
     print("✓ AD search_users method exists with correct signature")
     print("  Parameters: query, max_results")
@@ -41,8 +40,9 @@ def test_ad_search_users_method():
     # Check that the method is documented to search telephoneNumber
     docstring = ad_integration.search_users.__doc__
     assert docstring is not None, "search_users should have documentation"
-    assert 'phone' in docstring.lower() or 'telephone' in docstring.lower(), \
-        "Documentation should mention phone/telephone search capability"
+    assert (
+        "phone" in docstring.lower() or "telephone" in docstring.lower()
+    ), "Documentation should mention phone/telephone search capability"
 
     print("✓ Method documentation mentions phone/telephone search")
 
@@ -56,17 +56,19 @@ def test_search_filter_includes_telephone_number():
 
     import pbx.integrations.active_directory as ad_module
 
-    source = inspect.getsource(
-        ad_module.ActiveDirectoryIntegration.search_users)
+    source = inspect.getsource(ad_module.ActiveDirectoryIntegration.search_users)
 
     # Check that telephoneNumber is in the search filter
-    assert 'telephoneNumber' in source, \
-        "search_users method should search telephoneNumber attribute"
+    assert (
+        "telephoneNumber" in source
+    ), "search_users method should search telephoneNumber attribute"
 
     # Check that telephoneNumber is in the attributes list
-    assert "attributes=['sAMAccountName', 'displayName', 'mail', 'telephoneNumber']" in source or \
-           "attributes=" in source and "telephoneNumber" in source, \
-        "search_users should retrieve telephoneNumber attribute"
+    assert (
+        "attributes=['sAMAccountName', 'displayName', 'mail', 'telephoneNumber']" in source
+        or "attributes=" in source
+        and "telephoneNumber" in source
+    ), "search_users should retrieve telephoneNumber attribute"
 
     print("✓ Search filter includes telephoneNumber attribute")
     print("✓ Result attributes include telephoneNumber")
@@ -82,20 +84,21 @@ def test_api_endpoint_structure():
     from pbx.api import rest_api
 
     # Check that the handler method exists
-    assert hasattr(rest_api.PBXAPIHandler, '_handle_ad_search'), \
-        "REST API should have _handle_ad_search method"
+    assert hasattr(
+        rest_api.PBXAPIHandler, "_handle_ad_search"
+    ), "REST API should have _handle_ad_search method"
 
     # Get the method
     handler_method = rest_api.PBXAPIHandler._handle_ad_search
     source = inspect.getsource(handler_method)
 
     # Verify it calls search_users
-    assert 'search_users' in source, \
-        "_handle_ad_search should call ad_integration.search_users method"
+    assert (
+        "search_users" in source
+    ), "_handle_ad_search should call ad_integration.search_users method"
 
     # Verify it handles query parameter
-    assert "'q'" in source or '"q"' in source, \
-        "_handle_ad_search should handle 'q' query parameter"
+    assert "'q'" in source or '"q"' in source, "_handle_ad_search should handle 'q' query parameter"
 
     print("✓ REST API handler _handle_ad_search exists")
     print("✓ Handler calls search_users method")
@@ -114,17 +117,19 @@ def test_api_routing():
     source = inspect.getsource(rest_api.PBXAPIHandler.do_GET)
 
     # Check that the routing includes ad/search
-    assert '/api/integrations/ad/search' in source, \
-        "API routing should include /api/integrations/ad/search endpoint"
+    assert (
+        "/api/integrations/ad/search" in source
+    ), "API routing should include /api/integrations/ad/search endpoint"
 
-    assert '_handle_ad_search' in source, \
-        "API routing should call _handle_ad_search for the search endpoint"
+    assert (
+        "_handle_ad_search" in source
+    ), "API routing should call _handle_ad_search for the search endpoint"
 
     print("✓ API routing includes /api/integrations/ad/search")
     print("✓ Routing calls _handle_ad_search handler")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         test_ad_search_users_method()
         print()
@@ -149,5 +154,6 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"\n❌ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

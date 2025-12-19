@@ -8,10 +8,9 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.rtp.handler import RTPPlayer
-
 
 
 def test_wav_file_playback():
@@ -20,38 +19,35 @@ def test_wav_file_playback():
 
     # Create a minimal valid WAV file for testing
     # G.711 μ-law format, 8kHz, mono
-    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
         wav_file = f.name
 
         # WAV header
         # RIFF chunk
-        f.write(b'RIFF')
-        f.write(struct.pack('<I', 36 + 1000))  # file size - 8
-        f.write(b'WAVE')
+        f.write(b"RIFF")
+        f.write(struct.pack("<I", 36 + 1000))  # file size - 8
+        f.write(b"WAVE")
 
         # fmt chunk
-        f.write(b'fmt ')
-        f.write(struct.pack('<I', 18))  # fmt chunk size
-        f.write(struct.pack('<H', 7))   # audio format (7 = μ-law)
-        f.write(struct.pack('<H', 1))   # channels (1 = mono)
-        f.write(struct.pack('<I', 8000))  # sample rate
-        f.write(struct.pack('<I', 8000))  # byte rate
-        f.write(struct.pack('<H', 1))   # block align
-        f.write(struct.pack('<H', 8))   # bits per sample
-        f.write(struct.pack('<H', 0))   # extension size
+        f.write(b"fmt ")
+        f.write(struct.pack("<I", 18))  # fmt chunk size
+        f.write(struct.pack("<H", 7))  # audio format (7 = μ-law)
+        f.write(struct.pack("<H", 1))  # channels (1 = mono)
+        f.write(struct.pack("<I", 8000))  # sample rate
+        f.write(struct.pack("<I", 8000))  # byte rate
+        f.write(struct.pack("<H", 1))  # block align
+        f.write(struct.pack("<H", 8))  # bits per sample
+        f.write(struct.pack("<H", 0))  # extension size
 
         # data chunk
-        f.write(b'data')
-        f.write(struct.pack('<I', 1000))  # data size
-        f.write(b'\x7f' * 1000)  # 1000 bytes of audio data (silence in μ-law)
+        f.write(b"data")
+        f.write(struct.pack("<I", 1000))  # data size
+        f.write(b"\x7f" * 1000)  # 1000 bytes of audio data (silence in μ-law)
 
     try:
         # Create RTP player (won't actually send since we're not connected)
         player = RTPPlayer(
-            local_port=30000,
-            remote_host='127.0.0.1',
-            remote_port=30001,
-            call_id='test-call'
+            local_port=30000, remote_host="127.0.0.1", remote_port=30001, call_id="test-call"
         )
 
         # Start player
@@ -77,6 +73,7 @@ def test_wav_file_playback():
     except Exception as e:
         print(f"✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         if os.path.exists(wav_file):
             os.unlink(wav_file)
@@ -92,27 +89,27 @@ def test_call_transfer_message_building():
     try:
         # Build a REFER message
         refer_msg = SIPMessageBuilder.build_request(
-            method='REFER',
+            method="REFER",
             uri="sip:1001@192.168.1.1",
             from_addr="<sip:1002@192.168.1.1>",
             to_addr="<sip:1001@192.168.1.1>",
             call_id="test-call-123",
-            cseq=1
+            cseq=1,
         )
 
         # Add transfer-specific headers
-        refer_msg.set_header('Refer-To', '<sip:1003@192.168.1.1>')
-        refer_msg.set_header('Referred-By', '<sip:1002@192.168.1.1>')
-        refer_msg.set_header('Contact', '<sip:1002@192.168.1.1:5060>')
+        refer_msg.set_header("Refer-To", "<sip:1003@192.168.1.1>")
+        refer_msg.set_header("Referred-By", "<sip:1002@192.168.1.1>")
+        refer_msg.set_header("Contact", "<sip:1002@192.168.1.1:5060>")
 
         # Build the message
         message_text = refer_msg.build()
 
         # Verify it contains expected elements
-        assert 'REFER' in message_text, "Should contain REFER method"
-        assert 'Refer-To' in message_text, "Should contain Refer-To header"
-        assert 'Referred-By' in message_text, "Should contain Referred-By header"
-        assert 'sip:1003@192.168.1.1' in message_text, "Should contain transfer destination"
+        assert "REFER" in message_text, "Should contain REFER method"
+        assert "Refer-To" in message_text, "Should contain Refer-To header"
+        assert "Referred-By" in message_text, "Should contain Referred-By header"
+        assert "sip:1003@192.168.1.1" in message_text, "Should contain transfer destination"
 
         print("✓ REFER message built successfully")
         print(f"  Message preview: {message_text[:100]}...")
@@ -123,6 +120,7 @@ def test_call_transfer_message_building():
     except Exception as e:
         print(f"✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

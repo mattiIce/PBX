@@ -8,11 +8,10 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-
 
 
 def test_index_creation_with_permission_error():
@@ -20,16 +19,13 @@ def test_index_creation_with_permission_error():
     print("Testing repeated table creation (simulates permission scenario)...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -62,15 +58,12 @@ def test_table_already_exists_handling():
     """Test that 'already exists' errors are handled gracefully"""
     print("Testing 'already exists' error handling...")
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -93,24 +86,19 @@ def test_critical_vs_non_critical_errors():
     """Test that critical and non-critical errors are handled differently"""
     print("Testing critical vs non-critical error handling...")
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
 
         # Test non-critical permission error (should return True)
         result = db._execute_with_context(
-            "CREATE INDEX test_idx ON test_table(col)",
-            "index creation",
-            critical=False
+            "CREATE INDEX test_idx ON test_table(col)", "index creation", critical=False
         )
         # Should fail but be handled gracefully
         # In real scenario with permission error, it would return True
@@ -119,9 +107,7 @@ def test_critical_vs_non_critical_errors():
 
         # Test critical error (should return False and log error)
         result = db._execute_with_context(
-            "INVALID SQL SYNTAX HERE",
-            "critical operation",
-            critical=True
+            "INVALID SQL SYNTAX HERE", "critical operation", critical=True
         )
         assert result is False
 
@@ -156,6 +142,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 
@@ -167,6 +154,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

@@ -1,12 +1,14 @@
 """
 Call management and session handling
 """
+
 from datetime import datetime
 from enum import Enum
 
 
 class CallState(Enum):
     """Call states"""
+
     IDLE = "idle"
     CALLING = "calling"
     RINGING = "ringing"

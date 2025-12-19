@@ -21,11 +21,7 @@ class MockPBXCore:
         self.config = config
 
     def get_status(self):
-        return {
-            'registered_extensions': 0,
-            'active_calls': 0,
-            'uptime': 0
-        }
+        return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
 def test_api_server_restart():
@@ -46,12 +42,12 @@ def test_api_server_restart():
 
     # First start
     print("1. Starting API server (first time)...")
-    api_server1 = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+    api_server1 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
     if not api_server1.start():
         print("  ✗ Failed to start API server (first time)")
         return False
     print("  ✓ API server started successfully")
-    
+
     # Give it a moment to fully start
     time.sleep(0.5)
 
@@ -59,18 +55,18 @@ def test_api_server_restart():
     print("2. Stopping API server...")
     api_server1.stop()
     print("  ✓ API server stopped")
-    
+
     # Wait a brief moment for cleanup
     time.sleep(0.5)
 
     # Immediate restart - this should succeed with SO_REUSEADDR
     print("3. Restarting API server (should reuse address)...")
-    api_server2 = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+    api_server2 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
     if not api_server2.start():
         print("  ✗ Failed to restart API server - Address already in use?")
         return False
     print("  ✓ API server restarted successfully (socket reused)")
-    
+
     # Give it a moment
     time.sleep(0.5)
 
@@ -103,38 +99,38 @@ def test_failed_start_cleanup():
 
     # Start a server successfully first
     print("1. Starting API server...")
-    api_server1 = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+    api_server1 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
     if not api_server1.start():
         print("  ✗ Failed to start API server")
         return False
     print("  ✓ API server started successfully")
-    
+
     time.sleep(0.5)
 
     # Try to start another server on the same port (should fail)
     print("2. Attempting to start second server on same port (should fail)...")
-    api_server2 = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+    api_server2 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
     if api_server2.start():
         print("  ✗ Second server should have failed to start")
         api_server2.stop()
         api_server1.stop()
         return False
     print("  ✓ Second server correctly failed to start")
-    
+
     # Verify the second server cleaned up properly
     if api_server2.server is not None:
         print("  ✗ Failed server didn't clean up (server object still exists)")
         api_server1.stop()
         return False
     print("  ✓ Failed server properly cleaned up")
-    
+
     # Verify running flag was reset
     if api_server2.running:
         print("  ✗ Failed server didn't reset running flag")
         api_server1.stop()
         return False
     print("  ✓ Failed server reset running flag")
-    
+
     # Verify thread reference was cleared
     if api_server2.server_thread is not None:
         print("  ✗ Failed server didn't clear thread reference")
@@ -146,17 +142,17 @@ def test_failed_start_cleanup():
     print("3. Stopping first server...")
     api_server1.stop()
     print("  ✓ First server stopped")
-    
+
     time.sleep(0.5)
 
     # Now the second server should be able to start
     print("4. Starting new server after cleanup...")
-    api_server3 = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+    api_server3 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
     if not api_server3.start():
         print("  ✗ Failed to start server after cleanup")
         return False
     print("  ✓ Server started successfully after cleanup")
-    
+
     time.sleep(0.5)
     api_server3.stop()
 
@@ -166,7 +162,7 @@ def test_failed_start_cleanup():
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("API Server Restart Tests")
     print("=" * 60 + "\n")

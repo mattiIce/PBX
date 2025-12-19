@@ -9,11 +9,10 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-
 
 
 def test_extensions_columns_migration():
@@ -21,7 +20,7 @@ def test_extensions_columns_migration():
     print("Testing extensions table schema migration...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
@@ -31,7 +30,8 @@ def test_extensions_columns_migration():
         cursor = conn.cursor()
 
         # Create old schema without voicemail_pin_hash and voicemail_pin_salt
-        cursor.execute("""
+        cursor.execute(
+            """
         CREATE TABLE extensions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             number VARCHAR(20) UNIQUE NOT NULL,
@@ -47,7 +47,8 @@ def test_extensions_columns_migration():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
@@ -59,17 +60,14 @@ def test_extensions_columns_migration():
         conn.close()
 
         print(f"  Initial columns: {columns}")
-        assert 'voicemail_pin_hash' not in columns, "voicemail_pin_hash should not exist initially"
-        assert 'voicemail_pin_salt' not in columns, "voicemail_pin_salt should not exist initially"
-        assert 'password_salt' not in columns, "password_salt should not exist initially"
+        assert "voicemail_pin_hash" not in columns, "voicemail_pin_hash should not exist initially"
+        assert "voicemail_pin_salt" not in columns, "voicemail_pin_salt should not exist initially"
+        assert "password_salt" not in columns, "password_salt should not exist initially"
         print("  ✓ Old schema confirmed (missing voicemail PIN columns)")
 
         # Now connect with DatabaseBackend which should trigger migration
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -89,9 +87,13 @@ def test_extensions_columns_migration():
         conn.close()
 
         print(f"  Columns after migration: {columns_after}")
-        assert 'voicemail_pin_hash' in columns_after, "voicemail_pin_hash should exist after migration"
-        assert 'voicemail_pin_salt' in columns_after, "voicemail_pin_salt should exist after migration"
-        assert 'password_salt' in columns_after, "password_salt should exist after migration"
+        assert (
+            "voicemail_pin_hash" in columns_after
+        ), "voicemail_pin_hash should exist after migration"
+        assert (
+            "voicemail_pin_salt" in columns_after
+        ), "voicemail_pin_salt should exist after migration"
+        assert "password_salt" in columns_after, "password_salt should exist after migration"
         print("  ✓ Migration added missing columns")
 
         print("✓ Extensions table schema migration test passed")
@@ -107,16 +109,13 @@ def test_extensions_columns_already_exist():
     print("Testing extensions migration with existing columns...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -132,9 +131,9 @@ def test_extensions_columns_already_exist():
         columns = [row[1] for row in cursor.fetchall()]
         conn.close()
 
-        assert 'voicemail_pin_hash' in columns
-        assert 'voicemail_pin_salt' in columns
-        assert 'password_salt' in columns
+        assert "voicemail_pin_hash" in columns
+        assert "voicemail_pin_salt" in columns
+        assert "password_salt" in columns
         print(f"  Columns present: {columns}")
 
         # Run create_tables again - should not fail (migration runs internally)
@@ -156,14 +155,15 @@ def test_insert_with_voicemail_pin():
     print("Testing extension insertion with voicemail PIN...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # First, create old schema without voicemail_pin columns
         conn = sqlite3.connect(temp_db.name)
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
         CREATE TABLE extensions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             number VARCHAR(20) UNIQUE NOT NULL,
@@ -176,16 +176,14 @@ def test_insert_with_voicemail_pin():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
         # Connect with DatabaseBackend to trigger migration
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -198,8 +196,17 @@ def test_insert_with_voicemail_pin():
                               voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        params = ('1001', 'Test User', 'test@example.com', 'hash123', 1,
-                  'pin_hash', 'pin_salt', 0, None)
+        params = (
+            "1001",
+            "Test User",
+            "test@example.com",
+            "hash123",
+            1,
+            "pin_hash",
+            "pin_salt",
+            0,
+            None,
+        )
 
         result = db.execute(query, params)
         assert result is True, "Should be able to insert with voicemail PIN columns"
@@ -207,11 +214,11 @@ def test_insert_with_voicemail_pin():
 
         # Verify the data was inserted
         verify_query = "SELECT number, name, voicemail_pin_hash, voicemail_pin_salt FROM extensions WHERE number = ?"
-        row = db.fetch_one(verify_query, ('1001',))
+        row = db.fetch_one(verify_query, ("1001",))
         assert row is not None, "Extension should be found"
-        assert row['number'] == '1001'
-        assert row['voicemail_pin_hash'] == 'pin_hash'
-        assert row['voicemail_pin_salt'] == 'pin_salt'
+        assert row["number"] == "1001"
+        assert row["voicemail_pin_hash"] == "pin_hash"
+        assert row["voicemail_pin_salt"] == "pin_salt"
         print("  ✓ Data verified in database")
 
         db.disconnect()
@@ -247,6 +254,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
             print()
@@ -258,6 +266,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

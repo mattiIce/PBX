@@ -12,10 +12,9 @@ import time
 import yaml
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.pbx import PBXCore
-
 
 
 def test_pbx_shutdown():
@@ -24,46 +23,31 @@ def test_pbx_shutdown():
 
     # Create a minimal config file
     config_data = {
-        'server': {
-            'sip_host': '127.0.0.1',
-            'sip_port': 15060,  # Use non-standard port for testing
-            'external_ip': '127.0.0.1',
-            'rtp_port_range_start': 20000,
-            'rtp_port_range_end': 20100
+        "server": {
+            "sip_host": "127.0.0.1",
+            "sip_port": 15060,  # Use non-standard port for testing
+            "external_ip": "127.0.0.1",
+            "rtp_port_range_start": 20000,
+            "rtp_port_range_end": 20100,
         },
-        'api': {
-            'host': '127.0.0.1',
-            'port': 18080  # Use non-standard port for testing
-        },
-        'logging': {
-            'level': 'ERROR',  # Reduce log noise during testing
-            'console': False
-        },
-        'extensions': [
+        "api": {"host": "127.0.0.1", "port": 18080},  # Use non-standard port for testing
+        "logging": {"level": "ERROR", "console": False},  # Reduce log noise during testing
+        "extensions": [
             {
-                'number': '1001',
-                'name': 'Test User',
-                'password': 'test1001',
-                'email': 'test@example.com'
+                "number": "1001",
+                "name": "Test User",
+                "password": "test1001",
+                "email": "test@example.com",
             }
         ],
-        'dialplan': {
-            'internal_pattern': '^1[0-9]{3}$'
-        },
-        'features': {
-            'call_recording': False,
-            'voicemail': False
-        },
-        'voicemail': {
-            'storage_path': '/tmp/test_voicemail'
-        },
-        'provisioning': {
-            'enabled': False
-        }
+        "dialplan": {"internal_pattern": "^1[0-9]{3}$"},
+        "features": {"call_recording": False, "voicemail": False},
+        "voicemail": {"storage_path": "/tmp/test_voicemail"},
+        "provisioning": {"enabled": False},
     }
 
     # Write config to temporary file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
         yaml.dump(config_data, f)
         config_file = f.name
 
@@ -105,46 +89,31 @@ def test_signal_handling_simulation():
 
     # Create a minimal config file
     config_data = {
-        'server': {
-            'sip_host': '127.0.0.1',
-            'sip_port': 15061,  # Use different port
-            'external_ip': '127.0.0.1',
-            'rtp_port_range_start': 20100,
-            'rtp_port_range_end': 20200
+        "server": {
+            "sip_host": "127.0.0.1",
+            "sip_port": 15061,  # Use different port
+            "external_ip": "127.0.0.1",
+            "rtp_port_range_start": 20100,
+            "rtp_port_range_end": 20200,
         },
-        'api': {
-            'host': '127.0.0.1',
-            'port': 18081  # Use different port
-        },
-        'logging': {
-            'level': 'ERROR',
-            'console': False
-        },
-        'extensions': [
+        "api": {"host": "127.0.0.1", "port": 18081},  # Use different port
+        "logging": {"level": "ERROR", "console": False},
+        "extensions": [
             {
-                'number': '1001',
-                'name': 'Test User',
-                'password': 'test1001',
-                'email': 'test@example.com'
+                "number": "1001",
+                "name": "Test User",
+                "password": "test1001",
+                "email": "test@example.com",
             }
         ],
-        'dialplan': {
-            'internal_pattern': '^1[0-9]{3}$'
-        },
-        'features': {
-            'call_recording': False,
-            'voicemail': False
-        },
-        'voicemail': {
-            'storage_path': '/tmp/test_voicemail'
-        },
-        'provisioning': {
-            'enabled': False
-        }
+        "dialplan": {"internal_pattern": "^1[0-9]{3}$"},
+        "features": {"call_recording": False, "voicemail": False},
+        "voicemail": {"storage_path": "/tmp/test_voicemail"},
+        "provisioning": {"enabled": False},
     }
 
     # Write config to temporary file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
         yaml.dump(config_data, f)
         config_file = f.name
 

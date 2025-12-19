@@ -2,6 +2,7 @@
 Microsoft Outlook Integration
 Provides calendar sync, contact sync, and presence integration
 """
+
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -9,12 +10,14 @@ from pbx.utils.logger import get_logger
 
 try:
     import requests
+
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
 
 try:
     import msal
+
     MSAL_AVAILABLE = True
 except ImportError:
     MSAL_AVAILABLE = False
@@ -32,30 +35,29 @@ class OutlookIntegration:
         """
         self.logger = get_logger()
         self.config = config
-        self.enabled = config.get('integrations.outlook.enabled', False)
-        self.tenant_id = config.get('integrations.outlook.tenant_id')
-        self.client_id = config.get('integrations.outlook.client_id')
-        self.client_secret = config.get('integrations.outlook.client_secret')
-        self.sync_interval = config.get(
-            'integrations.outlook.sync_interval',
-            300)  # 5 minutes
-        self.auto_dnd_in_meetings = config.get(
-            'integrations.outlook.auto_dnd_in_meetings', True)
-        self.graph_endpoint = 'https://graph.microsoft.com/v1.0'
-        self.scopes = config.get('integrations.outlook.scopes', [
-            'https://graph.microsoft.com/.default'
-        ])
+        self.enabled = config.get("integrations.outlook.enabled", False)
+        self.tenant_id = config.get("integrations.outlook.tenant_id")
+        self.client_id = config.get("integrations.outlook.client_id")
+        self.client_secret = config.get("integrations.outlook.client_secret")
+        self.sync_interval = config.get("integrations.outlook.sync_interval", 300)  # 5 minutes
+        self.auto_dnd_in_meetings = config.get("integrations.outlook.auto_dnd_in_meetings", True)
+        self.graph_endpoint = "https://graph.microsoft.com/v1.0"
+        self.scopes = config.get(
+            "integrations.outlook.scopes", ["https://graph.microsoft.com/.default"]
+        )
         self.access_token = None
         self.msal_app = None
 
         if self.enabled:
             if not REQUESTS_AVAILABLE:
                 self.logger.error(
-                    "Outlook integration requires 'requests' library. Install with: pip install requests")
+                    "Outlook integration requires 'requests' library. Install with: pip install requests"
+                )
                 self.enabled = False
             elif not MSAL_AVAILABLE:
                 self.logger.error(
-                    "Outlook integration requires 'msal' library. Install with: pip install msal")
+                    "Outlook integration requires 'msal' library. Install with: pip install msal"
+                )
                 self.enabled = False
             else:
                 self.logger.info("Outlook integration enabled")
@@ -70,9 +72,7 @@ class OutlookIntegration:
         try:
             authority = f"https://login.microsoftonline.com/{self.tenant_id}"
             self.msal_app = msal.ConfidentialClientApplication(
-                self.client_id,
-                authority=authority,
-                client_credential=self.client_secret
+                self.client_id, authority=authority, client_credential=self.client_secret
             )
         except Exception as e:
             self.logger.error(f"Failed to initialize MSAL: {e}")
@@ -105,20 +105,16 @@ class OutlookIntegration:
             else:
                 error = result.get("error", "Unknown error")
                 error_desc = result.get("error_description", "")
-                self.logger.error(
-                    f"Authentication failed: {error} - {error_desc}")
+                self.logger.error(f"Authentication failed: {error} - {error_desc}")
                 return False
 
         except Exception as e:
-            self.logger.error(
-                f"Error authenticating with Microsoft Graph: {e}")
+            self.logger.error(f"Error authenticating with Microsoft Graph: {e}")
             return False
 
     def get_calendar_events(
-            self,
-            user_email: str,
-            start_time: str = None,
-            end_time: str = None) -> List[Dict]:
+        self, user_email: str, start_time: str = None, end_time: str = None
+    ) -> List[Dict]:
         """
         Get calendar events for a user
 
@@ -138,11 +134,11 @@ class OutlookIntegration:
 
         # Default to today's events if not specified
         if not start_time:
-            start_time = datetime.now().replace(
-                hour=0, minute=0, second=0).isoformat() + 'Z'
+            start_time = datetime.now().replace(hour=0, minute=0, second=0).isoformat() + "Z"
         if not end_time:
-            end_time = (datetime.now() + timedelta(days=1)
-                        ).replace(hour=0, minute=0, second=0).isoformat() + 'Z'
+            end_time = (datetime.now() + timedelta(days=1)).replace(
+                hour=0, minute=0, second=0
+            ).isoformat() + "Z"
 
         try:
             self.logger.info(f"Fetching calendar events for {user_email}")
@@ -150,39 +146,44 @@ class OutlookIntegration:
             url = f"{
                 self.graph_endpoint}/users/{user_email}/calendar/calendarView"
             headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
             }
             params = {
-                'startDateTime': start_time,
-                'endDateTime': end_time,
-                '$select': 'subject,start,end,location,organizer,isAllDay,isCancelled'}
+                "startDateTime": start_time,
+                "endDateTime": end_time,
+                "$select": "subject,start,end,location,organizer,isAllDay,isCancelled",
+            }
 
-            response = requests.get(
-                url, headers=headers, params=params, timeout=10)
+            response = requests.get(url, headers=headers, params=params, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
                 events = []
-                for event in data.get('value', []):
+                for event in data.get("value", []):
                     events.append(
                         {
-                            'subject': event.get('subject'), 'start': event.get(
-                                'start', {}).get('dateTime'), 'end': event.get(
-                                'end', {}).get('dateTime'), 'location': event.get(
-                                'location', {}).get('displayName'), 'organizer': event.get(
-                                'organizer', {}).get(
-                                'emailAddress', {}).get('name'), 'is_all_day': event.get(
-                                'isAllDay', False), 'is_cancelled': event.get(
-                                    'isCancelled', False)})
+                            "subject": event.get("subject"),
+                            "start": event.get("start", {}).get("dateTime"),
+                            "end": event.get("end", {}).get("dateTime"),
+                            "location": event.get("location", {}).get("displayName"),
+                            "organizer": event.get("organizer", {})
+                            .get("emailAddress", {})
+                            .get("name"),
+                            "is_all_day": event.get("isAllDay", False),
+                            "is_cancelled": event.get("isCancelled", False),
+                        }
+                    )
 
                 self.logger.info(
                     f"Found {
-                        len(events)} calendar events for {user_email}")
+                        len(events)} calendar events for {user_email}"
+                )
                 return events
             else:
                 self.logger.error(
-                    f"Failed to fetch calendar events: {response.status_code} - {response.text}")
+                    f"Failed to fetch calendar events: {response.status_code} - {response.text}"
+                )
                 return []
 
         except Exception as e:
@@ -213,19 +214,17 @@ class OutlookIntegration:
         if events:
             # User has active or upcoming meeting
             for event in events:
-                if not event.get('is_cancelled'):
+                if not event.get("is_cancelled"):
                     # Parse event times as timezone-aware
-                    event_start = datetime.fromisoformat(
-                        event['start'].replace('Z', '+00:00'))
-                    event_end = datetime.fromisoformat(
-                        event['end'].replace('Z', '+00:00'))
+                    event_start = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
+                    event_end = datetime.fromisoformat(event["end"].replace("Z", "+00:00"))
 
                     if event_start <= now <= event_end:
                         return "busy"
 
         # Check out of office status
         ooo = self.get_out_of_office_status(user_email)
-        if ooo and ooo.get('status') == 'scheduled':
+        if ooo and ooo.get("status") == "scheduled":
             return "out_of_office"
 
         return "available"
@@ -251,44 +250,45 @@ class OutlookIntegration:
 
             url = f"{self.graph_endpoint}/users/{user_email}/contacts"
             headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
             }
-            params = {
-                '$select': 'displayName,emailAddresses,businessPhones,mobilePhone,homePhones'}
+            params = {"$select": "displayName,emailAddresses,businessPhones,mobilePhone,homePhones"}
 
-            response = requests.get(
-                url, headers=headers, params=params, timeout=10)
+            response = requests.get(url, headers=headers, params=params, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
                 contacts = []
-                for contact in data.get('value', []):
+                for contact in data.get("value", []):
                     # Extract primary email
-                    emails = contact.get('emailAddresses', [])
-                    primary_email = emails[0].get(
-                        'address') if emails else None
+                    emails = contact.get("emailAddresses", [])
+                    primary_email = emails[0].get("address") if emails else None
 
                     # Extract phone numbers
-                    business_phones = contact.get('businessPhones', [])
-                    mobile_phone = contact.get('mobilePhone')
-                    home_phones = contact.get('homePhones', [])
+                    business_phones = contact.get("businessPhones", [])
+                    mobile_phone = contact.get("mobilePhone")
+                    home_phones = contact.get("homePhones", [])
 
-                    contacts.append({
-                        'name': contact.get('displayName'),
-                        'email': primary_email,
-                        'business_phone': business_phones[0] if business_phones else None,
-                        'mobile_phone': mobile_phone,
-                        'home_phone': home_phones[0] if home_phones else None
-                    })
+                    contacts.append(
+                        {
+                            "name": contact.get("displayName"),
+                            "email": primary_email,
+                            "business_phone": business_phones[0] if business_phones else None,
+                            "mobile_phone": mobile_phone,
+                            "home_phone": home_phones[0] if home_phones else None,
+                        }
+                    )
 
                 self.logger.info(
                     f"Synced {
-                        len(contacts)} contacts for {user_email}")
+                        len(contacts)} contacts for {user_email}"
+                )
                 return contacts
             else:
                 self.logger.error(
-                    f"Failed to sync contacts: {response.status_code} - {response.text}")
+                    f"Failed to sync contacts: {response.status_code} - {response.text}"
+                )
                 return []
 
         except Exception as e:
@@ -317,23 +317,20 @@ class OutlookIntegration:
             url = f"{self.graph_endpoint}/users/{user_email}/calendar/events"
 
             headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
             }
 
             # Extract call details
-            from_number = call_details.get('from', 'Unknown')
-            to_number = call_details.get('to', 'Unknown')
-            duration = call_details.get('duration', 0)
-            timestamp = call_details.get(
-                'timestamp', datetime.now(
-                    timezone.utc).isoformat())
-            direction = call_details.get('direction', 'inbound')
+            from_number = call_details.get("from", "Unknown")
+            to_number = call_details.get("to", "Unknown")
+            duration = call_details.get("duration", 0)
+            timestamp = call_details.get("timestamp", datetime.now(timezone.utc).isoformat())
+            direction = call_details.get("direction", "inbound")
 
             # Parse timestamp
             if isinstance(timestamp, str):
-                start_time = datetime.fromisoformat(
-                    timestamp.replace('Z', '+00:00'))
+                start_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             else:
                 start_time = datetime.now(timezone.utc)
 
@@ -342,38 +339,31 @@ class OutlookIntegration:
 
             # Create event body
             event_body = {
-                'subject': f'Phone Call - {from_number if direction == "inbound" else to_number}',
-                'body': {
-                    'contentType': 'text',
-                    'content': f'Phone call details:\n'
-                    f'Direction: {direction}\n'
-                    f'From: {from_number}\n'
-                    f'To: {to_number}\n'
-                    f'Duration: {duration} seconds'
+                "subject": f'Phone Call - {from_number if direction == "inbound" else to_number}',
+                "body": {
+                    "contentType": "text",
+                    "content": f"Phone call details:\n"
+                    f"Direction: {direction}\n"
+                    f"From: {from_number}\n"
+                    f"To: {to_number}\n"
+                    f"Duration: {duration} seconds",
                 },
-                'start': {
-                    'dateTime': start_time.isoformat(),
-                    'timeZone': 'UTC'
-                },
-                'end': {
-                    'dateTime': end_time.isoformat(),
-                    'timeZone': 'UTC'
-                },
-                'categories': ['Phone Call'],
-                'isReminderOn': False
+                "start": {"dateTime": start_time.isoformat(), "timeZone": "UTC"},
+                "end": {"dateTime": end_time.isoformat(), "timeZone": "UTC"},
+                "categories": ["Phone Call"],
+                "isReminderOn": False,
             }
 
             self.logger.info(f"Logging call to calendar for {user_email}")
-            response = requests.post(
-                url, headers=headers, json=event_body, timeout=10)
+            response = requests.post(url, headers=headers, json=event_body, timeout=10)
 
             if response.status_code == 201:
-                self.logger.info(
-                    f"Successfully logged call to calendar for {user_email}")
+                self.logger.info(f"Successfully logged call to calendar for {user_email}")
                 return True
             else:
                 self.logger.warning(
-                    f"Failed to log call to calendar: {response.status_code} - {response.text}")
+                    f"Failed to log call to calendar: {response.status_code} - {response.text}"
+                )
                 return False
 
         except Exception as e:
@@ -400,8 +390,8 @@ class OutlookIntegration:
             url = f"{
                 self.graph_endpoint}/users/{user_email}/mailboxSettings/automaticRepliesSetting"
             headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
             }
 
             response = requests.get(url, headers=headers, timeout=10)
@@ -410,16 +400,17 @@ class OutlookIntegration:
                 data = response.json()
                 return {
                     # disabled, alwaysEnabled, scheduled
-                    'status': data.get('status'),
-                    'external_reply': data.get('externalReplyMessage'),
-                    'internal_reply': data.get('internalReplyMessage'),
-                    'scheduled_start': data.get('scheduledStartDateTime', {}).get('dateTime'),
-                    'scheduled_end': data.get('scheduledEndDateTime', {}).get('dateTime')
+                    "status": data.get("status"),
+                    "external_reply": data.get("externalReplyMessage"),
+                    "internal_reply": data.get("internalReplyMessage"),
+                    "scheduled_start": data.get("scheduledStartDateTime", {}).get("dateTime"),
+                    "scheduled_end": data.get("scheduledEndDateTime", {}).get("dateTime"),
                 }
             else:
                 self.logger.error(
                     f"Failed to get OOO status: {
-                        response.status_code}")
+                        response.status_code}"
+                )
                 return None
 
         except Exception as e:
@@ -427,12 +418,13 @@ class OutlookIntegration:
             return None
 
     def send_meeting_reminder(
-            self,
-            user_email: str,
-            meeting_id: str,
-            minutes_before: int = 5,
-            pbx_core=None,
-            extension_number: str = None):
+        self,
+        user_email: str,
+        meeting_id: str,
+        minutes_before: int = 5,
+        pbx_core=None,
+        extension_number: str = None,
+    ):
         """
         Send a phone notification for upcoming meeting
 
@@ -458,7 +450,8 @@ class OutlookIntegration:
             return False
 
         self.logger.info(
-            f"Scheduling meeting reminder for {user_email} ({minutes_before} min before)")
+            f"Scheduling meeting reminder for {user_email} ({minutes_before} min before)"
+        )
 
         # Get meeting details if needed
         try:
@@ -469,8 +462,8 @@ class OutlookIntegration:
             url = f"{
                 self.graph_endpoint}/users/{user_email}/calendar/events/{meeting_id}"
             headers = {
-                'Authorization': f'Bearer {self.access_token}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
             }
 
             response = requests.get(url, headers=headers, timeout=10)
@@ -478,12 +471,13 @@ class OutlookIntegration:
             if response.status_code != 200:
                 self.logger.warning(
                     f"Failed to fetch meeting details: {
-                        response.status_code}")
+                        response.status_code}"
+                )
                 return False
 
             meeting = response.json()
-            subject = meeting.get('subject', 'Upcoming Meeting')
-            start_time_str = meeting.get('start', {}).get('dateTime', '')
+            subject = meeting.get("subject", "Upcoming Meeting")
+            start_time_str = meeting.get("start", {}).get("dateTime", "")
 
             if not start_time_str:
                 self.logger.error("Meeting has no start time")
@@ -492,19 +486,16 @@ class OutlookIntegration:
             # Parse meeting start time - handle various ISO formats
             try:
                 # Try with 'Z' suffix (Zulu time)
-                if start_time_str.endswith('Z'):
-                    start_time = datetime.fromisoformat(
-                        start_time_str.replace('Z', '+00:00'))
+                if start_time_str.endswith("Z"):
+                    start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
                 # Try direct ISO format parsing
-                elif '+' in start_time_str or start_time_str.endswith('+00:00'):
+                elif "+" in start_time_str or start_time_str.endswith("+00:00"):
                     start_time = datetime.fromisoformat(start_time_str)
                 else:
                     # Assume UTC if no timezone specified
-                    start_time = datetime.fromisoformat(
-                        start_time_str).replace(tzinfo=timezone.utc)
+                    start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
             except ValueError as e:
-                self.logger.error(
-                    f"Failed to parse meeting start time '{start_time_str}': {e}")
+                self.logger.error(f"Failed to parse meeting start time '{start_time_str}': {e}")
                 return False
 
             reminder_time = start_time - timedelta(minutes=minutes_before)
@@ -519,7 +510,8 @@ class OutlookIntegration:
 
             self.logger.info(
                 f"Meeting '{subject}' reminder scheduled for {reminder_time} (in {
-                    delay_seconds:.0f} seconds)")
+                    delay_seconds:.0f} seconds)"
+            )
 
             # If PBX core provided, schedule the reminder
             # NOTE: This uses threading.Timer which is lost on application restart.
@@ -530,21 +522,17 @@ class OutlookIntegration:
             # - Cron jobs for scheduled tasks
             if pbx_core:
                 # Find extension by email if not provided
-                if not extension_number and hasattr(
-                        pbx_core, 'extension_registry'):
+                if not extension_number and hasattr(pbx_core, "extension_registry"):
                     for ext_num, ext in pbx_core.extension_registry.extensions.items():
-                        if hasattr(ext, 'config') and ext.config.get(
-                                'email') == user_email:
+                        if hasattr(ext, "config") and ext.config.get("email") == user_email:
                             extension_number = ext_num
                             break
 
                 if not extension_number:
-                    self.logger.error(
-                        f"Could not find extension for email {user_email}")
+                    self.logger.error(f"Could not find extension for email {user_email}")
                     return False
 
-                self.logger.info(
-                    f"Will call extension {extension_number} at reminder time")
+                self.logger.info(f"Will call extension {extension_number} at reminder time")
 
                 # Schedule the reminder using threading
                 import threading
@@ -553,7 +541,8 @@ class OutlookIntegration:
                     """Execute the reminder call"""
                     try:
                         self.logger.info(
-                            f"Sending meeting reminder to extension {extension_number}")
+                            f"Sending meeting reminder to extension {extension_number}"
+                        )
 
                         # In production, this would:
                         # 1. Originate a call to the extension
@@ -570,24 +559,23 @@ class OutlookIntegration:
                         )
 
                         # If trunk system available, could originate call here
-                        if hasattr(pbx_core, 'call_manager'):
+                        if hasattr(pbx_core, "call_manager"):
                             self.logger.info(
-                                f"Call reminder system ready for extension {extension_number}")
+                                f"Call reminder system ready for extension {extension_number}"
+                            )
                             # In production:
                             # pbx_core.originate_call(extension_number,
                             # 'reminder', message)
 
                     except Exception as e:
-                        self.logger.error(
-                            f"Error sending meeting reminder: {e}")
+                        self.logger.error(f"Error sending meeting reminder: {e}")
 
                 # Schedule the timer
                 timer = threading.Timer(delay_seconds, send_reminder)
                 timer.daemon = True  # Don't block shutdown
                 timer.start()
 
-                self.logger.info(
-                    f"Meeting reminder scheduled successfully for {extension_number}")
+                self.logger.info(f"Meeting reminder scheduled successfully for {extension_number}")
                 return True
             else:
                 # No PBX core - just log the intent
@@ -604,5 +592,6 @@ class OutlookIntegration:
         except Exception as e:
             self.logger.error(f"Error scheduling meeting reminder: {e}")
             import traceback
+
             traceback.print_exc()
             return False

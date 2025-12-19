@@ -2,6 +2,7 @@
 Active Directory / LDAP Integration
 Provides SSO, user provisioning, and group-based permissions
 """
+
 import re
 import secrets
 from typing import Dict, List, Optional
@@ -11,6 +12,7 @@ from pbx.utils.logger import get_logger
 try:
     import ldap3
     from ldap3 import ALL, SUBTREE, Connection, Server
+
     LDAP3_AVAILABLE = True
 except ImportError:
     LDAP3_AVAILABLE = False
@@ -28,26 +30,24 @@ class ActiveDirectoryIntegration:
         """
         self.logger = get_logger()
         self.config = config
-        self.enabled = config.get(
-            'integrations.active_directory.enabled', False)
+        self.enabled = config.get("integrations.active_directory.enabled", False)
         self.ldap_server = config.get(
-            'integrations.active_directory.server',
-            config.get('integrations.active_directory.ldap_server'))
-        self.base_dn = config.get('integrations.active_directory.base_dn')
-        self.bind_dn = config.get('integrations.active_directory.bind_dn')
-        self.bind_password = config.get(
-            'integrations.active_directory.bind_password')
-        self.use_ssl = config.get(
-            'integrations.active_directory.use_ssl', True)
-        self.auto_provision = config.get(
-            'integrations.active_directory.auto_provision', False)
+            "integrations.active_directory.server",
+            config.get("integrations.active_directory.ldap_server"),
+        )
+        self.base_dn = config.get("integrations.active_directory.base_dn")
+        self.bind_dn = config.get("integrations.active_directory.bind_dn")
+        self.bind_password = config.get("integrations.active_directory.bind_password")
+        self.use_ssl = config.get("integrations.active_directory.use_ssl", True)
+        self.auto_provision = config.get("integrations.active_directory.auto_provision", False)
         self.connection = None
         self.server = None
 
         if self.enabled:
             if not LDAP3_AVAILABLE:
                 self.logger.error(
-                    "Active Directory integration requires 'ldap3' library. Install with: pip install ldap3")
+                    "Active Directory integration requires 'ldap3' library. Install with: pip install ldap3"
+                )
                 self.enabled = False
             else:
                 self.logger.info("Active Directory integration enabled")
@@ -65,22 +65,18 @@ class ActiveDirectoryIntegration:
         if self.connection and self.connection.bound:
             return True
 
-        if not all([self.ldap_server, self.base_dn,
-                   self.bind_dn, self.bind_password]):
-            self.logger.error(
-                "Active Directory credentials not configured properly")
+        if not all([self.ldap_server, self.base_dn, self.bind_dn, self.bind_password]):
+            self.logger.error("Active Directory credentials not configured properly")
             return False
 
         try:
             self.logger.info(
                 f"Connecting to Active Directory: {
-                    self.ldap_server}")
+                    self.ldap_server}"
+            )
 
             # Create server object
-            self.server = Server(
-                self.ldap_server,
-                get_info=ALL,
-                use_ssl=self.use_ssl)
+            self.server = Server(self.ldap_server, get_info=ALL, use_ssl=self.use_ssl)
 
             # Create connection
             self.connection = Connection(
@@ -88,7 +84,7 @@ class ActiveDirectoryIntegration:
                 user=self.bind_dn,
                 password=self.bind_password,
                 auto_bind=True,
-                raise_exceptions=True
+                raise_exceptions=True,
             )
 
             if self.connection.bound:
@@ -103,10 +99,7 @@ class ActiveDirectoryIntegration:
             self.connection = None
             return False
 
-    def authenticate_user(
-            self,
-            username: str,
-            password: str) -> Optional[Dict]:
+    def authenticate_user(self, username: str, password: str) -> Optional[Dict]:
         """
         Authenticate user against Active Directory
 
@@ -128,21 +121,19 @@ class ActiveDirectoryIntegration:
 
             # Search for user - escape username to prevent LDAP injection
             from ldap3.utils.conv import escape_filter_chars
+
             safe_username = escape_filter_chars(username)
             search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
             user_search_base = self.config.get(
-                'integrations.active_directory.user_search_base', self.base_dn)
+                "integrations.active_directory.user_search_base", self.base_dn
+            )
 
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=[
-                    'sAMAccountName',
-                    'displayName',
-                    'mail',
-                    'telephoneNumber',
-                    'memberOf'])
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
+            )
 
             if not self.connection.entries:
                 self.logger.warning(f"User not found: {username}")
@@ -153,52 +144,42 @@ class ActiveDirectoryIntegration:
 
             # Attempt to bind with user credentials
             user_conn = Connection(
-                self.server,
-                user=user_dn,
-                password=password,
-                auto_bind=True,
-                raise_exceptions=True
+                self.server, user=user_dn, password=password, auto_bind=True, raise_exceptions=True
             )
 
             if user_conn.bound:
-                self.logger.info(
-                    f"User authenticated successfully: {username}")
+                self.logger.info(f"User authenticated successfully: {username}")
                 user_conn.unbind()
 
                 # Return user information
                 return {
-                    'username': str(
-                        user_entry.sAMAccountName),
-                    'display_name': str(
-                        user_entry.displayName) if hasattr(
-                        user_entry,
-                        'displayName') else username,
-                    'email': str(
-                        user_entry.mail) if hasattr(
-                        user_entry,
-                        'mail') else None,
-                    'phone': str(
-                        user_entry.telephoneNumber) if hasattr(
-                        user_entry,
-                        'telephoneNumber') else None,
-                    'groups': [
-                        str(g) for g in user_entry.memberOf] if hasattr(
-                        user_entry,
-                        'memberOf') else []}
+                    "username": str(user_entry.sAMAccountName),
+                    "display_name": (
+                        str(user_entry.displayName)
+                        if hasattr(user_entry, "displayName")
+                        else username
+                    ),
+                    "email": str(user_entry.mail) if hasattr(user_entry, "mail") else None,
+                    "phone": (
+                        str(user_entry.telephoneNumber)
+                        if hasattr(user_entry, "telephoneNumber")
+                        else None
+                    ),
+                    "groups": (
+                        [str(g) for g in user_entry.memberOf]
+                        if hasattr(user_entry, "memberOf")
+                        else []
+                    ),
+                }
             else:
-                self.logger.warning(
-                    f"Authentication failed for user: {username}")
+                self.logger.warning(f"Authentication failed for user: {username}")
                 return None
 
         except Exception as e:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(
-            self,
-            extension_registry=None,
-            extension_db=None,
-            phone_provisioning=None):
+    def sync_users(self, extension_registry=None, extension_db=None, phone_provisioning=None):
         """
         Synchronize users from Active Directory
 
@@ -218,35 +199,30 @@ class ActiveDirectoryIntegration:
             return 0
 
         try:
-            self.logger.info(
-                "Starting user synchronization from Active Directory...")
+            self.logger.info("Starting user synchronization from Active Directory...")
 
             # Get user search base
             user_search_base = self.config.get(
-                'integrations.active_directory.user_search_base', self.base_dn)
+                "integrations.active_directory.user_search_base", self.base_dn
+            )
 
             # Search for all users with telephoneNumber attribute
             # Using objectClass=user and filtering for accounts with phone
             # numbers
-            search_filter = '(&(objectClass=user)(telephoneNumber=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))'
+            search_filter = "(&(objectClass=user)(telephoneNumber=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
 
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=[
-                    'sAMAccountName',
-                    'displayName',
-                    'mail',
-                    'telephoneNumber',
-                    'memberOf'])
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
+            )
 
             if not self.connection.entries:
                 self.logger.warning("No users found in Active Directory")
                 return 0
 
-            self.logger.info(
-                f"Found {len(self.connection.entries)} users in Active Directory")
+            self.logger.info(f"Found {len(self.connection.entries)} users in Active Directory")
 
             # Use database if available, otherwise fall back to config.yml
             use_database = extension_db is not None
@@ -254,14 +230,11 @@ class ActiveDirectoryIntegration:
             if use_database:
                 self.logger.info("Syncing to database")
             else:
-                self.logger.info(
-                    "Syncing to config.yml (database not available)")
+                self.logger.info("Syncing to config.yml (database not available)")
                 # Get PBX config for updating extensions
                 from pbx.utils.config import Config
-                pbx_config = Config(
-                    self.config.get(
-                        'config_file',
-                        'config.yml'))
+
+                pbx_config = Config(self.config.get("config_file", "config.yml"))
 
             synced_count = 0
             created_count = 0
@@ -273,42 +246,42 @@ class ActiveDirectoryIntegration:
 
             for entry in self.connection.entries:
                 try:
-                    username = str(
-                        entry.sAMAccountName) if hasattr(
-                        entry, 'sAMAccountName') else None
-                    display_name = str(
-                        entry.displayName) if hasattr(
-                        entry, 'displayName') else username
-                    email = str(entry.mail) if hasattr(entry, 'mail') else None
-                    phone_number = str(
-                        entry.telephoneNumber) if hasattr(
-                        entry, 'telephoneNumber') else None
+                    username = (
+                        str(entry.sAMAccountName) if hasattr(entry, "sAMAccountName") else None
+                    )
+                    display_name = (
+                        str(entry.displayName) if hasattr(entry, "displayName") else username
+                    )
+                    email = str(entry.mail) if hasattr(entry, "mail") else None
+                    phone_number = (
+                        str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else None
+                    )
 
                     # Skip if no username or phone number
                     if not username or not phone_number:
-                        self.logger.debug(
-                            f"Skipping user {username}: missing required fields")
+                        self.logger.debug(f"Skipping user {username}: missing required fields")
                         skipped_count += 1
                         continue
 
                     # Use phone number as extension number (Option A)
                     # Clean phone number to get just digits (remove spaces,
                     # dashes, etc.)
-                    extension_number = re.sub(r'[^0-9]', '', phone_number)
+                    extension_number = re.sub(r"[^0-9]", "", phone_number)
 
                     # Validate extension number
                     if not extension_number or len(extension_number) < 3:
                         self.logger.warning(
-                            f"Skipping user {username}: invalid extension number from phone {phone_number}")
+                            f"Skipping user {username}: invalid extension number from phone {phone_number}"
+                        )
                         skipped_count += 1
                         continue
 
                     ad_extension_numbers.add(extension_number)
 
                     # Get user's AD groups and map to PBX permissions
-                    user_groups = [
-                        str(g) for g in entry.memberOf] if hasattr(
-                        entry, 'memberOf') else []
+                    user_groups = (
+                        [str(g) for g in entry.memberOf] if hasattr(entry, "memberOf") else []
+                    )
                     permissions = self._map_groups_to_permissions(user_groups)
 
                     # Check if extension exists (database or config depending
@@ -316,13 +289,13 @@ class ActiveDirectoryIntegration:
                     if use_database:
                         existing_ext = extension_db.get(extension_number)
                     else:
-                        existing_ext = pbx_config.get_extension(
-                            extension_number)
+                        existing_ext = pbx_config.get_extension(extension_number)
 
                     if existing_ext:
                         # Update existing extension
                         self.logger.debug(
-                            f"Updating extension {extension_number} for user {username}")
+                            f"Updating extension {extension_number} for user {username}"
+                        )
 
                         if use_database:
                             # Update in database with explicit parameters
@@ -333,16 +306,16 @@ class ActiveDirectoryIntegration:
                                 name=display_name,
                                 email=email,
                                 ad_synced=True,
-                                ad_username=username
+                                ad_username=username,
                                 # Don't update password - keep existing
                             )
 
                             # Store permissions in extension config if update succeeded
                             # Database may not have columns for all permissions, so we store them
                             # in the extension's config field if available
-                            if success and hasattr(extension_db, 'get'):
+                            if success and hasattr(extension_db, "get"):
                                 ext_data = extension_db.get(extension_number)
-                                if ext_data and 'config' in ext_data:
+                                if ext_data and "config" in ext_data:
                                     # Permissions can be stored in config JSON
                                     # field
                                     pass  # Database implementation handles this
@@ -351,13 +324,13 @@ class ActiveDirectoryIntegration:
                             success = pbx_config.update_extension(
                                 number=extension_number,
                                 name=display_name,
-                                email=email
+                                email=email,
                                 # Don't update password - keep existing
                             )
                             if success:
                                 # Mark as AD-synced and apply permissions in
                                 # config
-                                existing_ext['ad_synced'] = True
+                                existing_ext["ad_synced"] = True
                                 for perm_key, perm_value in permissions.items():
                                     existing_ext[perm_key] = perm_value
 
@@ -371,45 +344,44 @@ class ActiveDirectoryIntegration:
                                 if ext:
                                     ext.name = display_name
                                     if email:
-                                        ext.config['email'] = email
-                                    ext.config['ad_synced'] = True
+                                        ext.config["email"] = email
+                                    ext.config["ad_synced"] = True
                                     # Apply permissions to live registry
                                     for perm_key, perm_value in permissions.items():
                                         ext.config[perm_key] = perm_value
 
                             # Log permissions if any were applied
                             if permissions:
-                                perm_list = ', '.join(
-                                    [k for k, v in permissions.items() if v])
+                                perm_list = ", ".join([k for k, v in permissions.items() if v])
                                 self.logger.info(
-                                    f"Applied permissions to extension {extension_number}: {perm_list}")
+                                    f"Applied permissions to extension {extension_number}: {perm_list}"
+                                )
                         else:
-                            self.logger.warning(
-                                f"Failed to update extension {extension_number}")
+                            self.logger.warning(f"Failed to update extension {extension_number}")
                     else:
                         # Create new extension with random 4-digit password
                         # Note: 4-digit passwords meet user requirement but provide limited security
                         # Consider using longer passwords for production
                         # environments
-                        random_password = ''.join(
-                            [str(secrets.randbelow(10)) for _ in range(4)])
+                        random_password = "".join([str(secrets.randbelow(10)) for _ in range(4)])
 
                         # Log extension creation without exposing password
                         self.logger.info(
-                            f"Creating extension {extension_number} for user {username}")
+                            f"Creating extension {extension_number} for user {username}"
+                        )
                         # Password can be retrieved from database or reset via
                         # admin interface
 
                         # Build extension data with permissions
                         ext_data = {
-                            'number': extension_number,
-                            'name': display_name,
-                            'email': email or None,
-                            'password_hash': random_password,
-                            'allow_external': True,
-                            'voicemail_pin': None,
-                            'ad_synced': True,
-                            'ad_username': username
+                            "number": extension_number,
+                            "name": display_name,
+                            "email": email or None,
+                            "password_hash": random_password,
+                            "allow_external": True,
+                            "voicemail_pin": None,
+                            "ad_synced": True,
+                            "ad_username": username,
                         }
 
                         # Add permissions to extension data
@@ -427,17 +399,16 @@ class ActiveDirectoryIntegration:
                             success = pbx_config.add_extension(
                                 number=extension_number,
                                 name=display_name,
-                                email=email or '',
+                                email=email or "",
                                 password=random_password,
-                                allow_external=True
+                                allow_external=True,
                             )
                             if success:
                                 # Mark newly created extension as AD-synced and
                                 # apply permissions
-                                new_ext_config = pbx_config.get_extension(
-                                    extension_number)
+                                new_ext_config = pbx_config.get_extension(extension_number)
                                 if new_ext_config:
-                                    new_ext_config['ad_synced'] = True
+                                    new_ext_config["ad_synced"] = True
                                     for perm_key, perm_value in permissions.items():
                                         new_ext_config[perm_key] = perm_value
 
@@ -448,31 +419,30 @@ class ActiveDirectoryIntegration:
                             # Add to live registry if provided
                             if extension_registry:
                                 from pbx.features.extensions import Extension
+
                                 ext_config = {
-                                    'number': extension_number,
-                                    'name': display_name,
-                                    'email': email or '',
-                                    'password': random_password,
-                                    'allow_external': True,
-                                    'ad_synced': True
+                                    "number": extension_number,
+                                    "name": display_name,
+                                    "email": email or "",
+                                    "password": random_password,
+                                    "allow_external": True,
+                                    "ad_synced": True,
                                 }
                                 # Apply permissions to config
                                 for perm_key, perm_value in permissions.items():
                                     ext_config[perm_key] = perm_value
 
-                                new_ext = Extension(
-                                    extension_number, display_name, ext_config)
+                                new_ext = Extension(extension_number, display_name, ext_config)
                                 extension_registry.extensions[extension_number] = new_ext
 
                             # Log permissions if any were applied
                             if permissions:
-                                perm_list = ', '.join(
-                                    [k for k, v in permissions.items() if v])
+                                perm_list = ", ".join([k for k, v in permissions.items() if v])
                                 self.logger.info(
-                                    f"Applied permissions to new extension {extension_number}: {perm_list}")
+                                    f"Applied permissions to new extension {extension_number}: {perm_list}"
+                                )
                         else:
-                            self.logger.warning(
-                                f"Failed to create extension {extension_number}")
+                            self.logger.warning(f"Failed to create extension {extension_number}")
 
                 except Exception as e:
                     user_desc = username if username else "unknown"
@@ -481,9 +451,7 @@ class ActiveDirectoryIntegration:
 
             # Deactivate extensions for users removed from AD
             deactivated_count = 0
-            if self.config.get(
-                'integrations.active_directory.deactivate_removed_users',
-                    True):
+            if self.config.get("integrations.active_directory.deactivate_removed_users", True):
                 self.logger.info("Checking for removed users to deactivate...")
 
                 if use_database:
@@ -494,35 +462,31 @@ class ActiveDirectoryIntegration:
                     all_extensions = pbx_config.get_extensions()
 
                 for ext in all_extensions:
-                    ext_number = ext.get('number')
+                    ext_number = ext.get("number")
                     # Only check extensions that could be AD-synced (numeric,
                     # reasonable length)
                     if ext_number and ext_number.isdigit() and len(ext_number) >= 3:
                         if ext_number not in ad_extension_numbers:
                             # Check if extension has AD metadata marker
-                            if ext.get('ad_synced', False):
+                            if ext.get("ad_synced", False):
                                 self.logger.info(
-                                    f"Deactivating extension {ext_number} (user removed from AD)")
+                                    f"Deactivating extension {ext_number} (user removed from AD)"
+                                )
                                 # Mark as inactive instead of deleting
                                 # Keep ad_synced=True so we know it was
                                 # previously managed by AD
 
                                 if use_database:
-                                    extension_db.update(
-                                        number=ext_number,
-                                        allow_external=False
-                                    )
+                                    extension_db.update(number=ext_number, allow_external=False)
                                 else:
                                     pbx_config.update_extension(
-                                        number=ext_number,
-                                        allow_external=False
+                                        number=ext_number, allow_external=False
                                     )
 
                                 if extension_registry:
-                                    registry_ext = extension_registry.get(
-                                        ext_number)
+                                    registry_ext = extension_registry.get(ext_number)
                                     if registry_ext:
-                                        registry_ext.config['allow_external'] = False
+                                        registry_ext.config["allow_external"] = False
                                         # Keep ad_synced=True to maintain
                                         # history
                                 deactivated_count += 1
@@ -542,7 +506,8 @@ class ActiveDirectoryIntegration:
             # from AD
             if phone_provisioning and (updated_count > 0 or created_count > 0):
                 self.logger.info(
-                    "Auto-provisioning: Automatically triggering phone reboots to update display names from AD sync...")
+                    "Auto-provisioning: Automatically triggering phone reboots to update display names from AD sync..."
+                )
 
                 # Find extensions that have provisioned devices and were updated
                 # Use set for O(1) lookup performance with many devices
@@ -554,35 +519,27 @@ class ActiveDirectoryIntegration:
 
                 if devices_to_reboot:
                     self.logger.info(
-                        f"Auto-provisioning: Will reboot {len(devices_to_reboot)} phones to apply AD name changes")
+                        f"Auto-provisioning: Will reboot {len(devices_to_reboot)} phones to apply AD name changes"
+                    )
                     # Store the extensions to reboot for later trigger
                     # This will be picked up by the sync caller to trigger
                     # actual reboots
-                    return {
-                        'synced_count': synced_count,
-                        'extensions_to_reboot': devices_to_reboot
-                    }
+                    return {"synced_count": synced_count, "extensions_to_reboot": devices_to_reboot}
                 else:
                     self.logger.info(
-                        "Auto-provisioning: No provisioned devices found for updated extensions")
+                        "Auto-provisioning: No provisioned devices found for updated extensions"
+                    )
 
-            return {
-                'synced_count': synced_count,
-                'extensions_to_reboot': []
-            }
+            return {"synced_count": synced_count, "extensions_to_reboot": []}
 
         except Exception as e:
-            self.logger.error(
-                f"Error synchronizing users from Active Directory: {e}")
+            self.logger.error(f"Error synchronizing users from Active Directory: {e}")
             import traceback
-            traceback.print_exc()
-            return {
-                'synced_count': 0,
-                'extensions_to_reboot': []
-            }
 
-    def _map_groups_to_permissions(
-            self, user_groups: List[str]) -> Dict[str, bool]:
+            traceback.print_exc()
+            return {"synced_count": 0, "extensions_to_reboot": []}
+
+    def _map_groups_to_permissions(self, user_groups: List[str]) -> Dict[str, bool]:
         """
         Map AD groups to PBX permissions based on configuration
 
@@ -596,7 +553,8 @@ class ActiveDirectoryIntegration:
 
         # Get group permissions configuration
         group_permissions_config = self.config.get(
-            'integrations.active_directory.group_permissions', {})
+            "integrations.active_directory.group_permissions", {}
+        )
 
         if not group_permissions_config:
             self.logger.debug("No group permissions configured")
@@ -607,8 +565,8 @@ class ActiveDirectoryIntegration:
         for group in user_groups:
             normalized_user_groups.add(group)  # Add full DN
             # Also add just the CN part for easier matching
-            if group.startswith('CN='):
-                cn_end = group.find(',')
+            if group.startswith("CN="):
+                cn_end = group.find(",")
                 if cn_end > 0:
                     cn_name = group[3:cn_end]
                     normalized_user_groups.add(cn_name)
@@ -616,8 +574,8 @@ class ActiveDirectoryIntegration:
         # Check each configured group mapping
         for group_dn, perms in group_permissions_config.items():
             # Extract CN from configured group DN for flexible matching
-            if group_dn.startswith('CN='):
-                cn_end = group_dn.find(',')
+            if group_dn.startswith("CN="):
+                cn_end = group_dn.find(",")
                 if cn_end > 0:
                     config_group_cn = group_dn[3:cn_end]
                 else:
@@ -627,8 +585,7 @@ class ActiveDirectoryIntegration:
 
             # Check if user is in this group (match by DN or CN)
             if group_dn in normalized_user_groups or config_group_cn in normalized_user_groups:
-                self.logger.debug(
-                    f"User is member of configured group: {group_dn}")
+                self.logger.debug(f"User is member of configured group: {group_dn}")
                 # Apply permissions from this group
                 if isinstance(perms, list):
                     for perm in perms:
@@ -659,16 +616,18 @@ class ActiveDirectoryIntegration:
 
             # Search for user - escape username to prevent LDAP injection
             from ldap3.utils.conv import escape_filter_chars
+
             safe_username = escape_filter_chars(username)
             search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
             user_search_base = self.config.get(
-                'integrations.active_directory.user_search_base', self.base_dn)
+                "integrations.active_directory.user_search_base", self.base_dn
+            )
 
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=['memberOf']
+                attributes=["memberOf"],
             )
 
             if not self.connection.entries:
@@ -679,13 +638,13 @@ class ActiveDirectoryIntegration:
 
             # Extract group names from DNs
             groups = []
-            if hasattr(user_entry, 'memberOf'):
+            if hasattr(user_entry, "memberOf"):
                 for group_dn in user_entry.memberOf:
                     # Extract CN from DN (e.g.,
                     # "CN=Sales,OU=Groups,DC=domain,DC=local" -> "Sales")
                     dn_str = str(group_dn)
-                    if dn_str.startswith('CN='):
-                        cn_end = dn_str.find(',')
+                    if dn_str.startswith("CN="):
+                        cn_end = dn_str.find(",")
                         if cn_end > 0:
                             group_name = dn_str[3:cn_end]
                             groups.append(group_name)
@@ -719,6 +678,7 @@ class ActiveDirectoryIntegration:
 
             # Escape query to prevent LDAP injection
             from ldap3.utils.conv import escape_filter_chars
+
             safe_query = escape_filter_chars(query)
 
             # Build search filter for multiple attributes
@@ -729,32 +689,35 @@ class ActiveDirectoryIntegration:
             )
 
             user_search_base = self.config.get(
-                'integrations.active_directory.user_search_base', self.base_dn)
+                "integrations.active_directory.user_search_base", self.base_dn
+            )
 
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=[
-                    'sAMAccountName',
-                    'displayName',
-                    'mail',
-                    'telephoneNumber'],
-                size_limit=max_results)
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber"],
+                size_limit=max_results,
+            )
 
             results = []
             for entry in self.connection.entries:
                 results.append(
                     {
-                        'username': str(
-                            entry.sAMAccountName), 'display_name': str(
-                            entry.displayName) if hasattr(
-                            entry, 'displayName') else str(
-                            entry.sAMAccountName), 'email': str(
-                            entry.mail) if hasattr(
-                                entry, 'mail') else None, 'phone': str(
-                                    entry.telephoneNumber) if hasattr(
-                                        entry, 'telephoneNumber') else None})
+                        "username": str(entry.sAMAccountName),
+                        "display_name": (
+                            str(entry.displayName)
+                            if hasattr(entry, "displayName")
+                            else str(entry.sAMAccountName)
+                        ),
+                        "email": str(entry.mail) if hasattr(entry, "mail") else None,
+                        "phone": (
+                            str(entry.telephoneNumber)
+                            if hasattr(entry, "telephoneNumber")
+                            else None
+                        ),
+                    }
+                )
 
             self.logger.info(f"Found {len(results)} users matching: {query}")
             return results
@@ -784,16 +747,18 @@ class ActiveDirectoryIntegration:
 
             # Search for user - escape username to prevent LDAP injection
             from ldap3.utils.conv import escape_filter_chars
+
             safe_username = escape_filter_chars(username)
             search_filter = f"(&(objectClass=user)(sAMAccountName={safe_username}))"
             user_search_base = self.config.get(
-                'integrations.active_directory.user_search_base', self.base_dn)
+                "integrations.active_directory.user_search_base", self.base_dn
+            )
 
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=['thumbnailPhoto']
+                attributes=["thumbnailPhoto"],
             )
 
             if not self.connection.entries:
@@ -803,13 +768,12 @@ class ActiveDirectoryIntegration:
             user_entry = self.connection.entries[0]
 
             # Return photo bytes if available
-            if hasattr(
-                    user_entry,
-                    'thumbnailPhoto') and user_entry.thumbnailPhoto.value:
+            if hasattr(user_entry, "thumbnailPhoto") and user_entry.thumbnailPhoto.value:
                 photo_data = user_entry.thumbnailPhoto.value
                 self.logger.info(
                     f"Retrieved photo for user {username} ({
-                        len(photo_data)} bytes)")
+                        len(photo_data)} bytes)"
+                )
                 return photo_data
             else:
                 self.logger.info(f"No photo available for user {username}")

@@ -16,7 +16,6 @@ from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
 
-
 class MockPBXCore:
     """Mock PBX core for testing"""
 
@@ -41,12 +40,12 @@ def create_mock_config_with_ssl(cert_file, key_file):
     original_get = config.get
 
     def mock_get(key, default=None):
-        if key == 'api.ssl':
+        if key == "api.ssl":
             return {
-                'enabled': True,
-                'cert_file': cert_file,
-                'key_file': key_file,
-                'ca': {'enabled': False}
+                "enabled": True,
+                "cert_file": cert_file,
+                "key_file": key_file,
+                "ca": {"enabled": False},
             }
         return original_get(key, default)
 
@@ -78,12 +77,12 @@ def test_ssl_enabled_missing_certificates():
     original_get = config.get
 
     def mock_get(key, default=None):
-        if key == 'api.ssl':
+        if key == "api.ssl":
             return {
-                'enabled': True,
-                'cert_file': 'certs/nonexistent_server.crt',
-                'key_file': 'certs/nonexistent_server.key',
-                'ca': {'enabled': False}
+                "enabled": True,
+                "cert_file": "certs/nonexistent_server.crt",
+                "key_file": "certs/nonexistent_server.key",
+                "ca": {"enabled": False},
             }
         return original_get(key, default)
 
@@ -98,7 +97,7 @@ def test_ssl_enabled_missing_certificates():
     print()
 
     # Create API server - should handle missing certificates gracefully
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=8083)
+    api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8083)
 
     print("Checking API server state:")
     print(f"  SSL enabled in config: True")
@@ -183,12 +182,12 @@ def test_ssl_enabled_with_valid_certificates():
     original_get = config.get
 
     def mock_get(key, default=None):
-        if key == 'api.ssl':
+        if key == "api.ssl":
             return {
-                'enabled': True,
-                'cert_file': cert_file,
-                'key_file': key_file,
-                'ca': {'enabled': False}
+                "enabled": True,
+                "cert_file": cert_file,
+                "key_file": key_file,
+                "ca": {"enabled": False},
             }
         return original_get(key, default)
 
@@ -202,7 +201,7 @@ def test_ssl_enabled_with_valid_certificates():
     print()
 
     # Create API server
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=8084)
+    api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8084)
 
     print("Checking API server state:")
     print(f"  SSL enabled in config: True")
@@ -255,10 +254,8 @@ def main():
     print()
 
     tests = [
-        ("SSL Enabled with Missing Certificates",
-         test_ssl_enabled_missing_certificates),
-        ("SSL Enabled with Valid Certificates",
-         test_ssl_enabled_with_valid_certificates),
+        ("SSL Enabled with Missing Certificates", test_ssl_enabled_missing_certificates),
+        ("SSL Enabled with Valid Certificates", test_ssl_enabled_with_valid_certificates),
     ]
 
     passed = 0
@@ -275,6 +272,7 @@ def main():
             failed += 1
             print(f"✗ Test error in {test_name}: {e}\n")
             import traceback
+
             traceback.print_exc()
 
     print("=" * 80)

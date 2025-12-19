@@ -2,9 +2,11 @@
 Database layer for Predictive Dialing
 Provides persistence for campaigns, contacts, and call results
 """
+
 import json
-from typing import Dict, List, Optional
 from datetime import datetime
+from typing import Dict, List, Optional
+
 from pbx.utils.logger import get_logger
 
 
@@ -13,21 +15,21 @@ class PredictiveDialingDatabase:
     Database layer for predictive dialing
     Stores campaigns, contacts, call attempts, and statistics
     """
-    
+
     def __init__(self, db_backend):
         """
         Initialize database layer
-        
+
         Args:
             db_backend: DatabaseBackend instance
         """
         self.logger = get_logger()
         self.db = db_backend
-        
+
     def create_tables(self):
         """Create tables for predictive dialing"""
         try:
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 sql_campaigns = """
                 CREATE TABLE IF NOT EXISTS dialing_campaigns (
                     id SERIAL PRIMARY KEY,
@@ -46,7 +48,7 @@ class PredictiveDialingDatabase:
                     failed_calls INTEGER DEFAULT 0
                 )
                 """
-                
+
                 sql_contacts = """
                 CREATE TABLE IF NOT EXISTS dialing_contacts (
                     id SERIAL PRIMARY KEY,
@@ -62,7 +64,7 @@ class PredictiveDialingDatabase:
                     UNIQUE(campaign_id, contact_id)
                 )
                 """
-                
+
                 sql_attempts = """
                 CREATE TABLE IF NOT EXISTS dialing_attempts (
                     id SERIAL PRIMARY KEY,
@@ -77,7 +79,7 @@ class PredictiveDialingDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_stats = """
                 CREATE TABLE IF NOT EXISTS dialing_statistics (
                     id SERIAL PRIMARY KEY,
@@ -111,7 +113,7 @@ class PredictiveDialingDatabase:
                     failed_calls INTEGER DEFAULT 0
                 )
                 """
-                
+
                 sql_contacts = """
                 CREATE TABLE IF NOT EXISTS dialing_contacts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -128,7 +130,7 @@ class PredictiveDialingDatabase:
                     FOREIGN KEY (campaign_id) REFERENCES dialing_campaigns(campaign_id) ON DELETE CASCADE
                 )
                 """
-                
+
                 sql_attempts = """
                 CREATE TABLE IF NOT EXISTS dialing_attempts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -143,7 +145,7 @@ class PredictiveDialingDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_stats = """
                 CREATE TABLE IF NOT EXISTS dialing_statistics (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -159,27 +161,27 @@ class PredictiveDialingDatabase:
                     FOREIGN KEY (campaign_id) REFERENCES dialing_campaigns(campaign_id) ON DELETE CASCADE
                 )
                 """
-            
+
             cursor = self.db.connection.cursor()
             cursor.execute(sql_campaigns)
             cursor.execute(sql_contacts)
             cursor.execute(sql_attempts)
             cursor.execute(sql_stats)
             self.db.connection.commit()
-            
+
             self.logger.info("Predictive dialing tables created successfully")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error creating predictive dialing tables: {e}")
             return False
-    
+
     def save_campaign(self, campaign_data: Dict) -> bool:
         """Save a campaign to database"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO dialing_campaigns 
                 (campaign_id, name, dialing_mode, status, max_attempts, retry_interval)
@@ -197,30 +199,30 @@ class PredictiveDialingDatabase:
                 (campaign_id, name, dialing_mode, status, max_attempts, retry_interval)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """
-            
+
             params = (
-                campaign_data['campaign_id'],
-                campaign_data['name'],
-                campaign_data['dialing_mode'],
-                campaign_data['status'],
-                campaign_data.get('max_attempts', 3),
-                campaign_data.get('retry_interval', 3600)
+                campaign_data["campaign_id"],
+                campaign_data["name"],
+                campaign_data["dialing_mode"],
+                campaign_data["status"],
+                campaign_data.get("max_attempts", 3),
+                campaign_data.get("retry_interval", 3600),
             )
-            
+
             cursor.execute(sql, params)
             self.db.connection.commit()
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error saving campaign: {e}")
             return False
-    
+
     def save_contact(self, campaign_id: str, contact_data: Dict) -> bool:
         """Save a contact to a campaign"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO dialing_contacts 
                 (campaign_id, contact_id, phone_number, data)
@@ -231,9 +233,9 @@ class PredictiveDialingDatabase:
                 """
                 params = (
                     campaign_id,
-                    contact_data['contact_id'],
-                    contact_data['phone_number'],
-                    json.dumps(contact_data.get('data', {}))
+                    contact_data["contact_id"],
+                    contact_data["phone_number"],
+                    json.dumps(contact_data.get("data", {})),
                 )
             else:
                 sql = """
@@ -243,25 +245,25 @@ class PredictiveDialingDatabase:
                 """
                 params = (
                     campaign_id,
-                    contact_data['contact_id'],
-                    contact_data['phone_number'],
-                    json.dumps(contact_data.get('data', {}))
+                    contact_data["contact_id"],
+                    contact_data["phone_number"],
+                    json.dumps(contact_data.get("data", {})),
                 )
-            
+
             cursor.execute(sql, params)
             self.db.connection.commit()
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error saving contact: {e}")
             return False
-    
+
     def save_attempt(self, campaign_id: str, contact_id: str, attempt_data: Dict):
         """Save a call attempt"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO dialing_attempts 
                 (campaign_id, contact_id, call_id, attempt_number, timestamp, result, duration, agent_id)
@@ -273,22 +275,22 @@ class PredictiveDialingDatabase:
                 (campaign_id, contact_id, call_id, attempt_number, timestamp, result, duration, agent_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """
-            
+
             params = (
                 campaign_id,
                 contact_id,
-                attempt_data.get('call_id'),
-                attempt_data.get('attempt_number'),
-                attempt_data.get('timestamp', datetime.now().isoformat()),
-                attempt_data.get('result'),
-                attempt_data.get('duration'),
-                attempt_data.get('agent_id')
+                attempt_data.get("call_id"),
+                attempt_data.get("attempt_number"),
+                attempt_data.get("timestamp", datetime.now().isoformat()),
+                attempt_data.get("result"),
+                attempt_data.get("duration"),
+                attempt_data.get("agent_id"),
             )
-            
+
             cursor.execute(sql, params)
-            
+
             # Update contact
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 update_sql = """
                 UPDATE dialing_contacts
                 SET attempts = attempts + 1, 
@@ -306,27 +308,27 @@ class PredictiveDialingDatabase:
                     call_result = ?
                 WHERE campaign_id = ? AND contact_id = ?
                 """
-            
+
             update_params = (
-                attempt_data.get('timestamp', datetime.now().isoformat()),
-                attempt_data.get('status', 'attempted'),
-                attempt_data.get('result'),
+                attempt_data.get("timestamp", datetime.now().isoformat()),
+                attempt_data.get("status", "attempted"),
+                attempt_data.get("result"),
                 campaign_id,
-                contact_id
+                contact_id,
             )
-            
+
             cursor.execute(update_sql, update_params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error saving attempt: {e}")
-    
+
     def update_campaign_stats(self, campaign_id: str, stats: Dict):
         """Update campaign statistics"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 UPDATE dialing_campaigns
                 SET total_contacts = %s,
@@ -344,92 +346,92 @@ class PredictiveDialingDatabase:
                     failed_calls = ?
                 WHERE campaign_id = ?
                 """
-            
+
             params = (
-                stats.get('total_contacts', 0),
-                stats.get('contacts_completed', 0),
-                stats.get('successful_calls', 0),
-                stats.get('failed_calls', 0),
-                campaign_id
+                stats.get("total_contacts", 0),
+                stats.get("contacts_completed", 0),
+                stats.get("successful_calls", 0),
+                stats.get("failed_calls", 0),
+                campaign_id,
             )
-            
+
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error updating campaign stats: {e}")
-    
+
     def get_campaign(self, campaign_id: str) -> Optional[Dict]:
         """Get campaign by ID"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = %s"
             else:
                 sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = ?"
-            
+
             cursor.execute(sql, (campaign_id,))
             row = cursor.fetchone()
-            
+
             if row:
                 columns = [desc[0] for desc in cursor.description]
                 return dict(zip(columns, row))
             return None
-            
+
         except Exception as e:
             self.logger.error(f"Error getting campaign: {e}")
             return None
-    
+
     def get_all_campaigns(self) -> List[Dict]:
         """Get all campaigns"""
         try:
             cursor = self.db.connection.cursor()
             cursor.execute("SELECT * FROM dialing_campaigns ORDER BY created_at DESC")
-            
+
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
-            
+
         except Exception as e:
             self.logger.error(f"Error getting campaigns: {e}")
             return []
-    
+
     def get_campaign_contacts(self, campaign_id: str) -> List[Dict]:
         """Get all contacts for a campaign"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = "SELECT * FROM dialing_contacts WHERE campaign_id = %s ORDER BY created_at"
             else:
                 sql = "SELECT * FROM dialing_contacts WHERE campaign_id = ? ORDER BY created_at"
-            
+
             cursor.execute(sql, (campaign_id,))
-            
+
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
-            
+
         except Exception as e:
             self.logger.error(f"Error getting campaign contacts: {e}")
             return []
-    
+
     def get_statistics(self, campaign_id: Optional[str] = None) -> Dict:
         """Get dialing statistics"""
         try:
             cursor = self.db.connection.cursor()
-            
+
             if campaign_id:
                 # Campaign-specific stats
-                if self.db.db_type == 'postgresql':
+                if self.db.db_type == "postgresql":
                     sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = %s"
                 else:
                     sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = ?"
-                
+
                 cursor.execute(sql, (campaign_id,))
                 row = cursor.fetchone()
-                
+
                 if row:
                     columns = [desc[0] for desc in cursor.description]
                     return dict(zip(columns, row))
@@ -446,16 +448,16 @@ class PredictiveDialingDatabase:
                 """
                 cursor.execute(sql)
                 row = cursor.fetchone()
-                
+
                 if row:
                     return {
-                        'total_campaigns': row[0] or 0,
-                        'total_contacts': row[1] or 0,
-                        'successful_calls': row[2] or 0,
-                        'failed_calls': row[3] or 0
+                        "total_campaigns": row[0] or 0,
+                        "total_contacts": row[1] or 0,
+                        "successful_calls": row[2] or 0,
+                        "failed_calls": row[3] or 0,
                     }
                 return {}
-                
+
         except Exception as e:
             self.logger.error(f"Error getting statistics: {e}")
             return {}

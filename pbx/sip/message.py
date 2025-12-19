@@ -31,7 +31,7 @@ class SIPMessage:
         Args:
             raw_message: Raw SIP message string
         """
-        lines = raw_message.split('\r\n')
+        lines = raw_message.split("\r\n")
 
         # Validate that we have at least one line
         if not lines:
@@ -39,9 +39,9 @@ class SIPMessage:
 
         # Parse first line (request or response)
         first_line = lines[0]
-        if first_line.startswith('SIP/'):
+        if first_line.startswith("SIP/"):
             # Response
-            parts = first_line.split(' ', 2)
+            parts = first_line.split(" ", 2)
             if len(parts) >= 2:
                 self.version = parts[0]
                 try:
@@ -55,7 +55,7 @@ class SIPMessage:
                 return
         else:
             # Request
-            parts = first_line.split(' ')
+            parts = first_line.split(" ")
             if len(parts) >= 2:
                 self.method = parts[0]
                 self.uri = parts[1]
@@ -67,17 +67,17 @@ class SIPMessage:
         # Parse headers
         body_start = None
         for i, line in enumerate(lines[1:], 1):
-            if line == '':
+            if line == "":
                 body_start = i + 1
                 break
 
-            if ':' in line:
-                key, value = line.split(':', 1)
+            if ":" in line:
+                key, value = line.split(":", 1)
                 self.headers[key.strip()] = value.strip()
 
         # Parse body
         if body_start and body_start < len(lines):
-            self.body = '\r\n'.join(lines[body_start:])
+            self.body = "\r\n".join(lines[body_start:])
 
     def get_header(self, name):
         """Get header value"""
@@ -108,21 +108,20 @@ class SIPMessage:
         if self.is_request():
             lines.append(f"{self.method} {self.uri} {self.version}")
         else:
-            lines.append(
-                f"{self.version} {self.status_code} {self.status_text}")
+            lines.append(f"{self.version} {self.status_code} {self.status_text}")
 
         # Headers
         for key, value in self.headers.items():
             lines.append(f"{key}: {value}")
 
         # Empty line before body
-        lines.append('')
+        lines.append("")
 
         # Body
         if self.body:
             lines.append(self.body)
 
-        return '\r\n'.join(lines)
+        return "\r\n".join(lines)
 
     def __str__(self):
         return self.build()
@@ -150,15 +149,15 @@ class SIPMessageBuilder:
         response.status_text = status_text
 
         # Copy relevant headers from request
-        for header in ['Via', 'From', 'To', 'Call-ID', 'CSeq']:
+        for header in ["Via", "From", "To", "Call-ID", "CSeq"]:
             if request_msg.get_header(header):
                 response.set_header(header, request_msg.get_header(header))
 
         if body:
             response.body = body
-            response.set_header('Content-Length', str(len(body)))
+            response.set_header("Content-Length", str(len(body)))
         else:
-            response.set_header('Content-Length', '0')
+            response.set_header("Content-Length", "0")
 
         return response
 
@@ -183,15 +182,15 @@ class SIPMessageBuilder:
         request.method = method
         request.uri = uri
 
-        request.set_header('From', from_addr)
-        request.set_header('To', to_addr)
-        request.set_header('Call-ID', call_id)
-        request.set_header('CSeq', f"{cseq} {method}")
+        request.set_header("From", from_addr)
+        request.set_header("To", to_addr)
+        request.set_header("Call-ID", call_id)
+        request.set_header("CSeq", f"{cseq} {method}")
 
         if body:
             request.body = body
-            request.set_header('Content-Length', str(len(body)))
+            request.set_header("Content-Length", str(len(body)))
         else:
-            request.set_header('Content-Length', '0')
+            request.set_header("Content-Length", "0")
 
         return request

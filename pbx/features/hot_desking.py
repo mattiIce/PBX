@@ -2,6 +2,7 @@
 Hot-Desking Feature
 Allows users to log in from any phone and retain their settings
 """
+
 import threading
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -35,12 +36,12 @@ class HotDeskSession:
     def to_dict(self) -> Dict:
         """Convert to dictionary"""
         return {
-            'extension': self.extension,
-            'device_id': self.device_id,
-            'ip_address': self.ip_address,
-            'logged_in_at': self.logged_in_at.isoformat(),
-            'last_activity': self.last_activity.isoformat(),
-            'auto_logout_enabled': self.auto_logout_enabled
+            "extension": self.extension,
+            "device_id": self.device_id,
+            "ip_address": self.ip_address,
+            "logged_in_at": self.logged_in_at.isoformat(),
+            "last_activity": self.last_activity.isoformat(),
+            "auto_logout_enabled": self.auto_logout_enabled,
         }
 
 
@@ -69,13 +70,14 @@ class HotDeskingSystem:
         self.pbx_core = pbx_core
 
         # Hot-desking configuration
-        self.enabled = self._get_config('features.hot_desking.enabled', False)
+        self.enabled = self._get_config("features.hot_desking.enabled", False)
         self.auto_logout_timeout = self._get_config(
-            'features.hot_desking.auto_logout_timeout', 28800)  # 8 hours
-        self.require_pin = self._get_config(
-            'features.hot_desking.require_pin', True)
+            "features.hot_desking.auto_logout_timeout", 28800
+        )  # 8 hours
+        self.require_pin = self._get_config("features.hot_desking.require_pin", True)
         self.allow_concurrent_logins = self._get_config(
-            'features.hot_desking.allow_concurrent_logins', False)
+            "features.hot_desking.allow_concurrent_logins", False
+        )
 
         # Active sessions
         self.sessions: Dict[str, HotDeskSession] = {}  # device_id -> session
@@ -95,7 +97,7 @@ class HotDeskingSystem:
 
     def _get_config(self, key: str, default=None):
         """Get configuration value"""
-        if hasattr(self.config, 'get'):
+        if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
@@ -103,9 +105,7 @@ class HotDeskingSystem:
         """Start auto-logout cleanup thread"""
         self.running = True
         self.cleanup_thread = threading.Thread(
-            target=self._cleanup_worker,
-            name="HotDeskCleanup",
-            daemon=True
+            target=self._cleanup_worker, name="HotDeskCleanup", daemon=True
         )
         self.cleanup_thread.start()
         self.logger.info("Started hot-desking auto-logout thread")
@@ -121,6 +121,7 @@ class HotDeskingSystem:
     def _cleanup_worker(self):
         """Worker thread for auto-logout"""
         import time
+
         while self.running:
             time.sleep(60)  # Check every minute
             self._auto_logout_inactive_sessions()
@@ -142,18 +143,15 @@ class HotDeskingSystem:
             for device_id in sessions_to_logout:
                 session = self.sessions.get(device_id)
                 if session:
-                    inactive_time = (
-                        now - session.last_activity).total_seconds()
+                    inactive_time = (now - session.last_activity).total_seconds()
                     self.logger.info(
-                        f"Auto-logout: {session.extension} from {device_id} (inactive for {inactive_time:.0f}s)")
+                        f"Auto-logout: {session.extension} from {device_id} (inactive for {inactive_time:.0f}s)"
+                    )
                     self._logout_internal(device_id)
 
     def login(
-            self,
-            extension: str,
-            device_id: str,
-            ip_address: str,
-            pin: Optional[str] = None) -> bool:
+        self, extension: str, device_id: str, ip_address: str, pin: Optional[str] = None
+    ) -> bool:
         """
         Log in extension to device
 
@@ -171,25 +169,22 @@ class HotDeskingSystem:
             return False
 
         # Verify extension exists
-        if self.pbx_core and hasattr(self.pbx_core, 'extension_registry'):
+        if self.pbx_core and hasattr(self.pbx_core, "extension_registry"):
             ext_obj = self.pbx_core.extension_registry.get_extension(extension)
             if not ext_obj:
-                self.logger.warning(
-                    f"Login failed: Extension {extension} not found")
+                self.logger.warning(f"Login failed: Extension {extension} not found")
                 return False
 
             # Verify PIN if required
             if self.require_pin:
                 if not pin:
-                    self.logger.warning(
-                        f"Login failed: PIN required for {extension}")
+                    self.logger.warning(f"Login failed: PIN required for {extension}")
                     return False
 
                 # Check voicemail PIN (extensions typically use same PIN)
-                voicemail_pin = ext_obj.get('voicemail_pin')
+                voicemail_pin = ext_obj.get("voicemail_pin")
                 if voicemail_pin and pin != voicemail_pin:
-                    self.logger.warning(
-                        f"Login failed: Invalid PIN for {extension}")
+                    self.logger.warning(f"Login failed: Invalid PIN for {extension}")
                     return False
         else:
             self.logger.warning("Extension registry not available")
@@ -202,16 +197,20 @@ class HotDeskingSystem:
                 if existing_session.extension != extension:
                     self.logger.info(
                         f"Logging out {
-                            existing_session.extension} from {device_id} before new login")
+                            existing_session.extension} from {device_id} before new login"
+                    )
                     self._logout_internal(device_id)
 
             # Check if extension is already logged in elsewhere
             if not self.allow_concurrent_logins:
-                if extension in self.extension_devices and len(
-                        self.extension_devices[extension]) > 0:
+                if (
+                    extension in self.extension_devices
+                    and len(self.extension_devices[extension]) > 0
+                ):
                     existing_devices = self.extension_devices[extension]
                     self.logger.info(
-                        f"Extension {extension} already logged in at {existing_devices}, logging out...")
+                        f"Extension {extension} already logged in at {existing_devices}, logging out..."
+                    )
                     for dev_id in existing_devices.copy():
                         self._logout_internal(dev_id)
 
@@ -224,17 +223,19 @@ class HotDeskingSystem:
                 self.extension_devices[extension] = []
             self.extension_devices[extension].append(device_id)
 
-            self.logger.info(
-                f"Hot-desk login: {extension} logged in to {device_id} ({ip_address})")
+            self.logger.info(f"Hot-desk login: {extension} logged in to {device_id} ({ip_address})")
 
             # Trigger webhook event
-            if self.pbx_core and hasattr(self.pbx_core, 'webhook_system'):
-                self.pbx_core.webhook_system.trigger_event('hot_desk.login', {
-                    'extension': extension,
-                    'device_id': device_id,
-                    'ip_address': ip_address,
-                    'timestamp': session.logged_in_at.isoformat()
-                })
+            if self.pbx_core and hasattr(self.pbx_core, "webhook_system"):
+                self.pbx_core.webhook_system.trigger_event(
+                    "hot_desk.login",
+                    {
+                        "extension": extension,
+                        "device_id": device_id,
+                        "ip_address": ip_address,
+                        "timestamp": session.logged_in_at.isoformat(),
+                    },
+                )
 
             return True
 
@@ -258,8 +259,7 @@ class HotDeskingSystem:
         """Internal logout (assumes lock is held)"""
         session = self.sessions.get(device_id)
         if not session:
-            self.logger.debug(
-                f"Logout failed: No session for device {device_id}")
+            self.logger.debug(f"Logout failed: No session for device {device_id}")
             return False
 
         extension = session.extension
@@ -274,16 +274,18 @@ class HotDeskingSystem:
             if not self.extension_devices[extension]:
                 del self.extension_devices[extension]
 
-        self.logger.info(
-            f"Hot-desk logout: {extension} logged out from {device_id}")
+        self.logger.info(f"Hot-desk logout: {extension} logged out from {device_id}")
 
         # Trigger webhook event
-        if self.pbx_core and hasattr(self.pbx_core, 'webhook_system'):
-            self.pbx_core.webhook_system.trigger_event('hot_desk.logout', {
-                'extension': extension,
-                'device_id': device_id,
-                'timestamp': datetime.now().isoformat()
-            })
+        if self.pbx_core and hasattr(self.pbx_core, "webhook_system"):
+            self.pbx_core.webhook_system.trigger_event(
+                "hot_desk.logout",
+                {
+                    "extension": extension,
+                    "device_id": device_id,
+                    "timestamp": datetime.now().isoformat(),
+                },
+            )
 
         return True
 
@@ -315,9 +317,7 @@ class HotDeskingSystem:
         with self.lock:
             return self.sessions.get(device_id)
 
-    def get_extension_session(
-            self,
-            extension: str) -> Optional[HotDeskSession]:
+    def get_extension_session(self, extension: str) -> Optional[HotDeskSession]:
         """Get session for extension (first device if multiple)"""
         with self.lock:
             devices = self.extension_devices.get(extension, [])
@@ -333,8 +333,9 @@ class HotDeskingSystem:
     def is_logged_in(self, extension: str) -> bool:
         """Check if extension is logged in anywhere"""
         with self.lock:
-            return extension in self.extension_devices and len(
-                self.extension_devices[extension]) > 0
+            return (
+                extension in self.extension_devices and len(self.extension_devices[extension]) > 0
+            )
 
     def update_session_activity(self, device_id: str):
         """Update session activity timestamp"""
@@ -372,8 +373,7 @@ class HotDeskingSystem:
         Returns:
             Extension profile dictionary
         """
-        if not self.pbx_core or not hasattr(
-                self.pbx_core, 'extension_registry'):
+        if not self.pbx_core or not hasattr(self.pbx_core, "extension_registry"):
             return None
 
         ext_obj = self.pbx_core.extension_registry.get_extension(extension)
@@ -382,13 +382,13 @@ class HotDeskingSystem:
 
         # Return profile (without sensitive data like passwords)
         profile = {
-            'extension': extension,
-            'name': ext_obj.get('name'),
-            'email': ext_obj.get('email'),
-            'allow_external': ext_obj.get('allow_external', True),
-            'voicemail_enabled': True,  # Assume voicemail is always enabled
-            'call_forwarding': ext_obj.get('call_forwarding'),
-            'do_not_disturb': ext_obj.get('do_not_disturb', False)
+            "extension": extension,
+            "name": ext_obj.get("name"),
+            "email": ext_obj.get("email"),
+            "allow_external": ext_obj.get("allow_external", True),
+            "voicemail_enabled": True,  # Assume voicemail is always enabled
+            "call_forwarding": ext_obj.get("call_forwarding"),
+            "do_not_disturb": ext_obj.get("do_not_disturb", False),
         }
 
         return profile

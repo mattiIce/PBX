@@ -15,7 +15,6 @@ from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
 
 
-
 def test_beep_generation():
     """Test that beep tone is generated correctly"""
     print("\n" + "=" * 60)
@@ -23,10 +22,7 @@ def test_beep_generation():
     print("=" * 60)
 
     print("\n1. Testing beep tone generation...")
-    beep_data = generate_beep_tone(
-        frequency=1000,
-        duration_ms=500,
-        sample_rate=8000)
+    beep_data = generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000)
 
     # 500ms at 8kHz = 4000 samples
     # Each sample is 16-bit (2 bytes)
@@ -37,7 +33,8 @@ def test_beep_generation():
     else:
         print(
             f"   ✗ PCM beep size wrong: expected {expected_pcm_size}, got {
-                len(beep_data)}")
+                len(beep_data)}"
+        )
         return False
 
     print("\n2. Testing PCM to μ-law conversion...")
@@ -49,16 +46,12 @@ def test_beep_generation():
     if len(ulaw_data) == expected_ulaw_size:
         print(f"   ✓ μ-law conversion: {len(ulaw_data)} bytes (correct)")
     else:
-        print(
-            f"   ✗ μ-law size wrong: expected {expected_ulaw_size}, got {len(ulaw_data)}")
+        print(f"   ✗ μ-law size wrong: expected {expected_ulaw_size}, got {len(ulaw_data)}")
         return False
 
     print("\n3. Testing play_beep method...")
     player = RTPPlayer(
-        local_port=30030,
-        remote_host="127.0.0.1",
-        remote_port=30031,
-        call_id="test_beep"
+        local_port=30030, remote_host="127.0.0.1", remote_port=30031, call_id="test_beep"
     )
 
     if not player.start():
@@ -85,15 +78,13 @@ def test_beep_generation():
     bytes_per_sample_ulaw = 1
     bytes_per_packet = samples_per_packet * bytes_per_sample_ulaw  # 160 bytes
 
-    num_packets = (expected_ulaw_size +
-                   bytes_per_packet - 1) // bytes_per_packet
+    num_packets = (expected_ulaw_size + bytes_per_packet - 1) // bytes_per_packet
     expected_packets = 25  # ceiling(4000 / 160) = 25
 
     if num_packets == expected_packets:
         print(f"   ✓ Packet count correct: {num_packets} packets")
     else:
-        print(
-            f"   ✗ Packet count wrong: expected {expected_packets}, got {num_packets}")
+        print(f"   ✗ Packet count wrong: expected {expected_packets}, got {num_packets}")
         return False
 
     print("\n5. Verifying audio duration...")
@@ -106,8 +97,7 @@ def test_beep_generation():
     if abs(duration_sec - expected_duration) < 0.01:
         print(f"   ✓ Duration correct: {duration_sec} seconds")
     else:
-        print(
-            f"   ✗ Duration wrong: expected {expected_duration}, got {duration_sec}")
+        print(f"   ✗ Duration wrong: expected {expected_duration}, got {duration_sec}")
         return False
 
     print("\n" + "=" * 60)
@@ -152,12 +142,10 @@ def test_bug_scenario():
     samples_per_packet = 160
 
     # Wrong way (before fix)
-    wrong_packets = (len(pcm_data) + samples_per_packet -
-                     1) // samples_per_packet
+    wrong_packets = (len(pcm_data) + samples_per_packet - 1) // samples_per_packet
 
     # Right way (after fix)
-    right_packets = (len(ulaw_data) + samples_per_packet -
-                     1) // samples_per_packet
+    right_packets = (len(ulaw_data) + samples_per_packet - 1) // samples_per_packet
 
     print(f"\nPacket count comparison:")
     print(f"  Before fix: {wrong_packets} packets (WRONG)")
@@ -171,7 +159,7 @@ def test_bug_scenario():
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success1 = test_beep_generation()
     success2 = test_bug_scenario()
 

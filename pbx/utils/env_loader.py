@@ -2,6 +2,7 @@
 Environment Variable Loader
 Securely loads sensitive configuration from environment variables
 """
+
 import os
 import re
 from typing import Any
@@ -13,22 +14,22 @@ class EnvironmentLoader:
     """Load configuration values from environment variables"""
 
     # Pattern to match ${VAR_NAME} or $VAR_NAME in config values
-    ENV_VAR_PATTERN = re.compile(r'\$\{([A-Z0-9_]+)\}|\$([A-Z0-9_]+)')
+    ENV_VAR_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}|\$([A-Z0-9_]+)")
 
     # Default values for common environment variables
     # These are used when the environment variable is not set
     DEFAULT_VALUES = {
-        'DB_HOST': 'localhost',
-        'DB_PORT': '5432',
-        'DB_NAME': 'pbx_system',
-        'DB_USER': 'pbx_user',
+        "DB_HOST": "localhost",
+        "DB_PORT": "5432",
+        "DB_NAME": "pbx_system",
+        "DB_USER": "pbx_user",
         # DB_PASSWORD has no default - must be explicitly set for PostgreSQL
-        'SMTP_HOST': '',  # Empty default - set in .env if using email notifications
-        'SMTP_PORT': '587',
-        'SMTP_USERNAME': '',  # Empty default - set in .env if using email notifications
+        "SMTP_HOST": "",  # Empty default - set in .env if using email notifications
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "",  # Empty default - set in .env if using email notifications
         # SMTP_PASSWORD has no default - must be explicitly set if using email
         # Empty default - set in .env if using voicemail transcription
-        'TRANSCRIPTION_API_KEY': '',
+        "TRANSCRIPTION_API_KEY": "",
     }
 
     def __init__(self):
@@ -67,26 +68,29 @@ class EnvironmentLoader:
                 if default is not None:
                     env_value = str(default)
                     self.logger.warning(
-                        f"Environment variable {var_name} not found, using provided default")
+                        f"Environment variable {var_name} not found, using provided default"
+                    )
                 # Fall back to class-level defaults
                 elif var_name in self.DEFAULT_VALUES:
                     env_value = self.DEFAULT_VALUES[var_name]
                     self.logger.info(
-                        f"Environment variable {var_name} not set, using default value")
+                        f"Environment variable {var_name} not set, using default value"
+                    )
                 else:
                     self.logger.error(
-                        f"Environment variable {var_name} not found and no default available")
+                        f"Environment variable {var_name} not found and no default available"
+                    )
                     # Return original value if env var not found
                     continue
 
             # Replace the variable reference
             if match[0]:  # ${VAR} format
-                result = result.replace(f'${{{var_name}}}', env_value)
+                result = result.replace(f"${{{var_name}}}", env_value)
             else:  # $VAR format
-                result = result.replace(f'${var_name}', env_value)
+                result = result.replace(f"${var_name}", env_value)
 
             # Track loaded vars (without exposing values)
-            self.loaded_vars[var_name] = '***'
+            self.loaded_vars[var_name] = "***"
 
         # Try to convert to appropriate type (int, float, bool)
         # Only if the entire string is a substitution (e.g., "${DB_PORT}" not
@@ -112,9 +116,9 @@ class EnvironmentLoader:
         complete_patterns = []
         for match in matches:
             if match[0]:  # ${VAR} format
-                complete_patterns.append(f'${{{match[0]}}}')
+                complete_patterns.append(f"${{{match[0]}}}")
             if match[1]:  # $VAR format
-                complete_patterns.append(f'${match[1]}')
+                complete_patterns.append(f"${match[1]}")
 
         return value.strip() in complete_patterns
 
@@ -141,9 +145,9 @@ class EnvironmentLoader:
             pass
 
         # Try boolean conversion
-        if value.lower() in ('true', 'yes', '1'):
+        if value.lower() in ("true", "yes", "1"):
             return True
-        if value.lower() in ('false', 'no', '0'):
+        if value.lower() in ("false", "no", "0"):
             return False
 
         return value
@@ -167,8 +171,11 @@ class EnvironmentLoader:
             elif isinstance(value, list):
                 # Resolve each item in list
                 resolved[key] = [
-                    self.resolve_config(item) if isinstance(item, dict)
-                    else self.resolve_value(item)
+                    (
+                        self.resolve_config(item)
+                        if isinstance(item, dict)
+                        else self.resolve_value(item)
+                    )
                     for item in value
                 ]
             else:
@@ -205,7 +212,7 @@ class EnvironmentLoader:
         return len(missing) == 0, missing
 
     @staticmethod
-    def load_env_file(env_file: str = '.env'):
+    def load_env_file(env_file: str = ".env"):
         """
         Load environment variables from a .env file
 
@@ -224,20 +231,19 @@ class EnvironmentLoader:
         loaded_count = 0
 
         try:
-            with open(env_file, 'r') as f:
+            with open(env_file, "r") as f:
                 for line_num, line in enumerate(f, 1):
                     # Skip empty lines and comments
                     line = line.strip()
-                    if not line or line.startswith('#'):
+                    if not line or line.startswith("#"):
                         continue
 
                     # Parse KEY=VALUE format
-                    if '=' not in line:
-                        logger.warning(
-                            f"Invalid line {line_num} in {env_file}: {line}")
+                    if "=" not in line:
+                        logger.warning(f"Invalid line {line_num} in {env_file}: {line}")
                         continue
 
-                    key, value = line.split('=', 1)
+                    key, value = line.split("=", 1)
                     key = key.strip()
                     value = value.strip()
 
@@ -253,8 +259,7 @@ class EnvironmentLoader:
                         loaded_count += 1
 
             if loaded_count > 0:
-                logger.info(
-                    f"Loaded {loaded_count} environment variables from {env_file}")
+                logger.info(f"Loaded {loaded_count} environment variables from {env_file}")
 
             return loaded_count
 
@@ -268,6 +273,6 @@ def get_env_loader() -> EnvironmentLoader:
     return EnvironmentLoader()
 
 
-def load_env_file(env_file: str = '.env') -> int:
+def load_env_file(env_file: str = ".env") -> int:
     """Load environment variables from file"""
     return EnvironmentLoader.load_env_file(env_file)

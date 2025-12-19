@@ -8,7 +8,7 @@ import tempfile
 import time
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import (
@@ -18,7 +18,6 @@ from pbx.utils.security import (
     SecurityAuditor,
     get_password_manager,
 )
-
 
 
 def test_password_policy():
@@ -99,44 +98,44 @@ def test_rate_limiter():
     print("Testing rate limiter...")
 
     config = {
-        'security.rate_limit.max_attempts': 3,
-        'security.rate_limit.window_seconds': 10,
-        'security.rate_limit.lockout_duration': 5
+        "security.rate_limit.max_attempts": 3,
+        "security.rate_limit.window_seconds": 10,
+        "security.rate_limit.lockout_duration": 5,
     }
 
     limiter = RateLimiter(config)
 
     # Test normal operation
-    is_limited, remaining = limiter.is_rate_limited('test_user')
+    is_limited, remaining = limiter.is_rate_limited("test_user")
     assert not is_limited, "User incorrectly rate limited"
 
     # Record failed attempts
     for i in range(3):
-        limiter.record_attempt('test_user', successful=False)
+        limiter.record_attempt("test_user", successful=False)
 
     # Should now be rate limited
-    is_limited, remaining = limiter.is_rate_limited('test_user')
+    is_limited, remaining = limiter.is_rate_limited("test_user")
     assert is_limited, "User not rate limited after max attempts"
     assert remaining is not None and remaining > 0, "No lockout duration returned"
 
     # Test successful login clears attempts
     limiter2 = RateLimiter(config)
-    limiter2.record_attempt('test_user2', successful=False)
-    limiter2.record_attempt('test_user2', successful=True)
-    is_limited, _ = limiter2.is_rate_limited('test_user2')
+    limiter2.record_attempt("test_user2", successful=False)
+    limiter2.record_attempt("test_user2", successful=True)
+    is_limited, _ = limiter2.is_rate_limited("test_user2")
     assert not is_limited, "Successful login didn't clear attempts"
 
     # Test lockout expiry
     limiter3 = RateLimiter(config)
     for i in range(3):
-        limiter3.record_attempt('test_user3', successful=False)
+        limiter3.record_attempt("test_user3", successful=False)
 
-    is_limited, remaining = limiter3.is_rate_limited('test_user3')
+    is_limited, remaining = limiter3.is_rate_limited("test_user3")
     assert is_limited, "User not locked out"
 
     # Wait for lockout to expire
     time.sleep(6)  # Wait longer than lockout_duration
-    is_limited, _ = limiter3.is_rate_limited('test_user3')
+    is_limited, _ = limiter3.is_rate_limited("test_user3")
     assert not is_limited, "Lockout didn't expire"
 
     print("✓ Rate limiter works")
@@ -146,32 +145,29 @@ def test_security_auditor():
     """Test security audit logging"""
     print("Testing security auditor...")
 
-    config = {'security.audit.enabled': True}
+    config = {"security.audit.enabled": True}
     auditor = SecurityAuditor(database=None, config=config)
 
     # Test logging (to logger only, no database)
     auditor.log_event(
         SecurityAuditor.EVENT_LOGIN_SUCCESS,
-        'test_user',
-        {'method': 'password'},
+        "test_user",
+        {"method": "password"},
         success=True,
-        ip_address='192.168.1.100'
+        ip_address="192.168.1.100",
     )
 
     auditor.log_event(
         SecurityAuditor.EVENT_LOGIN_FAILURE,
-        'test_user',
-        {'reason': 'invalid_password'},
+        "test_user",
+        {"reason": "invalid_password"},
         success=False,
-        ip_address='192.168.1.100'
+        ip_address="192.168.1.100",
     )
 
     # Test with database
     with tempfile.TemporaryDirectory() as tmpdir:
-        db_config = {
-            'database.type': 'sqlite',
-            'database.path': os.path.join(tmpdir, 'test.db')
-        }
+        db_config = {"database.type": "sqlite", "database.path": os.path.join(tmpdir, "test.db")}
 
         db = DatabaseBackend(db_config)
         assert db.connect(), "Failed to connect to test database"
@@ -180,15 +176,15 @@ def test_security_auditor():
         auditor_db = SecurityAuditor(database=db, config=config)
         auditor_db.log_event(
             SecurityAuditor.EVENT_PASSWORD_CHANGE,
-            'test_user',
-            {'changed_by': 'admin'},
-            success=True
+            "test_user",
+            {"changed_by": "admin"},
+            success=True,
         )
 
         # Verify log was stored
         query = "SELECT COUNT(*) as count FROM security_audit WHERE identifier = ?"
-        result = db.fetch_one(query, ('test_user',))
-        assert result and result['count'] == 1, "Audit log not stored in database"
+        result = db.fetch_one(query, ("test_user",))
+        assert result and result["count"] == 1, "Audit log not stored in database"
 
         db.disconnect()
 
@@ -199,7 +195,7 @@ def test_password_manager():
     """Test secure password manager"""
     print("Testing password manager...")
 
-    config = {'security.fips_mode': False}
+    config = {"security.fips_mode": False}
     mgr = get_password_manager(config)
 
     # Test password hashing
@@ -212,10 +208,8 @@ def test_password_manager():
     assert isinstance(salt, str), "Salt not string"
 
     # Test password verification
-    assert mgr.verify_password(
-        password, hashed, salt), "Password verification failed"
-    assert not mgr.verify_password(
-        "WrongPass123!", hashed, salt), "Wrong password verified"
+    assert mgr.verify_password(password, hashed, salt), "Password verification failed"
+    assert not mgr.verify_password("WrongPass123!", hashed, salt), "Wrong password verified"
 
     # Test password validation
     valid, error = mgr.validate_new_password("SecurePass123!")
@@ -237,32 +231,34 @@ def test_password_migration_compatibility():
     """Test that hashed passwords work with existing systems"""
     print("Testing password migration compatibility...")
 
-    config = {'security.fips_mode': False}
+    config = {"security.fips_mode": False}
     mgr = get_password_manager(config)
 
     # Simulate migration
     plaintext_passwords = {
-        '1001': 'password1001',
-        '1002': 'TestPass123!',
-        '1003': 'AnotherSecure456#'
+        "1001": "password1001",
+        "1002": "TestPass123!",
+        "1003": "AnotherSecure456#",
     }
 
     migrated_data = {}
     for ext_num, password in plaintext_passwords.items():
         hashed, salt = mgr.hash_password(password)
-        migrated_data[ext_num] = {'hash': hashed, 'salt': salt}
+        migrated_data[ext_num] = {"hash": hashed, "salt": salt}
 
     # Verify all passwords can be authenticated
     for ext_num, password in plaintext_passwords.items():
         data = migrated_data[ext_num]
-        assert mgr.verify_password(password, data['hash'], data['salt']), \
-            f"Migrated password for {ext_num} failed verification"
+        assert mgr.verify_password(
+            password, data["hash"], data["salt"]
+        ), f"Migrated password for {ext_num} failed verification"
 
     # Verify wrong passwords don't authenticate
     for ext_num in plaintext_passwords.keys():
         data = migrated_data[ext_num]
-        assert not mgr.verify_password('wrong_password', data['hash'], data['salt']), \
-            f"Wrong password verified for {ext_num}"
+        assert not mgr.verify_password(
+            "wrong_password", data["hash"], data["salt"]
+        ), f"Wrong password verified for {ext_num}"
 
     print("✓ Password migration compatibility verified")
 
@@ -298,6 +294,7 @@ def run_all_tests():
             print(f"✗ Test error: {test.__name__}")
             print(f"  Error: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
         print()

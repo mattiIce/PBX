@@ -3,6 +3,7 @@ E911 Protection Module
 Prevents emergency (911) calls from being tested or accidentally placed
 during development and testing scenarios.
 """
+
 import os
 import re
 
@@ -22,9 +23,9 @@ class E911Protection:
 
     # Patterns that match E911/emergency numbers
     E911_PATTERNS = [
-        r'^911$',           # Standard 911
-        r'^[0-9]*911$',     # Enhanced 911 with numeric prefix
-        r'^\*911$',         # Asterisk prefix (e.g., *911)
+        r"^911$",  # Standard 911
+        r"^[0-9]*911$",  # Enhanced 911 with numeric prefix
+        r"^\*911$",  # Asterisk prefix (e.g., *911)
     ]
 
     def __init__(self, config=None):
@@ -40,7 +41,8 @@ class E911Protection:
 
         if self._test_mode:
             self.logger.warning(
-                "E911 Protection: TEST MODE DETECTED - All emergency calls will be blocked")
+                "E911 Protection: TEST MODE DETECTED - All emergency calls will be blocked"
+            )
 
     def _detect_test_mode(self):
         """
@@ -51,10 +53,10 @@ class E911Protection:
         """
         # Check environment variables
         test_env_vars = [
-            'PYTEST_CURRENT_TEST',  # pytest sets this
-            'TEST_MODE',
-            'TESTING',
-            'PBX_TEST_MODE',
+            "PYTEST_CURRENT_TEST",  # pytest sets this
+            "TEST_MODE",
+            "TESTING",
+            "PBX_TEST_MODE",
         ]
 
         for var in test_env_vars:
@@ -63,8 +65,8 @@ class E911Protection:
 
         # Check if test config is being used
         if self.config:
-            config_file = getattr(self.config, 'config_file', '')
-            if 'test' in config_file.lower():
+            config_file = getattr(self.config, "config_file", "")
+            if "test" in config_file.lower():
                 return True
 
         return False

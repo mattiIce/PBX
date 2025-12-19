@@ -3,11 +3,11 @@ Compliance Framework
 SOC 2 Type 2 compliance features
 Note: GDPR and PCI DSS engines are commented out as they are not required for US-based operations
 """
+
 from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
-
 
 # GDPR Compliance Engine - COMMENTED OUT (Not required for US-based operations)
 # Preserved for potential future international use
@@ -278,10 +278,10 @@ class SOC2ComplianceEngine:
         self.logger = get_logger()
         self.db = db_backend
         self.config = config
-        self.enabled = config.get('soc2.enabled', True)
+        self.enabled = config.get("soc2.enabled", True)
 
         self.logger.info("SOC 2 Type II Compliance Framework initialized")
-        
+
         # Initialize default SOC 2 Type 2 controls
         self._initialize_default_controls()
 
@@ -290,106 +290,106 @@ class SOC2ComplianceEngine:
         default_controls = [
             # Security (Common Criteria)
             {
-                'control_id': 'CC1.1',
-                'control_category': 'Security',
-                'description': 'COSO Principle 1 - Demonstrates commitment to integrity and ethical values',
-                'implementation_status': 'implemented'
+                "control_id": "CC1.1",
+                "control_category": "Security",
+                "description": "COSO Principle 1 - Demonstrates commitment to integrity and ethical values",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC1.2',
-                'control_category': 'Security',
-                'description': 'COSO Principle 2 - Board independence and oversight responsibilities',
-                'implementation_status': 'implemented'
+                "control_id": "CC1.2",
+                "control_category": "Security",
+                "description": "COSO Principle 2 - Board independence and oversight responsibilities",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC2.1',
-                'control_category': 'Security',
-                'description': 'COSO Principle 4 - Demonstrates commitment to competence',
-                'implementation_status': 'implemented'
+                "control_id": "CC2.1",
+                "control_category": "Security",
+                "description": "COSO Principle 4 - Demonstrates commitment to competence",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC3.1',
-                'control_category': 'Security',
-                'description': 'COSO Principle 6 - Specifies suitable objectives',
-                'implementation_status': 'implemented'
+                "control_id": "CC3.1",
+                "control_category": "Security",
+                "description": "COSO Principle 6 - Specifies suitable objectives",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC5.1',
-                'control_category': 'Security',
-                'description': 'COSO Principle 10 - Selects and develops control activities',
-                'implementation_status': 'implemented'
+                "control_id": "CC5.1",
+                "control_category": "Security",
+                "description": "COSO Principle 10 - Selects and develops control activities",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC6.1',
-                'control_category': 'Security',
-                'description': 'Logical and physical access controls',
-                'implementation_status': 'implemented'
+                "control_id": "CC6.1",
+                "control_category": "Security",
+                "description": "Logical and physical access controls",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC6.2',
-                'control_category': 'Security',
-                'description': 'System access authorization and authentication',
-                'implementation_status': 'implemented'
+                "control_id": "CC6.2",
+                "control_category": "Security",
+                "description": "System access authorization and authentication",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC6.6',
-                'control_category': 'Security',
-                'description': 'Encryption of data in transit and at rest',
-                'implementation_status': 'implemented'
+                "control_id": "CC6.6",
+                "control_category": "Security",
+                "description": "Encryption of data in transit and at rest",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC7.1',
-                'control_category': 'Security',
-                'description': 'Detection of security incidents',
-                'implementation_status': 'implemented'
+                "control_id": "CC7.1",
+                "control_category": "Security",
+                "description": "Detection of security incidents",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'CC7.2',
-                'control_category': 'Security',
-                'description': 'Response to security incidents',
-                'implementation_status': 'implemented'
+                "control_id": "CC7.2",
+                "control_category": "Security",
+                "description": "Response to security incidents",
+                "implementation_status": "implemented",
             },
             # Availability
             {
-                'control_id': 'A1.1',
-                'control_category': 'Availability',
-                'description': 'System availability and performance monitoring',
-                'implementation_status': 'implemented'
+                "control_id": "A1.1",
+                "control_category": "Availability",
+                "description": "System availability and performance monitoring",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'A1.2',
-                'control_category': 'Availability',
-                'description': 'Backup and disaster recovery procedures',
-                'implementation_status': 'implemented'
+                "control_id": "A1.2",
+                "control_category": "Availability",
+                "description": "Backup and disaster recovery procedures",
+                "implementation_status": "implemented",
             },
             # Processing Integrity
             {
-                'control_id': 'PI1.1',
-                'control_category': 'Processing Integrity',
-                'description': 'Data processing quality and integrity controls',
-                'implementation_status': 'implemented'
+                "control_id": "PI1.1",
+                "control_category": "Processing Integrity",
+                "description": "Data processing quality and integrity controls",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'PI1.2',
-                'control_category': 'Processing Integrity',
-                'description': 'System processing accuracy monitoring',
-                'implementation_status': 'implemented'
+                "control_id": "PI1.2",
+                "control_category": "Processing Integrity",
+                "description": "System processing accuracy monitoring",
+                "implementation_status": "implemented",
             },
             # Confidentiality
             {
-                'control_id': 'C1.1',
-                'control_category': 'Confidentiality',
-                'description': 'Confidential information identification and classification',
-                'implementation_status': 'implemented'
+                "control_id": "C1.1",
+                "control_category": "Confidentiality",
+                "description": "Confidential information identification and classification",
+                "implementation_status": "implemented",
             },
             {
-                'control_id': 'C1.2',
-                'control_category': 'Confidentiality',
-                'description': 'Confidential information disposal procedures',
-                'implementation_status': 'implemented'
+                "control_id": "C1.2",
+                "control_category": "Confidentiality",
+                "description": "Confidential information disposal procedures",
+                "implementation_status": "implemented",
             },
         ]
-        
+
         for control in default_controls:
             try:
                 self.register_control(control)
@@ -409,48 +409,54 @@ class SOC2ComplianceEngine:
         try:
             # Check if control exists
             result = self.db.execute(
-                "SELECT id FROM soc2_controls WHERE control_id = ?"
-                if self.db.db_type == 'sqlite'
-                else "SELECT id FROM soc2_controls WHERE control_id = %s",
-                (control_data['control_id'],)
+                (
+                    "SELECT id FROM soc2_controls WHERE control_id = ?"
+                    if self.db.db_type == "sqlite"
+                    else "SELECT id FROM soc2_controls WHERE control_id = %s"
+                ),
+                (control_data["control_id"],),
             )
 
             if result and result[0]:
                 # Update
                 self.db.execute(
-                    """UPDATE soc2_controls 
+                    (
+                        """UPDATE soc2_controls 
                        SET control_category = ?, description = ?, 
                            implementation_status = ?, test_results = ?
                        WHERE control_id = ?"""
-                    if self.db.db_type == 'sqlite'
-                    else """UPDATE soc2_controls 
+                        if self.db.db_type == "sqlite"
+                        else """UPDATE soc2_controls 
                        SET control_category = %s, description = %s, 
                            implementation_status = %s, test_results = %s
-                       WHERE control_id = %s""",
+                       WHERE control_id = %s"""
+                    ),
                     (
-                        control_data.get('control_category'),
-                        control_data.get('description'),
-                        control_data.get('implementation_status'),
-                        control_data.get('test_results'),
-                        control_data['control_id']
-                    )
+                        control_data.get("control_category"),
+                        control_data.get("description"),
+                        control_data.get("implementation_status"),
+                        control_data.get("test_results"),
+                        control_data["control_id"],
+                    ),
                 )
             else:
                 # Insert
                 self.db.execute(
-                    """INSERT INTO soc2_controls 
+                    (
+                        """INSERT INTO soc2_controls 
                        (control_id, control_category, description, implementation_status)
                        VALUES (?, ?, ?, ?)"""
-                    if self.db.db_type == 'sqlite'
-                    else """INSERT INTO soc2_controls 
+                        if self.db.db_type == "sqlite"
+                        else """INSERT INTO soc2_controls 
                        (control_id, control_category, description, implementation_status)
-                       VALUES (%s, %s, %s, %s)""",
+                       VALUES (%s, %s, %s, %s)"""
+                    ),
                     (
-                        control_data['control_id'],
-                        control_data.get('control_category'),
-                        control_data.get('description'),
-                        control_data.get('implementation_status', 'pending')
-                    )
+                        control_data["control_id"],
+                        control_data.get("control_category"),
+                        control_data.get("description"),
+                        control_data.get("implementation_status", "pending"),
+                    ),
                 )
 
             self.logger.info(f"Registered SOC 2 control: {control_data['control_id']}")
@@ -473,14 +479,16 @@ class SOC2ComplianceEngine:
         """
         try:
             self.db.execute(
-                """UPDATE soc2_controls 
+                (
+                    """UPDATE soc2_controls 
                    SET test_results = ?, last_tested = ?
                    WHERE control_id = ?"""
-                if self.db.db_type == 'sqlite'
-                else """UPDATE soc2_controls 
+                    if self.db.db_type == "sqlite"
+                    else """UPDATE soc2_controls 
                    SET test_results = %s, last_tested = %s
-                   WHERE control_id = %s""",
-                (test_results, datetime.now(), control_id)
+                   WHERE control_id = %s"""
+                ),
+                (test_results, datetime.now(), control_id),
             )
 
             self.logger.info(f"Updated test results for control {control_id}")
@@ -498,20 +506,20 @@ class SOC2ComplianceEngine:
             List of control dictionaries
         """
         try:
-            result = self.db.execute(
-                "SELECT * FROM soc2_controls ORDER BY control_id"
-            )
+            result = self.db.execute("SELECT * FROM soc2_controls ORDER BY control_id")
 
             controls = []
-            for row in (result or []):
-                controls.append({
-                    'control_id': row[1],
-                    'control_category': row[2],
-                    'description': row[3],
-                    'implementation_status': row[4],
-                    'last_tested': row[5],
-                    'test_results': row[6]
-                })
+            for row in result or []:
+                controls.append(
+                    {
+                        "control_id": row[1],
+                        "control_category": row[2],
+                        "description": row[3],
+                        "implementation_status": row[4],
+                        "last_tested": row[5],
+                        "test_results": row[6],
+                    }
+                )
 
             return controls
 
@@ -522,35 +530,39 @@ class SOC2ComplianceEngine:
     def get_controls_by_category(self, category: str) -> List[Dict]:
         """
         Get SOC 2 controls by category
-        
+
         Args:
             category: Control category (Security, Availability, Processing Integrity, etc.)
-            
+
         Returns:
             List of control dictionaries
         """
         try:
             result = self.db.execute(
-                """SELECT * FROM soc2_controls 
+                (
+                    """SELECT * FROM soc2_controls 
                    WHERE control_category = ?
                    ORDER BY control_id"""
-                if self.db.db_type == 'sqlite'
-                else """SELECT * FROM soc2_controls 
+                    if self.db.db_type == "sqlite"
+                    else """SELECT * FROM soc2_controls 
                    WHERE control_category = %s
-                   ORDER BY control_id""",
-                (category,)
+                   ORDER BY control_id"""
+                ),
+                (category,),
             )
 
             controls = []
-            for row in (result or []):
-                controls.append({
-                    'control_id': row[1],
-                    'control_category': row[2],
-                    'description': row[3],
-                    'implementation_status': row[4],
-                    'last_tested': row[5],
-                    'test_results': row[6]
-                })
+            for row in result or []:
+                controls.append(
+                    {
+                        "control_id": row[1],
+                        "control_category": row[2],
+                        "description": row[3],
+                        "implementation_status": row[4],
+                        "last_tested": row[5],
+                        "test_results": row[6],
+                    }
+                )
 
             return controls
 
@@ -561,36 +573,36 @@ class SOC2ComplianceEngine:
     def get_compliance_summary(self) -> Dict:
         """
         Get SOC 2 compliance summary
-        
+
         Returns:
             Dictionary with compliance statistics
         """
         try:
             controls = self.get_all_controls()
-            
+
             total = len(controls)
-            implemented = sum(1 for c in controls if c['implementation_status'] == 'implemented')
-            pending = sum(1 for c in controls if c['implementation_status'] == 'pending')
-            tested = sum(1 for c in controls if c['last_tested'] is not None)
-            
+            implemented = sum(1 for c in controls if c["implementation_status"] == "implemented")
+            pending = sum(1 for c in controls if c["implementation_status"] == "pending")
+            tested = sum(1 for c in controls if c["last_tested"] is not None)
+
             categories = {}
             for control in controls:
-                cat = control['control_category']
+                cat = control["control_category"]
                 if cat not in categories:
-                    categories[cat] = {'total': 0, 'implemented': 0}
-                categories[cat]['total'] += 1
-                if control['implementation_status'] == 'implemented':
-                    categories[cat]['implemented'] += 1
-            
+                    categories[cat] = {"total": 0, "implemented": 0}
+                categories[cat]["total"] += 1
+                if control["implementation_status"] == "implemented":
+                    categories[cat]["implemented"] += 1
+
             return {
-                'total_controls': total,
-                'implemented': implemented,
-                'pending': pending,
-                'tested': tested,
-                'compliance_percentage': (implemented / total * 100) if total > 0 else 0,
-                'categories': categories
+                "total_controls": total,
+                "implemented": implemented,
+                "pending": pending,
+                "tested": tested,
+                "compliance_percentage": (implemented / total * 100) if total > 0 else 0,
+                "categories": categories,
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to get compliance summary: {e}")
             return {}

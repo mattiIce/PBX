@@ -7,18 +7,17 @@ import sys
 import time
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import ThreatDetector
-
 
 
 def test_threat_detector_initialization():
     """Test threat detector initialization"""
     print("Testing threat detector initialization...")
 
-    config = {'security': {'threat_detection': {'enabled': True}}}
+    config = {"security": {"threat_detection": {"enabled": True}}}
     detector = ThreatDetector(database=None, config=config)
 
     assert detector.enabled, "Threat detection should be enabled"
@@ -31,7 +30,7 @@ def test_ip_blocking():
     """Test IP blocking"""
     print("Testing IP blocking...")
 
-    config = {'security': {'threat_detection': {'enabled': True}}}
+    config = {"security": {"threat_detection": {"enabled": True}}}
     detector = ThreatDetector(database=None, config=config)
 
     test_ip = "192.168.1.100"
@@ -65,7 +64,7 @@ def test_auto_unblock():
     """Test automatic unblocking after duration"""
     print("Testing automatic unblocking...")
 
-    config = {'security': {'threat_detection': {'enabled': True}}}
+    config = {"security": {"threat_detection": {"enabled": True}}}
     detector = ThreatDetector(database=None, config=config)
 
     test_ip = "192.168.1.101"
@@ -93,14 +92,7 @@ def test_failed_attempt_tracking():
     """Test failed attempt tracking and auto-blocking"""
     print("Testing failed attempt tracking...")
 
-    config = {
-        'security': {
-            'threat_detection': {
-                'enabled': True,
-                'failed_login_threshold': 5
-            }
-        }
-    }
+    config = {"security": {"threat_detection": {"enabled": True, "failed_login_threshold": 5}}}
     detector = ThreatDetector(database=None, config=config)
 
     test_ip = "192.168.1.102"
@@ -136,12 +128,7 @@ def test_suspicious_pattern_detection():
     print("Testing suspicious pattern detection...")
 
     config = {
-        'security': {
-            'threat_detection': {
-                'enabled': True,
-                'suspicious_pattern_threshold': 3
-            }
-        }
+        "security": {"threat_detection": {"enabled": True, "suspicious_pattern_threshold": 3}}
     }
     detector = ThreatDetector(database=None, config=config)
 
@@ -172,22 +159,22 @@ def test_request_pattern_analysis():
     """Test request pattern analysis"""
     print("Testing request pattern analysis...")
 
-    config = {'security': {'threat_detection': {'enabled': True}}}
+    config = {"security": {"threat_detection": {"enabled": True}}}
     detector = ThreatDetector(database=None, config=config)
 
     # Test normal request
     analysis = detector.analyze_request_pattern("192.168.1.104", "Mozilla/5.0")
-    assert not analysis['is_blocked'], "Normal request should not be blocked"
-    assert not analysis['is_suspicious'], "Normal request should not be suspicious"
-    assert analysis['score'] == 0, "Normal request should have score 0"
+    assert not analysis["is_blocked"], "Normal request should not be blocked"
+    assert not analysis["is_suspicious"], "Normal request should not be suspicious"
+    assert analysis["score"] == 0, "Normal request should have score 0"
     print("  ✓ Normal request analyzed correctly")
 
     # Test scanner user agent
     analysis = detector.analyze_request_pattern("192.168.1.105", "nmap/7.80")
-    assert not analysis['is_blocked'], "Scanner should not be immediately blocked"
-    assert analysis['is_suspicious'], "Scanner should be marked suspicious"
-    assert analysis['score'] > 0, "Scanner should have elevated threat score"
-    assert len(analysis['threats']) > 0, "Scanner should have threats listed"
+    assert not analysis["is_blocked"], "Scanner should not be immediately blocked"
+    assert analysis["is_suspicious"], "Scanner should be marked suspicious"
+    assert analysis["score"] > 0, "Scanner should have elevated threat score"
+    assert len(analysis["threats"]) > 0, "Scanner should have threats listed"
     print("  ✓ Scanner user agent detected")
     print(f"    Threats: {analysis['threats']}")
     print(f"    Score: {analysis['score']}")
@@ -201,23 +188,16 @@ def test_with_database():
 
     # Create temporary SQLite database
     import tempfile
-    db_file = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+
+    db_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     db_path = db_file.name
     db_file.close()
 
     try:
         # Create database config
         db_config = {
-            'database': {
-                'type': 'sqlite',
-                'path': db_path
-            },
-            'security': {
-                'threat_detection': {
-                    'enabled': True,
-                    'failed_login_threshold': 5
-                }
-            }
+            "database": {"type": "sqlite", "path": db_path},
+            "security": {"threat_detection": {"enabled": True, "failed_login_threshold": 5}},
         }
 
         # Create database
@@ -252,10 +232,11 @@ def test_with_database():
 
         # Test threat summary
         summary = detector.get_threat_summary(hours=24)
-        assert summary['total_events'] >= 0, "Summary should return total events"
+        assert summary["total_events"] >= 0, "Summary should return total events"
         print(
             f"  ✓ Threat summary retrieved: {
-                summary['total_events']} events")
+                summary['total_events']} events"
+        )
 
         # Clean up
         db.connection.close()
@@ -304,6 +285,7 @@ def run_all_tests():
             failed += 1
             print(f"  ✗ {test.__name__} failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
         print()
 
@@ -314,6 +296,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)
