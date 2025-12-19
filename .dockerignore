@@ -1,0 +1,127 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv
+
+# Build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+.tox/
+.hypothesis/
+
+# Documentation
+docs/
+*.md
+!README.md
+screenshots/
+
+# CI/CD
+.github/
+
+# Logs
+*.log
+logs/
+
+# Runtime data directories (will be mounted as volumes)
+recordings/
+voicemail/
+test_voicemail/
+cdr/
+moh/*
+!moh/README.md
+!moh/default/
+
+# Generated files
+auto_attendant/*.wav
+voicemail_prompts/*.wav
+
+# Database files (will use PostgreSQL in production)
+*.db
+*.db-journal
+
+# Config files (will be provided via environment or volumes)
+*.local.yml
+*.local.json
+local_config/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Development files
+requirements-dev.txt
+.pre-commit-config.yaml
+.pylintrc
+.flake8
+mypy.ini
+.editorconfig
+.markdownlint.json
+
+# Test configurations
+test_config.yml
+*_test.py
+run_tests.py
+run_startup_tests.sh
+pbx-startup-tests.service
+
+# SSL/TLS certificates (will be provided via volumes or environment)
+*.pem
+*.key
+*.crt
+*.csr
+certs/
+
+# Example files
+.env.example
+examples/
+
+# Scripts (keep installation scripts but exclude setup scripts)
+scripts/setup_*.py
+scripts/generate_*.py
+
+# Constraints file
+constraints.txt
+
+# Setup files
+setup.py
+MANIFEST.in
