@@ -24,6 +24,7 @@ OPTIONAL_FEATURES = {
     "fido2": "FIDO2/WebAuthn authentication",
     "opuslib": "Opus codec support",
     "vosk": "Voicemail transcription (offline)",
+    "sounddevice": "Audio I/O (requires PortAudio system library)",
 }
 
 # Core dependencies (required for basic PBX operation)
@@ -76,6 +77,10 @@ def check_module(module_name: str) -> bool:
         importlib.import_module(module_name)
         return True
     except ImportError:
+        return False
+    except OSError:
+        # Some modules like sounddevice raise OSError when system libraries
+        # (e.g., PortAudio) are not installed, even though the Python package is installed
         return False
 
 
