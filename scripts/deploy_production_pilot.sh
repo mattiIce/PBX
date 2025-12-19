@@ -46,32 +46,32 @@ done
 
 # Logging functions
 log_info() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${BLUE}[INFO]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${BLUE}[INFO]${NC} $1"
     fi
 }
 
 log_success() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${GREEN}[SUCCESS]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${GREEN}[SUCCESS]${NC} $1"
     fi
 }
 
 log_warning() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${YELLOW}[WARNING]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${YELLOW}[WARNING]${NC} $1"
     fi
 }
 
 log_error() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${RED}[ERROR]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${RED}[ERROR]${NC} $1"
     fi
@@ -474,17 +474,26 @@ SERVICES CONFIGURED:
 ✓ Monitoring (Prometheus on :9090)
 ✓ Systemd Service (pbx.service)
 
-NEXT STEPS:
------------
+📖 WHAT TO READ NEXT:
+---------------------
+👉 READ THIS FIRST: $PROJECT_ROOT/POST_DEPLOYMENT.md
+
+This guide contains:
+- Critical first steps (database password, SSL setup)
+- Essential documentation to read (in order)
+- Testing and verification steps
+- Troubleshooting help
+
+QUICK NEXT STEPS:
+-----------------
 1. Update database password in config.yml
-2. Configure SSL certificate:
-   sudo certbot --nginx -d your-domain.com
-3. Start PBX service:
-   sudo systemctl start pbx
-4. Check service status:
-   sudo systemctl status pbx
-5. View logs:
-   sudo journalctl -u pbx -f
+2. Initialize database: python scripts/init_database.py
+3. Generate voice prompts: python scripts/generate_tts_prompts.py
+4. Configure SSL certificate: sudo certbot --nginx -d your-domain.com
+5. Start PBX service: sudo systemctl start pbx
+6. View logs: sudo journalctl -u pbx -f
+
+📚 Full details in POST_DEPLOYMENT.md
 
 MONITORING:
 -----------
@@ -569,13 +578,33 @@ main() {
     log_success "=========================================="
     log_success "DEPLOYMENT COMPLETE!"
     log_success "=========================================="
+    echo ""
     
     if [ "$DRY_RUN" = true ]; then
         log_info "This was a dry run. No changes were made."
         log_info "Run without --dry-run to perform actual deployment."
     else
-        log_info "Review the deployment summary above."
-        log_info "Complete the 'Next Steps' section before deploying to users."
+        log_success "✅ Base system configured successfully!"
+        echo ""
+        log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        log_info "📖 NEXT: Read the Post-Deployment Guide"
+        log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        log_info "📄 File: $PROJECT_ROOT/POST_DEPLOYMENT.md"
+        echo ""
+        log_info "This guide will walk you through:"
+        log_info "  • Critical first steps (database password, SSL)"
+        log_info "  • Essential documentation (in order)"
+        log_info "  • Voice prompt generation (REQUIRED)"
+        log_info "  • Testing and verification"
+        log_info "  • Troubleshooting common issues"
+        echo ""
+        log_info "Quick view:"
+        log_info "  cat $PROJECT_ROOT/POST_DEPLOYMENT.md | less"
+        echo ""
+        log_info "Or open in your browser/editor"
+        echo ""
+        log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     fi
 }
 

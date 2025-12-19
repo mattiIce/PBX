@@ -2,6 +2,17 @@
 
 This document helps you navigate the comprehensive documentation for the PBX system.
 
+## 🚀 Just Ran Deployment Script?
+
+**START HERE:**
+- **[POST_DEPLOYMENT.md](POST_DEPLOYMENT.md)** - 📌 **Read this after running `scripts/deploy_production_pilot.sh`**
+  - Critical first steps (database password, SSL setup)
+  - Essential documentation to read (in order)
+  - Testing and verification
+  - Troubleshooting guide
+
+---
+
 ## Executive Overview
 
 For executives, managers, and decision-makers:
