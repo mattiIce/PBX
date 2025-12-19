@@ -723,6 +723,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             if path == "":
                 self._handle_root()
+            elif path == "/health" or path == "/healthz":
+                self._handle_health()
             elif path == "/api/status":
                 self._handle_status()
             elif path == "/api/extensions":
@@ -1129,6 +1131,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         self.send_response(302)
         self.send_header("Location", "/admin")
         self.end_headers()
+
+    def _handle_health(self):
+        """Lightweight health check endpoint for container orchestration"""
+        # Return simple OK response if server is running
+        # This doesn't check PBX core status for faster response
+        self._set_headers(200, "application/json")
+        self.wfile.write(json.dumps({"status": "ok"}).encode())
 
     def _handle_status(self):
         """Get PBX status"""

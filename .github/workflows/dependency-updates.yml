@@ -1,0 +1,67 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install pip-tools
+      run: |
+        python -m pip install --upgrade pip pip-tools
+    
+    - name: Update requirements
+      run: |
+        # Generate updated requirements with latest versions
+        pip-compile --upgrade requirements.txt --output-file requirements-updated.txt
+        
+    - name: Check for updates
+      id: check
+      run: |
+        if ! diff -q requirements.txt requirements-updated.txt > /dev/null 2>&1; then
+          echo "updates_available=true" >> $GITHUB_OUTPUT
+          echo "Updates available!"
+          diff requirements.txt requirements-updated.txt || true
+        else
+          echo "updates_available=false" >> $GITHUB_OUTPUT
+          echo "No updates available"
+        fi
+    
+    - name: Create Pull Request
+      if: steps.check.outputs.updates_available == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        commit-message: 'chore(deps): Update Python dependencies'
+        title: 'chore(deps): Weekly dependency updates'
+        body: |
+          ## Automated Dependency Updates
+          
+          This PR updates Python dependencies to their latest compatible versions.
+          
+          ### Changes
+          - Updated dependencies in requirements.txt
+          
+          ### Testing
+          - [ ] CI tests pass
+          - [ ] Manual testing completed
+          
+          **Note:** Review the changes carefully before merging. Check for breaking changes in the changelog of updated packages.
+        branch: automated/dependency-updates
+        delete-branch: true
+        labels: |
+          dependencies
+          automated

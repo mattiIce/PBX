@@ -329,6 +329,10 @@ curl -X PUT http://localhost:8080/api/config \
 
 ## 🛠️ Architecture
 
+For a detailed architecture overview including data flows, component interactions, and deployment options, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### Quick Overview
+
 ```
 PBX System
 ├── pbx/
