@@ -93,6 +93,8 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 
 ## 🚀 Quick Start
 
+> **📌 Production Deployment?** If you're deploying to Ubuntu 24.04 LTS for production use, see the [Production Deployment](#-production-deployment-ubuntu-2404-lts) section below for automated setup.
+
 ### Installation
 
 1. Clone the repository:
@@ -169,6 +171,40 @@ The PBX will start on:
 - Admin Panel: https://localhost:8080/admin/
 
 **Note:** Browsers will show a security warning for self-signed certificates during development. This is normal. For production, use a certificate from a trusted CA like Let's Encrypt.
+
+## 🏭 Production Deployment (Ubuntu 24.04 LTS)
+
+For production deployments on Ubuntu 24.04 LTS, use the automated deployment script:
+
+```bash
+# Clone the repository
+git clone https://github.com/mattiIce/PBX.git
+cd PBX
+
+# Run deployment script (requires sudo)
+sudo bash scripts/deploy_production_pilot.sh
+
+# Or run in dry-run mode first to see what will be configured
+sudo bash scripts/deploy_production_pilot.sh --dry-run
+```
+
+**The script automatically configures:**
+- ✓ PostgreSQL database with secure password
+- ✓ Python virtual environment
+- ✓ Nginx reverse proxy
+- ✓ Firewall (UFW) with required ports
+- ✓ Daily backup system (2 AM)
+- ✓ Monitoring (Prometheus + Node Exporter)
+- ✓ Systemd service for automatic startup
+
+**After deployment completes, read:** [POST_DEPLOYMENT.md](POST_DEPLOYMENT.md)
+
+This guide contains:
+- Critical first steps (database password, SSL setup)
+- Essential documentation to read (in order)
+- Voice prompt generation (REQUIRED)
+- Testing and verification steps
+- Troubleshooting help
 
 ### 🌐 Production URL Setup (Optional)
 
