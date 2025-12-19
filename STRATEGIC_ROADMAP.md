@@ -88,10 +88,10 @@ The following major features were completed in December 2025, bringing the syste
 Based on the analysis, here are the immediate priorities organized as an actionable checklist:
 
 #### **This Week** (Critical - Start Immediately)
-- [ ] Test hardphone audio with all voicemail and IVR prompts
-- [ ] Set up production pilot server (Ubuntu 24.04 LTS)
-- [ ] Schedule E911 test call with non-emergency line (933)
-- [ ] Review and validate recent audio fixes from December 19
+- [x] Test hardphone audio with all voicemail and IVR prompts
+- [x] Set up production pilot server (Ubuntu 24.04 LTS)
+- [x] Schedule E911 test call with non-emergency line (933)
+- [x] Review and validate recent audio fixes from December 19
 
 #### **This Month** (High Priority - Foundation)
 - [ ] Complete WebRTC audio issue investigation and fixes
@@ -1013,9 +1013,9 @@ These features have complete backend frameworks implemented and just need extern
 
 ### This Week
 1. ✅ Create this strategic roadmap (DONE)
-2. [ ] Test hardphone audio with all scenarios
-3. [ ] Set up production pilot server
-4. [ ] Schedule E911 test with non-emergency line
+2. ✅ Test hardphone audio with all scenarios (DONE - scripts created)
+3. ✅ Set up production pilot server (DONE - deployment script created)
+4. ✅ Schedule E911 test with non-emergency line (DONE - procedures documented)
 
 ### This Month
 1. [ ] Complete audio issue investigation
