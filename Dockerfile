@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for PBX System
 # Stage 1: Builder stage for dependencies
-FROM python:3.11-slim-bookworm as builder
+FROM python:3.11-slim-bookworm AS builder
 
 # Install system dependencies required for building Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -20,12 +20,12 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy dependency files
-COPY pyproject.toml /tmp/
+COPY requirements.txt /tmp/
 WORKDIR /tmp
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir .
+    pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime stage
 FROM python:3.11-slim-bookworm

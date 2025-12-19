@@ -327,26 +327,131 @@ diff config.yml config.yml.new
 sudo systemctl restart pbx
 ```
 
-## Docker Deployment (Optional)
+## Docker Deployment
 
-Create `Dockerfile`:
-```dockerfile
-FROM python:3.9-slim
+The PBX system includes production-ready Docker containerization with multi-stage builds for optimal image size and security.
 
-WORKDIR /app
-COPY . /app
+### Prerequisites
 
-RUN pip install pyyaml
+- Docker Engine 20.10+ or Docker Desktop
+- Docker Compose (included with Docker Desktop)
 
-EXPOSE 5060/udp 8080/tcp 10000-20000/udp
+### Quick Start with Docker Compose
 
-CMD ["python", "main.py"]
+1. **Copy the environment template**:
+```bash
+cp .env.example .env
 ```
 
-Build and run:
+2. **Edit `.env` and set required variables**:
 ```bash
-docker build -t inhouse-pbx .
-docker run -p 5060:5060/udp -p 8080:8080 -p 10000-20000:10000-20000/udp inhouse-pbx
+# Minimum required configuration
+DB_PASSWORD=YourSecurePassword123!
+REDIS_PASSWORD=YourRedisPassword456!
+
+# Optional: Add other credentials as needed
+SMTP_HOST=smtp.yourserver.com
+SMTP_PORT=587
+# ... etc
+```
+
+3. **Start all services** (PBX, PostgreSQL, Redis):
+```bash
+docker compose up -d
+```
+
+4. **Check logs**:
+```bash
+docker compose logs -f pbx
+```
+
+5. **Access the system**:
+- API/Web Interface: http://localhost:8880
+- SIP Port: UDP 5060
+- RTP Ports: UDP 10000-20000
+
+### Docker Compose Services
+
+The `docker-compose.yml` orchestrates three services:
+
+- **pbx**: Main PBX application
+- **postgres**: PostgreSQL database (persistent storage)
+- **redis**: Redis cache (sessions, real-time features)
+
+### Building the Docker Image
+
+To build the image separately:
+```bash
+docker build -t pbx-system:latest .
+```
+
+The Dockerfile uses:
+- Multi-stage build for smaller final image size
+- Python 3.11 slim base image
+- Non-root user (pbx:1000) for security
+- System dependencies: ffmpeg, portaudio, opus, speex, etc.
+- Health check on API port
+
+### Data Persistence
+
+The following volumes persist data:
+- `postgres_data`: Database
+- `redis_data`: Redis cache
+- `recordings`: Call recordings
+- `voicemail`: Voicemail messages
+- `cdr`: Call detail records
+- `moh`: Music on hold files
+- `logs`: Application logs
+
+### Customization
+
+**Custom configuration**: Mount your own `config.yml`:
+```yaml
+volumes:
+  - ./my-config.yml:/app/config.yml:ro
+```
+
+**Custom voice prompts**: Mount your own audio files:
+```yaml
+volumes:
+  - ./my-prompts:/app/auto_attendant:ro
+```
+
+**SSL/TLS certificates**: Mount certificate directory:
+```yaml
+volumes:
+  - ./certs:/app/certs:ro
+```
+
+### Stopping and Cleanup
+
+Stop services:
+```bash
+docker compose down
+```
+
+Stop and remove volumes (⚠️ deletes all data):
+```bash
+docker compose down -v
+```
+
+### Troubleshooting
+
+**View logs**:
+```bash
+docker compose logs -f pbx        # PBX logs
+docker compose logs -f postgres   # Database logs
+docker compose logs -f redis      # Redis logs
+```
+
+**Access container shell**:
+```bash
+docker compose exec pbx /bin/bash
+```
+
+**Rebuild after code changes**:
+```bash
+docker compose up -d --build
 ```
 
 ## Getting Help
