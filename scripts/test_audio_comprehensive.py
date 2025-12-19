@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import math
 import os
 import struct
 import sys
@@ -190,8 +191,8 @@ class AudioTester:
             
             for i in range(num_samples):
                 t = i / sample_rate
-                # Generate sine wave
-                sample = int(16384 * 0.5 * (1 + 0.8 * (2 * 3.14159 * frequency * t % (2 * 3.14159)) / 3.14159 - 1))
+                # Generate sine wave using proper formula
+                sample = int(16384 * 0.5 * math.sin(2 * math.pi * frequency * t))
                 pcm_samples.append(sample)
             
             # Pack as 16-bit little-endian PCM

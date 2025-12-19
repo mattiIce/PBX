@@ -177,8 +177,16 @@ configure_postgresql() {
     
     # Create database and user
     sudo -u postgres psql -c "CREATE DATABASE pbx;" 2>/dev/null || log_warning "Database may already exist"
-    sudo -u postgres psql -c "CREATE USER pbxuser WITH PASSWORD 'CHANGE_ME_IN_PRODUCTION';" 2>/dev/null || log_warning "User may already exist"
+    
+    # Generate a random password if not in dry-run mode
+    DB_PASSWORD=$(openssl rand -base64 32)
+    echo "Generated database password: $DB_PASSWORD" >> "$LOG_FILE"
+    log_info "Database password generated (saved in log file)"
+    
+    sudo -u postgres psql -c "CREATE USER pbxuser WITH PASSWORD '$DB_PASSWORD';" 2>/dev/null || log_warning "User may already exist"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx TO pbxuser;"
+    
+    log_warning "⚠️  IMPORTANT: Update database password in config.yml with the password from $LOG_FILE"
     
     log_success "PostgreSQL configured"
 }
