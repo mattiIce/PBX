@@ -357,7 +357,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
-ReadWritePaths=$PROJECT_ROOT
+ReadWritePaths=$PROJECT_ROOT/logs $PROJECT_ROOT/recordings $PROJECT_ROOT/voicemail $PROJECT_ROOT/cdr $PROJECT_ROOT/moh
 
 # Resource limits
 LimitNOFILE=65536
