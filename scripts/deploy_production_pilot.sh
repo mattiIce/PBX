@@ -355,10 +355,9 @@ StandardError=journal
 # Security hardening
 NoNewPrivileges=true
 PrivateTmp=true
-ProtectSystem=strict
+ProtectSystem=full
 ProtectHome=true
-ReadWritePaths=$PROJECT_ROOT/logs $PROJECT_ROOT/recordings $PROJECT_ROOT/voicemail $PROJECT_ROOT/cdr
-ReadOnlyPaths=$PROJECT_ROOT
+ReadWritePaths=$PROJECT_ROOT
 
 # Resource limits
 LimitNOFILE=65536
