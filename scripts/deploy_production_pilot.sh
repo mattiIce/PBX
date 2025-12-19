@@ -46,32 +46,32 @@ done
 
 # Logging functions
 log_info() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${BLUE}[INFO]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${BLUE}[INFO]${NC} $1"
     fi
 }
 
 log_success() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${GREEN}[SUCCESS]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${GREEN}[SUCCESS]${NC} $1"
     fi
 }
 
 log_warning() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${YELLOW}[WARNING]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${YELLOW}[WARNING]${NC} $1"
     fi
 }
 
 log_error() {
-    if [ "$DRY_RUN" = true ] || [ -w "$(dirname "$LOG_FILE")" ]; then
-        echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE" 2>/dev/null || echo -e "${RED}[ERROR]${NC} $1"
+    if [ "$DRY_RUN" = false ] && [ -w "$(dirname "$LOG_FILE")" ]; then
+        echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
     else
         echo -e "${RED}[ERROR]${NC} $1"
     fi
