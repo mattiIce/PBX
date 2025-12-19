@@ -520,13 +520,14 @@ For issues and questions, please open a GitHub issue.
 
 ### Known Issues
 
-⚠️ **Audio Features Currently Non-Functional**
+⚠️ **Audio Features**
 - **WebRTC Browser Phone**: Currently disabled and not working. Use physical IP phones or SIP clients for calls.
-- **Hardphone Audio**: Audio playback on physical IP phones is experiencing issues and may be distorted or non-functional. Investigation ongoing.
-- **Root Cause**: Audio sample rate mismatch - voicemail prompt files are 16kHz but system expects 8kHz for PCMU codec, causing downsampling and distortion.
-- **Fix Available**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed solution (regenerate audio prompts at 8kHz).
+- ~~**Hardphone Audio**: Audio sample rate mismatch issue~~ - ✅ **FIXED** (December 19, 2025)
+  - All voicemail and auto attendant prompts regenerated at correct 8kHz sample rate for PCMU codec
+  - Audio playback should now work correctly on IP phones
+- **WebRTC Audio**: WebRTC browser calling feature needs further investigation
 
-These are critical components being actively investigated. All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) remain fully functional.
+All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) are fully functional.
 
 ### Framework Features (100% Free & Open Source)
 
@@ -580,8 +581,8 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 
 ### Future Enhancements
 - [ ] Fix WebRTC browser-based calling (currently non-functional)
-- [ ] Fix hardphone audio playback issues
-- [ ] Resolve audio sample rate mismatch (8kHz vs 16kHz)
+- [x] ~~Fix hardphone audio playback issues~~ - ✅ **COMPLETED** (Dec 19, 2025)
+- [x] ~~Resolve audio sample rate mismatch (8kHz vs 16kHz)~~ - ✅ **COMPLETED** (Dec 19, 2025)
 - [ ] Complete free/open-source service integrations for framework features
 - [ ] Native iOS and Android mobile apps (React Native/Flutter)
 - [ ] SMS/Messaging integration

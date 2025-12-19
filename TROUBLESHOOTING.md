@@ -43,15 +43,20 @@ tail -f ~/PBX/logs/pbx.log | grep RTP
 
 ### Distorted or Garbled Audio
 
+**Status:** ✅ **FIXED** (December 19, 2025)
+
 **Symptoms:**
 - Audio plays but sounds distorted or garbled
 - TTS prompts sound incorrect
 - Voicemail playback is unintelligible
 
 **Root Cause:**
-Audio sample rate mismatch - voicemail prompt files may be at 16kHz but system expects 8kHz for PCMU codec.
+Audio sample rate mismatch - voicemail prompt files were at 16kHz but system expects 8kHz for PCMU codec.
 
-**Solution:**
+**Solution Applied:**
+All voicemail and auto attendant prompts have been regenerated at the correct 8kHz sample rate.
+
+**If you need to regenerate prompts again:**
 ```bash
 # Regenerate audio prompts at correct sample rate
 cd /home/runner/work/PBX/PBX
@@ -62,7 +67,7 @@ file voicemail_prompts/*.wav
 # Should show: 8000 Hz, 16 bit, mono
 ```
 
-**Additional Steps:**
+**Additional Steps (if needed):**
 1. Clear any cached audio files
 2. Restart PBX service: `sudo systemctl restart pbx`
 3. Test voicemail prompts
