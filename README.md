@@ -581,8 +581,8 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 
 ### Future Enhancements
 - [ ] Fix WebRTC browser-based calling (currently non-functional)
-- [x] ~~Fix hardphone audio playback issues~~ - ✅ **COMPLETED** (Dec 19, 2025)
-- [x] ~~Resolve audio sample rate mismatch (8kHz vs 16kHz)~~ - ✅ **COMPLETED** (Dec 19, 2025)
+- [x] ~~Fix hardphone audio playback issues~~ - ✅ **COMPLETED** (December 19, 2025)
+- [x] ~~Resolve audio sample rate mismatch (8kHz vs 16kHz)~~ - ✅ **COMPLETED** (December 19, 2025)
 - [ ] Complete free/open-source service integrations for framework features
 - [ ] Native iOS and Android mobile apps (React Native/Flutter)
 - [ ] SMS/Messaging integration
