@@ -1,0 +1,21 @@
+[Unit]
+Description=PBX System
+After=network.target
+
+[Service]
+Type=simple
+# IMPORTANT: Update these paths to match your PBX installation directory
+# Common locations: /opt/pbx, /usr/local/pbx, /home/username/PBX, /root/PBX
+WorkingDirectory=/root/PBX
+ExecStart=/root/PBX/venv/bin/python main.py
+# IMPORTANT: Update this to the user who owns the PBX files
+# Common users: pbx, root, your-username
+User=root
+Group=root
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
