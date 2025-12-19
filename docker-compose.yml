@@ -39,7 +39,7 @@ services:
     image: redis:7-alpine
     container_name: pbx-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-pbx_redis_pass}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     volumes:
       # Persistent Redis data (AOF persistence)
       - redis_data:/data
@@ -50,7 +50,7 @@ services:
     networks:
       - pbx-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -81,7 +81,7 @@ services:
       # Redis configuration
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-pbx_redis_pass}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
       
       # Email/SMTP configuration (optional)
       SMTP_HOST: ${SMTP_HOST:-}

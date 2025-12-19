@@ -345,7 +345,7 @@ cp .env.example .env
 
 2. **Edit `.env` and set required variables**:
 ```bash
-# Minimum required configuration
+# Required configuration
 DB_PASSWORD=YourSecurePassword123!
 REDIS_PASSWORD=YourRedisPassword456!
 

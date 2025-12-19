@@ -87,7 +87,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.settimeout(5); s.connect(('localhost', 8880)); s.close()" || exit 1
+    CMD ["python", "/app/healthcheck.py"]
 
 # Set entrypoint
 ENTRYPOINT ["python"]
