@@ -9,11 +9,10 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-
 
 
 def test_transaction_rollback_on_error():
@@ -21,16 +20,13 @@ def test_transaction_rollback_on_error():
     print("Testing transaction rollback after errors...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -46,16 +42,14 @@ def test_transaction_rollback_on_error():
         # If rollback didn't work, this would fail with "transaction is
         # aborted" error
         result = db.execute(
-            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)",
-            ('1234567890',
-             1))
+            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)", ("1234567890", 1)
+        )
         assert result is True
 
         # Verify the insert worked
-        row = db.fetch_one(
-            "SELECT * FROM vip_callers WHERE caller_id = ?", ('1234567890',))
+        row = db.fetch_one("SELECT * FROM vip_callers WHERE caller_id = ?", ("1234567890",))
         assert row is not None
-        assert row['caller_id'] == '1234567890'
+        assert row["caller_id"] == "1234567890"
 
         db.disconnect()
         print("✓ Transaction rollback on error works correctly")
@@ -70,15 +64,12 @@ def test_fetch_one_rollback_on_error():
     """Test that fetch_one rolls back transaction on error"""
     print("Testing fetch_one transaction rollback...")
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -90,9 +81,8 @@ def test_fetch_one_rollback_on_error():
 
         # Now execute a valid query - should succeed if rollback worked
         result = db.execute(
-            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)",
-            ('9876543210',
-             1))
+            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)", ("9876543210", 1)
+        )
         assert result is True
 
         db.disconnect()
@@ -107,15 +97,12 @@ def test_fetch_all_rollback_on_error():
     """Test that fetch_all rolls back transaction on error"""
     print("Testing fetch_all transaction rollback...")
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -127,9 +114,8 @@ def test_fetch_all_rollback_on_error():
 
         # Now execute a valid query - should succeed if rollback worked
         result = db.execute(
-            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)",
-            ('5555555555',
-             1))
+            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)", ("5555555555", 1)
+        )
         assert result is True
 
         db.disconnect()
@@ -144,15 +130,12 @@ def test_schema_migration_rollback():
     """Test that schema migration errors don't leave transactions open"""
     print("Testing schema migration transaction rollback...")
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -165,9 +148,8 @@ def test_schema_migration_rollback():
         # After schema migration (even with potential errors), we should be
         # able to insert
         result = db.execute(
-            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)",
-            ('1112223333',
-             1))
+            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)", ("1112223333", 1)
+        )
         assert result is True
 
         db.disconnect()
@@ -182,15 +164,12 @@ def test_permission_error_rollback():
     """Test that permission errors properly rollback transactions"""
     print("Testing permission error transaction rollback...")
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -199,17 +178,14 @@ def test_permission_error_rollback():
         # Try to create an index that will fail (table doesn't exist)
         # This is marked as non-critical, so should return True but rollback
         result = db._execute_with_context(
-            "CREATE INDEX test_idx ON nonexistent_table(col)",
-            "index creation",
-            critical=False
+            "CREATE INDEX test_idx ON nonexistent_table(col)", "index creation", critical=False
         )
         # Should fail gracefully
 
         # After the failed index creation, we should still be able to insert
         result = db.execute(
-            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)",
-            ('4445556666',
-             1))
+            "INSERT INTO vip_callers (caller_id, priority_level) VALUES (?, ?)", ("4445556666", 1)
+        )
         assert result is True
 
         db.disconnect()
@@ -245,6 +221,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 
@@ -256,6 +233,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

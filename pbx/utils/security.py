@@ -2,6 +2,7 @@
 Security utilities for PBX system
 Provides password management, rate limiting, and security validation
 """
+
 import re
 import secrets
 import time
@@ -26,10 +27,25 @@ class PasswordPolicy:
 
     # Common weak passwords to block (case will be normalized during check)
     COMMON_PASSWORDS = {
-        'password', 'password123', 'password123!', 'password1', 'password1!',
-        'admin', 'admin123', '12345678', '123456789', '1234567890',
-        'qwerty', 'qwerty123', 'letmein', 'welcome', 'welcome1', 'monkey',
-        'passw0rd', 'p@ssword', 'p@ssw0rd'
+        "password",
+        "password123",
+        "password123!",
+        "password1",
+        "password1!",
+        "admin",
+        "admin123",
+        "12345678",
+        "123456789",
+        "1234567890",
+        "qwerty",
+        "qwerty123",
+        "letmein",
+        "welcome",
+        "welcome1",
+        "monkey",
+        "passw0rd",
+        "p@ssword",
+        "p@ssw0rd",
     }
 
     def __init__(self, config: dict = None):
@@ -43,18 +59,18 @@ class PasswordPolicy:
         self.config = config or {}
 
         # Load policy from config
-        self.min_length = self.config.get(
-            'security.password.min_length', self.MIN_LENGTH)
-        self.max_length = self.config.get(
-            'security.password.max_length', self.MAX_LENGTH)
+        self.min_length = self.config.get("security.password.min_length", self.MIN_LENGTH)
+        self.max_length = self.config.get("security.password.max_length", self.MAX_LENGTH)
         self.require_uppercase = self.config.get(
-            'security.password.require_uppercase', self.REQUIRE_UPPERCASE)
+            "security.password.require_uppercase", self.REQUIRE_UPPERCASE
+        )
         self.require_lowercase = self.config.get(
-            'security.password.require_lowercase', self.REQUIRE_LOWERCASE)
-        self.require_digit = self.config.get(
-            'security.password.require_digit', self.REQUIRE_DIGIT)
+            "security.password.require_lowercase", self.REQUIRE_LOWERCASE
+        )
+        self.require_digit = self.config.get("security.password.require_digit", self.REQUIRE_DIGIT)
         self.require_special = self.config.get(
-            'security.password.require_special', self.REQUIRE_SPECIAL)
+            "security.password.require_special", self.REQUIRE_SPECIAL
+        )
 
     def validate(self, password: str) -> Tuple[bool, Optional[str]]:
         """
@@ -71,12 +87,18 @@ class PasswordPolicy:
 
         # Check length
         if len(password) < self.min_length:
-            return False, f"Password must be at least {
-                self.min_length} characters"
+            return (
+                False,
+                f"Password must be at least {
+                self.min_length} characters",
+            )
 
         if len(password) > self.max_length:
-            return False, f"Password must be no more than {
-                self.max_length} characters"
+            return (
+                False,
+                f"Password must be no more than {
+                self.max_length} characters",
+            )
 
         # Check for common weak passwords (case-insensitive)
         common_passwords_lower = {p.lower() for p in self.COMMON_PASSWORDS}
@@ -84,19 +106,21 @@ class PasswordPolicy:
             return False, "Password is too common and easily guessed"
 
         # Check complexity requirements
-        if self.require_uppercase and not re.search(r'[A-Z]', password):
+        if self.require_uppercase and not re.search(r"[A-Z]", password):
             return False, "Password must contain at least one uppercase letter"
 
-        if self.require_lowercase and not re.search(r'[a-z]', password):
+        if self.require_lowercase and not re.search(r"[a-z]", password):
             return False, "Password must contain at least one lowercase letter"
 
-        if self.require_digit and not re.search(r'\d', password):
+        if self.require_digit and not re.search(r"\d", password):
             return False, "Password must contain at least one digit"
 
-        if self.require_special and not re.search(
-                f'[{re.escape(self.SPECIAL_CHARS)}]', password):
-            return False, f"Password must contain at least one special character: {
-                self.SPECIAL_CHARS}"
+        if self.require_special and not re.search(f"[{re.escape(self.SPECIAL_CHARS)}]", password):
+            return (
+                False,
+                f"Password must contain at least one special character: {
+                self.SPECIAL_CHARS}",
+            )
 
         # Check for sequential characters (4 or more in sequence)
         if self._has_sequential_chars(password, min_sequence=4):
@@ -108,24 +132,19 @@ class PasswordPolicy:
 
         return True, None
 
-    def _has_sequential_chars(
-            self,
-            password: str,
-            min_sequence: int = 3) -> bool:
+    def _has_sequential_chars(self, password: str, min_sequence: int = 3) -> bool:
         """Check for sequential characters like '123' or 'abc'"""
         for i in range(len(password) - min_sequence + 1):
             # Check numeric sequences
-            if password[i:i + min_sequence].isdigit():
-                nums = [int(c) for c in password[i:i + min_sequence]]
-                if all(nums[j + 1] == nums[j] +
-                       1 for j in range(len(nums) - 1)):
+            if password[i : i + min_sequence].isdigit():
+                nums = [int(c) for c in password[i : i + min_sequence]]
+                if all(nums[j + 1] == nums[j] + 1 for j in range(len(nums) - 1)):
                     return True
 
             # Check alphabetic sequences
-            if password[i:i + min_sequence].isalpha():
-                chars = [ord(c.lower()) for c in password[i:i + min_sequence]]
-                if all(chars[j + 1] == chars[j] +
-                       1 for j in range(len(chars) - 1)):
+            if password[i : i + min_sequence].isalpha():
+                chars = [ord(c.lower()) for c in password[i : i + min_sequence]]
+                if all(chars[j + 1] == chars[j] + 1 for j in range(len(chars) - 1)):
                     return True
 
         return False
@@ -133,7 +152,7 @@ class PasswordPolicy:
     def _has_repeated_chars(self, password: str, max_repeat: int = 3) -> bool:
         """Check for repeated characters like 'aaa' or '111'"""
         for i in range(len(password) - max_repeat + 1):
-            if len(set(password[i:i + max_repeat])) == 1:
+            if len(set(password[i : i + max_repeat])) == 1:
                 return True
         return False
 
@@ -153,22 +172,22 @@ class PasswordPolicy:
         # Ensure we have all required character types
         chars = []
         if self.require_uppercase:
-            chars.append(secrets.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+            chars.append(secrets.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
         if self.require_lowercase:
-            chars.append(secrets.choice('abcdefghijklmnopqrstuvwxyz'))
+            chars.append(secrets.choice("abcdefghijklmnopqrstuvwxyz"))
         if self.require_digit:
-            chars.append(secrets.choice('0123456789'))
+            chars.append(secrets.choice("0123456789"))
         if self.require_special:
             chars.append(secrets.choice(self.SPECIAL_CHARS))
 
         # Fill remaining length with random characters
-        all_chars = ''
+        all_chars = ""
         if self.require_uppercase:
-            all_chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            all_chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         if self.require_lowercase:
-            all_chars += 'abcdefghijklmnopqrstuvwxyz'
+            all_chars += "abcdefghijklmnopqrstuvwxyz"
         if self.require_digit:
-            all_chars += '0123456789'
+            all_chars += "0123456789"
         if self.require_special:
             all_chars += self.SPECIAL_CHARS
 
@@ -178,7 +197,7 @@ class PasswordPolicy:
         # Shuffle to avoid predictable patterns
         secrets.SystemRandom().shuffle(chars)
 
-        return ''.join(chars)
+        return "".join(chars)
 
 
 class RateLimiter:
@@ -195,12 +214,13 @@ class RateLimiter:
         self.config = config or {}
 
         # Configuration
-        self.max_attempts = self.config.get(
-            'security.rate_limit.max_attempts', 5)
+        self.max_attempts = self.config.get("security.rate_limit.max_attempts", 5)
         self.window_seconds = self.config.get(
-            'security.rate_limit.window_seconds', 300)  # 5 minutes
+            "security.rate_limit.window_seconds", 300
+        )  # 5 minutes
         self.lockout_duration = self.config.get(
-            'security.rate_limit.lockout_duration', 900)  # 15 minutes
+            "security.rate_limit.lockout_duration", 900
+        )  # 15 minutes
 
         # In-memory storage for attempts
         # Format: {identifier: [(timestamp1, timestamp2, ...)]}
@@ -234,8 +254,7 @@ class RateLimiter:
         # Clean old attempts outside window
         if identifier in self.attempts:
             cutoff = now - self.window_seconds
-            self.attempts[identifier] = [
-                t for t in self.attempts[identifier] if t > cutoff]
+            self.attempts[identifier] = [t for t in self.attempts[identifier] if t > cutoff]
 
             # Check if over limit
             if len(self.attempts[identifier]) >= self.max_attempts:
@@ -243,7 +262,8 @@ class RateLimiter:
                 self.lockouts[identifier] = now + self.lockout_duration
                 self.logger.warning(
                     f"Rate limit exceeded for {identifier}. Locked out for {
-                        self.lockout_duration} seconds")
+                        self.lockout_duration} seconds"
+                )
                 return True, self.lockout_duration
 
         return False, None
@@ -282,15 +302,15 @@ class RateLimiter:
 class SecurityAuditor:
     """Security event audit logging"""
 
-    EVENT_LOGIN_SUCCESS = 'login_success'
-    EVENT_LOGIN_FAILURE = 'login_failure'
-    EVENT_PASSWORD_CHANGE = 'password_change'
-    EVENT_PASSWORD_RESET = 'password_reset'
-    EVENT_ACCOUNT_LOCKED = 'account_locked'
-    EVENT_ACCOUNT_UNLOCKED = 'account_unlocked'
-    EVENT_PERMISSION_DENIED = 'permission_denied'
-    EVENT_CONFIG_CHANGE = 'config_change'
-    EVENT_SUSPICIOUS_ACTIVITY = 'suspicious_activity'
+    EVENT_LOGIN_SUCCESS = "login_success"
+    EVENT_LOGIN_FAILURE = "login_failure"
+    EVENT_PASSWORD_CHANGE = "password_change"
+    EVENT_PASSWORD_RESET = "password_reset"
+    EVENT_ACCOUNT_LOCKED = "account_locked"
+    EVENT_ACCOUNT_UNLOCKED = "account_unlocked"
+    EVENT_PERMISSION_DENIED = "permission_denied"
+    EVENT_CONFIG_CHANGE = "config_change"
+    EVENT_SUSPICIOUS_ACTIVITY = "suspicious_activity"
 
     def __init__(self, database=None, config: dict = None):
         """
@@ -303,10 +323,16 @@ class SecurityAuditor:
         self.logger = get_logger()
         self.database = database
         self.config = config or {}
-        self.enabled = self.config.get('security.audit.enabled', True)
+        self.enabled = self.config.get("security.audit.enabled", True)
 
-    def log_event(self, event_type: str, identifier: str, details: dict = None,
-                  success: bool = True, ip_address: str = None):
+    def log_event(
+        self,
+        event_type: str,
+        identifier: str,
+        details: dict = None,
+        success: bool = True,
+        ip_address: str = None,
+    ):
         """
         Log a security event
 
@@ -322,22 +348,22 @@ class SecurityAuditor:
 
         timestamp = datetime.now().isoformat()
         log_entry = {
-            'timestamp': timestamp,
-            'event_type': event_type,
-            'identifier': identifier,
-            'success': success,
-            'ip_address': ip_address,
-            'details': details or {}
+            "timestamp": timestamp,
+            "event_type": event_type,
+            "identifier": identifier,
+            "success": success,
+            "ip_address": ip_address,
+            "details": details or {},
         }
 
         # Log to standard logger
-        level = 'INFO' if success else 'WARNING'
+        level = "INFO" if success else "WARNING"
         log_msg = f"SECURITY: {event_type} - {identifier}"
         if ip_address:
             log_msg += f" from {ip_address}"
         log_msg += f" - {'SUCCESS' if success else 'FAILED'}"
 
-        if level == 'INFO':
+        if level == "INFO":
             self.logger.info(log_msg)
         else:
             self.logger.warning(log_msg)
@@ -353,21 +379,25 @@ class SecurityAuditor:
         """Store audit log in database"""
         import json
 
-        query = """
+        query = (
+            """
         INSERT INTO security_audit (timestamp, event_type, identifier, ip_address, success, details)
         VALUES (%s, %s, %s, %s, %s, %s)
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         INSERT INTO security_audit (timestamp, event_type, identifier, ip_address, success, details)
         VALUES (?, ?, ?, ?, ?, ?)
         """
+        )
 
         params = (
-            log_entry['timestamp'],
-            log_entry['event_type'],
-            log_entry['identifier'],
-            log_entry.get('ip_address'),
-            log_entry['success'],
-            json.dumps(log_entry.get('details', {}))
+            log_entry["timestamp"],
+            log_entry["event_type"],
+            log_entry["identifier"],
+            log_entry.get("ip_address"),
+            log_entry["success"],
+            json.dumps(log_entry.get("details", {})),
         )
 
         self.database.execute(query, params)
@@ -387,15 +417,13 @@ class SecurePasswordManager:
         self.config = config or {}
 
         # Get FIPS mode from config - default to True for security
-        fips_mode = self.config.get('security.fips_mode', True)
+        fips_mode = self.config.get("security.fips_mode", True)
 
         # Enforce FIPS mode if explicitly enabled in config
-        enforce_fips = fips_mode and self.config.get(
-            'security.enforce_fips', True)
+        enforce_fips = fips_mode and self.config.get("security.enforce_fips", True)
 
         if fips_mode:
-            self.logger.info(
-                "Initializing password manager with FIPS 140-2 compliance")
+            self.logger.info("Initializing password manager with FIPS 140-2 compliance")
 
         self.encryption = get_encryption(fips_mode, enforce_fips)
         self.policy = PasswordPolicy(config)
@@ -412,11 +440,7 @@ class SecurePasswordManager:
         """
         return self.encryption.hash_password(password)
 
-    def verify_password(
-            self,
-            password: str,
-            hashed_password: str,
-            salt: str) -> bool:
+    def verify_password(self, password: str, hashed_password: str, salt: str) -> bool:
         """
         Verify password against hash
 
@@ -430,8 +454,7 @@ class SecurePasswordManager:
         """
         return self.encryption.verify_password(password, hashed_password, salt)
 
-    def validate_new_password(
-            self, password: str) -> Tuple[bool, Optional[str]]:
+    def validate_new_password(self, password: str) -> Tuple[bool, Optional[str]]:
         """
         Validate new password against policy
 
@@ -461,9 +484,7 @@ def get_rate_limiter(config: dict = None) -> RateLimiter:
     return RateLimiter(config)
 
 
-def get_security_auditor(
-        database=None,
-        config: dict = None) -> SecurityAuditor:
+def get_security_auditor(database=None, config: dict = None) -> SecurityAuditor:
     """Get security auditor instance"""
     return SecurityAuditor(database, config)
 
@@ -493,14 +514,16 @@ class ThreatDetector:
 
         # Threat detection configuration
         # Support both nested dict and dot notation
-        self.enabled = self._get_config(
-            'security.threat_detection.enabled', True)
+        self.enabled = self._get_config("security.threat_detection.enabled", True)
         self.ip_block_duration = self._get_config(
-            'security.threat_detection.ip_block_duration', 3600)  # 1 hour
+            "security.threat_detection.ip_block_duration", 3600
+        )  # 1 hour
         self.failed_login_threshold = self._get_config(
-            'security.threat_detection.failed_login_threshold', 10)
+            "security.threat_detection.failed_login_threshold", 10
+        )
         self.suspicious_pattern_threshold = self._get_config(
-            'security.threat_detection.suspicious_pattern_threshold', 5)
+            "security.threat_detection.suspicious_pattern_threshold", 5
+        )
 
         # In-memory storage for threat tracking
         self.blocked_ips = {}  # {ip: block_until_timestamp}
@@ -524,13 +547,13 @@ class ThreatDetector:
             Config value or default
         """
         # Try dot notation first (Config object)
-        if hasattr(self.config, 'get') and '.' in key:
+        if hasattr(self.config, "get") and "." in key:
             value = self.config.get(key, None)
             if value is not None:
                 return value
 
         # Try nested dict navigation
-        keys = key.split('.')
+        keys = key.split(".")
         value = self.config
         for k in keys:
             if isinstance(value, dict) and k in value:
@@ -543,7 +566,8 @@ class ThreatDetector:
     def _initialize_schema(self):
         """Initialize threat detection database tables"""
         # Blocked IPs table
-        blocked_ips_table = """
+        blocked_ips_table = (
+            """
         CREATE TABLE IF NOT EXISTS security_blocked_ips (
             id SERIAL PRIMARY KEY,
             ip_address VARCHAR(45) NOT NULL,
@@ -554,7 +578,9 @@ class ThreatDetector:
             auto_unblocked BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS security_blocked_ips (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             ip_address VARCHAR(45) NOT NULL,
@@ -566,9 +592,11 @@ class ThreatDetector:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         # Threat events table
-        threat_events_table = """
+        threat_events_table = (
+            """
         CREATE TABLE IF NOT EXISTS security_threat_events (
             id SERIAL PRIMARY KEY,
             ip_address VARCHAR(45) NOT NULL,
@@ -578,7 +606,9 @@ class ThreatDetector:
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS security_threat_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             ip_address VARCHAR(45) NOT NULL,
@@ -589,18 +619,18 @@ class ThreatDetector:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         try:
             self.database.execute(blocked_ips_table)
             self.database.execute(threat_events_table)
             self.logger.info("Threat detection database schema initialized")
         except Exception as e:
-            self.logger.error(
-                f"Failed to initialize threat detection schema: {e}")
+            self.logger.error(f"Failed to initialize threat detection schema: {e}")
 
     def _get_active_blocks_query(self):
         """Get SQL query for active blocked IPs based on database type"""
-        if self.database.db_type == 'postgresql':
+        if self.database.db_type == "postgresql":
             return """
             SELECT ip_address, reason, blocked_until
             FROM security_blocked_ips
@@ -624,27 +654,24 @@ class ThreatDetector:
 
             if results:
                 for row in results:
-                    ip_address = row['ip_address']
-                    reason = row.get('reason', 'IP blocked')
-                    blocked_until = row['blocked_until']
+                    ip_address = row["ip_address"]
+                    reason = row.get("reason", "IP blocked")
+                    blocked_until = row["blocked_until"]
 
                     # Convert timestamp string to unix time
                     if isinstance(blocked_until, str):
-                        dt = datetime.fromisoformat(
-                            blocked_until.replace('Z', '+00:00'))
+                        dt = datetime.fromisoformat(blocked_until.replace("Z", "+00:00"))
                         blocked_until_ts = dt.timestamp()
                     else:
                         blocked_until_ts = blocked_until
 
                     # Add to in-memory cache
-                    self.blocked_ips[ip_address] = {
-                        'until': blocked_until_ts,
-                        'reason': reason
-                    }
+                    self.blocked_ips[ip_address] = {"until": blocked_until_ts, "reason": reason}
 
                 self.logger.info(
                     f"Loaded {
-                        len(results)} blocked IPs from database")
+                        len(results)} blocked IPs from database"
+                )
         except Exception as e:
             self.logger.error(f"Failed to load blocked IPs from database: {e}")
 
@@ -665,10 +692,9 @@ class ThreatDetector:
 
         # Check in-memory cache
         if ip_address in self.blocked_ips:
-            block_until = self.blocked_ips[ip_address]['until']
+            block_until = self.blocked_ips[ip_address]["until"]
             if now < block_until:
-                return True, self.blocked_ips[ip_address].get(
-                    'reason', 'IP blocked')
+                return True, self.blocked_ips[ip_address].get("reason", "IP blocked")
             else:
                 # Block expired
                 del self.blocked_ips[ip_address]
@@ -676,21 +702,25 @@ class ThreatDetector:
 
         # Check database for persistent blocks
         if self.database and self.database.enabled:
-            query = """
+            query = (
+                """
             SELECT reason, blocked_until
             FROM security_blocked_ips
             WHERE ip_address = %s AND blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
             ORDER BY blocked_at DESC LIMIT 1
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             SELECT reason, blocked_until
             FROM security_blocked_ips
             WHERE ip_address = ? AND blocked_until > datetime('now') AND unblocked_at IS NULL
             ORDER BY blocked_at DESC LIMIT 1
             """
+            )
             result = self.database.fetch_one(query, (ip_address,))
 
             if result:
-                return True, result.get('reason', 'IP blocked')
+                return True, result.get("reason", "IP blocked")
 
         return False, None
 
@@ -713,30 +743,30 @@ class ThreatDetector:
         block_until = now + duration
 
         # Add to in-memory cache
-        self.blocked_ips[ip_address] = {
-            'until': block_until,
-            'reason': reason
-        }
+        self.blocked_ips[ip_address] = {"until": block_until, "reason": reason}
 
         # Store in database
         if self.database and self.database.enabled:
             from datetime import datetime as dt
             from datetime import timedelta
+
             blocked_until_dt = dt.now() + timedelta(seconds=duration)
 
-            insert_query = """
+            insert_query = (
+                """
             INSERT INTO security_blocked_ips (ip_address, reason, blocked_until)
             VALUES (%s, %s, %s)
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             INSERT INTO security_blocked_ips (ip_address, reason, blocked_until)
             VALUES (?, ?, ?)
             """
-            self.database.execute(
-                insert_query, (ip_address, reason, blocked_until_dt))
+            )
+            self.database.execute(insert_query, (ip_address, reason, blocked_until_dt))
 
-        self.logger.warning(
-            f"IP {ip_address} blocked: {reason} (duration: {duration}s)")
-        self._log_threat_event(ip_address, 'ip_blocked', 'high', reason)
+        self.logger.warning(f"IP {ip_address} blocked: {reason} (duration: {duration}s)")
+        self._log_threat_event(ip_address, "ip_blocked", "high", reason)
 
     def unblock_ip(self, ip_address: str):
         """
@@ -751,15 +781,19 @@ class ThreatDetector:
 
         # Update database
         if self.database and self.database.enabled:
-            update_query = """
+            update_query = (
+                """
             UPDATE security_blocked_ips
             SET unblocked_at = CURRENT_TIMESTAMP
             WHERE ip_address = %s AND unblocked_at IS NULL
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             UPDATE security_blocked_ips
             SET unblocked_at = datetime('now')
             WHERE ip_address = ? AND unblocked_at IS NULL
             """
+            )
             self.database.execute(update_query, (ip_address,))
 
         self.logger.info(f"IP {ip_address} manually unblocked")
@@ -767,15 +801,19 @@ class ThreatDetector:
     def _auto_unblock_ip(self, ip_address: str):
         """Auto-unblock IP when duration expires"""
         if self.database and self.database.enabled:
-            update_query = """
+            update_query = (
+                """
             UPDATE security_blocked_ips
             SET unblocked_at = CURRENT_TIMESTAMP, auto_unblocked = %s
             WHERE ip_address = %s AND unblocked_at IS NULL
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             UPDATE security_blocked_ips
             SET unblocked_at = datetime('now'), auto_unblocked = ?
             WHERE ip_address = ? AND unblocked_at IS NULL
             """
+            )
             self.database.execute(update_query, (True, ip_address))
 
     def record_failed_attempt(self, ip_address: str, reason: str):
@@ -805,14 +843,15 @@ class ThreatDetector:
         ]
 
         # Check if threshold exceeded
-        if len(self.failed_attempts[ip_address]
-               ) >= self.failed_login_threshold:
+        if len(self.failed_attempts[ip_address]) >= self.failed_login_threshold:
             self.block_ip(
-                ip_address, f"Excessive failed login attempts ({len(self.failed_attempts[ip_address])})")
+                ip_address,
+                f"Excessive failed login attempts ({len(self.failed_attempts[ip_address])})",
+            )
             self.failed_attempts[ip_address] = []  # Reset counter
 
         # Log threat event
-        self._log_threat_event(ip_address, 'failed_auth', 'medium', reason)
+        self._log_threat_event(ip_address, "failed_auth", "medium", reason)
 
     def detect_suspicious_pattern(self, ip_address: str, pattern: str) -> bool:
         """
@@ -841,23 +880,18 @@ class ThreatDetector:
 
         # Check if threshold exceeded
         if count >= self.suspicious_pattern_threshold:
-            self.block_ip(
-                ip_address,
-                f"Suspicious pattern detected: {pattern} (count: {count})")
+            self.block_ip(ip_address, f"Suspicious pattern detected: {pattern} (count: {count})")
             self.suspicious_patterns[ip_address][pattern] = 0  # Reset
             return True
 
         # Log threat event
         self._log_threat_event(
-            ip_address,
-            'suspicious_pattern',
-            'low',
-            f"{pattern} (count: {count})")
+            ip_address, "suspicious_pattern", "low", f"{pattern} (count: {count})"
+        )
 
         return False
 
-    def analyze_request_pattern(
-            self, ip_address: str, user_agent: str = None) -> Dict[str, any]:
+    def analyze_request_pattern(self, ip_address: str, user_agent: str = None) -> Dict[str, any]:
         """
         Analyze request patterns for anomalies
 
@@ -869,10 +903,10 @@ class ThreatDetector:
             Dictionary with analysis results
         """
         analysis = {
-            'is_blocked': False,
-            'is_suspicious': False,
-            'threats': [],
-            'score': 0  # 0-100, higher is more threatening
+            "is_blocked": False,
+            "is_suspicious": False,
+            "threats": [],
+            "score": 0,  # 0-100, higher is more threatening
         }
 
         if not self.enabled:
@@ -881,64 +915,60 @@ class ThreatDetector:
         # Check if blocked
         is_blocked, reason = self.is_ip_blocked(ip_address)
         if is_blocked:
-            analysis['is_blocked'] = True
-            analysis['threats'].append(f"IP blocked: {reason}")
-            analysis['score'] = 100
+            analysis["is_blocked"] = True
+            analysis["threats"].append(f"IP blocked: {reason}")
+            analysis["score"] = 100
             return analysis
 
         # Check for scanner patterns in user agent
         if user_agent:
             scanner_keywords = [
-                'nmap',
-                'nikto',
-                'sqlmap',
-                'masscan',
-                'zap',
-                'burp',
-                'w3af',
-                'metasploit']
+                "nmap",
+                "nikto",
+                "sqlmap",
+                "masscan",
+                "zap",
+                "burp",
+                "w3af",
+                "metasploit",
+            ]
             user_agent_lower = user_agent.lower()
 
             for keyword in scanner_keywords:
                 if keyword in user_agent_lower:
-                    analysis['is_suspicious'] = True
-                    analysis['threats'].append(
-                        f"Scanner detected in user agent: {keyword}")
-                    analysis['score'] += 30
-                    self.detect_suspicious_pattern(
-                        ip_address, f'scanner_{keyword}')
+                    analysis["is_suspicious"] = True
+                    analysis["threats"].append(f"Scanner detected in user agent: {keyword}")
+                    analysis["score"] += 30
+                    self.detect_suspicious_pattern(ip_address, f"scanner_{keyword}")
 
         # Check failed attempt history
         if ip_address in self.failed_attempts:
             recent_failures = len(self.failed_attempts[ip_address])
             if recent_failures > 3:
-                analysis['is_suspicious'] = True
-                analysis['threats'].append(
-                    f"Recent failed attempts: {recent_failures}")
-                analysis['score'] += min(recent_failures * 5, 50)
+                analysis["is_suspicious"] = True
+                analysis["threats"].append(f"Recent failed attempts: {recent_failures}")
+                analysis["score"] += min(recent_failures * 5, 50)
 
         return analysis
 
-    def _log_threat_event(
-            self,
-            ip_address: str,
-            event_type: str,
-            severity: str,
-            details: str):
+    def _log_threat_event(self, ip_address: str, event_type: str, severity: str, details: str):
         """Log threat event to database"""
         if not self.database or not self.database.enabled:
             return
 
         try:
-            insert_query = """
+            insert_query = (
+                """
             INSERT INTO security_threat_events (ip_address, event_type, severity, details)
             VALUES (%s, %s, %s, %s)
-            """ if self.database.db_type == 'postgresql' else """
+            """
+                if self.database.db_type == "postgresql"
+                else """
             INSERT INTO security_threat_events (ip_address, event_type, severity, details)
             VALUES (?, ?, ?, ?)
             """
-            self.database.execute(
-                insert_query, (ip_address, event_type, severity, details))
+            )
+            self.database.execute(insert_query, (ip_address, event_type, severity, details))
         except Exception as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
@@ -953,26 +983,25 @@ class ThreatDetector:
             Dictionary with threat statistics
         """
         summary = {
-            'total_events': 0,
-            'blocked_ips': 0,
-            'suspicious_patterns': 0,
-            'failed_auths': 0,
-            'severity_counts': {'low': 0, 'medium': 0, 'high': 0}
+            "total_events": 0,
+            "blocked_ips": 0,
+            "suspicious_patterns": 0,
+            "failed_auths": 0,
+            "severity_counts": {"low": 0, "medium": 0, "high": 0},
         }
 
         if not self.database or not self.database.enabled:
             # Return in-memory stats
-            summary['blocked_ips'] = len(self.blocked_ips)
+            summary["blocked_ips"] = len(self.blocked_ips)
             return summary
 
         try:
             # Validate hours parameter to prevent SQL injection
-            if not isinstance(
-                    hours, (int, float)) or hours < 0 or hours > 8760:  # Max 1 year
+            if not isinstance(hours, (int, float)) or hours < 0 or hours > 8760:  # Max 1 year
                 hours = 24  # Default to 24 hours if invalid
 
             # Count events by type
-            if self.database.db_type == 'postgresql':
+            if self.database.db_type == "postgresql":
                 query = """
                 SELECT event_type, severity, COUNT(*) as count
                 FROM security_threat_events
@@ -992,20 +1021,21 @@ class ThreatDetector:
                 results = self.database.fetch_all(query)
 
             for row in results:
-                event_type = row['event_type']
-                severity = row['severity']
-                count = row['count']
+                event_type = row["event_type"]
+                severity = row["severity"]
+                count = row["count"]
 
-                summary['total_events'] += count
-                summary['severity_counts'][severity] = summary['severity_counts'].get(
-                    severity, 0) + count
+                summary["total_events"] += count
+                summary["severity_counts"][severity] = (
+                    summary["severity_counts"].get(severity, 0) + count
+                )
 
-                if event_type == 'ip_blocked':
-                    summary['blocked_ips'] += count
-                elif event_type == 'suspicious_pattern':
-                    summary['suspicious_patterns'] += count
-                elif event_type == 'failed_auth':
-                    summary['failed_auths'] += count
+                if event_type == "ip_blocked":
+                    summary["blocked_ips"] += count
+                elif event_type == "suspicious_pattern":
+                    summary["suspicious_patterns"] += count
+                elif event_type == "failed_auth":
+                    summary["failed_auths"] += count
 
             return summary
 

@@ -11,16 +11,16 @@ import unittest
 from unittest.mock import Mock
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
-
 # ============================================================================
 # Phone Clear Functionality Tests
 # ============================================================================
+
 
 def test_clear_all_phones():
     """Test clearing all phone registrations"""
@@ -28,10 +28,7 @@ def test_clear_all_phones():
 
     # Create database backend (using SQLite for tests)
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -65,10 +62,7 @@ def test_clear_empty_table():
 
     # Create database backend
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -93,10 +87,7 @@ def test_register_after_clear():
 
     # Create database backend
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -115,14 +106,13 @@ def test_register_after_clear():
     assert len(phones_db.list_all()) == 0, "Phones not cleared"
 
     # Register new phones
-    success, _ = phones_db.register_phone(
-        "1003", "192.168.1.102", "001565123458")
+    success, _ = phones_db.register_phone("1003", "192.168.1.102", "001565123458")
     assert success, "Failed to register phone after clear"
 
     # Verify new phone is registered
     phones = phones_db.list_all()
     assert len(phones) == 1, f"Expected 1 phone, got {len(phones)}"
-    assert phones[0]['extension_number'] == "1003", "Wrong extension registered"
+    assert phones[0]["extension_number"] == "1003", "Wrong extension registered"
 
     print("✓ Registration after clear_all() works")
 
@@ -131,13 +121,14 @@ def test_register_after_clear():
 # PBX Boot Preservation Tests
 # ============================================================================
 
+
 def test_pbx_preserves_phones_on_boot():
     """Test that PBX preserves registered phones table on boot"""
     print("\nTesting PBX preserves phones on boot...")
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, 'test.db')
+    db_path = os.path.join(temp_dir, "test.db")
 
     try:
         # Create a minimal test config
@@ -163,8 +154,8 @@ logging:
 
 extensions: []
 """
-        config_path = os.path.join(temp_dir, 'test_config.yml')
-        with open(config_path, 'w') as f:
+        config_path = os.path.join(temp_dir, "test_config.yml")
+        with open(config_path, "w") as f:
             f.write(config_content)
 
         # Create first PBX instance and register some phones
@@ -175,10 +166,8 @@ extensions: []
         assert pbx1.registered_phones_db is not None, "Registered phones DB not initialized"
 
         # Register some phones directly in the database
-        pbx1.registered_phones_db.register_phone(
-            "1001", "192.168.1.100", "001565123456")
-        pbx1.registered_phones_db.register_phone(
-            "1002", "192.168.1.101", "001565123457")
+        pbx1.registered_phones_db.register_phone("1001", "192.168.1.100", "001565123456")
+        pbx1.registered_phones_db.register_phone("1002", "192.168.1.101", "001565123457")
 
         # Verify phones were registered
         phones = pbx1.registered_phones_db.list_all()
@@ -215,20 +204,21 @@ extensions: []
 # Incomplete Registration Cleanup Tests
 # ============================================================================
 
+
 class TestPhoneCleanupStartup(unittest.TestCase):
     """Test cleanup of incomplete phone registrations"""
 
     def setUp(self):
         """Set up test fixtures"""
         self.db = Mock(spec=DatabaseBackend)
-        self.db.db_type = 'sqlite'
+        self.db.db_type = "sqlite"
         self.db.enabled = True
         self.phones_db = RegisteredPhonesDB(self.db)
 
     def test_cleanup_no_incomplete_registrations(self):
         """Test cleanup when there are no incomplete registrations"""
         # Mock fetch_one to return 0 count
-        self.db.fetch_one.return_value = {'count': 0}
+        self.db.fetch_one.return_value = {"count": 0}
 
         success, count = self.phones_db.cleanup_incomplete_registrations()
 
@@ -240,7 +230,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
     def test_cleanup_with_incomplete_registrations(self):
         """Test cleanup when there are incomplete registrations"""
         # Mock fetch_one to return 3 incomplete registrations
-        self.db.fetch_one.return_value = {'count': 3}
+        self.db.fetch_one.return_value = {"count": 3}
         self.db.execute.return_value = True
 
         success, count = self.phones_db.cleanup_incomplete_registrations()
@@ -268,7 +258,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
     def test_cleanup_delete_failure(self):
         """Test cleanup when delete operation fails"""
         # Mock fetch_one to return 2 incomplete registrations
-        self.db.fetch_one.return_value = {'count': 2}
+        self.db.fetch_one.return_value = {"count": 2}
         # Mock execute to return False (failure)
         self.db.execute.return_value = False
 
@@ -281,7 +271,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
 
     def test_cleanup_query_structure(self):
         """Test that cleanup query checks all required fields"""
-        self.db.fetch_one.return_value = {'count': 5}
+        self.db.fetch_one.return_value = {"count": 5}
         self.db.execute.return_value = True
 
         self.phones_db.cleanup_incomplete_registrations()
@@ -292,9 +282,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
         # Verify it checks for NULL or empty string for all three fields
         self.assertIn("mac_address IS NULL OR mac_address = ''", delete_query)
         self.assertIn("ip_address IS NULL OR ip_address = ''", delete_query)
-        self.assertIn(
-            "extension_number IS NULL OR extension_number = ''",
-            delete_query)
+        self.assertIn("extension_number IS NULL OR extension_number = ''", delete_query)
 
         # Verify it uses OR between field conditions (mac_address OR ip_address OR extension_number)
         # Any single missing field should trigger deletion of that record
@@ -304,6 +292,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
 # ============================================================================
 # Test Runner
 # ============================================================================
+
 
 def run_functional_tests():
     """Run functional tests (non-unittest)"""
@@ -327,6 +316,7 @@ def run_functional_tests():
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -339,21 +329,21 @@ def run_unit_tests():
 
     # Create test suite
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPhoneCleanupStartup)
-    
+
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
-    
+
     return result.wasSuccessful()
 
 
 if __name__ == "__main__":
     # Run functional tests
     functional_success = run_functional_tests()
-    
+
     # Run unit tests
     unit_success = run_unit_tests()
-    
+
     # Exit with appropriate code
     success = functional_success and unit_success
     sys.exit(0 if success else 1)

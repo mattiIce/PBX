@@ -8,12 +8,11 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-
 
 
 def test_emergency_notification_system_initialization():
@@ -22,21 +21,18 @@ def test_emergency_notification_system_initialization():
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, 'test.db')
+    db_path = os.path.join(temp_dir, "test.db")
 
     try:
         # Create a test config
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': db_path
-        }
-        test_config.config['features'] = {
-            'emergency_notification': {
-                'enabled': True,
-                'notify_on_911': True,
-                'methods': ['call', 'page', 'email'],
-                'contacts': []
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": db_path}
+        test_config.config["features"] = {
+            "emergency_notification": {
+                "enabled": True,
+                "notify_on_911": True,
+                "methods": ["call", "page", "email"],
+                "contacts": [],
             }
         }
 
@@ -53,14 +49,12 @@ def test_emergency_notification_system_initialization():
 
         # Initialize emergency notification system
         # This should not raise any database errors
-        emergency_system = EmergencyNotificationSystem(
-            pbx_core, test_config.config, db)
+        emergency_system = EmergencyNotificationSystem(pbx_core, test_config.config, db)
 
         # Verify initialization
         assert emergency_system is not None, "Emergency system not initialized"
         assert emergency_system.enabled is True, "Emergency system should be enabled"
-        assert len(
-            emergency_system.emergency_contacts) == 0, "Should have no contacts initially"
+        assert len(emergency_system.emergency_contacts) == 0, "Should have no contacts initially"
 
         # Verify database connection works
         contacts = emergency_system.get_emergency_contacts()
@@ -83,21 +77,18 @@ def test_emergency_notification_database_operations():
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, 'test.db')
+    db_path = os.path.join(temp_dir, "test.db")
 
     try:
         # Create a test config
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': db_path
-        }
-        test_config.config['features'] = {
-            'emergency_notification': {
-                'enabled': True,
-                'notify_on_911': True,
-                'methods': ['call', 'page', 'email'],
-                'contacts': []
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": db_path}
+        test_config.config["features"] = {
+            "emergency_notification": {
+                "enabled": True,
+                "notify_on_911": True,
+                "methods": ["call", "page", "email"],
+                "contacts": [],
             }
         }
 
@@ -113,8 +104,7 @@ def test_emergency_notification_database_operations():
         pbx_core = MockPBXCore()
 
         # Initialize emergency notification system
-        emergency_system = EmergencyNotificationSystem(
-            pbx_core, test_config.config, db)
+        emergency_system = EmergencyNotificationSystem(pbx_core, test_config.config, db)
 
         # Add an emergency contact
         contact = emergency_system.add_emergency_contact(
@@ -123,7 +113,7 @@ def test_emergency_notification_database_operations():
             phone="555-1234",
             email="test@example.com",
             priority=1,
-            notification_methods=['call', 'email']
+            notification_methods=["call", "email"],
         )
 
         assert contact is not None, "Failed to add emergency contact"
@@ -132,7 +122,7 @@ def test_emergency_notification_database_operations():
         # Verify contact was added
         contacts = emergency_system.get_emergency_contacts()
         assert len(contacts) == 1, f"Expected 1 contact, got {len(contacts)}"
-        assert contacts[0]['name'] == "Test Contact", "Contact name mismatch"
+        assert contacts[0]["name"] == "Test Contact", "Contact name mismatch"
 
         print("✓ Emergency notification database operations work correctly")
 
@@ -167,6 +157,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 
@@ -178,6 +169,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

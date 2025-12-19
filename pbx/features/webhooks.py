@@ -2,6 +2,7 @@
 Webhook System for Event-Driven Integrations
 Sends HTTP POST notifications to external systems when PBX events occur
 """
+
 import hashlib
 import hmac
 import json
@@ -65,23 +66,24 @@ class WebhookEvent:
     def to_dict(self) -> Dict:
         """Convert event to dictionary for JSON serialization"""
         return {
-            'event_id': self.event_id,
-            'event_type': self.event_type,
-            'timestamp': self.timestamp,
-            'data': self.data
+            "event_id": self.event_id,
+            "event_type": self.event_type,
+            "timestamp": self.timestamp,
+            "data": self.data,
         }
 
 
 class WebhookSubscription:
     """Represents a webhook subscription"""
 
-    def __init__(self,
-                 url: str,
-                 events: List[str],
-                 secret: Optional[str] = None,
-                 headers: Optional[Dict[str,
-                                        str]] = None,
-                 enabled: bool = True):
+    def __init__(
+        self,
+        url: str,
+        events: List[str],
+        secret: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        enabled: bool = True,
+    ):
         """
         Initialize webhook subscription
 
@@ -106,7 +108,7 @@ class WebhookSubscription:
         """Check if this subscription matches an event type"""
         if not self.enabled:
             return False
-        return '*' in self.events or event_type in self.events
+        return "*" in self.events or event_type in self.events
 
 
 class WebhookDeliveryQueue:
@@ -127,8 +129,7 @@ class WebhookDeliveryQueue:
         try:
             self.queue.put_nowait((event, subscription))
         except queue.Full:
-            self.logger.warning(
-                "Webhook delivery queue is full, dropping event")
+            self.logger.warning("Webhook delivery queue is full, dropping event")
 
     def dequeue(self, timeout: float = 1.0) -> Optional[tuple]:
         """Get next event from queue"""
@@ -161,14 +162,11 @@ class WebhookSystem:
         self.config = config or {}
 
         # Webhook configuration
-        self.enabled = self._get_config('features.webhooks.enabled', False)
-        self.max_retries = self._get_config('features.webhooks.max_retries', 3)
-        self.retry_delay = self._get_config(
-            'features.webhooks.retry_delay', 5)  # seconds
-        self.timeout = self._get_config(
-            'features.webhooks.timeout', 10)  # seconds
-        self.worker_threads = self._get_config(
-            'features.webhooks.worker_threads', 2)
+        self.enabled = self._get_config("features.webhooks.enabled", False)
+        self.max_retries = self._get_config("features.webhooks.max_retries", 3)
+        self.retry_delay = self._get_config("features.webhooks.retry_delay", 5)  # seconds
+        self.timeout = self._get_config("features.webhooks.timeout", 10)  # seconds
+        self.worker_threads = self._get_config("features.webhooks.worker_threads", 2)
 
         # Subscriptions
         self.subscriptions = []
@@ -186,52 +184,50 @@ class WebhookSystem:
 
         if self.enabled:
             self.logger.info("Webhook system enabled")
-            self.logger.info(
-                f"Loaded {len(self.subscriptions)} webhook subscriptions")
+            self.logger.info(f"Loaded {len(self.subscriptions)} webhook subscriptions")
             self._start_workers()
         else:
             self.logger.info("Webhook system disabled")
 
     def _get_config(self, key: str, default=None):
         """Get configuration value"""
-        if hasattr(self.config, 'get'):
+        if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
     def _load_subscriptions(self):
         """Load webhook subscriptions from configuration"""
-        webhooks_config = self._get_config(
-            'features.webhooks.subscriptions', [])
+        webhooks_config = self._get_config("features.webhooks.subscriptions", [])
 
         with self.subscriptions_lock:
             for webhook_config in webhooks_config:
                 subscription = WebhookSubscription(
-                    url=webhook_config.get('url'),
-                    events=webhook_config.get('events', ['*']),
-                    secret=webhook_config.get('secret'),
-                    headers=webhook_config.get('headers'),
-                    enabled=webhook_config.get('enabled', True)
+                    url=webhook_config.get("url"),
+                    events=webhook_config.get("events", ["*"]),
+                    secret=webhook_config.get("secret"),
+                    headers=webhook_config.get("headers"),
+                    enabled=webhook_config.get("enabled", True),
                 )
                 self.subscriptions.append(subscription)
                 self.logger.info(
                     f"Loaded webhook subscription: {
                         subscription.url} (events: {
-                        subscription.events})")
+                        subscription.events})"
+                )
 
     def _start_workers(self):
         """Start webhook delivery worker threads"""
         self.running = True
         for i in range(self.worker_threads):
             worker = threading.Thread(
-                target=self._delivery_worker,
-                name=f"WebhookWorker-{i}",
-                daemon=True
+                target=self._delivery_worker, name=f"WebhookWorker-{i}", daemon=True
             )
             worker.start()
             self.workers.append(worker)
         self.logger.info(
             f"Started {
-                self.worker_threads} webhook delivery workers")
+                self.worker_threads} webhook delivery workers"
+        )
 
     def stop(self):
         """Stop the webhook system"""
@@ -250,10 +246,7 @@ class WebhookSystem:
                 event, subscription = item
                 self._deliver_webhook(event, subscription)
 
-    def _deliver_webhook(
-            self,
-            event: WebhookEvent,
-            subscription: WebhookSubscription):
+    def _deliver_webhook(self, event: WebhookEvent, subscription: WebhookSubscription):
         """
         Deliver webhook to subscription with retry logic
 
@@ -265,33 +258,26 @@ class WebhookSystem:
         while attempt < self.max_retries:
             try:
                 # Prepare payload
-                payload = json.dumps(event.to_dict()).encode('utf-8')
+                payload = json.dumps(event.to_dict()).encode("utf-8")
 
                 # Prepare headers
                 headers = {
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'PBX-Webhook/1.0',
-                    'X-Webhook-Event': event.event_type,
-                    'X-Webhook-ID': event.event_id,
-                    **subscription.headers
+                    "Content-Type": "application/json",
+                    "User-Agent": "PBX-Webhook/1.0",
+                    "X-Webhook-Event": event.event_type,
+                    "X-Webhook-ID": event.event_id,
+                    **subscription.headers,
                 }
 
                 # Add HMAC signature if secret is provided
                 if subscription.secret:
                     signature = hmac.new(
-                        subscription.secret.encode('utf-8'),
-                        payload,
-                        hashlib.sha256
+                        subscription.secret.encode("utf-8"), payload, hashlib.sha256
                     ).hexdigest()
-                    headers['X-Webhook-Signature'] = f'sha256={signature}'
+                    headers["X-Webhook-Signature"] = f"sha256={signature}"
 
                 # Create request
-                request = Request(
-                    subscription.url,
-                    data=payload,
-                    headers=headers,
-                    method='POST'
-                )
+                request = Request(subscription.url, data=payload, headers=headers, method="POST")
 
                 # Send request
                 response = urlopen(request, timeout=self.timeout)
@@ -303,7 +289,8 @@ class WebhookSystem:
                     f"Webhook delivered: {
                         event.event_type} -> {
                         subscription.url} (status: {
-                        response.status})")
+                        response.status})"
+                )
                 return
 
             except (URLError, HTTPError) as e:
@@ -313,7 +300,8 @@ class WebhookSystem:
                     f"Webhook delivery failed (attempt {attempt}/{
                         self.max_retries}): {
                         event.event_type} -> {
-                        subscription.url} - {e}")
+                        subscription.url} - {e}"
+                )
 
                 if attempt < self.max_retries:
                     time.sleep(self.retry_delay)
@@ -322,13 +310,12 @@ class WebhookSystem:
                         f"Webhook delivery failed after {
                             self.max_retries} attempts: {
                             event.event_type} -> {
-                            subscription.url}")
+                            subscription.url}"
+                    )
 
             except Exception as e:
                 self.logger.error(f"Unexpected error delivering webhook: {e}")
-                self.logger.debug(
-                    "Webhook delivery error details",
-                    exc_info=True)
+                self.logger.debug("Webhook delivery error details", exc_info=True)
                 break
 
     def trigger_event(self, event_type: str, data: Dict):
@@ -348,8 +335,7 @@ class WebhookSystem:
         # Find matching subscriptions (make a copy to avoid holding lock during delivery)
         with self.subscriptions_lock:
             matching_subscriptions = [
-                sub for sub in self.subscriptions
-                if sub.matches_event(event_type)
+                sub for sub in self.subscriptions if sub.matches_event(event_type)
             ]
 
         if not matching_subscriptions:
@@ -361,14 +347,16 @@ class WebhookSystem:
 
         self.logger.debug(
             f"Triggered webhook event: {event_type} (subscriptions: {
-                len(matching_subscriptions)})")
+                len(matching_subscriptions)})"
+        )
 
-    def add_subscription(self,
-                         url: str,
-                         events: List[str],
-                         secret: Optional[str] = None,
-                         headers: Optional[Dict[str,
-                                                str]] = None) -> WebhookSubscription:
+    def add_subscription(
+        self,
+        url: str,
+        events: List[str],
+        secret: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> WebhookSubscription:
         """
         Add a webhook subscription
 
@@ -384,8 +372,7 @@ class WebhookSystem:
         subscription = WebhookSubscription(url, events, secret, headers)
         with self.subscriptions_lock:
             self.subscriptions.append(subscription)
-        self.logger.info(
-            f"Added webhook subscription: {url} (events: {events})")
+        self.logger.info(f"Added webhook subscription: {url} (events: {events})")
         return subscription
 
     def remove_subscription(self, url: str) -> bool:
@@ -411,13 +398,13 @@ class WebhookSystem:
         with self.subscriptions_lock:
             return [
                 {
-                    'url': sub.url,
-                    'events': sub.events,
-                    'enabled': sub.enabled,
-                    'created_at': sub.created_at.isoformat() if sub.created_at else None,
-                    'last_sent': sub.last_sent.isoformat() if sub.last_sent else None,
-                    'success_count': sub.success_count,
-                    'failure_count': sub.failure_count
+                    "url": sub.url,
+                    "events": sub.events,
+                    "enabled": sub.enabled,
+                    "created_at": sub.created_at.isoformat() if sub.created_at else None,
+                    "last_sent": sub.last_sent.isoformat() if sub.last_sent else None,
+                    "success_count": sub.success_count,
+                    "failure_count": sub.failure_count,
                 }
                 for sub in self.subscriptions
             ]

@@ -8,11 +8,10 @@ import re
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.pbx import PBXCore
 from pbx.sip.message import SIPMessage
-
 
 
 def test_mac_extraction():
@@ -68,10 +67,7 @@ def test_registration_storage():
     from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to test database"
@@ -82,21 +78,20 @@ def test_registration_storage():
 
     # Add a test extension to the in-memory database
     from pbx.utils.database import ExtensionDB
+
     pbx.extension_db = ExtensionDB(db)
 
     # Add extension to database with a simple hash for testing
     import hashlib
+
     password_hash = hashlib.sha256("testpass".encode()).hexdigest()
     pbx.extension_db.add(
-        number="1001",
-        name="Test User",
-        email="test@test.com",
-        password_hash=password_hash
+        number="1001", name="Test User", email="test@test.com", password_hash=password_hash
     )
 
     # Simulate a SIP REGISTER
     from_header = '"Test Phone" <sip:1001@192.168.1.100>'
-    addr = ('192.168.1.100', 5060)
+    addr = ("192.168.1.100", 5060)
     user_agent = "Yealink SIP-T46S 66.85.0.5 00:15:65:12:34:56"
     contact = "<sip:1001@192.168.1.100:5060>"
 
@@ -109,10 +104,10 @@ def test_registration_storage():
     assert len(phones) >= 1, "Phone not found in database"
 
     phone = phones[0]
-    assert phone['extension_number'] == "1001", "Wrong extension"
-    assert phone['ip_address'] == "192.168.1.100", "Wrong IP"
-    assert phone['mac_address'] == "001565123456", "Wrong MAC"
-    assert phone['user_agent'] == user_agent, "Wrong User-Agent"
+    assert phone["extension_number"] == "1001", "Wrong extension"
+    assert phone["ip_address"] == "192.168.1.100", "Wrong IP"
+    assert phone["mac_address"] == "001565123456", "Wrong MAC"
+    assert phone["user_agent"] == user_agent, "Wrong User-Agent"
 
     print("  ✓ Phone stored in database with all details")
     print(f"    Extension: {phone['extension_number']}")
@@ -127,7 +122,7 @@ def test_registration_storage():
 
     phones = pbx.registered_phones_db.get_by_extension("1001")
     assert len(phones) == 1, "Should only have one record after re-registration"
-    assert phones[0]['user_agent'] == user_agent2, "User-Agent not updated"
+    assert phones[0]["user_agent"] == user_agent2, "User-Agent not updated"
 
     print("  ✓ Re-registration updates existing record")
 
@@ -143,10 +138,7 @@ def test_ip_based_tracking():
     from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to test database"
@@ -158,19 +150,18 @@ def test_ip_based_tracking():
 
     # Add a test extension to the database
     from pbx.utils.database import ExtensionDB
+
     pbx.extension_db = ExtensionDB(db)
     import hashlib
+
     password_hash = hashlib.sha256("testpass".encode()).hexdigest()
     pbx.extension_db.add(
-        number="1002",
-        name="Generic User",
-        email="test2@test.com",
-        password_hash=password_hash
+        number="1002", name="Generic User", email="test2@test.com", password_hash=password_hash
     )
 
     # Simulate registration without MAC
     from_header = '"Generic Phone" <sip:1002@192.168.1.101>'
-    addr = ('192.168.1.101', 5060)
+    addr = ("192.168.1.101", 5060)
     user_agent = "Generic SIP Phone"
     contact = "<sip:1002@192.168.1.101:5060>"
 
@@ -182,8 +173,8 @@ def test_ip_based_tracking():
     assert len(phones) >= 1, "Phone not found"
 
     phone = phones[0]
-    assert phone['ip_address'] == "192.168.1.101", "Wrong IP"
-    assert phone['mac_address'] is None, "MAC should be None"
+    assert phone["ip_address"] == "192.168.1.101", "Wrong IP"
+    assert phone["mac_address"] is None, "MAC should be None"
 
     print(f"  ✓ Phone tracked by IP: {phone['ip_address']}")
     print(f"  ✓ MAC correctly stored as None")
@@ -211,6 +202,7 @@ def run_all_tests():
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

@@ -9,32 +9,30 @@ import tempfile
 from datetime import datetime
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-
 def test_database_configuration():
     """Test database configuration loading"""
     print("Testing database configuration...")
 
-    config = Config('config.yml')
+    config = Config("config.yml")
 
     # Check database settings (values come from .env on server)
-    assert config.get('database.type') == 'postgresql'
-    assert config.get(
-        'database.host') is not None, "Database host should be set"
+    assert config.get("database.type") == "postgresql"
+    assert config.get("database.host") is not None, "Database host should be set"
     # Port should be an integer after env variable resolution
-    db_port = config.get('database.port')
-    assert db_port == 5432 or db_port == '5432', f"Expected port 5432, got {db_port} (type: {
+    db_port = config.get("database.port")
+    assert (
+        db_port == 5432 or db_port == "5432"
+    ), f"Expected port 5432, got {db_port} (type: {
         type(db_port)})"
-    assert config.get(
-        'database.name') is not None, "Database name should be set"
-    assert config.get(
-        'database.user') is not None, "Database user should be set"
+    assert config.get("database.name") is not None, "Database name should be set"
+    assert config.get("database.user") is not None, "Database user should be set"
 
     print("✓ Database configuration loads correctly")
 
@@ -44,17 +42,14 @@ def test_database_backend_initialization():
     print("Testing database backend initialization...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
+        test_config = Config("config.yml")
         # Override database settings for testing
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -64,12 +59,11 @@ def test_database_backend_initialization():
         assert db.create_tables() is True
 
         # Test table existence with a simple query
-        result = db.fetch_all(
-            "SELECT name FROM sqlite_master WHERE type='table'")
-        table_names = [row['name'] for row in result]
-        assert 'voicemail_messages' in table_names
-        assert 'call_records' in table_names
-        assert 'vip_callers' in table_names
+        result = db.fetch_all("SELECT name FROM sqlite_master WHERE type='table'")
+        table_names = [row["name"] for row in result]
+        assert "voicemail_messages" in table_names
+        assert "call_records" in table_names
+        assert "vip_callers" in table_names
 
         db.disconnect()
         print("✓ Database backend initializes correctly")
@@ -86,16 +80,13 @@ def test_voicemail_database_integration():
 
     # Create temporary directories for test
     temp_dir = tempfile.mkdtemp()
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create test config with SQLite
-        config = Config('config.yml')
-        config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        config = Config("config.yml")
+        config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         # Initialize database
         db = DatabaseBackend(config)
@@ -103,19 +94,12 @@ def test_voicemail_database_integration():
         assert db.create_tables() is True
 
         # Create voicemail system with database
-        vm_system = VoicemailSystem(
-            storage_path=temp_dir,
-            config=config,
-            database=db
-        )
+        vm_system = VoicemailSystem(storage_path=temp_dir, config=config, database=db)
 
         # Save a test message
-        test_audio = b'RIFF' + b'\x00' * 100
+        test_audio = b"RIFF" + b"\x00" * 100
         message_id = vm_system.save_message(
-            extension_number="1001",
-            caller_id="1002",
-            audio_data=test_audio,
-            duration=30
+            extension_number="1001", caller_id="1002", audio_data=test_audio, duration=30
         )
 
         assert message_id is not None
@@ -125,10 +109,10 @@ def test_voicemail_database_integration():
         result = db.fetch_one(query, (message_id,))
 
         assert result is not None
-        assert result['extension_number'] == '1001'
-        assert result['caller_id'] == '1002'
-        assert result['duration'] == 30
-        assert result['listened'] is False or result['listened'] == 0
+        assert result["extension_number"] == "1001"
+        assert result["caller_id"] == "1002"
+        assert result["duration"] == 30
+        assert result["listened"] is False or result["listened"] == 0
 
         # Mark message as listened
         mailbox = vm_system.get_mailbox("1001")
@@ -136,7 +120,7 @@ def test_voicemail_database_integration():
 
         # Verify listened status updated in database
         result = db.fetch_one(query, (message_id,))
-        assert result['listened'] is True or result['listened'] == 1
+        assert result["listened"] is True or result["listened"] == 1
 
         # Delete message
         mailbox.delete_message(message_id)
@@ -162,22 +146,15 @@ def test_voicemail_without_database():
     temp_dir = tempfile.mkdtemp()
 
     try:
-        config = Config('config.yml')
+        config = Config("config.yml")
 
         # Create voicemail system without database
-        vm_system = VoicemailSystem(
-            storage_path=temp_dir,
-            config=config,
-            database=None
-        )
+        vm_system = VoicemailSystem(storage_path=temp_dir, config=config, database=None)
 
         # Save a test message
-        test_audio = b'RIFF' + b'\x00' * 100
+        test_audio = b"RIFF" + b"\x00" * 100
         message_id = vm_system.save_message(
-            extension_number="1001",
-            caller_id="1002",
-            audio_data=test_audio,
-            duration=30
+            extension_number="1001", caller_id="1002", audio_data=test_audio, duration=30
         )
 
         assert message_id is not None
@@ -214,6 +191,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

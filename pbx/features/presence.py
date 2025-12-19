@@ -2,6 +2,7 @@
 Presence and status system
 Allows users to see availability of other extensions in real-time
 """
+
 from datetime import datetime
 from enum import Enum
 
@@ -10,6 +11,7 @@ from pbx.utils.logger import get_logger
 
 class PresenceStatus(Enum):
     """User presence status"""
+
     AVAILABLE = "available"
     BUSY = "busy"
     AWAY = "away"
@@ -82,13 +84,13 @@ class UserPresence:
     def to_dict(self):
         """Convert to dictionary"""
         return {
-            'extension': self.extension,
-            'name': self.name,
-            'status': self.status.value,
-            'custom_message': self.custom_message,
-            'in_call': self.in_call,
-            'last_activity': self.last_activity.isoformat(),
-            'idle_time': self.get_idle_time()
+            "extension": self.extension,
+            "name": self.name,
+            "status": self.status.value,
+            "custom_message": self.custom_message,
+            "in_call": self.in_call,
+            "last_activity": self.last_activity.isoformat(),
+            "idle_time": self.get_idle_time(),
         }
 
 
@@ -221,8 +223,7 @@ class PresenceSystem:
 
         if subscriber_extension not in self.subscribers[watched_extension]:
             self.subscribers[watched_extension].append(subscriber_extension)
-            self.logger.debug(
-                f"{subscriber_extension} subscribed to {watched_extension}")
+            self.logger.debug(f"{subscriber_extension} subscribed to {watched_extension}")
 
     def unsubscribe(self, subscriber_extension, watched_extension):
         """
@@ -234,8 +235,7 @@ class PresenceSystem:
         """
         if watched_extension in self.subscribers:
             if subscriber_extension in self.subscribers[watched_extension]:
-                self.subscribers[watched_extension].remove(
-                    subscriber_extension)
+                self.subscribers[watched_extension].remove(subscriber_extension)
 
     def _notify_subscribers(self, extension):
         """
@@ -250,7 +250,8 @@ class PresenceSystem:
             if user:
                 self.logger.debug(
                     f"Notifying {
-                        len(subscribers)} subscribers of {extension} presence change")
+                        len(subscribers)} subscribers of {extension} presence change"
+                )
                 # In a real implementation, send presence update messages
 
     def check_auto_status(self):
@@ -289,5 +290,4 @@ class PresenceSystem:
         Returns:
             List of UserPresence objects
         """
-        return [u for u in self.users.values()
-                if u.status == PresenceStatus.AVAILABLE]
+        return [u for u in self.users.values() if u.status == PresenceStatus.AVAILABLE]

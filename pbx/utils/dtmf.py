@@ -2,6 +2,7 @@
 DTMF (Dual-Tone Multi-Frequency) Detection
 Implements Goertzel algorithm for detecting telephone keypad tones
 """
+
 import math
 from typing import List, Optional
 
@@ -9,10 +10,22 @@ from pbx.utils.logger import get_logger
 
 # DTMF frequency pairs for each key
 DTMF_FREQUENCIES = {
-    '1': (697, 1209), '2': (697, 1336), '3': (697, 1477), 'A': (697, 1633),
-    '4': (770, 1209), '5': (770, 1336), '6': (770, 1477), 'B': (770, 1633),
-    '7': (852, 1209), '8': (852, 1336), '9': (852, 1477), 'C': (852, 1633),
-    '*': (941, 1209), '0': (941, 1336), '#': (941, 1477), 'D': (941, 1633)
+    "1": (697, 1209),
+    "2": (697, 1336),
+    "3": (697, 1477),
+    "A": (697, 1633),
+    "4": (770, 1209),
+    "5": (770, 1336),
+    "6": (770, 1477),
+    "B": (770, 1633),
+    "7": (852, 1209),
+    "8": (852, 1336),
+    "9": (852, 1477),
+    "C": (852, 1633),
+    "*": (941, 1209),
+    "0": (941, 1336),
+    "#": (941, 1477),
+    "D": (941, 1633),
 }
 
 # Standard DTMF frequencies
@@ -45,7 +58,8 @@ class DTMFDetector:
             self.coefficients[freq] = 2.0 * math.cos(omega)
 
         self.logger.debug(
-            f"DTMF detector initialized: {sample_rate}Hz, {samples_per_frame} samples/frame")
+            f"DTMF detector initialized: {sample_rate}Hz, {samples_per_frame} samples/frame"
+        )
 
     def goertzel(self, samples: List[float], frequency: int) -> float:
         """
@@ -72,10 +86,7 @@ class DTMFDetector:
         magnitude = math.sqrt(q1 * q1 + q2 * q2 - q1 * q2 * coeff)
         return magnitude
 
-    def detect_tone(
-            self,
-            samples: List[float],
-            threshold: float = 0.3) -> Optional[str]:
+    def detect_tone(self, samples: List[float], threshold: float = 0.3) -> Optional[str]:
         """
         Detect DTMF tone from audio samples
 
@@ -97,18 +108,11 @@ class DTMFDetector:
             return None
 
         # Normalize samples (max_val guaranteed to be >= 0.01 from check above)
-        normalized = [s / (max_val or 1.0)
-                      for s in samples[:self.samples_per_frame]]
+        normalized = [s / (max_val or 1.0) for s in samples[: self.samples_per_frame]]
 
         # Detect low and high frequency components
-        low_magnitudes = {
-            freq: self.goertzel(
-                normalized,
-                freq) for freq in DTMF_LOW_FREQS}
-        high_magnitudes = {
-            freq: self.goertzel(
-                normalized,
-                freq) for freq in DTMF_HIGH_FREQS}
+        low_magnitudes = {freq: self.goertzel(normalized, freq) for freq in DTMF_LOW_FREQS}
+        high_magnitudes = {freq: self.goertzel(normalized, freq) for freq in DTMF_HIGH_FREQS}
 
         # Find strongest frequencies
         low_freq = max(low_magnitudes, key=low_magnitudes.get)
@@ -124,15 +128,11 @@ class DTMFDetector:
             # Additional validation: check that detected frequencies are dominant
             # Require detected frequencies to be at least 2x stronger than the
             # average of other frequencies
-            other_low_mags = [
-                m for f, m in low_magnitudes.items() if f != low_freq]
-            other_high_mags = [
-                m for f, m in high_magnitudes.items() if f != high_freq]
+            other_low_mags = [m for f, m in low_magnitudes.items() if f != low_freq]
+            other_high_mags = [m for f, m in high_magnitudes.items() if f != high_freq]
 
-            avg_other_low = sum(other_low_mags) / \
-                len(other_low_mags) if other_low_mags else 0
-            avg_other_high = sum(other_high_mags) / \
-                len(other_high_mags) if other_high_mags else 0
+            avg_other_low = sum(other_low_mags) / len(other_low_mags) if other_low_mags else 0
+            avg_other_high = sum(other_high_mags) / len(other_high_mags) if other_high_mags else 0
 
             # Require the detected frequencies to be significantly stronger than noise
             # Use 3.0 ratio for better noise rejection (prevents white noise false positives)
@@ -143,15 +143,13 @@ class DTMFDetector:
                         self.logger.debug(
                             f"Detected DTMF tone: {digit} (L:{low_freq}Hz={
                                 low_mag:.3f}, H:{high_freq}Hz={
-                                high_mag:.3f})")
+                                high_mag:.3f})"
+                        )
                         return digit
 
         return None
 
-    def detect(
-            self,
-            audio_bytes: bytes,
-            threshold: float = 0.3) -> Optional[str]:
+    def detect(self, audio_bytes: bytes, threshold: float = 0.3) -> Optional[str]:
         """
         Detect DTMF tone from raw audio bytes (PCM 16-bit signed little-endian)
 
@@ -181,7 +179,7 @@ class DTMFDetector:
             # odd)
             for i in range(0, num_samples * 2, 2):
                 # Read 2 bytes as signed 16-bit little-endian
-                sample_int = struct.unpack('<h', audio_bytes[i:i + 2])[0]
+                sample_int = struct.unpack("<h", audio_bytes[i : i + 2])[0]
                 # Normalize to [-1.0, 1.0]
                 samples.append(sample_int / 32768.0)
 
@@ -191,10 +189,7 @@ class DTMFDetector:
             # Invalid audio data
             return None
 
-    def detect_sequence(
-            self,
-            samples: List[float],
-            max_digits: int = 10) -> str:
+    def detect_sequence(self, samples: List[float], max_digits: int = 10) -> str:
         """
         Detect sequence of DTMF tones from longer audio sample
 
@@ -214,7 +209,7 @@ class DTMFDetector:
         frame_step = frame_size // 2  # 50% overlap
 
         for i in range(0, len(samples) - frame_size, frame_step):
-            frame = samples[i:i + frame_size]
+            frame = samples[i : i + frame_size]
             digit = self.detect_tone(frame)
 
             if digit:
@@ -242,7 +237,7 @@ class DTMFDetector:
         if last_digit and last_digit_count >= 2 and len(digits) < max_digits:
             digits.append(last_digit)
 
-        result = ''.join(digits)
+        result = "".join(digits)
         if result:
             self.logger.info(f"Detected DTMF sequence: {result}")
         return result
@@ -283,19 +278,15 @@ class DTMFGenerator:
         for i in range(num_samples):
             t = i / self.sample_rate
             # Generate sum of two sine waves
-            sample = (math.sin(2 * math.pi * low_freq * t) +
-                      math.sin(2 * math.pi * high_freq * t)) / 2
+            sample = (
+                math.sin(2 * math.pi * low_freq * t) + math.sin(2 * math.pi * high_freq * t)
+            ) / 2
             samples.append(sample)
 
-        self.logger.debug(
-            f"Generated DTMF tone for '{digit}': {num_samples} samples")
+        self.logger.debug(f"Generated DTMF tone for '{digit}': {num_samples} samples")
         return samples
 
-    def generate_sequence(
-            self,
-            digits: str,
-            tone_ms: int = 100,
-            gap_ms: int = 50) -> List[float]:
+    def generate_sequence(self, digits: str, tone_ms: int = 100, gap_ms: int = 50) -> List[float]:
         """
         Generate sequence of DTMF tones
 
@@ -317,5 +308,6 @@ class DTMFGenerator:
 
         self.logger.info(
             f"Generated DTMF sequence: {digits} ({
-                len(samples)} samples)")
+                len(samples)} samples)"
+        )
         return samples

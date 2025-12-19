@@ -1,13 +1,14 @@
 """
 Tests for QoS (Quality of Service) Monitoring System
 """
+
 import os
 import sys
 import time
 import unittest
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.qos_monitoring import QoSMetrics, QoSMonitor
 
@@ -118,8 +119,8 @@ class TestQoSMetrics(unittest.TestCase):
 
         # MOS should be high (>= 4.0) with perfect conditions
         summary = metrics.get_summary()
-        self.assertGreaterEqual(summary['mos_score'], 4.0)
-        self.assertEqual(summary['quality_rating'], "Excellent")
+        self.assertGreaterEqual(summary["mos_score"], 4.0)
+        self.assertEqual(summary["quality_rating"], "Excellent")
 
     def test_mos_score_poor_conditions(self):
         """Test MOS score with poor network conditions"""
@@ -139,8 +140,8 @@ class TestQoSMetrics(unittest.TestCase):
 
         # MOS should be low (< 3.5) with poor conditions
         summary = metrics.get_summary()
-        self.assertLess(summary['mos_score'], 3.5)
-        self.assertIn(summary['quality_rating'], ["Poor", "Bad"])
+        self.assertLess(summary["mos_score"], 3.5)
+        self.assertIn(summary["quality_rating"], ["Poor", "Bad"])
 
     def test_summary_generation(self):
         """Test summary data generation"""
@@ -156,20 +157,20 @@ class TestQoSMetrics(unittest.TestCase):
         summary = metrics.get_summary()
 
         # Verify all expected fields are present
-        self.assertIn('call_id', summary)
-        self.assertIn('start_time', summary)
-        self.assertIn('end_time', summary)
-        self.assertIn('duration_seconds', summary)
-        self.assertIn('packets_received', summary)
-        self.assertIn('packets_lost', summary)
-        self.assertIn('packet_loss_percentage', summary)
-        self.assertIn('jitter_avg_ms', summary)
-        self.assertIn('latency_avg_ms', summary)
-        self.assertIn('mos_score', summary)
-        self.assertIn('quality_rating', summary)
+        self.assertIn("call_id", summary)
+        self.assertIn("start_time", summary)
+        self.assertIn("end_time", summary)
+        self.assertIn("duration_seconds", summary)
+        self.assertIn("packets_received", summary)
+        self.assertIn("packets_lost", summary)
+        self.assertIn("packet_loss_percentage", summary)
+        self.assertIn("jitter_avg_ms", summary)
+        self.assertIn("latency_avg_ms", summary)
+        self.assertIn("mos_score", summary)
+        self.assertIn("quality_rating", summary)
 
-        self.assertEqual(summary['call_id'], "test-call-123")
-        self.assertEqual(summary['packets_received'], 10)
+        self.assertEqual(summary["call_id"], "test-call-123")
+        self.assertEqual(summary["packets_received"], 10)
 
 
 class TestQoSMonitor(unittest.TestCase):
@@ -205,7 +206,7 @@ class TestQoSMonitor(unittest.TestCase):
         summary = self.monitor.stop_monitoring("call-001")
 
         self.assertIsNotNone(summary)
-        self.assertEqual(summary['call_id'], "call-001")
+        self.assertEqual(summary["call_id"], "call-001")
         self.assertNotIn("call-001", self.monitor.active_calls)
         self.assertEqual(len(self.monitor.historical_data), 1)
 
@@ -216,7 +217,7 @@ class TestQoSMonitor(unittest.TestCase):
         metrics = self.monitor.get_metrics("call-001")
 
         self.assertIsNotNone(metrics)
-        self.assertEqual(metrics['call_id'], "call-001")
+        self.assertEqual(metrics["call_id"], "call-001")
 
     def test_get_all_active_metrics(self):
         """Test getting metrics for all active calls"""
@@ -227,7 +228,7 @@ class TestQoSMonitor(unittest.TestCase):
         all_metrics = self.monitor.get_all_active_metrics()
 
         self.assertEqual(len(all_metrics), 3)
-        call_ids = [m['call_id'] for m in all_metrics]
+        call_ids = [m["call_id"] for m in all_metrics]
         self.assertIn("call-001", call_ids)
         self.assertIn("call-002", call_ids)
         self.assertIn("call-003", call_ids)
@@ -267,13 +268,12 @@ class TestQoSMonitor(unittest.TestCase):
             self.monitor.stop_monitoring(call_id)
 
         # Get only high-quality calls (MOS >= 4.0)
-        high_quality = self.monitor.get_historical_metrics(
-            limit=100, min_mos=4.0)
+        high_quality = self.monitor.get_historical_metrics(limit=100, min_mos=4.0)
 
         # Should have approximately 5 high-quality calls
         self.assertGreater(len(high_quality), 0)
         for call in high_quality:
-            self.assertGreaterEqual(call['mos_score'], 4.0)
+            self.assertGreaterEqual(call["mos_score"], 4.0)
 
     def test_alert_generation_low_mos(self):
         """Test alert generation for low MOS score"""
@@ -292,8 +292,8 @@ class TestQoSMonitor(unittest.TestCase):
         self.assertGreater(len(self.monitor.alerts), 0)
 
         # Check for low MOS alert
-        alert_types = [a['type'] for a in self.monitor.alerts]
-        self.assertIn('low_mos', alert_types)
+        alert_types = [a["type"] for a in self.monitor.alerts]
+        self.assertIn("low_mos", alert_types)
 
     def test_alert_generation_packet_loss(self):
         """Test alert generation for high packet loss"""
@@ -308,8 +308,8 @@ class TestQoSMonitor(unittest.TestCase):
         self.monitor.stop_monitoring(call_id)
 
         alerts = self.monitor.get_alerts()
-        alert_types = [a['type'] for a in alerts]
-        self.assertIn('high_packet_loss', alert_types)
+        alert_types = [a["type"] for a in alerts]
+        self.assertIn("high_packet_loss", alert_types)
 
     def test_clear_alerts(self):
         """Test clearing alerts"""
@@ -355,27 +355,27 @@ class TestQoSMonitor(unittest.TestCase):
 
         stats = self.monitor.get_statistics()
 
-        self.assertEqual(stats['total_calls'], 20)
-        self.assertGreater(stats['average_mos'], 0.0)
-        self.assertGreater(stats['calls_with_issues'], 0)
-        self.assertGreater(stats['issue_percentage'], 0.0)
+        self.assertEqual(stats["total_calls"], 20)
+        self.assertGreater(stats["average_mos"], 0.0)
+        self.assertGreater(stats["calls_with_issues"], 0)
+        self.assertGreater(stats["issue_percentage"], 0.0)
 
     def test_update_thresholds(self):
         """Test updating alert thresholds"""
         # Set custom thresholds
         new_thresholds = {
-            'mos_min': 4.0,
-            'packet_loss_max': 1.0,
-            'jitter_max': 30.0,
-            'latency_max': 200.0
+            "mos_min": 4.0,
+            "packet_loss_max": 1.0,
+            "jitter_max": 30.0,
+            "latency_max": 200.0,
         }
 
         self.monitor.update_alert_thresholds(new_thresholds)
 
-        self.assertEqual(self.monitor.alert_thresholds['mos_min'], 4.0)
-        self.assertEqual(self.monitor.alert_thresholds['packet_loss_max'], 1.0)
-        self.assertEqual(self.monitor.alert_thresholds['jitter_max'], 30.0)
-        self.assertEqual(self.monitor.alert_thresholds['latency_max'], 200.0)
+        self.assertEqual(self.monitor.alert_thresholds["mos_min"], 4.0)
+        self.assertEqual(self.monitor.alert_thresholds["packet_loss_max"], 1.0)
+        self.assertEqual(self.monitor.alert_thresholds["jitter_max"], 30.0)
+        self.assertEqual(self.monitor.alert_thresholds["latency_max"], 200.0)
 
     def test_max_historical_records_limit(self):
         """Test that historical data doesn't exceed maximum"""
@@ -392,5 +392,5 @@ class TestQoSMonitor(unittest.TestCase):
         self.assertLessEqual(len(self.monitor.historical_data), 100)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

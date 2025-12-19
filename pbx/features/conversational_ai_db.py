@@ -2,9 +2,11 @@
 Database layer for Conversational AI Assistant
 Provides persistence for conversations, intents, and statistics
 """
+
 import json
-from typing import Dict, List, Optional
 from datetime import datetime
+from typing import Dict, List, Optional
+
 from pbx.utils.logger import get_logger
 
 
@@ -13,22 +15,22 @@ class ConversationalAIDatabase:
     Database layer for conversational AI
     Stores conversations, messages, intents, and analytics
     """
-    
+
     def __init__(self, db_backend):
         """
         Initialize database layer
-        
+
         Args:
             db_backend: DatabaseBackend instance
         """
         self.logger = get_logger()
         self.db = db_backend
-        
+
     def create_tables(self):
         """Create tables for conversational AI"""
         try:
             # Conversations table
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 sql_conversations = """
                 CREATE TABLE IF NOT EXISTS ai_conversations (
                     id SERIAL PRIMARY KEY,
@@ -41,7 +43,7 @@ class ConversationalAIDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_messages = """
                 CREATE TABLE IF NOT EXISTS ai_messages (
                     id SERIAL PRIMARY KEY,
@@ -52,7 +54,7 @@ class ConversationalAIDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_intents = """
                 CREATE TABLE IF NOT EXISTS ai_intents (
                     id SERIAL PRIMARY KEY,
@@ -64,7 +66,7 @@ class ConversationalAIDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_config = """
                 CREATE TABLE IF NOT EXISTS ai_configurations (
                     id SERIAL PRIMARY KEY,
@@ -91,7 +93,7 @@ class ConversationalAIDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_messages = """
                 CREATE TABLE IF NOT EXISTS ai_messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,7 +105,7 @@ class ConversationalAIDatabase:
                     FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
                 )
                 """
-                
+
                 sql_intents = """
                 CREATE TABLE IF NOT EXISTS ai_intents (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,7 +118,7 @@ class ConversationalAIDatabase:
                     FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
                 )
                 """
-                
+
                 sql_config = """
                 CREATE TABLE IF NOT EXISTS ai_configurations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,37 +132,39 @@ class ConversationalAIDatabase:
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-            
+
             cursor = self.db.connection.cursor()
             cursor.execute(sql_conversations)
             cursor.execute(sql_messages)
             cursor.execute(sql_intents)
             cursor.execute(sql_config)
             self.db.connection.commit()
-            
+
             self.logger.info("Conversational AI tables created successfully")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error creating Conversational AI tables: {e}")
             return False
-    
-    def save_conversation(self, call_id: str, caller_id: str, started_at: datetime) -> Optional[int]:
+
+    def save_conversation(
+        self, call_id: str, caller_id: str, started_at: datetime
+    ) -> Optional[int]:
         """
         Save a new conversation
-        
+
         Args:
             call_id: Unique call identifier
             caller_id: Caller's phone number
             started_at: When conversation started
-            
+
         Returns:
             Conversation ID or None
         """
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO ai_conversations (call_id, caller_id, started_at)
                 VALUES (%s, %s, %s)
@@ -171,28 +175,28 @@ class ConversationalAIDatabase:
                 INSERT INTO ai_conversations (call_id, caller_id, started_at)
                 VALUES (?, ?, ?)
                 """
-            
+
             params = (call_id, caller_id, started_at.isoformat())
             cursor.execute(sql, params)
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 conversation_id = cursor.fetchone()[0]
             else:
                 conversation_id = cursor.lastrowid
-            
+
             self.db.connection.commit()
             return conversation_id
-            
+
         except Exception as e:
             self.logger.error(f"Error saving conversation: {e}")
             return None
-    
+
     def save_message(self, conversation_id: int, role: str, content: str, timestamp: datetime):
         """Save a message in the conversation"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO ai_messages (conversation_id, role, content, timestamp)
                 VALUES (%s, %s, %s, %s)
@@ -202,47 +206,67 @@ class ConversationalAIDatabase:
                 INSERT INTO ai_messages (conversation_id, role, content, timestamp)
                 VALUES (?, ?, ?, ?)
                 """
-            
+
             params = (conversation_id, role, content, timestamp.isoformat())
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error saving message: {e}")
-    
-    def save_intent(self, conversation_id: int, intent: str, confidence: float, 
-                    entities: Dict, timestamp: datetime):
+
+    def save_intent(
+        self,
+        conversation_id: int,
+        intent: str,
+        confidence: float,
+        entities: Dict,
+        timestamp: datetime,
+    ):
         """Save detected intent"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 import json
+
                 sql = """
                 INSERT INTO ai_intents (conversation_id, intent, confidence, entities, timestamp)
                 VALUES (%s, %s, %s, %s, %s)
                 """
-                params = (conversation_id, intent, confidence, json.dumps(entities), timestamp.isoformat())
+                params = (
+                    conversation_id,
+                    intent,
+                    confidence,
+                    json.dumps(entities),
+                    timestamp.isoformat(),
+                )
             else:
                 import json
+
                 sql = """
                 INSERT INTO ai_intents (conversation_id, intent, confidence, entities, timestamp)
                 VALUES (?, ?, ?, ?, ?)
                 """
-                params = (conversation_id, intent, confidence, json.dumps(entities), timestamp.isoformat())
-            
+                params = (
+                    conversation_id,
+                    intent,
+                    confidence,
+                    json.dumps(entities),
+                    timestamp.isoformat(),
+                )
+
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error saving intent: {e}")
-    
+
     def end_conversation(self, call_id: str, final_intent: str, message_count: int):
         """Mark conversation as ended"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 UPDATE ai_conversations
                 SET ended_at = %s, final_intent = %s, message_count = %s
@@ -254,20 +278,20 @@ class ConversationalAIDatabase:
                 SET ended_at = ?, final_intent = ?, message_count = ?
                 WHERE call_id = ?
                 """
-            
+
             params = (datetime.now().isoformat(), final_intent, message_count, call_id)
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error ending conversation: {e}")
-    
+
     def get_conversation_history(self, limit: int = 100) -> List[Dict]:
         """Get recent conversation history"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 SELECT c.*, COUNT(m.id) as msg_count
                 FROM ai_conversations c
@@ -285,10 +309,10 @@ class ConversationalAIDatabase:
                 ORDER BY c.started_at DESC
                 LIMIT ?
                 """
-            
+
             cursor.execute(sql, (limit,))
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 columns = [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 return [dict(zip(columns, row)) for row in rows]
@@ -296,33 +320,33 @@ class ConversationalAIDatabase:
                 rows = cursor.fetchall()
                 columns = [desc[0] for desc in cursor.description]
                 return [dict(zip(columns, row)) for row in rows]
-                
+
         except Exception as e:
             self.logger.error(f"Error getting conversation history: {e}")
             return []
-    
+
     def get_intent_statistics(self) -> Dict:
         """Get intent usage statistics"""
         try:
             cursor = self.db.connection.cursor()
-            
+
             sql = """
             SELECT intent, COUNT(*) as count
             FROM ai_intents
             GROUP BY intent
             ORDER BY count DESC
             """
-            
+
             cursor.execute(sql)
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 columns = [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 return {row[0]: row[1] for row in rows}
             else:
                 rows = cursor.fetchall()
                 return {row[0]: row[1] for row in rows}
-                
+
         except Exception as e:
             self.logger.error(f"Error getting intent statistics: {e}")
             return {}

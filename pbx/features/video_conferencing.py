@@ -2,9 +2,10 @@
 Video Conferencing Framework
 HD video calls, screen sharing, and 4K video support
 """
+
+import hashlib
 from datetime import datetime
 from typing import Dict, List, Optional
-import hashlib
 
 from pbx.utils.logger import get_logger
 
@@ -26,7 +27,7 @@ class VideoConferencingEngine:
         self.logger = get_logger()
         self.db = db_backend
         self.config = config
-        self.enabled = config.get('video_conferencing.enabled', False)
+        self.enabled = config.get("video_conferencing.enabled", False)
 
         self.logger.info("Video Conferencing Framework initialized")
 
@@ -42,38 +43,40 @@ class VideoConferencingEngine:
         """
         try:
             password_hash = None
-            if room_data.get('password'):
-                password_hash = hashlib.sha256(
-                    room_data['password'].encode()
-                ).hexdigest()
+            if room_data.get("password"):
+                password_hash = hashlib.sha256(room_data["password"].encode()).hexdigest()
 
             self.db.execute(
-                """INSERT INTO video_conference_rooms 
+                (
+                    """INSERT INTO video_conference_rooms 
                    (room_name, owner_extension, max_participants, enable_4k,
                     enable_screen_share, recording_enabled, password_hash)
                    VALUES (?, ?, ?, ?, ?, ?, ?)"""
-                if self.db.db_type == 'sqlite'
-                else """INSERT INTO video_conference_rooms 
+                    if self.db.db_type == "sqlite"
+                    else """INSERT INTO video_conference_rooms 
                    (room_name, owner_extension, max_participants, enable_4k,
                     enable_screen_share, recording_enabled, password_hash)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+                ),
                 (
-                    room_data['room_name'],
-                    room_data.get('owner_extension'),
-                    room_data.get('max_participants', 10),
-                    room_data.get('enable_4k', False),
-                    room_data.get('enable_screen_share', True),
-                    room_data.get('recording_enabled', False),
-                    password_hash
-                )
+                    room_data["room_name"],
+                    room_data.get("owner_extension"),
+                    room_data.get("max_participants", 10),
+                    room_data.get("enable_4k", False),
+                    room_data.get("enable_screen_share", True),
+                    room_data.get("recording_enabled", False),
+                    password_hash,
+                ),
             )
 
             # Get created room ID
             result = self.db.execute(
-                "SELECT id FROM video_conference_rooms WHERE room_name = ?"
-                if self.db.db_type == 'sqlite'
-                else "SELECT id FROM video_conference_rooms WHERE room_name = %s",
-                (room_data['room_name'],)
+                (
+                    "SELECT id FROM video_conference_rooms WHERE room_name = ?"
+                    if self.db.db_type == "sqlite"
+                    else "SELECT id FROM video_conference_rooms WHERE room_name = %s"
+                ),
+                (room_data["room_name"],),
             )
 
             if result and result[0]:
@@ -100,20 +103,22 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                """INSERT INTO video_conference_participants 
+                (
+                    """INSERT INTO video_conference_participants 
                    (room_id, extension, display_name, video_enabled, audio_enabled)
                    VALUES (?, ?, ?, ?, ?)"""
-                if self.db.db_type == 'sqlite'
-                else """INSERT INTO video_conference_participants 
+                    if self.db.db_type == "sqlite"
+                    else """INSERT INTO video_conference_participants 
                    (room_id, extension, display_name, video_enabled, audio_enabled)
-                   VALUES (%s, %s, %s, %s, %s)""",
+                   VALUES (%s, %s, %s, %s, %s)"""
+                ),
                 (
                     room_id,
-                    participant_data.get('extension'),
-                    participant_data.get('display_name'),
-                    participant_data.get('video_enabled', True),
-                    participant_data.get('audio_enabled', True)
-                )
+                    participant_data.get("extension"),
+                    participant_data.get("display_name"),
+                    participant_data.get("video_enabled", True),
+                    participant_data.get("audio_enabled", True),
+                ),
             )
 
             self.logger.info(
@@ -138,14 +143,16 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                """UPDATE video_conference_participants 
+                (
+                    """UPDATE video_conference_participants 
                    SET left_at = ? 
                    WHERE room_id = ? AND extension = ? AND left_at IS NULL"""
-                if self.db.db_type == 'sqlite'
-                else """UPDATE video_conference_participants 
+                    if self.db.db_type == "sqlite"
+                    else """UPDATE video_conference_participants 
                    SET left_at = %s 
-                   WHERE room_id = %s AND extension = %s AND left_at IS NULL""",
-                (datetime.now(), room_id, extension)
+                   WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
+                ),
+                (datetime.now(), room_id, extension),
             )
 
             self.logger.info(f"Participant {extension} left room {room_id}")
@@ -167,23 +174,25 @@ class VideoConferencingEngine:
         """
         try:
             result = self.db.execute(
-                "SELECT * FROM video_conference_rooms WHERE id = ?"
-                if self.db.db_type == 'sqlite'
-                else "SELECT * FROM video_conference_rooms WHERE id = %s",
-                (room_id,)
+                (
+                    "SELECT * FROM video_conference_rooms WHERE id = ?"
+                    if self.db.db_type == "sqlite"
+                    else "SELECT * FROM video_conference_rooms WHERE id = %s"
+                ),
+                (room_id,),
             )
 
             if result and result[0]:
                 row = result[0]
                 return {
-                    'id': row[0],
-                    'room_name': row[1],
-                    'owner_extension': row[2],
-                    'max_participants': row[3],
-                    'enable_4k': bool(row[4]),
-                    'enable_screen_share': bool(row[5]),
-                    'recording_enabled': bool(row[6]),
-                    'created_at': row[8]
+                    "id": row[0],
+                    "room_name": row[1],
+                    "owner_extension": row[2],
+                    "max_participants": row[3],
+                    "enable_4k": bool(row[4]),
+                    "enable_screen_share": bool(row[5]),
+                    "recording_enabled": bool(row[6]),
+                    "created_at": row[8],
                 }
 
             return None
@@ -204,24 +213,28 @@ class VideoConferencingEngine:
         """
         try:
             result = self.db.execute(
-                """SELECT * FROM video_conference_participants 
+                (
+                    """SELECT * FROM video_conference_participants 
                    WHERE room_id = ? AND left_at IS NULL"""
-                if self.db.db_type == 'sqlite'
-                else """SELECT * FROM video_conference_participants 
-                   WHERE room_id = %s AND left_at IS NULL""",
-                (room_id,)
+                    if self.db.db_type == "sqlite"
+                    else """SELECT * FROM video_conference_participants 
+                   WHERE room_id = %s AND left_at IS NULL"""
+                ),
+                (room_id,),
             )
 
             participants = []
-            for row in (result or []):
-                participants.append({
-                    'extension': row[2],
-                    'display_name': row[3],
-                    'joined_at': row[4],
-                    'video_enabled': bool(row[6]),
-                    'audio_enabled': bool(row[7]),
-                    'screen_sharing': bool(row[8])
-                })
+            for row in result or []:
+                participants.append(
+                    {
+                        "extension": row[2],
+                        "display_name": row[3],
+                        "joined_at": row[4],
+                        "video_enabled": bool(row[6]),
+                        "audio_enabled": bool(row[7]),
+                        "screen_sharing": bool(row[8]),
+                    }
+                )
 
             return participants
 
@@ -242,51 +255,57 @@ class VideoConferencingEngine:
         try:
             # Check if codec exists
             result = self.db.execute(
-                "SELECT id FROM video_codec_configs WHERE codec_name = ?"
-                if self.db.db_type == 'sqlite'
-                else "SELECT id FROM video_codec_configs WHERE codec_name = %s",
-                (codec_data['codec_name'],)
+                (
+                    "SELECT id FROM video_codec_configs WHERE codec_name = ?"
+                    if self.db.db_type == "sqlite"
+                    else "SELECT id FROM video_codec_configs WHERE codec_name = %s"
+                ),
+                (codec_data["codec_name"],),
             )
 
             if result and result[0]:
                 # Update
                 self.db.execute(
-                    """UPDATE video_codec_configs 
+                    (
+                        """UPDATE video_codec_configs 
                        SET enabled = ?, priority = ?, max_resolution = ?,
                            max_bitrate = ?, min_bitrate = ?
                        WHERE codec_name = ?"""
-                    if self.db.db_type == 'sqlite'
-                    else """UPDATE video_codec_configs 
+                        if self.db.db_type == "sqlite"
+                        else """UPDATE video_codec_configs 
                        SET enabled = %s, priority = %s, max_resolution = %s,
                            max_bitrate = %s, min_bitrate = %s
-                       WHERE codec_name = %s""",
+                       WHERE codec_name = %s"""
+                    ),
                     (
-                        codec_data.get('enabled', True),
-                        codec_data.get('priority', 100),
-                        codec_data.get('max_resolution', '1920x1080'),
-                        codec_data.get('max_bitrate', 2000),
-                        codec_data.get('min_bitrate', 500),
-                        codec_data['codec_name']
-                    )
+                        codec_data.get("enabled", True),
+                        codec_data.get("priority", 100),
+                        codec_data.get("max_resolution", "1920x1080"),
+                        codec_data.get("max_bitrate", 2000),
+                        codec_data.get("min_bitrate", 500),
+                        codec_data["codec_name"],
+                    ),
                 )
             else:
                 # Insert
                 self.db.execute(
-                    """INSERT INTO video_codec_configs 
+                    (
+                        """INSERT INTO video_codec_configs 
                        (codec_name, enabled, priority, max_resolution, max_bitrate, min_bitrate)
                        VALUES (?, ?, ?, ?, ?, ?)"""
-                    if self.db.db_type == 'sqlite'
-                    else """INSERT INTO video_codec_configs 
+                        if self.db.db_type == "sqlite"
+                        else """INSERT INTO video_codec_configs 
                        (codec_name, enabled, priority, max_resolution, max_bitrate, min_bitrate)
-                       VALUES (%s, %s, %s, %s, %s, %s)""",
+                       VALUES (%s, %s, %s, %s, %s, %s)"""
+                    ),
                     (
-                        codec_data['codec_name'],
-                        codec_data.get('enabled', True),
-                        codec_data.get('priority', 100),
-                        codec_data.get('max_resolution', '1920x1080'),
-                        codec_data.get('max_bitrate', 2000),
-                        codec_data.get('min_bitrate', 500)
-                    )
+                        codec_data["codec_name"],
+                        codec_data.get("enabled", True),
+                        codec_data.get("priority", 100),
+                        codec_data.get("max_resolution", "1920x1080"),
+                        codec_data.get("max_bitrate", 2000),
+                        codec_data.get("min_bitrate", 500),
+                    ),
                 )
 
             self.logger.info(f"Updated video codec config: {codec_data['codec_name']}")
@@ -309,17 +328,19 @@ class VideoConferencingEngine:
             )
 
             rooms = []
-            for row in (result or []):
-                rooms.append({
-                    'id': row[0],
-                    'room_name': row[1],
-                    'owner_extension': row[2],
-                    'max_participants': row[3],
-                    'enable_4k': bool(row[4]),
-                    'enable_screen_share': bool(row[5]),
-                    'recording_enabled': bool(row[6]),
-                    'created_at': row[8]
-                })
+            for row in result or []:
+                rooms.append(
+                    {
+                        "id": row[0],
+                        "room_name": row[1],
+                        "owner_extension": row[2],
+                        "max_participants": row[3],
+                        "enable_4k": bool(row[4]),
+                        "enable_screen_share": bool(row[5]),
+                        "recording_enabled": bool(row[6]),
+                        "created_at": row[8],
+                    }
+                )
 
             return rooms
 
@@ -341,14 +362,16 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                """UPDATE video_conference_participants 
+                (
+                    """UPDATE video_conference_participants 
                    SET screen_sharing = ?
                    WHERE room_id = ? AND extension = ? AND left_at IS NULL"""
-                if self.db.db_type == 'sqlite'
-                else """UPDATE video_conference_participants 
+                    if self.db.db_type == "sqlite"
+                    else """UPDATE video_conference_participants 
                    SET screen_sharing = %s
-                   WHERE room_id = %s AND extension = %s AND left_at IS NULL""",
-                (True, room_id, extension)
+                   WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
+                ),
+                (True, room_id, extension),
             )
 
             # NOTE: Video conferencing is handled by Zoom/Teams for this deployment

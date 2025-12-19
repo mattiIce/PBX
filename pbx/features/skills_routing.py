@@ -2,6 +2,7 @@
 Skills-Based Routing (SBR) System
 Routes calls to agents based on their skills and expertise
 """
+
 from datetime import datetime
 from typing import Dict, List, Optional, Set
 
@@ -26,21 +27,13 @@ class Skill:
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
-        return {
-            'skill_id': self.skill_id,
-            'name': self.name,
-            'description': self.description
-        }
+        return {"skill_id": self.skill_id, "name": self.name, "description": self.description}
 
 
 class AgentSkill:
     """Represents an agent's proficiency in a skill"""
 
-    def __init__(
-            self,
-            agent_extension: str,
-            skill_id: str,
-            proficiency: int = 5):
+    def __init__(self, agent_extension: str, skill_id: str, proficiency: int = 5):
         """
         Initialize agent skill
 
@@ -57,21 +50,17 @@ class AgentSkill:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'agent_extension': self.agent_extension,
-            'skill_id': self.skill_id,
-            'proficiency': self.proficiency,
-            'assigned_at': self.assigned_at.isoformat()
+            "agent_extension": self.agent_extension,
+            "skill_id": self.skill_id,
+            "proficiency": self.proficiency,
+            "assigned_at": self.assigned_at.isoformat(),
         }
 
 
 class SkillRequirement:
     """Represents a skill requirement for a call or queue"""
 
-    def __init__(
-            self,
-            skill_id: str,
-            min_proficiency: int = 1,
-            required: bool = True):
+    def __init__(self, skill_id: str, min_proficiency: int = 1, required: bool = True):
         """
         Initialize skill requirement
 
@@ -87,9 +76,9 @@ class SkillRequirement:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'skill_id': self.skill_id,
-            'min_proficiency': self.min_proficiency,
-            'required': self.required
+            "skill_id": self.skill_id,
+            "min_proficiency": self.min_proficiency,
+            "required": self.required,
         }
 
 
@@ -112,12 +101,13 @@ class SkillsBasedRouter:
         self.config = config or {}
 
         # Configuration
-        self.enabled = self._get_config(
-            'features.skills_routing.enabled', False)
+        self.enabled = self._get_config("features.skills_routing.enabled", False)
         self.fallback_to_any_agent = self._get_config(
-            'features.skills_routing.fallback_to_any', True)
+            "features.skills_routing.fallback_to_any", True
+        )
         self.proficiency_weight = self._get_config(
-            'features.skills_routing.proficiency_weight', 0.7)
+            "features.skills_routing.proficiency_weight", 0.7
+        )
 
         # In-memory storage
         self.skills = {}  # skill_id -> Skill
@@ -133,12 +123,12 @@ class SkillsBasedRouter:
 
     def _get_config(self, key: str, default=None):
         """Get config value supporting both dot notation and nested dicts"""
-        if hasattr(self.config, 'get') and '.' in key:
+        if hasattr(self.config, "get") and "." in key:
             value = self.config.get(key, None)
             if value is not None:
                 return value
 
-        keys = key.split('.')
+        keys = key.split(".")
         value = self.config
         for k in keys:
             if isinstance(value, dict) and k in value:
@@ -151,14 +141,8 @@ class SkillsBasedRouter:
     def _initialize_schema(self):
         """Initialize skills routing database tables"""
         # Skills table
-        skills_table = """
-        CREATE TABLE IF NOT EXISTS skills (
-            skill_id VARCHAR(50) PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """ if self.database.db_type == 'postgresql' else """
+        skills_table = (
+            """
         CREATE TABLE IF NOT EXISTS skills (
             skill_id VARCHAR(50) PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -166,9 +150,20 @@ class SkillsBasedRouter:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+            if self.database.db_type == "postgresql"
+            else """
+        CREATE TABLE IF NOT EXISTS skills (
+            skill_id VARCHAR(50) PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        )
 
         # Agent skills table
-        agent_skills_table = """
+        agent_skills_table = (
+            """
         CREATE TABLE IF NOT EXISTS agent_skills (
             id SERIAL PRIMARY KEY,
             agent_extension VARCHAR(20) NOT NULL,
@@ -177,7 +172,9 @@ class SkillsBasedRouter:
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(agent_extension, skill_id)
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS agent_skills (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             agent_extension VARCHAR(20) NOT NULL,
@@ -187,9 +184,11 @@ class SkillsBasedRouter:
             UNIQUE(agent_extension, skill_id)
         )
         """
+        )
 
         # Queue skill requirements table
-        queue_requirements_table = """
+        queue_requirements_table = (
+            """
         CREATE TABLE IF NOT EXISTS queue_skill_requirements (
             id SERIAL PRIMARY KEY,
             queue_number VARCHAR(20) NOT NULL,
@@ -198,7 +197,9 @@ class SkillsBasedRouter:
             required BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """ if self.database.db_type == 'postgresql' else """
+        """
+            if self.database.db_type == "postgresql"
+            else """
         CREATE TABLE IF NOT EXISTS queue_skill_requirements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             queue_number VARCHAR(20) NOT NULL,
@@ -208,19 +209,17 @@ class SkillsBasedRouter:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
+        )
 
         try:
             self.database.execute(skills_table)
             self.database.execute(agent_skills_table)
             self.database.execute(queue_requirements_table)
-            self.logger.info(
-                "Skills-based routing database schema initialized")
+            self.logger.info("Skills-based routing database schema initialized")
         except Exception as e:
-            self.logger.error(
-                f"Failed to initialize skills routing schema: {e}")
+            self.logger.error(f"Failed to initialize skills routing schema: {e}")
 
-    def add_skill(self, skill_id: str, name: str,
-                  description: str = "") -> bool:
+    def add_skill(self, skill_id: str, name: str, description: str = "") -> bool:
         """
         Add a new skill
 
@@ -242,15 +241,18 @@ class SkillsBasedRouter:
         # Store in database
         if self.database and self.database.enabled:
             try:
-                insert_query = """
+                insert_query = (
+                    """
                 INSERT INTO skills (skill_id, name, description)
                 VALUES (%s, %s, %s)
-                """ if self.database.db_type == 'postgresql' else """
+                """
+                    if self.database.db_type == "postgresql"
+                    else """
                 INSERT INTO skills (skill_id, name, description)
                 VALUES (?, ?, ?)
                 """
-                self.database.execute(
-                    insert_query, (skill_id, name, description))
+                )
+                self.database.execute(insert_query, (skill_id, name, description))
             except Exception as e:
                 self.logger.error(f"Failed to store skill in database: {e}")
 
@@ -258,10 +260,8 @@ class SkillsBasedRouter:
         return True
 
     def assign_skill_to_agent(
-            self,
-            agent_extension: str,
-            skill_id: str,
-            proficiency: int = 5) -> bool:
+        self, agent_extension: str, skill_id: str, proficiency: int = 5
+    ) -> bool:
         """
         Assign skill to agent
 
@@ -289,29 +289,29 @@ class SkillsBasedRouter:
         if self.database and self.database.enabled:
             try:
                 # Try insert first, update if exists
-                insert_query = """
+                insert_query = (
+                    """
                 INSERT INTO agent_skills (agent_extension, skill_id, proficiency)
                 VALUES (%s, %s, %s)
                 ON CONFLICT (agent_extension, skill_id)
                 DO UPDATE SET proficiency = EXCLUDED.proficiency, assigned_at = CURRENT_TIMESTAMP
-                """ if self.database.db_type == 'postgresql' else """
+                """
+                    if self.database.db_type == "postgresql"
+                    else """
                 INSERT OR REPLACE INTO agent_skills (agent_extension, skill_id, proficiency)
                 VALUES (?, ?, ?)
                 """
-                self.database.execute(
-                    insert_query, (agent_extension, skill_id, proficiency))
+                )
+                self.database.execute(insert_query, (agent_extension, skill_id, proficiency))
             except Exception as e:
-                self.logger.error(
-                    f"Failed to store agent skill in database: {e}")
+                self.logger.error(f"Failed to store agent skill in database: {e}")
 
         self.logger.info(
-            f"Assigned skill {skill_id} to agent {agent_extension} (proficiency: {proficiency})")
+            f"Assigned skill {skill_id} to agent {agent_extension} (proficiency: {proficiency})"
+        )
         return True
 
-    def remove_skill_from_agent(
-            self,
-            agent_extension: str,
-            skill_id: str) -> bool:
+    def remove_skill_from_agent(self, agent_extension: str, skill_id: str) -> bool:
         """
         Remove skill from agent
 
@@ -322,36 +322,33 @@ class SkillsBasedRouter:
         Returns:
             True if skill was removed
         """
-        if agent_extension in self.agent_skills and skill_id in self.agent_skills[
-                agent_extension]:
+        if agent_extension in self.agent_skills and skill_id in self.agent_skills[agent_extension]:
             del self.agent_skills[agent_extension][skill_id]
 
             # Remove from database
             if self.database and self.database.enabled:
                 try:
-                    delete_query = """
+                    delete_query = (
+                        """
                     DELETE FROM agent_skills
                     WHERE agent_extension = %s AND skill_id = %s
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     DELETE FROM agent_skills
                     WHERE agent_extension = ? AND skill_id = ?
                     """
-                    self.database.execute(
-                        delete_query, (agent_extension, skill_id))
+                    )
+                    self.database.execute(delete_query, (agent_extension, skill_id))
                 except Exception as e:
-                    self.logger.error(
-                        f"Failed to remove agent skill from database: {e}")
+                    self.logger.error(f"Failed to remove agent skill from database: {e}")
 
-            self.logger.info(
-                f"Removed skill {skill_id} from agent {agent_extension}")
+            self.logger.info(f"Removed skill {skill_id} from agent {agent_extension}")
             return True
 
         return False
 
-    def set_queue_requirements(
-            self,
-            queue_number: str,
-            requirements: List[Dict]) -> bool:
+    def set_queue_requirements(self, queue_number: str, requirements: List[Dict]) -> bool:
         """
         Set skill requirements for a queue
 
@@ -364,9 +361,9 @@ class SkillsBasedRouter:
         """
         skill_reqs = []
         for req in requirements:
-            skill_id = req.get('skill_id')
-            min_prof = req.get('min_proficiency', 1)
-            required = req.get('required', True)
+            skill_id = req.get("skill_id")
+            min_prof = req.get("min_proficiency", 1)
+            required = req.get("required", True)
 
             if skill_id not in self.skills:
                 self.logger.error(f"Skill {skill_id} does not exist")
@@ -380,38 +377,46 @@ class SkillsBasedRouter:
         if self.database and self.database.enabled:
             try:
                 # Clear existing requirements
-                delete_query = """
+                delete_query = (
+                    """
                 DELETE FROM queue_skill_requirements WHERE queue_number = %s
-                """ if self.database.db_type == 'postgresql' else """
+                """
+                    if self.database.db_type == "postgresql"
+                    else """
                 DELETE FROM queue_skill_requirements WHERE queue_number = ?
                 """
+                )
                 self.database.execute(delete_query, (queue_number,))
 
                 # Insert new requirements
                 for req in skill_reqs:
-                    insert_query = """
+                    insert_query = (
+                        """
                     INSERT INTO queue_skill_requirements (queue_number, skill_id, min_proficiency, required)
                     VALUES (%s, %s, %s, %s)
-                    """ if self.database.db_type == 'postgresql' else """
+                    """
+                        if self.database.db_type == "postgresql"
+                        else """
                     INSERT INTO queue_skill_requirements (queue_number, skill_id, min_proficiency, required)
                     VALUES (?, ?, ?, ?)
                     """
+                    )
                     self.database.execute(
-                        insert_query, (queue_number, req.skill_id, req.min_proficiency, req.required))
+                        insert_query,
+                        (queue_number, req.skill_id, req.min_proficiency, req.required),
+                    )
             except Exception as e:
-                self.logger.error(
-                    f"Failed to store queue requirements in database: {e}")
+                self.logger.error(f"Failed to store queue requirements in database: {e}")
 
         self.logger.info(
             f"Set {
-                len(skill_reqs)} skill requirements for queue {queue_number}")
+                len(skill_reqs)} skill requirements for queue {queue_number}"
+        )
         return True
 
     def find_best_agents(
-            self,
-            queue_number: str,
-            available_agents: List[str],
-            max_results: int = 5) -> List[Dict]:
+        self, queue_number: str, available_agents: List[str], max_results: int = 5
+    ) -> List[Dict]:
         """
         Find best agents for a queue based on skill requirements
 
@@ -425,40 +430,41 @@ class SkillsBasedRouter:
         """
         if queue_number not in self.queue_requirements:
             # No requirements, return all available agents
-            return [{'extension': ext, 'score': 1.0, 'matching_skills': []}
-                    for ext in available_agents[:max_results]]
+            return [
+                {"extension": ext, "score": 1.0, "matching_skills": []}
+                for ext in available_agents[:max_results]
+            ]
 
         requirements = self.queue_requirements[queue_number]
         scored_agents = []
 
         for agent_ext in available_agents:
-            score, matching_skills = self._calculate_agent_score(
-                agent_ext, requirements)
+            score, matching_skills = self._calculate_agent_score(agent_ext, requirements)
 
             # Filter out agents who don't meet required skills
             if score > 0:
-                scored_agents.append({
-                    'extension': agent_ext,
-                    'score': score,
-                    'matching_skills': matching_skills
-                })
+                scored_agents.append(
+                    {"extension": agent_ext, "score": score, "matching_skills": matching_skills}
+                )
 
         # Sort by score descending
-        scored_agents.sort(key=lambda x: x['score'], reverse=True)
+        scored_agents.sort(key=lambda x: x["score"], reverse=True)
 
         # If no agents match and fallback is enabled, return any available
         if not scored_agents and self.fallback_to_any_agent:
             self.logger.warning(
-                f"No agents match requirements for queue {queue_number}, falling back to any available")
-            return [{'extension': ext, 'score': 0.0, 'matching_skills': []}
-                    for ext in available_agents[:max_results]]
+                f"No agents match requirements for queue {queue_number}, falling back to any available"
+            )
+            return [
+                {"extension": ext, "score": 0.0, "matching_skills": []}
+                for ext in available_agents[:max_results]
+            ]
 
         return scored_agents[:max_results]
 
     def _calculate_agent_score(
-            self,
-            agent_extension: str,
-            requirements: List[SkillRequirement]) -> tuple:
+        self, agent_extension: str, requirements: List[SkillRequirement]
+    ) -> tuple:
         """
         Calculate agent score based on skill requirements
 
@@ -490,11 +496,13 @@ class SkillsBasedRouter:
                     weight = 1.0 if req.required else 0.5
                     total_score += skill_score * weight
 
-                    matching_skills.append({
-                        'skill_id': req.skill_id,
-                        'proficiency': agent_skill.proficiency,
-                        'required': req.required
-                    })
+                    matching_skills.append(
+                        {
+                            "skill_id": req.skill_id,
+                            "proficiency": agent_skill.proficiency,
+                            "required": req.required,
+                        }
+                    )
 
                     if req.required:
                         matched_required += 1
@@ -522,12 +530,11 @@ class SkillsBasedRouter:
             return []
 
         skills = []
-        for skill_id, agent_skill in self.agent_skills[agent_extension].items(
-        ):
+        for skill_id, agent_skill in self.agent_skills[agent_extension].items():
             skill_info = agent_skill.to_dict()
             if skill_id in self.skills:
-                skill_info['name'] = self.skills[skill_id].name
-                skill_info['description'] = self.skills[skill_id].description
+                skill_info["name"] = self.skills[skill_id].name
+                skill_info["description"] = self.skills[skill_id].description
             skills.append(skill_info)
 
         return skills
@@ -553,7 +560,7 @@ class SkillsBasedRouter:
         for req in self.queue_requirements[queue_number]:
             req_dict = req.to_dict()
             if req.skill_id in self.skills:
-                req_dict['skill_name'] = self.skills[req.skill_id].name
+                req_dict["skill_name"] = self.skills[req.skill_id].name
             reqs.append(req_dict)
 
         return reqs

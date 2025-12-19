@@ -9,11 +9,10 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 from pbx.features.webrtc import WebRTCGateway
-
 
 
 class TestWebRTCVoicemailAccess(unittest.TestCase):
@@ -21,7 +20,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        self.config_file = 'config.yml'
+        self.config_file = "config.yml"
 
     def test_webrtc_voicemail_pattern_detection(self):
         """Test that WebRTC gateway detects voicemail access pattern"""
@@ -38,11 +37,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
         mock_call = MagicMock(spec=Call)
         mock_call.state = CallState.RINGING
         mock_call.rtp_ports = [20000, 20001]
-        mock_call.caller_rtp = {
-            'address': '127.0.0.1',
-            'port': 10000,
-            'formats': [0, 8]
-        }
+        mock_call.caller_rtp = {"address": "127.0.0.1", "port": 10000, "formats": [0, 8]}
         mock_pbx_core.call_manager.create_call.return_value = mock_call
 
         # Create mock RTP relay
@@ -63,20 +58,18 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         # Create mock session
         mock_session = MagicMock()
-        mock_session.extension = '1001'
-        mock_session.local_sdp = 'v=0\r\no=- 123 456 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=audio 10000 RTP/AVP 0 8\r\nc=IN IP4 127.0.0.1\r\n'
+        mock_session.extension = "1001"
+        mock_session.local_sdp = "v=0\r\no=- 123 456 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=audio 10000 RTP/AVP 0 8\r\nc=IN IP4 127.0.0.1\r\n"
 
         # Create mock signaling server
         mock_signaling = MagicMock()
         mock_signaling.get_session.return_value = mock_session
 
         # Mock the thread start
-        with patch('threading.Thread') as mock_thread:
+        with patch("threading.Thread") as mock_thread:
             # Initiate call to voicemail
             call_id = gateway.initiate_call(
-                session_id='test-session',
-                target_extension='*1001',
-                webrtc_signaling=mock_signaling
+                session_id="test-session", target_extension="*1001", webrtc_signaling=mock_signaling
             )
 
             # Verify call was created
@@ -84,7 +77,9 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
             # Verify voicemail attributes were set
             assert mock_call.voicemail_access, "Call should be marked as voicemail access"
-            assert mock_call.voicemail_extension == '1001', "Voicemail extension should be extracted"
+            assert (
+                mock_call.voicemail_extension == "1001"
+            ), "Voicemail extension should be extracted"
 
             # Verify call was marked as connected
             mock_call.connect.assert_called_once()
@@ -95,13 +90,13 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
             # Verify IVR session thread was started
             mock_thread.assert_called_once()
             thread_call = mock_thread.call_args
-            assert thread_call[1]['daemon'], "Thread should be daemon"
+            assert thread_call[1]["daemon"], "Thread should be daemon"
 
             # Verify thread target is the voicemail IVR session
-            assert thread_call[1]['target'] == mock_pbx_core._voicemail_ivr_session
+            assert thread_call[1]["target"] == mock_pbx_core._voicemail_ivr_session
 
             # Verify thread args include call_id, call, mailbox, and ivr
-            args = thread_call[1]['args']
+            args = thread_call[1]["args"]
             assert len(args) == 4, "Should have 4 arguments"
             assert args[0] == call_id, "First arg should be call_id"
             assert args[1] == mock_call, "Second arg should be call"
@@ -125,7 +120,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         # Create mock session
         mock_session = MagicMock()
-        mock_session.extension = '1001'
+        mock_session.extension = "1001"
 
         # Create mock signaling server
         mock_signaling = MagicMock()
@@ -133,9 +128,9 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         # Try to initiate call to invalid extension
         call_id = gateway.initiate_call(
-            session_id='test-session',
-            target_extension='*99',  # Too short, should not match
-            webrtc_signaling=mock_signaling
+            session_id="test-session",
+            target_extension="*99",  # Too short, should not match
+            webrtc_signaling=mock_signaling,
         )
 
         # Should fail because dialplan check returns False
@@ -179,7 +174,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         # Create mock session
         mock_session = MagicMock()
-        mock_session.extension = '1001'
+        mock_session.extension = "1001"
         mock_session.local_sdp = None  # No SDP
 
         # Create mock signaling server
@@ -188,9 +183,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         # Initiate call to voicemail
         call_id = gateway.initiate_call(
-            session_id='test-session',
-            target_extension='*1001',
-            webrtc_signaling=mock_signaling
+            session_id="test-session", target_extension="*1001", webrtc_signaling=mock_signaling
         )
 
         # Call should be created even without RTP info
@@ -225,6 +218,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

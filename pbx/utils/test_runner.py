@@ -16,15 +16,15 @@ from datetime import datetime
 def _setup_log_file(log_path):
     """
     Setup and open the log file for writing test failures
-    
+
     Args:
         log_path: Path to the log file
-        
+
     Returns:
         Open file handle or None if failed
     """
     try:
-        log_file = open(log_path, 'a')
+        log_file = open(log_path, "a")
         log_file.write("\n" + "=" * 80 + "\n")
         log_file.write(f"Test Run Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         log_file.write("=" * 80 + "\n\n")
@@ -37,7 +37,7 @@ def _setup_log_file(log_path):
 def _finalize_log_file(log_file, total_passed, total_failed, total_skipped):
     """
     Write summary and close the log file
-    
+
     Args:
         log_file: Open file handle
         total_passed: Number of passed tests
@@ -49,7 +49,9 @@ def _finalize_log_file(log_file, total_passed, total_failed, total_skipped):
     try:
         log_file.write("=" * 80 + "\n")
         log_file.write(f"Test Run Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        log_file.write(f"Summary: {total_passed} passed, {total_failed} failed, {total_skipped} skipped\n")
+        log_file.write(
+            f"Summary: {total_passed} passed, {total_failed} failed, {total_skipped} skipped\n"
+        )
         log_file.write("=" * 80 + "\n")
     except BaseException:
         pass  # Best effort to write summary
@@ -60,11 +62,11 @@ def _finalize_log_file(log_file, total_passed, total_failed, total_skipped):
 def _load_test_module(test_file, test_path):
     """
     Load a test module from file
-    
+
     Args:
         test_file: Test filename
         test_path: Full path to test file
-        
+
     Returns:
         Loaded module or None if failed
     """
@@ -72,7 +74,7 @@ def _load_test_module(test_file, test_path):
     spec = importlib.util.spec_from_file_location(test_name, test_path)
     if spec is None or spec.loader is None:
         return None
-    
+
     module = importlib.util.module_from_spec(spec)
     sys.modules[test_name] = module
     spec.loader.exec_module(module)
@@ -82,35 +84,37 @@ def _load_test_module(test_file, test_path):
 def _check_test_passed(success, test_stdout):
     """
     Determine if a test passed based on return value and output
-    
+
     Args:
         success: Return value from test
         test_stdout: Captured stdout from test
-        
+
     Returns:
         True if test passed, False otherwise
     """
     # Check if test explicitly returned True
     if success is True:
         return True
-    
+
     # If test returned None/False, check output for success indicators
     if test_stdout:
         output_lower = test_stdout.lower()
-        if ('0 failed' in output_lower or 
-            'all tests passed' in output_lower or
-            re.search(r'all.*tests passed', output_lower)):
+        if (
+            "0 failed" in output_lower
+            or "all tests passed" in output_lower
+            or re.search(r"all.*tests passed", output_lower)
+        ):
             # Also check that there's no explicit failure indicator
-            if 'failed' not in output_lower or '0 failed' in output_lower:
+            if "failed" not in output_lower or "0 failed" in output_lower:
                 return True
-    
+
     return False
 
 
 def _log_test_failure(log_file, test_file, success, test_stdout, test_stderr):
     """
     Log a test failure to the log file
-    
+
     Args:
         log_file: Open file handle
         test_file: Test filename
@@ -120,7 +124,7 @@ def _log_test_failure(log_file, test_file, success, test_stdout, test_stderr):
     """
     if not log_file:
         return
-    
+
     log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FAILED: {test_file}\n")
     log_file.write(f"  Return value: {success} (expected True)\n")
     if test_stdout:
@@ -137,7 +141,7 @@ def _log_test_failure(log_file, test_file, success, test_stdout, test_stderr):
 def _log_test_error(log_file, test_file, error, error_trace):
     """
     Log a test error (exception) to the log file
-    
+
     Args:
         log_file: Open file handle
         test_file: Test filename
@@ -146,7 +150,7 @@ def _log_test_error(log_file, test_file, error, error_trace):
     """
     if not log_file:
         return
-    
+
     log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: {test_file}\n")
     log_file.write(f"  Exception: {error}\n")
     log_file.write(f"  Traceback:\n")
@@ -173,14 +177,14 @@ def run_all_tests(tests_dir="tests", log_failures=True):
     """
     # Get absolute path to tests directory
     if not os.path.isabs(tests_dir):
-        tests_dir = os.path.join(os.path.dirname(__file__), '..', '..', tests_dir)
+        tests_dir = os.path.join(os.path.dirname(__file__), "..", "..", tests_dir)
     tests_dir = os.path.abspath(tests_dir)
 
     # Set up failure log file
     log_file = None
     log_path = None
     if log_failures:
-        log_path = os.path.join(os.path.dirname(tests_dir), 'test_failures.log')
+        log_path = os.path.join(os.path.dirname(tests_dir), "test_failures.log")
         log_file = _setup_log_file(log_path)
 
     total_passed = 0
@@ -193,8 +197,9 @@ def run_all_tests(tests_dir="tests", log_failures=True):
             return 0, 1, 0, []
 
         # Find all test files
-        test_files = sorted([f for f in os.listdir(tests_dir) 
-                           if f.startswith('test_') and f.endswith('.py')])
+        test_files = sorted(
+            [f for f in os.listdir(tests_dir) if f.startswith("test_") and f.endswith(".py")]
+        )
 
         if not test_files:
             print(f"No test files found in {tests_dir}")
@@ -223,7 +228,7 @@ def run_all_tests(tests_dir="tests", log_failures=True):
                     continue
 
                 # Run the test if it has a run_all_tests function
-                if not hasattr(module, 'run_all_tests'):
+                if not hasattr(module, "run_all_tests"):
                     print(f"  ⚠ {test_file} has no run_all_tests() function (skipped)")
                     total_skipped += 1
                     test_results.append((test_file, None, "No run_all_tests function"))
@@ -243,9 +248,9 @@ def run_all_tests(tests_dir="tests", log_failures=True):
 
                 # Print the output so user can see it
                 if test_stdout:
-                    print(test_stdout, end='')
+                    print(test_stdout, end="")
                 if test_stderr:
-                    print(test_stderr, end='', file=sys.stderr)
+                    print(test_stderr, end="", file=sys.stderr)
 
                 # Determine if test passed
                 test_passed = _check_test_passed(success, test_stdout)

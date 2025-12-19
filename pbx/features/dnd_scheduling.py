@@ -2,6 +2,7 @@
 Do Not Disturb (DND) Scheduling System
 Automatically sets DND status based on calendar events and scheduled rules
 """
+
 import threading
 import time
 from datetime import datetime, timedelta, timezone
@@ -14,12 +15,7 @@ from pbx.utils.logger import get_logger
 class DNDRule:
     """Represents a DND scheduling rule"""
 
-    def __init__(
-            self,
-            rule_id: str,
-            extension: str,
-            rule_type: str,
-            config: dict):
+    def __init__(self, rule_id: str, extension: str, rule_type: str, config: dict):
         """
         Initialize DND rule
 
@@ -33,9 +29,9 @@ class DNDRule:
         self.extension = extension
         self.rule_type = rule_type
         self.config = config
-        self.enabled = config.get('enabled', True)
+        self.enabled = config.get("enabled", True)
         # Higher priority rules override lower
-        self.priority = config.get('priority', 0)
+        self.priority = config.get("priority", 0)
 
     def should_apply(self, current_time: datetime = None) -> bool:
         """
@@ -53,9 +49,9 @@ class DNDRule:
         if current_time is None:
             current_time = datetime.now()
 
-        if self.rule_type == 'time_based':
+        if self.rule_type == "time_based":
             return self._check_time_based(current_time)
-        elif self.rule_type == 'calendar':
+        elif self.rule_type == "calendar":
             # Calendar rules are checked separately by calendar monitor
             return False
 
@@ -64,17 +60,16 @@ class DNDRule:
     def _check_time_based(self, current_time: datetime) -> bool:
         """Check if time-based rule applies"""
         # Check day of week
-        days = self.config.get('days', [])
-        if days and current_time.strftime('%A').lower() not in [
-                d.lower() for d in days]:
+        days = self.config.get("days", [])
+        if days and current_time.strftime("%A").lower() not in [d.lower() for d in days]:
             return False
 
         # Check time range
-        start_time = self.config.get('start_time')  # Format: "HH:MM"
-        end_time = self.config.get('end_time')      # Format: "HH:MM"
+        start_time = self.config.get("start_time")  # Format: "HH:MM"
+        end_time = self.config.get("end_time")  # Format: "HH:MM"
 
         if start_time and end_time:
-            current_time_str = current_time.strftime('%H:%M')
+            current_time_str = current_time.strftime("%H:%M")
 
             # Handle overnight ranges (e.g., 22:00 to 06:00)
             if start_time <= end_time:
@@ -87,12 +82,12 @@ class DNDRule:
     def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
-            'rule_id': self.rule_id,
-            'extension': self.extension,
-            'rule_type': self.rule_type,
-            'enabled': self.enabled,
-            'priority': self.priority,
-            'config': self.config
+            "rule_id": self.rule_id,
+            "extension": self.extension,
+            "rule_type": self.rule_type,
+            "enabled": self.enabled,
+            "priority": self.priority,
+            "config": self.config,
         }
 
 
@@ -124,8 +119,7 @@ class CalendarMonitor:
             email: User's email address
         """
         self.extension_email_map[extension] = email
-        self.logger.info(
-            f"Registered calendar monitoring for {extension} ({email})")
+        self.logger.info(f"Registered calendar monitoring for {extension} ({email})")
 
     def unregister_user(self, extension: str):
         """
@@ -146,7 +140,8 @@ class CalendarMonitor:
 
         if not self.outlook or not self.outlook.enabled:
             self.logger.warning(
-                "Calendar monitoring cannot start: Outlook integration not available")
+                "Calendar monitoring cannot start: Outlook integration not available"
+            )
             return
 
         self.running = True
@@ -185,41 +180,36 @@ class CalendarMonitor:
                 start_time = now.isoformat()
                 end_time = (now + timedelta(minutes=15)).isoformat()
 
-                events = self.outlook.get_calendar_events(
-                    email, start_time, end_time)
+                events = self.outlook.get_calendar_events(email, start_time, end_time)
 
                 # Check if user is currently in a meeting
                 in_meeting = False
                 current_meeting = None
 
                 for event in events:
-                    event_start = datetime.fromisoformat(
-                        event['start'].replace('Z', '+00:00'))
-                    event_end = datetime.fromisoformat(
-                        event['end'].replace('Z', '+00:00'))
+                    event_start = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
+                    event_end = datetime.fromisoformat(event["end"].replace("Z", "+00:00"))
 
                     # Check if event is happening now
                     if event_start <= now <= event_end:
                         # Check if user accepted the meeting
-                        show_as = event.get('showAs', 'busy').lower()
-                        response_status = event.get(
-                            'responseStatus', {}).get(
-                            'response', 'none').lower()
+                        show_as = event.get("showAs", "busy").lower()
+                        response_status = (
+                            event.get("responseStatus", {}).get("response", "none").lower()
+                        )
 
                         # Set DND if busy and accepted
-                        if show_as in [
-                                'busy',
-                                'outofoffice',
-                                'tentative'] and response_status in [
-                                'accepted',
-                                'organizer',
-                                'tentativelyaccepted']:
+                        if show_as in ["busy", "outofoffice", "tentative"] and response_status in [
+                            "accepted",
+                            "organizer",
+                            "tentativelyaccepted",
+                        ]:
                             in_meeting = True
                             current_meeting = {
-                                'subject': event.get('subject', 'Meeting'),
-                                'start': event_start.isoformat(),
-                                'end': event_end.isoformat(),
-                                'show_as': show_as
+                                "subject": event.get("subject", "Meeting"),
+                                "start": event_start.isoformat(),
+                                "end": event_end.isoformat(),
+                                "show_as": show_as,
                             }
                             break
 
@@ -231,7 +221,8 @@ class CalendarMonitor:
                     self.active_meetings[extension] = current_meeting
                     self.logger.info(
                         f"Extension {extension} entered meeting: {
-                            current_meeting['subject']}")
+                            current_meeting['subject']}"
+                    )
                 elif not in_meeting and previous_state:
                     # User left meeting
                     del self.active_meetings[extension]
@@ -241,8 +232,7 @@ class CalendarMonitor:
                     self.active_meetings[extension] = current_meeting
 
             except Exception as e:
-                self.logger.error(
-                    f"Error checking calendar for {extension}: {e}")
+                self.logger.error(f"Error checking calendar for {extension}: {e}")
 
     def is_in_meeting(self, extension: str) -> Tuple[bool, Optional[dict]]:
         """
@@ -263,11 +253,7 @@ class DNDScheduler:
     Manages automatic DND scheduling based on calendar and time-based rules
     """
 
-    def __init__(
-            self,
-            presence_system=None,
-            outlook_integration=None,
-            config: dict = None):
+    def __init__(self, presence_system=None, outlook_integration=None, config: dict = None):
         """
         Initialize DND scheduler
 
@@ -282,12 +268,9 @@ class DNDScheduler:
         self.config = config or {}
 
         # Configuration
-        self.enabled = self._get_config(
-            'features.dnd_scheduling.enabled', False)
-        self.calendar_dnd_enabled = self._get_config(
-            'features.dnd_scheduling.calendar_dnd', True)
-        self.check_interval = self._get_config(
-            'features.dnd_scheduling.check_interval', 60)
+        self.enabled = self._get_config("features.dnd_scheduling.enabled", False)
+        self.calendar_dnd_enabled = self._get_config("features.dnd_scheduling.calendar_dnd", True)
+        self.check_interval = self._get_config("features.dnd_scheduling.check_interval", 60)
 
         # Storage
         self.rules = {}  # extension -> list of DNDRule
@@ -297,8 +280,7 @@ class DNDScheduler:
 
         # Calendar monitor
         self.calendar_monitor = CalendarMonitor(
-            outlook_integration=outlook_integration,
-            check_interval=self.check_interval
+            outlook_integration=outlook_integration, check_interval=self.check_interval
         )
 
         # Monitoring thread
@@ -320,13 +302,13 @@ class DNDScheduler:
             Config value or default
         """
         # Try dot notation first (Config object)
-        if hasattr(self.config, 'get') and '.' in key:
+        if hasattr(self.config, "get") and "." in key:
             value = self.config.get(key, None)
             if value is not None:
                 return value
 
         # Try nested dict navigation
-        keys = key.split('.')
+        keys = key.split(".")
         value = self.config
         for k in keys:
             if isinstance(value, dict) and k in value:
@@ -351,8 +333,7 @@ class DNDScheduler:
 
         # Start rule checking thread
         self.running = True
-        self.thread = threading.Thread(
-            target=self._monitoring_loop, daemon=True)
+        self.thread = threading.Thread(target=self._monitoring_loop, daemon=True)
         self.thread.start()
 
         self.logger.info("DND Scheduler started")
@@ -383,6 +364,7 @@ class DNDScheduler:
             Rule ID
         """
         import uuid
+
         rule_id = str(uuid.uuid4())
 
         rule = DNDRule(rule_id, extension, rule_type, config)
@@ -449,10 +431,8 @@ class DNDScheduler:
         self.calendar_monitor.unregister_user(extension)
 
     def set_manual_override(
-            self,
-            extension: str,
-            status: PresenceStatus,
-            duration_minutes: int = None):
+        self, extension: str, status: PresenceStatus, duration_minutes: int = None
+    ):
         """
         Manually override DND scheduling
 
@@ -473,7 +453,8 @@ class DNDScheduler:
 
         self.logger.info(
             f"Manual DND override for {extension}: {
-                status.value} until {until_time}")
+                status.value} until {until_time}"
+        )
 
     def clear_manual_override(self, extension: str):
         """
@@ -507,8 +488,9 @@ class DNDScheduler:
 
         now = datetime.now()
 
-        for extension in list(set(list(self.rules.keys()) +
-                                  list(self.calendar_monitor.extension_email_map.keys()))):
+        for extension in list(
+            set(list(self.rules.keys()) + list(self.calendar_monitor.extension_email_map.keys()))
+        ):
             try:
                 # Check manual override first
                 if extension in self.manual_overrides:
@@ -527,15 +509,13 @@ class DNDScheduler:
                 # Check time-based rules
                 if extension in self.rules:
                     for rule in self.rules[extension]:
-                        if rule.should_apply(
-                                now) and rule.priority > highest_priority:
+                        if rule.should_apply(now) and rule.priority > highest_priority:
                             should_dnd = True
                             highest_priority = rule.priority
 
                 # Check calendar-based DND
                 if self.calendar_dnd_enabled:
-                    in_meeting, meeting_info = self.calendar_monitor.is_in_meeting(
-                        extension)
+                    in_meeting, meeting_info = self.calendar_monitor.is_in_meeting(extension)
                     if in_meeting:
                         # Calendar DND has high priority
                         should_dnd = True
@@ -549,21 +529,30 @@ class DNDScheduler:
 
                 # Apply or remove DND
                 if should_dnd and current_status not in [
-                        PresenceStatus.DO_NOT_DISTURB, PresenceStatus.IN_MEETING]:
+                    PresenceStatus.DO_NOT_DISTURB,
+                    PresenceStatus.IN_MEETING,
+                ]:
                     # Save previous status for restoration
                     if extension not in self.previous_statuses:
                         self.previous_statuses[extension] = current_status
 
                     # Set DND or IN_MEETING
-                    if self.calendar_dnd_enabled and self.calendar_monitor.is_in_meeting(extension)[
-                            0]:
+                    if (
+                        self.calendar_dnd_enabled
+                        and self.calendar_monitor.is_in_meeting(extension)[0]
+                    ):
                         self.presence_system.set_status(
-                            extension, PresenceStatus.IN_MEETING, "In calendar meeting")
+                            extension, PresenceStatus.IN_MEETING, "In calendar meeting"
+                        )
                     else:
                         self.presence_system.set_status(
-                            extension, PresenceStatus.DO_NOT_DISTURB, "Auto-DND (scheduled)")
+                            extension, PresenceStatus.DO_NOT_DISTURB, "Auto-DND (scheduled)"
+                        )
 
-                elif not should_dnd and current_status in [PresenceStatus.DO_NOT_DISTURB, PresenceStatus.IN_MEETING]:
+                elif not should_dnd and current_status in [
+                    PresenceStatus.DO_NOT_DISTURB,
+                    PresenceStatus.IN_MEETING,
+                ]:
                     # Check if we set this status (not user)
                     if extension in self.previous_statuses:
                         # Restore previous status
@@ -585,46 +574,46 @@ class DNDScheduler:
             Status dictionary
         """
         status = {
-            'extension': extension,
-            'dnd_active': False,
-            'reason': None,
-            'rules_count': len(self.rules.get(extension, [])),
-            'manual_override': extension in self.manual_overrides,
-            'in_meeting': False,
-            'meeting_info': None
+            "extension": extension,
+            "dnd_active": False,
+            "reason": None,
+            "rules_count": len(self.rules.get(extension, [])),
+            "manual_override": extension in self.manual_overrides,
+            "in_meeting": False,
+            "meeting_info": None,
         }
 
         # Check presence
         if self.presence_system:
             user = self.presence_system.users.get(extension)
             if user:
-                status['dnd_active'] = user.status in [
-                    PresenceStatus.DO_NOT_DISTURB, PresenceStatus.IN_MEETING]
-                status['current_status'] = user.status.value
+                status["dnd_active"] = user.status in [
+                    PresenceStatus.DO_NOT_DISTURB,
+                    PresenceStatus.IN_MEETING,
+                ]
+                status["current_status"] = user.status.value
 
         # Check calendar
         if self.calendar_dnd_enabled:
-            in_meeting, meeting_info = self.calendar_monitor.is_in_meeting(
-                extension)
-            status['in_meeting'] = in_meeting
-            status['meeting_info'] = meeting_info
+            in_meeting, meeting_info = self.calendar_monitor.is_in_meeting(extension)
+            status["in_meeting"] = in_meeting
+            status["meeting_info"] = meeting_info
             if in_meeting:
-                status['reason'] = 'calendar_meeting'
+                status["reason"] = "calendar_meeting"
 
         # Check rules
         if extension in self.rules:
             for rule in self.rules[extension]:
                 if rule.should_apply():
-                    if not status['reason']:
-                        status['reason'] = 'scheduled_rule'
+                    if not status["reason"]:
+                        status["reason"] = "scheduled_rule"
                     break
 
         return status
 
 
 def get_dnd_scheduler(
-        presence_system=None,
-        outlook_integration=None,
-        config: dict = None) -> DNDScheduler:
+    presence_system=None, outlook_integration=None, config: dict = None
+) -> DNDScheduler:
     """Get DND scheduler instance"""
     return DNDScheduler(presence_system, outlook_integration, config)

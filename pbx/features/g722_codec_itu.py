@@ -8,6 +8,7 @@ tables, adaptive prediction, and QMF filtering.
 
 The codec encodes 16kHz wideband audio at 64 kbit/s using sub-band ADPCM (SB-ADPCM).
 """
+
 import struct
 from typing import List, Optional, Tuple
 
@@ -16,56 +17,183 @@ from pbx.utils.logger import get_logger
 # ITU-T G.722 QMF Filter Coefficients
 # These are the official coefficients from the G.722 specification
 QMF_COEFFS = [
-    3, -11, -11, 53, 12, -156, 32, 362,
-    -210, -805, 951, 3876, 3876, 951, -805, -210,
-    362, 32, -156, 12, 53, -11, -11, 3
+    3,
+    -11,
+    -11,
+    53,
+    12,
+    -156,
+    32,
+    362,
+    -210,
+    -805,
+    951,
+    3876,
+    3876,
+    951,
+    -805,
+    -210,
+    362,
+    32,
+    -156,
+    12,
+    53,
+    -11,
+    -11,
+    3,
 ]
 
 # Quantizer lookup tables for lower sub-band (6 bits)
 # ITU-T G.722 Table 17/G.722
 WL_TABLE = [
-    -60, 3042, 1198, 538, 334, 172, 58, -30,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
 ]
 
 # Quantizer lookup tables for higher sub-band (2 bits)
 # ITU-T G.722 Table 18/G.722
-WH_TABLE = [
-    0, -214, 798, -214
-]
+WH_TABLE = [0, -214, 798, -214]
 
 # Inverse quantizer output levels for lower sub-band
 # ITU-T G.722 Table 7/G.722
 ILB_TABLE = [
-    2048, 2093, 2139, 2186, 2233, 2282, 2332, 2383,
-    2435, 2489, 2543, 2599, 2656, 2714, 2774, 2834,
-    2896, 2960, 3025, 3091, 3158, 3228, 3298, 3371,
-    3444, 3520, 3597, 3676, 3756, 3838, 3922, 4008
+    2048,
+    2093,
+    2139,
+    2186,
+    2233,
+    2282,
+    2332,
+    2383,
+    2435,
+    2489,
+    2543,
+    2599,
+    2656,
+    2714,
+    2774,
+    2834,
+    2896,
+    2960,
+    3025,
+    3091,
+    3158,
+    3228,
+    3298,
+    3371,
+    3444,
+    3520,
+    3597,
+    3676,
+    3756,
+    3838,
+    3922,
+    4008,
 ]
 
 # Inverse quantizer output levels for higher sub-band
 # ITU-T G.722 Table 8/G.722
-IHB_TABLE = [
-    0, 448, 896, 1344
-]
+IHB_TABLE = [0, 448, 896, 1344]
 
 # Decision levels for quantization
 Q6 = [  # Lower sub-band (6-bit)
-    -124, -92, -60, -44, -28, -20, -12, -8,
-    -4, -2, 0, 2, 4, 8, 12, 20,
-    28, 44, 60, 92, 124, 156, 188, 220,
-    252, 284, 316, 348, 380, 412, 444, 476
+    -124,
+    -92,
+    -60,
+    -44,
+    -28,
+    -20,
+    -12,
+    -8,
+    -4,
+    -2,
+    0,
+    2,
+    4,
+    8,
+    12,
+    20,
+    28,
+    44,
+    60,
+    92,
+    124,
+    156,
+    188,
+    220,
+    252,
+    284,
+    316,
+    348,
+    380,
+    412,
+    444,
+    476,
 ]
 
-Q2 = [  # Higher sub-band (2-bit)
-    -12, 12, 52
-]
+Q2 = [-12, 12, 52]  # Higher sub-band (2-bit)
 
 
 class G722State:
@@ -135,18 +263,18 @@ class G722CodecITU:
         """
         try:
             if len(pcm_data) % 4 != 0:
-                pcm_data = pcm_data[:len(pcm_data) - (len(pcm_data) % 4)]
+                pcm_data = pcm_data[: len(pcm_data) - (len(pcm_data) % 4)]
 
             if len(pcm_data) < 4:
-                return b''
+                return b""
 
             encoded = bytearray()
             state = self.encoder_state
 
             # Process samples in pairs
             for i in range(0, len(pcm_data) - 3, 4):
-                s1 = struct.unpack('<h', pcm_data[i:i + 2])[0]
-                s2 = struct.unpack('<h', pcm_data[i + 2:i + 4])[0]
+                s1 = struct.unpack("<h", pcm_data[i : i + 2])[0]
+                s2 = struct.unpack("<h", pcm_data[i + 2 : i + 4])[0]
 
                 # Scale to 14-bit (G.722 works with 14-bit internally)
                 s1 = s1 >> 2
@@ -186,7 +314,7 @@ class G722CodecITU:
         """
         try:
             if len(g722_data) == 0:
-                return b''
+                return b""
 
             decoded = bytearray()
             state = self.decoder_state
@@ -207,8 +335,8 @@ class G722CodecITU:
                 xout1 = self._saturate(xout1 << 2, -32768, 32767)
                 xout2 = self._saturate(xout2 << 2, -32768, 32767)
 
-                decoded.extend(struct.pack('<h', xout1))
-                decoded.extend(struct.pack('<h', xout2))
+                decoded.extend(struct.pack("<h", xout1))
+                decoded.extend(struct.pack("<h", xout2))
 
             return bytes(decoded)
 
@@ -228,8 +356,7 @@ class G722CodecITU:
         result = acc >> 14
         return self._saturate(result, -16384, 16383)
 
-    def _qmf_synthesis(self, rl: int, rh: int,
-                       state: G722State) -> Tuple[int, int]:
+    def _qmf_synthesis(self, rl: int, rh: int, state: G722State) -> Tuple[int, int]:
         """QMF synthesis filter - combines two 8kHz sub-bands into 16kHz"""
         # Simple synthesis - combine sub-bands
         xout1 = self._saturate(rl + rh, -16384, 16383)
@@ -491,12 +618,12 @@ class G722CodecITU:
     def get_info(self) -> dict:
         """Get codec information"""
         return {
-            'name': 'G.722',
-            'description': 'Wideband audio codec (ITU-T compliant)',
-            'sample_rate': self.SAMPLE_RATE,
-            'bitrate': self.bitrate,
-            'payload_type': self.PAYLOAD_TYPE,
-            'implementation': 'ITU-T G.722 Specification'
+            "name": "G.722",
+            "description": "Wideband audio codec (ITU-T compliant)",
+            "sample_rate": self.SAMPLE_RATE,
+            "bitrate": self.bitrate,
+            "payload_type": self.PAYLOAD_TYPE,
+            "implementation": "ITU-T G.722 Specification",
         }
 
     @staticmethod

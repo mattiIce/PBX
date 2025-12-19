@@ -7,11 +7,10 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-
 
 
 def test_emergency_contacts_table_creation():
@@ -19,16 +18,13 @@ def test_emergency_contacts_table_creation():
     print("Testing emergency_contacts table creation...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -39,7 +35,8 @@ def test_emergency_contacts_table_creation():
         # Verify emergency_contacts table exists
         cursor = db.connection.cursor()
         cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='emergency_contacts'")
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='emergency_contacts'"
+        )
         result = cursor.fetchone()
         assert result is not None, "emergency_contacts table not found"
 
@@ -48,14 +45,15 @@ def test_emergency_contacts_table_creation():
         columns = {row[1]: row[2] for row in cursor.fetchall()}
 
         required_columns = [
-            'id',
-            'name',
-            'extension',
-            'phone',
-            'email',
-            'priority',
-            'notification_methods',
-            'active']
+            "id",
+            "name",
+            "extension",
+            "phone",
+            "email",
+            "priority",
+            "notification_methods",
+            "active",
+        ]
         for col in required_columns:
             assert col in columns, f"Column {col} not found in emergency_contacts table"
 
@@ -74,16 +72,13 @@ def test_emergency_notifications_table_creation():
     print("Testing emergency_notifications table creation...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -94,7 +89,8 @@ def test_emergency_notifications_table_creation():
         # Verify emergency_notifications table exists
         cursor = db.connection.cursor()
         cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='emergency_notifications'")
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='emergency_notifications'"
+        )
         result = cursor.fetchone()
         assert result is not None, "emergency_notifications table not found"
 
@@ -103,12 +99,13 @@ def test_emergency_notifications_table_creation():
         columns = {row[1]: row[2] for row in cursor.fetchall()}
 
         required_columns = [
-            'id',
-            'timestamp',
-            'trigger_type',
-            'details',
-            'contacts_notified',
-            'methods_used']
+            "id",
+            "timestamp",
+            "trigger_type",
+            "details",
+            "contacts_notified",
+            "methods_used",
+        ]
         for col in required_columns:
             assert col in columns, f"Column {col} not found in emergency_notifications table"
 
@@ -127,16 +124,13 @@ def test_emergency_indexes_creation():
     print("Testing emergency table indexes creation...")
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
 
     try:
         # Create a test config for SQLite
-        test_config = Config('config.yml')
-        test_config.config['database'] = {
-            'type': 'sqlite',
-            'path': temp_db.name
-        }
+        test_config = Config("config.yml")
+        test_config.config["database"] = {"type": "sqlite", "path": temp_db.name}
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
@@ -150,10 +144,10 @@ def test_emergency_indexes_creation():
         indexes = [row[0] for row in cursor.fetchall()]
 
         expected_indexes = [
-            'idx_emergency_contacts_active',
-            'idx_emergency_contacts_priority',
-            'idx_emergency_notifications_timestamp',
-            'idx_emergency_notifications_trigger_type'
+            "idx_emergency_contacts_active",
+            "idx_emergency_contacts_priority",
+            "idx_emergency_notifications_timestamp",
+            "idx_emergency_notifications_trigger_type",
         ]
 
         for idx in expected_indexes:
@@ -192,6 +186,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 
@@ -203,6 +198,6 @@ def run_all_tests():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

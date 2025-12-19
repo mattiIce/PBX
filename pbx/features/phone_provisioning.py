@@ -11,6 +11,7 @@ Manual reboot options if needed:
 - Power cycle phone or use phone menu
 - API: POST /api/phones/reboot or POST /api/phones/{extension}/reboot
 """
+
 import os
 from datetime import datetime
 
@@ -48,105 +49,52 @@ class PhoneTemplate:
         config = self.template_content
 
         # Extension information
-        config = config.replace(
-            '{{EXTENSION_NUMBER}}', str(
-                extension_config.get(
-                    'number', '')))
-        config = config.replace(
-            '{{EXTENSION_NAME}}', str(
-                extension_config.get(
-                    'name', '')))
-        config = config.replace(
-            '{{EXTENSION_PASSWORD}}', str(
-                extension_config.get(
-                    'password', '')))
+        config = config.replace("{{EXTENSION_NUMBER}}", str(extension_config.get("number", "")))
+        config = config.replace("{{EXTENSION_NAME}}", str(extension_config.get("name", "")))
+        config = config.replace("{{EXTENSION_PASSWORD}}", str(extension_config.get("password", "")))
 
         # Server information
-        config = config.replace(
-            '{{SIP_SERVER}}', str(
-                server_config.get(
-                    'sip_host', '')))
-        config = config.replace(
-            '{{SIP_PORT}}', str(
-                server_config.get(
-                    'sip_port', '5060')))
-        config = config.replace(
-            '{{SERVER_NAME}}', str(
-                server_config.get(
-                    'server_name', 'PBX')))
+        config = config.replace("{{SIP_SERVER}}", str(server_config.get("sip_host", "")))
+        config = config.replace("{{SIP_PORT}}", str(server_config.get("sip_port", "5060")))
+        config = config.replace("{{SERVER_NAME}}", str(server_config.get("server_name", "PBX")))
 
         # LDAP/LDAPS Phone Book Configuration
-        ldap_config = server_config.get('ldap_phonebook', {})
+        ldap_config = server_config.get("ldap_phonebook", {})
+        config = config.replace("{{LDAP_ENABLE}}", str(ldap_config.get("enable", "0")))
+        config = config.replace("{{LDAP_SERVER}}", str(ldap_config.get("server", "")))
+        config = config.replace("{{LDAP_PORT}}", str(ldap_config.get("port", "636")))
+        config = config.replace("{{LDAP_BASE}}", str(ldap_config.get("base", "")))
+        config = config.replace("{{LDAP_USER}}", str(ldap_config.get("user", "")))
+        config = config.replace("{{LDAP_PASSWORD}}", str(ldap_config.get("password", "")))
+        config = config.replace("{{LDAP_VERSION}}", str(ldap_config.get("version", "3")))
+        config = config.replace("{{LDAP_TLS_MODE}}", str(ldap_config.get("tls_mode", "1")))
         config = config.replace(
-            '{{LDAP_ENABLE}}', str(
-                ldap_config.get(
-                    'enable', '0')))
+            "{{LDAP_NAME_FILTER}}", str(ldap_config.get("name_filter", "(|(cn=%)(sn=%))"))
+        )
         config = config.replace(
-            '{{LDAP_SERVER}}', str(
-                ldap_config.get(
-                    'server', '')))
+            "{{LDAP_NUMBER_FILTER}}",
+            str(ldap_config.get("number_filter", "(|(telephoneNumber=%)(mobile=%))")),
+        )
+        config = config.replace("{{LDAP_NAME_ATTR}}", str(ldap_config.get("name_attr", "cn")))
         config = config.replace(
-            '{{LDAP_PORT}}', str(
-                ldap_config.get(
-                    'port', '636')))
+            "{{LDAP_NUMBER_ATTR}}", str(ldap_config.get("number_attr", "telephoneNumber"))
+        )
         config = config.replace(
-            '{{LDAP_BASE}}', str(
-                ldap_config.get(
-                    'base', '')))
-        config = config.replace(
-            '{{LDAP_USER}}', str(
-                ldap_config.get(
-                    'user', '')))
-        config = config.replace(
-            '{{LDAP_PASSWORD}}', str(
-                ldap_config.get(
-                    'password', '')))
-        config = config.replace(
-            '{{LDAP_VERSION}}', str(
-                ldap_config.get(
-                    'version', '3')))
-        config = config.replace(
-            '{{LDAP_TLS_MODE}}', str(
-                ldap_config.get(
-                    'tls_mode', '1')))
-        config = config.replace(
-            '{{LDAP_NAME_FILTER}}', str(
-                ldap_config.get(
-                    'name_filter', '(|(cn=%)(sn=%))')))
-        config = config.replace(
-            '{{LDAP_NUMBER_FILTER}}', str(
-                ldap_config.get(
-                    'number_filter', '(|(telephoneNumber=%)(mobile=%))')))
-        config = config.replace(
-            '{{LDAP_NAME_ATTR}}', str(
-                ldap_config.get(
-                    'name_attr', 'cn')))
-        config = config.replace(
-            '{{LDAP_NUMBER_ATTR}}', str(
-                ldap_config.get(
-                    'number_attr', 'telephoneNumber')))
-        config = config.replace(
-            '{{LDAP_DISPLAY_NAME}}', str(
-                ldap_config.get(
-                    'display_name', 'Company Directory')))
+            "{{LDAP_DISPLAY_NAME}}", str(ldap_config.get("display_name", "Company Directory"))
+        )
 
         # Remote Phone Book URL (fallback method)
-        remote_phonebook = server_config.get('remote_phonebook', {})
+        remote_phonebook = server_config.get("remote_phonebook", {})
+        config = config.replace("{{REMOTE_PHONEBOOK_URL}}", str(remote_phonebook.get("url", "")))
         config = config.replace(
-            '{{REMOTE_PHONEBOOK_URL}}', str(
-                remote_phonebook.get(
-                    'url', '')))
-        config = config.replace(
-            '{{REMOTE_PHONEBOOK_REFRESH}}', str(
-                remote_phonebook.get(
-                    'refresh_interval', '60')))
+            "{{REMOTE_PHONEBOOK_REFRESH}}", str(remote_phonebook.get("refresh_interval", "60"))
+        )
 
         # DTMF Configuration
-        dtmf_config = server_config.get('dtmf', {})
+        dtmf_config = server_config.get("dtmf", {})
         config = config.replace(
-            '{{DTMF_PAYLOAD_TYPE}}', str(
-                dtmf_config.get(
-                    'payload_type', '101')))
+            "{{DTMF_PAYLOAD_TYPE}}", str(dtmf_config.get("payload_type", "101"))
+        )
 
         return config
 
@@ -162,20 +110,14 @@ def normalize_mac_address(mac):
         Normalized MAC (lowercase, no separators)
     """
     # Remove common separators
-    normalized = mac.lower().replace(':', '').replace('-', '').replace('.', '')
+    normalized = mac.lower().replace(":", "").replace("-", "").replace(".", "")
     return normalized
 
 
 class ProvisioningDevice:
     """Represents a provisioned phone device"""
 
-    def __init__(
-            self,
-            mac_address,
-            extension_number,
-            vendor,
-            model,
-            config_url=None):
+    def __init__(self, mac_address, extension_number, vendor, model, config_url=None):
         """
         Initialize provisioning device
 
@@ -201,13 +143,15 @@ class ProvisioningDevice:
     def to_dict(self):
         """Convert to dictionary"""
         return {
-            'mac_address': self.mac_address,
-            'extension_number': self.extension_number,
-            'vendor': self.vendor,
-            'model': self.model,
-            'config_url': self.config_url,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'last_provisioned': self.last_provisioned.isoformat() if self.last_provisioned else None
+            "mac_address": self.mac_address,
+            "extension_number": self.extension_number,
+            "vendor": self.vendor,
+            "model": self.model,
+            "config_url": self.config_url,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_provisioned": (
+                self.last_provisioned.isoformat() if self.last_provisioned else None
+            ),
         }
 
 
@@ -235,14 +179,13 @@ class PhoneProvisioning:
         # Initialize database access if available
         if database and database.enabled:
             from pbx.utils.database import ProvisionedDevicesDB
+
             self.devices_db = ProvisionedDevicesDB(database)
-            self.logger.info(
-                "Phone provisioning will use database for persistent storage")
+            self.logger.info("Phone provisioning will use database for persistent storage")
             # Load devices from database into memory
             self._load_devices_from_database()
         else:
-            self.logger.info(
-                "Phone provisioning will use in-memory storage only")
+            self.logger.info("Phone provisioning will use in-memory storage only")
 
         # Initialize built-in templates
         self._load_builtin_templates()
@@ -255,27 +198,33 @@ class PhoneProvisioning:
             f"Provisioning URL format: {
                 self.config.get(
                     'provisioning.url_format',
-                    'Not configured')}")
+                    'Not configured')}"
+        )
         self.logger.info(
             f"Server external IP: {
                 self.config.get(
                     'server.external_ip',
-                    'Not configured')}")
+                    'Not configured')}"
+        )
         self.logger.info(
             f"API port: {
                 self.config.get(
                     'api.port',
-                    'Not configured')}")
+                    'Not configured')}"
+        )
 
         # Check SSL status for provisioning URL generation
-        ssl_enabled = self.config.get('api.ssl.enabled', False)
+        ssl_enabled = self.config.get("api.ssl.enabled", False)
         if ssl_enabled:
             self.logger.warning(
-                "SSL is enabled - phones may not be able to provision with self-signed certificates")
+                "SSL is enabled - phones may not be able to provision with self-signed certificates"
+            )
             self.logger.warning(
-                "Consider using HTTP for provisioning or obtaining trusted certificates")
+                "Consider using HTTP for provisioning or obtaining trusted certificates"
+            )
             self.logger.warning(
-                "To use HTTP for provisioning: set provisioning.url_format to http://... in config.yml")
+                "To use HTTP for provisioning: set provisioning.url_format to http://... in config.yml"
+            )
 
     def _load_devices_from_database(self):
         """Load provisioned devices from database into memory"""
@@ -286,23 +235,24 @@ class PhoneProvisioning:
             db_devices = self.devices_db.list_all()
             for db_device in db_devices:
                 device = ProvisioningDevice(
-                    mac_address=db_device['mac_address'],
-                    extension_number=db_device['extension_number'],
-                    vendor=db_device['vendor'],
-                    model=db_device['model'],
-                    config_url=db_device.get('config_url')
+                    mac_address=db_device["mac_address"],
+                    extension_number=db_device["extension_number"],
+                    vendor=db_device["vendor"],
+                    model=db_device["model"],
+                    config_url=db_device.get("config_url"),
                 )
                 # Restore timestamps if available
-                if db_device.get('created_at'):
-                    device.created_at = db_device['created_at']
-                if db_device.get('last_provisioned'):
-                    device.last_provisioned = db_device['last_provisioned']
+                if db_device.get("created_at"):
+                    device.created_at = db_device["created_at"]
+                if db_device.get("last_provisioned"):
+                    device.last_provisioned = db_device["last_provisioned"]
 
                 self.devices[device.mac_address] = device
 
             self.logger.info(
                 f"Loaded {
-                    len(db_devices)} provisioned devices from database")
+                    len(db_devices)} provisioned devices from database"
+            )
         except Exception as e:
             self.logger.error(f"Error loading devices from database: {e}")
 
@@ -475,7 +425,7 @@ linekey.3.extension = %NULL%
 linekey.3.xml_phonebook = 0
 linekey.3.pickup_value = %NULL%
 """
-        self.add_template('zultys', 'zip33g', zultys_zip33g_template)
+        self.add_template("zultys", "zip33g", zultys_zip33g_template)
 
         # Zultys ZIP 37G template (advanced SIP phone)
         # NOTE: ZIP 37G can use the same flat .cfg format as ZIP 33G
@@ -612,7 +562,7 @@ linekey.3.extension = %NULL%
 linekey.3.xml_phonebook = 0
 linekey.3.pickup_value = %NULL%
 """
-        self.add_template('zultys', 'zip37g', zultys_zip37g_template)
+        self.add_template("zultys", "zip37g", zultys_zip37g_template)
 
         # Yealink T46S template (popular business phone)
         yealink_t46s_template = """#!version:1.0.0.1
@@ -646,7 +596,7 @@ network.internet_port.dhcp = 1
 local_time.time_zone = -8
 local_time.ntp_server1 = pool.ntp.org
 """
-        self.add_template('yealink', 't46s', yealink_t46s_template)
+        self.add_template("yealink", "t46s", yealink_t46s_template)
 
         # Yealink T28G template (basic business phone)
         yealink_t28g_template = """#!version:1.0.0.1
@@ -686,7 +636,7 @@ network.internet_port.dhcp = 1
 local_time.time_zone = -8
 local_time.ntp_server1 = pool.ntp.org
 """
-        self.add_template('yealink', 't28g', yealink_t28g_template)
+        self.add_template("yealink", "t28g", yealink_t28g_template)
 
         # Polycom VVX 450 template
         polycom_vvx450_template = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -708,7 +658,7 @@ local_time.ntp_server1 = pool.ntp.org
             tcpIpApp.sntp.gmtOffset="-28800"/>
 </polycomConfig>
 """
-        self.add_template('polycom', 'vvx450', polycom_vvx450_template)
+        self.add_template("polycom", "vvx450", polycom_vvx450_template)
 
         # Cisco SPA504G template
         cisco_spa504g_template = """# Cisco SPA504G Configuration
@@ -733,7 +683,7 @@ Internet_Connection_Type : DHCP
 Time_Zone : GMT-08:00
 Primary_NTP_Server : pool.ntp.org
 """
-        self.add_template('cisco', 'spa504g', cisco_spa504g_template)
+        self.add_template("cisco", "spa504g", cisco_spa504g_template)
 
         # Grandstream GXP2170 template
         grandstream_gxp2170_template = """# Grandstream GXP2170 Configuration
@@ -759,36 +709,30 @@ P8 = 0     # DHCP enabled
 P64 = pool.ntp.org
 P30 = 13   # GMT-8
 """
-        self.add_template(
-            'grandstream',
-            'gxp2170',
-            grandstream_gxp2170_template)
+        self.add_template("grandstream", "gxp2170", grandstream_gxp2170_template)
 
-        self.logger.info(
-            f"Loaded {len(self.templates)} built-in phone templates")
+        self.logger.info(f"Loaded {len(self.templates)} built-in phone templates")
 
     def _load_custom_templates(self):
         """Load custom templates from configuration"""
-        custom_templates_dir = self.config.get(
-            'provisioning.custom_templates_dir', None)
+        custom_templates_dir = self.config.get("provisioning.custom_templates_dir", None)
 
         if custom_templates_dir and os.path.exists(custom_templates_dir):
             try:
                 for filename in os.listdir(custom_templates_dir):
-                    if filename.endswith('.template'):
+                    if filename.endswith(".template"):
                         filepath = os.path.join(custom_templates_dir, filename)
                         # Parse filename: vendor_model.template
-                        parts = filename.replace('.template', '').split('_')
+                        parts = filename.replace(".template", "").split("_")
                         if len(parts) >= 2:
                             vendor = parts[0]
-                            model = '_'.join(parts[1:])
+                            model = "_".join(parts[1:])
 
-                            with open(filepath, 'r') as f:
+                            with open(filepath, "r") as f:
                                 template_content = f.read()
 
                             self.add_template(vendor, model, template_content)
-                            self.logger.info(
-                                f"Loaded custom template for {vendor} {model}")
+                            self.logger.info(f"Loaded custom template for {vendor} {model}")
             except Exception as e:
                 self.logger.error(f"Error loading custom templates: {e}")
 
@@ -831,39 +775,33 @@ P30 = 13   # GMT-8
         Returns:
             ProvisioningDevice
         """
-        device = ProvisioningDevice(
-            mac_address, extension_number, vendor, model)
+        device = ProvisioningDevice(mac_address, extension_number, vendor, model)
 
         # Generate config URL based on MAC
         # Auto-detect protocol based on SSL settings
         # Note: Most phones cannot validate self-signed certificates, so HTTP is recommended
         # for provisioning even when SSL is enabled for the admin API
-        provisioning_url_format = self.config.get('provisioning.url_format')
+        provisioning_url_format = self.config.get("provisioning.url_format")
 
         if not provisioning_url_format:
             # Auto-generate URL format based on SSL status
             # Default to HTTP for phone provisioning (phones often can't handle
             # self-signed certs)
-            ssl_enabled = self.config.get('api.ssl.enabled', False)
-            protocol = 'http'  # Always use HTTP for provisioning by default
-            provisioning_url_format = f'{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/{{mac}}.cfg'
-            self.logger.info(
-                f"Auto-generated provisioning URL format: {provisioning_url_format}")
+            ssl_enabled = self.config.get("api.ssl.enabled", False)
+            protocol = "http"  # Always use HTTP for provisioning by default
+            provisioning_url_format = (
+                f"{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/{{mac}}.cfg"
+            )
+            self.logger.info(f"Auto-generated provisioning URL format: {provisioning_url_format}")
             if ssl_enabled:
-                self.logger.info(
-                    "Note: Using HTTP for provisioning even though SSL is enabled")
-                self.logger.info(
-                    "Phones typically cannot validate self-signed certificates")
+                self.logger.info("Note: Using HTTP for provisioning even though SSL is enabled")
+                self.logger.info("Phones typically cannot validate self-signed certificates")
 
-        config_url = provisioning_url_format.replace(
-            '{mac}', device.mac_address)
+        config_url = provisioning_url_format.replace("{mac}", device.mac_address)
         config_url = config_url.replace(
-            '{{SERVER_IP}}', self.config.get(
-                'server.external_ip', '127.0.0.1'))
-        config_url = config_url.replace(
-            '{{PORT}}', str(
-                self.config.get(
-                    'api.port', '8080')))
+            "{{SERVER_IP}}", self.config.get("server.external_ip", "127.0.0.1")
+        )
+        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", "8080")))
 
         device.config_url = config_url
         self.devices[device.mac_address] = device
@@ -876,17 +814,20 @@ P30 = 13   # GMT-8
                     extension_number=extension_number,
                     vendor=vendor,
                     model=model,
-                    config_url=config_url
+                    config_url=config_url,
                 )
                 self.logger.info(
-                    f"Registered device {mac_address} for extension {extension_number} (saved to database)")
+                    f"Registered device {mac_address} for extension {extension_number} (saved to database)"
+                )
             except Exception as e:
                 self.logger.error(f"Failed to save device to database: {e}")
                 self.logger.info(
-                    f"Registered device {mac_address} for extension {extension_number} (in-memory only)")
+                    f"Registered device {mac_address} for extension {extension_number} (in-memory only)"
+                )
         else:
             self.logger.info(
-                f"Registered device {mac_address} for extension {extension_number} (in-memory only)")
+                f"Registered device {mac_address} for extension {extension_number} (in-memory only)"
+            )
 
         return device
 
@@ -910,16 +851,14 @@ P30 = 13   # GMT-8
             if self.devices_db:
                 try:
                     self.devices_db.remove_device(normalized_mac)
-                    self.logger.info(
-                        f"Unregistered device {mac_address} (removed from database)")
+                    self.logger.info(f"Unregistered device {mac_address} (removed from database)")
                 except Exception as e:
-                    self.logger.error(
-                        f"Failed to remove device from database: {e}")
+                    self.logger.error(f"Failed to remove device from database: {e}")
                     self.logger.info(
-                        f"Unregistered device {mac_address} (removed from memory only)")
+                        f"Unregistered device {mac_address} (removed from memory only)"
+                    )
             else:
-                self.logger.info(
-                    f"Unregistered device {mac_address} (removed from memory)")
+                self.logger.info(f"Unregistered device {mac_address} (removed from memory)")
 
             return True
         return False
@@ -960,66 +899,60 @@ P30 = 13   # GMT-8
         from urllib.parse import urlparse
 
         # Check if explicit ldap_phonebook config exists
-        explicit_config = self.config.get('provisioning.ldap_phonebook', {})
+        explicit_config = self.config.get("provisioning.ldap_phonebook", {})
 
         # Check if AD integration is enabled
-        ad_enabled = self.config.get(
-            'integrations.active_directory.enabled', False)
+        ad_enabled = self.config.get("integrations.active_directory.enabled", False)
 
         if ad_enabled:
             # Use AD credentials from .env (via config)
-            ad_server = self.config.get(
-                'integrations.active_directory.server', '')
-            ad_bind_dn = self.config.get(
-                'integrations.active_directory.bind_dn', '')
-            ad_bind_password = self.config.get(
-                'integrations.active_directory.bind_password', '')
-            ad_base_dn = self.config.get(
-                'integrations.active_directory.base_dn', '')
+            ad_server = self.config.get("integrations.active_directory.server", "")
+            ad_bind_dn = self.config.get("integrations.active_directory.bind_dn", "")
+            ad_bind_password = self.config.get("integrations.active_directory.bind_password", "")
+            ad_base_dn = self.config.get("integrations.active_directory.base_dn", "")
 
             # Validate AD credentials
             if ad_server and ad_bind_dn and ad_bind_password:
                 # Validate LDAP DN format (basic check)
-                if not ad_bind_dn.upper().startswith(('CN=', 'OU=', 'DC=')):
-                    self.logger.warning(
-                        f"AD bind DN may be invalid: {ad_bind_dn}")
+                if not ad_bind_dn.upper().startswith(("CN=", "OU=", "DC=")):
+                    self.logger.warning(f"AD bind DN may be invalid: {ad_bind_dn}")
 
-                self.logger.info(
-                    "Using AD credentials from .env for LDAP phonebook")
+                self.logger.info("Using AD credentials from .env for LDAP phonebook")
 
                 # Parse server URL properly using urllib
                 try:
                     parsed = urlparse(ad_server)
 
                     # Extract hostname and port
-                    server_url = parsed.hostname or parsed.netloc.split(
-                        ':')[0] if parsed.netloc else ad_server
+                    server_url = (
+                        parsed.hostname or parsed.netloc.split(":")[0]
+                        if parsed.netloc
+                        else ad_server
+                    )
                     port = parsed.port
                     scheme = parsed.scheme.lower()
 
                     # Determine TLS mode and default port based on scheme
-                    if scheme == 'ldaps':
+                    if scheme == "ldaps":
                         tls_mode = 1
                         port = port or 636  # Default LDAPS port
-                    elif scheme == 'ldap':
+                    elif scheme == "ldap":
                         tls_mode = 0
                         port = port or 389  # Default LDAP port
                     else:
                         # No scheme provided, assume LDAPS
                         self.logger.warning(
-                            f"No scheme in AD server URL, assuming LDAPS: {ad_server}")
+                            f"No scheme in AD server URL, assuming LDAPS: {ad_server}"
+                        )
                         tls_mode = 1
                         port = port or 636
 
                 except Exception as e:
-                    self.logger.error(
-                        f"Error parsing AD server URL '{ad_server}': {e}")
+                    self.logger.error(f"Error parsing AD server URL '{ad_server}': {e}")
                     # Fall back to simple parsing
-                    server_url = ad_server.replace(
-                        'ldaps://',
-                        '').replace(
-                        'ldap://',
-                        '').split(':')[0]
+                    server_url = (
+                        ad_server.replace("ldaps://", "").replace("ldap://", "").split(":")[0]
+                    )
                     port = 636
                     tls_mode = 1
 
@@ -1027,21 +960,25 @@ P30 = 13   # GMT-8
                 # Override with explicit config if provided
                 ldap_config = {
                     # Enable by default
-                    'enable': explicit_config.get('enable', 1),
-                    'server': server_url,
-                    'port': explicit_config.get('port', port),
-                    'base': explicit_config.get('base', ad_base_dn),
-                    'user': ad_bind_dn,
-                    'password': ad_bind_password,
-                    'version': explicit_config.get('version', 3),
-                    'tls_mode': explicit_config.get('tls_mode', tls_mode),
+                    "enable": explicit_config.get("enable", 1),
+                    "server": server_url,
+                    "port": explicit_config.get("port", port),
+                    "base": explicit_config.get("base", ad_base_dn),
+                    "user": ad_bind_dn,
+                    "password": ad_bind_password,
+                    "version": explicit_config.get("version", 3),
+                    "tls_mode": explicit_config.get("tls_mode", tls_mode),
                     # Filter to only show users with telephoneNumber - ensures
                     # phone book shows entries with phone numbers
-                    'name_filter': explicit_config.get('name_filter', '(&(|(cn=%)(sn=%))(telephoneNumber=*))'),
-                    'number_filter': explicit_config.get('number_filter', '(|(telephoneNumber=%)(mobile=%))'),
-                    'name_attr': explicit_config.get('name_attr', 'cn'),
-                    'number_attr': explicit_config.get('number_attr', 'telephoneNumber'),
-                    'display_name': explicit_config.get('display_name', 'Company Directory')
+                    "name_filter": explicit_config.get(
+                        "name_filter", "(&(|(cn=%)(sn=%))(telephoneNumber=*))"
+                    ),
+                    "number_filter": explicit_config.get(
+                        "number_filter", "(|(telephoneNumber=%)(mobile=%))"
+                    ),
+                    "name_attr": explicit_config.get("name_attr", "cn"),
+                    "number_attr": explicit_config.get("number_attr", "telephoneNumber"),
+                    "display_name": explicit_config.get("display_name", "Company Directory"),
                 }
 
                 return ldap_config
@@ -1054,28 +991,24 @@ P30 = 13   # GMT-8
         # Return empty config if neither AD nor explicit config is available
         self.logger.debug("No LDAP phonebook configuration available")
         return {
-            'enable': 0,
-            'server': '',
-            'port': 636,
-            'base': '',
-            'user': '',
-            'password': '',
-            'version': 3,
-            'tls_mode': 1,
+            "enable": 0,
+            "server": "",
+            "port": 636,
+            "base": "",
+            "user": "",
+            "password": "",
+            "version": 3,
+            "tls_mode": 1,
             # Filter to only show users with telephoneNumber - ensures phone
             # book shows entries with phone numbers
-            'name_filter': '(&(|(cn=%)(sn=%))(telephoneNumber=*))',
-            'number_filter': '(|(telephoneNumber=%)(mobile=%))',
-            'name_attr': 'cn',
-            'number_attr': 'telephoneNumber',
-            'display_name': 'Directory'
+            "name_filter": "(&(|(cn=%)(sn=%))(telephoneNumber=*))",
+            "number_filter": "(|(telephoneNumber=%)(mobile=%))",
+            "name_attr": "cn",
+            "number_attr": "telephoneNumber",
+            "display_name": "Directory",
         }
 
-    def generate_config(
-            self,
-            mac_address,
-            extension_registry,
-            request_info=None):
+    def generate_config(self, mac_address, extension_registry, request_info=None):
         """
         Generate configuration for a device
 
@@ -1089,23 +1022,23 @@ P30 = 13   # GMT-8
         """
         # Log the provisioning request for troubleshooting
         request_log = {
-            'timestamp': datetime.now().isoformat(),
-            'mac_address': mac_address,
-            'normalized_mac': normalize_mac_address(mac_address),
-            'ip_address': request_info.get('ip') if request_info else None,
-            'user_agent': request_info.get('user_agent') if request_info else None,
-            'success': False,
-            'error': None}
+            "timestamp": datetime.now().isoformat(),
+            "mac_address": mac_address,
+            "normalized_mac": normalize_mac_address(mac_address),
+            "ip_address": request_info.get("ip") if request_info else None,
+            "user_agent": request_info.get("user_agent") if request_info else None,
+            "success": False,
+            "error": None,
+        }
 
-        self.logger.info(
-            f"Provisioning request received for MAC: {mac_address}")
+        self.logger.info(f"Provisioning request received for MAC: {mac_address}")
         if request_info:
             self.logger.info(
                 f"  Request from IP: {
                     request_info.get(
-                        'ip', 'Unknown')}")
-            self.logger.info(
-                f"  User-Agent: {request_info.get('user_agent', 'Unknown')}")
+                        'ip', 'Unknown')}"
+            )
+            self.logger.info(f"  User-Agent: {request_info.get('user_agent', 'Unknown')}")
 
         device = self.get_device(mac_address)
         if not device:
@@ -1116,41 +1049,40 @@ P30 = 13   # GMT-8
             self.logger.warning(
                 f"  Registered devices: {
                     list(
-                        self.devices.keys())}")
+                        self.devices.keys())}"
+            )
 
             # Provide helpful guidance
             # Determine protocol based on actual API configuration
             # Note: Provisioning typically uses HTTP even when API uses HTTPS
             # because phones often cannot validate self-signed certificates
-            ssl_enabled = self.config.get('api.ssl.enabled', False)
-            api_protocol = 'https' if ssl_enabled else 'http'
-            api_port = self.config.get('api.port', 8080)
-            server_ip = self.config.get('server.external_ip', '192.168.1.14')
+            ssl_enabled = self.config.get("api.ssl.enabled", False)
+            api_protocol = "https" if ssl_enabled else "http"
+            api_port = self.config.get("api.port", 8080)
+            server_ip = self.config.get("server.external_ip", "192.168.1.14")
 
             self.logger.warning(f"  → Device needs to be registered first")
-            self.logger.warning(
-                f"  → Register via API: POST /api/provisioning/devices")
+            self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
             self.logger.warning(f"  → Example:")
             self.logger.warning(
-                f"     curl -X POST {api_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\")
+                f"     curl -X POST {api_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\"
+            )
+            self.logger.warning(f"       -H 'Content-Type: application/json' \\")
             self.logger.warning(
-                f"       -H 'Content-Type: application/json' \\")
+                f'       -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
+            )
             self.logger.warning(
-                f"       -d '{{\"mac_address\":\"{mac_address}\",\"extension_number\":\"XXXX\",\"vendor\":\"VENDOR\",\"model\":\"MODEL\"}}'")
-            self.logger.warning(
-                f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys")
+                f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys"
+            )
 
             # Check if there are similar MACs (might be a format issue)
             mac_prefix = normalized[:6]  # First 6 chars (OUI)
-            similar_macs = [
-                m for m in self.devices.keys() if m.startswith(mac_prefix)]
+            similar_macs = [m for m in self.devices.keys() if m.startswith(mac_prefix)]
             if similar_macs:
-                self.logger.warning(
-                    f"  → Similar MACs found (same vendor): {similar_macs}")
-                self.logger.warning(
-                    f"     This might be a typo in the MAC address")
+                self.logger.warning(f"  → Similar MACs found (same vendor): {similar_macs}")
+                self.logger.warning(f"     This might be a typo in the MAC address")
 
-            request_log['error'] = error_msg
+            request_log["error"] = error_msg
             self._add_request_log(request_log)
             return None, None
 
@@ -1158,7 +1090,8 @@ P30 = 13   # GMT-8
             f"  Found device: vendor={
                 device.vendor}, model={
                 device.model}, extension={
-                device.extension_number}")
+                device.extension_number}"
+        )
 
         # Get template
         template = self.get_template(device.vendor, device.model)
@@ -1170,8 +1103,9 @@ P30 = 13   # GMT-8
             self.logger.warning(
                 f"  Available templates: {
                     list(
-                        self.templates.keys())}")
-            request_log['error'] = error_msg
+                        self.templates.keys())}"
+            )
+            request_log["error"] = error_msg
             self._add_request_log(request_log)
             return None, None
 
@@ -1181,50 +1115,51 @@ P30 = 13   # GMT-8
             error_msg = f"Extension {device.extension_number} not found"
             self.logger.warning(error_msg)
             self.logger.warning(
-                f"  Available extensions: {[e.number for e in extension_registry.get_all()]}")
-            request_log['error'] = error_msg
+                f"  Available extensions: {[e.number for e in extension_registry.get_all()]}"
+            )
+            request_log["error"] = error_msg
             self._add_request_log(request_log)
             return None, None
 
         self.logger.info(
             f"  Extension found: {
                 extension.number} ({
-                extension.name})")
+                extension.name})"
+        )
 
         # Build extension config dict
         extension_config = {
-            'number': extension.number,
-            'name': extension.name,
-            'password': extension.config.get('password', '')
+            "number": extension.number,
+            "name": extension.name,
+            "password": extension.config.get("password", ""),
         }
 
         # Build server config dict
         server_config = {
-            'sip_host': self.config.get('server.external_ip', '127.0.0.1'),
-            'sip_port': self.config.get('server.sip_port', 5060),
-            'server_name': self.config.get('server.server_name', 'PBX')
+            "sip_host": self.config.get("server.external_ip", "127.0.0.1"),
+            "sip_port": self.config.get("server.sip_port", 5060),
+            "server_name": self.config.get("server.server_name", "PBX"),
         }
 
         # Add LDAP phonebook configuration
-        server_config['ldap_phonebook'] = self._build_ldap_phonebook_config()
-        server_config['remote_phonebook'] = self.config.get(
-            'provisioning.remote_phonebook', {})
+        server_config["ldap_phonebook"] = self._build_ldap_phonebook_config()
+        server_config["remote_phonebook"] = self.config.get("provisioning.remote_phonebook", {})
 
         self.logger.info(
             f"  Server config: SIP={
                 server_config['sip_host']}:{
-                server_config['sip_port']}")
+                server_config['sip_port']}"
+        )
 
         # Generate configuration
-        config_content = template.generate_config(
-            extension_config, server_config)
+        config_content = template.generate_config(extension_config, server_config)
 
         # Determine content type based on vendor
         # Mapping of vendors to their content types
         vendor_content_types = {
-            'polycom': 'application/xml',
+            "polycom": "application/xml",
         }
-        content_type = vendor_content_types.get(device.vendor, 'text/plain')
+        content_type = vendor_content_types.get(device.vendor, "text/plain")
 
         # Mark device as provisioned
         device.mark_provisioned()
@@ -1234,20 +1169,19 @@ P30 = 13   # GMT-8
             try:
                 self.devices_db.mark_provisioned(device.mac_address)
             except Exception as e:
-                self.logger.debug(
-                    f"Failed to update last_provisioned in database: {e}")
+                self.logger.debug(f"Failed to update last_provisioned in database: {e}")
 
-        self.logger.info(
-            f"✓ Successfully generated config for device {mac_address}")
+        self.logger.info(f"✓ Successfully generated config for device {mac_address}")
         self.logger.info(
             f"  Config size: {
-                len(config_content)} bytes, Content-Type: {content_type}")
+                len(config_content)} bytes, Content-Type: {content_type}"
+        )
 
-        request_log['success'] = True
-        request_log['vendor'] = device.vendor
-        request_log['model'] = device.model
-        request_log['extension'] = device.extension_number
-        request_log['config_size'] = len(config_content)
+        request_log["success"] = True
+        request_log["vendor"] = device.vendor
+        request_log["model"] = device.model
+        request_log["extension"] = device.extension_number
+        request_log["config_size"] = len(config_content)
         self._add_request_log(request_log)
 
         return config_content, content_type
@@ -1257,7 +1191,7 @@ P30 = 13   # GMT-8
         self.provision_requests.append(request_log)
         # Keep only the last N requests
         if len(self.provision_requests) > self.max_request_history:
-            self.provision_requests = self.provision_requests[-self.max_request_history:]
+            self.provision_requests = self.provision_requests[-self.max_request_history :]
 
     def get_request_history(self, limit=None):
         """
@@ -1328,45 +1262,42 @@ P30 = 13   # GMT-8
         from pbx.sip.message import SIPMessageBuilder
 
         # Find the extension to get its registered address
-        extension = sip_server.pbx_core.extension_registry.get(
-            extension_number)
+        extension = sip_server.pbx_core.extension_registry.get(extension_number)
         if not extension or not extension.registered or not extension.address:
-            self.logger.warning(
-                f"Extension {extension_number} not registered, cannot reboot phone")
+            self.logger.warning(f"Extension {extension_number} not registered, cannot reboot phone")
             return False
 
         try:
             # Build SIP NOTIFY for check-sync event (triggers phone
             # reboot/config reload)
-            server_ip = sip_server.pbx_core.config.get(
-                'server.external_ip', '127.0.0.1')
-            sip_port = sip_server.pbx_core.config.get('server.sip_port', 5060)
+            server_ip = sip_server.pbx_core.config.get("server.external_ip", "127.0.0.1")
+            sip_port = sip_server.pbx_core.config.get("server.sip_port", 5060)
 
             notify_msg = SIPMessageBuilder.build_request(
-                method='NOTIFY',
+                method="NOTIFY",
                 uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
                 from_addr=f"<sip:{server_ip}:{sip_port}>",
                 to_addr=f"<sip:{extension_number}@{server_ip}>",
                 call_id=f"notify-reboot-{extension_number}-{datetime.now().timestamp()}",
-                cseq=1
+                cseq=1,
             )
 
             # Add NOTIFY-specific headers
-            notify_msg.set_header('Event', 'check-sync')
-            notify_msg.set_header('Subscription-State', 'terminated')
-            notify_msg.set_header('Content-Length', '0')
+            notify_msg.set_header("Event", "check-sync")
+            notify_msg.set_header("Subscription-State", "terminated")
+            notify_msg.set_header("Content-Length", "0")
 
             # Send the NOTIFY message
             sip_server._send_message(notify_msg.build(), extension.address)
 
             self.logger.info(
                 f"Sent reboot NOTIFY to extension {extension_number} at {
-                    extension.address}")
+                    extension.address}"
+            )
             return True
 
         except Exception as e:
-            self.logger.error(
-                f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
+            self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
             return False
 
     def reboot_all_phones(self, sip_server):
@@ -1379,12 +1310,7 @@ P30 = 13   # GMT-8
         Returns:
             dict: Results with success count and list of extensions
         """
-        results = {
-            'success_count': 0,
-            'failed_count': 0,
-            'rebooted': [],
-            'failed': []
-        }
+        results = {"success_count": 0, "failed_count": 0, "rebooted": [], "failed": []}
 
         # Get all registered extensions
         extensions = sip_server.pbx_core.extension_registry.get_all()
@@ -1392,16 +1318,17 @@ P30 = 13   # GMT-8
         for extension in extensions:
             if extension.registered:
                 if self.reboot_phone(extension.number, sip_server):
-                    results['success_count'] += 1
-                    results['rebooted'].append(extension.number)
+                    results["success_count"] += 1
+                    results["rebooted"].append(extension.number)
                 else:
-                    results['failed_count'] += 1
-                    results['failed'].append(extension.number)
+                    results["failed_count"] += 1
+                    results["failed"].append(extension.number)
 
         self.logger.info(
             f"Rebooted {
                 results['success_count']} phones, {
-                results['failed_count']} failed")
+                results['failed_count']} failed"
+        )
         return results
 
     def list_all_templates(self):
@@ -1416,23 +1343,25 @@ P30 = 13   # GMT-8
             # Check if template is customized (exists in custom dir)
             is_custom = False
             custom_dir = self.config.get(
-                'provisioning.custom_templates_dir',
-                'provisioning_templates')
+                "provisioning.custom_templates_dir", "provisioning_templates"
+            )
             template_filename = f"{vendor}_{model}.template"
             template_path = os.path.join(custom_dir, template_filename)
 
             if os.path.exists(template_path):
                 is_custom = True
 
-            templates_list.append({
-                'vendor': vendor,
-                'model': model,
-                'is_custom': is_custom,
-                'template_path': template_path if is_custom else 'built-in',
-                'size': len(template.template_content)
-            })
+            templates_list.append(
+                {
+                    "vendor": vendor,
+                    "model": model,
+                    "is_custom": is_custom,
+                    "template_path": template_path if is_custom else "built-in",
+                    "size": len(template.template_content),
+                }
+            )
 
-        return sorted(templates_list, key=lambda x: (x['vendor'], x['model']))
+        return sorted(templates_list, key=lambda x: (x["vendor"], x["model"]))
 
     def get_template_content(self, vendor, model):
         """
@@ -1463,28 +1392,28 @@ P30 = 13   # GMT-8
         """
         # Validate vendor and model to prevent path traversal
         import re
-        if not re.match(
-                r'^[a-z0-9_-]+$',
-                vendor.lower()) or not re.match(
-                r'^[a-z0-9_-]+$',
-                model.lower()):
-            return False, "Invalid vendor or model name. Only alphanumeric, underscore, and hyphen allowed.", None
+
+        if not re.match(r"^[a-z0-9_-]+$", vendor.lower()) or not re.match(
+            r"^[a-z0-9_-]+$", model.lower()
+        ):
+            return (
+                False,
+                "Invalid vendor or model name. Only alphanumeric, underscore, and hyphen allowed.",
+                None,
+            )
 
         template = self.get_template(vendor, model)
         if not template:
             return False, f"Template not found for {vendor} {model}", None
 
         # Get custom templates directory
-        custom_dir = self.config.get(
-            'provisioning.custom_templates_dir',
-            'provisioning_templates')
+        custom_dir = self.config.get("provisioning.custom_templates_dir", "provisioning_templates")
 
         # Create directory if it doesn't exist
         if not os.path.exists(custom_dir):
             try:
                 os.makedirs(custom_dir)
-                self.logger.info(
-                    f"Created custom templates directory: {custom_dir}")
+                self.logger.info(f"Created custom templates directory: {custom_dir}")
             except Exception as e:
                 return False, f"Failed to create directory: {e}", None
 
@@ -1493,7 +1422,7 @@ P30 = 13   # GMT-8
         template_path = os.path.join(custom_dir, template_filename)
 
         try:
-            with open(template_path, 'w') as f:
+            with open(template_path, "w") as f:
                 f.write(template.template_content)
 
             self.logger.info(f"Exported template to: {template_path}")
@@ -1516,17 +1445,17 @@ P30 = 13   # GMT-8
         """
         # Validate vendor and model to prevent path traversal
         import re
-        if not re.match(
-                r'^[a-z0-9_-]+$',
-                vendor.lower()) or not re.match(
-                r'^[a-z0-9_-]+$',
-                model.lower()):
-            return False, "Invalid vendor or model name. Only alphanumeric, underscore, and hyphen allowed."
+
+        if not re.match(r"^[a-z0-9_-]+$", vendor.lower()) or not re.match(
+            r"^[a-z0-9_-]+$", model.lower()
+        ):
+            return (
+                False,
+                "Invalid vendor or model name. Only alphanumeric, underscore, and hyphen allowed.",
+            )
 
         # Get custom templates directory
-        custom_dir = self.config.get(
-            'provisioning.custom_templates_dir',
-            'provisioning_templates')
+        custom_dir = self.config.get("provisioning.custom_templates_dir", "provisioning_templates")
 
         # Create directory if it doesn't exist
         if not os.path.exists(custom_dir):
@@ -1540,7 +1469,7 @@ P30 = 13   # GMT-8
         template_path = os.path.join(custom_dir, template_filename)
 
         try:
-            with open(template_path, 'w') as f:
+            with open(template_path, "w") as f:
                 f.write(content)
 
             # Update in memory
@@ -1573,11 +1502,9 @@ P30 = 13   # GMT-8
         # Save to database if available
         if self.devices_db:
             try:
-                success = self.devices_db.set_static_ip(
-                    normalized_mac, static_ip)
+                success = self.devices_db.set_static_ip(normalized_mac, static_ip)
                 if success:
-                    self.logger.info(
-                        f"Set static IP {static_ip} for device {mac_address}")
+                    self.logger.info(f"Set static IP {static_ip} for device {mac_address}")
                     return True, f"Static IP {static_ip} set for device {mac_address}"
                 else:
                     return False, "Failed to update static IP in database"
@@ -1603,7 +1530,7 @@ P30 = 13   # GMT-8
             try:
                 device = self.devices_db.get_device(normalized_mac)
                 if device:
-                    return device.get('static_ip')
+                    return device.get("static_ip")
             except Exception as e:
                 self.logger.error(f"Failed to get static IP: {e}")
 
@@ -1627,8 +1554,8 @@ P30 = 13   # GMT-8
             self._load_custom_templates()
 
             stats = {
-                'total_templates': len(self.templates),
-                'vendors': len(self.get_supported_vendors())
+                "total_templates": len(self.templates),
+                "vendors": len(self.get_supported_vendors()),
             }
 
             self.logger.info(f"Reloaded {stats['total_templates']} templates")

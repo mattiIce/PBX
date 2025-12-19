@@ -6,6 +6,7 @@ This is a complete implementation of the ITU-T G.722 wideband audio codec
 based on the official ITU-T Recommendation G.722 specification.
 G.722 uses sub-band ADPCM (SB-ADPCM) to encode 16kHz audio at 64 kbit/s.
 """
+
 import struct
 from typing import List, Optional, Tuple
 
@@ -17,18 +18,74 @@ from pbx.utils.logger import get_logger
 # Lower sub-band quantizer (6 bits = 64 levels)
 # Quantization decision levels for lower sub-band
 Q6_DECISION_LEVELS = [
-    -124, -92, -60, -44, -28, -20, -12, -8,
-    -4, -2, 0, 2, 4, 8, 12, 20,
-    28, 44, 60, 92, 124, 156, 188, 220,
-    252, 284, 316, 348, 380, 412, 444, 476
+    -124,
+    -92,
+    -60,
+    -44,
+    -28,
+    -20,
+    -12,
+    -8,
+    -4,
+    -2,
+    0,
+    2,
+    4,
+    8,
+    12,
+    20,
+    28,
+    44,
+    60,
+    92,
+    124,
+    156,
+    188,
+    220,
+    252,
+    284,
+    316,
+    348,
+    380,
+    412,
+    444,
+    476,
 ]
 
 # Quantization output levels for lower sub-band
 Q6_OUTPUT_LEVELS = [
-    -140, -108, -76, -52, -36, -24, -16, -10,
-    -6, -3, -1, 1, 3, 6, 10, 16,
-    24, 36, 52, 76, 108, 140, 172, 204,
-    236, 268, 300, 332, 364, 396, 428, 460
+    -140,
+    -108,
+    -76,
+    -52,
+    -36,
+    -24,
+    -16,
+    -10,
+    -6,
+    -3,
+    -1,
+    1,
+    3,
+    6,
+    10,
+    16,
+    24,
+    36,
+    52,
+    76,
+    108,
+    140,
+    172,
+    204,
+    236,
+    268,
+    300,
+    332,
+    364,
+    396,
+    428,
+    460,
 ]
 
 # Higher sub-band quantizer (2 bits = 4 levels)
@@ -41,31 +98,111 @@ Q2_OUTPUT_LEVELS = [-14, 14, 34, 94]
 # Inverse adaptive quantizer scale factors
 # These control the adaptation of the quantizer step size
 ILB_TABLE = [  # Lower sub-band
-    2048, 2093, 2139, 2186, 2233, 2282, 2332, 2383,
-    2435, 2489, 2543, 2599, 2656, 2714, 2774, 2834,
-    2896, 2960, 3025, 3091, 3158, 3228, 3298, 3371,
-    3444, 3520, 3597, 3676, 3756, 3838, 3922, 4008
+    2048,
+    2093,
+    2139,
+    2186,
+    2233,
+    2282,
+    2332,
+    2383,
+    2435,
+    2489,
+    2543,
+    2599,
+    2656,
+    2714,
+    2774,
+    2834,
+    2896,
+    2960,
+    3025,
+    3091,
+    3158,
+    3228,
+    3298,
+    3371,
+    3444,
+    3520,
+    3597,
+    3676,
+    3756,
+    3838,
+    3922,
+    4008,
 ]
 
-IHB_TABLE = [  # Higher sub-band
-    0, 448, 896, 1344
-]
+IHB_TABLE = [0, 448, 896, 1344]  # Higher sub-band
 
 # Quantizer scale factor adaptation
 WL_TABLE = [  # Lower sub-band (64 entries for 6-bit codes)
-    -60, 3042, 1198, 538, 334, 172, 58, -30,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60,
-    3042, 1198, 538, 334, 172, 58, -30, -60
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
+    3042,
+    1198,
+    538,
+    334,
+    172,
+    58,
+    -30,
+    -60,
 ]
 
-WH_TABLE = [  # Higher sub-band
-    0, -214, 798, -214
-]
+WH_TABLE = [0, -214, 798, -214]  # Higher sub-band
 
 # Predictor coefficients update constants
 F_TABLE = [0, 0, 0, 1, 1, 1, 3, 7]
@@ -125,13 +262,13 @@ class G722Codec:
 
     # Codec parameters
     SAMPLE_RATE = 16000  # 16 kHz wideband
-    FRAME_SIZE = 320     # 20ms frame at 16kHz (320 samples)
-    PAYLOAD_TYPE = 9     # RTP payload type for G.722
+    FRAME_SIZE = 320  # 20ms frame at 16kHz (320 samples)
+    PAYLOAD_TYPE = 9  # RTP payload type for G.722
 
     # Bitrate modes
-    MODE_64K = 64000   # 64 kbit/s
-    MODE_56K = 56000   # 56 kbit/s
-    MODE_48K = 48000   # 48 kbit/s
+    MODE_64K = 64000  # 64 kbit/s
+    MODE_56K = 56000  # 56 kbit/s
+    MODE_48K = 48000  # 48 kbit/s
 
     def __init__(self, bitrate: int = MODE_64K):
         """
@@ -148,8 +285,7 @@ class G722Codec:
         self.encoder_state = G722State()
         self.decoder_state = G722State()
 
-        self.logger.debug(
-            f"G.722 codec initialized at {bitrate} bps (ITU-T compliant)")
+        self.logger.debug(f"G.722 codec initialized at {bitrate} bps (ITU-T compliant)")
 
     def encode(self, pcm_data: bytes) -> Optional[bytes]:
         """
@@ -165,10 +301,10 @@ class G722Codec:
             # Validate input
             if len(pcm_data) % 4 != 0:
                 # G.722 processes pairs of samples, truncate incomplete pairs
-                pcm_data = pcm_data[:len(pcm_data) - (len(pcm_data) % 4)]
+                pcm_data = pcm_data[: len(pcm_data) - (len(pcm_data) % 4)]
 
             if len(pcm_data) < 4:
-                return b''
+                return b""
 
             encoded = bytearray()
 
@@ -176,8 +312,8 @@ class G722Codec:
             # decimation)
             for i in range(0, len(pcm_data) - 3, 4):
                 # Read two 16-bit samples (little-endian)
-                sample1 = struct.unpack('<h', pcm_data[i:i + 2])[0]
-                sample2 = struct.unpack('<h', pcm_data[i + 2:i + 4])[0]
+                sample1 = struct.unpack("<h", pcm_data[i : i + 2])[0]
+                sample2 = struct.unpack("<h", pcm_data[i + 2 : i + 4])[0]
 
                 # Encode the sample pair
                 code = self._encode_sample_pair(sample1, sample2)
@@ -201,7 +337,7 @@ class G722Codec:
         """
         try:
             if len(g722_data) == 0:
-                return b''
+                return b""
 
             decoded = bytearray()
 
@@ -210,8 +346,8 @@ class G722Codec:
                 sample1, sample2 = self._decode_sample_pair(byte)
 
                 # Pack as 16-bit little-endian samples
-                decoded.extend(struct.pack('<h', sample1))
-                decoded.extend(struct.pack('<h', sample2))
+                decoded.extend(struct.pack("<h", sample1))
+                decoded.extend(struct.pack("<h", sample2))
 
             return bytes(decoded)
 
@@ -293,9 +429,30 @@ class G722Codec:
         """
         # QMF filter coefficients (ITU-T G.722)
         qmf_coeffs = [
-            3, -11, -11, 53, 12, -156, 32, 362,
-            -210, -805, 951, 3876, 3876, 951, -805, -210,
-            362, 32, -156, 12, 53, -11, -11, 3
+            3,
+            -11,
+            -11,
+            53,
+            12,
+            -156,
+            32,
+            362,
+            -210,
+            -805,
+            951,
+            3876,
+            3876,
+            951,
+            -805,
+            -210,
+            362,
+            32,
+            -156,
+            12,
+            53,
+            -11,
+            -11,
+            3,
         ]
 
         acc = 0
@@ -310,8 +467,7 @@ class G722Codec:
         result = acc >> 14
         return self._saturate(result, -16384, 16383)
 
-    def _qmf_tx_filter(self, rlow: int, rhigh: int,
-                       state: G722State) -> Tuple[int, int]:
+    def _qmf_tx_filter(self, rlow: int, rhigh: int, state: G722State) -> Tuple[int, int]:
         """
         QMF synthesis filter (transmit/decode side)
         Combines two 8kHz sub-bands into 16kHz signal
@@ -668,16 +824,16 @@ class G722Codec:
             Dictionary with codec details
         """
         return {
-            'name': 'G.722',
-            'description': 'Wideband audio codec (7 kHz)',
-            'sample_rate': self.SAMPLE_RATE,
-            'bitrate': self.bitrate,
-            'frame_size': self.FRAME_SIZE,
-            'payload_type': self.PAYLOAD_TYPE,
-            'enabled': self.enabled,
-            'quality': 'HD Audio (Wideband)',
-            'bandwidth': 'Medium (16 kHz)',
-            'implementation': 'Full Python Implementation'
+            "name": "G.722",
+            "description": "Wideband audio codec (7 kHz)",
+            "sample_rate": self.SAMPLE_RATE,
+            "bitrate": self.bitrate,
+            "frame_size": self.FRAME_SIZE,
+            "payload_type": self.PAYLOAD_TYPE,
+            "enabled": self.enabled,
+            "quality": "HD Audio (Wideband)",
+            "bandwidth": "Medium (16 kHz)",
+            "implementation": "Full Python Implementation",
         }
 
     def get_sdp_description(self) -> str:
@@ -710,13 +866,13 @@ class G722Codec:
             Dictionary with supported features
         """
         return {
-            'bitrates': [48000, 56000, 64000],
-            'sample_rate': 16000,
-            'channels': 1,  # Mono
-            'frame_sizes': [320, 160],  # 20ms, 10ms
-            'complexity': 'Low',  # Lower complexity than Opus
-            'latency': 'Low (20-40ms)',
-            'applications': ['VoIP', 'Video Conferencing', 'Recording']
+            "bitrates": [48000, 56000, 64000],
+            "sample_rate": 16000,
+            "channels": 1,  # Mono
+            "frame_sizes": [320, 160],  # 20ms, 10ms
+            "complexity": "Low",  # Lower complexity than Opus
+            "latency": "Low (20-40ms)",
+            "applications": ["VoIP", "Video Conferencing", "Recording"],
         }
 
 
@@ -734,9 +890,8 @@ class G722CodecManager:
         """
         self.logger = get_logger()
         self.config = config or {}
-        self.enabled = self.config.get('codecs.g722.enabled', True)
-        self.default_bitrate = self.config.get(
-            'codecs.g722.bitrate', G722Codec.MODE_64K)
+        self.enabled = self.config.get("codecs.g722.enabled", True)
+        self.default_bitrate = self.config.get("codecs.g722.bitrate", G722Codec.MODE_64K)
 
         # Codec instances cache
         self.encoders = {}  # call_id -> encoder instance
@@ -748,10 +903,7 @@ class G722CodecManager:
         else:
             self.logger.info("G.722 codec disabled in configuration")
 
-    def create_encoder(
-            self,
-            call_id: str,
-            bitrate: int = None) -> Optional[G722Codec]:
+    def create_encoder(self, call_id: str, bitrate: int = None) -> Optional[G722Codec]:
         """
         Create encoder for a call
 
@@ -773,10 +925,7 @@ class G722CodecManager:
 
         return encoder
 
-    def create_decoder(
-            self,
-            call_id: str,
-            bitrate: int = None) -> Optional[G722Codec]:
+    def create_decoder(self, call_id: str, bitrate: int = None) -> Optional[G722Codec]:
         """
         Create decoder for a call
 
@@ -829,11 +978,11 @@ class G722CodecManager:
             Dictionary with statistics
         """
         return {
-            'enabled': self.enabled,
-            'active_encoders': len(self.encoders),
-            'active_decoders': len(self.decoders),
-            'default_bitrate': self.default_bitrate,
-            'supported': G722Codec.is_supported()
+            "enabled": self.enabled,
+            "active_encoders": len(self.encoders),
+            "active_decoders": len(self.decoders),
+            "default_bitrate": self.default_bitrate,
+            "supported": G722Codec.is_supported(),
         }
 
     def get_sdp_capabilities(self) -> list:

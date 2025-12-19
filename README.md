@@ -1,5 +1,12 @@
 # Aluminum Blanking Phone System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Tests](https://github.com/mattiIce/PBX/workflows/Tests/badge.svg)](https://github.com/mattiIce/PBX/actions)
+[![Code Quality](https://github.com/mattiIce/PBX/workflows/Code%20Quality/badge.svg)](https://github.com/mattiIce/PBX/actions)
+[![codecov](https://codecov.io/gh/mattiIce/PBX/branch/main/graph/badge.svg)](https://codecov.io/gh/mattiIce/PBX)
+
 A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built from scratch in Python. This system provides enterprise-grade telephony features for internal communication and external connectivity.
 
 > **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) or [EXECUTIVE_SUMMARY.pdf](EXECUTIVE_SUMMARY.pdf) for a complete business overview, ROI analysis, and strategic recommendations.
@@ -322,6 +329,10 @@ curl -X PUT http://localhost:8080/api/config \
 - Dial `*1001` - Access voicemail for extension 1001
 
 ## 🛠️ Architecture
+
+For a detailed architecture overview including data flows, component interactions, and deployment options, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### Quick Overview
 
 ```
 PBX System

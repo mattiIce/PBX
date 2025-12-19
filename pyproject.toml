@@ -112,8 +112,13 @@ omit = [
     "*/test_*",
     "*/__pycache__/*",
 ]
+branch = true
+parallel = true
 
 [tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -123,6 +128,9 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [tool.black]
 line-length = 100

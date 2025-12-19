@@ -2,6 +2,7 @@
 Audio utilities for PBX system
 Provides audio generation and processing functions
 """
+
 import math
 import os
 import struct
@@ -56,7 +57,7 @@ def pcm16_to_ulaw(pcm_data):
             # Read 16-bit little-endian sample
             if i + 1 >= len(pcm_data):
                 break
-            sample = struct.unpack('<h', pcm_data[i:i + 2])[0]
+            sample = struct.unpack("<h", pcm_data[i : i + 2])[0]
 
             # Get sign and magnitude
             sign = 0x80 if sample < 0 else 0x00
@@ -110,7 +111,7 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
     # Validate input data
     if len(pcm_data) < 2:
         # Not enough data for even one 16-bit sample
-        return b''
+        return b""
 
     # Ensure data length is even (complete 16-bit samples)
     if len(pcm_data) % 2 != 0:
@@ -126,26 +127,24 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
         num_samples = len(pcm_data) // 2
 
         if num_samples == 0:
-            return b''
+            return b""
 
         for i in range(num_samples - 1):
             # Read current and next sample
-            current = struct.unpack('<h', pcm_data[i * 2:(i + 1) * 2])[0]
-            next_sample = struct.unpack(
-                '<h', pcm_data[(i + 1) * 2:(i + 2) * 2])[0]
+            current = struct.unpack("<h", pcm_data[i * 2 : (i + 1) * 2])[0]
+            next_sample = struct.unpack("<h", pcm_data[(i + 1) * 2 : (i + 2) * 2])[0]
 
             # Add current sample
-            upsampled.extend(struct.pack('<h', current))
+            upsampled.extend(struct.pack("<h", current))
 
             # Add interpolated sample (average of current and next)
             interpolated = (current + next_sample) // 2
-            upsampled.extend(struct.pack('<h', interpolated))
+            upsampled.extend(struct.pack("<h", interpolated))
 
         # Add the last sample twice (duplicate to maintain 2:1 ratio)
-        last_sample = struct.unpack(
-            '<h', pcm_data[(num_samples - 1) * 2:num_samples * 2])[0]
-        upsampled.extend(struct.pack('<h', last_sample))
-        upsampled.extend(struct.pack('<h', last_sample))
+        last_sample = struct.unpack("<h", pcm_data[(num_samples - 1) * 2 : num_samples * 2])[0]
+        upsampled.extend(struct.pack("<h", last_sample))
+        upsampled.extend(struct.pack("<h", last_sample))
 
         pcm_data = bytes(upsampled)
 
@@ -155,7 +154,7 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
     # Encode PCM to G.722
     g722_data = codec.encode(pcm_data)
 
-    return g722_data if g722_data is not None else b''
+    return g722_data if g722_data is not None else b""
 
 
 def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
@@ -176,15 +175,15 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
         output_wav_path = input_wav_path
 
     try:
-        with open(input_wav_path, 'rb') as f:
+        with open(input_wav_path, "rb") as f:
             # Read RIFF header
             riff = f.read(4)
-            if riff != b'RIFF':
+            if riff != b"RIFF":
                 return False
 
-            _ = struct.unpack('<I', f.read(4))[0]  # file_size
+            _ = struct.unpack("<I", f.read(4))[0]  # file_size
             wave = f.read(4)
-            if wave != b'WAVE':
+            if wave != b"WAVE":
                 return False
 
             # Find fmt chunk
@@ -196,21 +195,21 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                 if not chunk_id or len(chunk_id) < 4:
                     break
 
-                chunk_size = struct.unpack('<I', f.read(4))[0]
+                chunk_size = struct.unpack("<I", f.read(4))[0]
 
-                if chunk_id == b'fmt ':
+                if chunk_id == b"fmt ":
                     # Parse format chunk
                     fmt_data = f.read(chunk_size)
-                    audio_format = struct.unpack('<H', fmt_data[0:2])[0]
-                    _ = struct.unpack('<H', fmt_data[2:4])[0]  # channels
-                    sample_rate = struct.unpack('<I', fmt_data[4:8])[0]
-                    _ = struct.unpack('<H', fmt_data[14:16])[0]  # bits_per_sample
+                    audio_format = struct.unpack("<H", fmt_data[0:2])[0]
+                    _ = struct.unpack("<H", fmt_data[2:4])[0]  # channels
+                    sample_rate = struct.unpack("<I", fmt_data[4:8])[0]
+                    _ = struct.unpack("<H", fmt_data[14:16])[0]  # bits_per_sample
 
                     # Only process PCM files
                     if audio_format != WAV_FORMAT_PCM:
                         return False
 
-                elif chunk_id == b'data':
+                elif chunk_id == b"data":
                     # Read PCM audio data
                     audio_data = f.read(chunk_size)
                 else:
@@ -227,7 +226,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                 return False
 
             # Write G.722 WAV file
-            with open(output_wav_path, 'wb') as out_f:
+            with open(output_wav_path, "wb") as out_f:
                 # G.722 WAV uses format code 0x0067 and 8kHz clock rate
                 # Note: G.722 actually samples at 16kHz but uses 8kHz clock
                 # rate per RFC
@@ -236,7 +235,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                     sample_rate=8000,  # G.722 clock rate (8kHz)
                     channels=1,
                     bits_per_sample=8,
-                    audio_format=WAV_FORMAT_G722
+                    audio_format=WAV_FORMAT_G722,
                 )
                 out_f.write(header)
                 out_f.write(g722_data)
@@ -266,25 +265,15 @@ def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
     for i in range(num_samples):
         # Generate sine wave
         t = i / sample_rate
-        value = int(
-            MAX_16BIT_SIGNED *
-            DEFAULT_AMPLITUDE *
-            math.sin(
-                2 *
-                math.pi *
-                frequency *
-                t))
-        samples.append(struct.pack('<h', value))  # 16-bit signed little-endian
+        value = int(MAX_16BIT_SIGNED * DEFAULT_AMPLITUDE * math.sin(2 * math.pi * frequency * t))
+        samples.append(struct.pack("<h", value))  # 16-bit signed little-endian
 
-    return b''.join(samples)
+    return b"".join(samples)
 
 
 def build_wav_header(
-        data_size,
-        sample_rate=8000,
-        channels=1,
-        bits_per_sample=16,
-        audio_format=WAV_FORMAT_PCM):
+    data_size, sample_rate=8000, channels=1, bits_per_sample=16, audio_format=WAV_FORMAT_PCM
+):
     """
     Build a WAV file header
 
@@ -309,19 +298,19 @@ def build_wav_header(
         byte_rate = sample_rate * channels * bits_per_sample // 8
         block_align = channels * bits_per_sample // 8
 
-    header = b'RIFF'
-    header += struct.pack('<I', 36 + data_size)  # File size - 8
-    header += b'WAVE'
-    header += b'fmt '
-    header += struct.pack('<I', 16)  # Subchunk1Size (16 for basic formats)
-    header += struct.pack('<H', audio_format)  # AudioFormat
-    header += struct.pack('<H', channels)
-    header += struct.pack('<I', sample_rate)
-    header += struct.pack('<I', byte_rate)
-    header += struct.pack('<H', block_align)
-    header += struct.pack('<H', bits_per_sample)
-    header += b'data'
-    header += struct.pack('<I', data_size)
+    header = b"RIFF"
+    header += struct.pack("<I", 36 + data_size)  # File size - 8
+    header += b"WAVE"
+    header += b"fmt "
+    header += struct.pack("<I", 16)  # Subchunk1Size (16 for basic formats)
+    header += struct.pack("<H", audio_format)  # AudioFormat
+    header += struct.pack("<H", channels)
+    header += struct.pack("<I", sample_rate)
+    header += struct.pack("<I", byte_rate)
+    header += struct.pack("<H", block_align)
+    header += struct.pack("<H", bits_per_sample)
+    header += b"data"
+    header += struct.pack("<I", data_size)
 
     return header
 
@@ -333,10 +322,7 @@ def generate_voicemail_beep():
     Returns:
         bytes: Complete WAV file with beep tone
     """
-    pcm_data = generate_beep_tone(
-        frequency=1000,
-        duration_ms=500,
-        sample_rate=8000)
+    pcm_data = generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000)
     header = build_wav_header(len(pcm_data), sample_rate=8000)
     return header + pcm_data
 
@@ -359,21 +345,20 @@ def generate_ring_tone(rings=1):
     ring_samples = int(sample_rate * ring_duration_ms / 1000)
     silence_samples = int(sample_rate * silence_duration_ms / 1000)
 
-    pcm_data = b''
+    pcm_data = b""
 
     for _ in range(rings):
         # Ring sound
         for i in range(ring_samples):
             t = i / sample_rate
             # Mix two frequencies
-            value = int(32767 * 0.3 * (
-                math.sin(2 * math.pi * 440 * t) +
-                math.sin(2 * math.pi * 480 * t)
-            ))
-            pcm_data += struct.pack('<h', value)
+            value = int(
+                32767 * 0.3 * (math.sin(2 * math.pi * 440 * t) + math.sin(2 * math.pi * 480 * t))
+            )
+            pcm_data += struct.pack("<h", value)
 
         # Silence
-        pcm_data += b'\x00\x00' * silence_samples
+        pcm_data += b"\x00\x00" * silence_samples
 
     header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
     return header + pcm_data
@@ -391,7 +376,7 @@ def generate_busy_tone():
     silence_duration_ms = 500  # 500ms off
     repeats = 3
 
-    pcm_data = b''
+    pcm_data = b""
 
     for _ in range(repeats):
         # Tone
@@ -399,11 +384,11 @@ def generate_busy_tone():
         for i in range(tone_samples):
             t = i / sample_rate
             value = int(32767 * 0.5 * math.sin(2 * math.pi * 500 * t))
-            pcm_data += struct.pack('<h', value)
+            pcm_data += struct.pack("<h", value)
 
         # Silence
         silence_samples = int(sample_rate * silence_duration_ms / 1000)
-        pcm_data += b'\x00\x00' * silence_samples
+        pcm_data += b"\x00\x00" * silence_samples
 
     header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
     return header + pcm_data
@@ -434,76 +419,115 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
     # Define tone sequences for different prompts
     # Format: [(frequency_hz, duration_ms), ...]
     tone_sequences = {
-        'leave_message': [
+        "leave_message": [
             # Ascending tones to indicate "please leave a message"
-            (600, 200), (700, 200), (800, 200), (900, 300),
+            (600, 200),
+            (700, 200),
+            (800, 200),
+            (900, 300),
         ],
-        'enter_pin': [
+        "enter_pin": [
             # Short repeating tone for PIN entry
-            (1000, 150), (0, 100), (1000, 150), (0, 100), (1000, 150),
+            (1000, 150),
+            (0, 100),
+            (1000, 150),
+            (0, 100),
+            (1000, 150),
         ],
-        'main_menu': [
+        "main_menu": [
             # Two-tone pattern for menu
-            (800, 200), (600, 200), (800, 200),
+            (800, 200),
+            (600, 200),
+            (800, 200),
         ],
-        'message_menu': [
+        "message_menu": [
             # Quick triple beep for options
-            (900, 100), (0, 50), (900, 100), (0, 50), (900, 100),
+            (900, 100),
+            (0, 50),
+            (900, 100),
+            (0, 50),
+            (900, 100),
         ],
-        'no_messages': [
+        "no_messages": [
             # Descending tones for "no messages"
-            (800, 200), (600, 200), (400, 300),
+            (800, 200),
+            (600, 200),
+            (400, 300),
         ],
-        'goodbye': [
+        "goodbye": [
             # Descending dual tone for goodbye
-            (700, 250), (500, 300),
+            (700, 250),
+            (500, 300),
         ],
-        'invalid_option': [
+        "invalid_option": [
             # Low buzz for invalid option
             (300, 400),
         ],
-        'you_have_messages': [
+        "you_have_messages": [
             # Cheerful ascending tones
-            (600, 150), (750, 150), (900, 200),
+            (600, 150),
+            (750, 150),
+            (900, 200),
         ],
-        'auto_attendant_welcome': [
+        "auto_attendant_welcome": [
             # Welcoming ascending tones
-            (500, 250), (650, 250), (800, 250), (950, 350),
+            (500, 250),
+            (650, 250),
+            (800, 250),
+            (950, 350),
         ],
-        'auto_attendant_menu': [
+        "auto_attendant_menu": [
             # Menu option tones - distinctive pattern
-            (700, 200), (0, 100), (800, 200), (0,
-                                               100), (700, 200), (0, 100), (900, 300),
+            (700, 200),
+            (0, 100),
+            (800, 200),
+            (0, 100),
+            (700, 200),
+            (0, 100),
+            (900, 300),
         ],
-        'timeout': [
+        "timeout": [
             # Warning tone for timeout
-            (400, 300), (0, 150), (400, 300),
+            (400, 300),
+            (0, 150),
+            (400, 300),
         ],
-        'transferring': [
+        "transferring": [
             # Success tone for transfer
-            (800, 150), (1000, 150), (1200, 200),
+            (800, 150),
+            (1000, 150),
+            (1200, 200),
         ],
-        'invalid_pin': [
+        "invalid_pin": [
             # Error tone for invalid PIN
-            (300, 400), (0, 100), (300, 400),
+            (300, 400),
+            (0, 100),
+            (300, 400),
         ],
-        'recording_greeting': [
+        "recording_greeting": [
             # Recording prompt tones
-            (700, 200), (900, 200), (1100, 300),
+            (700, 200),
+            (900, 200),
+            (1100, 300),
         ],
-        'greeting_saved': [
+        "greeting_saved": [
             # Success confirmation
-            (1000, 200), (1200, 200), (1000, 200),
+            (1000, 200),
+            (1200, 200),
+            (1000, 200),
         ],
-        'message_deleted': [
+        "message_deleted": [
             # Deletion confirmation - descending
-            (900, 150), (700, 150), (500, 200),
+            (900, 150),
+            (700, 150),
+            (500, 200),
         ],
-        'end_of_messages': [
+        "end_of_messages": [
             # End notification - neutral tone
-            (600, 300), (500, 300),
+            (600, 300),
+            (500, 300),
         ],
-        'beep': [
+        "beep": [
             # Standard recording beep - single high tone
             (1000, 400),
         ],
@@ -511,32 +535,27 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
 
     sequence = tone_sequences.get(prompt_type, [(800, 300)])  # Default tone
 
-    pcm_data = b''
+    pcm_data = b""
     for frequency, duration_ms in sequence:
         if frequency == 0:
             # Silence
             num_samples = int(sample_rate * duration_ms / 1000)
-            pcm_data += b'\x00\x00' * num_samples
+            pcm_data += b"\x00\x00" * num_samples
         else:
             # Generate tone
             num_samples = int(sample_rate * duration_ms / 1000)
             for i in range(num_samples):
                 t = i / sample_rate
                 value = int(
-                    MAX_16BIT_SIGNED *
-                    DEFAULT_AMPLITUDE *
-                    math.sin(
-                        2 *
-                        math.pi *
-                        frequency *
-                        t))
-                pcm_data += struct.pack('<h', value)
+                    MAX_16BIT_SIGNED * DEFAULT_AMPLITUDE * math.sin(2 * math.pi * frequency * t)
+                )
+                pcm_data += struct.pack("<h", value)
 
     header = build_wav_header(len(pcm_data), sample_rate=sample_rate)
     return header + pcm_data
 
 
-def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
+def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
     """
     Load a voice prompt WAV file from disk
 
@@ -556,23 +575,21 @@ def load_prompt_file(prompt_type, prompt_dir='voicemail_prompts'):
     # Check if file exists
     if os.path.exists(prompt_file):
         try:
-            with open(prompt_file, 'rb') as f:
+            with open(prompt_file, "rb") as f:
                 return f.read()
         except (IOError, OSError) as e:
             # If we can't read the file (permission issues, disk errors, etc.),
             # return None so caller can use fallback tone generation
             # In production, consider logging this error for debugging
             import warnings
+
             warnings.warn(f"Failed to read prompt file {prompt_file}: {e}")
             return None
 
     return None
 
 
-def get_prompt_audio(
-        prompt_type,
-        prompt_dir='voicemail_prompts',
-        sample_rate=8000):
+def get_prompt_audio(prompt_type, prompt_dir="voicemail_prompts", sample_rate=8000):
     """
     Get voice prompt audio, trying to load from file first, then generating tones as fallback
 

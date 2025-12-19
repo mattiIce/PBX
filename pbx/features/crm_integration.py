@@ -2,6 +2,7 @@
 CRM Integration and Screen Pop Support
 Provides caller information lookup and CRM integration capabilities
 """
+
 import json
 import threading
 from datetime import datetime
@@ -39,39 +40,39 @@ class CallerInfo:
     def to_dict(self) -> Dict:
         """Convert to dictionary"""
         return {
-            'phone_number': self.phone_number,
-            'name': self.name,
-            'company': self.company,
-            'email': self.email,
-            'account_id': self.account_id,
-            'contact_id': self.contact_id,
-            'tags': self.tags,
-            'notes': self.notes,
-            'last_contact': self.last_contact.isoformat() if self.last_contact else None,
-            'contact_count': self.contact_count,
-            'custom_fields': self.custom_fields,
-            'source': self.source}
+            "phone_number": self.phone_number,
+            "name": self.name,
+            "company": self.company,
+            "email": self.email,
+            "account_id": self.account_id,
+            "contact_id": self.contact_id,
+            "tags": self.tags,
+            "notes": self.notes,
+            "last_contact": self.last_contact.isoformat() if self.last_contact else None,
+            "contact_count": self.contact_count,
+            "custom_fields": self.custom_fields,
+            "source": self.source,
+        }
 
     @staticmethod
-    def from_dict(data: Dict) -> 'CallerInfo':
+    def from_dict(data: Dict) -> "CallerInfo":
         """Create from dictionary"""
-        phone_number = data.get('phone_number', '')
+        phone_number = data.get("phone_number", "")
         caller_info = CallerInfo(phone_number)
-        caller_info.name = data.get('name')
-        caller_info.company = data.get('company')
-        caller_info.email = data.get('email')
-        caller_info.account_id = data.get('account_id')
-        caller_info.contact_id = data.get('contact_id')
-        caller_info.tags = data.get('tags', [])
-        caller_info.notes = data.get('notes')
-        caller_info.contact_count = data.get('contact_count', 0)
-        caller_info.custom_fields = data.get('custom_fields', {})
-        caller_info.source = data.get('source')
+        caller_info.name = data.get("name")
+        caller_info.company = data.get("company")
+        caller_info.email = data.get("email")
+        caller_info.account_id = data.get("account_id")
+        caller_info.contact_id = data.get("contact_id")
+        caller_info.tags = data.get("tags", [])
+        caller_info.notes = data.get("notes")
+        caller_info.contact_count = data.get("contact_count", 0)
+        caller_info.custom_fields = data.get("custom_fields", {})
+        caller_info.source = data.get("source")
 
-        if data.get('last_contact'):
+        if data.get("last_contact"):
             try:
-                caller_info.last_contact = datetime.fromisoformat(
-                    data['last_contact'])
+                caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
             except BaseException:
                 pass
 
@@ -90,8 +91,8 @@ class CRMLookupProvider:
         """
         self.logger = get_logger()
         self.config = config
-        self.enabled = config.get('enabled', False)
-        self.name = config.get('name', 'Unknown')
+        self.enabled = config.get("enabled", False)
+        self.name = config.get("name", "Unknown")
 
     def lookup(self, phone_number: str) -> Optional[CallerInfo]:
         """
@@ -119,7 +120,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
         """
         super().__init__(config)
         self.phone_book = phone_book
-        self.name = 'PhoneBook'
+        self.name = "PhoneBook"
 
     def lookup(self, phone_number: str) -> Optional[CallerInfo]:
         """Look up caller in phone book"""
@@ -133,11 +134,11 @@ class PhoneBookLookupProvider(CRMLookupProvider):
             if results:
                 contact = results[0]  # Take first match
                 caller_info = CallerInfo(phone_number)
-                caller_info.name = contact.get('name')
-                caller_info.company = contact.get('company')
-                caller_info.email = contact.get('email')
-                caller_info.notes = contact.get('notes')
-                caller_info.source = 'phone_book'
+                caller_info.name = contact.get("name")
+                caller_info.company = contact.get("company")
+                caller_info.email = contact.get("email")
+                caller_info.notes = contact.get("notes")
+                caller_info.source = "phone_book"
                 return caller_info
         except Exception as e:
             self.logger.error(f"Phone book lookup error: {e}")
@@ -158,7 +159,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
         """
         super().__init__(config)
         self.ad_integration = ad_integration
-        self.name = 'ActiveDirectory'
+        self.name = "ActiveDirectory"
 
     def lookup(self, phone_number: str) -> Optional[CallerInfo]:
         """Look up caller in Active Directory"""
@@ -167,16 +168,15 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
 
         try:
             # Search AD by phone number
-            users = self.ad_integration.search_users(
-                f'(telephoneNumber={phone_number})')
+            users = self.ad_integration.search_users(f"(telephoneNumber={phone_number})")
 
             if users:
                 user = users[0]  # Take first match
                 caller_info = CallerInfo(phone_number)
-                caller_info.name = user.get('displayName') or user.get('cn')
-                caller_info.email = user.get('mail')
-                caller_info.company = user.get('company')
-                caller_info.source = 'active_directory'
+                caller_info.name = user.get("displayName") or user.get("cn")
+                caller_info.email = user.get("mail")
+                caller_info.company = user.get("company")
+                caller_info.source = "active_directory"
                 return caller_info
         except Exception as e:
             self.logger.error(f"Active Directory lookup error: {e}")
@@ -195,10 +195,10 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
             config: Provider configuration with 'url', 'api_key', 'timeout'
         """
         super().__init__(config)
-        self.url = config.get('url')
-        self.api_key = config.get('api_key')
-        self.timeout = config.get('timeout', 5)
-        self.name = config.get('name', 'ExternalCRM')
+        self.url = config.get("url")
+        self.api_key = config.get("api_key")
+        self.timeout = config.get("timeout", 5)
+        self.name = config.get("name", "ExternalCRM")
 
     def lookup(self, phone_number: str) -> Optional[CallerInfo]:
         """Look up caller via external CRM API"""
@@ -208,47 +208,42 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
         try:
             # Prepare request
             url = f"{self.url}?phone={phone_number}"
-            headers = {
-                'Content-Type': 'application/json',
-                'User-Agent': 'PBX-CRM/1.0'
-            }
+            headers = {"Content-Type": "application/json", "User-Agent": "PBX-CRM/1.0"}
 
             if self.api_key:
-                headers['Authorization'] = f'Bearer {self.api_key}'
+                headers["Authorization"] = f"Bearer {self.api_key}"
 
-            request = Request(url, headers=headers, method='GET')
+            request = Request(url, headers=headers, method="GET")
 
             # Send request
             response = urlopen(request, timeout=self.timeout)
-            data = json.loads(response.read().decode('utf-8'))
+            data = json.loads(response.read().decode("utf-8"))
 
             # Parse response
-            if data.get('found'):
+            if data.get("found"):
                 caller_info = CallerInfo(phone_number)
-                caller_info.name = data.get('name')
-                caller_info.company = data.get('company')
-                caller_info.email = data.get('email')
-                caller_info.account_id = data.get('account_id')
-                caller_info.contact_id = data.get('contact_id')
-                caller_info.tags = data.get('tags', [])
-                caller_info.notes = data.get('notes')
-                caller_info.custom_fields = data.get('custom_fields', {})
+                caller_info.name = data.get("name")
+                caller_info.company = data.get("company")
+                caller_info.email = data.get("email")
+                caller_info.account_id = data.get("account_id")
+                caller_info.contact_id = data.get("contact_id")
+                caller_info.tags = data.get("tags", [])
+                caller_info.notes = data.get("notes")
+                caller_info.custom_fields = data.get("custom_fields", {})
                 caller_info.source = self.name.lower()
 
-                if data.get('last_contact'):
+                if data.get("last_contact"):
                     try:
-                        caller_info.last_contact = datetime.fromisoformat(
-                            data['last_contact'])
+                        caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
                     except BaseException:
                         pass
 
-                if data.get('contact_count'):
-                    caller_info.contact_count = int(data['contact_count'])
+                if data.get("contact_count"):
+                    caller_info.contact_count = int(data["contact_count"])
 
                 return caller_info
         except (URLError, HTTPError) as e:
-            self.logger.warning(
-                f"External CRM lookup failed for {phone_number}: {e}")
+            self.logger.warning(f"External CRM lookup failed for {phone_number}: {e}")
         except Exception as e:
             self.logger.error(f"External CRM lookup error: {e}")
 
@@ -279,12 +274,11 @@ class CRMIntegration:
         self.pbx_core = pbx_core
 
         # CRM configuration
-        self.enabled = self._get_config(
-            'features.crm_integration.enabled', False)
-        self.cache_enabled = self._get_config(
-            'features.crm_integration.cache_enabled', True)
+        self.enabled = self._get_config("features.crm_integration.enabled", False)
+        self.cache_enabled = self._get_config("features.crm_integration.cache_enabled", True)
         self.cache_timeout = self._get_config(
-            'features.crm_integration.cache_timeout', 3600)  # 1 hour
+            "features.crm_integration.cache_timeout", 3600
+        )  # 1 hour
 
         # Lookup providers
         self.providers: List[CRMLookupProvider] = []
@@ -305,42 +299,42 @@ class CRMIntegration:
 
     def _get_config(self, key: str, default=None):
         """Get configuration value"""
-        if hasattr(self.config, 'get'):
+        if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
     def _initialize_providers(self):
         """Initialize CRM lookup providers"""
-        providers_config = self._get_config(
-            'features.crm_integration.providers', [])
+        providers_config = self._get_config("features.crm_integration.providers", [])
 
         for provider_config in providers_config:
-            provider_type = provider_config.get('type')
+            provider_type = provider_config.get("type")
 
-            if provider_type == 'phone_book':
-                phone_book = self.pbx_core.phone_book if self.pbx_core and hasattr(
-                    self.pbx_core, 'phone_book') else None
+            if provider_type == "phone_book":
+                phone_book = (
+                    self.pbx_core.phone_book
+                    if self.pbx_core and hasattr(self.pbx_core, "phone_book")
+                    else None
+                )
                 provider = PhoneBookLookupProvider(provider_config, phone_book)
-            elif provider_type == 'active_directory':
-                ad_integration = self.pbx_core.ad_integration if self.pbx_core and hasattr(
-                    self.pbx_core, 'ad_integration') else None
-                provider = ActiveDirectoryLookupProvider(
-                    provider_config, ad_integration)
-            elif provider_type == 'external_crm':
+            elif provider_type == "active_directory":
+                ad_integration = (
+                    self.pbx_core.ad_integration
+                    if self.pbx_core and hasattr(self.pbx_core, "ad_integration")
+                    else None
+                )
+                provider = ActiveDirectoryLookupProvider(provider_config, ad_integration)
+            elif provider_type == "external_crm":
                 provider = ExternalCRMLookupProvider(provider_config)
             else:
-                self.logger.warning(
-                    f"Unknown CRM provider type: {provider_type}")
+                self.logger.warning(f"Unknown CRM provider type: {provider_type}")
                 continue
 
             if provider.enabled:
                 self.providers.append(provider)
                 self.logger.info(f"Loaded CRM provider: {provider.name}")
 
-    def lookup_caller(
-            self,
-            phone_number: str,
-            use_cache: bool = True) -> Optional[CallerInfo]:
+    def lookup_caller(self, phone_number: str, use_cache: bool = True) -> Optional[CallerInfo]:
         """
         Look up caller information from all available sources
 
@@ -370,7 +364,8 @@ class CRMIntegration:
                 caller_info = provider.lookup(phone_number)
                 if caller_info:
                     self.logger.info(
-                        f"Caller identified via {provider.name}: {phone_number} -> {caller_info.name}")
+                        f"Caller identified via {provider.name}: {phone_number} -> {caller_info.name}"
+                    )
 
                     # Cache result
                     if self.cache_enabled:
@@ -379,11 +374,9 @@ class CRMIntegration:
                     # Notify callback
                     if self.on_caller_identified:
                         try:
-                            self.on_caller_identified(
-                                phone_number, caller_info)
+                            self.on_caller_identified(phone_number, caller_info)
                         except Exception as e:
-                            self.logger.error(
-                                f"Error in caller identified callback: {e}")
+                            self.logger.error(f"Error in caller identified callback: {e}")
 
                     return caller_info
             except Exception as e:
@@ -399,9 +392,9 @@ class CRMIntegration:
 
         # Remove all non-digit characters except the leading + which we'll
         # remove separately
-        normalized = re.sub(r'[^\d+]', '', phone_number)
+        normalized = re.sub(r"[^\d+]", "", phone_number)
         # Remove leading + if present
-        if normalized.startswith('+'):
+        if normalized.startswith("+"):
             normalized = normalized[1:]
         return normalized
 
@@ -431,11 +424,7 @@ class CRMIntegration:
             self.cache.clear()
         self.logger.info("Caller lookup cache cleared")
 
-    def trigger_screen_pop(
-            self,
-            phone_number: str,
-            call_id: str,
-            extension: str):
+    def trigger_screen_pop(self, phone_number: str, call_id: str, extension: str):
         """
         Trigger screen pop notification for incoming call
 
@@ -452,28 +441,22 @@ class CRMIntegration:
 
         # Prepare screen pop data
         screen_pop_data = {
-            'call_id': call_id,
-            'phone_number': phone_number,
-            'extension': extension,
-            'timestamp': datetime.now().isoformat(),
-            'caller_info': caller_info.to_dict() if caller_info else None
+            "call_id": call_id,
+            "phone_number": phone_number,
+            "extension": extension,
+            "timestamp": datetime.now().isoformat(),
+            "caller_info": caller_info.to_dict() if caller_info else None,
         }
 
         # Trigger webhook event if webhook system is available
-        if self.pbx_core and hasattr(self.pbx_core, 'webhook_system'):
-            self.pbx_core.webhook_system.trigger_event(
-                'crm.screen_pop', screen_pop_data)
+        if self.pbx_core and hasattr(self.pbx_core, "webhook_system"):
+            self.pbx_core.webhook_system.trigger_event("crm.screen_pop", screen_pop_data)
 
-        self.logger.info(
-            f"Screen pop triggered for call {call_id}: {phone_number} -> {extension}")
+        self.logger.info(f"Screen pop triggered for call {call_id}: {phone_number} -> {extension}")
 
     def get_provider_status(self) -> List[Dict]:
         """Get status of all providers"""
         return [
-            {
-                'name': provider.name,
-                'enabled': provider.enabled,
-                'type': type(provider).__name__
-            }
+            {"name": provider.name, "enabled": provider.enabled, "type": type(provider).__name__}
             for provider in self.providers
         ]

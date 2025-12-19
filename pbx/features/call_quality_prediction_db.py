@@ -2,9 +2,11 @@
 Database layer for Call Quality Prediction
 Provides persistence for quality metrics, predictions, and alerts
 """
+
 import json
-from typing import Dict, List, Optional
 from datetime import datetime
+from typing import Dict, List, Optional
+
 from pbx.utils.logger import get_logger
 
 
@@ -13,21 +15,21 @@ class CallQualityPredictionDatabase:
     Database layer for call quality prediction
     Stores network metrics, predictions, and quality alerts
     """
-    
+
     def __init__(self, db_backend):
         """
         Initialize database layer
-        
+
         Args:
             db_backend: DatabaseBackend instance
         """
         self.logger = get_logger()
         self.db = db_backend
-        
+
     def create_tables(self):
         """Create tables for call quality prediction"""
         try:
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 sql_metrics = """
                 CREATE TABLE IF NOT EXISTS quality_metrics (
                     id SERIAL PRIMARY KEY,
@@ -41,7 +43,7 @@ class CallQualityPredictionDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_predictions = """
                 CREATE TABLE IF NOT EXISTS quality_predictions (
                     id SERIAL PRIMARY KEY,
@@ -58,7 +60,7 @@ class CallQualityPredictionDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_alerts = """
                 CREATE TABLE IF NOT EXISTS quality_alerts (
                     id SERIAL PRIMARY KEY,
@@ -73,7 +75,7 @@ class CallQualityPredictionDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_trends = """
                 CREATE TABLE IF NOT EXISTS quality_trends (
                     id SERIAL PRIMARY KEY,
@@ -103,7 +105,7 @@ class CallQualityPredictionDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_predictions = """
                 CREATE TABLE IF NOT EXISTS quality_predictions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,7 +122,7 @@ class CallQualityPredictionDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_alerts = """
                 CREATE TABLE IF NOT EXISTS quality_alerts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,7 +137,7 @@ class CallQualityPredictionDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
                 """
-                
+
                 sql_trends = """
                 CREATE TABLE IF NOT EXISTS quality_trends (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,27 +153,27 @@ class CallQualityPredictionDatabase:
                     UNIQUE(endpoint, date)
                 )
                 """
-            
+
             cursor = self.db.connection.cursor()
             cursor.execute(sql_metrics)
             cursor.execute(sql_predictions)
             cursor.execute(sql_alerts)
             cursor.execute(sql_trends)
             self.db.connection.commit()
-            
+
             self.logger.info("Call quality prediction tables created successfully")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error creating quality prediction tables: {e}")
             return False
-    
+
     def save_metrics(self, call_id: str, metrics: Dict):
         """Save quality metrics"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO quality_metrics 
                 (call_id, timestamp, latency, jitter, packet_loss, bandwidth, mos_score)
@@ -183,29 +185,29 @@ class CallQualityPredictionDatabase:
                 (call_id, timestamp, latency, jitter, packet_loss, bandwidth, mos_score)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """
-            
+
             params = (
                 call_id,
-                metrics.get('timestamp', datetime.now().isoformat()),
-                metrics.get('latency'),
-                metrics.get('jitter'),
-                metrics.get('packet_loss'),
-                metrics.get('bandwidth'),
-                metrics.get('mos_score')
+                metrics.get("timestamp", datetime.now().isoformat()),
+                metrics.get("latency"),
+                metrics.get("jitter"),
+                metrics.get("packet_loss"),
+                metrics.get("bandwidth"),
+                metrics.get("mos_score"),
             )
-            
+
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error saving quality metrics: {e}")
-    
+
     def save_prediction(self, call_id: str, prediction: Dict):
         """Save quality prediction"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO quality_predictions 
                 (call_id, current_mos, predicted_mos, predicted_quality_level, 
@@ -215,15 +217,15 @@ class CallQualityPredictionDatabase:
                 """
                 params = (
                     call_id,
-                    prediction.get('current_mos'),
-                    prediction.get('predicted_mos'),
-                    prediction.get('predicted_quality_level'),
-                    prediction.get('current_packet_loss'),
-                    prediction.get('predicted_packet_loss'),
-                    prediction.get('alert', False),
-                    json.dumps(prediction.get('alert_reasons', [])),
-                    json.dumps(prediction.get('recommendations', [])),
-                    prediction.get('timestamp', datetime.now())
+                    prediction.get("current_mos"),
+                    prediction.get("predicted_mos"),
+                    prediction.get("predicted_quality_level"),
+                    prediction.get("current_packet_loss"),
+                    prediction.get("predicted_packet_loss"),
+                    prediction.get("alert", False),
+                    json.dumps(prediction.get("alert_reasons", [])),
+                    json.dumps(prediction.get("recommendations", [])),
+                    prediction.get("timestamp", datetime.now()),
                 )
             else:
                 sql = """
@@ -235,30 +237,37 @@ class CallQualityPredictionDatabase:
                 """
                 params = (
                     call_id,
-                    prediction.get('current_mos'),
-                    prediction.get('predicted_mos'),
-                    prediction.get('predicted_quality_level'),
-                    prediction.get('current_packet_loss'),
-                    prediction.get('predicted_packet_loss'),
-                    1 if prediction.get('alert', False) else 0,
-                    json.dumps(prediction.get('alert_reasons', [])),
-                    json.dumps(prediction.get('recommendations', [])),
-                    prediction.get('timestamp', datetime.now().isoformat())
+                    prediction.get("current_mos"),
+                    prediction.get("predicted_mos"),
+                    prediction.get("predicted_quality_level"),
+                    prediction.get("current_packet_loss"),
+                    prediction.get("predicted_packet_loss"),
+                    1 if prediction.get("alert", False) else 0,
+                    json.dumps(prediction.get("alert_reasons", [])),
+                    json.dumps(prediction.get("recommendations", [])),
+                    prediction.get("timestamp", datetime.now().isoformat()),
                 )
-            
+
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error saving prediction: {e}")
-    
-    def save_alert(self, call_id: str, alert_type: str, severity: str, 
-                   message: str, metric_value: float, threshold_value: float):
+
+    def save_alert(
+        self,
+        call_id: str,
+        alert_type: str,
+        severity: str,
+        message: str,
+        metric_value: float,
+        threshold_value: float,
+    ):
         """Save quality alert"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO quality_alerts 
                 (call_id, alert_type, severity, message, metric_value, threshold_value, timestamp)
@@ -270,21 +279,28 @@ class CallQualityPredictionDatabase:
                 (call_id, alert_type, severity, message, metric_value, threshold_value, timestamp)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """
-            
-            params = (call_id, alert_type, severity, message, metric_value, threshold_value, 
-                     datetime.now().isoformat())
+
+            params = (
+                call_id,
+                alert_type,
+                severity,
+                message,
+                metric_value,
+                threshold_value,
+                datetime.now().isoformat(),
+            )
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error saving alert: {e}")
-    
+
     def get_recent_predictions(self, limit: int = 100) -> List[Dict]:
         """Get recent predictions"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 SELECT * FROM quality_predictions
                 ORDER BY timestamp DESC
@@ -296,22 +312,22 @@ class CallQualityPredictionDatabase:
                 ORDER BY timestamp DESC
                 LIMIT ?
                 """
-            
+
             cursor.execute(sql, (limit,))
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
-            
+
         except Exception as e:
             self.logger.error(f"Error getting predictions: {e}")
             return []
-    
+
     def get_active_alerts(self) -> List[Dict]:
         """Get active (unacknowledged) alerts"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 SELECT * FROM quality_alerts
                 WHERE acknowledged = FALSE
@@ -323,39 +339,39 @@ class CallQualityPredictionDatabase:
                 WHERE acknowledged = 0
                 ORDER BY timestamp DESC
                 """
-            
+
             cursor.execute(sql)
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
-            
+
         except Exception as e:
             self.logger.error(f"Error getting active alerts: {e}")
             return []
-    
+
     def acknowledge_alert(self, alert_id: int):
         """Mark alert as acknowledged"""
         try:
             cursor = self.db.connection.cursor()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = "UPDATE quality_alerts SET acknowledged = TRUE WHERE id = %s"
             else:
                 sql = "UPDATE quality_alerts SET acknowledged = 1 WHERE id = ?"
-            
+
             cursor.execute(sql, (alert_id,))
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error acknowledging alert: {e}")
-    
+
     def update_daily_trends(self, endpoint: str, metrics: Dict):
         """Update daily trend statistics"""
         try:
             cursor = self.db.connection.cursor()
             today = datetime.now().date().isoformat()
-            
-            if self.db.db_type == 'postgresql':
+
+            if self.db.db_type == "postgresql":
                 sql = """
                 INSERT INTO quality_trends 
                 (endpoint, date, avg_mos, avg_latency, avg_jitter, avg_packet_loss, call_count, alert_count)
@@ -374,49 +390,49 @@ class CallQualityPredictionDatabase:
                 (endpoint, date, avg_mos, avg_latency, avg_jitter, avg_packet_loss, call_count, alert_count)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """
-            
+
             params = (
                 endpoint,
                 today,
-                metrics.get('avg_mos'),
-                metrics.get('avg_latency'),
-                metrics.get('avg_jitter'),
-                metrics.get('avg_packet_loss'),
-                metrics.get('call_count', 1),
-                metrics.get('alert_count', 0)
+                metrics.get("avg_mos"),
+                metrics.get("avg_latency"),
+                metrics.get("avg_jitter"),
+                metrics.get("avg_packet_loss"),
+                metrics.get("call_count", 1),
+                metrics.get("alert_count", 0),
             )
-            
+
             cursor.execute(sql, params)
             self.db.connection.commit()
-            
+
         except Exception as e:
             self.logger.error(f"Error updating daily trends: {e}")
-    
+
     def get_statistics(self) -> Dict:
         """Get quality prediction statistics"""
         try:
             cursor = self.db.connection.cursor()
-            
+
             # Total predictions
             cursor.execute("SELECT COUNT(*) FROM quality_predictions")
             total_predictions = cursor.fetchone()[0]
-            
+
             # Predictions with alerts
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 cursor.execute("SELECT COUNT(*) FROM quality_predictions WHERE alert = TRUE")
             else:
                 cursor.execute("SELECT COUNT(*) FROM quality_predictions WHERE alert = 1")
             alerts_generated = cursor.fetchone()[0]
-            
+
             # Active alerts
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 cursor.execute("SELECT COUNT(*) FROM quality_alerts WHERE acknowledged = FALSE")
             else:
                 cursor.execute("SELECT COUNT(*) FROM quality_alerts WHERE acknowledged = 0")
             active_alerts = cursor.fetchone()[0]
-            
+
             # Average MOS from recent metrics
-            if self.db.db_type == 'postgresql':
+            if self.db.db_type == "postgresql":
                 sql = """
                     SELECT AVG(mos_score) FROM quality_metrics
                     WHERE timestamp > NOW() - INTERVAL '24 hours'
@@ -426,18 +442,18 @@ class CallQualityPredictionDatabase:
                     SELECT AVG(mos_score) FROM quality_metrics
                     WHERE timestamp > datetime('now', '-24 hours')
                 """
-            
+
             cursor.execute(sql)
             row = cursor.fetchone()
             avg_mos_24h = row[0] if row and row[0] else 0.0
-            
+
             return {
-                'total_predictions': total_predictions,
-                'alerts_generated': alerts_generated,
-                'active_alerts': active_alerts,
-                'avg_mos_24h': avg_mos_24h
+                "total_predictions": total_predictions,
+                "alerts_generated": alerts_generated,
+                "active_alerts": active_alerts,
+                "avg_mos_24h": avg_mos_24h,
             }
-            
+
         except Exception as e:
             self.logger.error(f"Error getting statistics: {e}")
             return {}

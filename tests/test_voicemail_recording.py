@@ -11,13 +11,12 @@ import threading
 import time
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 from pbx.core.pbx import PBXCore
 from pbx.rtp.handler import RTPRecorder
 from pbx.utils.config import Config
-
 
 
 def test_rtp_recorder():
@@ -47,17 +46,17 @@ def test_wav_file_builder():
     print("Testing WAV file builder...")
 
     # Create a temp config
-    pbx = PBXCore('config.yml')
+    pbx = PBXCore("config.yml")
 
     # Test with sample audio data
-    sample_audio = b'\x00' * 1000  # 1000 bytes of audio
+    sample_audio = b"\x00" * 1000  # 1000 bytes of audio
     wav_data = pbx._build_wav_file(sample_audio)
 
     # Check WAV header is present
-    assert wav_data.startswith(b'RIFF')
-    assert b'WAVE' in wav_data[:20]
-    assert b'fmt ' in wav_data[:50]
-    assert b'data' in wav_data[:100]
+    assert wav_data.startswith(b"RIFF")
+    assert b"WAVE" in wav_data[:20]
+    assert b"fmt " in wav_data[:50]
+    assert b"data" in wav_data[:100]
 
     # Check that audio data is included
     assert len(wav_data) > len(sample_audio)
@@ -70,10 +69,10 @@ def test_voicemail_recording_timer():
     print("Testing voicemail recording timer setup...")
 
     # Create PBX instance
-    pbx = PBXCore('config.yml')
+    pbx = PBXCore("config.yml")
 
     # Create a mock call
-    call = Call('test-call-123', '1001', '1002')
+    call = Call("test-call-123", "1001", "1002")
     call.start()
 
     # Set up required attributes
@@ -82,23 +81,23 @@ def test_voicemail_recording_timer():
 
     # Create a mock INVITE
     invite_msg = SIPMessage()
-    invite_msg.method = 'INVITE'
-    invite_msg.set_header('Call-ID', 'test-call-123')
-    invite_msg.set_header('CSeq', '1 INVITE')
-    invite_msg.set_header('From', '<sip:1001@192.168.1.14>')
-    invite_msg.set_header('To', '<sip:1002@192.168.1.14>')
-    invite_msg.set_header('Via', 'SIP/2.0/UDP 192.168.1.100:5060')
+    invite_msg.method = "INVITE"
+    invite_msg.set_header("Call-ID", "test-call-123")
+    invite_msg.set_header("CSeq", "1 INVITE")
+    invite_msg.set_header("From", "<sip:1001@192.168.1.14>")
+    invite_msg.set_header("To", "<sip:1002@192.168.1.14>")
+    invite_msg.set_header("Via", "SIP/2.0/UDP 192.168.1.100:5060")
 
     # Set SDP body
-    sdp = SDPBuilder.build_audio_sdp(
-        '192.168.1.100', 20000, session_id='test-call-123')
+    sdp = SDPBuilder.build_audio_sdp("192.168.1.100", 20000, session_id="test-call-123")
     invite_msg.body = sdp
 
     call.original_invite = invite_msg
-    call.caller_addr = ('192.168.1.100', 5060)
+    call.caller_addr = ("192.168.1.100", 5060)
 
     # Parse SDP
     from pbx.sip.sdp import SDPSession
+
     sdp_obj = SDPSession()
     sdp_obj.parse(sdp)
     call.caller_rtp = sdp_obj.get_audio_info()
@@ -116,17 +115,17 @@ def test_voicemail_recording_timer():
     assert call.routed_to_voicemail
 
     # Verify recorder was created
-    assert hasattr(call, 'voicemail_recorder')
+    assert hasattr(call, "voicemail_recorder")
     assert call.voicemail_recorder is not None
 
     # Verify timer was set
-    assert hasattr(call, 'voicemail_timer')
+    assert hasattr(call, "voicemail_timer")
     assert call.voicemail_timer is not None
 
     # Clean up
-    if hasattr(call, 'voicemail_recorder') and call.voicemail_recorder:
+    if hasattr(call, "voicemail_recorder") and call.voicemail_recorder:
         call.voicemail_recorder.stop()
-    if hasattr(call, 'voicemail_timer') and call.voicemail_timer:
+    if hasattr(call, "voicemail_timer") and call.voicemail_timer:
         call.voicemail_timer.cancel()
 
     pbx.call_manager.active_calls.clear()
@@ -143,24 +142,25 @@ def test_voicemail_save_on_hangup():
 
     try:
         # Create PBX instance with temporary voicemail path
-        config = Config('config.yml')
+        config = Config("config.yml")
         from pbx.features.voicemail import VoicemailSystem
+
         vm_system = VoicemailSystem(storage_path=temp_dir, config=config)
 
         # Create a mock call
-        call = Call('test-call-456', '1001', '1002')
+        call = Call("test-call-456", "1001", "1002")
         call.start()
         call.routed_to_voicemail = True
 
         # Create a mock recorder with some data
-        recorder = RTPRecorder(local_port=15500, call_id='test-call-456')
+        recorder = RTPRecorder(local_port=15500, call_id="test-call-456")
         recorder.running = True  # Mark as running
         # Add some fake audio data
-        recorder.recorded_data = [b'\x00' * 160]  # One packet of audio
+        recorder.recorded_data = [b"\x00" * 160]  # One packet of audio
         call.voicemail_recorder = recorder
 
         # Create PBX and set voicemail system
-        pbx = PBXCore('config.yml')
+        pbx = PBXCore("config.yml")
         pbx.voicemail_system = vm_system
         pbx.call_manager.active_calls[call.call_id] = call
 
@@ -168,11 +168,11 @@ def test_voicemail_save_on_hangup():
         pbx.end_call(call.call_id)
 
         # Check that voicemail was saved
-        mailbox = vm_system.get_mailbox('1002')
+        mailbox = vm_system.get_mailbox("1002")
         messages = mailbox.get_messages()
 
         assert len(messages) > 0
-        assert messages[0]['caller_id'] == '1001'
+        assert messages[0]["caller_id"] == "1001"
 
         print("✓ Voicemail save on hangup works")
 
@@ -186,10 +186,10 @@ def test_no_answer_answers_call():
     print("Testing that no-answer answers the call...")
 
     # Create PBX instance
-    pbx = PBXCore('config.yml')
+    pbx = PBXCore("config.yml")
 
     # Create a mock call
-    call = Call('test-call-789', '1001', '1002')
+    call = Call("test-call-789", "1001", "1002")
     call.start()
 
     # Set up required attributes
@@ -198,23 +198,23 @@ def test_no_answer_answers_call():
 
     # Create a mock INVITE
     invite_msg = SIPMessage()
-    invite_msg.method = 'INVITE'
-    invite_msg.set_header('Call-ID', 'test-call-789')
-    invite_msg.set_header('CSeq', '1 INVITE')
-    invite_msg.set_header('From', '<sip:1001@192.168.1.14>')
-    invite_msg.set_header('To', '<sip:1002@192.168.1.14>')
-    invite_msg.set_header('Via', 'SIP/2.0/UDP 192.168.1.100:5060')
+    invite_msg.method = "INVITE"
+    invite_msg.set_header("Call-ID", "test-call-789")
+    invite_msg.set_header("CSeq", "1 INVITE")
+    invite_msg.set_header("From", "<sip:1001@192.168.1.14>")
+    invite_msg.set_header("To", "<sip:1002@192.168.1.14>")
+    invite_msg.set_header("Via", "SIP/2.0/UDP 192.168.1.100:5060")
 
     # Set SDP body
-    sdp = SDPBuilder.build_audio_sdp(
-        '192.168.1.100', 20000, session_id='test-call-789')
+    sdp = SDPBuilder.build_audio_sdp("192.168.1.100", 20000, session_id="test-call-789")
     invite_msg.body = sdp
 
     call.original_invite = invite_msg
-    call.caller_addr = ('192.168.1.100', 5060)
+    call.caller_addr = ("192.168.1.100", 5060)
 
     # Parse SDP
     from pbx.sip.sdp import SDPSession
+
     sdp_obj = SDPSession()
     sdp_obj.parse(sdp)
     call.caller_rtp = sdp_obj.get_audio_info()
@@ -235,9 +235,9 @@ def test_no_answer_answers_call():
     assert call.routed_to_voicemail
 
     # Clean up
-    if hasattr(call, 'voicemail_recorder') and call.voicemail_recorder:
+    if hasattr(call, "voicemail_recorder") and call.voicemail_recorder:
         call.voicemail_recorder.stop()
-    if hasattr(call, 'voicemail_timer') and call.voicemail_timer:
+    if hasattr(call, "voicemail_timer") and call.voicemail_timer:
         call.voicemail_timer.cancel()
 
     pbx.call_manager.active_calls.clear()
@@ -270,6 +270,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

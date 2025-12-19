@@ -11,13 +11,12 @@ import sys
 import tempfile
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.pbx import PBXCore
 from pbx.features.email_notification import EmailNotifier
 from pbx.features.voicemail import VoicemailBox, VoicemailSystem
 from pbx.utils.config import Config
-
 
 
 def test_api_serves_audio_by_default():
@@ -29,15 +28,16 @@ def test_api_serves_audio_by_default():
 
     try:
         # Create voicemail system
-        config = Config('config.yml')
+        config = Config("config.yml")
         vm_system = VoicemailSystem(storage_path=temp_dir, config=config)
 
         # Create a test voicemail message with audio file
-        mailbox = vm_system.get_mailbox('1001')
+        mailbox = vm_system.get_mailbox("1001")
 
         # Create a simple WAV file
         import struct
-        audio_data = b'\x7F' * 1600  # 0.2 seconds
+
+        audio_data = b"\x7f" * 1600  # 0.2 seconds
 
         # Build minimal WAV file
         # WAV format constants
@@ -50,37 +50,33 @@ def test_api_serves_audio_by_default():
         data_size = len(audio_data)
         file_size = 4 + 26 + 8 + data_size
 
-        wav_header = struct.pack('<4sI4s', b'RIFF', file_size, b'WAVE')
+        wav_header = struct.pack("<4sI4s", b"RIFF", file_size, b"WAVE")
         fmt_chunk = struct.pack(
-            '<4sIHHIIHH',
-            b'fmt ',
+            "<4sIHHIIHH",
+            b"fmt ",
             18,
             audio_format,
             num_channels,
             sample_rate,
-            sample_rate *
-            num_channels *
-            bits_per_sample //
-            8,
-            num_channels *
-            bits_per_sample //
-            8,
-            bits_per_sample)
-        fmt_extension = struct.pack('<H', 0)
-        data_chunk = struct.pack('<4sI', b'data', data_size)
+            sample_rate * num_channels * bits_per_sample // 8,
+            num_channels * bits_per_sample // 8,
+            bits_per_sample,
+        )
+        fmt_extension = struct.pack("<H", 0)
+        data_chunk = struct.pack("<4sI", b"data", data_size)
 
         wav_data = wav_header + fmt_chunk + fmt_extension + data_chunk + audio_data
 
         # Save voicemail
-        message_id = mailbox.save_message('1002', wav_data, duration=1)
+        message_id = mailbox.save_message("1002", wav_data, duration=1)
 
         # Verify message was saved with audio file
         messages = mailbox.get_messages()
         assert len(messages) == 1
-        assert os.path.exists(messages[0]['file_path'])
+        assert os.path.exists(messages[0]["file_path"])
 
         # Read the audio file to verify it was written correctly
-        with open(messages[0]['file_path'], 'rb') as f:
+        with open(messages[0]["file_path"], "rb") as f:
             saved_data = f.read()
 
         assert len(saved_data) == len(wav_data)
@@ -98,7 +94,7 @@ def test_voicemail_access_checks_registry():
 
     try:
         # Create PBX instance
-        pbx = PBXCore('config.yml')
+        pbx = PBXCore("config.yml")
 
         # Get an extension from the registry
         extensions = pbx.extension_registry.get_all()
@@ -119,28 +115,28 @@ def test_voicemail_access_checks_registry():
 
         # The pattern should match
         import re
-        dialplan = pbx.config.get('dialplan', {})
+
+        dialplan = pbx.config.get("dialplan", {})
         # Default pattern supports 3-4 digit extensions
-        voicemail_pattern = dialplan.get(
-            'voicemail_pattern', '^\\*[0-9]{3,4}$')
+        voicemail_pattern = dialplan.get("voicemail_pattern", "^\\*[0-9]{3,4}$")
 
         # Check if pattern matches (should match *100, *1001, etc.)
         # Pattern typically supports 3-4 digit extensions as per config
         if len(test_ext) >= 3 and len(test_ext) <= 4 and test_ext.isdigit():
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
-            assert pattern_matches, f"Voicemail pattern '{voicemail_pattern}' should match {voicemail_ext}"
-            print(
-                f"✓ Voicemail pattern '{voicemail_pattern}' matches {voicemail_ext}")
+            assert (
+                pattern_matches
+            ), f"Voicemail pattern '{voicemail_pattern}' should match {voicemail_ext}"
+            print(f"✓ Voicemail pattern '{voicemail_pattern}' matches {voicemail_ext}")
         else:
             print(
-                f"⚠ Extension {test_ext} is non-standard length, pattern check informational only")
+                f"⚠ Extension {test_ext} is non-standard length, pattern check informational only"
+            )
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
             if pattern_matches:
-                print(
-                    f"  Pattern '{voicemail_pattern}' matches {voicemail_ext}")
+                print(f"  Pattern '{voicemail_pattern}' matches {voicemail_ext}")
             else:
-                print(
-                    f"  Pattern '{voicemail_pattern}' does not match {voicemail_ext}")
+                print(f"  Pattern '{voicemail_pattern}' does not match {voicemail_ext}")
 
     except Exception as e:
         print(f"Note: Could not fully test voicemail access - {e}")
@@ -156,22 +152,20 @@ def test_email_notification_checks_database():
 
     try:
         # Create config and voicemail system
-        config = Config('config.yml')
+        config = Config("config.yml")
 
         # Check if email notifications are enabled
-        email_enabled = config.get('voicemail.email_notifications', False)
+        email_enabled = config.get("voicemail.email_notifications", False)
 
         if not email_enabled:
-            print(
-                "⚠ Email notifications disabled in config, test result is informational")
+            print("⚠ Email notifications disabled in config, test result is informational")
         else:
             # Check if SMTP is configured
-            smtp_host = config.get('voicemail.smtp.host')
-            from_addr = config.get('voicemail.email.from_address')
+            smtp_host = config.get("voicemail.smtp.host")
+            from_addr = config.get("voicemail.email.from_address")
 
             if not smtp_host or not from_addr:
-                print(
-                    "⚠ SMTP not fully configured (this is expected in dev environment)")
+                print("⚠ SMTP not fully configured (this is expected in dev environment)")
                 print(f"  SMTP Host: {smtp_host}")
                 print(f"  From Address: {from_addr}")
             else:
@@ -187,7 +181,7 @@ def test_email_notification_checks_database():
         source = inspect.getsource(VoicemailBox.save_message)
 
         # Check if the code includes database checking logic for email
-        if 'ExtensionDB' in source and 'database' in source.lower():
+        if "ExtensionDB" in source and "database" in source.lower():
             print("✓ VoicemailBox.save_message includes database check for email")
         else:
             print("⚠ Could not verify database check in save_message")
@@ -222,6 +216,7 @@ def run_all_tests():
         except Exception as e:
             print(f"✗ {test.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
             print()

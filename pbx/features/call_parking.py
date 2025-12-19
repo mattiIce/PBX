@@ -2,6 +2,7 @@
 Call Parking System
 Allows calls to be parked and retrieved from any extension
 """
+
 from datetime import datetime
 
 from pbx.utils.logger import get_logger
@@ -10,12 +11,7 @@ from pbx.utils.logger import get_logger
 class ParkedCall:
     """Represents a parked call"""
 
-    def __init__(
-            self,
-            call_id,
-            park_number,
-            from_extension,
-            original_destination):
+    def __init__(self, call_id, park_number, from_extension, original_destination):
         """
         Initialize parked call
 
@@ -39,21 +35,22 @@ class ParkedCall:
     def to_dict(self):
         """Convert to dictionary"""
         return {
-            'call_id': self.call_id,
-            'park_number': self.park_number,
-            'from_extension': self.from_extension,
-            'original_destination': self.original_destination,
-            'parker': self.parker,
-            'park_time': self.park_time.isoformat(),
-            'duration': self.get_park_duration()
+            "call_id": self.call_id,
+            "park_number": self.park_number,
+            "from_extension": self.from_extension,
+            "original_destination": self.original_destination,
+            "parker": self.parker,
+            "park_time": self.park_time.isoformat(),
+            "duration": self.get_park_duration(),
         }
 
 
 class CallParkingSystem:
     """Manages call parking"""
 
-    def __init__(self, park_range_start=70, park_range_end=79,
-                 timeout=120, callback_extension=None):
+    def __init__(
+        self, park_range_start=70, park_range_end=79, timeout=120, callback_extension=None
+    ):
         """
         Initialize call parking system
 
@@ -100,11 +97,7 @@ class CallParkingSystem:
             self.logger.warning("No parking slots available")
             return None
 
-        parked_call = ParkedCall(
-            call_id,
-            park_number,
-            from_extension,
-            original_destination)
+        parked_call = ParkedCall(call_id, park_number, from_extension, original_destination)
         self.parked_calls[park_number] = parked_call
 
         self.logger.info(f"Parked call {call_id} at slot {park_number}")
@@ -126,7 +119,8 @@ class CallParkingSystem:
         if parked_call:
             del self.parked_calls[park_number]
             self.logger.info(
-                f"Retrieved parked call from slot {park_number} by {retrieving_extension}")
+                f"Retrieved parked call from slot {park_number} by {retrieving_extension}"
+            )
             return parked_call
 
         return None
@@ -144,8 +138,7 @@ class CallParkingSystem:
             if parked_call.get_park_duration() > self.timeout:
                 timed_out.append(parked_call)
                 del self.parked_calls[park_number]
-                self.logger.info(
-                    f"Parked call at slot {park_number} timed out")
+                self.logger.info(f"Parked call at slot {park_number} timed out")
 
         return timed_out
 

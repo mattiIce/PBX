@@ -7,11 +7,10 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
-
 
 
 def test_ldap_config_from_ad_credentials():
@@ -27,13 +26,26 @@ def test_ldap_config_from_ad_credentials():
 
     # Verify that ldap_config is a dict
     assert isinstance(
-        ldap_config, dict), f"Expected dict, got {
+        ldap_config, dict
+    ), f"Expected dict, got {
         type(ldap_config)}"
 
     # Check for required fields
-    required_fields = ['enable', 'server', 'port', 'base', 'user', 'password',
-                       'version', 'tls_mode', 'name_filter', 'number_filter',
-                       'name_attr', 'number_attr', 'display_name']
+    required_fields = [
+        "enable",
+        "server",
+        "port",
+        "base",
+        "user",
+        "password",
+        "version",
+        "tls_mode",
+        "name_filter",
+        "number_filter",
+        "name_attr",
+        "number_attr",
+        "display_name",
+    ]
 
     for field in required_fields:
         assert field in ldap_config, f"Missing required field: {field}"
@@ -46,16 +58,15 @@ def test_ldap_config_from_ad_credentials():
     print(f"  Display Name: {ldap_config['display_name']}")
 
     # Check if AD is enabled
-    ad_enabled = config.get('integrations.active_directory.enabled', False)
+    ad_enabled = config.get("integrations.active_directory.enabled", False)
     if ad_enabled:
         print("✓ AD integration is enabled")
         # Verify that credentials are being used from AD
-        ad_server = config.get('integrations.active_directory.server', '')
-        ad_bind_dn = config.get('integrations.active_directory.bind_dn', '')
+        ad_server = config.get("integrations.active_directory.server", "")
+        ad_bind_dn = config.get("integrations.active_directory.bind_dn", "")
 
         if ad_server and ad_bind_dn:
-            print(
-                f"✓ AD credentials are available and will be used for LDAP phonebook")
+            print(f"✓ AD credentials are available and will be used for LDAP phonebook")
     else:
         print("ℹ AD integration is disabled, using explicit ldap_phonebook config")
 
@@ -74,19 +85,20 @@ def test_server_config_includes_ldap():
     provisioning = PhoneProvisioning(config)
 
     # Verify that the method exists
-    assert hasattr(provisioning, '_build_ldap_phonebook_config'), \
-        "Missing _build_ldap_phonebook_config method"
+    assert hasattr(
+        provisioning, "_build_ldap_phonebook_config"
+    ), "Missing _build_ldap_phonebook_config method"
 
     # Call it to ensure it doesn't raise exceptions
     ldap_config = provisioning._build_ldap_phonebook_config()
 
     assert isinstance(ldap_config, dict), "LDAP config should be a dict"
-    assert 'server' in ldap_config, "LDAP config should have 'server' field"
+    assert "server" in ldap_config, "LDAP config should have 'server' field"
 
     print("✓ Server config structure is correct")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         test_ldap_config_from_ad_credentials()
         print()
@@ -101,5 +113,6 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"\n❌ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

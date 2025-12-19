@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pbx.rtp.handler import RTPRelay
 
 
-
 def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):
     """Build a simple RTP packet for testing"""
     version = 2
@@ -29,8 +28,8 @@ def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):
     byte0 = (version << 6) | (padding << 5) | (extension << 4) | csrc_count
     byte1 = (marker << 7) | (payload_type & 0x7F)
 
-    header = struct.pack('!BBHII', byte0, byte1, sequence, timestamp, ssrc)
-    payload = b'A' * 160  # 160 bytes of audio data
+    header = struct.pack("!BBHII", byte0, byte1, sequence, timestamp, ssrc)
+    payload = b"A" * 160  # 160 bytes of audio data
 
     return header + payload
 
@@ -56,7 +55,7 @@ def test_early_rtp_packets():
     # Set up ONLY endpoint A (simulating INVITE received but no 200 OK yet)
     print("\n2. Setting only endpoint A (simulating early INVITE stage)...")
     expected_a = ("192.168.1.10", 5000)
-    relay_handler = relay.active_relays[call_id]['handler']
+    relay_handler = relay.active_relays[call_id]["handler"]
     relay_handler.set_endpoints(expected_a, None)  # Note: endpoint B is None
     print(f"   ✓ Endpoint A set to: {expected_a}")
     print(f"   ⚠ Endpoint B NOT set yet (simulating pre-200 OK state)")
@@ -64,15 +63,15 @@ def test_early_rtp_packets():
     # Create test sockets for "phones"
     print("\n3. Creating test endpoints...")
     sock_a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock_a.bind(('127.0.0.1', 46000))
+    sock_a.bind(("127.0.0.1", 46000))
     sock_a.settimeout(0.5)
 
     sock_b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock_b.bind(('127.0.0.1', 46001))
+    sock_b.bind(("127.0.0.1", 46001))
     sock_b.settimeout(0.5)
 
-    actual_a = ('127.0.0.1', 46000)
-    actual_b = ('127.0.0.1', 46001)
+    actual_a = ("127.0.0.1", 46000)
+    actual_b = ("127.0.0.1", 46001)
     print(f"   ✓ Test endpoint A: {actual_a}")
     print(f"   ✓ Test endpoint B: {actual_b}")
 
@@ -82,7 +81,7 @@ def test_early_rtp_packets():
     # CRITICAL TEST: Send packet from A before endpoint B is set
     print("\n4. Sending EARLY RTP packet from A (before B is set)...")
     packet_1 = build_rtp_packet(sequence=1, timestamp=0)
-    sock_a.sendto(packet_1, ('127.0.0.1', rtp_ports[0]))
+    sock_a.sendto(packet_1, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.1)
 
     # The relay should learn A's actual address and NOT drop the packet
@@ -103,7 +102,7 @@ def test_early_rtp_packets():
     # Send packet from B
     print("\n6. Sending RTP packet from B...")
     packet_2 = build_rtp_packet(sequence=1, timestamp=0)
-    sock_b.sendto(packet_2, ('127.0.0.1', rtp_ports[0]))
+    sock_b.sendto(packet_2, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.1)
 
     if relay_handler.learned_b:
@@ -117,7 +116,7 @@ def test_early_rtp_packets():
 
     # Send from A, should receive at B
     packet_from_a = build_rtp_packet(sequence=2, timestamp=160)
-    sock_a.sendto(packet_from_a, ('127.0.0.1', rtp_ports[0]))
+    sock_a.sendto(packet_from_a, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.05)
 
     try:
@@ -133,7 +132,7 @@ def test_early_rtp_packets():
 
     # Send from B, should receive at A
     packet_from_b = build_rtp_packet(sequence=2, timestamp=160)
-    sock_b.sendto(packet_from_b, ('127.0.0.1', rtp_ports[0]))
+    sock_b.sendto(packet_from_b, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.05)
 
     try:
@@ -170,6 +169,6 @@ def test_early_rtp_packets():
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = test_early_rtp_packets()
     sys.exit(0 if success else 1)

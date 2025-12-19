@@ -14,11 +14,10 @@ import sys
 import time
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
-
 
 
 def test_periodic_reregistration_preserves_data():
@@ -37,10 +36,7 @@ def test_periodic_reregistration_preserves_data():
 
     # Create database backend
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -55,15 +51,15 @@ def test_periodic_reregistration_preserves_data():
         ip_address="192.168.1.100",
         mac_address="001565123456",
         user_agent="Yealink SIP-T46S 66.85.0.5",
-        contact_uri="<sip:1001@192.168.1.100:5060;mac=00:15:65:12:34:56>"
+        contact_uri="<sip:1001@192.168.1.100:5060;mac=00:15:65:12:34:56>",
     )
 
     # Verify initial registration
     phone = phones_db.get_by_ip("192.168.1.100", "1001")
     assert phone is not None, "Phone not found after initial registration"
-    assert phone['mac_address'] == "001565123456", "MAC not stored"
-    assert phone['extension_number'] == "1001", "Extension not stored"
-    assert phone['ip_address'] == "192.168.1.100", "IP not stored"
+    assert phone["mac_address"] == "001565123456", "MAC not stored"
+    assert phone["extension_number"] == "1001", "Extension not stored"
+    assert phone["ip_address"] == "192.168.1.100", "IP not stored"
     print("    ✓ Initial registration: MAC=001565123456, IP=192.168.1.100, Ext=1001")
 
     # Simulate re-registration at T=60s (phone doesn't send MAC this time)
@@ -73,15 +69,15 @@ def test_periodic_reregistration_preserves_data():
         ip_address="192.168.1.100",
         mac_address=None,  # Phone doesn't include MAC in this REGISTER
         user_agent="Yealink SIP-T46S 66.85.0.5",
-        contact_uri="<sip:1001@192.168.1.100:5060>"  # No MAC in Contact
+        contact_uri="<sip:1001@192.168.1.100:5060>",  # No MAC in Contact
     )
 
     # Verify MAC was preserved
     phone = phones_db.get_by_ip("192.168.1.100", "1001")
     assert phone is not None, "Phone not found after re-registration"
-    assert phone['mac_address'] == "001565123456", "MAC was lost! Should be preserved"
-    assert phone['extension_number'] == "1001", "Extension changed"
-    assert phone['ip_address'] == "192.168.1.100", "IP changed"
+    assert phone["mac_address"] == "001565123456", "MAC was lost! Should be preserved"
+    assert phone["extension_number"] == "1001", "Extension changed"
+    assert phone["ip_address"] == "192.168.1.100", "IP changed"
     print("    ✓ Re-registration preserved: MAC=001565123456, IP=192.168.1.100, Ext=1001")
 
     # Simulate re-registration at T=120s (phone sends MAC again)
@@ -91,13 +87,13 @@ def test_periodic_reregistration_preserves_data():
         ip_address="192.168.1.100",
         mac_address="001565123456",
         user_agent="Yealink SIP-T46S 66.85.0.5",
-        contact_uri="<sip:1001@192.168.1.100:5060;mac=00:15:65:12:34:56>"
+        contact_uri="<sip:1001@192.168.1.100:5060;mac=00:15:65:12:34:56>",
     )
 
     # Verify all data is still correct
     phone = phones_db.get_by_ip("192.168.1.100", "1001")
     assert phone is not None, "Phone not found"
-    assert phone['mac_address'] == "001565123456", "MAC incorrect"
+    assert phone["mac_address"] == "001565123456", "MAC incorrect"
     print("    ✓ Re-registration maintained: MAC=001565123456, IP=192.168.1.100, Ext=1001")
 
     # Simulate re-registration at T=180s (no MAC again)
@@ -107,18 +103,20 @@ def test_periodic_reregistration_preserves_data():
         ip_address="192.168.1.100",
         mac_address=None,
         user_agent="Yealink SIP-T46S 66.85.0.5",
-        contact_uri="<sip:1001@192.168.1.100:5060>"
+        contact_uri="<sip:1001@192.168.1.100:5060>",
     )
 
     # Verify MAC still preserved
     phone = phones_db.get_by_ip("192.168.1.100", "1001")
     assert phone is not None, "Phone not found"
-    assert phone['mac_address'] == "001565123456", "MAC was lost again!"
+    assert phone["mac_address"] == "001565123456", "MAC was lost again!"
     print("    ✓ Re-registration preserved: MAC=001565123456, IP=192.168.1.100, Ext=1001")
 
     # Verify we only have ONE record (not multiple duplicate entries)
     all_phones = phones_db.get_by_extension("1001")
-    assert len(all_phones) == 1, f"Expected 1 phone record, got {
+    assert (
+        len(all_phones) == 1
+    ), f"Expected 1 phone record, got {
         len(all_phones)}"
     print("    ✓ Only ONE record in database (no duplicates)")
 
@@ -133,10 +131,7 @@ def test_multiple_phones_reregistering():
 
     # Create database backend
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -146,29 +141,13 @@ def test_multiple_phones_reregistering():
 
     # Register three phones initially
     print("  Initial registrations:")
-    _ = phones_db.register_phone(
-        "1001",
-        "192.168.1.100",
-        "001565111111",
-        "Yealink T46S")
-    _ = phones_db.register_phone(
-        "1002",
-        "192.168.1.101",
-        "001565222222",
-        "Polycom VVX")
-    _ = phones_db.register_phone(
-        "1003",
-        "192.168.1.102",
-        "001565333333",
-        "Cisco SPA")
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565111111", "Yealink T46S")
+    _ = phones_db.register_phone("1002", "192.168.1.101", "001565222222", "Polycom VVX")
+    _ = phones_db.register_phone("1003", "192.168.1.102", "001565333333", "Cisco SPA")
     print("    ✓ Registered 3 phones with MACs")
 
     # Phone 1 re-registers with MAC
-    _ = phones_db.register_phone(
-        "1001",
-        "192.168.1.100",
-        "001565111111",
-        "Yealink T46S")
+    _ = phones_db.register_phone("1001", "192.168.1.100", "001565111111", "Yealink T46S")
     # Phone 2 re-registers without MAC
     _ = phones_db.register_phone("1002", "192.168.1.101", None, "Polycom VVX")
     # Phone 3 re-registers without MAC
@@ -181,9 +160,9 @@ def test_multiple_phones_reregistering():
     phone2 = phones_db.get_by_ip("192.168.1.101", "1002")
     phone3 = phones_db.get_by_ip("192.168.1.102", "1003")
 
-    assert phone1['mac_address'] == "001565111111", "Phone 1 MAC lost"
-    assert phone2['mac_address'] == "001565222222", "Phone 2 MAC lost"
-    assert phone3['mac_address'] == "001565333333", "Phone 3 MAC lost"
+    assert phone1["mac_address"] == "001565111111", "Phone 1 MAC lost"
+    assert phone2["mac_address"] == "001565222222", "Phone 2 MAC lost"
+    assert phone3["mac_address"] == "001565333333", "Phone 3 MAC lost"
 
     print("    ✓ All MACs preserved: 001565111111, 001565222222, 001565333333")
     print("✓ Multiple phones re-registering works correctly")
@@ -219,6 +198,7 @@ def run_all_tests():
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

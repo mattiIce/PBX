@@ -22,11 +22,7 @@ class MockPBXCore:
         self.config = config
 
     def get_status(self):
-        return {
-            'registered_extensions': 0,
-            'active_calls': 0,
-            'uptime': 0
-        }
+        return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
 def test_root_redirect():
@@ -40,7 +36,7 @@ def test_root_redirect():
 
     # Create API server on a test port
     test_port = 8083
-    api_server = PBXAPIServer(mock_pbx, host='127.0.0.1', port=test_port)
+    api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
 
     # Start the server
     print("  Starting API server...")
@@ -49,24 +45,24 @@ def test_root_redirect():
         return False
 
     print("  ✓ API server started successfully")
-    
+
     # Give server a moment to be ready
     time.sleep(0.5)
 
     try:
         # Test GET request to root path
         print("  Testing GET / ...")
-        conn = HTTPConnection('127.0.0.1', test_port, timeout=5)
-        conn.request('GET', '/')
+        conn = HTTPConnection("127.0.0.1", test_port, timeout=5)
+        conn.request("GET", "/")
         response = conn.getresponse()
-        
+
         # Check for redirect (302)
         if response.status == 302:
             print(f"  ✓ Got redirect status: {response.status}")
-            
+
             # Check Location header
-            location = response.getheader('Location')
-            if location == '/admin':
+            location = response.getheader("Location")
+            if location == "/admin":
                 print(f"  ✓ Redirect location is correct: {location}")
                 print("\n✓ Test passed: Root path correctly redirects to /admin")
                 result = True
@@ -76,12 +72,13 @@ def test_root_redirect():
         else:
             print(f"  ✗ Unexpected status code: {response.status} (expected 302)")
             result = False
-        
+
         conn.close()
-        
+
     except Exception as e:
         print(f"  ✗ Error during test: {e}")
         import traceback
+
         traceback.print_exc()
         result = False
     finally:

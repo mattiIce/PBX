@@ -1,0 +1,61 @@
+# Git attributes for PBX System
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.py text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Configuration files
+.editorconfig text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+Makefile text eol=lf
+
+# Documentation
+*.md text diff=markdown
+*.txt text
+
+# Audio files (binary, no diff)
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.flac binary
+
+# Archives (binary)
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+
+# Images (binary)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+
+# Python compiled files (should be ignored anyway)
+*.pyc binary
+*.pyo binary
+
+# Database files
+*.db binary
+*.sqlite binary
+
+# Export diff output with text
+*.patch text eol=lf
+*.diff text eol=lf
+
+# Denote all files that should not be normalized
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary

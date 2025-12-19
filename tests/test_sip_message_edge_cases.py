@@ -6,10 +6,9 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
-
 
 
 def test_empty_message():
@@ -86,7 +85,7 @@ def test_valid_request():
     raw_message = (
         "INVITE sip:1002@pbx.local SIP/2.0\r\n"
         "Via: SIP/2.0/UDP 192.168.1.100:5060\r\n"
-        "From: \"Alice\" <sip:1001@pbx.local>\r\n"
+        'From: "Alice" <sip:1001@pbx.local>\r\n'
         "To: <sip:1002@pbx.local>\r\n"
         "Call-ID: test-call-123\r\n"
         "CSeq: 1 INVITE\r\n"
@@ -111,7 +110,7 @@ def test_valid_response():
     raw_message = (
         "SIP/2.0 200 OK\r\n"
         "Via: SIP/2.0/UDP 192.168.1.100:5060\r\n"
-        "From: \"Alice\" <sip:1001@pbx.local>\r\n"
+        'From: "Alice" <sip:1001@pbx.local>\r\n'
         "To: <sip:1002@pbx.local>\r\n"
         "Call-ID: test-call-123\r\n"
         "CSeq: 1 INVITE\r\n"
@@ -152,6 +151,7 @@ def run_all_tests():
     except Exception as e:
         print(f"\n✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

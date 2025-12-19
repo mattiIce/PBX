@@ -12,11 +12,10 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
-
 
 
 def test_phone_reprovisioning_removes_old_mapping():
@@ -33,10 +32,7 @@ def test_phone_reprovisioning_removes_old_mapping():
 
     # Create database backend (using SQLite for tests)
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -49,14 +45,14 @@ def test_phone_reprovisioning_removes_old_mapping():
         extension_number="1001",
         ip_address="192.168.1.100",
         mac_address="001122334455",
-        user_agent="Yealink SIP-T46S"
+        user_agent="Yealink SIP-T46S",
     )
     assert success, "Initial registration failed"
 
     # Verify phone is registered to extension 1001
     phone = phones_db.get_by_mac("001122334455")
     assert phone is not None, "Phone not found after initial registration"
-    assert phone['extension_number'] == "1001", "Phone should be on extension 1001"
+    assert phone["extension_number"] == "1001", "Phone should be on extension 1001"
 
     phones_ext_1001 = phones_db.get_by_extension("1001")
     assert len(phones_ext_1001) == 1, "Extension 1001 should have 1 phone"
@@ -66,29 +62,32 @@ def test_phone_reprovisioning_removes_old_mapping():
         extension_number="1002",
         ip_address="192.168.1.100",  # Same IP
         mac_address="001122334455",  # Same MAC
-        user_agent="Yealink SIP-T46S"
+        user_agent="Yealink SIP-T46S",
     )
     assert success, "Reprovisioning registration failed"
 
     # Step 3: Verify old mapping is removed
     phones_ext_1001 = phones_db.get_by_extension("1001")
-    assert len(phones_ext_1001) == 0, f"Extension 1001 should have 0 phones, but has {
+    assert (
+        len(phones_ext_1001) == 0
+    ), f"Extension 1001 should have 0 phones, but has {
         len(phones_ext_1001)}"
 
     # Step 4: Verify new mapping exists
     phones_ext_1002 = phones_db.get_by_extension("1002")
-    assert len(phones_ext_1002) == 1, f"Extension 1002 should have 1 phone, but has {
+    assert (
+        len(phones_ext_1002) == 1
+    ), f"Extension 1002 should have 1 phone, but has {
         len(phones_ext_1002)}"
-    assert phones_ext_1002[0]['mac_address'] == "001122334455", "Wrong MAC on extension 1002"
-    assert phones_ext_1002[0]['ip_address'] == "192.168.1.100", "Wrong IP on extension 1002"
+    assert phones_ext_1002[0]["mac_address"] == "001122334455", "Wrong MAC on extension 1002"
+    assert phones_ext_1002[0]["ip_address"] == "192.168.1.100", "Wrong IP on extension 1002"
 
     # Step 5: Verify no duplicate entries for this MAC/IP
     all_phones = phones_db.list_all()
-    mac_count = sum(
-        1 for p in all_phones if p['mac_address'] == "001122334455")
+    mac_count = sum(1 for p in all_phones if p["mac_address"] == "001122334455")
     assert mac_count == 1, f"Expected 1 entry for MAC, found {mac_count} (duplicate entries exist!)"
 
-    ip_count = sum(1 for p in all_phones if p['ip_address'] == "192.168.1.100")
+    ip_count = sum(1 for p in all_phones if p["ip_address"] == "192.168.1.100")
     assert ip_count == 1, f"Expected 1 entry for IP, found {ip_count} (duplicate entries exist!)"
 
     print("✓ Phone reprovisioning correctly removes old mapping")
@@ -101,10 +100,7 @@ def test_phone_reprovisioning_by_ip_only():
     print("Testing phone reprovisioning by IP only (no MAC)...")
 
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -117,7 +113,7 @@ def test_phone_reprovisioning_by_ip_only():
         extension_number="1003",
         ip_address="192.168.1.103",
         mac_address=None,  # No MAC
-        user_agent="Generic SIP Phone"
+        user_agent="Generic SIP Phone",
     )
     assert success, "Initial registration failed"
 
@@ -130,23 +126,22 @@ def test_phone_reprovisioning_by_ip_only():
         extension_number="1004",
         ip_address="192.168.1.103",  # Same IP
         mac_address=None,  # Still no MAC
-        user_agent="Generic SIP Phone"
+        user_agent="Generic SIP Phone",
     )
     assert success, "Reprovisioning failed"
 
     # Verify old mapping removed
     phones_ext_1003 = phones_db.get_by_extension("1003")
-    assert len(
-        phones_ext_1003) == 0, "Extension 1003 should have 0 phones after reprovisioning"
+    assert len(phones_ext_1003) == 0, "Extension 1003 should have 0 phones after reprovisioning"
 
     # Verify new mapping exists
     phones_ext_1004 = phones_db.get_by_extension("1004")
     assert len(phones_ext_1004) == 1, "Extension 1004 should have 1 phone"
-    assert phones_ext_1004[0]['ip_address'] == "192.168.1.103", "Wrong IP on extension 1004"
+    assert phones_ext_1004[0]["ip_address"] == "192.168.1.103", "Wrong IP on extension 1004"
 
     # No duplicates
     all_phones = phones_db.list_all()
-    ip_count = sum(1 for p in all_phones if p['ip_address'] == "192.168.1.103")
+    ip_count = sum(1 for p in all_phones if p["ip_address"] == "192.168.1.103")
     assert ip_count == 1, f"Expected 1 entry for IP, found {ip_count}"
 
     print("✓ Phone reprovisioning by IP only works correctly")
@@ -159,10 +154,7 @@ def test_phone_reprovisioning_with_mac_then_ip():
     print("Testing phone reprovisioning with MAC then IP...")
 
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -175,7 +167,7 @@ def test_phone_reprovisioning_with_mac_then_ip():
         extension_number="1005",
         ip_address="192.168.1.105",
         mac_address="AABBCCDDEE11",
-        user_agent="Yealink Phone"
+        user_agent="Yealink Phone",
     )
     assert success, "Initial registration failed"
 
@@ -185,7 +177,7 @@ def test_phone_reprovisioning_with_mac_then_ip():
         extension_number="1006",
         ip_address="192.168.1.105",  # Same IP
         mac_address=None,  # No MAC this time
-        user_agent="Yealink Phone"
+        user_agent="Yealink Phone",
     )
     assert success, "Reprovisioning failed"
 
@@ -199,7 +191,7 @@ def test_phone_reprovisioning_with_mac_then_ip():
 
     # No duplicates
     all_phones = phones_db.list_all()
-    ip_count = sum(1 for p in all_phones if p['ip_address'] == "192.168.1.105")
+    ip_count = sum(1 for p in all_phones if p["ip_address"] == "192.168.1.105")
     assert ip_count == 1, f"Expected 1 entry for IP, found {ip_count}"
 
     print("✓ Phone reprovisioning with MAC then IP works correctly")
@@ -212,10 +204,7 @@ def test_multiple_phones_different_extensions():
     print("Testing multiple phones to different extensions (normal operation)...")
 
     config = Config("config.yml")
-    config.config['database'] = {
-        'type': 'sqlite',
-        'path': ':memory:'
-    }
+    config.config["database"] = {"type": "sqlite", "path": ":memory:"}
 
     db = DatabaseBackend(config)
     assert db.connect(), "Failed to connect to database"
@@ -233,12 +222,9 @@ def test_multiple_phones_different_extensions():
     assert len(all_phones) == 3, f"Expected 3 phones, got {len(all_phones)}"
 
     # Each extension should have exactly one phone
-    assert len(phones_db.get_by_extension("2001")
-               ) == 1, "Extension 2001 should have 1 phone"
-    assert len(phones_db.get_by_extension("2002")
-               ) == 1, "Extension 2002 should have 1 phone"
-    assert len(phones_db.get_by_extension("2003")
-               ) == 1, "Extension 2003 should have 1 phone"
+    assert len(phones_db.get_by_extension("2001")) == 1, "Extension 2001 should have 1 phone"
+    assert len(phones_db.get_by_extension("2002")) == 1, "Extension 2002 should have 1 phone"
+    assert len(phones_db.get_by_extension("2003")) == 1, "Extension 2003 should have 1 phone"
 
     print("✓ Multiple phones to different extensions works correctly")
 
@@ -262,11 +248,13 @@ def run_all_tests():
     except AssertionError as e:
         print(f"\n✗ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     except Exception as e:
         print(f"\n✗ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

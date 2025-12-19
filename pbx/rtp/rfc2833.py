@@ -4,6 +4,7 @@ RFC 2833 RTP Event Handler for DTMF Signaling
 Implements RFC 2833 (RTP Payload for DTMF Digits, Telephony Tones and Signals)
 using configurable payload type (default 101) for out-of-band DTMF transmission over RTP.
 """
+
 import socket
 import struct
 import threading
@@ -17,22 +18,22 @@ PAYLOAD_TYPE_TELEPHONE_EVENT = 101  # RFC 2833 default payload type (can be conf
 
 # RFC 2833 Event Codes for DTMF digits
 RFC2833_EVENT_CODES = {
-    '0': 0,
-    '1': 1,
-    '2': 2,
-    '3': 3,
-    '4': 4,
-    '5': 5,
-    '6': 6,
-    '7': 7,
-    '8': 8,
-    '9': 9,
-    '*': 10,
-    '#': 11,
-    'A': 12,
-    'B': 13,
-    'C': 14,
-    'D': 15,
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "7": 7,
+    "8": 8,
+    "9": 9,
+    "*": 10,
+    "#": 11,
+    "A": 12,
+    "B": 13,
+    "C": 14,
+    "D": 15,
 }
 
 # Reverse mapping
@@ -88,7 +89,7 @@ class RFC2833EventPacket:
         byte2 = (int(self.end) << 7) | (self.volume & 0x3F)
 
         # Pack: event(8), E|R|volume(8), duration(16)
-        return struct.pack('!BBH', self.event, byte2, self.duration)
+        return struct.pack("!BBH", self.event, byte2, self.duration)
 
     @staticmethod
     def unpack(data):
@@ -105,7 +106,7 @@ class RFC2833EventPacket:
             return None
 
         try:
-            event, byte2, duration = struct.unpack('!BBH', data[:4])
+            event, byte2, duration = struct.unpack("!BBH", data[:4])
             end = bool(byte2 & 0x80)
             volume = byte2 & 0x3F
 
@@ -157,13 +158,14 @@ class RFC2833Receiver:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(('0.0.0.0', self.local_port))
+            self.socket.bind(("0.0.0.0", self.local_port))
             self.socket.settimeout(0.1)  # Non-blocking with timeout
             self.running = True
 
             self.logger.info(
                 f"RFC 2833 receiver started on port {
-                    self.local_port}")
+                    self.local_port}"
+            )
 
             # Start receiving thread
             receive_thread = threading.Thread(target=self._receive_loop)
@@ -185,7 +187,8 @@ class RFC2833Receiver:
                 pass
         self.logger.info(
             f"RFC 2833 receiver stopped on port {
-                self.local_port}")
+                self.local_port}"
+        )
 
     def _receive_loop(self):
         """Main receive loop for RFC 2833 events"""
@@ -215,7 +218,7 @@ class RFC2833Receiver:
 
         # Parse RTP header
         try:
-            header = struct.unpack('!BBHII', data[:12])
+            header = struct.unpack("!BBHII", data[:12])
             version = (header[0] >> 6) & 0x03
             payload_type = header[1] & 0x7F
             marker = bool(header[1] & 0x80)
@@ -248,7 +251,8 @@ class RFC2833Receiver:
                     # This is the end of the current event
                     self.logger.info(
                         f"RFC 2833 DTMF event completed: {digit} (duration: {
-                            event_packet.duration})")
+                            event_packet.duration})"
+                    )
 
                     # Deliver DTMF to PBX core
                     if self.pbx_core and self.call_id:
@@ -304,11 +308,12 @@ class RFC2833Sender:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(('0.0.0.0', self.local_port))
+            self.socket.bind(("0.0.0.0", self.local_port))
 
             self.logger.info(
                 f"RFC 2833 sender started on port {
-                    self.local_port}")
+                    self.local_port}"
+            )
             return True
         except Exception as e:
             self.logger.error(f"Failed to start RFC 2833 sender: {e}")
@@ -350,31 +355,23 @@ class RFC2833Sender:
             volume = 10  # Medium volume
 
             # Packet 1: Start (marker bit set in RTP header)
-            event_packet = RFC2833EventPacket(
-                event_code, end=False, volume=volume, duration=160)
-            self._send_rtp_packet(
-                event_packet.pack(),
-                payload_type=self.payload_type,
-                marker=True)
+            event_packet = RFC2833EventPacket(event_code, end=False, volume=volume, duration=160)
+            self._send_rtp_packet(event_packet.pack(), payload_type=self.payload_type, marker=True)
             time.sleep(0.02)  # 20ms
 
             # Packet 2: Continuation
-            event_packet = RFC2833EventPacket(
-                event_code, end=False, volume=volume, duration=320)
-            self._send_rtp_packet(
-                event_packet.pack(),
-                payload_type=self.payload_type,
-                marker=False)
+            event_packet = RFC2833EventPacket(event_code, end=False, volume=volume, duration=320)
+            self._send_rtp_packet(event_packet.pack(), payload_type=self.payload_type, marker=False)
             time.sleep(0.02)  # 20ms
 
             # Packet 3: End (end bit set, send 3 times for reliability)
             event_packet = RFC2833EventPacket(
-                event_code, end=True, volume=volume, duration=duration_units)
+                event_code, end=True, volume=volume, duration=duration_units
+            )
             for _ in range(3):
                 self._send_rtp_packet(
-                    event_packet.pack(),
-                    payload_type=self.payload_type,
-                    marker=False)
+                    event_packet.pack(), payload_type=self.payload_type, marker=False
+                )
                 time.sleep(0.01)  # 10ms between end packets
 
             self.logger.info(f"Sent RFC 2833 DTMF digit: {digit}")
@@ -395,7 +392,7 @@ class RFC2833Sender:
         """
         # Use instance payload_type if not specified
         pt = payload_type if payload_type is not None else self.payload_type
-            
+
         # Build RTP header
         version = 2
         padding = 0
@@ -405,12 +402,9 @@ class RFC2833Sender:
         byte0 = (version << 6) | (padding << 5) | (extension << 4) | csrc_count
         byte1 = (int(marker) << 7) | (pt & 0x7F)
 
-        header = struct.pack('!BBHII',
-                             byte0,
-                             byte1,
-                             self.sequence_number,
-                             self.timestamp,
-                             self.ssrc)
+        header = struct.pack(
+            "!BBHII", byte0, byte1, self.sequence_number, self.timestamp, self.ssrc
+        )
 
         packet = header + payload
 

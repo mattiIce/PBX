@@ -3,6 +3,7 @@ Opus Codec Support
 Provides support for Opus audio codec (RFC 6716, 7587)
 Opus is a modern, high-quality, low-latency audio codec
 """
+
 from typing import Any, Dict, Optional
 
 from pbx.utils.logger import get_logger
@@ -56,64 +57,61 @@ class OpusCodec:
         self.config = config or {}
 
         # Codec parameters
-        self.sample_rate = self.config.get(
-            'sample_rate', self.DEFAULT_SAMPLE_RATE)
-        self.bitrate = self.config.get('bitrate', self.DEFAULT_BITRATE)
-        self.frame_size = self.config.get(
-            'frame_size', self.DEFAULT_FRAME_SIZE)
-        self.channels = self.config.get('channels', self.DEFAULT_CHANNELS)
-        self.complexity = self.config.get(
-            'complexity', self.DEFAULT_COMPLEXITY)
+        self.sample_rate = self.config.get("sample_rate", self.DEFAULT_SAMPLE_RATE)
+        self.bitrate = self.config.get("bitrate", self.DEFAULT_BITRATE)
+        self.frame_size = self.config.get("frame_size", self.DEFAULT_FRAME_SIZE)
+        self.channels = self.config.get("channels", self.DEFAULT_CHANNELS)
+        self.complexity = self.config.get("complexity", self.DEFAULT_COMPLEXITY)
 
         # Application type
-        app_type = self.config.get('application', 'voip')
-        if app_type == 'audio':
+        app_type = self.config.get("application", "voip")
+        if app_type == "audio":
             self.application = self.APP_AUDIO
-        elif app_type == 'lowdelay':
+        elif app_type == "lowdelay":
             self.application = self.APP_LOWDELAY
         else:
             self.application = self.APP_VOIP
 
         # Features
-        self.fec_enabled = self.config.get(
-            'fec', True)  # Forward Error Correction
-        self.dtx_enabled = self.config.get(
-            'dtx', False)  # Discontinuous Transmission
+        self.fec_enabled = self.config.get("fec", True)  # Forward Error Correction
+        self.dtx_enabled = self.config.get("dtx", False)  # Discontinuous Transmission
 
         # Validation
         if self.sample_rate not in self.SAMPLE_RATES:
             self.logger.warning(
                 f"Invalid sample rate {
                     self.sample_rate}, using {
-                    self.DEFAULT_SAMPLE_RATE}")
+                    self.DEFAULT_SAMPLE_RATE}"
+            )
             self.sample_rate = self.DEFAULT_SAMPLE_RATE
 
         if not 6000 <= self.bitrate <= 510000:
             self.logger.warning(
                 f"Invalid bitrate {
                     self.bitrate}, using {
-                    self.DEFAULT_BITRATE}")
+                    self.DEFAULT_BITRATE}"
+            )
             self.bitrate = self.DEFAULT_BITRATE
 
         if self.complexity < 0 or self.complexity > 10:
             self.logger.warning(
                 f"Invalid complexity {
                     self.complexity}, using {
-                    self.DEFAULT_COMPLEXITY}")
+                    self.DEFAULT_COMPLEXITY}"
+            )
             self.complexity = self.DEFAULT_COMPLEXITY
 
         # Try to import opus library
         self.opus_available = False
         try:
             import opuslib
+
             self.opuslib = opuslib
             self.opus_available = True
             self.logger.info("Opus codec library available")
         except ImportError:
-            self.logger.warning(
-                "opuslib not available. Install with: pip install opuslib")
-            self.logger.info(
-                "Opus codec support will be limited to SDP negotiation only")
+            self.logger.warning("opuslib not available. Install with: pip install opuslib")
+            self.logger.info("Opus codec support will be limited to SDP negotiation only")
 
         # Encoder and decoder (created on demand)
         self.encoder = None
@@ -123,7 +121,8 @@ class OpusCodec:
             f"Opus codec initialized: {
                 self.sample_rate}Hz, {
                 self.bitrate}bps, {
-                self.frame_size}ms frames")
+                self.frame_size}ms frames"
+        )
 
     def is_available(self) -> bool:
         """
@@ -143,11 +142,11 @@ class OpusCodec:
         """
         # RFC 7587 - RTP Payload Format for Opus
         return {
-            'payload_type': self.PAYLOAD_TYPE,
-            'encoding_name': 'opus',
-            'clock_rate': 48000,  # Opus always uses 48kHz clock rate in RTP
-            'channels': self.channels,
-            'fmtp': self._build_fmtp_string()
+            "payload_type": self.PAYLOAD_TYPE,
+            "encoding_name": "opus",
+            "clock_rate": 48000,  # Opus always uses 48kHz clock rate in RTP
+            "channels": self.channels,
+            "fmtp": self._build_fmtp_string(),
         }
 
     def _build_fmtp_string(self) -> str:
@@ -193,9 +192,7 @@ class OpusCodec:
             frame_samples = int(self.sample_rate * self.frame_size / 1000)
 
             self.encoder = Encoder(
-                fs=self.sample_rate,
-                channels=self.channels,
-                application=self.application
+                fs=self.sample_rate, channels=self.channels, application=self.application
             )
 
             # Configure encoder
@@ -207,7 +204,8 @@ class OpusCodec:
             self.logger.info(
                 f"Opus encoder created: {
                     self.sample_rate}Hz, {
-                    self.bitrate}bps")
+                    self.bitrate}bps"
+            )
             return self.encoder
         except Exception as e:
             self.logger.error(f"Failed to create Opus encoder: {e}")
@@ -227,10 +225,7 @@ class OpusCodec:
         try:
             from opuslib import Decoder
 
-            self.decoder = Decoder(
-                fs=self.sample_rate,
-                channels=self.channels
-            )
+            self.decoder = Decoder(fs=self.sample_rate, channels=self.channels)
 
             self.logger.info(f"Opus decoder created: {self.sample_rate}Hz")
             return self.decoder
@@ -257,13 +252,13 @@ class OpusCodec:
         try:
             # Calculate frame size in samples
             frame_samples = int(self.sample_rate * self.frame_size / 1000)
-            expected_bytes = frame_samples * self.channels * \
-                2  # 2 bytes per sample (16-bit)
+            expected_bytes = frame_samples * self.channels * 2  # 2 bytes per sample (16-bit)
 
             if len(pcm_data) != expected_bytes:
                 self.logger.warning(
                     f"PCM data size mismatch: got {
-                        len(pcm_data)}, expected {expected_bytes}")
+                        len(pcm_data)}, expected {expected_bytes}"
+                )
                 return None
 
             # Encode the frame
@@ -273,10 +268,7 @@ class OpusCodec:
             self.logger.error(f"Opus encoding error: {e}")
             return None
 
-    def decode(
-            self,
-            opus_data: bytes,
-            frame_size: Optional[int] = None) -> Optional[bytes]:
+    def decode(self, opus_data: bytes, frame_size: Optional[int] = None) -> Optional[bytes]:
         """
         Decode Opus data to PCM audio
 
@@ -305,9 +297,7 @@ class OpusCodec:
             self.logger.error(f"Opus decoding error: {e}")
             return None
 
-    def handle_packet_loss(
-            self,
-            frame_size: Optional[int] = None) -> Optional[bytes]:
+    def handle_packet_loss(self, frame_size: Optional[int] = None) -> Optional[bytes]:
         """
         Generate concealment audio for lost packet (Packet Loss Concealment)
 
@@ -327,17 +317,15 @@ class OpusCodec:
 
             # Opus can generate concealment audio without encoded data
             # Pass None as the packet to trigger PLC
-            concealment = self.decoder.decode(
-                None, frame_size, decode_fec=False)
+            concealment = self.decoder.decode(None, frame_size, decode_fec=False)
             return concealment
         except Exception as e:
             self.logger.error(f"Opus PLC error: {e}")
             return None
 
     def decode_with_fec(
-            self,
-            opus_data: bytes,
-            frame_size: Optional[int] = None) -> Optional[bytes]:
+        self, opus_data: bytes, frame_size: Optional[int] = None
+    ) -> Optional[bytes]:
         """
         Decode Opus data with Forward Error Correction
 
@@ -357,8 +345,7 @@ class OpusCodec:
                 frame_size = int(self.sample_rate * self.frame_size / 1000)
 
             # Decode FEC from the next packet
-            fec_audio = self.decoder.decode(
-                opus_data, frame_size, decode_fec=True)
+            fec_audio = self.decoder.decode(opus_data, frame_size, decode_fec=True)
             return fec_audio
         except Exception as e:
             self.logger.error(f"Opus FEC decoding error: {e}")
@@ -390,32 +377,32 @@ class OpusCodec:
             Dictionary with codec details
         """
         return {
-            'name': 'Opus',
-            'rfc': 'RFC 6716, RFC 7587',
-            'available': self.opus_available,
-            'configuration': {
-                'sample_rate': self.sample_rate,
-                'bitrate': self.bitrate,
-                'frame_size_ms': self.frame_size,
-                'channels': self.channels,
-                'complexity': self.complexity,
-                'application': self._get_app_name(),
-                'fec_enabled': self.fec_enabled,
-                'dtx_enabled': self.dtx_enabled
+            "name": "Opus",
+            "rfc": "RFC 6716, RFC 7587",
+            "available": self.opus_available,
+            "configuration": {
+                "sample_rate": self.sample_rate,
+                "bitrate": self.bitrate,
+                "frame_size_ms": self.frame_size,
+                "channels": self.channels,
+                "complexity": self.complexity,
+                "application": self._get_app_name(),
+                "fec_enabled": self.fec_enabled,
+                "dtx_enabled": self.dtx_enabled,
             },
-            'sdp': self.get_sdp_parameters(),
-            'encoder_ready': self.encoder is not None,
-            'decoder_ready': self.decoder is not None
+            "sdp": self.get_sdp_parameters(),
+            "encoder_ready": self.encoder is not None,
+            "decoder_ready": self.decoder is not None,
         }
 
     def _get_app_name(self) -> str:
         """Get application type name"""
         if self.application == self.APP_AUDIO:
-            return 'audio'
+            return "audio"
         elif self.application == self.APP_LOWDELAY:
-            return 'lowdelay'
+            return "lowdelay"
         else:
-            return 'voip'
+            return "voip"
 
 
 class OpusCodecManager:
@@ -435,12 +422,11 @@ class OpusCodecManager:
         self.codecs = {}  # call_id -> OpusCodec
 
         # Get global configuration
-        self.config = pbx.config.get('codecs.opus', {})
+        self.config = pbx.config.get("codecs.opus", {})
 
         self.logger.info("Opus codec manager initialized")
 
-    def create_codec(self, call_id: str,
-                     config: Optional[Dict[str, Any]] = None) -> OpusCodec:
+    def create_codec(self, call_id: str, config: Optional[Dict[str, Any]] = None) -> OpusCodec:
         """
         Create Opus codec for a call
 
@@ -501,6 +487,7 @@ class OpusCodecManager:
         """
         try:
             import opuslib
+
             return True
         except ImportError:
             return False
