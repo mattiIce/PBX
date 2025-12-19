@@ -9,7 +9,21 @@
     // Windows: "${workspaceFolder}/venv/Scripts/python.exe"
     "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
     
-    // Linting
+    // Linting - Modern extension-specific settings
+    "pylint.enabled": true,
+    "pylint.args": [
+        "--rcfile=${workspaceFolder}/.pylintrc"
+    ],
+    "flake8.enabled": true,
+    "flake8.args": [
+        "--config=${workspaceFolder}/.flake8"
+    ],
+    "mypy-type-checker.enabled": true,
+    "mypy-type-checker.args": [
+        "--config-file=${workspaceFolder}/mypy.ini"
+    ],
+    
+    // Legacy linting settings (for backward compatibility with older VS Code)
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": true,
@@ -25,7 +39,6 @@
     ],
     
     // Formatting
-    "python.formatting.provider": "none",
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
