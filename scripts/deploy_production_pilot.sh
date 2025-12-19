@@ -180,13 +180,13 @@ configure_postgresql() {
     
     # Generate a random password if not in dry-run mode
     DB_PASSWORD=$(openssl rand -base64 32)
-    echo "Generated database password: $DB_PASSWORD" >> "$LOG_FILE"
-    log_info "Database password generated (saved in log file)"
+    log_info "Database password generated. It will be shown once below; store it securely."
+    echo "PBX database password for user 'pbxuser': $DB_PASSWORD"
     
     sudo -u postgres psql -c "CREATE USER pbxuser WITH PASSWORD '$DB_PASSWORD';" 2>/dev/null || log_warning "User may already exist"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx TO pbxuser;"
     
-    log_warning "⚠️  IMPORTANT: Update database password in config.yml with the password from $LOG_FILE"
+    log_warning "⚠️  IMPORTANT: Update database password in config.yml with the password shown above. It is not stored in the log file."
     
     log_success "PostgreSQL configured"
 }
@@ -272,22 +272,22 @@ setup_backup_system() {
     mkdir -p "$BACKUP_DIR"
     
     # Create backup script
-    cat > /usr/local/bin/pbx-backup.sh << 'EOF'
+    cat > /usr/local/bin/pbx-backup.sh << EOF
 #!/bin/bash
 BACKUP_DIR="/var/backups/pbx"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
 DATABASE="pbx"
 
 # Database backup
-sudo -u postgres pg_dump $DATABASE | gzip > "$BACKUP_DIR/db_$TIMESTAMP.sql.gz"
+sudo -u postgres pg_dump \$DATABASE | gzip > "\$BACKUP_DIR/db_\$TIMESTAMP.sql.gz"
 
 # Configuration backup
-tar -czf "$BACKUP_DIR/config_$TIMESTAMP.tar.gz" /opt/pbx/config.yml
+tar -czf "\$BACKUP_DIR/config_\$TIMESTAMP.tar.gz" "$PROJECT_ROOT/config.yml"
 
 # Keep only last 7 days of backups
-find "$BACKUP_DIR" -name "*.gz" -mtime +7 -delete
+find "\$BACKUP_DIR" -name "*.gz" -mtime +7 -delete
 
-echo "Backup completed: $TIMESTAMP"
+echo "Backup completed: \$TIMESTAMP"
 EOF
     
     chmod +x /usr/local/bin/pbx-backup.sh

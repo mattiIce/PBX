@@ -14,7 +14,6 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import sys
 from datetime import datetime
@@ -22,7 +21,7 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
+from pbx.features.webrtc import WebRTCSignalingServer
 
 
 class WebRTCAudioTester:

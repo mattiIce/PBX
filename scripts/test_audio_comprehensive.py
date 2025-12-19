@@ -89,11 +89,6 @@ class AudioTester:
                 sample_width = wav.getsampwidth()
                 framerate = wav.getframerate()
                 num_frames = wav.getnframes()
-                comp_type = wav.getcomptype()
-                comp_name = wav.getcompname()
-                
-                # Read raw parameters to get format code
-                params = wav.getparams()
                 
                 # Telephony requirements
                 issues = []
