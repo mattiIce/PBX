@@ -310,7 +310,8 @@ setup_monitoring() {
     fi
     
     # Install Prometheus
-    apt-get install -y prometheus prometheus-node-exporter
+    # Suppress Python SyntaxWarnings during package installation
+    PYTHONWARNINGS="ignore::SyntaxWarning" apt-get install -y prometheus prometheus-node-exporter
     
     # Start services
     systemctl start prometheus
