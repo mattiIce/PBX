@@ -105,6 +105,17 @@ Stop with: `Ctrl+C`
 
 ## ☐ Step 5: Set Up as Service (3 minutes)
 
+**Option A: Use Template (Recommended)**
+```bash
+# Edit the provided template
+nano pbx.service
+
+# Update WorkingDirectory, ExecStart, User paths
+# Then install:
+sudo cp pbx.service /etc/systemd/system/
+```
+
+**Option B: Create Manually**
 ```bash
 # Create service file
 sudo nano /etc/systemd/system/pbx.service
@@ -129,6 +140,8 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
+**⚠️ IMPORTANT:** The `WorkingDirectory` line is required to avoid CHDIR errors!
+
 **Start service:**
 ```bash
 sudo systemctl daemon-reload
@@ -136,6 +149,8 @@ sudo systemctl enable pbx
 sudo systemctl start pbx
 sudo systemctl status pbx  # Should show "active (running)"
 ```
+
+See [SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md) for troubleshooting.
 
 ## ☐ Step 6: Configure First Phone (5 minutes)
 

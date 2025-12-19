@@ -121,7 +121,28 @@ PBX system is running...
 
 ### Running as a Service (systemd)
 
-Create `/etc/systemd/system/pbx.service`:
+A template service file (`pbx.service`) is provided in the repository. 
+
+**Quick Installation:**
+
+```bash
+# Edit the template to match your installation
+nano pbx.service
+
+# Copy to systemd directory
+sudo cp pbx.service /etc/systemd/system/
+
+# Reload systemd and start
+sudo systemctl daemon-reload
+sudo systemctl enable pbx
+sudo systemctl start pbx
+```
+
+See [SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md) for detailed instructions.
+
+**Manual Creation:**
+
+Alternatively, create `/etc/systemd/system/pbx.service`:
 
 ```ini
 [Unit]
@@ -140,6 +161,8 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 ```
+
+**⚠️ IMPORTANT:** Update `WorkingDirectory`, `ExecStart`, `User`, and `Group` to match your installation.
 
 Enable and start:
 ```bash
