@@ -73,7 +73,7 @@ class EnvSetup:
             db_password = input("Database password (leave empty to generate): ").strip()
             if not db_password:
                 db_password = self._generate_password(32)
-                print(f"Generated password: {db_password}")
+                print("A secure database password has been generated and will be saved to the environment file.")
             
             self.variables['DB_PASSWORD'] = db_password
         
