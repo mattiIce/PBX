@@ -1155,106 +1155,94 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             checker = self._get_health_checker()
             is_ready, details = checker.check_readiness()
-            
+
             status_code = 200 if is_ready else 503
             self._set_headers(status_code, "application/json")
             self.wfile.write(json.dumps(details).encode())
         except Exception as e:
             self.logger.error(f"Health check error: {e}")
             self._set_headers(500, "application/json")
-            self.wfile.write(json.dumps({
-                "status": "error",
-                "error": str(e)
-            }).encode())
-    
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
     def _handle_liveness(self):
         """Kubernetes-style liveness probe - is the app alive?"""
         try:
             checker = self._get_health_checker()
             is_alive, details = checker.check_liveness()
-            
+
             status_code = 200 if is_alive else 503
             self._set_headers(status_code, "application/json")
             self.wfile.write(json.dumps(details).encode())
         except Exception as e:
             self.logger.error(f"Liveness check error: {e}")
             self._set_headers(500, "application/json")
-            self.wfile.write(json.dumps({
-                "status": "error",
-                "error": str(e)
-            }).encode())
-    
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
     def _handle_readiness(self):
         """Kubernetes-style readiness probe - is the app ready for traffic?"""
         try:
             checker = self._get_health_checker()
             is_ready, details = checker.check_readiness()
-            
+
             status_code = 200 if is_ready else 503
             self._set_headers(status_code, "application/json")
             self.wfile.write(json.dumps(details).encode())
         except Exception as e:
             self.logger.error(f"Readiness check error: {e}")
             self._set_headers(500, "application/json")
-            self.wfile.write(json.dumps({
-                "status": "error",
-                "error": str(e)
-            }).encode())
-    
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
     def _handle_detailed_health(self):
         """Comprehensive health status for monitoring dashboards"""
         try:
             checker = self._get_health_checker()
             details = checker.get_detailed_status()
-            
+
             is_healthy = details.get("overall_status") == "healthy"
             status_code = 200 if is_healthy else 503
-            
+
             self._set_headers(status_code, "application/json")
             self.wfile.write(json.dumps(details, indent=2).encode())
         except Exception as e:
             self.logger.error(f"Detailed health check error: {e}")
             self._set_headers(500, "application/json")
-            self.wfile.write(json.dumps({
-                "status": "error",
-                "error": str(e)
-            }).encode())
-    
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
     def _handle_prometheus_metrics(self):
         """Prometheus metrics endpoint"""
         try:
             checker = self._get_health_checker()
             _, details = checker.check_readiness()
-            
+
             from pbx.utils.production_health import format_health_check_response
+
             is_healthy = details.get("status") == "ready"
-            
+
             status_code, metrics_text = format_health_check_response(
                 is_healthy, details, format_type="prometheus"
             )
-            
+
             self._set_headers(status_code, "text/plain; version=0.0.4")
             self.wfile.write(metrics_text.encode())
         except Exception as e:
             self.logger.error(f"Metrics endpoint error: {e}")
             self._set_headers(500, "text/plain")
             self.wfile.write(f"# ERROR: {str(e)}\n".encode())
-    
+
     def _get_health_checker(self):
         """Get or create production health checker instance"""
         if PBXAPIHandler._health_checker is None:
             from pbx.utils.production_health import ProductionHealthChecker
-            
+
             # Get config from pbx_core if available
             config = None
-            if self.pbx_core and hasattr(self.pbx_core, 'config'):
+            if self.pbx_core and hasattr(self.pbx_core, "config"):
                 config = self.pbx_core.config
-            
+
             PBXAPIHandler._health_checker = ProductionHealthChecker(
-                pbx_core=self.pbx_core,
-                config=config
+                pbx_core=self.pbx_core, config=config
             )
-        
+
         return PBXAPIHandler._health_checker
 
     def _handle_status(self):

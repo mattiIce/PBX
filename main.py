@@ -11,7 +11,8 @@ import time
 # This ensures environment variables (like DEBUG_VM_PIN) are available
 # when modules are imported and initialized
 from pbx.utils.env_loader import load_env_file
-load_env_file('.env')
+
+load_env_file(".env")
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.test_runner import run_all_tests
@@ -56,6 +57,7 @@ def run_tests_before_start():
     except Exception as e:
         print(f"Error running tests: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -64,15 +66,15 @@ if __name__ == "__main__":
     print("=" * 60)
     print("InHouse PBX System v1.0.0")
     print("=" * 60)
-    
+
     # Check dependencies first
     print("\nChecking dependencies...")
     try:
         from pbx.utils.dependency_checker import check_and_report
-        
+
         # Check with minimal verbosity by default
         # Use --verbose flag to see detailed info
-        verbose = '--verbose' in sys.argv or '-v' in sys.argv
+        verbose = "--verbose" in sys.argv or "-v" in sys.argv
         if not check_and_report(verbose=verbose, strict=True):
             print("\n✗ Dependency check failed. Install missing packages and try again.")
             sys.exit(1)
@@ -112,16 +114,16 @@ if __name__ == "__main__":
 
         # Load config to check FIPS settings
         config = Config("config.yml")
-        
+
         # Validate configuration
         print("\nValidating configuration...")
         if not validate_config_on_startup(config.config):
             print("\n✗ Configuration validation failed")
             print("  Review errors above and fix configuration before starting")
             sys.exit(1)
-        
-        fips_mode = config.get('security.fips_mode', True)
-        enforce_fips = config.get('security.enforce_fips', True)
+
+        fips_mode = config.get("security.fips_mode", True)
+        enforce_fips = config.get("security.enforce_fips", True)
 
         if fips_mode:
             if not CRYPTO_AVAILABLE:
@@ -180,8 +182,10 @@ if __name__ == "__main__":
                     status = pbx.get_status()
                     print(
                         f"Status: {
-                            status['registered_extensions']} extensions registered, " f"{
-                            status['active_calls']} active calls")
+                            status['registered_extensions']} extensions registered, "
+                        f"{
+                            status['active_calls']} active calls"
+                    )
                     last_status_time = current_time
 
             print("PBX system shutdown complete")
@@ -195,6 +199,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         if pbx:
             pbx.stop()
