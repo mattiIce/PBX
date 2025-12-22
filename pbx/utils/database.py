@@ -1511,15 +1511,19 @@ class ExtensionDB:
         if result:
             value = result.get('config_value')
             config_type = result.get('config_type')
-            # Convert value based on type
-            if config_type == "int":
-                return int(value) if value else default
-            elif config_type == "bool":
-                return value.lower() in ("true", "1", "yes") if value else default
-            elif config_type == "json":
-                return json.loads(value) if value else default
-            else:
-                return value if value else default
+            # Convert value based on type with error handling
+            try:
+                if config_type == "int":
+                    return int(value) if value else default
+                elif config_type == "bool":
+                    return value.lower() in ("true", "1", "yes") if value else default
+                elif config_type == "json":
+                    return json.loads(value) if value else default
+                else:
+                    return value if value else default
+            except (ValueError, json.JSONDecodeError) as e:
+                self.logger.warning(f"Error parsing config value for key '{key}': {e}. Returning default.")
+                return default
         return default
 
     def set_config(self, key: str, value, config_type: str = "string", updated_by: str = None):
@@ -1535,13 +1539,17 @@ class ExtensionDB:
         Returns:
             bool: True if successful
         """
-        # Convert value to string for storage
-        if config_type == "json":
-            str_value = json.dumps(value)
-        elif config_type == "bool":
-            str_value = "true" if value else "false"
-        else:
-            str_value = str(value)
+        # Convert value to string for storage with error handling
+        try:
+            if config_type == "json":
+                str_value = json.dumps(value)
+            elif config_type == "bool":
+                str_value = "true" if value else "false"
+            else:
+                str_value = str(value)
+        except (TypeError, ValueError) as e:
+            self.logger.error(f"Error serializing config value for key '{key}': {e}")
+            return False
 
         # Check if key exists
         check_query = (

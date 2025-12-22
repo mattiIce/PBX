@@ -28,11 +28,11 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
+from pbx.utils.logger import get_logger
+from pbx.utils.tts import get_tts_requirements, is_tts_available, text_to_wav_telephony
 
 # Constants
 DEFAULT_WEBRTC_EXTENSION = "webrtc-admin"  # Default extension for WebRTC browser phone
-from pbx.utils.logger import get_logger
-from pbx.utils.tts import get_tts_requirements, is_tts_available, text_to_wav_telephony
 
 # Optional imports for SSL certificate generation
 try:
