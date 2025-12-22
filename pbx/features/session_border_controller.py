@@ -145,7 +145,11 @@ class SessionBorderController:
             return message
 
         # Get SBC public IP (use configured or detect)
-        sbc_public_ip = self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")
+        sbc_public_ip = (
+            self.config.get("features", {})
+            .get("sbc", {})
+            .get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
+        )
 
         # Create a copy to avoid modifying original
         modified_message = message.copy()
@@ -359,7 +363,11 @@ class SessionBorderController:
         self.relay_port_pool.discard(rtcp_port)
 
         # Get SBC public IP
-        relay_ip = self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")
+        relay_ip = (
+            self.config.get("features", {})
+            .get("sbc", {})
+            .get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
+        )
 
         relay_info = {
             "success": True,

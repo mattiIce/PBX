@@ -9603,7 +9603,12 @@ def get_process_using_port(port):
 class PBXAPIServer:
     """REST API server for PBX with HTTPS support"""
 
-    def __init__(self, pbx_core, host="0.0.0.0", port=8080):
+    def __init__(
+        self,
+        pbx_core,
+        host="0.0.0.0",
+        port=8080,  # nosec B104 - PBX API needs to bind all interfaces for network access
+    ):
         """
         Initialize API server
 

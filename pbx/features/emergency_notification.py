@@ -233,7 +233,7 @@ class EmergencyNotificationSystem:
             placeholder = self._get_db_placeholder()
 
             # Check if contact exists (database-agnostic approach)
-            check_query = f"SELECT id FROM emergency_contacts WHERE id = {placeholder}"
+            check_query = f"SELECT id FROM emergency_contacts WHERE id = {placeholder}"  # nosec B608 - placeholder is safely parameterized
             existing = self.database.fetch_one(check_query, (contact.id,))
 
             if existing:
@@ -245,7 +245,7 @@ class EmergencyNotificationSystem:
                         email = {placeholder}, priority = {placeholder}, notification_methods = {placeholder},
                         active = true
                     WHERE id = {placeholder}
-                """
+                """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
                 params = (
                     contact.name,
                     contact.extension,
@@ -262,7 +262,7 @@ class EmergencyNotificationSystem:
                     INSERT INTO emergency_contacts
                     (id, name, extension, phone, email, priority, notification_methods, active)
                     VALUES ({placeholders}, true)
-                """
+                """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
                 params = (
                     contact.id,
                     contact.name,
@@ -298,9 +298,7 @@ class EmergencyNotificationSystem:
                 if self.database and self.database.enabled:
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = (
-                            f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"
-                        )
+                        query = f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(query, (contact_id,))
                     except Exception as e:
                         self.logger.error(f"Failed to remove contact from database: {e}")
@@ -671,7 +669,7 @@ PBX Emergency Notification System
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
                 VALUES ({placeholders})
-            """
+            """  # nosec B608 - placeholders are safely parameterized
 
             self.database.execute(
                 query,

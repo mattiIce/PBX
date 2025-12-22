@@ -1017,7 +1017,7 @@ class ThreatDetector:
                 FROM security_threat_events
                 WHERE timestamp > datetime('now', '-{int(hours)} hours')
                 GROUP BY event_type, severity
-                """
+                """  # nosec B608 - hours is validated as int
                 results = self.database.fetch_all(query)
 
             for row in results:

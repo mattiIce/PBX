@@ -216,7 +216,9 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
             request = Request(url, headers=headers, method="GET")
 
             # Send request
-            response = urlopen(request, timeout=self.timeout)
+            response = urlopen(
+                request, timeout=self.timeout
+            )  # nosec B310 - URL is constructed from validated CRM API endpoint
             data = json.loads(response.read().decode("utf-8"))
 
             # Parse response

@@ -158,7 +158,9 @@ class RFC2833Receiver:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
             self.socket.settimeout(0.1)  # Non-blocking with timeout
             self.running = True
 
@@ -308,7 +310,9 @@ class RFC2833Sender:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
 
             self.logger.info(
                 f"RFC 2833 sender started on port {

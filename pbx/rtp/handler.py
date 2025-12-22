@@ -44,7 +44,9 @@ class RTPHandler:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
             self.running = True
 
             self.logger.info(f"RTP handler started on port {self.local_port}")
@@ -306,7 +308,9 @@ class RTPRelayHandler:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
             self.running = True
             self._start_time = time.time()  # Track start time for learning timeout
 
@@ -564,7 +568,9 @@ class RTPRecorder:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
             self.socket.settimeout(0.5)  # 500ms timeout for recv
             self.running = True
 
@@ -707,7 +713,9 @@ class RTPPlayer:
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
             # This is intentional for VoIP systems which need to handle
             # multi-homed servers
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
             self.running = True
 
             self.logger.info(
@@ -1126,7 +1134,9 @@ class RTPDTMFListener:
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
             # This is intentional for VoIP systems which need to handle
             # multi-homed servers
-            self.socket.bind(("0.0.0.0", self.local_port))
+            self.socket.bind(
+                ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
+            )
             self.socket.settimeout(0.1)  # 100ms timeout for recv
             self.running = True
 

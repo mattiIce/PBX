@@ -36,7 +36,12 @@ RFC2833_EVENT_TO_DTMF = {
 class SIPServer:
     """SIP server for handling registration and calls"""
 
-    def __init__(self, host="0.0.0.0", port=5060, pbx_core=None):
+    def __init__(
+        self,
+        host="0.0.0.0",
+        port=5060,
+        pbx_core=None,  # nosec B104 - SIP server needs to bind all interfaces
+    ):
         """
         Initialize SIP server
 

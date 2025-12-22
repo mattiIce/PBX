@@ -1439,7 +1439,7 @@ class ExtensionDB:
         UPDATE extensions
         SET {', '.join(updates)}
         WHERE number = {'%s' if self.db.db_type == 'postgresql' else '?'}
-        """
+        """  # nosec B608 - updates are validated field names, placeholder is safe
 
         return self.db.execute(query, tuple(params))
 
@@ -1509,8 +1509,8 @@ class ExtensionDB:
 
         result = self.db.fetch_one(query, (key,))
         if result:
-            value = result.get('config_value')
-            config_type = result.get('config_type')
+            value = result.get("config_value")
+            config_type = result.get("config_type")
             # Convert value based on type with error handling
             try:
                 if config_type == "int":
@@ -1525,7 +1525,9 @@ class ExtensionDB:
                 else:
                     return value if value else default
             except (ValueError, json.JSONDecodeError, AttributeError) as e:
-                self.logger.warning(f"Error parsing config value for key '{key}': {e}. Returning default.")
+                self.logger.warning(
+                    f"Error parsing config value for key '{key}': {e}. Returning default."
+                )
                 return default
         return default
 
@@ -1578,9 +1580,7 @@ class ExtensionDB:
             WHERE config_key = ?
             """
             )
-            return self.db.execute(
-                query, (str_value, config_type, datetime.now(), updated_by, key)
-            )
+            return self.db.execute(query, (str_value, config_type, datetime.now(), updated_by, key))
         else:
             # Insert new
             query = (
@@ -1594,9 +1594,7 @@ class ExtensionDB:
             VALUES (?, ?, ?, ?, ?)
             """
             )
-            return self.db.execute(
-                query, (key, str_value, config_type, datetime.now(), updated_by)
-            )
+            return self.db.execute(query, (key, str_value, config_type, datetime.now(), updated_by))
 
 
 class ProvisionedDevicesDB:

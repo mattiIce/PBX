@@ -274,7 +274,9 @@ class YubiKeyOTPVerifier:
 
                     # Make HTTP request with timeout
                     request = urllib.request.Request(full_url)
-                    with urllib.request.urlopen(request, timeout=5) as response:
+                    with urllib.request.urlopen(
+                        request, timeout=5
+                    ) as response:  # nosec B310 - URL is from configured MFA provider
                         response_data = response.read().decode("utf-8")
 
                     # Parse response (key=value pairs separated by newlines)
