@@ -9592,72 +9592,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self.logger.error(f"Error getting storage location: {e}")
             self._send_json({"error": str(e)}, 500)
 
-
-class ReusableHTTPServer(HTTPServer):
-    """HTTPServer that allows immediate socket reuse after restart"""
-
-    allow_reuse_address = True
-
-    def server_bind(self):
-        """Bind the server with socket reuse options"""
-        # Set SO_REUSEADDR (already done by allow_reuse_address, but explicit is better)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        # Set SO_REUSEPORT if available (helps with rapid restarts)
-        if hasattr(socket, "SO_REUSEPORT"):
-            try:
-                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            except (OSError, AttributeError):
-                # SO_REUSEPORT not supported on this platform, continue without it
-                pass
-
-        # Call parent bind
-        super().server_bind()
-
-
-def get_process_using_port(port):
-    """
-    Detect what process is using a specific port
-
-    Args:
-        port (int): Port number to check
-
-    Returns:
-        str: Description of the process using the port, or None if not found
-    """
-    try:
-        # Try lsof first (most reliable)
-        result = subprocess.run(
-            ["lsof", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
-        )
-        if result.returncode == 0 and result.stdout:
-            lines = result.stdout.strip().split("\n")
-            if len(lines) > 1:
-                # Parse the second line (first data line after header)
-                parts = lines[1].split()
-                if len(parts) >= 2:
-                    process_name = parts[0]
-                    pid = parts[1]
-                    return f"{process_name} (PID: {pid})"
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
-
-    try:
-        # Fallback to netstat
-        result = subprocess.run(["netstat", "-tulpn"], capture_output=True, text=True, timeout=2)
-        if result.returncode == 0:
-            for line in result.stdout.split("\n"):
-                if f":{port}" in line and "LISTEN" in line:
-                    # Try to extract process info
-                    parts = line.split()
-                    if len(parts) >= 7:
-                        process_info = parts[6]
-                        return process_info
-    except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
-        pass
-
-    return None
-
     # ============================================================================
     # License Management Handlers
     # ============================================================================
@@ -10051,6 +9985,72 @@ def get_process_using_port(port):
                 'success': False,
                 'error': str(e)
             }, 500)
+
+
+class ReusableHTTPServer(HTTPServer):
+    """HTTPServer that allows immediate socket reuse after restart"""
+
+    allow_reuse_address = True
+
+    def server_bind(self):
+        """Bind the server with socket reuse options"""
+        # Set SO_REUSEADDR (already done by allow_reuse_address, but explicit is better)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        # Set SO_REUSEPORT if available (helps with rapid restarts)
+        if hasattr(socket, "SO_REUSEPORT"):
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            except (OSError, AttributeError):
+                # SO_REUSEPORT not supported on this platform, continue without it
+                pass
+
+        # Call parent bind
+        super().server_bind()
+
+
+def get_process_using_port(port):
+    """
+    Detect what process is using a specific port
+
+    Args:
+        port (int): Port number to check
+
+    Returns:
+        str: Description of the process using the port, or None if not found
+    """
+    try:
+        # Try lsof first (most reliable)
+        result = subprocess.run(
+            ["lsof", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
+        )
+        if result.returncode == 0 and result.stdout:
+            lines = result.stdout.strip().split("\n")
+            if len(lines) > 1:
+                # Parse the second line (first data line after header)
+                parts = lines[1].split()
+                if len(parts) >= 2:
+                    process_name = parts[0]
+                    pid = parts[1]
+                    return f"{process_name} (PID: {pid})"
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    try:
+        # Fallback to netstat
+        result = subprocess.run(["netstat", "-tulpn"], capture_output=True, text=True, timeout=2)
+        if result.returncode == 0:
+            for line in result.stdout.split("\n"):
+                if f":{port}" in line and "LISTEN" in line:
+                    # Try to extract process info
+                    parts = line.split()
+                    if len(parts) >= 7:
+                        process_info = parts[6]
+                        return process_info
+    except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
+        pass
+
+    return None
 
 
 class PBXAPIServer:
