@@ -102,9 +102,18 @@ if __name__ == "__main__":
     try:
         from pbx.utils.config import Config
         from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
+        from pbx.utils.config_validator import validate_config_on_startup
 
         # Load config to check FIPS settings
         config = Config("config.yml")
+        
+        # Validate configuration
+        print("\nValidating configuration...")
+        if not validate_config_on_startup(config.config):
+            print("\n✗ Configuration validation failed")
+            print("  Review errors above and fix configuration before starting")
+            sys.exit(1)
+        
         fips_mode = config.get('security.fips_mode', True)
         enforce_fips = config.get('security.enforce_fips', True)
 
