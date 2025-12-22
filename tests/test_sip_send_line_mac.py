@@ -140,6 +140,21 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNone(x_mac)
 
+    def test_add_mac_address_header_invalid_chars(self):
+        """Test adding MAC with invalid characters doesn't add header"""
+        message = SIPMessage()
+        message.method = "INVITE"
+        
+        # Test with invalid characters (G is not hex)
+        SIPMessageBuilder.add_mac_address_header(
+            message,
+            mac_address="GG:11:22:33:44:55"
+        )
+        
+        x_mac = message.get_header("X-MAC-Address")
+        # Should not add header for invalid MAC
+        self.assertIsNone(x_mac)
+
 
 class TestSIPMessageParsing(unittest.TestCase):
     """Test parsing SIP messages with new headers"""

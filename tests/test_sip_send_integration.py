@@ -14,9 +14,15 @@ class TestSIPSendLineIntegration(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
+        import tempfile
+        import os
+        
+        # Create a unique temporary config file
+        self.temp_config = tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False)
+        self.temp_config_path = self.temp_config.name
+        
         # Create a minimal test config
-        with open('test_config_sip_headers.yml', 'w') as f:
-            f.write("""
+        self.temp_config.write("""
 server:
   sip_host: 0.0.0.0
   sip_port: 5060
@@ -44,12 +50,13 @@ logging:
   level: ERROR
   console: false
 """)
+        self.temp_config.close()
 
     def tearDown(self):
         """Clean up test environment"""
         import os
-        if os.path.exists('test_config_sip_headers.yml'):
-            os.remove('test_config_sip_headers.yml')
+        if os.path.exists(self.temp_config_path):
+            os.remove(self.temp_config_path)
 
     def test_invite_includes_caller_id_headers(self):
         """Test that INVITE messages include P-Asserted-Identity and Remote-Party-ID"""
@@ -118,7 +125,7 @@ logging:
         """Test that features are enabled by default"""
         from pbx.utils.config import Config
         
-        config = Config('test_config_sip_headers.yml')
+        config = Config(self.temp_config_path)
         
         # Verify defaults
         self.assertTrue(config.get("sip.caller_id.send_p_asserted_identity", True))

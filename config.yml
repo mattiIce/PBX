@@ -29,7 +29,7 @@ sip:
     # DEFAULT: true (enabled)
     send_p_asserted_identity: true
     
-    # Remote-Party-ID (RFC 3428) - Legacy header, still widely used
+    # Remote-Party-ID (RFC 3325 / Legacy extension) - Legacy header, still widely used
     # Provides backward compatibility with older systems
     # DEFAULT: true (enabled)
     send_remote_party_id: true

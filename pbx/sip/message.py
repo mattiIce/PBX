@@ -233,6 +233,8 @@ class SIPMessageBuilder:
         if mac_address:
             # Normalize MAC address format to XX:XX:XX:XX:XX:XX
             mac_clean = mac_address.replace(":", "").replace("-", "").lower()
-            if len(mac_clean) == 12:
+            # Validate MAC address format (must be 12 hex characters)
+            import re
+            if len(mac_clean) == 12 and re.match(r'^[0-9a-f]{12}$', mac_clean):
                 mac_formatted = ":".join([mac_clean[i:i+2] for i in range(0, 12, 2)])
                 message.set_header("X-MAC-Address", mac_formatted)
