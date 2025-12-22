@@ -130,7 +130,7 @@ server:
   external_ip: 192.168.1.14
   rtp_port_range_end: 20000
   rtp_port_range_start: 10000
-  server_name: Aluminum Blanking Phone System
+  server_name: Warden Voip
   sip_host: 0.0.0.0
   sip_port: 5060
   version: 1.0.0

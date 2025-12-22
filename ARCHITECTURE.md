@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Aluminum Blanking Phone System is a comprehensive, enterprise-grade PBX system built in Python. This document provides a high-level overview of the system architecture.
+The Warden Voip system is a comprehensive, enterprise-grade PBX system built in Python. This document provides a high-level overview of the system architecture.
 
 ## System Components
 
