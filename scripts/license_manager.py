@@ -460,6 +460,10 @@ Examples:
   # Generate a perpetual license (never expires)
   python scripts/license_manager.py generate --type perpetual --org "Example LLC"
 
+  # Batch generate multiple licenses from a config file
+  python scripts/license_manager.py batch-generate examples/batch_licenses.json
+  python scripts/license_manager.py batch-generate examples/batch_licenses.yml --output-dir /path/to/output
+
   # Install a license
   python scripts/license_manager.py install license_acme_corp_20251222.json
 
@@ -540,6 +544,8 @@ Examples:
     try:
         if args.command == 'generate':
             return cmd_generate(args)
+        elif args.command == 'batch-generate':
+            return cmd_batch_generate(args)
         elif args.command == 'install':
             return cmd_install(args)
         elif args.command == 'status':

@@ -1,0 +1,67 @@
+# Example Batch License Generation Configuration
+#
+# This file demonstrates how to generate multiple licenses at once using the
+# batch-generate command:
+#
+#   python scripts/license_manager.py batch-generate examples/batch_licenses.yml
+#
+# You can also use JSON format instead of YAML.
+
+# List of licenses to generate
+licenses:
+  # Trial license for demo purposes
+  - type: trial
+    issued_to: "Demo User Inc"
+    expiration_days: 30
+    # Trial licenses automatically get trial limits (10 ext, 5 calls)
+
+  # Basic license for small business
+  - type: basic
+    issued_to: "Small Business LLC"
+    expiration_days: 365
+    max_extensions: 50
+    max_concurrent_calls: 25
+
+  # Professional license for medium-sized company
+  - type: professional
+    issued_to: "Medium Corp"
+    expiration_days: 365
+    max_extensions: 200
+    max_concurrent_calls: 100
+
+  # Enterprise license for large organization
+  - type: enterprise
+    issued_to: "BigCo International"
+    expiration_days: 730  # 2 years
+    # Enterprise gets unlimited by default
+
+  # Perpetual license (never expires)
+  - type: perpetual
+    issued_to: "Forever Client Ltd"
+    # No expiration_days needed for perpetual
+    max_extensions: 500
+    max_concurrent_calls: 250
+
+  # Custom license with specific features
+  - type: custom
+    issued_to: "Custom Solutions Inc"
+    expiration_days: 365
+    features:
+      - basic_calling
+      - voicemail
+      - call_recording
+      - webrtc
+      - ai_features
+      - max_extensions:100
+      - max_concurrent_calls:50
+
+  # Another custom license with different features
+  - type: custom
+    issued_to: "Special Client Co"
+    expiration_days: 180
+    features:
+      - basic_calling
+      - conference
+      - crm_integration
+      - max_extensions:75
+      - max_concurrent_calls:40
