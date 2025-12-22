@@ -2312,7 +2312,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if is_license_admin_extension(extension_number):
                 # Handle license admin authentication separately
                 # For license admin, the password is the PIN
-                if verify_license_admin_credentials(extension_number, LICENSE_ADMIN_USERNAME, password):
+                # Username defaults to LICENSE_ADMIN_USERNAME if not provided in request
+                username = body.get("username", LICENSE_ADMIN_USERNAME)
+                if verify_license_admin_credentials(extension_number, username, password):
                     # Generate session token for license admin
                     from pbx.utils.session_token import get_session_token_manager
                     

@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 """
 Test license admin login functionality
+
+Note: The license admin credentials (extension 9322, username ICE, PIN 26697647)
+are documented in multiple places in the codebase including:
+- LICENSE_ADMIN_QUICKREF.md
+- LICENSE_ADMIN_INTERFACE.md
+- IMPLEMENTATION_SUMMARY_LICENSE_ADMIN.md
+- pbx/utils/license_admin.py
+
+These are not secret credentials but system defaults that can be verified
+through the triple-layer encryption system (SHA256, PBKDF2, HMAC).
 """
 
 import unittest
