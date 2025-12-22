@@ -235,6 +235,10 @@
                         <span class="tab-icon">⚙️</span>
                         <span class="tab-text">Features Status</span>
                     </button>
+                    <button class="tab-button" data-tab="license-management">
+                        <span class="tab-icon">🔑</span>
+                        <span class="tab-text">License Management</span>
+                    </button>
                 </div>
             </nav>
 
@@ -3330,6 +3334,149 @@ G.726-32</textarea>
             <div class="action-buttons" style="margin-top: 20px;">
                 <button class="btn btn-primary" onclick="loadFeaturesStatus()">🔄 Refresh Status</button>
                 <button class="btn btn-secondary" onclick="showTab('config')">⚙️ Configure Features</button>
+            </div>
+        </div>
+
+        <!-- License Management Tab -->
+        <div id="license-management" class="tab-content">
+            <h2>🔑 License Management</h2>
+
+            <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3; margin-bottom: 20px;">
+                <p><strong>💡 About Licensing:</strong> The PBX system includes a flexible licensing system that can be enabled or disabled by the administrator. When disabled, all features are available for free (open-source mode).</p>
+            </div>
+
+            <!-- Current License Status -->
+            <div class="config-section">
+                <h3>📊 Current License Status</h3>
+                <div id="license-status-container">
+                    <div class="loading">Loading license information...</div>
+                </div>
+                <div class="action-buttons" style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="loadLicenseStatus()">🔄 Refresh Status</button>
+                </div>
+            </div>
+
+            <!-- Available Features -->
+            <div class="config-section">
+                <h3>✨ Available Features & Limits</h3>
+                <div id="license-features-container">
+                    <div class="loading">Loading features...</div>
+                </div>
+                <div class="action-buttons" style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="loadLicenseFeatures()">🔄 Refresh Features</button>
+                </div>
+            </div>
+
+            <!-- License Actions -->
+            <div class="config-section">
+                <h3>⚙️ License Actions</h3>
+                
+                <!-- Toggle Licensing -->
+                <div style="margin-bottom: 25px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">Enable/Disable Licensing</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Control whether licensing enforcement is active. When disabled, all features are available (open-source mode).</p>
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="toggleLicensing(true)">✅ Enable Licensing</button>
+                        <button class="btn btn-warning" onclick="toggleLicensing(false)">❌ Disable Licensing</button>
+                    </div>
+                    <div id="licensing-toggle-result" style="margin-top: 10px;"></div>
+                </div>
+
+                <!-- Generate License -->
+                <div style="margin-bottom: 25px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">Generate New License</h4>
+                    <form id="generate-license-form" onsubmit="generateLicense(event); return false;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
+                                <select name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="trial">Trial (30 days)</option>
+                                    <option value="basic">Basic</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="enterprise">Enterprise</option>
+                                    <option value="perpetual">Perpetual (No Expiration)</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Organization/Person *</label>
+                                <input type="text" name="issued_to" required placeholder="Example Corporation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Expiration Days</label>
+                                <input type="number" name="expiration_days" placeholder="365 (leave empty for perpetual)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Max Extensions</label>
+                                <input type="number" name="max_extensions" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Max Concurrent Calls</label>
+                                <input type="number" name="max_concurrent_calls" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">🔑 Generate License</button>
+                        </div>
+                    </form>
+                    <div id="generate-license-result" style="margin-top: 15px;"></div>
+                </div>
+
+                <!-- Install License -->
+                <div style="margin-bottom: 25px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">Install License</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Upload and install a license file (JSON format).</p>
+                    <form id="install-license-form" onsubmit="installLicense(event); return false;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">License Data (JSON)</label>
+                            <textarea name="license_data" rows="8" required placeholder='{"key": "XXXX-XXXX-XXXX-XXXX", "type": "professional", ...}' style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" name="enforce_licensing" style="margin-right: 8px;">
+                                <span><strong>Enforce Licensing</strong> (Create lock file - prevents disabling licensing)</span>
+                            </label>
+                            <p style="color: #666; margin: 5px 0 0 24px; font-size: 13px;">Enable this for commercial deployments to prevent users from disabling licensing.</p>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-success">📥 Install License</button>
+                        </div>
+                    </form>
+                    <div id="install-license-result" style="margin-top: 15px;"></div>
+                </div>
+
+                <!-- Revoke License -->
+                <div style="margin-bottom: 25px; padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">⚠️ Revoke Current License</h4>
+                    <p style="color: #666; margin-bottom: 10px;">Remove the currently installed license. This action cannot be undone.</p>
+                    <div class="action-buttons">
+                        <button class="btn btn-danger" onclick="revokeLicense()">🗑️ Revoke License</button>
+                    </div>
+                    <div id="revoke-license-result" style="margin-top: 10px;"></div>
+                </div>
+
+                <!-- Remove License Lock -->
+                <div style="margin-bottom: 25px; padding: 15px; background: #ffebee; border: 1px solid #f44336; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">🔓 Remove License Lock</h4>
+                    <p style="color: #666; margin-bottom: 10px;"><strong>Admin Only:</strong> Remove the license lock file to allow disabling licensing. Only use when transitioning from commercial to open-source deployment.</p>
+                    <div class="action-buttons">
+                        <button class="btn btn-danger" onclick="removeLicenseLock()">🔓 Remove Lock File</button>
+                    </div>
+                    <div id="remove-lock-result" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <!-- License Documentation -->
+            <div class="config-section">
+                <h3>📚 Documentation</h3>
+                <p>For more information about licensing, including:</p>
+                <ul>
+                    <li>License types and features</li>
+                    <li>CLI tool usage (<code>python scripts/license_manager.py</code>)</li>
+                    <li>API reference</li>
+                    <li>Troubleshooting</li>
+                </ul>
+                <p>See the <strong>LICENSING_GUIDE.md</strong> file in the repository root.</p>
             </div>
         </div>
 

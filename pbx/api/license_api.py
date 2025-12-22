@@ -3,9 +3,11 @@
 License Management API Endpoints
 
 Provides REST API for managing licensing and subscriptions.
+Protected by license administrator authentication.
 """
 
 import logging
+import os
 from datetime import datetime
 from typing import Dict
 
@@ -15,6 +17,10 @@ from pbx.utils.licensing import (
     get_license_manager,
     LicenseType,
     LicenseStatus
+)
+from pbx.utils.license_admin import (
+    require_license_admin,
+    verify_license_admin_session
 )
 
 logger = logging.getLogger(__name__)
@@ -27,6 +33,8 @@ license_api = Blueprint('license_api', __name__)
 def get_license_status():
     """
     Get current license status and information.
+    
+    Available to all authenticated users to view license status.
     
     Returns:
         JSON with license status and details
@@ -148,9 +156,12 @@ def check_feature():
 
 
 @license_api.route('/api/license/generate', methods=['POST'])
+@require_license_admin
 def generate_license():
     """
-    Generate a new license key (admin only).
+    Generate a new license key (license admin only).
+    
+    Requires authentication as the special license administrator account.
     
     Request JSON:
         {
@@ -223,9 +234,12 @@ def generate_license():
 
 
 @license_api.route('/api/license/install', methods=['POST'])
+@require_license_admin
 def install_license():
     """
-    Install a license key (admin only).
+    Install a license key (license admin only).
+    
+    Requires authentication as the special license administrator account.
     
     Request JSON:
         {
@@ -243,10 +257,6 @@ def install_license():
         JSON with installation status
     """
     try:
-        # TODO: SECURITY - Add admin authentication check before production deployment
-        # Example: check for admin session, API key, or JWT token
-        # if not is_admin_authenticated(request):
-        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
         
         data = request.get_json()
         license_data = data.get('license_data') or data
@@ -289,19 +299,17 @@ def install_license():
 
 
 @license_api.route('/api/license/revoke', methods=['POST'])
+@require_license_admin
 def revoke_license():
     """
-    Revoke current license (admin only).
+    Revoke current license (license admin only).
+    
+    Requires authentication as the special license administrator account.
     
     Returns:
         JSON with revocation status
     """
     try:
-        # TODO: SECURITY - Add admin authentication check before production deployment
-        # Example: check for admin session, API key, or JWT token
-        # if not is_admin_authenticated(request):
-        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-        
         license_manager = get_license_manager()
         success = license_manager.revoke_license()
         
@@ -325,11 +333,12 @@ def revoke_license():
 
 
 @license_api.route('/api/license/toggle', methods=['POST'])
+@require_license_admin
 def toggle_licensing():
     """
-    Enable or disable licensing enforcement (admin only).
+    Enable or disable licensing enforcement (license admin only).
     
-    This allows the programmer to turn licensing on/off as needed.
+    Requires authentication as the special license administrator account.
     
     Request JSON:
         {
@@ -340,11 +349,6 @@ def toggle_licensing():
         JSON with new licensing status
     """
     try:
-        # TODO: SECURITY - Add admin authentication check before production deployment
-        # Example: check for admin session, API key, or JWT token
-        # if not is_admin_authenticated(request):
-        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-        
         data = request.get_json()
         enabled = data.get('enabled')
         
@@ -417,22 +421,18 @@ def toggle_licensing():
 
 
 @license_api.route('/api/license/remove_lock', methods=['POST'])
+@require_license_admin
 def remove_license_lock():
     """
-    Remove license lock file to allow disabling licensing (admin only).
+    Remove license lock file to allow disabling licensing (license admin only).
     
+    Requires authentication as the special license administrator account.
     This is used when transitioning from commercial to open-source deployment.
-    Requires admin authentication.
     
     Returns:
         JSON with removal status
     """
     try:
-        # TODO: SECURITY - Add admin authentication check before production deployment
-        # Example: check for admin session, API key, or JWT token
-        # if not is_admin_authenticated(request):
-        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-        
         license_manager = get_license_manager()
         success = license_manager.remove_license_lock()
         
@@ -452,6 +452,85 @@ def remove_license_lock():
         return jsonify({
             'success': False,
             'error': str(e)
+        }), 500
+
+
+@license_api.route('/api/license/verify_admin', methods=['GET'])
+def verify_admin():
+    """
+    Verify if the current session belongs to the license administrator.
+    
+    Returns:
+        JSON with verification status
+    """
+    from pbx.utils.license_admin import verify_license_admin_session
+    
+    is_authorized, error_msg = verify_license_admin_session(request)
+    
+    return jsonify({
+        'success': True,
+        'is_license_admin': is_authorized,
+        'message': 'Authorized' if is_authorized else (error_msg or 'Not authorized')
+    }), 200
+
+
+@license_api.route('/api/license/admin_login', methods=['POST'])
+def admin_login():
+    """
+    Authenticate as the license administrator.
+    
+    Request JSON:
+        {
+            "extension": "9322",
+            "username": "ICE",
+            "pin": "26697647"
+        }
+    
+    Returns:
+        JSON with authentication status
+    """
+    from flask import session
+    from pbx.utils.license_admin import verify_license_admin_credentials
+    
+    try:
+        data = request.get_json()
+        extension = data.get('extension', '').strip()
+        username = data.get('username', '').strip()
+        pin = data.get('pin', '').strip()
+        
+        if not extension or not username or not pin:
+            return jsonify({
+                'success': False,
+                'error': 'Missing required fields: extension, username, pin'
+            }), 400
+        
+        # Verify credentials using encrypted verification
+        if verify_license_admin_credentials(extension, username, pin):
+            # Set session
+            session['extension'] = extension
+            session['username'] = username
+            session['is_license_admin'] = True
+            
+            logger.info(f"License admin logged in: {extension}/{username}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'License administrator authenticated successfully',
+                'extension': extension,
+                'username': username
+            }), 200
+        else:
+            logger.warning(f"Failed license admin login attempt: {extension}/{username}")
+            return jsonify({
+                'success': False,
+                'error': 'Invalid credentials'
+            }), 401
+    
+    except Exception as e:
+        logger.error(f"Error during license admin login: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Authentication failed'
         }), 500
 
 

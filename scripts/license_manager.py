@@ -341,6 +341,109 @@ def cmd_features(args):
     return 0
 
 
+def cmd_batch_generate(args):
+    """Generate multiple licenses from a configuration file."""
+    config = setup_config()
+    lm = LicenseManager(config)
+    
+    # Load batch configuration
+    if not os.path.exists(args.batch_file):
+        print(f"Error: Batch file not found: {args.batch_file}")
+        return 1
+    
+    try:
+        with open(args.batch_file, 'r') as f:
+            if args.batch_file.endswith('.json'):
+                import json
+                batch_config = json.load(f)
+            else:
+                import yaml
+                batch_config = yaml.safe_load(f)
+    except Exception as e:
+        print(f"Error: Failed to load batch file: {e}")
+        return 1
+    
+    # Validate batch config
+    if 'licenses' not in batch_config:
+        print("Error: Batch file must contain 'licenses' array")
+        return 1
+    
+    licenses_to_generate = batch_config['licenses']
+    output_dir = args.output_dir or 'generated_licenses'
+    
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
+    
+    print(f"Generating {len(licenses_to_generate)} licenses...")
+    print(f"Output directory: {output_dir}")
+    print()
+    
+    generated_count = 0
+    errors = []
+    
+    for i, license_spec in enumerate(licenses_to_generate, 1):
+        try:
+            # Parse license type
+            license_type = LicenseType(license_spec.get('type', 'basic'))
+            issued_to = license_spec.get('issued_to')
+            
+            if not issued_to:
+                errors.append(f"License {i}: Missing 'issued_to' field")
+                continue
+            
+            # Generate license
+            print(f"[{i}/{len(licenses_to_generate)}] Generating {license_type.value} license for '{issued_to}'...")
+            
+            custom_features = None
+            if license_spec.get('features'):
+                if isinstance(license_spec['features'], str):
+                    custom_features = license_spec['features'].split(',')
+                else:
+                    custom_features = license_spec['features']
+            
+            license_data = lm.generate_license_key(
+                license_type=license_type,
+                issued_to=issued_to,
+                max_extensions=license_spec.get('max_extensions'),
+                max_concurrent_calls=license_spec.get('max_concurrent_calls'),
+                expiration_days=license_spec.get('expiration_days'),
+                custom_features=custom_features
+            )
+            
+            # Save to file
+            import re
+            safe_org = re.sub(r'[^a-zA-Z0-9_-]', '_', issued_to).lower()
+            output_file = os.path.join(
+                output_dir,
+                f"license_{safe_org}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i}.json"
+            )
+            
+            with open(output_file, 'w') as f:
+                json.dump(license_data, f, indent=2)
+            
+            print(f"  ✓ Saved to: {output_file}")
+            generated_count += 1
+            
+        except Exception as e:
+            error_msg = f"License {i} ({license_spec.get('issued_to', 'unknown')}): {str(e)}"
+            errors.append(error_msg)
+            print(f"  ✗ Error: {e}")
+    
+    # Summary
+    print()
+    print("=" * 60)
+    print(f"Batch generation complete!")
+    print(f"Successfully generated: {generated_count}/{len(licenses_to_generate)} licenses")
+    
+    if errors:
+        print(f"\nErrors ({len(errors)}):")
+        for error in errors:
+            print(f"  - {error}")
+        return 1
+    
+    return 0
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -394,6 +497,11 @@ Examples:
     gen_parser.add_argument('--max-calls', type=int, help='Maximum concurrent calls')
     gen_parser.add_argument('--features', help='Custom features (comma-separated, for custom type)')
     gen_parser.add_argument('--output', '-o', help='Output file path')
+    
+    # Batch generate command
+    batch_parser = subparsers.add_parser('batch-generate', help='Generate multiple licenses from a configuration file')
+    batch_parser.add_argument('batch_file', help='Path to batch configuration file (JSON or YAML)')
+    batch_parser.add_argument('--output-dir', help='Output directory for generated licenses (default: generated_licenses)')
     
     # Install command
     install_parser = subparsers.add_parser('install', help='Install a license file')
