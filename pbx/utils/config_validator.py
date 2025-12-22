@@ -8,7 +8,7 @@ to catch issues before the PBX starts, preventing runtime errors.
 import logging
 import os
 import re
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 logger = logging.getLogger(__name__)
 

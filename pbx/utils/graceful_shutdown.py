@@ -10,7 +10,7 @@ import signal
 import sys
 import threading
 import time
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 

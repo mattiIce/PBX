@@ -37,10 +37,10 @@ class SmokeTestRunner:
 
     def test_imports(self):
         """Test that core modules can be imported"""
-        from pbx.core.pbx import PBXCore
-        from pbx.sip.server import SIPServer
-        from pbx.rtp.handler import RTPHandler
         from pbx.api.rest_api import PBXAPIServer
+        from pbx.core.pbx import PBXCore
+        from pbx.rtp.handler import RTPHandler
+        from pbx.sip.server import SIPServer
         from pbx.utils.config import Config
 
     def test_config_loading(self):
