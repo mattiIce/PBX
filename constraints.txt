@@ -10,10 +10,10 @@
 #   pip install -c constraints.txt -r requirements-dev.txt
 #
 # To update versions: Review and update version numbers based on the latest stable
-# releases compatible with Python 3.8+. Test thoroughly after updating.
+# releases compatible with Python 3.13+. Test thoroughly after updating.
 #
 # Generated from: pyproject.toml and requirements-dev.txt
-# Python Version: >=3.8
+# Python Version: >=3.13
 
 # ============================================================================
 # Build Dependencies
@@ -24,28 +24,28 @@
 # ============================================================================
 # Core Dependencies
 # ============================================================================
-PyYAML==6.0.1
-cryptography==42.0.4
+PyYAML==6.0.2
+cryptography==44.0.0
 
 # SIP/RTP Support
-aiortc==1.7.0
-twisted==23.10.0
+aiortc==1.10.0
+twisted==24.11.0
 
 # Audio Processing
 pydub==0.25.1
-sounddevice==0.4.6
+sounddevice==0.5.1
 
 # Voice Prompt Generation
-gTTS==2.5.0
-pyttsx3==2.90
+gTTS==2.5.4
+pyttsx3==2.99
 
 # Database Backend
-sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
 
 # Enterprise Integrations
-requests==2.31.0
-msal==1.26.0
+requests==2.32.3
+msal==1.31.1
 
 # Authentication
 fido2==1.1.3
@@ -54,55 +54,56 @@ fido2==1.1.3
 opuslib==3.0.1
 
 # AI/ML Integration
-vosk==0.3.45
-spacy==3.7.2
-nltk==3.9.0
-numpy==1.24.4
-scikit-learn==1.3.2
-scipy==1.11.4
+vosk==0.3.50
+spacy==3.8.3
+nltk==3.9.1
+numpy==2.2.1
+scikit-learn==1.6.0
+scipy==1.15.0
 pyAudioAnalysis==0.3.14
-librosa==0.10.1
+librosa==0.10.2
 soundfile==0.12.1
 
 # Video Codec Support
-imageio-ffmpeg==0.4.9
-av==11.0.0
+imageio-ffmpeg==0.5.1
+av==14.0.1
 
 # Web Interface
-flask==3.0.1
-websockets==12.0
+flask==3.1.0
+websockets==14.1
 
 # Monitoring
-prometheus-client==0.19.0
-redis==5.0.1
+prometheus-client==0.21.1
+redis==5.2.1
+psutil==6.1.1
 
 # ============================================================================
 # Development Dependencies
 # ============================================================================
 
 # Testing
-pytest==7.4.4
-pytest-cov==4.1.0
-pytest-asyncio==0.21.1
-pytest-timeout==2.2.0
-pytest-mock==3.12.0
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-asyncio==0.25.2
+pytest-timeout==2.3.1
+pytest-mock==3.14.0
 
 # Code Quality
-pylint==3.0.3
-flake8==6.1.0
-black==23.12.1
-mypy==1.8.0
+pylint==3.3.3
+flake8==7.1.1
+black==24.10.0
+mypy==1.14.0
 isort==5.13.2
 
 # Pre-commit Hooks
-pre-commit==3.6.0
+pre-commit==4.0.1
 
 # Documentation
-sphinx==7.2.6
-sphinx-rtd-theme==2.0.0
+sphinx==8.1.3
+sphinx-rtd-theme==3.0.2
 
 # Development Utilities
-ipython==8.18.1
+ipython==8.31.0
 ipdb==0.13.13
 
 # ============================================================================

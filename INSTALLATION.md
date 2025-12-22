@@ -294,7 +294,7 @@ pbx hard nofile 65536
 
 1. Check Python version:
 ```bash
-python3 --version  # Should be 3.7+
+python3 --version  # Should be 3.13+
 ```
 
 2. Check dependencies:
