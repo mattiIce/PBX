@@ -6694,8 +6694,7 @@ async function loadClickToDialHistory() {
 
 // ========== WebRTC Phone Configuration ==========
 
-// Default extension for the WebRTC phone (must match webrtc_phone.js)
-const DEFAULT_WEBRTC_EXTENSION = 'webrtc-admin';
+// Note: DEFAULT_WEBRTC_EXTENSION is defined in webrtc_phone.js
 
 async function loadWebRTCPhoneConfig() {
     try {
