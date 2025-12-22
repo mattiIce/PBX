@@ -28,6 +28,22 @@ Start here if you're new to the PBX system:
 3. **[INSTALLATION.md](INSTALLATION.md)** - Detailed installation instructions
 4. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature status and implementation overview**
 
+## Product Improvement & Roadmap
+
+For planning future enhancements:
+
+- **[QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md)** - ⭐ **Quick reference for top improvement priorities**
+  - Top 10 high-impact improvements
+  - Quick wins (high impact, low effort)
+  - 4-phase implementation roadmap
+  - Cost-benefit summary
+- **[PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md](PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md)** - Complete detailed analysis
+  - 30 improvement categories
+  - 200+ specific actionable recommendations
+  - Priority rankings and ROI analysis
+  - Risk assessment and mitigation strategies
+- **[TODO.md](TODO.md)** - Current feature status (56/64 complete, 8 framework features)
+
 ## Deployment Guides
 
 Choose the guide that fits your deployment scenario:
@@ -212,16 +228,18 @@ Must read:
 1. [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)
 2. [README.md](README.md)
 3. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) (feature status)
-4. [FEATURES.md](FEATURES.md)
-5. [SUMMARY.md](SUMMARY.md)
-6. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+4. [QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md) (future improvements)
+5. [FEATURES.md](FEATURES.md)
+6. [SUMMARY.md](SUMMARY.md)
+7. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
 
 ### Executive / Business Leader
 
 Must read:
 1. [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) (complete business case)
-2. [README.md](README.md) (technical capabilities overview)
-3. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) (implementation readiness)
+2. [QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md) (future roadmap and ROI)
+3. [README.md](README.md) (technical capabilities overview)
+4. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) (implementation readiness)
 
 ## Support and Contributing
 
