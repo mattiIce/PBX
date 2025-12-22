@@ -1508,8 +1508,8 @@ class ExtensionDB:
 
         result = self.db.fetch_one(query, (key,))
         if result:
-            value = result.get('config_value') or result.get('config_value')
-            config_type = result.get('config_type') or result.get('config_type')
+            value = result.get('config_value')
+            config_type = result.get('config_type')
             # Convert value based on type
             if config_type == "int":
                 return int(value) if value else default
