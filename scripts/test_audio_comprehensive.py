@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Comprehensive Audio Testing Script for PBX System
+Comprehensive Audio Testing Script for Warden Voip System
 Tests hardphone audio with all voicemail and IVR prompts
 
 This script addresses Critical Blocker 1.1 from STRATEGIC_ROADMAP.md:

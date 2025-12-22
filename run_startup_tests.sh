@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Startup Test Runner for PBX System
+# Startup Test Runner for Warden Voip System
 # Run this script on server startup to test the system and log failures
 #
 # Usage:
 #   ./run_startup_tests.sh
 #
 # This script will:
-#   1. Run all PBX tests
+#   1. Run all Warden Voip tests
 #   2. Log failures to test_failures.log
 #   3. Commit the log file to git
 #   4. Push changes to remote repository (if git credentials are configured)
@@ -17,7 +17,7 @@
 set -e
 
 echo "========================================================================"
-echo "PBX System - Startup Test Runner"
+echo "Warden Voip System - Startup Test Runner"
 echo "========================================================================"
 echo "Started at: $(date)"
 echo ""
@@ -42,7 +42,7 @@ fi
 set +e
 
 # Run the tests
-echo "Running PBX system tests..."
+echo "Running Warden Voip system tests..."
 echo ""
 python3 run_tests.py
 

@@ -63,7 +63,7 @@ When you register a device via the admin console:
    {{EXTENSION_PASSWORD}} → password1001
    {{SIP_SERVER}} → 192.168.1.14
    {{SIP_PORT}} → 5060
-   {{SERVER_NAME}} → Aluminum Blanking Phone System
+   {{SERVER_NAME}} → Warden Voip
    ```
 
 5. **Phone downloads configuration:**
@@ -88,7 +88,7 @@ All templates support these placeholders:
 | `{{EXTENSION_PASSWORD}}` | SIP authentication password | `password1001` |
 | `{{SIP_SERVER}}` | PBX server IP address | `192.168.1.14` |
 | `{{SIP_PORT}}` | SIP server port | `5060` |
-| `{{SERVER_NAME}}` | PBX server name | `Aluminum Blanking Phone System` |
+| `{{SERVER_NAME}}` | PBX server name | `Warden Voip` |
 
 ### LDAP/LDAPS Phone Book Placeholders
 
@@ -273,7 +273,7 @@ Edit `provisioning_templates/yealink_t46s.template`:
 ```ini
 #!version:1.0.0.1
 
-# Yealink T46S Configuration File - Custom for Aluminum Blanking
+# Yealink T46S Configuration File - Custom for Warden Voip
 
 # Account 1
 account.1.enable = 1

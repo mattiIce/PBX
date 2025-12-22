@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installation script for PBX dependencies
+# Installation script for Warden Voip dependencies
 # This script handles conflicts with system-managed packages
 
 set -e
@@ -21,7 +21,7 @@ fi
 # Validate that requirements.txt exists
 [[ -f requirements.txt ]] || { echo 'Error: requirements.txt not found'; exit 1; }
 
-echo "Installing PBX dependencies..."
+echo "Installing Warden Voip dependencies..."
 echo "Python version: $python_version"
 echo "Note: This script handles conflicts with system-managed packages like typing_extensions"
 echo ""

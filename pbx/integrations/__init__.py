@@ -1,5 +1,5 @@
 """
-PBX System Integrations Package
+Warden Voip System Integrations Package
 
 Provides both proprietary and free/open-source integrations.
 All integrations are optional and can be enabled/disabled in config.yml.

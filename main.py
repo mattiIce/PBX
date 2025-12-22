@@ -64,7 +64,7 @@ def run_tests_before_start():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("InHouse PBX System v1.0.0")
+    print("Warden Voip System v1.0.0")
     print("=" * 60)
 
     # Check dependencies first

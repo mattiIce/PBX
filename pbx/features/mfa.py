@@ -1,5 +1,5 @@
 """
-Multi-Factor Authentication (MFA) for PBX System
+Multi-Factor Authentication (MFA) for Warden Voip System
 Provides TOTP-based two-factor authentication and YubiKey support for enhanced security
 
 Supported MFA Methods:
@@ -137,7 +137,7 @@ class TOTPGenerator:
 
         return result == 0
 
-    def get_provisioning_uri(self, account_name: str, issuer: str = "PBX System") -> str:
+    def get_provisioning_uri(self, account_name: str, issuer: str = "Warden Voip") -> str:
         """
         Generate provisioning URI for QR code
 
@@ -362,7 +362,7 @@ class FIDO2Verifier:
     Supports YubiKey and other FIDO2-compliant devices
     """
 
-    def __init__(self, rp_id: str = "pbx.local", rp_name: str = "PBX System"):
+    def __init__(self, rp_id: str = "pbx.local", rp_name: str = "Warden Voip"):
         """
         Initialize FIDO2 verifier
 

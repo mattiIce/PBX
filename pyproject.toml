@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pbx-system"
+name = "warden-voip"
 version = "1.0.0"
-description = "A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built in Python"
+description = "Warden Voip - A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built in Python"
 readme = "README.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
 authors = [
-    {name = "PBX System Contributors"}
+    {name = "Warden Voip Contributors"}
 ]
 keywords = ["pbx", "voip", "sip", "telephony", "communication"]
 classifiers = [

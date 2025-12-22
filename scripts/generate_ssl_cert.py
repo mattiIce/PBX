@@ -52,7 +52,7 @@ def generate_self_signed_cert(cert_dir="certs", hostname="localhost", days_valid
             x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
             x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "State"),
             x509.NameAttribute(NameOID.LOCALITY_NAME, "City"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PBX System"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Warden Voip"),
             x509.NameAttribute(NameOID.COMMON_NAME, hostname),
         ]
     )

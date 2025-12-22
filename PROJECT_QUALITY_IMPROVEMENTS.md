@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document summarizes the comprehensive quality improvements made to the Aluminum Blanking Phone System (PBX) project. All changes are non-breaking and designed to improve code quality, developer experience, and maintainability.
+This document summarizes the comprehensive quality improvements made to the Warden Voip (PBX) project. All changes are non-breaking and designed to improve code quality, developer experience, and maintainability.
 
 ## Changes Summary
 

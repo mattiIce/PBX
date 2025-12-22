@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Database Verification and Diagnostic Tool for PBX System
+Database Verification and Diagnostic Tool for Warden Voip System
 
 This script verifies that the PostgreSQL database is properly configured
 and accessible. It provides detailed diagnostic information to help

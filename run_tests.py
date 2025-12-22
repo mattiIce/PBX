@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Runner for PBX System
+Test Runner for Warden Voip System
 Runs all tests and logs failures to test_failures.log
 """
 import datetime
@@ -85,7 +85,7 @@ def write_failures_log(total, passed, failed, failures):
     with open(LOG_FILE, "w") as f:
         # Write header
         f.write("=" * 70 + "\n")
-        f.write("PBX System Test Failures Log\n")
+        f.write("Warden Voip System Test Failures Log\n")
         f.write("=" * 70 + "\n")
         f.write(f"Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write(f"Total Tests: {total}\n")

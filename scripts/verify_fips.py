@@ -142,7 +142,7 @@ def check_cryptography_library():
 
 def check_pbx_configuration():
     """Check PBX FIPS configuration"""
-    print_header("PBX System Configuration")
+    print_header("Warden Voip System Configuration")
 
     all_passed = True
 

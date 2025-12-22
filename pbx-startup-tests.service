@@ -1,5 +1,5 @@
 [Unit]
-Description=PBX System Startup Tests
+Description=Warden Voip System Startup Tests
 After=network.target
 
 [Service]
