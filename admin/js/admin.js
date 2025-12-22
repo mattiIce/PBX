@@ -3,10 +3,33 @@ const API_BASE = window.location.origin;
 
 // Constants
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
+const EXTENSION_LOAD_TIMEOUT = 10000; // 10 seconds
+const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds for general requests
+const AD_SYNC_TIMEOUT = 60000; // 60 seconds for AD sync (can take longer with large directories)
 
 // State
 let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
+
+// Helper function to fetch with timeout
+async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Request timed out');
+        }
+        throw error;
+    }
+}
 
 // Error Display Configuration
 const ERROR_DISPLAY_CONFIG = {
@@ -204,9 +227,9 @@ async function initializeUserContext() {
     
     // Verify token is still valid by making an authenticated request
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`, {
+        const response = await fetchWithTimeout(`${API_BASE}/api/extensions`, {
             headers: getAuthHeaders()
-        });
+        }, 5000); // Short timeout for auth check
         
         if (response.status === 401 || response.status === 403) {
             // Token is invalid or expired - redirect to login
@@ -219,6 +242,7 @@ async function initializeUserContext() {
         }
     } catch (error) {
         console.error('Error verifying authentication:', error);
+        // Continue anyway - user might be able to login again or system is starting up
     }
     
     // Get user info from localStorage (set during login)
@@ -503,7 +527,7 @@ window.switchTab = showTab;
 // Connection Check
 async function checkConnection() {
     try {
-        const response = await fetch(`${API_BASE}/api/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {}, 5000);
         const statusBadge = document.getElementById('connection-status');
         
         if (response.ok) {
@@ -524,7 +548,7 @@ async function checkConnection() {
 // Dashboard Functions
 async function loadDashboard() {
     try {
-        const response = await fetch(`${API_BASE}/api/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/status`);
         const data = await response.json();
         
         document.getElementById('stat-extensions').textContent = data.registered_extensions || 0;
@@ -551,7 +575,7 @@ function refreshDashboard() {
 // AD Integration Functions
 async function loadADStatus() {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/ad/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`);
         const data = await response.json();
         
         // Update status badge
@@ -621,9 +645,10 @@ async function syncADUsers() {
     syncBtn.textContent = '⏳ Syncing...';
     
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/ad/sync`, {
+        // AD sync can take a while, so use a longer timeout
+        const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/sync`, {
             method: 'POST'
-        });
+        }, AD_SYNC_TIMEOUT);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
@@ -642,12 +667,25 @@ async function syncADUsers() {
         }
     } catch (error) {
         console.error('Error syncing AD users:', error);
-        showNotification('Error syncing AD users', 'error');
+        const errorMsg = error.message === 'Request timed out' 
+            ? 'AD sync timed out. This may happen with large directories. Check the server logs.' 
+            : 'Error syncing AD users';
+        showNotification(errorMsg, 'error');
     } finally {
         // Re-enable button
         syncBtn.textContent = originalText;
         syncBtn.disabled = false;
     }
+}
+
+// Helper function to create retry buttons HTML (safe - only uses boolean check)
+function getRetryButtonsHtml() {
+    const retryBtn = '<button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>';
+    // currentUser.is_admin is a boolean, safe for conditional rendering
+    const syncBtn = (currentUser && currentUser.is_admin === true) 
+        ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' 
+        : '';
+    return retryBtn + syncBtn;
 }
 
 // Extensions Functions
@@ -656,9 +694,10 @@ async function loadExtensions() {
     tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading extensions...</td></tr>';
     
     try {
-        const response = await fetch(`${API_BASE}/api/extensions`, {
+        const response = await fetchWithTimeout(`${API_BASE}/api/extensions`, {
             headers: getAuthHeaders()
-        });
+        }, EXTENSION_LOAD_TIMEOUT);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -666,7 +705,12 @@ async function loadExtensions() {
         currentExtensions = extensions;
         
         if (extensions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="loading">No extensions found</td></tr>';
+            tbody.innerHTML = `
+                <tr><td colspan="7" class="loading">
+                    No extensions found. 
+                    ${getRetryButtonsHtml()}
+                </td></tr>
+            `;
             return;
         }
         
@@ -708,7 +752,15 @@ async function loadExtensions() {
         `).join('');
     } catch (error) {
         console.error('Error loading extensions:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="loading">Error loading extensions</td></tr>';
+        const errorMsg = error.message === 'Request timed out'
+            ? 'Request timed out. The system may still be starting up.' 
+            : 'Error loading extensions';
+        tbody.innerHTML = `
+            <tr><td colspan="7" class="loading">
+                ${errorMsg}
+                ${getRetryButtonsHtml()}
+            </td></tr>
+        `;
     }
 }
 
@@ -771,7 +823,7 @@ async function loadCalls() {
     callsList.innerHTML = '<div class="loading">Loading calls...</div>';
     
     try {
-        const response = await fetch(`${API_BASE}/api/calls`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/calls`);
         const calls = await response.json();
         
         if (calls.length === 0) {
@@ -793,7 +845,7 @@ async function loadCalls() {
 // Configuration Functions
 async function loadConfig() {
     try {
-        const response = await fetch(`${API_BASE}/api/config/full`, {
+        const response = await fetchWithTimeout(`${API_BASE}/api/config/full`, {
             headers: getAuthHeaders()
         });
         if (response.ok) {
@@ -1775,7 +1827,7 @@ async function loadRegisteredPhones() {
     tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading registered phones...</td></tr>';
     
     try {
-        const response = await fetch(`${API_BASE}/api/registered-phones`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/registered-phones`);
         
         if (!response.ok) {
             // Try to parse error response from API
