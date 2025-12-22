@@ -7340,5 +7340,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-});
 
