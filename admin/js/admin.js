@@ -5,6 +5,7 @@ const API_BASE = window.location.origin;
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
 const EXTENSION_LOAD_TIMEOUT = 10000; // 10 seconds
 const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds for general requests
+const AD_SYNC_TIMEOUT = 60000; // 60 seconds for AD sync (can take longer with large directories)
 
 // State
 let currentExtensions = [];
@@ -23,7 +24,6 @@ async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEO
         clearTimeout(timeoutId);
         return response;
     } catch (error) {
-        clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
             throw new Error('Request timed out');
         }
@@ -648,7 +648,7 @@ async function syncADUsers() {
         // AD sync can take a while, so use a longer timeout
         const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/sync`, {
             method: 'POST'
-        }, 60000); // 60 second timeout for AD sync
+        }, AD_SYNC_TIMEOUT);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
@@ -678,6 +678,16 @@ async function syncADUsers() {
     }
 }
 
+// Helper function to create retry buttons HTML (safe - only uses boolean check)
+function getRetryButtonsHtml() {
+    const retryBtn = '<button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>';
+    // currentUser.is_admin is a boolean, safe for conditional rendering
+    const syncBtn = (currentUser && currentUser.is_admin === true) 
+        ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' 
+        : '';
+    return retryBtn + syncBtn;
+}
+
 // Extensions Functions
 async function loadExtensions() {
     const tbody = document.getElementById('extensions-table-body');
@@ -698,8 +708,7 @@ async function loadExtensions() {
             tbody.innerHTML = `
                 <tr><td colspan="7" class="loading">
                     No extensions found. 
-                    <button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>
-                    ${currentUser && currentUser.is_admin ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' : ''}
+                    ${getRetryButtonsHtml()}
                 </td></tr>
             `;
             return;
@@ -749,8 +758,7 @@ async function loadExtensions() {
         tbody.innerHTML = `
             <tr><td colspan="7" class="loading">
                 ${errorMsg}
-                <button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>
-                ${currentUser && currentUser.is_admin ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' : ''}
+                ${getRetryButtonsHtml()}
             </td></tr>
         `;
     }
