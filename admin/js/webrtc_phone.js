@@ -703,10 +703,14 @@ async function initWebRTCPhone() {
     // This prompts the user for permission immediately rather than waiting for a call
     await webrtcPhone.requestMicrophoneAccess();
     
-    // Update the UI to show the configured extension if it's not the default
+    // Update the UI to show the configured extension
     const statusDiv = document.getElementById('webrtc-status');
-    if (statusDiv && adminExtension !== DEFAULT_WEBRTC_EXTENSION) {
-        statusDiv.textContent = `Ready to call (Extension: ${adminExtension})`;
+    if (statusDiv) {
+        if (adminExtension !== DEFAULT_WEBRTC_EXTENSION) {
+            statusDiv.textContent = `Ready to call (Extension: ${adminExtension})`;
+        } else {
+            statusDiv.textContent = `Ready to call (Default extension)`;
+        }
     }
 }
 

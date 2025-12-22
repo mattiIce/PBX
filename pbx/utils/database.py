@@ -1516,12 +1516,15 @@ class ExtensionDB:
                 if config_type == "int":
                     return int(value) if value else default
                 elif config_type == "bool":
-                    return value.lower() in ("true", "1", "yes") if value else default
+                    if value and isinstance(value, str):
+                        return value.lower() in ("true", "1", "yes")
+                    else:
+                        return default
                 elif config_type == "json":
                     return json.loads(value) if value else default
                 else:
                     return value if value else default
-            except (ValueError, json.JSONDecodeError) as e:
+            except (ValueError, json.JSONDecodeError, AttributeError) as e:
                 self.logger.warning(f"Error parsing config value for key '{key}': {e}. Returning default.")
                 return default
         return default
