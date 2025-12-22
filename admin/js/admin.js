@@ -389,6 +389,9 @@ function applyRoleBasedUI() {
             header.innerHTML = `📞 PBX Admin Dashboard - ${currentUser.name} (${currentUser.number}) 👑`;
         }
     }
+    
+    // Update license management visibility (only for extension 9322)
+    updateLicenseManagementVisibility();
 }
 
 function showNonAdminBanner() {
@@ -524,6 +527,9 @@ function showTab(tabName) {
             break;
         case 'webrtc-phone':
             loadWebRTCPhoneConfig();
+            break;
+        case 'license-management':
+            initLicenseManagement();
             break;
     }
 }
@@ -7299,7 +7305,7 @@ function initLicenseManagement() {
  */
 function isLicenseAdmin() {
     // Check if current user is extension 9322 (license admin)
-    if (currentUser && currentUser.extension === '9322') {
+    if (currentUser && currentUser.number === '9322') {
         return true;
     }
     return false;
@@ -7333,9 +7339,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(initLicenseManagement, 100);
         });
     }
-    
-    // Update visibility when page loads
-    // Wait for currentUser to be loaded
-    setTimeout(updateLicenseManagementVisibility, 1000);
+});
 });
 
