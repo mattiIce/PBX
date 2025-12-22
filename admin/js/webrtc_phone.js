@@ -665,11 +665,14 @@ class WebRTCPhone {
 // Initialize WebRTC phone when admin panel loads
 let webrtcPhone = null;
 
+// Default extension for the WebRTC phone if no configuration is set
+const DEFAULT_WEBRTC_EXTENSION = 'webrtc-admin';
+
 async function initWebRTCPhone() {
     const apiUrl = window.location.origin;
     
     // Fetch the configured extension from the server
-    let adminExtension = 'webrtc-admin'; // default fallback
+    let adminExtension = DEFAULT_WEBRTC_EXTENSION; // default fallback
     
     try {
         const response = await fetch('/api/webrtc/phone-config');
@@ -700,9 +703,9 @@ async function initWebRTCPhone() {
     // This prompts the user for permission immediately rather than waiting for a call
     await webrtcPhone.requestMicrophoneAccess();
     
-    // Update the UI to show the configured extension
+    // Update the UI to show the configured extension if it's not the default
     const statusDiv = document.getElementById('webrtc-status');
-    if (statusDiv && adminExtension !== 'webrtc-admin') {
+    if (statusDiv && adminExtension !== DEFAULT_WEBRTC_EXTENSION) {
         statusDiv.textContent = `Ready to call (Extension: ${adminExtension})`;
     }
 }

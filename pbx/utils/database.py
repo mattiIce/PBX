@@ -3,6 +3,7 @@ Database backend for PBX features
 Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 """
 
+import json
 import os
 import traceback
 from datetime import datetime
@@ -1516,7 +1517,6 @@ class ExtensionDB:
             elif config_type == "bool":
                 return value.lower() in ("true", "1", "yes") if value else default
             elif config_type == "json":
-                import json
                 return json.loads(value) if value else default
             else:
                 return value if value else default
@@ -1537,7 +1537,6 @@ class ExtensionDB:
         """
         # Convert value to string for storage
         if config_type == "json":
-            import json
             str_value = json.dumps(value)
         elif config_type == "bool":
             str_value = "true" if value else "false"
