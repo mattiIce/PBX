@@ -194,3 +194,45 @@ class SIPMessageBuilder:
             request.set_header("Content-Length", "0")
 
         return request
+
+    @staticmethod
+    def add_caller_id_headers(message, extension_number, display_name, server_ip):
+        """
+        Add caller ID headers to a SIP message
+        
+        Adds P-Asserted-Identity and Remote-Party-ID headers for enhanced
+        caller identification and line appearance support.
+        
+        Args:
+            message: SIPMessage object to add headers to
+            extension_number: Extension number (e.g., "1001")
+            display_name: Display name for the caller (e.g., "John Doe")
+            server_ip: SIP server IP address
+        """
+        # P-Asserted-Identity (RFC 3325)
+        # Format: "Display Name" <sip:extension@domain>
+        pai_value = f'"{display_name}" <sip:{extension_number}@{server_ip}>'
+        message.set_header("P-Asserted-Identity", pai_value)
+        
+        # Remote-Party-ID (legacy, but widely supported)
+        # Format: "Display Name" <sip:extension@domain>;party=calling;privacy=off;screen=no
+        rpid_value = f'"{display_name}" <sip:{extension_number}@{server_ip}>;party=calling;privacy=off;screen=no'
+        message.set_header("Remote-Party-ID", rpid_value)
+    
+    @staticmethod
+    def add_mac_address_header(message, mac_address):
+        """
+        Add MAC address header to a SIP message
+        
+        Adds X-MAC-Address custom header for device identification.
+        
+        Args:
+            message: SIPMessage object to add header to
+            mac_address: MAC address in format XX:XX:XX:XX:XX:XX or XXXXXXXXXXXX
+        """
+        if mac_address:
+            # Normalize MAC address format to XX:XX:XX:XX:XX:XX
+            mac_clean = mac_address.replace(":", "").replace("-", "").lower()
+            if len(mac_clean) == 12:
+                mac_formatted = ":".join([mac_clean[i:i+2] for i in range(0, 12, 2)])
+                message.set_header("X-MAC-Address", mac_formatted)

@@ -17,6 +17,35 @@ server:
   rtp_port_range_end: 20000
   server_name: Aluminum Blanking Phone System
   version: 1.0.0
+# SIP Configuration
+# Features are enabled by default for maximum compatibility
+sip:
+  # Caller ID and Line Identification Headers (ENABLED BY DEFAULT)
+  # These headers help identify which line/account is making the call
+  # and provide enhanced caller identification for multi-line phones
+  caller_id:
+    # P-Asserted-Identity (RFC 3325) - Preferred for trusted networks
+    # Used by carriers and enterprise networks to assert caller identity
+    # DEFAULT: true (enabled)
+    send_p_asserted_identity: true
+    
+    # Remote-Party-ID (RFC 3428) - Legacy header, still widely used
+    # Provides backward compatibility with older systems
+    # DEFAULT: true (enabled)
+    send_remote_party_id: true
+    
+  # Device Identification (ENABLED BY DEFAULT)
+  # Send MAC address in SIP headers for device tracking and provisioning
+  device:
+    # Send MAC address in custom X-MAC-Address header
+    # Useful for auto-provisioning and device management
+    # DEFAULT: true (enabled)
+    send_mac_address: true
+    
+    # Accept MAC address from phones in INVITE messages
+    # This allows phones to identify themselves during calls
+    # DEFAULT: true (enabled)
+    accept_mac_in_invite: true
 # RTP Configuration (imported from Asterisk/FreeSWITCH best practices)
 rtp:
   # Jitter Buffer (from FreeSWITCH STFU library)

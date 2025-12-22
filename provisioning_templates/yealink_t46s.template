@@ -37,6 +37,11 @@ account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
 account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay  
 account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}  # Payload type for RFC2833 (configurable)
 
+# SIP Send Line and MAC Address Support (NEW)
+# Enable sending caller ID and device identification in SIP headers
+account.1.send_line_id = 1       # Send line ID in SIP headers (for multi-line phones)
+account.1.enable_user_equal_phone = 1  # Add user=phone parameter to From/Contact headers
+
 # Network
 network.internet_port.type = 0
 network.internet_port.dhcp = 1
