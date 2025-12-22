@@ -2,6 +2,7 @@
 """
 Main entry point for PBX system
 """
+import logging
 import signal
 import sys
 import time
@@ -14,10 +15,15 @@ load_env_file('.env')
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.test_runner import run_all_tests
+from pbx.utils.graceful_shutdown import setup_graceful_shutdown
+
+# Get logger
+logger = logging.getLogger(__name__)
 
 # Global running flag
 running = True
 pbx = None
+shutdown_handler = None
 
 
 def signal_handler(sig, frame):  # pylint: disable=unused-argument
@@ -155,9 +161,9 @@ if __name__ == "__main__":
     try:
         pbx = PBXCore("config.yml")
 
-        # Register signal handler for graceful shutdown
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # Setup graceful shutdown with 30 second timeout
+        shutdown_handler = setup_graceful_shutdown(pbx, timeout=30)
+        logger.info("Graceful shutdown handlers configured")
 
         # Start PBX
         if pbx.start():
