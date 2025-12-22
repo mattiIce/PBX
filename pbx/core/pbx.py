@@ -233,6 +233,12 @@ class PBXCore:
                             self.logger.info(
                                 f"Auto-synced {synced_count} extension(s) from Active Directory at startup"
                             )
+                            # Reload extension registry to ensure all synced extensions are loaded
+                            self.logger.info("Reloading extension registry from database...")
+                            self.extension_registry.reload()
+                            self.logger.info(
+                                f"Extension registry reloaded: {len(self.extension_registry.extensions)} total extensions"
+                            )
                         else:
                             self.logger.warning(
                                 "AD auto-sync completed but no extensions were synced"
