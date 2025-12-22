@@ -266,7 +266,7 @@ class ConfigValidator:
             
             # Check for default/example email addresses
             from_address = voicemail_config.get("email", {}).get("from_address", "")
-            if "example.com" in from_address:
+            if from_address.endswith("@example.com") or "@example.com" in from_address:
                 self.warnings.append(
                     "Voicemail from_address uses example.com. Update for production."
                 )
