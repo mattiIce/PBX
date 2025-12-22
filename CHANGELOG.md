@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- docker-compose compatibility: Downgraded requests library from 2.32.3 to 2.31.0 to fix `URLSchemeUnknown: Not supported URL scheme http+docker` error when building with docker-compose v1.29.2
+
 ### Security
 
 ## [1.0.0] - 2024-12-19
