@@ -16,6 +16,11 @@ Preferred_Codec_4_ : iLBC
 Preferred_Codec_5_ : SPEEX
 Preferred_Codec_6_ : G729a
 
+# SIP Send Line and MAC Address Support (NEW)
+# Enable sending caller ID and device identification in SIP headers
+Send_Caller_ID_In_From_Header_1_ : Yes
+Remote_Party_ID_1_ : Yes
+
 # Network
 Internet_Connection_Type : DHCP
 

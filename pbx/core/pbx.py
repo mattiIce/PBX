@@ -1223,6 +1223,51 @@ class PBXCore:
                 f"<sip:{from_ext}@{server_ip}:{self.config.get('server.sip_port', 5060)}>",
             )
             invite_to_callee.set_header("Content-Type", "application/sdp")
+            
+            # Add caller ID headers (P-Asserted-Identity and Remote-Party-ID) if configured
+            if self.config.get("sip.caller_id.send_p_asserted_identity", True) or \
+               self.config.get("sip.caller_id.send_remote_party_id", True):
+                # Get caller's display name from extension
+                caller_ext_obj = self.extension_registry.get(from_ext)
+                display_name = from_ext  # Default to extension number
+                if caller_ext_obj:
+                    # Try to get name from extension object
+                    display_name = getattr(caller_ext_obj, 'name', from_ext)
+                    if not display_name or display_name == "":
+                        display_name = from_ext
+                
+                # Add caller ID headers for line identification
+                SIPMessageBuilder.add_caller_id_headers(
+                    invite_to_callee,
+                    from_ext,
+                    display_name,
+                    server_ip
+                )
+                self.logger.debug(f"Added caller ID headers: {display_name} <{from_ext}>")
+            
+            # Add MAC address header if configured
+            if self.config.get("sip.device.send_mac_address", True):
+                # Try to get MAC address from registered phones database
+                mac_address = None
+                if self.registered_phones_db:
+                    try:
+                        phone_info = self.registered_phones_db.get_phone_by_extension(from_ext)
+                        if phone_info and phone_info.get('mac_address'):
+                            mac_address = phone_info['mac_address']
+                    except Exception as e:
+                        self.logger.debug(f"Could not retrieve MAC for extension {from_ext}: {e}")
+                
+                # Also check if MAC was sent in the original INVITE
+                if not mac_address and self.config.get("sip.device.accept_mac_in_invite", True):
+                    x_mac = message.get_header("X-MAC-Address")
+                    if x_mac:
+                        mac_address = x_mac
+                        self.logger.debug(f"Using MAC from incoming INVITE: {mac_address}")
+                
+                # Add MAC header if we found one
+                if mac_address:
+                    SIPMessageBuilder.add_mac_address_header(invite_to_callee, mac_address)
+                    self.logger.debug(f"Added X-MAC-Address header: {mac_address}")
 
             # Send to destination
             self.sip_server._send_message(invite_to_callee.build(), dest_ext_obj.address)

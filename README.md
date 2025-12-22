@@ -35,6 +35,7 @@ A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system buil
 - **SIP Trunk Support** - Connect to external SIP providers
 - **Phone Provisioning** - Auto-configuration for multiple IP phone brands (Zultys, Yealink, Polycom, Cisco, Grandstream) with customizable templates
 - **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
+- **SIP Send Line & Send MAC** - Caller ID headers (P-Asserted-Identity, Remote-Party-ID) and device MAC tracking for enhanced call identification (see [SIP_SEND_LINE_MAC_GUIDE.md](SIP_SEND_LINE_MAC_GUIDE.md))
 - **Phone Book System** - Centralized directory with AD sync, pushed to IP phones in multiple formats (Yealink, Cisco XML)
 - **Paging System** - Full overhead paging support with SIP/RTP integration (hardware-ready)
 - **Webhook System** - Event-driven integrations with HMAC signature support for real-time notifications

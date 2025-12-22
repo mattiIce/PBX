@@ -22,6 +22,11 @@ P79 = 2    # DTMF Type: 0=In-audio, 1=RFC2833, 2=SIP INFO
 P184 = 0   # DTMF Info Type: 0=DTMF, 1=DTMF-Relay
 P78 = 101  # DTMF Payload Type (for RFC2833)
 
+# SIP Send Line and MAC Address Support (NEW)
+# Enable sending caller ID and device identification in SIP headers
+P2350 = 1  # Send P-Asserted-Identity header
+P2351 = 1  # Send Remote-Party-ID header
+
 # Network
 P8 = 0     # DHCP enabled
 
