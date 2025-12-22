@@ -73,7 +73,9 @@ def cmd_generate(args):
     )
     
     # Save to file
-    output_file = args.output or f"license_{args.org.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d')}.json"
+    import re
+    safe_org = re.sub(r'[^a-zA-Z0-9_-]', '_', args.org).lower()
+    output_file = args.output or f"license_{safe_org}_{datetime.now().strftime('%Y%m%d')}.json"
     
     with open(output_file, 'w') as f:
         json.dump(license_data, f, indent=2)
@@ -164,8 +166,8 @@ def cmd_revoke(args):
     lm = LicenseManager(config)
     
     if not args.yes:
-        response = input("Are you sure you want to revoke the current license? (yes/no): ")
-        if response.lower() not in ('yes', 'y'):
+        response = input("Are you sure you want to revoke the current license? Type 'yes' to confirm: ")
+        if response.strip().lower() != 'yes':
             print("Aborted.")
             return 0
     

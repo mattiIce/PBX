@@ -269,8 +269,15 @@ class LicenseManager:
         payload_str = json.dumps(payload, sort_keys=True)
         
         # Generate expected signature
-        # In production, use a private/public key pair
-        secret_key = self.config.get('license_secret_key', 'default_secret_key')
+        # In production, use a private/public key pair and change the secret key!
+        secret_key = self.config.get('license_secret_key')
+        if not secret_key or secret_key == 'default_secret_key':
+            logger.warning(
+                "Using default license secret key! "
+                "Set 'licensing.license_secret_key' in config.yml for production."
+            )
+            secret_key = 'default_secret_key'
+        
         expected_signature = hashlib.sha256(
             f"{payload_str}{secret_key}".encode()
         ).hexdigest()

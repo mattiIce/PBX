@@ -166,7 +166,10 @@ def generate_license():
         JSON with generated license data
     """
     try:
-        # TODO: Add admin authentication check
+        # TODO: SECURITY - Add admin authentication check before production deployment
+        # Example: check for admin session, API key, or JWT token
+        # if not is_admin_authenticated(request):
+        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
         
         data = request.get_json()
         
@@ -238,7 +241,10 @@ def install_license():
         JSON with installation status
     """
     try:
-        # TODO: Add admin authentication check
+        # TODO: SECURITY - Add admin authentication check before production deployment
+        # Example: check for admin session, API key, or JWT token
+        # if not is_admin_authenticated(request):
+        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
         
         data = request.get_json()
         license_data = data.get('license_data') or data
@@ -283,7 +289,10 @@ def revoke_license():
         JSON with revocation status
     """
     try:
-        # TODO: Add admin authentication check
+        # TODO: SECURITY - Add admin authentication check before production deployment
+        # Example: check for admin session, API key, or JWT token
+        # if not is_admin_authenticated(request):
+        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
         
         license_manager = get_license_manager()
         success = license_manager.revoke_license()
@@ -323,7 +332,10 @@ def toggle_licensing():
         JSON with new licensing status
     """
     try:
-        # TODO: Add admin authentication check
+        # TODO: SECURITY - Add admin authentication check before production deployment
+        # Example: check for admin session, API key, or JWT token
+        # if not is_admin_authenticated(request):
+        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
         
         data = request.get_json()
         enabled = data.get('enabled')
@@ -338,8 +350,32 @@ def toggle_licensing():
         # This writes to config file or environment
         license_manager = get_license_manager()
         
-        # For now, we'll update via environment variable
-        # In production, you might want to update config.yml instead
+        # Update .env file for persistence
+        # NOTE: PBX restart required for change to take full effect
+        env_file = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
+        
+        # Read existing .env
+        env_lines = []
+        if os.path.exists(env_file):
+            with open(env_file, 'r') as f:
+                env_lines = f.readlines()
+        
+        # Update or add PBX_LICENSING_ENABLED
+        found = False
+        for i, line in enumerate(env_lines):
+            if line.startswith('PBX_LICENSING_ENABLED='):
+                env_lines[i] = f"PBX_LICENSING_ENABLED={'true' if enabled else 'false'}\n"
+                found = True
+                break
+        
+        if not found:
+            env_lines.append(f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n')
+        
+        # Write back
+        with open(env_file, 'w') as f:
+            f.writelines(env_lines)
+        
+        # Also update runtime environment for immediate effect
         import os
         os.environ['PBX_LICENSING_ENABLED'] = 'true' if enabled else 'false'
         
