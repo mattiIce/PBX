@@ -72,6 +72,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     pbx_core = None  # Set by PBXAPIServer
     logger = get_logger()  # Initialize logger for handler
     _integration_endpoints = None  # Cache for integration endpoints
+    _health_checker = None  # Production health checker instance
 
     def _get_integration_endpoints(self):
         """Get integration endpoints (cached)"""
@@ -730,8 +731,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_root()
             elif path == "/health" or path == "/healthz":
                 self._handle_health()
+            elif path == "/ready" or path == "/readiness":
+                self._handle_readiness()
+            elif path == "/live" or path == "/liveness":
+                self._handle_liveness()
             elif path == "/api/status":
                 self._handle_status()
+            elif path == "/api/health/detailed":
+                self._handle_detailed_health()
+            elif path == "/metrics":
+                self._handle_prometheus_metrics()
             elif path == "/api/extensions":
                 self._handle_get_extensions()
             elif path == "/api/calls":
@@ -1142,9 +1151,99 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_health(self):
         """Lightweight health check endpoint for container orchestration"""
         # Return simple OK response if server is running
-        # This doesn't check PBX core status for faster response
-        self._set_headers(200, "application/json")
-        self.wfile.write(json.dumps({"status": "ok"}).encode())
+        # This is a combined liveness/readiness check for backward compatibility
+        try:
+            checker = self._get_health_checker()
+            is_ready, details = checker.check_readiness()
+
+            status_code = 200 if is_ready else 503
+            self._set_headers(status_code, "application/json")
+            self.wfile.write(json.dumps(details).encode())
+        except Exception as e:
+            self.logger.error(f"Health check error: {e}")
+            self._set_headers(500, "application/json")
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
+    def _handle_liveness(self):
+        """Kubernetes-style liveness probe - is the app alive?"""
+        try:
+            checker = self._get_health_checker()
+            is_alive, details = checker.check_liveness()
+
+            status_code = 200 if is_alive else 503
+            self._set_headers(status_code, "application/json")
+            self.wfile.write(json.dumps(details).encode())
+        except Exception as e:
+            self.logger.error(f"Liveness check error: {e}")
+            self._set_headers(500, "application/json")
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
+    def _handle_readiness(self):
+        """Kubernetes-style readiness probe - is the app ready for traffic?"""
+        try:
+            checker = self._get_health_checker()
+            is_ready, details = checker.check_readiness()
+
+            status_code = 200 if is_ready else 503
+            self._set_headers(status_code, "application/json")
+            self.wfile.write(json.dumps(details).encode())
+        except Exception as e:
+            self.logger.error(f"Readiness check error: {e}")
+            self._set_headers(500, "application/json")
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
+    def _handle_detailed_health(self):
+        """Comprehensive health status for monitoring dashboards"""
+        try:
+            checker = self._get_health_checker()
+            details = checker.get_detailed_status()
+
+            is_healthy = details.get("overall_status") == "healthy"
+            status_code = 200 if is_healthy else 503
+
+            self._set_headers(status_code, "application/json")
+            self.wfile.write(json.dumps(details, indent=2).encode())
+        except Exception as e:
+            self.logger.error(f"Detailed health check error: {e}")
+            self._set_headers(500, "application/json")
+            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+
+    def _handle_prometheus_metrics(self):
+        """Prometheus metrics endpoint"""
+        try:
+            checker = self._get_health_checker()
+            _, details = checker.check_readiness()
+
+            from pbx.utils.production_health import format_health_check_response
+
+            is_healthy = details.get("status") == "ready"
+
+            status_code, metrics_text = format_health_check_response(
+                is_healthy, details, format_type="prometheus"
+            )
+
+            self._set_headers(status_code, "text/plain; version=0.0.4")
+            self.wfile.write(metrics_text.encode())
+        except Exception as e:
+            self.logger.error(f"Metrics endpoint error: {e}")
+            self._set_headers(500, "text/plain")
+            self.wfile.write(f"# ERROR: {str(e)}\n".encode())
+
+    def _get_health_checker(self):
+        """Get or create production health checker instance"""
+        if PBXAPIHandler._health_checker is None:
+            from pbx.utils.production_health import ProductionHealthChecker
+
+            # Get config from pbx_core if available
+            config = None
+            if self.pbx_core and hasattr(self.pbx_core, "config"):
+                config = self.pbx_core.config
+
+            PBXAPIHandler._health_checker = ProductionHealthChecker(
+                pbx_core=self.pbx_core, config=config
+            )
+
+        return PBXAPIHandler._health_checker
 
     def _handle_status(self):
         """Get PBX status"""
