@@ -656,9 +656,16 @@ async function loadExtensions() {
     tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading extensions...</td></tr>';
     
     try {
+        // Add timeout to prevent hanging indefinitely
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         const response = await fetch(`${API_BASE}/api/extensions`, {
-            headers: getAuthHeaders()
+            headers: getAuthHeaders(),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -666,7 +673,13 @@ async function loadExtensions() {
         currentExtensions = extensions;
         
         if (extensions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="loading">No extensions found</td></tr>';
+            tbody.innerHTML = `
+                <tr><td colspan="7" class="loading">
+                    No extensions found. 
+                    <button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>
+                    ${currentUser && currentUser.is_admin ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' : ''}
+                </td></tr>
+            `;
             return;
         }
         
@@ -708,7 +721,16 @@ async function loadExtensions() {
         `).join('');
     } catch (error) {
         console.error('Error loading extensions:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="loading">Error loading extensions</td></tr>';
+        const errorMsg = error.name === 'AbortError' 
+            ? 'Request timed out. The system may still be starting up.' 
+            : 'Error loading extensions';
+        tbody.innerHTML = `
+            <tr><td colspan="7" class="loading">
+                ${errorMsg}
+                <button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>
+                ${currentUser && currentUser.is_admin ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' : ''}
+            </td></tr>
+        `;
     }
 }
 
