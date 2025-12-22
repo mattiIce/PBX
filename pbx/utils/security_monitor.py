@@ -92,8 +92,8 @@ class SecurityMonitor:
         self.monitor_thread.start()
         self.logger.info("Security runtime monitor started")
 
-        # Perform initial security check
-        self.perform_security_check()
+        # The monitor thread will perform the first security check
+        # No need to call it here to avoid duplicate logs at startup
 
     def stop(self):
         """Stop security monitoring"""

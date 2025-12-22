@@ -200,7 +200,7 @@ class ExtensionRegistry:
         extension = self.get(number)
         if extension:
             extension.register(address)
-            self.logger.info(f"Extension {number} registered from {address}")
+            # Logging is handled by the caller (pbx.py) to avoid duplicate logs
             return True
         return False
 
