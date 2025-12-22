@@ -249,6 +249,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_add_webhook()
             elif path == "/api/webrtc/session":
                 self._handle_create_webrtc_session()
+            elif path == "/api/webrtc/phone-config":
+                self._handle_set_webrtc_phone_config()
             elif path == "/api/webrtc/offer":
                 self._handle_webrtc_offer()
             elif path == "/api/webrtc/answer":
@@ -826,6 +828,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_webhooks()
             elif path == "/api/webrtc/sessions":
                 self._handle_get_webrtc_sessions()
+            elif path == "/api/webrtc/phone-config":
+                self._handle_get_webrtc_phone_config()
             elif path == "/api/webrtc/ice-servers":
                 self._handle_get_ice_servers()
             elif path.startswith("/api/webrtc/session/"):
@@ -4127,6 +4131,49 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             config = self.pbx_core.webrtc_signaling.get_ice_servers_config()
             self._send_json(config)
         except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_webrtc_phone_config(self):
+        """Get WebRTC phone extension configuration"""
+        try:
+            # Get the configured extension for the webrtc admin phone
+            extension = self.pbx_core.extension_db.get_config(
+                "webrtc_phone_extension", "webrtc-admin"
+            )
+            self._send_json({"success": True, "extension": extension})
+        except Exception as e:
+            self.logger.error(f"Error getting WebRTC phone config: {e}")
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_set_webrtc_phone_config(self):
+        """Set WebRTC phone extension configuration"""
+        try:
+            data = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            extension = data.get("extension")
+
+            if not extension:
+                self._send_json({"error": "Extension is required"}, 400)
+                return
+
+            # Validate extension exists or is a valid virtual extension
+            is_virtual = extension.startswith("webrtc-")
+            if not is_virtual:
+                ext_info = self.pbx_core.extension_registry.get_extension(extension)
+                if not ext_info:
+                    self._send_json({"error": "Extension not found"}, 404)
+                    return
+
+            # Save the configuration
+            success = self.pbx_core.extension_db.set_config(
+                "webrtc_phone_extension", extension, "string"
+            )
+
+            if success:
+                self._send_json({"success": True, "extension": extension})
+            else:
+                self._send_json({"error": "Failed to save configuration"}, 500)
+        except Exception as e:
+            self.logger.error(f"Error setting WebRTC phone config: {e}")
             self._send_json({"error": str(e)}, 500)
 
     # ========== CRM Integration Handlers ==========

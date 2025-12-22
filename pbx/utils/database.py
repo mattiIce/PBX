@@ -529,6 +529,20 @@ class DatabaseBackend:
         """
         )
 
+        # System configuration table - stores key-value config pairs
+        system_config_table = self._build_table_sql(
+            """
+        CREATE TABLE IF NOT EXISTS system_config (
+            id {SERIAL},
+            config_key VARCHAR(100) UNIQUE NOT NULL,
+            config_value TEXT,
+            config_type VARCHAR(20) DEFAULT 'string',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_by VARCHAR(20)
+        )
+        """
+        )
+
         # Execute table creation
         success = True
         for table_sql in [
@@ -541,6 +555,7 @@ class DatabaseBackend:
             security_audit_table,
             emergency_contacts_table,
             emergency_notifications_table,
+            system_config_table,
         ]:
             if not self._execute_with_context(table_sql, "table creation"):
                 success = False
@@ -1709,3 +1724,101 @@ class ProvisionedDevicesDB:
         """
         )
         return self.db.execute(query, (static_ip, datetime.now(), mac_address))
+
+    def get_config(self, key: str, default=None):
+        """
+        Get a configuration value by key
+
+        Args:
+            key: Configuration key
+            default: Default value if not found
+
+        Returns:
+            Configuration value or default
+        """
+        query = (
+            "SELECT config_value, config_type FROM system_config WHERE config_key = %s"
+            if self.db.db_type == "postgresql"
+            else "SELECT config_value, config_type FROM system_config WHERE config_key = ?"
+        )
+
+        result = self.db.fetch_one(query, (key,))
+        if result:
+            value, config_type = result
+            # Convert value based on type
+            if config_type == "int":
+                return int(value) if value else default
+            elif config_type == "bool":
+                return value.lower() in ("true", "1", "yes") if value else default
+            elif config_type == "json":
+                import json
+                return json.loads(value) if value else default
+            else:
+                return value if value else default
+        return default
+
+    def set_config(self, key: str, value, config_type: str = "string", updated_by: str = None):
+        """
+        Set a configuration value
+
+        Args:
+            key: Configuration key
+            value: Configuration value
+            config_type: Type of value (string, int, bool, json)
+            updated_by: User who updated the config
+
+        Returns:
+            bool: True if successful
+        """
+        # Convert value to string for storage
+        if config_type == "json":
+            import json
+            str_value = json.dumps(value)
+        elif config_type == "bool":
+            str_value = "true" if value else "false"
+        else:
+            str_value = str(value)
+
+        # Check if key exists
+        check_query = (
+            "SELECT config_key FROM system_config WHERE config_key = %s"
+            if self.db.db_type == "postgresql"
+            else "SELECT config_key FROM system_config WHERE config_key = ?"
+        )
+
+        exists = self.db.fetch_one(check_query, (key,))
+
+        if exists:
+            # Update existing
+            query = (
+                """
+            UPDATE system_config
+            SET config_value = %s, config_type = %s, updated_at = %s, updated_by = %s
+            WHERE config_key = %s
+            """
+                if self.db.db_type == "postgresql"
+                else """
+            UPDATE system_config
+            SET config_value = ?, config_type = ?, updated_at = ?, updated_by = ?
+            WHERE config_key = ?
+            """
+            )
+            return self.db.execute(
+                query, (str_value, config_type, datetime.now(), updated_by, key)
+            )
+        else:
+            # Insert new
+            query = (
+                """
+            INSERT INTO system_config (config_key, config_value, config_type, updated_at, updated_by)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+                if self.db.db_type == "postgresql"
+                else """
+            INSERT INTO system_config (config_key, config_value, config_type, updated_at, updated_by)
+            VALUES (?, ?, ?, ?, ?)
+            """
+            )
+            return self.db.execute(
+                query, (key, str_value, config_type, datetime.now(), updated_by)
+            )
