@@ -109,11 +109,20 @@ def cmd_install(args):
         print(f"Error: Failed to load license file: {e}")
         return 1
     
+    # Determine if enforcement is requested
+    enforce_licensing = args.enforce if hasattr(args, 'enforce') else False
+    
     # Install license
     print(f"Installing license from {args.license_file}...")
+    if enforce_licensing:
+        print("⚠️  Enforcement mode: License lock file will be created")
+        print("    Licensing cannot be disabled once lock file exists")
     
-    if lm.save_license(license_data):
+    if lm.save_license(license_data, enforce_licensing=enforce_licensing):
         print("\n✓ License installed successfully!")
+        
+        if enforce_licensing:
+            print("✓ License lock file created - licensing enforcement is mandatory")
         
         # Show status
         status, message = lm.get_license_status()
@@ -229,6 +238,14 @@ def cmd_disable(args):
         with open(env_file, 'r') as f:
             env_lines = f.readlines()
     
+    # Check for license lock file
+    lock_path = os.path.join(os.path.dirname(__file__), '..', '.license_lock')
+    if os.path.exists(lock_path):
+        print("✗ Cannot disable licensing - license lock file exists")
+        print("\nTo disable licensing, first remove the lock file:")
+        print(f"  python {__file__} remove-lock")
+        return 1
+    
     # Update or add PBX_LICENSING_ENABLED
     found = False
     for i, line in enumerate(env_lines):
@@ -249,6 +266,29 @@ def cmd_disable(args):
     print("  sudo systemctl restart pbx")
     
     return 0
+
+
+def cmd_remove_lock(args):
+    """Remove license lock file."""
+    config = setup_config()
+    lm = LicenseManager(config)
+    
+    if not args.yes:
+        response = input("Remove license lock file? This will allow licensing to be disabled. Type 'yes' to confirm: ")
+        if response.strip().lower() != 'yes':
+            print("Aborted.")
+            return 0
+    
+    print("Removing license lock file...")
+    
+    if lm.remove_license_lock():
+        print("✓ License lock file removed")
+        print("\nLicensing can now be disabled via:")
+        print(f"  python {__file__} disable")
+        return 0
+    else:
+        print("✗ License lock file does not exist or could not be removed")
+        return 1
 
 
 def cmd_features(args):
@@ -320,6 +360,9 @@ Examples:
   # Install a license
   python scripts/license_manager.py install license_acme_corp_20251222.json
 
+  # Install a license with enforcement (creates lock file - for commercial deployments)
+  python scripts/license_manager.py install license_acme_corp_20251222.json --enforce
+
   # Check license status
   python scripts/license_manager.py status
 
@@ -331,6 +374,9 @@ Examples:
 
   # Disable licensing (free/open-source mode)
   python scripts/license_manager.py disable
+
+  # Remove license lock file (allows disabling licensing)
+  python scripts/license_manager.py remove-lock
 
   # Revoke current license
   python scripts/license_manager.py revoke
@@ -352,6 +398,8 @@ Examples:
     # Install command
     install_parser = subparsers.add_parser('install', help='Install a license file')
     install_parser.add_argument('license_file', help='Path to license JSON file')
+    install_parser.add_argument('--enforce', action='store_true', 
+                               help='Create license lock file to prevent disabling (for commercial deployments)')
     
     # Status command
     subparsers.add_parser('status', help='Show license status')
@@ -368,6 +416,10 @@ Examples:
     
     # Disable command
     subparsers.add_parser('disable', help='Disable licensing enforcement')
+    
+    # Remove lock command
+    remove_lock_parser = subparsers.add_parser('remove-lock', help='Remove license lock file')
+    remove_lock_parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation')
     
     # Parse arguments
     args = parser.parse_args()
@@ -392,6 +444,8 @@ Examples:
             return cmd_enable(args)
         elif args.command == 'disable':
             return cmd_disable(args)
+        elif args.command == 'remove-lock':
+            return cmd_remove_lock(args)
         else:
             parser.print_help()
             return 1

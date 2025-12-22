@@ -229,11 +229,13 @@ def install_license():
     
     Request JSON:
         {
-            "license_data": { ... license data object ... }
+            "license_data": { ... license data object ... },
+            "enforce_licensing": true  # Optional: create lock file to prevent disabling
         }
         OR
         {
             "license_key": "XXXX-XXXX-XXXX-XXXX",
+            "enforce_licensing": false,  # Optional (default: false)
             ... other license fields ...
         }
     
@@ -248,6 +250,7 @@ def install_license():
         
         data = request.get_json()
         license_data = data.get('license_data') or data
+        enforce_licensing = data.get('enforce_licensing', False)
         
         # Validate license data
         if 'key' not in license_data:
@@ -256,15 +259,20 @@ def install_license():
                 'error': 'Missing license key'
             }), 400
         
-        # Save license
+        # Save license with optional enforcement
         license_manager = get_license_manager()
-        success = license_manager.save_license(license_data)
+        success = license_manager.save_license(license_data, enforce_licensing=enforce_licensing)
+        
+        message = 'License installed successfully'
+        if enforce_licensing:
+            message += ' (licensing enforcement enabled - cannot be disabled)'
         
         if success:
             return jsonify({
                 'success': True,
-                'message': 'License installed successfully',
-                'license': license_manager.get_license_info()
+                'message': message,
+                'license': license_manager.get_license_info(),
+                'enforcement_locked': enforce_licensing
             }), 200
         else:
             return jsonify({
@@ -360,6 +368,17 @@ def toggle_licensing():
             with open(env_file, 'r') as f:
                 env_lines = f.readlines()
         
+        # Check if license lock exists
+        lock_path = os.path.join(
+            os.path.dirname(__file__), '..', '..', '.license_lock'
+        )
+        if os.path.exists(lock_path):
+            return jsonify({
+                'success': False,
+                'error': 'Cannot disable licensing - license lock file exists. Use remove_lock endpoint first.',
+                'licensing_enabled': True
+            }), 403
+        
         # Update or add PBX_LICENSING_ENABLED
         found = False
         for i, line in enumerate(env_lines):
@@ -391,6 +410,45 @@ def toggle_licensing():
     
     except Exception as e:
         logger.error(f"Error toggling licensing: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@license_api.route('/api/license/remove_lock', methods=['POST'])
+def remove_license_lock():
+    """
+    Remove license lock file to allow disabling licensing (admin only).
+    
+    This is used when transitioning from commercial to open-source deployment.
+    Requires admin authentication.
+    
+    Returns:
+        JSON with removal status
+    """
+    try:
+        # TODO: SECURITY - Add admin authentication check before production deployment
+        # Example: check for admin session, API key, or JWT token
+        # if not is_admin_authenticated(request):
+        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+        
+        license_manager = get_license_manager()
+        success = license_manager.remove_license_lock()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'License lock removed - licensing can now be disabled'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'License lock file does not exist or could not be removed'
+            }), 404
+    
+    except Exception as e:
+        logger.error(f"Error removing license lock: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

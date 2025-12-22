@@ -83,9 +83,32 @@ curl http://localhost:8080/api/license/features
 
 ## Enabling/Disabling Licensing
 
-The licensing system can be controlled in **three ways** (in order of priority):
+The licensing system can be controlled in **four ways** (in order of priority):
 
-### 1. Environment Variable (Highest Priority)
+### 1. License Lock File (Highest Priority - Enforcement Mode)
+
+**For Commercial Deployments**: When a license is installed with the `--enforce` flag, a `.license_lock` file is created. This **prevents licensing from being disabled** via config or environment variables.
+
+```bash
+# Install license with enforcement (commercial deployment)
+python scripts/license_manager.py install license.json --enforce
+```
+
+**Effect**: 
+- Licensing is **mandatory** and cannot be disabled
+- Config and environment variable settings are ignored
+- Ideal for SaaS deployments where you control the server
+
+**To disable licensing again** (transition back to open-source):
+```bash
+# Remove the lock file (admin only)
+python scripts/license_manager.py remove-lock
+
+# Then disable licensing
+python scripts/license_manager.py disable
+```
+
+### 2. Environment Variable (Second Priority)
 
 ```bash
 # Enable licensing
@@ -100,7 +123,9 @@ Add to `.env` file for persistence:
 PBX_LICENSING_ENABLED=false
 ```
 
-### 2. Configuration File
+**Note**: If `.license_lock` exists, this setting is ignored.
+
+### 3. Configuration File (Third Priority)
 
 Add to `config.yml`:
 ```yaml
@@ -111,7 +136,9 @@ licensing:
   license_secret_key: "your-secret-key-here"  # Change in production!
 ```
 
-### 3. REST API (Runtime Toggle)
+**Note**: If `.license_lock` exists or environment variable is set, this setting is ignored.
+
+### 4. REST API (Runtime Toggle)
 
 ```bash
 POST /api/license/toggle
@@ -307,6 +334,7 @@ POST /api/license/generate
 
 ### Method 1: REST API
 
+**Standard Installation** (open-source/internal use):
 ```bash
 POST /api/license/install
 {
@@ -319,7 +347,58 @@ POST /api/license/install
 }
 ```
 
-### Method 2: Manual File Installation
+**Commercial Installation with Enforcement**:
+```bash
+POST /api/license/install
+{
+  "license_data": {
+    "key": "A3F2-8C1D-9E4B-7F05",
+    "type": "professional",
+    "issued_to": "Example Company",
+    ... (rest of license data)
+  },
+  "enforce_licensing": true
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "License installed successfully (licensing enforcement enabled - cannot be disabled)",
+  "license": { ... },
+  "enforcement_locked": true
+}
+```
+
+When `enforce_licensing: true` is set:
+- Creates a `.license_lock` file
+- Prevents licensing from being disabled
+- Ideal for commercial SaaS deployments
+
+### Method 2: CLI Tool
+
+**Standard Installation**:
+```bash
+python scripts/license_manager.py install license.json
+```
+
+**Commercial Installation with Enforcement**:
+```bash
+python scripts/license_manager.py install license.json --enforce
+```
+
+Output:
+```
+Installing license from license.json...
+⚠️  Enforcement mode: License lock file will be created
+    Licensing cannot be disabled once lock file exists
+
+✓ License installed successfully!
+✓ License lock file created - licensing enforcement is mandatory
+```
+
+### Method 3: Manual File Installation
 
 1. Save license data to `.license` file in PBX root directory:
 
@@ -338,11 +417,42 @@ cat > .license << 'EOF'
 EOF
 ```
 
-2. Restart PBX system:
+2. **(Optional)** For commercial enforcement, create lock file:
+
+```bash
+cat > .license_lock << 'EOF'
+{
+  "created": "2025-12-22T10:30:00",
+  "license_key": "A3F2-8C1D-9E4B-7F05...",
+  "issued_to": "Example Company",
+  "type": "professional",
+  "enforcement": "mandatory"
+}
+EOF
+chmod 600 .license_lock
+```
+
+3. Restart PBX system:
 
 ```bash
 sudo systemctl restart pbx
 ```
+
+### Removing License Lock (Admin Operation)
+
+To transition from commercial to open-source deployment:
+
+**CLI**:
+```bash
+python scripts/license_manager.py remove-lock
+```
+
+**API**:
+```bash
+POST /api/license/remove_lock
+```
+
+**Warning**: Only use this when transitioning deployment modes. This allows licensing to be disabled again.
 
 ---
 

@@ -97,25 +97,36 @@ class LicenseManager:
         Check if licensing is enabled.
         
         Checks multiple sources in order of priority:
-        1. Environment variable: PBX_LICENSING_ENABLED
-        2. Config file: licensing.enabled
-        3. Default: False (disabled by default for open-source use)
+        1. License lock file: .license_lock (if exists, licensing is mandatory)
+        2. Environment variable: PBX_LICENSING_ENABLED
+        3. Config file: licensing.enabled
+        4. Default: False (disabled by default for open-source use)
         
         Returns:
             True if licensing should be enforced, False otherwise
         """
-        # Environment variable (highest priority)
+        # Check for license lock file (highest priority - enforces licensing)
+        # This file is created when a commercial license is first installed
+        # and prevents users from disabling licensing via config/env
+        license_lock_path = os.path.join(
+            os.path.dirname(__file__), '..', '..', '.license_lock'
+        )
+        if os.path.exists(license_lock_path):
+            logger.info("License lock file detected - licensing enforcement is mandatory")
+            return True
+        
+        # Environment variable (second priority)
         env_enabled = os.getenv('PBX_LICENSING_ENABLED', '').lower()
         if env_enabled in ('true', '1', 'yes', 'on'):
             return True
         if env_enabled in ('false', '0', 'no', 'off'):
             return False
         
-        # Config file
+        # Config file (third priority)
         if 'licensing' in self.config:
             return self.config['licensing'].get('enabled', False)
         
-        # Default: disabled
+        # Default: disabled (open-source friendly)
         return False
     
     def _initialize_features(self) -> Dict[str, List[str]]:
@@ -364,12 +375,14 @@ class LicenseManager:
         parts = [key_hash[i:i+4].upper() for i in range(0, 16, 4)]
         return '-'.join(parts)
     
-    def save_license(self, license_data: Dict) -> bool:
+    def save_license(self, license_data: Dict, enforce_licensing: bool = False) -> bool:
         """
         Save license to file.
         
         Args:
             license_data: License data to save
+            enforce_licensing: If True, create a license lock file to prevent 
+                             licensing from being disabled (for commercial deployments)
         
         Returns:
             True if saved successfully, False otherwise
@@ -380,6 +393,10 @@ class LicenseManager:
             
             logger.info(f"License saved to {self.license_path}")
             
+            # Create license lock file if enforcement is requested
+            if enforce_licensing:
+                self._create_license_lock(license_data)
+            
             # Reload license
             self._load_license()
             
@@ -387,6 +404,67 @@ class LicenseManager:
         
         except Exception as e:
             logger.error(f"Error saving license: {e}")
+            return False
+    
+    def _create_license_lock(self, license_data: Dict) -> None:
+        """
+        Create a license lock file to enforce licensing.
+        
+        This file prevents users from disabling licensing via config or environment.
+        Used for commercial deployments where licensing must be enforced.
+        
+        Args:
+            license_data: License data to include in lock file
+        """
+        lock_path = os.path.join(
+            os.path.dirname(self.license_path), '.license_lock'
+        )
+        
+        try:
+            lock_data = {
+                'created': datetime.now().isoformat(),
+                'license_key': license_data.get('key', '')[:19] + '...',  # Partial key
+                'issued_to': license_data.get('issued_to', ''),
+                'type': license_data.get('type', ''),
+                'enforcement': 'mandatory'
+            }
+            
+            with open(lock_path, 'w') as f:
+                json.dump(lock_data, f, indent=2)
+            
+            # Restrict permissions (owner read/write only)
+            os.chmod(lock_path, 0o600)
+            
+            logger.info(f"License lock file created at {lock_path} - licensing enforcement is now mandatory")
+        
+        except Exception as e:
+            logger.error(f"Error creating license lock file: {e}")
+    
+    def remove_license_lock(self) -> bool:
+        """
+        Remove license lock file (admin operation).
+        
+        This allows licensing to be disabled again. Should only be used when
+        transitioning from commercial to open-source deployment.
+        
+        Returns:
+            True if removed successfully, False otherwise
+        """
+        lock_path = os.path.join(
+            os.path.dirname(self.license_path), '.license_lock'
+        )
+        
+        try:
+            if os.path.exists(lock_path):
+                os.remove(lock_path)
+                logger.info("License lock file removed - licensing can now be disabled")
+                return True
+            else:
+                logger.warning("License lock file does not exist")
+                return False
+        
+        except Exception as e:
+            logger.error(f"Error removing license lock file: {e}")
             return False
     
     def get_license_status(self) -> Tuple[LicenseStatus, Optional[str]]:
