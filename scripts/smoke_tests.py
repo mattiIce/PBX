@@ -304,7 +304,7 @@ class SmokeTestRunner:
             try:
                 data = json.loads(e.read().decode())
                 return e.code, data
-            except:
+            except Exception:
                 return e.code, {"error": str(e)}
         except urllib.error.URLError as e:
             raise Exception(f"Connection failed: {e}")
