@@ -28,12 +28,12 @@ sip:
     # Used by carriers and enterprise networks to assert caller identity
     # DEFAULT: true (enabled)
     send_p_asserted_identity: true
-    
+
     # Remote-Party-ID (RFC 3325 / Legacy extension) - Legacy header, still widely used
     # Provides backward compatibility with older systems
     # DEFAULT: true (enabled)
     send_remote_party_id: true
-    
+
   # Device Identification (ENABLED BY DEFAULT)
   # Send MAC address in SIP headers for device tracking and provisioning
   device:
@@ -41,7 +41,7 @@ sip:
     # Useful for auto-provisioning and device management
     # DEFAULT: true (enabled)
     send_mac_address: true
-    
+
     # Accept MAC address from phones in INVITE messages
     # This allows phones to identify themselves during calls
     # DEFAULT: true (enabled)
@@ -154,10 +154,10 @@ features:
   music_on_hold: true
   auto_attendant: true
   max_call_duration: 7200
-  
+
   # DTMF Configuration - Global settings for all devices
   # Note: Individual phone templates may override these for device-specific requirements
-  # 
+  #
   # How to choose the right payload type:
   # ------------------------------------------------------------------
   # 1. START WITH: 101 (RFC2833 standard - works for most phones)
@@ -175,19 +175,19 @@ features:
                                # 100 = Cisco/common alternative
                                # 102 = Carrier alternative
                                # 96  = Generic fallback
-  
+
   # Phone Book - Centralized directory for IP phones
   phone_book:
     enabled: true              # Enable phone book feature (required for remote phone book URL)
     auto_sync_from_ad: true    # Automatically sync from Active Directory
-  
+
   # Voicemail Transcription - Speech-to-text for voicemails
   voicemail_transcription:
     enabled: true              # Enable voicemail transcription
     provider: vosk              # Provider: 'vosk' (FREE, offline) or 'google'
     vosk_model_path: models/vosk-model-small-en-us-0.15  # Path to Vosk model (download from https://alphacephei.com/vosk/models)
     # For Google Cloud Speech-to-Text, set GOOGLE_APPLICATION_CREDENTIALS environment variable
-  
+
   # Webhook System - Event-driven integrations
   webhooks:
     enabled: false
@@ -195,7 +195,7 @@ features:
     retry_delay: 5          # Seconds between retries
     timeout: 10             # HTTP request timeout in seconds
     worker_threads: 2       # Number of delivery worker threads
-    
+
     # Webhook subscriptions
     # Example subscriptions (add your own endpoints):
     subscriptions: []
@@ -205,38 +205,38 @@ features:
       #   secret: "your-webhook-secret"  # Optional - for HMAC signature
       #   headers:            # Optional custom headers
       #     Authorization: "Bearer your-token"
-      # 
+      #
       # - url: "https://crm.company.com/api/call-events"
       #   events:
       #     - "call.started"
       #     - "call.ended"
       #   enabled: true
-      # 
+      #
       # - url: "https://analytics.company.com/webhooks"
       #   events:
       #     - "voicemail.new"
       #     - "queue.call_answered"
       #   enabled: true
-  
+
   # WebRTC Browser Calling - No-download browser-based calling
   webrtc:
     enabled: true
     verbose_logging: false    # Enable verbose logging for debugging call failures
     session_timeout: 3600     # Session timeout in seconds (matches ZIP33G: 3600s/1 hour)
     ice_transport_policy: all # ICE transport policy: 'all' or 'relay'
-    
+
     # STUN servers for NAT traversal
     stun_servers:
       - stun:stun.l.google.com:19302
       - stun:stun1.l.google.com:19302
-    
+
     # TURN servers for relay (optional)
     # Uncomment and configure if you need TURN relay support
     turn_servers: []
       # - url: turn:your-turn-server.com:3478
       #   username: your-turn-username
       #   credential: your-turn-password
-    
+
     # Codec Configuration
     # Priority: PCMU (0) > PCMA (8) > G722 (9) > Opus (optional) > RFC2833 (101) for DTMF
     # Note: G.711 (PCMU/PCMA) prioritized for maximum compatibility with hardware phones
@@ -264,7 +264,7 @@ features:
         name: telephone-event
         priority: 5
         enabled: true
-    
+
     # DTMF Configuration (matches Zultys ZIP33G)
     # Primary: RFC2833 (out-of-band RTP events)
     # Fallback: SIP INFO
@@ -273,18 +273,18 @@ features:
       payload_type: 101          # RFC2833 payload type
       duration: 160              # DTMF duration in milliseconds
       sip_info_fallback: true    # Enable SIP INFO as fallback
-    
+
     # RTP Settings (matches Zultys ZIP33G)
     rtp:
       port_min: 10000            # Minimum RTP port
       port_max: 20000            # Maximum RTP port
       packet_time: 20            # RTP packet time in milliseconds
-    
+
     # NAT Settings (matches Zultys ZIP33G)
     nat:
       udp_update_time: 30        # Keep-alive interval in seconds
       rport: true                # Enable rport for NAT traversal
-    
+
     # Audio Settings (matches Zultys ZIP33G)
     audio:
       echo_cancellation: true    # Enable echo cancellation
@@ -292,25 +292,25 @@ features:
       auto_gain_control: true    # Enable automatic gain control
       voice_activity_detection: true  # Enable VAD
       comfort_noise: true        # Enable comfort noise generation
-  
+
   # CRM Integration and Screen Pop - Auto-display customer info on calls
   crm_integration:
     enabled: true
     cache_enabled: true       # Cache lookup results
     cache_timeout: 3600       # Cache timeout in seconds (1 hour)
-    
+
     # Lookup providers (tried in order)
     providers:
       # Phone Book lookup
       - type: phone_book
         enabled: true
         name: PhoneBook
-      
+
       # Active Directory lookup
       - type: active_directory
         enabled: true
         name: ActiveDirectory
-      
+
       # External CRM API lookup (example)
       # - type: external_crm
       #   enabled: true
@@ -318,14 +318,14 @@ features:
       #   url: https://your-crm.com/api/lookup
       #   api_key: your-api-key-here
       #   timeout: 5
-  
+
   # Hot-Desking - Log in from any phone, retain settings
   hot_desking:
     enabled: true
     require_pin: true                  # Require voicemail PIN for login
     allow_concurrent_logins: false     # Allow same extension on multiple devices
     auto_logout_timeout: 28800         # Auto-logout after inactivity (8 hours)
-  
+
   # Find Me/Follow Me - Ring multiple destinations sequentially or simultaneously
   find_me_follow_me:
     enabled: true                      # Enable Find Me/Follow Me feature
@@ -454,11 +454,11 @@ provisioning:
   url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
   custom_templates_dir: 'provisioning_templates'
   devices: []
-  
+
   # LDAP/LDAPS Phone Book Configuration for IP Phones
   # This configures phones to directly access LDAP directory for lookups
   # Supported on: Zultys ZIP 33G, ZIP 37G, Yealink phones, and other LDAP-capable devices
-  # 
+  #
   # NOTE: If AD integration is enabled, the system will automatically use AD credentials
   # from .env (AD_SERVER, AD_BIND_DN, AD_BIND_PASSWORD) for phone provisioning.
   # The settings below are optional overrides or used when AD integration is disabled.
@@ -479,7 +479,7 @@ provisioning:
     name_attr: cn  # LDAP attribute for contact name
     number_attr: telephoneNumber  # LDAP attribute for phone number
     display_name: Company Directory  # Display name shown on phone
-  
+
   # Remote Phone Book URL (Fallback method)
   # This provides a URL where phones can fetch an XML directory
   # Useful as a fallback if LDAP is unreliable or unavailable
@@ -495,7 +495,7 @@ integrations:
   # All integrations below are 100% free and open source
   # See OPEN_SOURCE_INTEGRATIONS.md for detailed setup guides
   # Annual cost: $0 (vs $3,726+/user for proprietary stack)
-  
+
   # Jitsi Meet - Video Conferencing (Free alternative to Zoom)
   jitsi:
     enabled: false  # Set to true to enable
@@ -506,11 +506,11 @@ integrations:
     # For development/testing only, you may use: http://localhost:8888
     server_url: https://localhost:8443  # Using dedicated port 8443 to avoid conflicts
     auto_create_rooms: true  # Auto-create meeting rooms for call escalation
-    
+
     # Optional: JWT authentication for secure rooms (requires self-hosted Jitsi)
     app_id: ''  # JWT application ID (leave empty for basic setup)
     app_secret: ''  # JWT secret key (leave empty for basic setup)
-  
+
   # Matrix - Team Messaging (Free alternative to Slack/Teams Chat)
   matrix:
     enabled: false  # Set to true to enable
@@ -520,18 +520,18 @@ integrations:
     # NOTE: HTTPS recommended to encrypt Matrix communications - see HTTPS_SETUP_GUIDE.md
     # Port 8008 is standard for Matrix and does not conflict with other services
     homeserver_url: https://localhost:8008  # Using local server on standard port 8008
-    
+
     # Bot account for sending notifications
     bot_username: ''  # Matrix bot user ID (@pbxbot:localhost or @pbxbot:matrix.org)
     # SECURITY: Password loaded from environment variable
     # Set MATRIX_BOT_PASSWORD in .env file
     bot_password: ${MATRIX_BOT_PASSWORD}
-    
+
     # Room configuration
     notification_room: ''  # Room ID for general notifications (!xxx:localhost or !xxx:matrix.org)
     voicemail_room: ''  # Optional: Separate room for voicemail (!xxx:localhost or !xxx:matrix.org)
     missed_call_notifications: true  # Send missed call alerts
-  
+
   # EspoCRM - Customer Relationship Management (Free alternative to Salesforce/HubSpot)
   espocrm:
     enabled: false  # Set to true to enable
@@ -545,18 +545,18 @@ integrations:
     # SECURITY: API key loaded from environment variable
     # Set ESPOCRM_API_KEY in .env file
     api_key: ${ESPOCRM_API_KEY}
-    
+
     # Feature flags
     auto_create_contacts: true  # Create contacts for unknown callers
     auto_log_calls: true  # Automatically log all calls to CRM
     screen_pop: true  # Show contact info on incoming calls
-  
+
   # =============================================================================
   # PROPRIETARY INTEGRATIONS (Optional - Require Licenses)
   # =============================================================================
   # These integrations require paid licenses from third-party vendors
   # Consider using free alternatives above to save costs
-  
+
   # Active Directory / OpenLDAP - Directory Services
   # Note: Works with both Microsoft AD (proprietary) and OpenLDAP (free)
   active_directory:

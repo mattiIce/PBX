@@ -9,18 +9,18 @@
        reg.1.server.1.port="{{SIP_PORT}}"
        reg.1.server.1.expires="3600"
        reg.1.lineKeys="1"/>
-  
+
   <!-- SIP Send Line and MAC Address Support (NEW) -->
   <call call.remotePartyID.1.render="1"
         call.remotePartyID.1.stage="1"/>
-  
+
   <voice voice.codecPref.G711_Mu="1"
          voice.codecPref.G711_A="2"
          voice.codecPref.G722="3"
          voice.codecPref.iLBC="4"
          voice.codecPref.SPEEX="5"
          voice.codecPref.G729_AB="6"/>
-  
+
   <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"
             tcpIpApp.sntp.gmtOffset="-28800"/>
 </polycomConfig>

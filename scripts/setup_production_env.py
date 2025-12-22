@@ -8,8 +8,8 @@ validates their format, and checks for security issues.
 
 import os
 import re
-import sys
 import secrets
+import sys
 from pathlib import Path
 
 

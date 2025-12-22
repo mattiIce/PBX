@@ -29,11 +29,11 @@ has_nginx_processes() {
 # Function to check if port 80 is available and handle conflicts
 check_port_80() {
     echo "Checking port 80 availability..."
-    
+
     # Check if something is listening on port 80
     if is_port_80_in_use; then
         echo -e "${YELLOW}Port 80 is already in use${NC}"
-        
+
         # Try to identify what's using port 80
         local port_80_process=""
         if command -v lsof &> /dev/null; then
@@ -42,29 +42,29 @@ check_port_80() {
             # Use awk instead of grep -oP for better compatibility
             port_80_process=$(ss -tlnp 2>/dev/null | grep ':80 ' | awk -F'pid=' '{if ($2) {split($2, a, ","); print a[1]}}' | head -1)
         fi
-        
+
         # Validate PID is numeric
         if [ -n "$port_80_process" ] && ! [[ "$port_80_process" =~ ^[0-9]+$ ]]; then
             port_80_process=""
         fi
-        
+
         if [ -n "$port_80_process" ]; then
             local process_name=$(ps -p "$port_80_process" -o comm= 2>/dev/null || echo "unknown")
             local process_cmdline=$(ps -p "$port_80_process" -o args= 2>/dev/null || echo "unknown")
-            
+
             echo "Process using port 80:"
             echo "  PID: $port_80_process"
             echo "  Name: $process_name"
             echo "  Command: $process_cmdline"
-            
+
             # Check if it's an nginx process
             if [[ "$process_name" == *"nginx"* ]]; then
                 echo ""
                 echo -e "${YELLOW}An nginx process is already running on port 80${NC}"
-                
+
                 # Check if nginx service thinks it's running
                 local nginx_service_state=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
-                
+
                 if [ "$nginx_service_state" = "active" ]; then
                     # Nginx is active - check if it's already configured for PBX
                     # If we're setting up for a new domain, this is likely from another service (Jitsi, etc.)
@@ -78,18 +78,18 @@ check_port_80() {
                     echo "You can restart nginx later with: sudo systemctl start nginx"
                     echo ""
                     read -p "Stop nginx now? (y/n): " STOP_NGINX
-                    
+
                     if [ "$STOP_NGINX" = "y" ] || [ "$STOP_NGINX" = "Y" ]; then
                         echo "Stopping nginx..."
                         systemctl stop nginx 2>/dev/null || true
                         sleep 2
-                        
+
                         # Verify port 80 is now free
                         if is_port_80_in_use; then
                             echo -e "${RED}Error: Port 80 is still in use after stopping nginx${NC}"
                             return 1
                         fi
-                        
+
                         echo -e "${GREEN}Successfully stopped nginx${NC}"
                         echo ""
                         read -p "Disable nginx from starting on boot? (y/n): " DISABLE_NGINX
@@ -105,28 +105,28 @@ check_port_80() {
                 else
                     echo -e "${YELLOW}Warning: Nginx process exists but service state is: $nginx_service_state${NC}"
                     echo "This suggests a stale nginx process. Attempting to clean up..."
-                    
+
                     # Try to stop all nginx processes
                     echo "Stopping stale nginx processes..."
                     systemctl stop nginx 2>/dev/null || true
-                    
+
                     # Wait a moment for processes to stop
                     sleep 2
-                    
+
                     # If nginx processes still exist, force kill them
                     if has_nginx_processes; then
                         echo "Force killing remaining nginx processes..."
                         pkill -9 nginx 2>/dev/null || true
                         sleep 1
                     fi
-                    
+
                     # Verify port 80 is now free
                     if is_port_80_in_use; then
                         echo -e "${RED}Error: Unable to free port 80 even after stopping nginx${NC}"
                         echo "Please manually investigate and stop the process using port 80"
                         return 1
                     fi
-                    
+
                     echo -e "${GREEN}Successfully cleaned up stale nginx processes${NC}"
                     return 0
                 fi
@@ -135,11 +135,11 @@ check_port_80() {
                 echo ""
                 echo -e "${YELLOW}Port 80 is in use by a non-nginx process${NC}"
                 echo ""
-                
+
                 # Check if it's a known service that we can offer to stop automatically
                 local is_systemd_service=false
                 local service_name=""
-                
+
                 # Common web servers that might be running as services (excluding nginx, handled above)
                 for svc in apache2 httpd lighttpd; do
                     if systemctl is-active --quiet "$svc" 2>/dev/null; then
@@ -148,36 +148,36 @@ check_port_80() {
                         break
                     fi
                 done
-                
+
                 if [ "$is_systemd_service" = true ] && [ -n "$service_name" ]; then
                     echo "Detected $service_name service is running on port 80."
-                    
+
                     # Provide context about what might be affected
                     case "$service_name" in
                         apache2|httpd)
                             echo "This may be serving EspoCRM or other web applications."
                             ;;
                     esac
-                    
+
                     echo ""
                     echo "Would you like to automatically stop $service_name to free port 80?"
                     echo -e "${YELLOW}Warning: This will stop the $service_name service and may affect related services.${NC}"
-                    
+
                     # Additional warnings for specific services
                     if [ "$service_name" = "apache2" ] || [ "$service_name" = "httpd" ]; then
                         echo -e "${YELLOW}Note: This may affect EspoCRM or other web applications using Apache.${NC}"
                     fi
-                    
+
                     echo "You can restart it later if needed with: sudo systemctl start $service_name"
                     echo ""
                     read -p "Stop $service_name now? (y/n): " STOP_SERVICE
-                    
+
                     if [ "$STOP_SERVICE" = "y" ] || [ "$STOP_SERVICE" = "Y" ]; then
                         echo "Stopping $service_name..."
                         # Note: systemctl commands don't need sudo as script requires root (checked at script start)
                         if systemctl stop "$service_name"; then
                             echo -e "${GREEN}Successfully stopped $service_name${NC}"
-                            
+
                             # Optionally disable the service from starting on boot
                             echo ""
                             read -p "Disable $service_name from starting on boot? (y/n): " DISABLE_SERVICE
@@ -185,7 +185,7 @@ check_port_80() {
                                 systemctl disable "$service_name" 2>/dev/null || true
                                 echo -e "${GREEN}$service_name disabled from automatic startup${NC}"
                             fi
-                            
+
                             # Verify port 80 is now free
                             sleep 2
                             if is_port_80_in_use; then
@@ -193,7 +193,7 @@ check_port_80() {
                                 echo "Please check what else might be using port 80"
                                 return 1
                             fi
-                            
+
                             echo -e "${GREEN}Port 80 is now available${NC}"
                             return 0
                         else
@@ -241,12 +241,12 @@ check_port_80() {
 # Function to manage nginx service (start/reload)
 manage_nginx_service() {
     local action_description="${1:-Starting/reloading}"
-    
+
     echo "$action_description nginx..."
-    
+
     # Check nginx service state
     NGINX_STATE=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
-    
+
     if [ "$NGINX_STATE" = "active" ]; then
         # Nginx is running, reload configuration
         echo "Nginx is active, reloading configuration..."
@@ -261,23 +261,23 @@ manage_nginx_service() {
     else
         # Nginx is not active (could be inactive, failed, or not loaded)
         echo "Nginx is not active (state: $NGINX_STATE), starting service..."
-        
+
         # Check if there are any stale nginx processes running
         if has_nginx_processes; then
             echo -e "${YELLOW}Warning: Found nginx processes running but service state is $NGINX_STATE${NC}"
             echo "Cleaning up stale nginx processes..."
-            
+
             # Try graceful stop first
             systemctl stop nginx 2>/dev/null || true
             sleep 2
-            
+
             # If processes still exist, force kill them
             if has_nginx_processes; then
                 echo "Nginx processes still running, force terminating..."
                 pkill -9 nginx 2>/dev/null || true
                 sleep 1
             fi
-            
+
             # Verify processes are gone
             if has_nginx_processes; then
                 echo -e "${RED}Error: Unable to stop nginx processes${NC}"
@@ -286,13 +286,13 @@ manage_nginx_service() {
             fi
             echo -e "${GREEN}Stale nginx processes cleaned up${NC}"
         fi
-        
+
         # If nginx is in a failed state, reset it first
         if systemctl is-failed --quiet nginx; then
             echo "Resetting failed nginx service..."
             systemctl reset-failed nginx
         fi
-        
+
         # Start nginx
         if ! systemctl start nginx; then
             echo -e "${RED}Failed to start nginx${NC}"
@@ -300,11 +300,11 @@ manage_nginx_service() {
             journalctl -xeu nginx.service --no-pager -n 50
             return 1
         fi
-        
+
         # Enable nginx to start on boot
         systemctl enable nginx
     fi
-    
+
     return 0
 }
 
@@ -314,7 +314,7 @@ echo "================================================================"
 echo ""
 
 # Check if running as root
-if [ "$EUID" -ne 0 ]; then 
+if [ "$EUID" -ne 0 ]; then
     echo -e "${RED}Error: This script must be run as root (use sudo)${NC}"
     exit 1
 fi
@@ -393,12 +393,12 @@ cat > /etc/nginx/sites-available/$DOMAIN_NAME << EOF
 server {
     listen 80;
     server_name $DOMAIN_NAME;
-    
+
     # Allow certbot to verify domain ownership
     location /.well-known/acme-challenge/ {
         root /var/www/html;
     }
-    
+
     # Logging
     access_log /var/log/nginx/${DOMAIN_NAME}-access.log;
     error_log /var/log/nginx/${DOMAIN_NAME}-error.log;
@@ -407,23 +407,23 @@ server {
     location / {
         proxy_pass http://localhost:$BACKEND_PORT;
         proxy_http_version 1.1;
-        
+
         # WebSocket support (for WebRTC phone)
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        
+
         # Forward original request information
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        
+
         # Timeouts for long-running connections
         proxy_read_timeout 300;
         proxy_connect_timeout 300;
         proxy_send_timeout 300;
     }
-    
+
     # API endpoint with rate limiting
     location /api/ {
         limit_req zone=api_limit burst=20 nodelay;
@@ -473,7 +473,7 @@ if [ ${PIPESTATUS[0]} -eq 0 ]; then
     echo -e "${GREEN}Successfully obtained SSL certificate!${NC}"
 else
     echo -e "${YELLOW}Warning: Failed to obtain SSL certificate${NC}"
-    
+
     # Check for specific error types
     if grep -q "$CERTBOT_OPENSSL_ERROR_PATTERN" /tmp/certbot_output.log; then
         echo ""
@@ -512,7 +512,7 @@ else
         echo "Check the certbot logs at: /var/log/letsencrypt/letsencrypt.log"
         echo ""
     fi
-    
+
     # Don't exit - allow the script to complete with HTTP-only configuration
     echo -e "${YELLOW}Continuing with HTTP-only configuration...${NC}"
     echo "Your site will be accessible via: http://$DOMAIN_NAME"
@@ -581,4 +581,3 @@ fi
 
 echo ""
 echo -e "${GREEN}Enjoy your PBX system!${NC}"
-

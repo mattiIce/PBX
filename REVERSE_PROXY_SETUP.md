@@ -469,4 +469,3 @@ sudo nginx -t
 **Need Help?** Check logs at:
 - Nginx: `/var/log/nginx/abps.albl.com-error.log`
 - PBX: `[PBX_INSTALL_DIR]/logs/pbx.log`
-

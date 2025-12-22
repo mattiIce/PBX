@@ -34,7 +34,7 @@ account.1.codec.7.payload_type = G726-32
 
 # DTMF Settings
 account.1.dtmf.type = 2          # 0=Inband, 1=RFC2833, 2=SIP INFO
-account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay  
+account.1.dtmf.info_type = 0     # 0=DTMF, 1=DTMF-Relay
 account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}  # Payload type for RFC2833 (configurable)
 
 # SIP Send Line and MAC Address Support (NEW)

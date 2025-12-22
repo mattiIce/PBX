@@ -41,9 +41,11 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
         from pbx.core.pbx import PBXCore
 
         # Mock the necessary components
-        with patch("pbx.core.pbx.VoicemailSystem") as MockVoicemailSystem, patch(
-            "pbx.rtp.handler.RTPPlayer"
-        ) as MockRTPPlayer, patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder:
+        with (
+            patch("pbx.core.pbx.VoicemailSystem") as MockVoicemailSystem,
+            patch("pbx.rtp.handler.RTPPlayer") as MockRTPPlayer,
+            patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder,
+        ):
 
             # Set up mocks
             mock_vm_system = MagicMock()
@@ -138,9 +140,11 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
         """
         from pbx.core.pbx import PBXCore
 
-        with patch("pbx.core.pbx.VoicemailSystem") as MockVoicemailSystem, patch(
-            "pbx.rtp.handler.RTPPlayer"
-        ) as MockRTPPlayer, patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder:
+        with (
+            patch("pbx.core.pbx.VoicemailSystem") as MockVoicemailSystem,
+            patch("pbx.rtp.handler.RTPPlayer") as MockRTPPlayer,
+            patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder,
+        ):
 
             # Set up mocks
             mock_vm_system = MagicMock()

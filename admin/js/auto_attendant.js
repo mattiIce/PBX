@@ -8,16 +8,16 @@ async function loadAutoAttendantConfig() {
         const configResponse = await fetch(`${API_BASE}/api/auto-attendant/config`);
         if (configResponse.ok) {
             const config = await configResponse.json();
-            
+
             document.getElementById('aa-enabled').checked = config.enabled || false;
             document.getElementById('aa-extension').value = config.extension || '0';
             document.getElementById('aa-timeout').value = config.timeout || 10;
             document.getElementById('aa-max-retries').value = config.max_retries || 3;
         }
-        
+
         // Load menu options
         await loadAutoAttendantMenuOptions();
-        
+
         // Load prompts
         await loadAutoAttendantPrompts();
     } catch (error) {
@@ -33,17 +33,17 @@ async function loadAutoAttendantPrompts() {
             console.warn('Failed to load prompts, using defaults');
             return;
         }
-        
+
         const data = await response.json();
         const prompts = data.prompts || {};
         const companyName = data.company_name || '';
-        
+
         // Set company name
         const companyNameField = document.getElementById('aa-company-name');
         if (companyNameField) {
             companyNameField.value = companyName;
         }
-        
+
         // Set prompt texts
         if (prompts.welcome) {
             document.getElementById('aa-prompt-welcome').value = prompts.welcome;
@@ -71,15 +71,15 @@ async function loadAutoAttendantMenuOptions() {
         if (!response.ok) {
             throw new Error('Failed to load menu options');
         }
-        
+
         const data = await response.json();
         const tbody = document.getElementById('aa-menu-options-table-body');
-        
+
         if (!data.menu_options || data.menu_options.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="no-data">No menu options configured. Click "Add Menu Option" to get started.</td></tr>';
             return;
         }
-        
+
         // Sort by digit for consistent display
         const sortedOptions = data.menu_options.sort((a, b) => {
             if (a.digit === b.digit) return 0;
@@ -89,36 +89,36 @@ async function loadAutoAttendantMenuOptions() {
             if (b.digit === '#') return -1;
             return a.digit.localeCompare(b.digit);
         });
-        
+
         tbody.innerHTML = '';
         sortedOptions.forEach(option => {
             const row = document.createElement('tr');
-            
+
             const digitCell = document.createElement('td');
             digitCell.innerHTML = `<strong>${escapeHtml(option.digit)}</strong>`;
             row.appendChild(digitCell);
-            
+
             const destCell = document.createElement('td');
             destCell.textContent = option.destination;
             row.appendChild(destCell);
-            
+
             const descCell = document.createElement('td');
             descCell.textContent = option.description;
             row.appendChild(descCell);
-            
+
             const actionsCell = document.createElement('td');
             const editBtn = document.createElement('button');
             editBtn.className = 'btn btn-primary';
             editBtn.textContent = '✏️ Edit';
             editBtn.onclick = () => editMenuOption(option.digit, option.destination, option.description);
             actionsCell.appendChild(editBtn);
-            
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn btn-danger';
             deleteBtn.textContent = '🗑️ Delete';
             deleteBtn.onclick = () => deleteMenuOption(option.digit);
             actionsCell.appendChild(deleteBtn);
-            
+
             row.appendChild(actionsCell);
             tbody.appendChild(row);
         });
@@ -134,14 +134,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (aaConfigForm) {
         aaConfigForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const configData = {
                 enabled: document.getElementById('aa-enabled').checked,
                 extension: document.getElementById('aa-extension').value,
                 timeout: parseInt(document.getElementById('aa-timeout').value, 10),
                 max_retries: parseInt(document.getElementById('aa-max-retries').value, 10)
             };
-            
+
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/config`, {
                     method: 'PUT',
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify(configData)
                 });
-                
+
                 if (response.ok) {
                     showNotification('Auto attendant configuration saved successfully', 'success');
                 } else {
@@ -190,12 +190,12 @@ async function deleteMenuOption(digit) {
     if (!confirm(`Are you sure you want to delete menu option for digit "${digit}"?`)) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/auto-attendant/menu-options/${digit}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showNotification('Menu option deleted successfully', 'success');
             loadAutoAttendantMenuOptions();
@@ -215,13 +215,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addMenuForm) {
         addMenuForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const menuData = {
                 digit: document.getElementById('new-menu-digit').value,
                 destination: document.getElementById('new-menu-destination').value,
                 description: document.getElementById('new-menu-description').value
             };
-            
+
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/menu-options`, {
                     method: 'POST',
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify(menuData)
                 });
-                
+
                 if (response.ok) {
                     showNotification('Menu option added successfully', 'success');
                     closeAddMenuOptionModal();
@@ -253,13 +253,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editMenuForm) {
         editMenuForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const digit = document.getElementById('edit-menu-digit').value;
             const menuData = {
                 destination: document.getElementById('edit-menu-destination').value,
                 description: document.getElementById('edit-menu-description').value
             };
-            
+
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/menu-options/${digit}`, {
                     method: 'PUT',
@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify(menuData)
                 });
-                
+
                 if (response.ok) {
                     showNotification('Menu option updated successfully', 'success');
                     closeEditMenuOptionModal();
@@ -291,16 +291,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (promptsForm) {
         promptsForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const statusDiv = document.getElementById('voice-generation-status');
             const statusMessage = document.getElementById('voice-generation-message');
-            
+
             // Show status
             if (statusDiv) {
                 statusDiv.style.display = 'block';
                 statusMessage.textContent = '⏳ Saving prompts and regenerating voices using gTTS...';
             }
-            
+
             const promptsData = {
                 company_name: document.getElementById('aa-company-name').value,
                 prompts: {
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     transferring: document.getElementById('aa-prompt-transferring').value
                 }
             };
-            
+
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`, {
                     method: 'PUT',
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify(promptsData)
                 });
-                
+
                 if (response.ok) {
                     showNotification('Prompts saved and voices regenerated successfully!', 'success');
                     if (statusDiv) {

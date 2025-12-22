@@ -183,7 +183,7 @@ class PredictiveDialingDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO dialing_campaigns 
+                INSERT INTO dialing_campaigns
                 (campaign_id, name, dialing_mode, status, max_attempts, retry_interval)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 ON CONFLICT (campaign_id) DO UPDATE
@@ -195,7 +195,7 @@ class PredictiveDialingDatabase:
                 """
             else:
                 sql = """
-                INSERT OR REPLACE INTO dialing_campaigns 
+                INSERT OR REPLACE INTO dialing_campaigns
                 (campaign_id, name, dialing_mode, status, max_attempts, retry_interval)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """
@@ -224,7 +224,7 @@ class PredictiveDialingDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO dialing_contacts 
+                INSERT INTO dialing_contacts
                 (campaign_id, contact_id, phone_number, data)
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (campaign_id, contact_id) DO UPDATE
@@ -239,7 +239,7 @@ class PredictiveDialingDatabase:
                 )
             else:
                 sql = """
-                INSERT OR REPLACE INTO dialing_contacts 
+                INSERT OR REPLACE INTO dialing_contacts
                 (campaign_id, contact_id, phone_number, data)
                 VALUES (?, ?, ?, ?)
                 """
@@ -265,13 +265,13 @@ class PredictiveDialingDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO dialing_attempts 
+                INSERT INTO dialing_attempts
                 (campaign_id, contact_id, call_id, attempt_number, timestamp, result, duration, agent_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """
             else:
                 sql = """
-                INSERT INTO dialing_attempts 
+                INSERT INTO dialing_attempts
                 (campaign_id, contact_id, call_id, attempt_number, timestamp, result, duration, agent_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """
@@ -293,7 +293,7 @@ class PredictiveDialingDatabase:
             if self.db.db_type == "postgresql":
                 update_sql = """
                 UPDATE dialing_contacts
-                SET attempts = attempts + 1, 
+                SET attempts = attempts + 1,
                     last_attempt = %s,
                     status = %s,
                     call_result = %s
@@ -302,7 +302,7 @@ class PredictiveDialingDatabase:
             else:
                 update_sql = """
                 UPDATE dialing_contacts
-                SET attempts = attempts + 1, 
+                SET attempts = attempts + 1,
                     last_attempt = ?,
                     status = ?,
                     call_result = ?
@@ -439,7 +439,7 @@ class PredictiveDialingDatabase:
             else:
                 # Global stats
                 sql = """
-                SELECT 
+                SELECT
                     COUNT(*) as total_campaigns,
                     SUM(total_contacts) as total_contacts,
                     SUM(successful_calls) as successful_calls,

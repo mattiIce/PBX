@@ -77,23 +77,23 @@ services:
       DB_NAME: ${DB_NAME:-pbx_system}
       DB_USER: ${DB_USER:-pbx_user}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
-      
+
       # Redis configuration
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
-      
+
       # Email/SMTP configuration (optional)
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      
+
       # Active Directory / LDAP (optional)
       AD_SERVER: ${AD_SERVER:-}
       AD_BIND_DN: ${AD_BIND_DN:-}
       AD_BIND_PASSWORD: ${AD_BIND_PASSWORD:-}
-      
+
       # Integration credentials (optional)
       MATRIX_BOT_PASSWORD: ${MATRIX_BOT_PASSWORD:-}
       ESPOCRM_API_KEY: ${ESPOCRM_API_KEY:-}
@@ -103,42 +103,42 @@ services:
       OUTLOOK_CLIENT_SECRET: ${OUTLOOK_CLIENT_SECRET:-}
       TEAMS_CLIENT_ID: ${TEAMS_CLIENT_ID:-}
       TEAMS_CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
-      
+
       # Debugging (set to 'true' only for troubleshooting)
       DEBUG_VM_PIN: ${DEBUG_VM_PIN:-false}
-      
+
       # Google Cloud Speech (optional)
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     volumes:
       # Configuration file
       - ./config.yml:/app/config.yml:ro
-      
+
       # Persistent data directories
       - recordings:/data/recordings
       - voicemail:/data/voicemail
       - cdr:/data/cdr
       - moh:/data/moh
-      
+
       # Application logs
       - logs:/app/logs
-      
+
       # Provisioning templates (if you need to customize)
       - ./provisioning_templates:/app/provisioning_templates:ro
-      
+
       # Optional: SSL/TLS certificates
       # - ./certs:/app/certs:ro
-      
+
       # Optional: Custom voice prompts
       # - ./auto_attendant:/app/auto_attendant:ro
       # - ./voicemail_prompts:/app/voicemail_prompts:ro
     ports:
       # SIP signaling (UDP)
       - "5060:5060/udp"
-      
+
       # RTP media ports (UDP) - adjust range as needed
       # Default range: 10000-20000 (as per config.yml)
       - "10000-20000:10000-20000/udp"
-      
+
       # HTTP API / Web interface (TCP)
       - "8880:8880/tcp"
     networks:
@@ -168,23 +168,23 @@ volumes:
   # Database persistent storage
   postgres_data:
     driver: local
-  
+
   # Redis persistent storage
   redis_data:
     driver: local
-  
+
   # PBX data volumes
   recordings:
     driver: local
-  
+
   voicemail:
     driver: local
-  
+
   cdr:
     driver: local
-  
+
   moh:
     driver: local
-  
+
   logs:
     driver: local

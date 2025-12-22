@@ -52,12 +52,12 @@ class NomadicE911Engine:
             # Insert new location
             self.db.execute(
                 (
-                    """INSERT INTO nomadic_e911_locations 
+                    """INSERT INTO nomadic_e911_locations
                    (extension, ip_address, location_name, street_address, city, state,
                     postal_code, country, building, floor, room, latitude, longitude, auto_detected)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO nomadic_e911_locations 
+                    else """INSERT INTO nomadic_e911_locations
                    (extension, ip_address, location_name, street_address, city, state,
                     postal_code, country, building, floor, room, latitude, longitude, auto_detected)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
@@ -87,11 +87,11 @@ class NomadicE911Engine:
 
                 self.db.execute(
                     (
-                        """INSERT INTO e911_location_updates 
+                        """INSERT INTO e911_location_updates
                        (extension, old_location, new_location, update_source)
                        VALUES (?, ?, ?, ?)"""
                         if self.db.db_type == "sqlite"
-                        else """INSERT INTO e911_location_updates 
+                        else """INSERT INTO e911_location_updates
                        (extension, old_location, new_location, update_source)
                        VALUES (%s, %s, %s, %s)"""
                     ),
@@ -118,12 +118,12 @@ class NomadicE911Engine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM nomadic_e911_locations 
-                   WHERE extension = ? 
+                    """SELECT * FROM nomadic_e911_locations
+                   WHERE extension = ?
                    ORDER BY last_updated DESC LIMIT 1"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM nomadic_e911_locations 
-                   WHERE extension = %s 
+                    else """SELECT * FROM nomadic_e911_locations
+                   WHERE extension = %s
                    ORDER BY last_updated DESC LIMIT 1"""
                 ),
                 (extension,),
@@ -311,12 +311,12 @@ class NomadicE911Engine:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO multi_site_e911_configs 
+                    """INSERT INTO multi_site_e911_configs
                    (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
                     street_address, city, state, postal_code, country, building, floor)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO multi_site_e911_configs 
+                    else """INSERT INTO multi_site_e911_configs
                    (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
                     street_address, city, state, postal_code, country, building, floor)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
@@ -397,12 +397,12 @@ class NomadicE911Engine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM e911_location_updates 
-                   WHERE extension = ? 
+                    """SELECT * FROM e911_location_updates
+                   WHERE extension = ?
                    ORDER BY updated_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM e911_location_updates 
-                   WHERE extension = %s 
+                    else """SELECT * FROM e911_location_updates
+                   WHERE extension = %s
                    ORDER BY updated_at DESC LIMIT %s"""
                 ),
                 (extension, limit),

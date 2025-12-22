@@ -233,7 +233,7 @@ class LeastCostRouting:
             # Load regular rates
             cursor.execute(
                 """
-                SELECT trunk_id, pattern, description, rate_per_minute, 
+                SELECT trunk_id, pattern, description, rate_per_minute,
                        connection_fee, minimum_seconds, billing_increment
                 FROM lcr_rates
             """
@@ -301,8 +301,8 @@ class LeastCostRouting:
 
             cursor.execute(
                 """
-                INSERT OR REPLACE INTO lcr_rates 
-                (trunk_id, pattern, description, rate_per_minute, connection_fee, 
+                INSERT OR REPLACE INTO lcr_rates
+                (trunk_id, pattern, description, rate_per_minute, connection_fee,
                  minimum_seconds, billing_increment, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """,
@@ -343,7 +343,7 @@ class LeastCostRouting:
 
             cursor.execute(
                 """
-                INSERT OR REPLACE INTO lcr_time_rates 
+                INSERT OR REPLACE INTO lcr_time_rates
                 (name, start_hour, start_minute, end_hour, end_minute,
                  days_of_week, rate_multiplier, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)

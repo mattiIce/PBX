@@ -15,8 +15,8 @@ from pbx.utils.env_loader import load_env_file
 load_env_file(".env")
 
 from pbx.core.pbx import PBXCore
-from pbx.utils.test_runner import run_all_tests
 from pbx.utils.graceful_shutdown import setup_graceful_shutdown
+from pbx.utils.test_runner import run_all_tests
 
 # Get logger
 logger = logging.getLogger(__name__)
@@ -109,8 +109,8 @@ if __name__ == "__main__":
     print("\nPerforming security checks...")
     try:
         from pbx.utils.config import Config
-        from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
         from pbx.utils.config_validator import validate_config_on_startup
+        from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 
         # Load config to check FIPS settings
         config = Config("config.yml")

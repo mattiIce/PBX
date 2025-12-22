@@ -485,7 +485,7 @@ class EmergencyNotificationSystem:
 
                 # Build email body
                 body = f"""EMERGENCY NOTIFICATION
-                
+
 Type: {trigger_type}
 Time: {details.get('timestamp', datetime.now())}
 Contact: {contact.name}

@@ -91,7 +91,7 @@ class RecordingAnnouncements:
             # Create index on call_id
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_recording_announcements_call_id 
+                CREATE INDEX IF NOT EXISTS idx_recording_announcements_call_id
                 ON recording_announcements_log(call_id)
             """
             )

@@ -43,11 +43,11 @@ class TeamMessagingEngine:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO team_messaging_channels 
+                    """INSERT INTO team_messaging_channels
                    (channel_name, description, is_private, created_by)
                    VALUES (?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO team_messaging_channels 
+                    else """INSERT INTO team_messaging_channels
                    (channel_name, description, is_private, created_by)
                    VALUES (%s, %s, %s, %s)"""
                 ),
@@ -100,11 +100,11 @@ class TeamMessagingEngine:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO team_messaging_members 
+                    """INSERT INTO team_messaging_members
                    (channel_id, extension, role)
                    VALUES (?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO team_messaging_members 
+                    else """INSERT INTO team_messaging_members
                    (channel_id, extension, role)
                    VALUES (%s, %s, %s)"""
                 ),
@@ -131,11 +131,11 @@ class TeamMessagingEngine:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO team_messages 
+                    """INSERT INTO team_messages
                    (channel_id, sender_extension, message_text, message_type)
                    VALUES (?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO team_messages 
+                    else """INSERT INTO team_messages
                    (channel_id, sender_extension, message_text, message_type)
                    VALUES (%s, %s, %s, %s)"""
                 ),
@@ -150,12 +150,12 @@ class TeamMessagingEngine:
             # Get message ID
             result = self.db.execute(
                 (
-                    """SELECT id FROM team_messages 
-                   WHERE channel_id = ? AND sender_extension = ? 
+                    """SELECT id FROM team_messages
+                   WHERE channel_id = ? AND sender_extension = ?
                    ORDER BY sent_at DESC LIMIT 1"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT id FROM team_messages 
-                   WHERE channel_id = %s AND sender_extension = %s 
+                    else """SELECT id FROM team_messages
+                   WHERE channel_id = %s AND sender_extension = %s
                    ORDER BY sent_at DESC LIMIT 1"""
                 ),
                 (message_data["channel_id"], message_data["sender_extension"]),
@@ -184,12 +184,12 @@ class TeamMessagingEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM team_messages 
-                   WHERE channel_id = ? 
+                    """SELECT * FROM team_messages
+                   WHERE channel_id = ?
                    ORDER BY sent_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM team_messages 
-                   WHERE channel_id = %s 
+                    else """SELECT * FROM team_messages
+                   WHERE channel_id = %s
                    ORDER BY sent_at DESC LIMIT %s"""
                 ),
                 (channel_id, limit),
@@ -268,10 +268,10 @@ class TeamMessagingEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM team_messaging_channels 
+                    """SELECT * FROM team_messaging_channels
                    WHERE is_private = ? ORDER BY channel_name"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM team_messaging_channels 
+                    else """SELECT * FROM team_messaging_channels
                    WHERE is_private = %s ORDER BY channel_name"""
                 ),
                 (False,),
@@ -331,13 +331,13 @@ class FileShareEngine:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO shared_files 
-                   (file_name, file_path, file_size, mime_type, uploaded_by, 
+                    """INSERT INTO shared_files
+                   (file_name, file_path, file_size, mime_type, uploaded_by,
                     shared_with, description, expires_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO shared_files 
-                   (file_name, file_path, file_size, mime_type, uploaded_by, 
+                    else """INSERT INTO shared_files
+                   (file_name, file_path, file_size, mime_type, uploaded_by,
                     shared_with, description, expires_at)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
                 ),
@@ -356,10 +356,10 @@ class FileShareEngine:
             # Get file ID
             result = self.db.execute(
                 (
-                    """SELECT id FROM shared_files 
+                    """SELECT id FROM shared_files
                    WHERE file_path = ? ORDER BY uploaded_at DESC LIMIT 1"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT id FROM shared_files 
+                    else """SELECT id FROM shared_files
                    WHERE file_path = %s ORDER BY uploaded_at DESC LIMIT 1"""
                 ),
                 (file_data["file_path"],),
@@ -389,11 +389,11 @@ class FileShareEngine:
             # Files uploaded by user or shared with them
             result = self.db.execute(
                 (
-                    """SELECT * FROM shared_files 
+                    """SELECT * FROM shared_files
                    WHERE uploaded_by = ? OR shared_with LIKE ?
                    ORDER BY uploaded_at DESC"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM shared_files 
+                    else """SELECT * FROM shared_files
                    WHERE uploaded_by = %s OR shared_with LIKE %s
                    ORDER BY uploaded_at DESC"""
                 ),

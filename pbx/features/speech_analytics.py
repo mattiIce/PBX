@@ -85,14 +85,14 @@ class SpeechAnalyticsEngine:
                 # Update
                 self.db.execute(
                     (
-                        """UPDATE speech_analytics_configs 
-                       SET enabled = ?, transcription_enabled = ?, 
+                        """UPDATE speech_analytics_configs
+                       SET enabled = ?, transcription_enabled = ?,
                            sentiment_enabled = ?, summarization_enabled = ?,
                            keywords = ?, alert_threshold = ?, updated_at = ?
                        WHERE extension = ?"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE speech_analytics_configs 
-                       SET enabled = %s, transcription_enabled = %s, 
+                        else """UPDATE speech_analytics_configs
+                       SET enabled = %s, transcription_enabled = %s,
                            sentiment_enabled = %s, summarization_enabled = %s,
                            keywords = %s, alert_threshold = %s, updated_at = %s
                        WHERE extension = %s"""
@@ -112,12 +112,12 @@ class SpeechAnalyticsEngine:
                 # Insert
                 self.db.execute(
                     (
-                        """INSERT INTO speech_analytics_configs 
+                        """INSERT INTO speech_analytics_configs
                        (extension, enabled, transcription_enabled, sentiment_enabled,
                         summarization_enabled, keywords, alert_threshold)
                        VALUES (?, ?, ?, ?, ?, ?, ?)"""
                         if self.db.db_type == "sqlite"
-                        else """INSERT INTO speech_analytics_configs 
+                        else """INSERT INTO speech_analytics_configs
                        (extension, enabled, transcription_enabled, sentiment_enabled,
                         summarization_enabled, keywords, alert_threshold)
                        VALUES (%s, %s, %s, %s, %s, %s, %s)"""
@@ -438,11 +438,11 @@ class SpeechAnalyticsEngine:
 
             self.db.execute(
                 (
-                    """INSERT INTO call_summaries 
+                    """INSERT INTO call_summaries
                    (call_id, transcript, summary, sentiment, sentiment_score)
                    VALUES (?, ?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO call_summaries 
+                    else """INSERT INTO call_summaries
                    (call_id, transcript, summary, sentiment, sentiment_score)
                    VALUES (%s, %s, %s, %s, %s)"""
                 ),

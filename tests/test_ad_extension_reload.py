@@ -80,7 +80,9 @@ def test_extension_registry_reload_after_ad_sync():
     print("  ✓ Extensions loaded successfully after reload")
 
     final_count = len(registry.extensions)
-    assert final_count == initial_count + 2, f"Expected {initial_count + 2} extensions, got {final_count}"
+    assert (
+        final_count == initial_count + 2
+    ), f"Expected {initial_count + 2} extensions, got {final_count}"
     print(f"  ✓ Final extension count: {final_count}")
 
     print("✓ Extension registry reload after AD sync works correctly")

@@ -1,7 +1,7 @@
 /**
  * WebRTC Phone Widget for Admin Panel
  * Enables browser-based calling to extension 1001 without hardware phone
- * 
+ *
  * To enable verbose logging:
  * 1. Open browser console (F12)
  * 2. Type: window.WEBRTC_VERBOSE_LOGGING = true
@@ -29,16 +29,16 @@ class WebRTCPhone {
         this.localStream = null;
         this.isCallActive = false;
         this.remoteAudio = null;
-        
+
         verboseLog('WebRTC Phone constructor called:', {
             apiUrl: this.apiUrl,
             extension: this.extension
         });
-        
+
         // Initialize UI elements
         this.initializeUI();
     }
-    
+
     initializeUI() {
         // Get UI elements
         this.callButton = document.getElementById('webrtc-call-btn');
@@ -48,7 +48,7 @@ class WebRTCPhone {
         this.statusDiv = document.getElementById('webrtc-status');
         this.targetExtension = document.getElementById('webrtc-target-ext');
         this.keypadSection = document.getElementById('webrtc-keypad-section');
-        
+
         // Create remote audio element
         this.remoteAudio = document.getElementById('webrtc-remote-audio');
         if (!this.remoteAudio) {
@@ -58,12 +58,12 @@ class WebRTCPhone {
             this.remoteAudio.playsinline = true;
             document.body.appendChild(this.remoteAudio);
         }
-        
+
         // Ensure audio element is ready for playback
         this.remoteAudio.autoplay = true;
         this.remoteAudio.playsinline = true;
         this.remoteAudio.volume = 0.8; // Set initial volume
-        
+
         // Set up event listeners
         if (this.callButton) {
             this.callButton.addEventListener('click', () => this.makeCall());
@@ -77,13 +77,13 @@ class WebRTCPhone {
         if (this.volumeSlider) {
             this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
         }
-        
+
         // Set up keypad buttons
         this.setupKeypad();
-        
+
         this.updateUIState('idle');
     }
-    
+
     setupKeypad() {
         // Add event listeners to all keypad buttons
         const keypadButtons = document.querySelectorAll('.keypad-btn');
@@ -100,10 +100,10 @@ class WebRTCPhone {
                 }
             });
         });
-        
+
         verboseLog('Keypad initialized with', keypadButtons.length, 'buttons');
     }
-    
+
     updateStatus(message, type = 'info') {
         if (this.statusDiv) {
             this.statusDiv.textContent = message;
@@ -112,7 +112,7 @@ class WebRTCPhone {
             verboseLog('Status update:', { message, type });
         }
     }
-    
+
     updateUIState(state) {
         // state can be: idle, connecting, calling, connected
         if (this.callButton) {
@@ -124,21 +124,21 @@ class WebRTCPhone {
         if (this.muteButton) {
             this.muteButton.disabled = (state === 'idle');
         }
-        
+
         // Show keypad and enable buttons when call is active (calling or connected)
         const isCallActive = (state === 'connected' || state === 'calling');
-        
+
         if (this.keypadSection) {
             this.keypadSection.style.display = isCallActive ? 'block' : 'none';
         }
-        
+
         // Enable/disable keypad buttons based on call state
         const keypadButtons = document.querySelectorAll('.keypad-btn');
         keypadButtons.forEach(button => {
             button.disabled = !isCallActive;
         });
     }
-    
+
     /**
      * Request microphone access automatically on page load
      * @description Provides a better user experience by prompting for permissions upfront.
@@ -148,7 +148,7 @@ class WebRTCPhone {
     async requestMicrophoneAccess() {
         try {
             this.updateStatus('Requesting microphone access...', 'info');
-            
+
             // Request microphone access with ZIP33G-compatible audio settings
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
@@ -158,69 +158,69 @@ class WebRTCPhone {
                 },
                 video: false
             });
-            
+
             // Stop the tracks immediately - we just wanted to get permission
             // The actual stream will be created when a call is made
             stream.getTracks().forEach(track => track.stop());
-            
+
             this.updateStatus('Ready to call (microphone access granted)', 'success');
             console.log('[WebRTC Phone] Microphone access granted');
             return true;
-            
+
         } catch (err) {
             console.error('[WebRTC Phone] Microphone access denied:', err);
             this.updateStatus('Microphone access denied. Please allow microphone access in browser settings.', 'error');
             return false;
         }
     }
-    
+
     async createSession() {
         try {
             this.updateStatus('Creating WebRTC session...', 'info');
-            
+
             verboseLog('Creating WebRTC session:', {
                 url: `${this.apiUrl}/api/webrtc/session`,
                 extension: this.extension
             });
-            
+
             const response = await fetch(`${this.apiUrl}/api/webrtc/session`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({extension: this.extension})
             });
-            
+
             verboseLog('Session creation response:', {
                 status: response.status,
                 statusText: response.statusText,
                 ok: response.ok
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 verboseLog('Session creation failed - response text:', errorText);
                 throw new Error(`Failed to create session: ${response.statusText} - ${errorText}`);
             }
-            
+
             const data = await response.json();
             verboseLog('Session creation response data:', data);
-            
+
             if (!data.success) {
                 throw new Error('Session creation failed');
             }
-            
+
             this.sessionId = data.session.session_id;
             this.updateStatus(`Session created: ${this.sessionId}`, 'success');
-            
+
             verboseLog('Session created successfully:', {
                 sessionId: this.sessionId,
                 iceServers: data.ice_servers
             });
-            
+
             // Create peer connection with ICE servers
             this.peerConnection = new RTCPeerConnection(data.ice_servers);
-            
+
             verboseLog('RTCPeerConnection created with configuration:', data.ice_servers);
-            
+
             // Handle ICE candidates
             this.peerConnection.onicecandidate = (event) => {
                 verboseLog('ICE candidate event:', {
@@ -231,7 +231,7 @@ class WebRTCPhone {
                     this.sendICECandidate(event.candidate);
                 }
             };
-            
+
             // Handle connection state changes
             this.peerConnection.onconnectionstatechange = () => {
                 console.log(`Connection state: ${this.peerConnection.connectionState}`);
@@ -241,7 +241,7 @@ class WebRTCPhone {
                     iceGatheringState: this.peerConnection.iceGatheringState,
                     signalingState: this.peerConnection.signalingState
                 });
-                
+
                 if (this.peerConnection.connectionState === 'connected') {
                     this.updateStatus('Call connected', 'success');
                     this.updateUIState('connected');
@@ -255,7 +255,7 @@ class WebRTCPhone {
                     this.hangup();
                 }
             };
-            
+
             // Handle ICE connection state
             this.peerConnection.oniceconnectionstatechange = () => {
                 console.log(`ICE connection state: ${this.peerConnection.iceConnectionState}`);
@@ -263,12 +263,12 @@ class WebRTCPhone {
                     iceConnectionState: this.peerConnection.iceConnectionState,
                     iceGatheringState: this.peerConnection.iceGatheringState
                 });
-                
+
                 if (this.peerConnection.iceConnectionState === 'failed') {
                     verboseLog('ICE connection FAILED - this usually means network connectivity issues');
                 }
             };
-            
+
             // Handle remote track (incoming audio)
             this.peerConnection.ontrack = (event) => {
                 console.log('Received remote track');
@@ -278,10 +278,10 @@ class WebRTCPhone {
                     trackKind: event.track.kind,
                     trackId: event.track.id
                 });
-                
+
                 if (this.remoteAudio && event.streams?.length > 0) {
                     this.remoteAudio.srcObject = event.streams[0];
-                    
+
                     // Ensure audio plays - modern browsers require user interaction
                     // Try to play, handling any errors
                     const playPromise = this.remoteAudio.play();
@@ -298,7 +298,7 @@ class WebRTCPhone {
                     console.warn('No remote audio element or streams available');
                 }
             };
-            
+
             return true;
         } catch (error) {
             console.error('Error creating session:', error);
@@ -311,23 +311,23 @@ class WebRTCPhone {
             return false;
         }
     }
-    
+
     async makeCall() {
         try {
             const targetExt = this.targetExtension ? this.targetExtension.value : '1001';
-            
+
             verboseLog('makeCall() called:', {
                 targetExtension: targetExt
             });
-            
+
             if (!targetExt) {
                 this.updateStatus('Please enter target extension', 'error');
                 return;
             }
-            
+
             this.updateUIState('connecting');
             this.updateStatus('Requesting microphone access...', 'info');
-            
+
             // Get user media (microphone)
             try {
                 verboseLog('Requesting user media...');
@@ -362,7 +362,7 @@ class WebRTCPhone {
                 this.updateUIState('idle');
                 return;
             }
-            
+
             // Create WebRTC session
             verboseLog('Creating WebRTC session...');
             const sessionCreated = await this.createSession();
@@ -371,7 +371,7 @@ class WebRTCPhone {
                 this.updateUIState('idle');
                 return;
             }
-            
+
             // Add local stream to peer connection
             verboseLog('Adding local tracks to peer connection...');
             this.localStream.getTracks().forEach(track => {
@@ -383,7 +383,7 @@ class WebRTCPhone {
                     label: track.label
                 });
             });
-            
+
             // Create and send offer
             this.updateStatus('Creating call offer...', 'info');
             verboseLog('Creating RTC offer...');
@@ -392,19 +392,19 @@ class WebRTCPhone {
                 type: offer.type,
                 sdpLength: offer.sdp.length
             });
-            
+
             await this.peerConnection.setLocalDescription(offer);
             verboseLog('Local description set');
-            
+
             console.log('SDP Offer created:', offer.sdp);
             verboseLog('Full SDP Offer:', offer.sdp);
-            
+
             // Send offer to PBX
             verboseLog('Sending offer to PBX:', {
                 url: `${this.apiUrl}/api/webrtc/offer`,
                 sessionId: this.sessionId
             });
-            
+
             const offerResponse = await fetch(`${this.apiUrl}/api/webrtc/offer`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -413,36 +413,36 @@ class WebRTCPhone {
                     sdp: offer.sdp
                 })
             });
-            
+
             verboseLog('Offer response:', {
                 status: offerResponse.status,
                 statusText: offerResponse.statusText,
                 ok: offerResponse.ok
             });
-            
+
             if (!offerResponse.ok) {
                 const errorText = await offerResponse.text();
                 verboseLog('Offer failed - response text:', errorText);
                 throw new Error(`Failed to send offer: ${offerResponse.statusText} - ${errorText}`);
             }
-            
+
             const offerData = await offerResponse.json();
             verboseLog('Offer response data:', offerData);
-            
+
             if (!offerData.success) {
                 throw new Error('Offer was rejected by server');
             }
-            
+
             this.updateStatus(`Calling extension ${targetExt}...`, 'info');
             this.updateUIState('calling');
-            
+
             // Initiate call to target extension
             verboseLog('Initiating call to target extension:', {
                 url: `${this.apiUrl}/api/webrtc/call`,
                 sessionId: this.sessionId,
                 targetExtension: targetExt
             });
-            
+
             const callResponse = await fetch(`${this.apiUrl}/api/webrtc/call`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -451,16 +451,16 @@ class WebRTCPhone {
                     target_extension: targetExt
                 })
             });
-            
+
             verboseLog('Call response:', {
                 status: callResponse.status,
                 statusText: callResponse.statusText,
                 ok: callResponse.ok
             });
-            
+
             const callData = await callResponse.json();
             verboseLog('Call response data:', callData);
-            
+
             if (callData.success) {
                 this.isCallActive = true;
                 this.callId = callData.call_id; // Store call ID for hangup
@@ -472,7 +472,7 @@ class WebRTCPhone {
                 verboseLog('Call initiation failed:', callData);
                 throw new Error(callData.error || 'Failed to initiate call');
             }
-            
+
         } catch (error) {
             console.error('Error making call:', error);
             verboseLog('Error in makeCall:', {
@@ -484,7 +484,7 @@ class WebRTCPhone {
             this.hangup();
         }
     }
-    
+
     async sendICECandidate(candidate) {
         try {
             // Validate session exists before sending ICE candidate
@@ -493,14 +493,14 @@ class WebRTCPhone {
                 verboseLog('ICE candidate send skipped - no session');
                 return;
             }
-            
+
             verboseLog('Sending ICE candidate:', {
                 sessionId: this.sessionId,
                 candidate: candidate.candidate,
                 sdpMid: candidate.sdpMid,
                 sdpMLineIndex: candidate.sdpMLineIndex
             });
-            
+
             await fetch(`${this.apiUrl}/api/webrtc/ice-candidate`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -523,7 +523,7 @@ class WebRTCPhone {
             });
         }
     }
-    
+
     /**
      * Send DTMF tone during an active call
      * @param {string} digit - The digit to send (0-9, *, #)
@@ -533,10 +533,10 @@ class WebRTCPhone {
             console.warn('Cannot send DTMF: No active call');
             return;
         }
-        
+
         try {
             verboseLog('Sending DTMF digit:', digit);
-            
+
             // Send DTMF via API
             const response = await fetch(`${this.apiUrl}/api/webrtc/dtmf`, {
                 method: 'POST',
@@ -547,17 +547,17 @@ class WebRTCPhone {
                     duration: 160  // milliseconds (standard duration)
                 })
             });
-            
+
             verboseLog('DTMF response:', {
                 status: response.status,
                 statusText: response.statusText
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 console.log(`DTMF '${digit}' sent successfully`);
                 verboseLog('DTMF send result:', data);
-                
+
                 // Brief visual feedback in status
                 const currentStatus = this.statusDiv.textContent;
                 this.updateStatus(`Sent: ${digit}`, 'info');
@@ -578,10 +578,10 @@ class WebRTCPhone {
             });
         }
     }
-    
+
     async hangup() {
         console.log('Hanging up call');
-        
+
         // Notify server to terminate the call
         if (this.sessionId || this.callId) {
             try {
@@ -589,7 +589,7 @@ class WebRTCPhone {
                     sessionId: this.sessionId,
                     callId: this.callId
                 });
-                
+
                 const hangupResponse = await fetch(`${this.apiUrl}/api/webrtc/hangup`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -598,7 +598,7 @@ class WebRTCPhone {
                         call_id: this.callId
                     })
                 });
-                
+
                 if (hangupResponse.ok) {
                     const hangupData = await hangupResponse.json();
                     verboseLog('Server hangup response:', hangupData);
@@ -618,31 +618,31 @@ class WebRTCPhone {
                 });
             }
         }
-        
+
         // Stop local stream
         if (this.localStream) {
             this.localStream.getTracks().forEach(track => track.stop());
             this.localStream = null;
         }
-        
+
         // Close peer connection
         if (this.peerConnection) {
             this.peerConnection.close();
             this.peerConnection = null;
         }
-        
+
         // Reset state
         this.sessionId = null;
         this.callId = null;
         this.isCallActive = false;
-        
+
         this.updateStatus('Call ended', 'info');
         this.updateUIState('idle');
     }
-    
+
     toggleMute() {
         if (!this.localStream) return;
-        
+
         const audioTrack = this.localStream.getAudioTracks()[0];
         if (audioTrack) {
             audioTrack.enabled = !audioTrack.enabled;
@@ -653,7 +653,7 @@ class WebRTCPhone {
             this.updateStatus(audioTrack.enabled ? 'Unmuted' : 'Muted', 'info');
         }
     }
-    
+
     setVolume(value) {
         if (this.remoteAudio) {
             this.remoteAudio.volume = value / 100;
@@ -670,14 +670,14 @@ const DEFAULT_WEBRTC_EXTENSION = 'webrtc-admin';
 
 async function initWebRTCPhone() {
     const apiUrl = window.location.origin;
-    
+
     // Fetch the configured extension from the server
     let adminExtension = DEFAULT_WEBRTC_EXTENSION; // default fallback
-    
+
     try {
         const response = await fetch('/api/webrtc/phone-config');
         const data = await response.json();
-        
+
         if (data.success && data.extension) {
             adminExtension = data.extension;
             console.log('WebRTC Phone using configured extension:', adminExtension);
@@ -687,7 +687,7 @@ async function initWebRTCPhone() {
     } catch (error) {
         console.warn('Failed to load WebRTC phone config, using default:', error);
     }
-    
+
     // Create or recreate the WebRTC phone with the configured extension
     if (webrtcPhone) {
         // Clean up existing phone
@@ -695,14 +695,14 @@ async function initWebRTCPhone() {
             await webrtcPhone.hangup();
         }
     }
-    
+
     webrtcPhone = new WebRTCPhone(apiUrl, adminExtension);
     console.log('WebRTC Phone initialized with extension:', adminExtension);
-    
+
     // Automatically request microphone access on load
     // This prompts the user for permission immediately rather than waiting for a call
     await webrtcPhone.requestMicrophoneAccess();
-    
+
     // Update the UI to show the configured extension
     const statusDiv = document.getElementById('webrtc-status');
     if (statusDiv) {
