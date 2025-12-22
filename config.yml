@@ -67,7 +67,7 @@ rtcp:
     rtt_ms: 300.0              # Alert if round-trip time > 300ms
 api:
   host: 0.0.0.0
-  port: 8080
+  port: 9000
   enable_cors: true
   # HTTPS/SSL Configuration
   ssl:
