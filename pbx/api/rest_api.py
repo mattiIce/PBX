@@ -28,6 +28,9 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
+
+# Constants
+DEFAULT_WEBRTC_EXTENSION = "webrtc-admin"  # Default extension for WebRTC browser phone
 from pbx.utils.logger import get_logger
 from pbx.utils.tts import get_tts_requirements, is_tts_available, text_to_wav_telephony
 
@@ -4138,7 +4141,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         try:
             # Get the configured extension for the webrtc admin phone
             extension = self.pbx_core.extension_db.get_config(
-                "webrtc_phone_extension", "webrtc-admin"
+                "webrtc_phone_extension", DEFAULT_WEBRTC_EXTENSION
             )
             self._send_json({"success": True, "extension": extension})
         except Exception as e:
