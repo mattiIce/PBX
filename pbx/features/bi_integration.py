@@ -455,7 +455,7 @@ class BIIntegration:
                 "Content-Type": "application/json",
             }
 
-            response = requests.post(url, headers=headers, json=schema)
+            response = requests.post(url, headers=headers, json=schema, timeout=30)
 
             if response.status_code == 201:
                 result = response.json()

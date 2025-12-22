@@ -10,7 +10,8 @@ import logging
 import os
 import socket
 import time
-from typing import Dict, Any, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
+
 import psutil
 
 logger = logging.getLogger(__name__)

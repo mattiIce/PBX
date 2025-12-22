@@ -118,7 +118,9 @@ class PBXCore:
 
         # Initialize SIP server
         self.sip_server = SIPServer(
-            host=self.config.get("server.sip_host", "0.0.0.0"),
+            host=self.config.get(
+                "server.sip_host", "0.0.0.0"
+            ),  # nosec B104 - SIP server needs to bind to all interfaces
             port=self.config.get("server.sip_port", 5060),
             pbx_core=self,
         )
@@ -492,7 +494,9 @@ class PBXCore:
             self.skills_router = None
 
         # Initialize API server
-        api_host = self.config.get("api.host", "0.0.0.0")
+        api_host = self.config.get(
+            "api.host", "0.0.0.0"
+        )  # nosec B104 - API server needs to bind to all interfaces
         api_port = self.config.get("api.port", 8080)
         self.api_server = PBXAPIServer(self, api_host, api_port)
 

@@ -510,7 +510,7 @@ class STIRSHAKENManager:
         if not CRYPTO_AVAILABLE:
             raise RuntimeError("Cryptography library not available")
 
-        output_dir = output_dir or "/tmp"
+        output_dir = output_dir or "/tmp"  # nosec B108 - temp directory for certificate generation
 
         # Generate private key
         private_key = rsa.generate_private_key(

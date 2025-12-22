@@ -280,7 +280,9 @@ class WebhookSystem:
                 request = Request(subscription.url, data=payload, headers=headers, method="POST")
 
                 # Send request
-                response = urlopen(request, timeout=self.timeout)
+                response = urlopen(
+                    request, timeout=self.timeout
+                )  # nosec B310 - URL is from configured webhook subscription
 
                 # Success
                 subscription.last_sent = datetime.now()

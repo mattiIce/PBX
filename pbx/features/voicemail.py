@@ -176,7 +176,7 @@ class VoicemailBox:
                 INSERT INTO voicemail_messages
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
                 VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
-                """
+                """  # nosec B608 - placeholders are safely parameterized
 
                 params = (
                     message_id,
@@ -248,7 +248,7 @@ class VoicemailBox:
                             transcription_provider = {placeholder},
                             transcribed_at = {placeholder}
                         WHERE message_id = {placeholder}
-                        """
+                        """  # nosec B608 - placeholders are safely parameterized
                         self.database.execute(
                             query,
                             (
@@ -373,7 +373,7 @@ class VoicemailBox:
                         UPDATE voicemail_messages
                         SET listened = {placeholder}
                         WHERE message_id = {placeholder}
-                        """
+                        """  # nosec B608 - placeholders are safely parameterized
                         self.database.execute(query, (True, message_id))
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {
@@ -418,7 +418,7 @@ class VoicemailBox:
                         query = f"""
                         DELETE FROM voicemail_messages
                         WHERE message_id = {placeholder}
-                        """
+                        """  # nosec B608 - placeholders are safely parameterized
                         self.database.execute(query, (message_id,))
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {
@@ -454,11 +454,11 @@ class VoicemailBox:
                 FROM voicemail_messages
                 WHERE extension_number = {}
                 ORDER BY created_at DESC
-                """.format(
+                """.format(  # nosec B608 - placeholder is safely parameterized
                     placeholder
                 )
                 self.logger.debug(
-                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {
+                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {  # nosec B608 - log statement only
                         self.extension_number}"
                 )
                 rows = self.database.fetch_all(query, (self.extension_number,))
