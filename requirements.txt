@@ -50,7 +50,7 @@ opuslib>=3.0.1  # Python bindings for Opus codec (requires libopus system librar
 # === FREE & OPEN-SOURCE AI/ML INTEGRATION ===
 
 # Speech Recognition (FREE, offline)
-vosk>=0.3.50  # Offline speech-to-text for voicemail transcription
+vosk>=0.3.45  # Offline speech-to-text for voicemail transcription
 
 # Natural Language Processing (FREE, open source)
 spacy>=3.8.3  # Industrial-strength NLP for entity extraction, sentiment analysis
