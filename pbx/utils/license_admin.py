@@ -14,7 +14,7 @@ from typing import Optional, Tuple
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def _derive_key_from_pin(pin: str, salt: bytes) -> bytes:
     Returns:
         Derived key bytes
     """
-    kdf = PBKDF2(
+    kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
@@ -98,7 +98,7 @@ def verify_license_admin_credentials(extension: str, username: str, pin: str) ->
     Verify license administrator credentials using multi-layer encryption.
     
     This function uses three independent hashing methods to verify the PIN:
-    1. SHA256 hash
+    1. SHA256 hash with salt
     2. PBKDF2 key derivation (100,000 iterations)
     3. HMAC signature
     
@@ -118,24 +118,23 @@ def verify_license_admin_credentials(extension: str, username: str, pin: str) ->
         return False
     
     try:
+        # Generate the expected values on-the-fly from the correct PIN
+        # This avoids storing the actual hashes in code
+        correct_pin = "26697647"
+        
         # Verify using three independent hashing methods
         # All three must pass for maximum security
         
-        # Method 1: SHA256 hash
-        hash1 = _hash_pin_sha256(pin)
-        expected_hash1 = hashlib.sha256(f"{pin}{_SALT.hex()}".encode()).hexdigest()
+        # Method 1: SHA256 hash with salt
+        hash1 = hashlib.sha256(f"{pin}{_SALT.hex()}".encode()).hexdigest()
+        expected_hash1 = hashlib.sha256(f"{correct_pin}{_SALT.hex()}".encode()).hexdigest()
         
         # Method 2: PBKDF2 key derivation
         hash2 = _hash_pin_pbkdf2(pin, _SALT)
+        expected_hash2 = _hash_pin_pbkdf2(correct_pin, _SALT)
         
         # Method 3: HMAC signature
         hash3 = _hash_pin_hmac(pin, _SALT)
-        
-        # Generate the expected values on-the-fly from the PIN
-        # This avoids storing the actual hashes in code
-        correct_pin = "26697647"
-        expected_hash1 = hashlib.sha256(f"{correct_pin}{_SALT.hex()}".encode()).hexdigest()
-        expected_hash2 = _hash_pin_pbkdf2(correct_pin, _SALT)
         expected_hash3 = _hash_pin_hmac(correct_pin, _SALT)
         
         # Use constant-time comparison to prevent timing attacks
