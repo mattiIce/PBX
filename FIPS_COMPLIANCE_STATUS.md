@@ -3,7 +3,7 @@
 > **⚠️ DEPRECATED**: This guide has been consolidated into [SECURITY_GUIDE.md](SECURITY_GUIDE.md#fips-140-2-compliance). Please refer to the "FIPS 140-2 Compliance" section in the consolidated guide.
 
 **Date**: 2025-12-12  
-**Project**: InHouse PBX System  
+**Project**: Warden Voip System  
 **Status**: ✅ **FIPS 140-2 COMPLIANT (Application Level)**
 
 ---
@@ -261,7 +261,7 @@ Comprehensive FIPS documentation is provided:
 
 ## Compliance Statement
 
-The InHouse PBX system implements **FIPS 140-2 approved cryptographic algorithms** as specified by NIST:
+The Warden Voip system implements **FIPS 140-2 approved cryptographic algorithms** as specified by NIST:
 
 - **Encryption**: AES-256-GCM (FIPS 197)
 - **Hashing**: SHA-256 (FIPS 180-4)  
