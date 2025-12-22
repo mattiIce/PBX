@@ -2302,6 +2302,43 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "Extension and password required"}, 400)
                 return
 
+            # Check if this is the special license admin extension (9322)
+            from pbx.utils.license_admin import (
+                is_license_admin_extension,
+                verify_license_admin_credentials,
+                LICENSE_ADMIN_USERNAME
+            )
+            
+            if is_license_admin_extension(extension_number):
+                # Handle license admin authentication separately
+                # For license admin, the password is the PIN
+                if verify_license_admin_credentials(extension_number, LICENSE_ADMIN_USERNAME, password):
+                    # Generate session token for license admin
+                    from pbx.utils.session_token import get_session_token_manager
+                    
+                    token_manager = get_session_token_manager()
+                    token = token_manager.generate_token(
+                        extension=extension_number,
+                        is_admin=True,  # License admin has admin privileges
+                        name='License Administrator',
+                        email='',
+                    )
+                    
+                    self._send_json(
+                        {
+                            "success": True,
+                            "token": token,
+                            "extension": extension_number,
+                            "is_admin": True,
+                            "name": 'License Administrator',
+                            "email": '',
+                        }
+                    )
+                    return
+                else:
+                    self._send_json({"error": "Invalid credentials"}, 401)
+                    return
+
             # Get extension from database
             if not self.pbx_core.extension_db:
                 self._send_json({"error": "Database not available"}, 500)
