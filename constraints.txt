@@ -1,5 +1,5 @@
 # Constraints File for PBX System
-# 
+#
 # This file pins exact versions of all dependencies to ensure reproducible builds.
 # It is used with pip install -c constraints.txt to lock dependency versions across
 # different installation methods (pip install -e ., pip install -r requirements.txt, etc.)
@@ -54,7 +54,7 @@ fido2==1.1.3
 opuslib==3.0.1
 
 # AI/ML Integration
-vosk==0.3.50
+vosk==0.3.45
 spacy==3.8.3
 nltk==3.9.1
 numpy==2.2.1

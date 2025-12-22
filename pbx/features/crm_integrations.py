@@ -85,12 +85,12 @@ class HubSpotIntegration:
 
                 self.db.execute(
                     (
-                        """UPDATE hubspot_integration 
+                        """UPDATE hubspot_integration
                        SET enabled = ?, api_key_encrypted = ?, portal_id = ?,
                            sync_contacts = ?, sync_deals = ?, auto_create_contacts = ?
                        WHERE id = (SELECT MAX(id) FROM hubspot_integration)"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE hubspot_integration 
+                        else """UPDATE hubspot_integration
                        SET enabled = %s, api_key_encrypted = %s, portal_id = %s,
                            sync_contacts = %s, sync_deals = %s, auto_create_contacts = %s
                        WHERE id = (SELECT MAX(id) FROM hubspot_integration)"""
@@ -110,11 +110,11 @@ class HubSpotIntegration:
 
                 self.db.execute(
                     (
-                        """INSERT INTO hubspot_integration 
+                        """INSERT INTO hubspot_integration
                        (enabled, api_key_encrypted, portal_id, sync_contacts, sync_deals, auto_create_contacts)
                        VALUES (?, ?, ?, ?, ?, ?)"""
                         if self.db.db_type == "sqlite"
-                        else """INSERT INTO hubspot_integration 
+                        else """INSERT INTO hubspot_integration
                        (enabled, api_key_encrypted, portal_id, sync_contacts, sync_deals, auto_create_contacts)
                        VALUES (%s, %s, %s, %s, %s, %s)"""
                     ),
@@ -321,11 +321,11 @@ class HubSpotIntegration:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO integration_activity_log 
+                    """INSERT INTO integration_activity_log
                    (integration_type, action, status, details)
                    VALUES (?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO integration_activity_log 
+                    else """INSERT INTO integration_activity_log
                    (integration_type, action, status, details)
                    VALUES (%s, %s, %s, %s)"""
                 ),
@@ -409,12 +409,12 @@ class ZendeskIntegration:
 
                 self.db.execute(
                     (
-                        """UPDATE zendesk_integration 
+                        """UPDATE zendesk_integration
                        SET enabled = ?, subdomain = ?, api_token_encrypted = ?,
                            email = ?, auto_create_tickets = ?, default_priority = ?
                        WHERE id = (SELECT MAX(id) FROM zendesk_integration)"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE zendesk_integration 
+                        else """UPDATE zendesk_integration
                        SET enabled = %s, subdomain = %s, api_token_encrypted = %s,
                            email = %s, auto_create_tickets = %s, default_priority = %s
                        WHERE id = (SELECT MAX(id) FROM zendesk_integration)"""
@@ -434,11 +434,11 @@ class ZendeskIntegration:
 
                 self.db.execute(
                     (
-                        """INSERT INTO zendesk_integration 
+                        """INSERT INTO zendesk_integration
                        (enabled, subdomain, api_token_encrypted, email, auto_create_tickets, default_priority)
                        VALUES (?, ?, ?, ?, ?, ?)"""
                         if self.db.db_type == "sqlite"
-                        else """INSERT INTO zendesk_integration 
+                        else """INSERT INTO zendesk_integration
                        (enabled, subdomain, api_token_encrypted, email, auto_create_tickets, default_priority)
                        VALUES (%s, %s, %s, %s, %s, %s)"""
                     ),
@@ -642,11 +642,11 @@ class ZendeskIntegration:
         try:
             self.db.execute(
                 (
-                    """INSERT INTO integration_activity_log 
+                    """INSERT INTO integration_activity_log
                    (integration_type, action, status, details)
                    VALUES (?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO integration_activity_log 
+                    else """INSERT INTO integration_activity_log
                    (integration_type, action, status, details)
                    VALUES (%s, %s, %s, %s)"""
                 ),
@@ -668,10 +668,10 @@ class ZendeskIntegration:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM integration_activity_log 
+                    """SELECT * FROM integration_activity_log
                    ORDER BY created_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM integration_activity_log 
+                    else """SELECT * FROM integration_activity_log
                    ORDER BY created_at DESC LIMIT %s"""
                 ),
                 (limit,),

@@ -14,16 +14,16 @@
                 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
                 'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js'
             ];
-            
+
             let currentIndex = 0;
-            
+
             function tryNextFallback() {
                 if (currentIndex >= fallbacks.length) {
                     console.error('All Chart.js CDN fallbacks failed');
                     window.chartJsLoadFailed = true;
                     return;
                 }
-                
+
                 const script = document.createElement('script');
                 script.src = fallbacks[currentIndex];
                 script.onerror = function() {
@@ -37,12 +37,12 @@
                 };
                 document.head.appendChild(script);
             }
-            
+
             tryNextFallback();
         }
     </script>
     <!-- Load Chart.js with fallback on error -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
             onerror="loadChartJsFallback()"></script>
 </head>
 <body>
@@ -267,27 +267,27 @@
             <div class="config-section" id="ad-integration-section">
                 <div class="ad-status-grid">
                     <div class="ad-status-item">
-                        <strong>Status:</strong> 
+                        <strong>Status:</strong>
                         <span id="ad-status-badge" class="status-badge">Loading...</span>
                     </div>
                     <div class="ad-status-item">
-                        <strong>Connection:</strong> 
+                        <strong>Connection:</strong>
                         <span id="ad-connection-status">-</span>
                     </div>
                     <div class="ad-status-item">
-                        <strong>Server:</strong> 
+                        <strong>Server:</strong>
                         <span id="ad-server">-</span>
                     </div>
                     <div class="ad-status-item">
-                        <strong>Auto Provision:</strong> 
+                        <strong>Auto Provision:</strong>
                         <span id="ad-auto-provision">-</span>
                     </div>
                     <div class="ad-status-item">
-                        <strong>Synced Users:</strong> 
+                        <strong>Synced Users:</strong>
                         <span id="ad-synced-users">-</span>
                     </div>
                     <div class="ad-status-item">
-                        <strong>Last Error:</strong> 
+                        <strong>Last Error:</strong>
                         <span id="ad-error" style="color: #d32f2f;">-</span>
                     </div>
                 </div>
@@ -307,18 +307,18 @@
         <!-- WebRTC Phone Tab -->
         <div id="webrtc-phone" class="tab-content">
             <h2>📞 WebRTC Browser Phone</h2>
-            
+
             <!-- Phone Extension Configuration -->
             <div class="config-section" style="max-width: 600px; margin: 0 auto 20px;">
                 <h3>⚙️ Phone Configuration</h3>
                 <form id="webrtc-phone-config-form" onsubmit="saveWebRTCPhoneConfig(event)">
                     <div class="form-group">
                         <label for="webrtc-phone-extension">Phone Extension:</label>
-                        <input 
-                            type="text" 
-                            id="webrtc-phone-extension" 
-                            placeholder="webrtc-admin" 
-                            pattern="[a-zA-Z0-9-]+" 
+                        <input
+                            type="text"
+                            id="webrtc-phone-extension"
+                            placeholder="webrtc-admin"
+                            pattern="[a-zA-Z0-9-]+"
                             maxlength="20"
                             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
                         >
@@ -330,25 +330,25 @@
                     <button type="button" class="btn btn-primary" onclick="loadWebRTCPhoneConfig()" style="margin-left: 10px;">🔄 Reload</button>
                 </form>
             </div>
-            
+
             <!-- Microphone Requirement Alert -->
-            
+
             <div class="config-section" style="max-width: 600px; margin: 0 auto;">
                 <div class="webrtc-phone-widget">
                     <div class="phone-display">
                         <div class="phone-status-container">
                             <div id="webrtc-status" class="webrtc-status info">Ready to call</div>
                         </div>
-                        
+
                         <div class="phone-input-group" style="margin: 20px 0;">
                             <label for="webrtc-target-ext" style="display: block; margin-bottom: 8px; font-weight: bold;">
                                 Call Extension:
                             </label>
-                            <input 
-                                type="text" 
-                                id="webrtc-target-ext" 
-                                value="1001" 
-                                pattern="[0-9*#]+" 
+                            <input
+                                type="text"
+                                id="webrtc-target-ext"
+                                value="1001"
+                                pattern="[0-9*#]+"
                                 maxlength="16"
                                 style="width: 100%; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 8px;"
                                 placeholder="1001"
@@ -359,47 +359,47 @@
                         </div>
 
                         <div class="phone-controls" style="display: flex; flex-direction: column; gap: 10px;">
-                            <button 
-                                id="webrtc-call-btn" 
-                                class="btn btn-success" 
+                            <button
+                                id="webrtc-call-btn"
+                                class="btn btn-success"
                                 style="padding: 15px; font-size: 18px; width: 100%;"
                             >
                                 📞 Call Extension
                             </button>
-                            
-                            <button 
-                                id="webrtc-hangup-btn" 
-                                class="btn btn-danger" 
-                                style="padding: 15px; font-size: 18px; width: 100%;" 
+
+                            <button
+                                id="webrtc-hangup-btn"
+                                class="btn btn-danger"
+                                style="padding: 15px; font-size: 18px; width: 100%;"
                                 disabled
                             >
                                 📴 Hang Up
                             </button>
-                            
+
                             <div style="display: flex; gap: 10px;">
-                                <button 
-                                    id="webrtc-mute-btn" 
-                                    class="btn btn-secondary" 
-                                    style="flex: 1; padding: 12px;" 
+                                <button
+                                    id="webrtc-mute-btn"
+                                    class="btn btn-secondary"
+                                    style="flex: 1; padding: 12px;"
                                     disabled
                                 >
                                     🔇 Mute
                                 </button>
-                                
+
                                 <div style="flex: 2; display: flex; align-items: center; gap: 10px; padding: 0 10px; background: #f5f5f5; border-radius: 4px;">
                                     <label for="webrtc-volume" style="white-space: nowrap;">🔊 Volume:</label>
-                                    <input 
-                                        type="range" 
-                                        id="webrtc-volume" 
-                                        min="0" 
-                                        max="100" 
-                                        value="80" 
+                                    <input
+                                        type="range"
+                                        id="webrtc-volume"
+                                        min="0"
+                                        max="100"
+                                        value="80"
                                         style="flex: 1;"
                                     >
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- DTMF Keypad -->
                         <div id="webrtc-keypad-section" style="margin-top: 25px; display: none;">
                             <h3 style="text-align: center; margin-bottom: 15px;">📱 Dial Pad</h3>
@@ -437,7 +437,7 @@
                         <li>Use the controls to mute/unmute or adjust volume</li>
                         <li>Click "📴 Hang Up" when you're done</li>
                     </ol>
-                    
+
                     <h3 style="margin-top: 20px;">🔧 Troubleshooting</h3>
                     <ul>
                         <li><strong>No audio:</strong> Check your microphone permissions in browser settings</li>
@@ -452,9 +452,9 @@
         <!-- Analytics Tab -->
         <div id="analytics" class="tab-content">
             <h2>Call Analytics & Statistics</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
-                <label>Time Period: 
+                <label>Time Period:
                     <select id="analytics-period" onchange="loadAnalytics()">
                         <option value="1">Last 24 Hours</option>
                         <option value="7" selected>Last 7 Days</option>
@@ -490,17 +490,17 @@
                     <h3>Daily Call Trends</h3>
                     <canvas id="daily-trends-chart"></canvas>
                 </div>
-                
+
                 <div class="chart-box">
                     <h3>Hourly Call Distribution</h3>
                     <canvas id="hourly-distribution-chart"></canvas>
                 </div>
-                
+
                 <div class="chart-box">
                     <h3>Call Disposition Breakdown</h3>
                     <canvas id="disposition-chart"></canvas>
                 </div>
-                
+
                 <div class="chart-box">
                     <h3>Call Quality Metrics</h3>
                     <canvas id="quality-chart"></canvas>
@@ -541,7 +541,7 @@
         <!-- QoS (Call Quality) Tab -->
         <div id="qos" class="tab-content">
             <h2>Call Quality Monitoring (QoS)</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadQoSMetrics()">🔄 Refresh Metrics</button>
                 <button class="btn btn-secondary" onclick="clearQoSAlerts()">🗑️ Clear Alerts</button>
@@ -670,7 +670,7 @@
                     <p><strong>Packet Loss:</strong> Percentage of packets that didn't arrive. Above 2% can cause noticeable quality degradation.</p>
                     <p><strong>Jitter:</strong> Variation in packet arrival times. High jitter (>50ms) causes choppy audio.</p>
                     <p><strong>Latency:</strong> Round-trip delay. Above 300ms can cause conversational difficulties.</p>
-                    
+
                     <h4 style="margin-top: 20px;">📊 Understanding Bidirectional Call Quality</h4>
                     <p>Each call is monitored in <strong>both directions</strong> (A→B and B→A) separately. This helps diagnose:</p>
                     <ul>
@@ -678,7 +678,7 @@
                         <li><strong>Asymmetric Quality:</strong> Different quality in each direction may indicate network routing issues</li>
                         <li><strong>Firewall/NAT Issues:</strong> One direction working but not the other suggests port forwarding problems</li>
                     </ul>
-                    
+
                     <h4 style="margin-top: 20px;">🔧 Troubleshooting One-Way Audio</h4>
                     <p>If you see <strong>MOS 0.00 in one direction</strong>:</p>
                     <ol>
@@ -695,7 +695,7 @@
         <!-- Emergency Notification Tab -->
         <div id="emergency" class="tab-content">
             <h2>🚨 Emergency Notification System</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadEmergencyContacts()">🔄 Refresh Contacts</button>
                 <button class="btn btn-warning" onclick="testEmergencyNotification()">🧪 Test System</button>
@@ -792,7 +792,7 @@
                         <li><strong>Priority 3:</strong> HR, facilities</li>
                         <li><strong>Priority 4-5:</strong> Additional contacts</li>
                     </ul>
-                    
+
                     <h4>Notification Methods</h4>
                     <ul>
                         <li><strong>Call:</strong> Automated voice call to extension or phone</li>
@@ -800,7 +800,7 @@
                         <li><strong>Email:</strong> Emergency notification email</li>
                         <li><strong>SMS:</strong> Text message alert (requires configuration)</li>
                     </ul>
-                    
+
                     <h4>911 Detection</h4>
                     <p>When someone dials 911 from any extension, all emergency contacts are automatically notified with:</p>
                     <ul>
@@ -919,7 +919,7 @@
                     </ul>
                     <p>💡 Both methods can be enabled simultaneously for redundancy.</p>
                 </div>
-                
+
                 <!-- LDAPS Configuration -->
                 <div class="form-group">
                     <label>
@@ -928,7 +928,7 @@
                     </label>
                     <small>Allow phones to directly query LDAP directory (Recommended for Zultys 33G/37G)</small>
                 </div>
-                
+
                 <div id="ldap-phonebook-settings" style="display: none; margin-left: 20px; border-left: 3px solid #007bff; padding-left: 15px;">
                     <div class="form-group">
                         <label>LDAP Server:</label>
@@ -967,7 +967,7 @@
                         <small>Name shown on phone display</small>
                     </div>
                 </div>
-                
+
                 <!-- Remote Phone Book URL Configuration -->
                 <div class="form-group" style="margin-top: 20px;">
                     <label>
@@ -976,7 +976,7 @@
                     </label>
                     <small>Provide HTTP/HTTPS URL for phones to fetch XML directory (Fallback)</small>
                 </div>
-                
+
                 <div id="remote-phonebook-settings" style="display: none; margin-left: 20px; border-left: 3px solid #28a745; padding-left: 15px;">
                     <div class="form-group">
                         <label>Phone Book URL:</label>
@@ -989,7 +989,7 @@
                         <small>How often phones should refresh the directory (1-1440 minutes)</small>
                     </div>
                 </div>
-                
+
                 <button class="btn btn-success" onclick="savePhonebookSettings()">💾 Save Phone Book Settings</button>
             </div>
 
@@ -1237,13 +1237,13 @@
                         <span id="view-toggle-text">📋 Switch to Table View</span>
                     </button>
                 </div>
-                
+
                 <!-- Card View (Visual Voicemail) -->
                 <div id="voicemail-cards-view" class="voicemail-cards-container">
                     <!-- Voicemail cards will be inserted here -->
                     <div class="info-box">Select an extension to view voicemails</div>
                 </div>
-                
+
                 <!-- Table View (Legacy) -->
                 <div id="voicemail-table-view" class="table-container" style="display: none;">
                     <table class="data-table">
@@ -1264,7 +1264,7 @@
                     </table>
                 </div>
             </div>
-            
+
             <!-- Audio Player Modal -->
             <div id="voicemail-player-modal" class="modal">
                 <div class="modal-content" style="max-width: 600px;">
@@ -1565,7 +1565,7 @@
                         <li>Select your default extension</li>
                         <li>Click any phone number on a webpage to dial</li>
                     </ol>
-                    
+
                     <h4 style="margin-top: 20px;">API Integration</h4>
                     <p>Integrate click-to-dial into your applications using the REST API:</p>
                     <div class="code-block" style="background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; margin-top: 10px;">
@@ -1592,7 +1592,7 @@ Content-Type: application/json
     "browser_notification": true
 }</pre>
                     </div>
-                    
+
                     <h4 style="margin-top: 20px;">CRM Integration</h4>
                     <p>Click-to-dial works seamlessly with CRM systems:</p>
                     <ul>
@@ -1608,7 +1608,7 @@ Content-Type: application/json
         <!-- Hot Desking Tab -->
         <div id="hot-desking" class="tab-content">
             <h2>🔄 Hot Desking</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadHotDeskSessions()">🔄 Refresh Sessions</button>
             </div>
@@ -1666,7 +1666,7 @@ Content-Type: application/json
         <!-- Find Me/Follow Me Tab -->
         <div id="find-me-follow-me" class="tab-content">
             <h2>🔄 Find Me/Follow Me</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadFMFMExtensions()">🔄 Refresh</button>
                 <button class="btn btn-success" onclick="showAddFMFMModal()">➕ Configure Extension</button>
@@ -1732,7 +1732,7 @@ Content-Type: application/json
         <!-- Time-Based Routing Tab -->
         <div id="time-routing" class="tab-content">
             <h2>⏰ Time-Based Routing</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadTimeRoutingRules()">🔄 Refresh</button>
                 <button class="btn btn-success" onclick="showAddTimeRuleModal()">➕ Add Rule</button>
@@ -1799,7 +1799,7 @@ Content-Type: application/json
         <!-- SIP Trunks Tab -->
         <div id="sip-trunks" class="tab-content">
             <h2>🌐 SIP Trunk Management</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadSIPTrunks()">🔄 Refresh Trunks</button>
                 <button class="btn btn-success" onclick="showAddTrunkModal()">➕ Add Trunk</button>
@@ -1874,7 +1874,7 @@ Content-Type: application/json
         <!-- Least-Cost Routing Tab -->
         <div id="least-cost-routing" class="tab-content">
             <h2>💰 Least-Cost Routing (LCR)</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadLCRRates()">🔄 Refresh Rates</button>
                 <button class="btn btn-success" onclick="showAddLCRRateModal()">➕ Add Rate</button>
@@ -1998,7 +1998,7 @@ Content-Type: application/json
         <!-- Codecs Tab -->
         <div id="codecs" class="tab-content">
             <h2>🎵 Audio & Video Codecs</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadCodecStatus()">🔄 Refresh Status</button>
             </div>
@@ -2174,14 +2174,14 @@ Content-Type: application/json
                         <li><strong>G.729:</strong> Low bandwidth (8 kbps). Compressed quality. Good for limited bandwidth scenarios. Framework ready for codec library integration.</li>
                         <li><strong>G.726:</strong> ADPCM codec family. Multiple bitrates (16/24/32/40 kbps). G.726-32 has built-in support, others have framework support.</li>
                     </ul>
-                    
+
                     <h4>Audio Quality Levels</h4>
                     <ul>
                         <li><strong>Narrowband (3.1 kHz):</strong> Standard telephone quality - G.711, G.729, G.726</li>
                         <li><strong>Wideband (7 kHz):</strong> HD audio quality - G.722</li>
                         <li><strong>Superwideband (12-20 kHz):</strong> Best audio quality - Opus</li>
                     </ul>
-                    
+
                     <h4>Codec Selection Guidelines</h4>
                     <ul>
                         <li><strong>Internal calls:</strong> Use G.722 or Opus for best quality</li>
@@ -2363,7 +2363,7 @@ G.726-32</textarea>
                         <li><strong>Check your SIP provider's documentation</strong> for their required payload type</li>
                         <li><strong>Phone-specific overrides:</strong> Individual phone templates can override these settings</li>
                     </ol>
-                    
+
                     <h4>🔧 Troubleshooting</h4>
                     <ul>
                         <li><strong>DTMF not detected in IVR/voicemail:</strong> Try changing payload type to 100 or 102</li>
@@ -2371,8 +2371,8 @@ G.726-32</textarea>
                         <li><strong>DTMF works locally but not through trunk:</strong> Check SIP provider's required payload type</li>
                         <li><strong>Delayed DTMF response:</strong> Reduce DTMF duration or check network latency</li>
                     </ul>
-                    
-                    <p>📖 For detailed information, see: 
+
+                    <p>📖 For detailed information, see:
                         <a href="https://github.com/mattiIce/PBX/blob/main/COMPLETE_DTMF_IMPLEMENTATION_SUMMARY.md" target="_blank">COMPLETE_DTMF_IMPLEMENTATION_SUMMARY.md</a>,
                         <a href="https://github.com/mattiIce/PBX/blob/main/DTMF_PAYLOAD_TYPE_CONFIGURATION.md" target="_blank">DTMF_PAYLOAD_TYPE_CONFIGURATION.md</a>
                     </p>
@@ -2383,7 +2383,7 @@ G.726-32</textarea>
         <!-- Webhooks Tab -->
         <div id="webhooks" class="tab-content">
             <h2>🔔 Webhooks</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadWebhooks()">🔄 Refresh</button>
                 <button class="btn btn-success" onclick="showAddWebhookModal()">➕ Add Webhook</button>
@@ -2430,7 +2430,7 @@ G.726-32</textarea>
         <!-- Recording Retention Tab -->
         <div id="recording-retention" class="tab-content">
             <h2>📁 Recording Retention Policies</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadRetentionPolicies()">🔄 Refresh</button>
                 <button class="btn btn-success" onclick="showAddRetentionPolicyModal()">➕ Add Policy</button>
@@ -2501,7 +2501,7 @@ G.726-32</textarea>
         <!-- Fraud Detection Tab -->
         <div id="fraud-detection" class="tab-content">
             <h2>🛡️ Fraud Detection</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadFraudAlerts()">🔄 Refresh Alerts</button>
                 <button class="btn btn-success" onclick="showAddBlockedPatternModal()">➕ Block Pattern</button>
@@ -2589,7 +2589,7 @@ G.726-32</textarea>
         <!-- Callback Queue Tab -->
         <div id="callback-queue" class="tab-content">
             <h2>📞 Callback Queue Management</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadCallbackQueue()">🔄 Refresh</button>
                 <button class="btn btn-success" onclick="showRequestCallbackModal()">➕ Request Callback</button>
@@ -2670,7 +2670,7 @@ G.726-32</textarea>
         <!-- Mobile Push Notifications Tab -->
         <div id="mobile-push" class="tab-content">
             <h2>📱 Mobile Push Notifications</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadMobilePushDevices()">🔄 Refresh</button>
                 <button class="btn btn-success" onclick="showRegisterDeviceModal()">➕ Register Device</button>
@@ -2770,7 +2770,7 @@ G.726-32</textarea>
         <!-- Recording Announcements Tab -->
         <div id="recording-announcements" class="tab-content">
             <h2>📢 Recording Announcements</h2>
-            
+
             <div class="action-buttons" style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="loadRecordingAnnouncementsStats()">🔄 Refresh</button>
             </div>
@@ -3087,7 +3087,7 @@ G.726-32</textarea>
                         </label>
                         <small>Allow browser-based calling without downloads</small>
                     </div>
-                    
+
                     <h4>Webhooks</h4>
                     <div class="form-group">
                         <label>
@@ -3096,7 +3096,7 @@ G.726-32</textarea>
                         </label>
                         <small>Event-driven integrations with external systems</small>
                     </div>
-                    
+
                     <h4>CRM Integration</h4>
                     <div class="form-group">
                         <label>
@@ -3105,7 +3105,7 @@ G.726-32</textarea>
                         </label>
                         <small>Auto-display caller information from CRM</small>
                     </div>
-                    
+
                     <h4>Hot Desking</h4>
                     <div class="form-group">
                         <label>
@@ -3120,7 +3120,7 @@ G.726-32</textarea>
                             Require PIN for Hot Desking
                         </label>
                     </div>
-                    
+
                     <h4>Voicemail Transcription</h4>
                     <div class="form-group">
                         <label>
@@ -3129,7 +3129,7 @@ G.726-32</textarea>
                         </label>
                         <small>Convert voicemails to text (requires Vosk or Google Cloud)</small>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-success">💾 Save Advanced Settings</button>
                 </form>
             </div>
@@ -3157,7 +3157,7 @@ G.726-32</textarea>
             <div class="config-section">
                 <h3>🔒 SSL/HTTPS Configuration</h3>
                 <p class="config-note">Configure HTTPS encryption for secure API communication</p>
-                
+
                 <div class="info-box" style="margin-bottom: 20px;">
                     <p><strong>Current Status:</strong></p>
                     <div id="ssl-status-info">
@@ -3176,13 +3176,13 @@ G.726-32</textarea>
 
                     <div id="ssl-certificate-section" style="display: none; margin-left: 20px; border-left: 3px solid #2196F3; padding-left: 15px;">
                         <h4>Certificate Configuration</h4>
-                        
+
                         <div class="form-group">
                             <label>Certificate File Path:</label>
                             <input type="text" id="ssl-cert-file" placeholder="certs/server.crt" readonly>
                             <small>Location of the SSL certificate file</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Private Key File Path:</label>
                             <input type="text" id="ssl-key-file" placeholder="certs/server.key" readonly>
@@ -3215,19 +3215,19 @@ G.726-32</textarea>
 
                         <h4 style="margin-top: 20px;">Generate Self-Signed Certificate</h4>
                         <p class="config-note">Generate a self-signed certificate for development/testing. For production, use a certificate from a trusted CA (Let's Encrypt, DigiCert, etc.).</p>
-                        
+
                         <div class="form-group">
                             <label>Hostname/IP Address:</label>
                             <input type="text" id="ssl-hostname" placeholder="192.168.1.14">
                             <small>The hostname or IP address that will be used to access the server</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Certificate Validity (days):</label>
                             <input type="number" id="ssl-days-valid" value="365" min="1" max="3650">
                             <small>How many days the certificate will be valid (1-3650)</small>
                         </div>
-                        
+
                         <div class="action-buttons">
                             <button type="button" class="btn btn-primary" onclick="generateSSLCertificate()">🔐 Generate Certificate</button>
                             <button type="button" class="btn btn-secondary" onclick="refreshSSLStatus()">🔄 Refresh Status</button>
@@ -3274,7 +3274,7 @@ G.726-32</textarea>
         <!-- Features Status Tab -->
         <div id="features-status" class="tab-content">
             <h2>⚙️ System Features Status</h2>
-            
+
             <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3; margin-bottom: 20px;">
                 <p><strong>💡 Tip:</strong> This page shows all available system features and their current status. Enable or disable features in the Configuration tab.</p>
             </div>
@@ -3335,7 +3335,7 @@ G.726-32</textarea>
 
         <div id="nomadic-e911" class="tab-content">
             <h2>📍 Nomadic E911</h2>
-            
+
             <div class="config-section">
                 <h3>🏢 E911 Site Configuration</h3>
                 <p>Configure sites with IP ranges for automatic location detection.</p>
@@ -3396,7 +3396,7 @@ G.726-32</textarea>
                 <div class="action-buttons" style="margin-bottom: 15px;">
                     <button class="btn btn-primary" onclick="loadLocationHistory()">🔄 Refresh History</button>
                     <label style="margin-left: 15px;">
-                        Extension: 
+                        Extension:
                         <select id="location-history-extension" onchange="loadLocationHistory()">
                             <option value="">All Extensions</option>
                         </select>
@@ -3433,7 +3433,7 @@ G.726-32</textarea>
                         <li><strong>Multi-Site Support:</strong> Track users across multiple office locations</li>
                         <li><strong>Real-Time Updates:</strong> Location updated when extension registers from new IP</li>
                     </ul>
-                    
+
                     <h4 style="margin-top: 20px;">Emergency Call Handling</h4>
                     <p>When a user dials 911:</p>
                     <ul>
@@ -3442,7 +3442,7 @@ G.726-32</textarea>
                         <li><strong>PSAP Routing:</strong> Route to correct Public Safety Answering Point</li>
                         <li><strong>Notification:</strong> Alert security/management with caller location</li>
                     </ul>
-                    
+
                     <h4 style="margin-top: 20px;">Manual Override</h4>
                     <p>Users can manually update their location for:</p>
                     <ul>
@@ -3458,7 +3458,7 @@ G.726-32</textarea>
         <!-- Open Source Integrations Tabs -->
         <div id="opensource-integrations" class="tab-content">
             <h2>🆓 Open Source Integrations</h2>
-            
+
             <div class="info-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                 <h3 style="color: white; margin-top: 0;">💡 Zero-Cost Integration Stack</h3>
                 <p style="margin-bottom: 10px;">All integrations below are 100% free and open source. No licensing fees, no per-user costs.</p>
@@ -3477,7 +3477,7 @@ G.726-32</textarea>
                     <strong>🚀 Quick Setup:</strong> Check the boxes below to enable integrations with default settings. All integrations use free public servers by default.
                 </div>
                 <div class="integration-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                    
+
                     <div class="integration-card" id="jitsi-card" style="border: 2px solid #4CAF50; border-radius: 8px; padding: 15px; position: relative;">
                         <div style="display: flex; align-items: center; margin-bottom: 10px;">
                             <input type="checkbox" id="quick-jitsi-enabled" onchange="quickToggleIntegration('jitsi')" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
@@ -3539,7 +3539,7 @@ G.726-32</textarea>
                 <div class="info-box" style="margin-bottom: 15px; background-color: #fff3e0;">
                     <p><strong>💡 Pro Tip:</strong> Once enabled, you can use these quick actions to interact with your integrations instantly!</p>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                     <!-- Jitsi Quick Action -->
                     <div style="border: 1px solid #4CAF50; border-radius: 8px; padding: 15px; background: #f1f8e9;">
@@ -3549,7 +3549,7 @@ G.726-32</textarea>
                         </button>
                         <p style="font-size: 12px; color: #666; margin: 0;">Jump to Jitsi tab to create instant or scheduled video meetings</p>
                     </div>
-                    
+
                     <!-- Matrix Quick Action -->
                     <div style="border: 1px solid #9C27B0; border-radius: 8px; padding: 15px; background: #f3e5f5;">
                         <h4 style="color: #9C27B0; margin-top: 0;">💬 Matrix Actions</h4>
@@ -3558,7 +3558,7 @@ G.726-32</textarea>
                         </button>
                         <p style="font-size: 12px; color: #666; margin: 0;">Jump to Matrix tab to send messages or create rooms</p>
                     </div>
-                    
+
                     <!-- EspoCRM Quick Action -->
                     <div style="border: 1px solid #2196F3; border-radius: 8px; padding: 15px; background: #e3f2fd;">
                         <h4 style="color: #2196F3; margin-top: 0;">👥 EspoCRM Actions</h4>
@@ -3574,7 +3574,7 @@ G.726-32</textarea>
         <div id="jitsi-integration" class="tab-content">
             <h2>📹 Jitsi Meet Integration</h2>
             <p class="subtitle">Free & Open Source Video Conferencing (Alternative to Zoom)</p>
-            
+
             <div class="config-section">
                 <h3>Configuration</h3>
                 <form id="jitsi-config-form">
@@ -3585,14 +3585,14 @@ G.726-32</textarea>
                         </label>
                         <small>Enable video conferencing with Jitsi Meet</small>
                     </div>
-                    
+
                     <div id="jitsi-settings" style="display: none;">
                         <div class="form-group">
                             <label>Server URL:</label>
                             <input type="text" id="jitsi-server-url" placeholder="https://meet.jit.si" value="https://meet.jit.si">
                             <small>Use public server (meet.jit.si) or your self-hosted instance</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>
                                 <input type="checkbox" id="jitsi-auto-create-rooms" checked>
@@ -3600,25 +3600,25 @@ G.726-32</textarea>
                             </label>
                             <small>Automatically create rooms for call escalation</small>
                         </div>
-                        
+
                         <div class="form-group" style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #f9f9f9;">
                             <h4 style="margin-top: 0;">Advanced: JWT Authentication (Optional)</h4>
                             <p style="font-size: 14px; color: #666;">For self-hosted Jitsi with secure rooms</p>
-                            
+
                             <label>App ID:</label>
                             <input type="text" id="jitsi-app-id" placeholder="your-app-id">
                             <small>JWT application ID from Jitsi configuration</small>
-                            
+
                             <label style="margin-top: 10px;">App Secret:</label>
                             <input type="password" id="jitsi-app-secret" placeholder="your-app-secret">
                             <small>JWT secret key for token generation</small>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary">Save Configuration</button>
                         <button type="button" class="btn" onclick="testJitsiConnection()">Test Connection</button>
                     </div>
                 </form>
-                
+
                 <div id="jitsi-status" style="margin-top: 20px;"></div>
             </div>
 
@@ -3627,7 +3627,7 @@ G.726-32</textarea>
                 <div class="info-box" style="margin-bottom: 15px; background-color: #e8f5e9;">
                     <p><strong>💡 Quick Action:</strong> Create instant video meetings or schedule them for later. Share the meeting URL with participants.</p>
                 </div>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
                         <h4>Instant Meeting</h4>
@@ -3641,7 +3641,7 @@ G.726-32</textarea>
                             🚀 Create Instant Meeting
                         </button>
                     </div>
-                    
+
                     <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
                         <h4>Schedule Meeting</h4>
                         <p style="font-size: 14px; color: #666;">Plan a meeting for the future</p>
@@ -3658,7 +3658,7 @@ G.726-32</textarea>
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="jitsi-meeting-result" style="margin-top: 20px; display: none;">
                     <h4>✅ Meeting Created</h4>
                     <div class="info-box" style="background-color: #e8f5e9;">
@@ -3692,7 +3692,7 @@ sudo apt-get install jitsi-meet</pre>
         <div id="matrix-integration" class="tab-content">
             <h2>💬 Matrix Integration</h2>
             <p class="subtitle">Free & Open Source Team Messaging (Alternative to Slack/Teams)</p>
-            
+
             <div class="config-section">
                 <h3>Configuration</h3>
                 <form id="matrix-config-form">
@@ -3703,38 +3703,38 @@ sudo apt-get install jitsi-meet</pre>
                         </label>
                         <small>Enable team messaging and notifications</small>
                     </div>
-                    
+
                     <div id="matrix-settings" style="display: none;">
                         <div class="form-group">
                             <label>Homeserver URL:</label>
                             <input type="text" id="matrix-homeserver-url" placeholder="https://matrix.org">
                             <small>Public homeserver (matrix.org) or your self-hosted Synapse server</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Bot Username:</label>
                             <input type="text" id="matrix-bot-username" placeholder="@pbxbot:matrix.org">
                             <small>Matrix user ID for PBX bot (@username:server.com)</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Bot Password:</label>
                             <input type="password" id="matrix-bot-password" placeholder="bot-password">
                             <small>Password for bot account</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Notification Room ID:</label>
                             <input type="text" id="matrix-notification-room" placeholder="!roomid:matrix.org">
                             <small>Room ID for general notifications (starts with !)</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Voicemail Room ID (optional):</label>
                             <input type="text" id="matrix-voicemail-room" placeholder="!roomid:matrix.org">
                             <small>Separate room for voicemail notifications</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>
                                 <input type="checkbox" id="matrix-missed-call-notifications" checked>
@@ -3742,12 +3742,12 @@ sudo apt-get install jitsi-meet</pre>
                             </label>
                             <small>Post missed call alerts to notification room</small>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary">Save Configuration</button>
                         <button type="button" class="btn" onclick="testMatrixConnection()">Test Connection</button>
                     </div>
                 </form>
-                
+
                 <div id="matrix-status" style="margin-top: 20px;"></div>
             </div>
 
@@ -3756,7 +3756,7 @@ sudo apt-get install jitsi-meet</pre>
                 <div class="info-box" style="margin-bottom: 15px; background-color: #f3e5f5;">
                     <p><strong>💡 Quick Action:</strong> Send messages to your Matrix rooms for testing or notifications.</p>
                 </div>
-                
+
                 <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
                     <div class="form-group">
                         <label>Select Room:</label>
@@ -3767,18 +3767,18 @@ sudo apt-get install jitsi-meet</pre>
                             <option value="custom">Custom Room ID...</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group" id="matrix-custom-room" style="display: none;">
                         <label>Custom Room ID:</label>
                         <input type="text" id="matrix-custom-room-id" placeholder="!roomid:matrix.org">
                         <small>Enter the full Matrix room ID (starts with !)</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Message:</label>
                         <textarea id="matrix-message-text" rows="4" placeholder="Hello from PBX! 👋"></textarea>
                     </div>
-                    
+
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-primary" onclick="sendMatrixMessage()" style="flex: 1;">
                             📤 Send Message
@@ -3788,7 +3788,7 @@ sudo apt-get install jitsi-meet</pre>
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="matrix-message-result" style="margin-top: 15px; display: none;">
                     <div class="info-box" style="background-color: #e8f5e9;">
                         <p id="matrix-message-result-text"></p>
@@ -3812,7 +3812,7 @@ sudo apt-get install jitsi-meet</pre>
                         ➕ Create Room
                     </button>
                 </div>
-                
+
                 <div id="matrix-room-result" style="margin-top: 15px; display: none;">
                     <div class="info-box" style="background-color: #e8f5e9;">
                         <p><strong>✅ Room Created!</strong></p>
@@ -3848,7 +3848,7 @@ python3 -m synapse.app.homeserver \
         <div id="espocrm-integration" class="tab-content">
             <h2>👥 EspoCRM Integration</h2>
             <p class="subtitle">Free & Open Source CRM (Alternative to Salesforce/HubSpot)</p>
-            
+
             <div class="config-section">
                 <h3>Configuration</h3>
                 <form id="espocrm-config-form">
@@ -3859,20 +3859,20 @@ python3 -m synapse.app.homeserver \
                         </label>
                         <small>Enable CRM features: screen pop, call logging, contact sync</small>
                     </div>
-                    
+
                     <div id="espocrm-settings" style="display: none;">
                         <div class="form-group">
                             <label>API URL:</label>
                             <input type="text" id="espocrm-api-url" placeholder="https://crm.yourcompany.com/api/v1">
                             <small>Your EspoCRM server API endpoint</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>API Key:</label>
                             <input type="password" id="espocrm-api-key" placeholder="your-api-key">
                             <small>API key from EspoCRM Administration > API Users</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>
                                 <input type="checkbox" id="espocrm-auto-create-contacts" checked>
@@ -3880,7 +3880,7 @@ python3 -m synapse.app.homeserver \
                             </label>
                             <small>Create new contacts for unknown callers</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>
                                 <input type="checkbox" id="espocrm-auto-log-calls" checked>
@@ -3888,7 +3888,7 @@ python3 -m synapse.app.homeserver \
                             </label>
                             <small>Automatically log all calls to CRM</small>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>
                                 <input type="checkbox" id="espocrm-screen-pop" checked>
@@ -3896,12 +3896,12 @@ python3 -m synapse.app.homeserver \
                             </label>
                             <small>Show contact info on incoming calls</small>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary">Save Configuration</button>
                         <button type="button" class="btn" onclick="testEspoCRMConnection()">Test Connection</button>
                     </div>
                 </form>
-                
+
                 <div id="espocrm-status" style="margin-top: 20px;"></div>
             </div>
 
@@ -3910,7 +3910,7 @@ python3 -m synapse.app.homeserver \
                 <div class="info-box" style="margin-bottom: 15px; background-color: #e3f2fd;">
                     <p><strong>💡 Quick Action:</strong> Search for contacts by phone number, email, or name.</p>
                 </div>
-                
+
                 <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
                     <div class="form-group">
                         <label>Search By:</label>
@@ -3920,17 +3920,17 @@ python3 -m synapse.app.homeserver \
                             <option value="name">Name</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Search Term:</label>
                         <input type="text" id="espocrm-search-term" placeholder="Enter phone, email, or name">
                     </div>
-                    
+
                     <button class="btn btn-primary" onclick="searchEspoCRMContact()" style="width: 100%;">
                         🔍 Search Contact
                     </button>
                 </div>
-                
+
                 <div id="espocrm-search-results" style="margin-top: 20px; display: none;">
                     <h4>Search Results</h4>
                     <div id="espocrm-contact-details"></div>
@@ -3950,32 +3950,32 @@ python3 -m synapse.app.homeserver \
                             <input type="text" id="espocrm-new-lastname" placeholder="Doe">
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Phone Number:</label>
                         <input type="tel" id="espocrm-new-phone" placeholder="+1-555-0100">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Email:</label>
                         <input type="email" id="espocrm-new-email" placeholder="john.doe@example.com">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Company (optional):</label>
                         <input type="text" id="espocrm-new-company" placeholder="Acme Corp">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Title (optional):</label>
                         <input type="text" id="espocrm-new-title" placeholder="Sales Manager">
                     </div>
-                    
+
                     <button class="btn btn-success" onclick="createEspoCRMContact()" style="width: 100%;">
                         ➕ Create Contact
                     </button>
                 </div>
-                
+
                 <div id="espocrm-create-result" style="margin-top: 15px; display: none;">
                     <div class="info-box" style="background-color: #e8f5e9;">
                         <p id="espocrm-create-result-text"></p>
@@ -4008,7 +4008,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
 
         <div id="crm-integrations" class="tab-content">
             <h2>🔗 CRM Integrations</h2>
-            
+
             <div class="config-section">
                 <h3>📊 HubSpot Integration</h3>
                 <p>Connect to HubSpot for marketing automation and CRM features.</p>
@@ -4055,7 +4055,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </div>
                     <button type="submit" class="btn btn-success">💾 Save HubSpot Configuration</button>
                 </form>
-                
+
                 <div class="info-box" style="margin-top: 15px;">
                     <p><strong>✅ Implementation Status:</strong></p>
                     <ul>
@@ -4122,7 +4122,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </div>
                     <button type="submit" class="btn btn-success">💾 Save Zendesk Configuration</button>
                 </form>
-                
+
                 <div class="info-box" style="margin-top: 15px;">
                     <p><strong>✅ Implementation Status:</strong></p>
                     <ul>
@@ -4164,7 +4164,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
 
         <div id="compliance" class="tab-content">
             <h2>✅ Compliance Frameworks</h2>
-            
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>SOC 2 Type II</h3>
@@ -4190,7 +4190,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
 
         <div id="speech-analytics" class="tab-content">
             <h2>🎙️ Speech Analytics</h2>
-            
+
             <div class="config-section">
                 <h3>⚙️ System Configuration</h3>
                 <form id="speech-analytics-config-form">
@@ -4269,7 +4269,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                         <li><strong>Reliable:</strong> Works without internet connection</li>
                         <li><strong>Real-Time:</strong> Low-latency transcription during active calls</li>
                     </ul>
-                    
+
                     <h4 style="margin-top: 20px;">Features Available</h4>
                     <ul>
                         <li><strong>Live Transcription:</strong> Convert speech to text in real-time using Vosk</li>
@@ -4755,7 +4755,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
 
                 <div class="config-section">
                     <h4>Time Conditions</h4>
-                    
+
                     <div class="form-group">
                         <label>Days of Week:</label>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 5px; margin-top: 8px;">

@@ -12,37 +12,37 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.14']
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
-    
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev
-    
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-    
+
     - name: Run custom test suite
       run: |
         python run_tests.py
       continue-on-error: true
-    
+
     - name: Run pytest with coverage
       run: |
         pytest tests/ -v --tb=short --maxfail=5 --cov=pbx --cov-report=xml --cov-report=term-missing
       continue-on-error: true
-    
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
@@ -53,7 +53,7 @@ jobs:
 
   test-with-postgresql:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -68,27 +68,27 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
         cache: 'pip'
-    
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev
-    
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-    
+
     - name: Configure database
       env:
         DB_HOST: localhost
@@ -102,7 +102,7 @@ jobs:
         echo "DB_NAME=$DB_NAME" >> .env
         echo "DB_USER=$DB_USER" >> .env
         echo "DB_PASSWORD=$DB_PASSWORD" >> .env
-    
+
     - name: Run PostgreSQL tests
       run: |
         pytest tests/test_*postgresql*.py tests/test_database*.py -v

@@ -125,4 +125,3 @@ Nginx Reverse Proxy
 4. **Access admin panel**
    - Open: `https://abps.albl.com`
    - Enjoy HTTPS with valid certificate!
-

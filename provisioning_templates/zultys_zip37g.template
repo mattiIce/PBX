@@ -127,7 +127,7 @@ account.1.nat.rport = 1
 
 # Presence/BLF
 account.1.blf.subscribe_period = 3600
-account.1.blf.list_uri = 
+account.1.blf.list_uri =
 account.1.subscribe_mwi = 1
 
 # Call Features
@@ -267,7 +267,7 @@ auto_provision.dhcp_option.option43_enable = 1
 auto_provision.repeat.enable = 1
 auto_provision.repeat.minutes = 1440
 auto_provision.pnp.enable = 1
-auto_provision.server.url = 
+auto_provision.server.url =
 auto_provision.server.auth_enable = 0
 
 # ============================================================================

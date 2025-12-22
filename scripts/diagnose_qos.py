@@ -5,13 +5,13 @@ Helps troubleshoot calls with poor quality or 0.0 MOS scores
 
 Usage:
     python scripts/diagnose_qos.py [call_id]
-    
+
 Examples:
     python scripts/diagnose_qos.py 600703453@192.168.10.135
 """
 
-import sys
 import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,15 +19,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pbx.features.qos_monitoring import QoSMetrics
 
 
-def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost, 
-                          jitter_avg, latency_avg, duration):
+def diagnose_call_quality(
+    call_id, packets_sent, packets_received, packets_lost, jitter_avg, latency_avg, duration
+):
     """
     Diagnose call quality issues
-    
+
     Args:
         call_id: Call identifier
         packets_sent: Number of packets sent
-        packets_received: Number of packets received  
+        packets_received: Number of packets received
         packets_lost: Number of packets lost
         jitter_avg: Average jitter in ms
         latency_avg: Average latency in ms
@@ -37,7 +38,7 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
     print(f"QoS DIAGNOSTIC REPORT FOR: {call_id}")
     print("=" * 70)
     print()
-    
+
     print("CALL STATISTICS:")
     print(f"  Duration: {duration}s")
     print(f"  Packets Sent: {packets_sent}")
@@ -46,14 +47,14 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
     print(f"  Average Jitter: {jitter_avg} ms")
     print(f"  Average Latency: {latency_avg} ms")
     print()
-    
+
     # Calculate expected packet counts
     # Typical VoIP uses 20ms packets (50 packets/second)
     expected_packets = int(duration * 50)
-    
+
     print("DIAGNOSTIC ANALYSIS:")
     print("-" * 70)
-    
+
     # Issue 1: No packets received
     if packets_received == 0:
         print("❌ CRITICAL: No RTP packets received during the call")
@@ -64,16 +65,18 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("   - Wrong IP address or port in SDP")
         print("   - QoS monitoring not started for this call")
         print()
-    
+
     # Issue 2: Very few packets received
     elif packets_received < expected_packets * 0.1:
-        print(f"⚠️  WARNING: Very few packets received ({packets_received} vs expected ~{expected_packets})")
+        print(
+            f"⚠️  WARNING: Very few packets received ({packets_received} vs expected ~{expected_packets})"
+        )
         print("   Possible causes:")
         print("   - Severe network issues or packet drops")
         print("   - Call connected but one-way audio")
         print("   - QoS monitoring started late in the call")
         print()
-    
+
     # Issue 3: No packets sent
     if packets_sent == 0:
         print("❌ CRITICAL: No RTP packets sent during the call")
@@ -82,7 +85,7 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("   - Outbound firewall blocking RTP")
         print("   - PBX not receiving RTP from local endpoint")
         print()
-    
+
     # Issue 4: Zero jitter and latency
     if jitter_avg == 0.0 and latency_avg == 0.0 and packets_received > 0:
         print("⚠️  WARNING: Jitter and latency are both 0.0 despite receiving packets")
@@ -91,7 +94,7 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("   - No RTCP packets for latency measurement")
         print("   - Jitter calculation issue in code")
         print()
-    
+
     # Issue 5: High packet loss
     if packets_received > 0:
         total = packets_received + packets_lost
@@ -104,7 +107,7 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
             print("   - Bandwidth saturation")
             print("   - QoS/traffic prioritization not configured")
             print()
-    
+
     # Issue 6: High jitter
     if jitter_avg > 50:
         print(f"⚠️  WARNING: High jitter: {jitter_avg} ms")
@@ -113,8 +116,8 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("   - Shared bandwidth with bursty traffic")
         print("   - Need for jitter buffer tuning")
         print()
-    
-    # Issue 7: High latency  
+
+    # Issue 7: High latency
     if latency_avg > 300:
         print(f"⚠️  WARNING: High latency: {latency_avg} ms")
         print("   Possible causes:")
@@ -122,7 +125,7 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("   - Too many network hops")
         print("   - Slow network equipment")
         print()
-    
+
     # Issue 8: MOS score is 0.0
     if packets_received == 0 and packets_sent > 0:
         print("📊 MOS SCORE: 0.0 (No Quality Data)")
@@ -131,11 +134,11 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("   - This indicates a one-way call or monitoring issue")
         print("   - Check 'No packets received' issues above")
         print()
-    
+
     print("=" * 70)
     print("RECOMMENDATIONS:")
     print("-" * 70)
-    
+
     if packets_received == 0:
         print("1. Check firewall rules to allow RTP port range (10000-20000)")
         print("2. Verify NAT configuration and symmetric RTP support")
@@ -143,13 +146,13 @@ def diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
         print("4. Use tcpdump to verify RTP packets are arriving:")
         print("   tcpdump -i any -n 'udp portrange 10000-20000'")
         print()
-    
+
     if latency_avg == 0.0 and packets_received > 0:
         print("1. RTCP latency measurement is not implemented")
         print("2. This is normal - latency measurement requires RTCP support")
         print("3. MOS calculation will use jitter and packet loss only")
         print()
-    
+
     print("=" * 70)
 
 
@@ -162,11 +165,13 @@ def main():
         print("  python scripts/diagnose_qos.py 600703453@192.168.10.135")
         print()
         print("Or provide all metrics:")
-        print("  python scripts/diagnose_qos.py CALL_ID DURATION PACKETS_SENT PACKETS_RECV PACKETS_LOST JITTER LATENCY")
+        print(
+            "  python scripts/diagnose_qos.py CALL_ID DURATION PACKETS_SENT PACKETS_RECV PACKETS_LOST JITTER LATENCY"
+        )
         sys.exit(1)
-    
+
     call_id = sys.argv[1]
-    
+
     # Check if all metrics were provided
     if len(sys.argv) >= 8:
         duration = float(sys.argv[2])
@@ -185,10 +190,11 @@ def main():
         packets_lost = 0
         jitter_avg = 0.0
         latency_avg = 0.0
-    
-    diagnose_call_quality(call_id, packets_sent, packets_received, packets_lost,
-                         jitter_avg, latency_avg, duration)
+
+    diagnose_call_quality(
+        call_id, packets_sent, packets_received, packets_lost, jitter_avg, latency_avg, duration
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -188,11 +188,11 @@
         <form id="login-form">
             <div class="form-group">
                 <label for="extension">Extension Number</label>
-                <input 
-                    type="text" 
-                    id="extension" 
-                    name="extension" 
-                    placeholder="e.g., 1001" 
+                <input
+                    type="text"
+                    id="extension"
+                    name="extension"
+                    placeholder="e.g., 1001"
                     required
                     pattern="[0-9]+"
                     maxlength="6"
@@ -202,11 +202,11 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    placeholder="Enter your password" 
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
                     required
                     autocomplete="current-password"
                 >
@@ -238,7 +238,7 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const extension = extensionInput.value.trim();
             const password = passwordInput.value;
 
@@ -272,7 +272,7 @@
                     localStorage.setItem('pbx_extension', data.extension);
                     localStorage.setItem('pbx_is_admin', data.is_admin.toString());
                     localStorage.setItem('pbx_name', data.name || 'User');
-                    
+
                     // Redirect to admin panel
                     window.location.href = '/admin/index.html';
                 } else {

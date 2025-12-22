@@ -86,12 +86,12 @@ class ClickToDialEngine:
                 # Update
                 self.db.execute(
                     (
-                        """UPDATE click_to_dial_configs 
+                        """UPDATE click_to_dial_configs
                        SET enabled = ?, default_caller_id = ?, auto_answer = ?,
                            browser_notification = ?
                        WHERE extension = ?"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE click_to_dial_configs 
+                        else """UPDATE click_to_dial_configs
                        SET enabled = %s, default_caller_id = %s, auto_answer = %s,
                            browser_notification = %s
                        WHERE extension = %s"""
@@ -108,11 +108,11 @@ class ClickToDialEngine:
                 # Insert
                 self.db.execute(
                     (
-                        """INSERT INTO click_to_dial_configs 
+                        """INSERT INTO click_to_dial_configs
                        (extension, enabled, default_caller_id, auto_answer, browser_notification)
                        VALUES (?, ?, ?, ?, ?)"""
                         if self.db.db_type == "sqlite"
-                        else """INSERT INTO click_to_dial_configs 
+                        else """INSERT INTO click_to_dial_configs
                        (extension, enabled, default_caller_id, auto_answer, browser_notification)
                        VALUES (%s, %s, %s, %s, %s)"""
                     ),
@@ -151,11 +151,11 @@ class ClickToDialEngine:
             # Log call initiation in database
             self.db.execute(
                 (
-                    """INSERT INTO click_to_dial_history 
+                    """INSERT INTO click_to_dial_history
                    (extension, destination, call_id, source, status)
                    VALUES (?, ?, ?, ?, ?)"""
                     if self.db.db_type == "sqlite"
-                    else """INSERT INTO click_to_dial_history 
+                    else """INSERT INTO click_to_dial_history
                    (extension, destination, call_id, source, status)
                    VALUES (%s, %s, %s, %s, %s)"""
                 ),
@@ -218,11 +218,11 @@ class ClickToDialEngine:
             if connected_at:
                 self.db.execute(
                     (
-                        """UPDATE click_to_dial_history 
+                        """UPDATE click_to_dial_history
                        SET status = ?, connected_at = ?
                        WHERE call_id = ?"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE click_to_dial_history 
+                        else """UPDATE click_to_dial_history
                        SET status = %s, connected_at = %s
                        WHERE call_id = %s"""
                     ),
@@ -231,11 +231,11 @@ class ClickToDialEngine:
             else:
                 self.db.execute(
                     (
-                        """UPDATE click_to_dial_history 
+                        """UPDATE click_to_dial_history
                        SET status = ?
                        WHERE call_id = ?"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE click_to_dial_history 
+                        else """UPDATE click_to_dial_history
                        SET status = %s
                        WHERE call_id = %s"""
                     ),
@@ -262,12 +262,12 @@ class ClickToDialEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM click_to_dial_history 
-                   WHERE extension = ? 
+                    """SELECT * FROM click_to_dial_history
+                   WHERE extension = ?
                    ORDER BY initiated_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM click_to_dial_history 
-                   WHERE extension = %s 
+                    else """SELECT * FROM click_to_dial_history
+                   WHERE extension = %s
                    ORDER BY initiated_at DESC LIMIT %s"""
                 ),
                 (extension, limit),

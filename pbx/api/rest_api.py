@@ -7791,7 +7791,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             try:
                 # Query integration activity log directly from database
                 result = self.pbx_core.database.execute(
-                    """SELECT * FROM integration_activity_log 
+                    """SELECT * FROM integration_activity_log
                        ORDER BY created_at DESC LIMIT 100"""
                 )
 

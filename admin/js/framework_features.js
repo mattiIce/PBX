@@ -313,7 +313,7 @@ function loadClickToDialTab() {
             </div>
         </div>
     `;
-    
+
     // Load configurations
     setTimeout(() => {
         fetch('/api/framework/click-to-dial/configs')
@@ -322,22 +322,22 @@ function loadClickToDialTab() {
                 displayClickToDialConfigs(data.configs || []);
             })
             .catch(err => {
-                document.getElementById('click-to-dial-configs-list').innerHTML = 
+                document.getElementById('click-to-dial-configs-list').innerHTML =
                     `<div class="error-box">Error loading configurations: ${err.message}</div>`;
             });
     }, 100);
-    
+
     return content;
 }
 
 function displayClickToDialConfigs(configs) {
     const container = document.getElementById('click-to-dial-configs-list');
-    
+
     if (configs.length === 0) {
         container.innerHTML = '<p>No configurations found. Configurations are created automatically when extensions use click-to-dial.</p>';
         return;
     }
-    
+
     const html = `
         <table class="data-table">
             <thead>
@@ -364,7 +364,7 @@ function displayClickToDialConfigs(configs) {
             </tbody>
         </table>
     `;
-    
+
     container.innerHTML = html;
 }
 
@@ -374,12 +374,12 @@ function viewClickToDialHistory(extension) {
         .then(data => {
             const history = data.history || [];
             const container = document.getElementById('click-to-dial-history');
-            
+
             if (history.length === 0) {
                 container.innerHTML = `<p>No call history for extension ${extension}</p>`;
                 return;
             }
-            
+
             const html = `
                 <h4>Call History for Extension ${extension}</h4>
                 <table class="data-table">
@@ -405,11 +405,11 @@ function viewClickToDialHistory(extension) {
                     </tbody>
                 </table>
             `;
-            
+
             container.innerHTML = html;
         })
         .catch(err => {
-            document.getElementById('click-to-dial-history').innerHTML = 
+            document.getElementById('click-to-dial-history').innerHTML =
                 `<div class="error-box">Error loading history: ${err.message}</div>`;
         });
 }
@@ -473,12 +473,12 @@ function loadVideoConferencingTab() {
             </div>
         </div>
     `;
-    
+
     // Load rooms
     setTimeout(() => {
         loadVideoRooms();
     }, 100);
-    
+
     return content;
 }
 
@@ -489,19 +489,19 @@ function loadVideoRooms() {
             displayVideoRooms(data.rooms || []);
         })
         .catch(err => {
-            document.getElementById('video-rooms-list').innerHTML = 
+            document.getElementById('video-rooms-list').innerHTML =
                 `<div class="error-box">Error loading rooms: ${err.message}</div>`;
         });
 }
 
 function displayVideoRooms(rooms) {
     const container = document.getElementById('video-rooms-list');
-    
+
     if (rooms.length === 0) {
         container.innerHTML = '<p>No conference rooms created yet.</p>';
         return;
     }
-    
+
     const html = `
         <table class="data-table">
             <thead>
@@ -530,17 +530,17 @@ function displayVideoRooms(rooms) {
             </tbody>
         </table>
     `;
-    
+
     container.innerHTML = html;
 }
 
 function showCreateRoomDialog() {
     document.getElementById('create-room-dialog').style.display = 'flex';
-    
+
     // Setup form submission
     document.getElementById('create-room-form').onsubmit = function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(e.target);
         const data = {
             room_name: formData.get('room_name'),
@@ -550,7 +550,7 @@ function showCreateRoomDialog() {
             enable_screen_share: formData.get('enable_screen_share') === 'on',
             recording_enabled: formData.get('recording_enabled') === 'on'
         };
-        
+
         fetch('/api/framework/video-conference/create-room', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -670,7 +670,7 @@ features:
 function loadConversationalAIStats() {
     const statsDiv = document.getElementById('ai-statistics');
     statsDiv.innerHTML = '<p>Loading statistics...</p>';
-    
+
     // Call the API endpoint to get actual statistics
     fetch('/api/framework/conversational-ai/stats')
         .then(r => r.json())
@@ -787,12 +787,12 @@ function loadPredictiveDialingTab() {
             </div>
         </div>
     `;
-    
+
     setTimeout(() => {
         loadPredictiveDialingCampaigns();
         loadPredictiveDialingStats();
     }, 100);
-    
+
     return content;
 }
 
@@ -802,12 +802,12 @@ function loadPredictiveDialingCampaigns() {
         .then(data => {
             const campaigns = data.campaigns || [];
             const container = document.getElementById('campaigns-list');
-            
+
             if (campaigns.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No campaigns created yet. Framework ready for campaign management.</p>';
                 return;
             }
-            
+
             const html = `
                 <table class="data-table">
                     <thead>
@@ -843,7 +843,7 @@ function loadPredictiveDialingCampaigns() {
             container.innerHTML = html;
         })
         .catch(err => {
-            document.getElementById('campaigns-list').innerHTML = 
+            document.getElementById('campaigns-list').innerHTML =
                 '<p style="color: #666;">Framework ready. Campaigns will appear when feature is enabled.</p>';
         });
 }
@@ -940,12 +940,12 @@ function loadVoiceBiometricsTab() {
             </div>
         </div>
     `;
-    
+
     setTimeout(() => {
         loadVoiceBiometricProfiles();
         loadVoiceBiometricStats();
     }, 100);
-    
+
     return content;
 }
 
@@ -955,12 +955,12 @@ function loadVoiceBiometricProfiles() {
         .then(data => {
             const profiles = data.profiles || [];
             const container = document.getElementById('biometric-profiles-list');
-            
+
             if (profiles.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No users enrolled yet. Framework ready for voice enrollment.</p>';
                 return;
             }
-            
+
             const html = `
                 <table class="data-table">
                     <thead>
@@ -994,7 +994,7 @@ function loadVoiceBiometricProfiles() {
             container.innerHTML = html;
         })
         .catch(err => {
-            document.getElementById('biometric-profiles-list').innerHTML = 
+            document.getElementById('biometric-profiles-list').innerHTML =
                 '<p style="color: #666;">Framework ready. Voice profiles will appear when feature is enabled.</p>';
         });
 }
@@ -1113,7 +1113,7 @@ function loadBIIntegrationTab() {
             `;
         })
         .catch(err => console.error('Error loading BI statistics:', err));
-    
+
     const content = `
         <h2>📈 Business Intelligence Integration</h2>
         <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
@@ -1213,13 +1213,13 @@ POST /api/framework/bi-integration/test-connection</pre>
 function exportBIDataset(dataset) {
     const format = document.getElementById('bi-export-format')?.value || 'csv';
     const dateRange = document.getElementById('bi-date-range')?.value || 'last7days';
-    
+
     // Show loading message
     const exportBtn = event.target;
     const originalText = exportBtn.textContent;
     exportBtn.textContent = 'Exporting...';
     exportBtn.disabled = true;
-    
+
     // Call the new API endpoint
     fetch('/api/framework/bi-integration/export', {
         method: 'POST',
@@ -1274,7 +1274,7 @@ function loadCallTaggingTab() {
             `;
         })
         .catch(err => console.error('Error loading tagging statistics:', err));
-    
+
     const content = `
         <h2>🏷️ Call Tagging & Categorization</h2>
         <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
@@ -1338,13 +1338,13 @@ POST /api/framework/call-tagging/classify/{call_id}</pre>
             </div>
         </div>
     `;
-    
+
     // Load tags and rules after content is rendered
     setTimeout(() => {
         loadCallTags();
         loadTaggingRules();
     }, 100);
-    
+
     return content;
 }
 
@@ -1354,12 +1354,12 @@ function loadCallTags() {
         .then(data => {
             const tags = data.tags || [];
             const container = document.getElementById('tags-list');
-            
+
             if (tags.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No tags created yet. Click "+ Create Tag" to add your first tag.</p>';
                 return;
             }
-            
+
             const html = `
                 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                     ${tags.map(tag => `
@@ -1376,7 +1376,7 @@ function loadCallTags() {
         .catch(err => {
             // Expected when feature is not yet enabled or API endpoint not implemented
             // Fallback shows framework ready message with 0 values
-            document.getElementById('tags-list').innerHTML = 
+            document.getElementById('tags-list').innerHTML =
                 `<p class="text-muted">Framework ready. Tags will appear when feature is enabled.</p>`;
         });
 }
@@ -1387,12 +1387,12 @@ function loadTaggingRules() {
         .then(data => {
             const rules = data.rules || [];
             const container = document.getElementById('tagging-rules-list');
-            
+
             if (rules.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No auto-tagging rules created yet.</p>';
                 return;
             }
-            
+
             const html = `
                 <table class="data-table">
                     <thead>
@@ -1425,7 +1425,7 @@ function loadTaggingRules() {
         .catch(err => {
             // Expected when feature is not yet enabled or API endpoint not implemented
             // Fallback shows framework ready message
-            document.getElementById('tagging-rules-list').innerHTML = 
+            document.getElementById('tagging-rules-list').innerHTML =
                 `<p class="text-muted">Framework ready. Rules will appear when feature is enabled.</p>`;
         });
 }
@@ -1566,13 +1566,13 @@ function loadMobileAppsTab() {
 function loadMobileAppsStats() {
     const devicesDiv = document.getElementById('mobile-devices-list');
     devicesDiv.innerHTML = '<p>Loading device statistics...</p>';
-    
+
     fetch('/api/framework/mobile-apps/devices')
         .then(r => r.json())
         .then(data => {
             const devices = data.devices || [];
             const stats = data.statistics || {};
-            
+
             let html = `
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
                     <div class="stat-card">
@@ -1593,7 +1593,7 @@ function loadMobileAppsStats() {
                     </div>
                 </div>
             `;
-            
+
             if (devices.length > 0) {
                 html += `
                     <h4>Registered Devices</h4>
@@ -1625,7 +1625,7 @@ function loadMobileAppsStats() {
             } else {
                 html += '<p><em>No devices registered yet. Devices will appear here once the mobile apps are deployed and users register.</em></p>';
             }
-            
+
             devicesDiv.innerHTML = html;
         })
         .catch(err => {
@@ -1743,19 +1743,19 @@ function loadCallBlendingTab() {
             `;
         })
         .catch(err => console.error('Error loading blending statistics:', err));
-    
+
     // Load agents list
     fetch('/api/framework/call-blending/agents')
         .then(r => r.json())
         .then(data => {
             const agents = data.agents || [];
             const container = document.getElementById('blending-agents-list');
-            
+
             if (agents.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No agents registered for call blending yet.</p>';
                 return;
             }
-            
+
             const html = `
                 <table class="data-table">
                     <thead>
@@ -1803,7 +1803,7 @@ function loadCallBlendingTab() {
             console.error('Error loading agents:', err);
             document.getElementById('blending-agents-list').innerHTML = '<p style="color: #666;">No agents available.</p>';
         });
-    
+
     return `
         <h2>🔀 Call Blending</h2>
         <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
@@ -1939,19 +1939,19 @@ function loadGeographicRedundancyTab() {
             `;
         })
         .catch(err => console.error('Error loading geo statistics:', err));
-    
+
     // Load regions list
     fetch('/api/framework/geo-redundancy/regions')
         .then(r => r.json())
         .then(data => {
             const regions = data.regions || [];
             const container = document.getElementById('geo-regions-list');
-            
+
             if (regions.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No regions configured yet. Click "+ Add Region" to create your first region.</p>';
                 return;
             }
-            
+
             const html = `
                 <table class="data-table">
                     <thead>
@@ -1971,7 +1971,7 @@ function loadGeographicRedundancyTab() {
                             let statusColor = '#4caf50';
                             if (region.status === 'failed') statusColor = '#f44336';
                             else if (region.status === 'standby') statusColor = '#ff9800';
-                            
+
                             return `
                                 <tr ${region.is_active ? 'style="background: #e8f5e9;"' : ''}>
                                     <td>
@@ -2004,7 +2004,7 @@ function loadGeographicRedundancyTab() {
             console.error('Error loading regions:', err);
             document.getElementById('geo-regions-list').innerHTML = '<p style="color: #666;">No regions available.</p>';
         });
-    
+
     return `
         <h2>🌍 Geographic Redundancy</h2>
         <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
@@ -2057,13 +2057,13 @@ POST /api/framework/geo-redundancy/region/{region_id}/failover</pre>
 function showCreateRegionDialog() {
     const regionId = prompt('Enter Region ID (e.g., us-east-1):');
     if (!regionId) return;
-    
+
     const name = prompt('Enter Region Name (e.g., US East):');
     if (!name) return;
-    
+
     const location = prompt('Enter Region Location (e.g., Virginia, USA):');
     if (!location) return;
-    
+
     fetch('/api/framework/geo-redundancy/region', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -2088,7 +2088,7 @@ function showCreateRegionDialog() {
 
 function triggerFailover(regionId) {
     if (!confirm(`Are you sure you want to failover to region ${regionId}?`)) return;
-    
+
     fetch(`/api/framework/geo-redundancy/region/${regionId}/failover`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'}
@@ -2121,7 +2121,7 @@ Trunks: ${region.trunk_count}
 Priority: ${region.priority}
 Is Active: ${region.is_active ? 'Yes' : 'No'}
 Last Health Check: ${region.last_health_check || 'Never'}`;
-            
+
             alert(details);
         })
         .catch(err => alert(`❌ Error loading region: ${err.message}`));

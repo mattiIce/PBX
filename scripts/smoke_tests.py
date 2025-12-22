@@ -11,7 +11,7 @@ import os
 import sys
 import time
 import urllib.request
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 
 class SmokeTestRunner:

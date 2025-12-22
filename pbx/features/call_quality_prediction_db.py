@@ -175,13 +175,13 @@ class CallQualityPredictionDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO quality_metrics 
+                INSERT INTO quality_metrics
                 (call_id, timestamp, latency, jitter, packet_loss, bandwidth, mos_score)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
             else:
                 sql = """
-                INSERT INTO quality_metrics 
+                INSERT INTO quality_metrics
                 (call_id, timestamp, latency, jitter, packet_loss, bandwidth, mos_score)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """
@@ -209,9 +209,9 @@ class CallQualityPredictionDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO quality_predictions 
-                (call_id, current_mos, predicted_mos, predicted_quality_level, 
-                 current_packet_loss, predicted_packet_loss, alert, alert_reasons, 
+                INSERT INTO quality_predictions
+                (call_id, current_mos, predicted_mos, predicted_quality_level,
+                 current_packet_loss, predicted_packet_loss, alert, alert_reasons,
                  recommendations, timestamp)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
@@ -229,9 +229,9 @@ class CallQualityPredictionDatabase:
                 )
             else:
                 sql = """
-                INSERT INTO quality_predictions 
-                (call_id, current_mos, predicted_mos, predicted_quality_level, 
-                 current_packet_loss, predicted_packet_loss, alert, alert_reasons, 
+                INSERT INTO quality_predictions
+                (call_id, current_mos, predicted_mos, predicted_quality_level,
+                 current_packet_loss, predicted_packet_loss, alert, alert_reasons,
                  recommendations, timestamp)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """
@@ -269,13 +269,13 @@ class CallQualityPredictionDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO quality_alerts 
+                INSERT INTO quality_alerts
                 (call_id, alert_type, severity, message, metric_value, threshold_value, timestamp)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
             else:
                 sql = """
-                INSERT INTO quality_alerts 
+                INSERT INTO quality_alerts
                 (call_id, alert_type, severity, message, metric_value, threshold_value, timestamp)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """
@@ -373,7 +373,7 @@ class CallQualityPredictionDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                INSERT INTO quality_trends 
+                INSERT INTO quality_trends
                 (endpoint, date, avg_mos, avg_latency, avg_jitter, avg_packet_loss, call_count, alert_count)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (endpoint, date) DO UPDATE
@@ -386,7 +386,7 @@ class CallQualityPredictionDatabase:
                 """
             else:
                 sql = """
-                INSERT OR REPLACE INTO quality_trends 
+                INSERT OR REPLACE INTO quality_trends
                 (endpoint, date, avg_mos, avg_latency, avg_jitter, avg_packet_loss, call_count, alert_count)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """

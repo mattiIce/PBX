@@ -88,7 +88,7 @@ check_root() {
 # Check Ubuntu version
 check_ubuntu_version() {
     log_info "Checking Ubuntu version..."
-    
+
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         if [ "$ID" = "ubuntu" ] && [ "$VERSION_ID" = "24.04" ]; then
@@ -107,7 +107,7 @@ check_ubuntu_version() {
 # System requirements check
 check_system_requirements() {
     log_info "Checking system requirements..."
-    
+
     # Check CPU cores
     CPU_CORES=$(nproc)
     if [ "$CPU_CORES" -lt 2 ]; then
@@ -115,7 +115,7 @@ check_system_requirements() {
     else
         log_success "CPU cores: $CPU_CORES"
     fi
-    
+
     # Check RAM
     TOTAL_RAM=$(free -g | awk '/^Mem:/{print $2}')
     if [ "$TOTAL_RAM" -lt 4 ]; then
@@ -123,7 +123,7 @@ check_system_requirements() {
     else
         log_success "RAM: ${TOTAL_RAM}GB"
     fi
-    
+
     # Check disk space
     AVAILABLE_SPACE=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
     if [ "$AVAILABLE_SPACE" -lt 20 ]; then
@@ -136,12 +136,12 @@ check_system_requirements() {
 # Install dependencies
 install_dependencies() {
     log_info "Installing system dependencies..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would install: postgresql, python3-pip, nginx, etc."
         return 0
     fi
-    
+
     apt-get update
     # Suppress Python SyntaxWarnings during package installation (e.g., from fail2ban)
     # These warnings are from the packages themselves, not our code
@@ -157,14 +157,14 @@ install_dependencies() {
         supervisor \
         ufw \
         fail2ban
-    
+
     log_success "Dependencies installed"
 }
 
 # Configure PostgreSQL
 configure_postgresql() {
     log_info "Configuring PostgreSQL..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would configure PostgreSQL with:"
         log_info "  - Create pbx database and user"
@@ -172,55 +172,55 @@ configure_postgresql() {
         log_info "  - Configure backup"
         return 0
     fi
-    
+
     # Start PostgreSQL if not running
     systemctl start postgresql
     systemctl enable postgresql
-    
+
     # Create database and user
     sudo -u postgres psql -c "CREATE DATABASE pbx;" 2>/dev/null || log_warning "Database may already exist"
-    
+
     # Generate a random password if not in dry-run mode
     DB_PASSWORD=$(openssl rand -base64 32)
     log_info "Database password generated. It will be shown once below; store it securely."
     echo "PBX database password for user 'pbxuser': $DB_PASSWORD"
-    
+
     sudo -u postgres psql -c "CREATE USER pbxuser WITH PASSWORD '$DB_PASSWORD';" 2>/dev/null || log_warning "User may already exist"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx TO pbxuser;"
-    
+
     log_warning "⚠️  IMPORTANT: Update database password in config.yml with the password shown above. It is not stored in the log file."
-    
+
     log_success "PostgreSQL configured"
 }
 
 # Setup Python virtual environment
 setup_python_environment() {
     log_info "Setting up Python virtual environment..."
-    
+
     cd "$PROJECT_ROOT"
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would create venv and install requirements"
         return 0
     fi
-    
+
     # Create virtual environment
     python3 -m venv venv
     source venv/bin/activate
-    
+
     # Upgrade pip
     pip install --upgrade pip
-    
+
     # Install requirements
     pip install -r requirements.txt
-    
+
     log_success "Python environment configured"
 }
 
 # Configure firewall
 configure_firewall() {
     log_info "Configuring firewall (UFW)..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would configure UFW with:"
         log_info "  - Allow SSH (22)"
@@ -232,53 +232,53 @@ configure_firewall() {
         log_info "  - Allow Node Exporter (9100)"
         return 0
     fi
-    
+
     # Reset UFW to defaults
     ufw --force reset
-    
+
     # Default policies
     ufw default deny incoming
     ufw default allow outgoing
-    
+
     # Allow SSH
     ufw allow 22/tcp
-    
+
     # Allow HTTP/HTTPS
     ufw allow 80/tcp
     ufw allow 443/tcp
-    
+
     # Allow SIP
     ufw allow 5060/udp
     ufw allow 5060/tcp
-    
+
     # Allow RTP (audio/video)
     ufw allow 10000:20000/udp
-    
+
     # Allow WebRTC signaling
     ufw allow 8443/tcp
-    
+
     # Allow Prometheus and Node Exporter (for monitoring)
     ufw allow 9090/tcp
     ufw allow 9100/tcp
-    
+
     # Enable firewall
     ufw --force enable
-    
+
     log_success "Firewall configured"
 }
 
 # Setup backup system
 setup_backup_system() {
     log_info "Setting up backup system..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would setup daily backups to $BACKUP_DIR"
         return 0
     fi
-    
+
     # Create backup directory
     mkdir -p "$BACKUP_DIR"
-    
+
     # Create backup script
     cat > /usr/local/bin/pbx-backup.sh << EOF
 #!/bin/bash
@@ -297,34 +297,34 @@ find "\$BACKUP_DIR" -name "*.gz" -mtime +7 -delete
 
 echo "Backup completed: \$TIMESTAMP"
 EOF
-    
+
     chmod +x /usr/local/bin/pbx-backup.sh
-    
+
     # Add to crontab (daily at 2 AM)
     (crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/pbx-backup.sh >> /var/log/pbx-backup.log 2>&1") | crontab -
-    
+
     log_success "Backup system configured (daily at 2 AM)"
 }
 
 # Setup monitoring (Prometheus + Grafana)
 setup_monitoring() {
     log_info "Setting up monitoring (Prometheus + Grafana)..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would install Prometheus and Grafana"
         return 0
     fi
-    
+
     # Install Prometheus
     # Suppress Python SyntaxWarnings during package installation
     PYTHONWARNINGS="ignore::SyntaxWarning" apt-get install -y prometheus prometheus-node-exporter
-    
+
     # Start services
     systemctl start prometheus
     systemctl enable prometheus
     systemctl start prometheus-node-exporter
     systemctl enable prometheus-node-exporter
-    
+
     log_success "Monitoring configured (Prometheus running on :9090)"
     log_info "Note: Install Grafana separately or use cloud version"
 }
@@ -332,13 +332,13 @@ setup_monitoring() {
 # Setup systemd service
 setup_systemd_service() {
     log_info "Setting up systemd service..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would create systemd service for PBX"
         log_info "[DRY RUN] Would populate $PROJECT_ROOT/pbx.service template"
         return 0
     fi
-    
+
     # First, populate the repository's pbx.service template file
     log_info "Populating pbx.service template in repository..."
     cat > "$PROJECT_ROOT/pbx.service" << EOF
@@ -372,35 +372,35 @@ LimitNPROC=4096
 [Install]
 WantedBy=multi-user.target
 EOF
-    
+
     log_success "Repository pbx.service template populated"
-    
+
     # Now copy it to systemd directory
     log_info "Installing systemd service..."
     cp "$PROJECT_ROOT/pbx.service" /etc/systemd/system/pbx.service
-    
+
     # Create pbx user if doesn't exist (with enhanced security)
     id -u pbx &>/dev/null || useradd -r -s /bin/false -M -d /nonexistent pbx
-    
+
     # Set permissions
     chown -R pbx:pbx "$PROJECT_ROOT"
-    
+
     # Reload systemd
     systemctl daemon-reload
     systemctl enable pbx.service
-    
+
     log_success "Systemd service configured and installed"
 }
 
 # Setup Nginx reverse proxy
 setup_nginx() {
     log_info "Setting up Nginx reverse proxy..."
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would configure Nginx as reverse proxy"
         return 0
     fi
-    
+
     cat > /etc/nginx/sites-available/pbx << 'EOF'
 server {
     listen 80;
@@ -441,21 +441,21 @@ server {
     }
 }
 EOF
-    
+
     # Enable site
     ln -sf /etc/nginx/sites-available/pbx /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
-    
+
     # Test and reload
     nginx -t && systemctl reload nginx
-    
+
     log_success "Nginx configured"
 }
 
 # Create deployment summary
 create_deployment_summary() {
     SUMMARY_FILE="$PROJECT_ROOT/DEPLOYMENT_SUMMARY.txt"
-    
+
     cat > "$SUMMARY_FILE" << EOF
 ================================================================================
 PBX PRODUCTION PILOT DEPLOYMENT SUMMARY
@@ -537,7 +537,7 @@ sudo -u postgres psql -d pbx
 
 ================================================================================
 EOF
-    
+
     log_success "Deployment summary saved to: $SUMMARY_FILE"
     cat "$SUMMARY_FILE"
 }
@@ -547,39 +547,39 @@ main() {
     log_info "Starting PBX Production Pilot Deployment..."
     log_info "Dry run mode: $DRY_RUN"
     echo ""
-    
+
     # Pre-flight checks
     check_root
     check_ubuntu_version
     check_system_requirements
     echo ""
-    
+
     # Installation
     install_dependencies
     configure_postgresql
     setup_python_environment
     echo ""
-    
+
     # Security
     configure_firewall
     echo ""
-    
+
     # Operations
     setup_backup_system
     setup_monitoring
     setup_systemd_service
     setup_nginx
     echo ""
-    
+
     # Summary
     create_deployment_summary
     echo ""
-    
+
     log_success "=========================================="
     log_success "DEPLOYMENT COMPLETE!"
     log_success "=========================================="
     echo ""
-    
+
     if [ "$DRY_RUN" = true ]; then
         log_info "This was a dry run. No changes were made."
         log_info "Run without --dry-run to perform actual deployment."

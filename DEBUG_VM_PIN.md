@@ -223,4 +223,3 @@ This was fixed in a recent update. The voicemail IVR now captures the first digi
 1. Hidden characters in the configured PIN (whitespace, newlines)
 2. PIN stored in different encoding
 3. Check mailbox PIN configuration in database or config file
-

@@ -48,13 +48,13 @@ class GDPRComplianceEngine:
             if 'consent_given' not in consent_data:
                 self.logger.error("consent_given is required for GDPR compliance")
                 return False
-                
+
             self.db.execute(
-                \"\"\"INSERT INTO gdpr_consent_records 
+                \"\"\"INSERT INTO gdpr_consent_records
                    (extension, consent_type, consent_given, consent_date, ip_address)
                    VALUES (?, ?, ?, ?, ?)\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"INSERT INTO gdpr_consent_records 
+                else \"\"\"INSERT INTO gdpr_consent_records
                    (extension, consent_type, consent_given, consent_date, ip_address)
                    VALUES (%s, %s, %s, %s, %s)\"\"\",
                 (
@@ -88,11 +88,11 @@ class GDPRComplianceEngine:
         \"\"\"
         try:
             self.db.execute(
-                \"\"\"UPDATE gdpr_consent_records 
+                \"\"\"UPDATE gdpr_consent_records
                    SET consent_given = ?, withdrawn_date = ?
                    WHERE extension = ? AND consent_type = ? AND consent_given = ?\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"UPDATE gdpr_consent_records 
+                else \"\"\"UPDATE gdpr_consent_records
                    SET consent_given = %s, withdrawn_date = %s
                    WHERE extension = %s AND consent_type = %s AND consent_given = %s\"\"\",
                 (False, datetime.now(), extension, consent_type, True)
@@ -117,12 +117,12 @@ class GDPRComplianceEngine:
         \"\"\"
         try:
             result = self.db.execute(
-                \"\"\"SELECT * FROM gdpr_consent_records 
-                   WHERE extension = ? 
+                \"\"\"SELECT * FROM gdpr_consent_records
+                   WHERE extension = ?
                    ORDER BY consent_date DESC\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"SELECT * FROM gdpr_consent_records 
-                   WHERE extension = %s 
+                else \"\"\"SELECT * FROM gdpr_consent_records
+                   WHERE extension = %s
                    ORDER BY consent_date DESC\"\"\",
                 (extension,)
             )
@@ -155,11 +155,11 @@ class GDPRComplianceEngine:
         \"\"\"
         try:
             self.db.execute(
-                \"\"\"INSERT INTO gdpr_data_requests 
+                \"\"\"INSERT INTO gdpr_data_requests
                    (extension, request_type, status)
                    VALUES (?, ?, ?)\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"INSERT INTO gdpr_data_requests 
+                else \"\"\"INSERT INTO gdpr_data_requests
                    (extension, request_type, status)
                    VALUES (%s, %s, %s)\"\"\",
                 (
@@ -171,12 +171,12 @@ class GDPRComplianceEngine:
 
             # Get request ID
             result = self.db.execute(
-                \"\"\"SELECT id FROM gdpr_data_requests 
-                   WHERE extension = ? AND request_type = ? 
+                \"\"\"SELECT id FROM gdpr_data_requests
+                   WHERE extension = ? AND request_type = ?
                    ORDER BY requested_at DESC LIMIT 1\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"SELECT id FROM gdpr_data_requests 
-                   WHERE extension = %s AND request_type = %s 
+                else \"\"\"SELECT id FROM gdpr_data_requests
+                   WHERE extension = %s AND request_type = %s
                    ORDER BY requested_at DESC LIMIT 1\"\"\",
                 (request_data['extension'], request_data['request_type'])
             )
@@ -206,11 +206,11 @@ class GDPRComplianceEngine:
         \"\"\"
         try:
             self.db.execute(
-                \"\"\"UPDATE gdpr_data_requests 
+                \"\"\"UPDATE gdpr_data_requests
                    SET status = ?, completed_at = ?
                    WHERE id = ?\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"UPDATE gdpr_data_requests 
+                else \"\"\"UPDATE gdpr_data_requests
                    SET status = %s, completed_at = %s
                    WHERE id = %s\"\"\",
                 ('completed', datetime.now(), request_id)
@@ -232,12 +232,12 @@ class GDPRComplianceEngine:
         \"\"\"
         try:
             result = self.db.execute(
-                \"\"\"SELECT * FROM gdpr_data_requests 
-                   WHERE status = ? 
+                \"\"\"SELECT * FROM gdpr_data_requests
+                   WHERE status = ?
                    ORDER BY requested_at\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"SELECT * FROM gdpr_data_requests 
-                   WHERE status = %s 
+                else \"\"\"SELECT * FROM gdpr_data_requests
+                   WHERE status = %s
                    ORDER BY requested_at\"\"\",
                 ('pending',)
             )
@@ -421,13 +421,13 @@ class SOC2ComplianceEngine:
                 # Update
                 self.db.execute(
                     (
-                        """UPDATE soc2_controls 
-                       SET control_category = ?, description = ?, 
+                        """UPDATE soc2_controls
+                       SET control_category = ?, description = ?,
                            implementation_status = ?, test_results = ?
                        WHERE control_id = ?"""
                         if self.db.db_type == "sqlite"
-                        else """UPDATE soc2_controls 
-                       SET control_category = %s, description = %s, 
+                        else """UPDATE soc2_controls
+                       SET control_category = %s, description = %s,
                            implementation_status = %s, test_results = %s
                        WHERE control_id = %s"""
                     ),
@@ -443,11 +443,11 @@ class SOC2ComplianceEngine:
                 # Insert
                 self.db.execute(
                     (
-                        """INSERT INTO soc2_controls 
+                        """INSERT INTO soc2_controls
                        (control_id, control_category, description, implementation_status)
                        VALUES (?, ?, ?, ?)"""
                         if self.db.db_type == "sqlite"
-                        else """INSERT INTO soc2_controls 
+                        else """INSERT INTO soc2_controls
                        (control_id, control_category, description, implementation_status)
                        VALUES (%s, %s, %s, %s)"""
                     ),
@@ -480,11 +480,11 @@ class SOC2ComplianceEngine:
         try:
             self.db.execute(
                 (
-                    """UPDATE soc2_controls 
+                    """UPDATE soc2_controls
                    SET test_results = ?, last_tested = ?
                    WHERE control_id = ?"""
                     if self.db.db_type == "sqlite"
-                    else """UPDATE soc2_controls 
+                    else """UPDATE soc2_controls
                    SET test_results = %s, last_tested = %s
                    WHERE control_id = %s"""
                 ),
@@ -540,11 +540,11 @@ class SOC2ComplianceEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM soc2_controls 
+                    """SELECT * FROM soc2_controls
                    WHERE control_category = ?
                    ORDER BY control_id"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM soc2_controls 
+                    else """SELECT * FROM soc2_controls
                    WHERE control_category = %s
                    ORDER BY control_id"""
                 ),
@@ -644,11 +644,11 @@ class PCIDSSComplianceEngine:
         \"\"\"
         try:
             self.db.execute(
-                \"\"\"INSERT INTO pci_dss_audit_log 
+                \"\"\"INSERT INTO pci_dss_audit_log
                    (event_type, user_id, ip_address, action, result)
                    VALUES (?, ?, ?, ?, ?)\"\"\"
                 if self.db.db_type == 'sqlite'
-                else \"\"\"INSERT INTO pci_dss_audit_log 
+                else \"\"\"INSERT INTO pci_dss_audit_log
                    (event_type, user_id, ip_address, action, result)
                    VALUES (%s, %s, %s, %s, %s)\"\"\",
                 (
@@ -680,21 +680,21 @@ class PCIDSSComplianceEngine:
         try:
             if event_type:
                 result = self.db.execute(
-                    \"\"\"SELECT * FROM pci_dss_audit_log 
-                       WHERE event_type = ? 
+                    \"\"\"SELECT * FROM pci_dss_audit_log
+                       WHERE event_type = ?
                        ORDER BY timestamp DESC LIMIT ?\"\"\"
                     if self.db.db_type == 'sqlite'
-                    else \"\"\"SELECT * FROM pci_dss_audit_log 
-                       WHERE event_type = %s 
+                    else \"\"\"SELECT * FROM pci_dss_audit_log
+                       WHERE event_type = %s
                        ORDER BY timestamp DESC LIMIT %s\"\"\",
                     (event_type, limit)
                 )
             else:
                 result = self.db.execute(
-                    \"\"\"SELECT * FROM pci_dss_audit_log 
+                    \"\"\"SELECT * FROM pci_dss_audit_log
                        ORDER BY timestamp DESC LIMIT ?\"\"\"
                     if self.db.db_type == 'sqlite'
-                    else \"\"\"SELECT * FROM pci_dss_audit_log 
+                    else \"\"\"SELECT * FROM pci_dss_audit_log
                        ORDER BY timestamp DESC LIMIT %s\"\"\",
                     (limit,)
                 )

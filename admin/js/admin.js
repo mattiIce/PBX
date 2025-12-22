@@ -17,10 +17,10 @@ async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEO
     if (options.signal) {
         throw new Error('fetchWithTimeout does not support custom abort signals. Use the timeout parameter instead.');
     }
-    
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
         const response = await fetch(url, {
             ...options,
@@ -59,11 +59,11 @@ function escapeHtml(text) {
 // Display error in a visible notification
 function displayError(error, context = '') {
     if (!ERROR_DISPLAY_CONFIG.enabled) return;
-    
+
     const errorId = 'error-' + Date.now();
     const errorMessage = error.message || error.toString();
     const errorStack = error.stack || '';
-    
+
     // Add to queue
     errorQueue.push({
         id: errorId,
@@ -72,12 +72,12 @@ function displayError(error, context = '') {
         stack: errorStack,
         timestamp: new Date()
     });
-    
+
     // Keep only max errors
     if (errorQueue.length > ERROR_DISPLAY_CONFIG.maxErrors) {
         errorQueue.shift();
     }
-    
+
     // Create error notification element
     const errorDiv = document.createElement('div');
     errorDiv.id = errorId;
@@ -98,23 +98,23 @@ function displayError(error, context = '') {
         font-size: 13px;
         line-height: 1.4;
     `;
-    
+
     let html = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
             <strong style="font-size: 16px;">❌ JavaScript Error</strong>
-            <button id="close-${errorId}" 
+            <button id="close-${errorId}"
                     style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; margin-left: 10px;">
                 ×
             </button>
         </div>
     `;
-    
+
     if (context) {
         html += `<div style="margin-bottom: 5px;"><strong>Context:</strong> ${escapeHtml(context)}</div>`;
     }
-    
+
     html += `<div style="margin-bottom: 5px;"><strong>Message:</strong> ${escapeHtml(errorMessage)}</div>`;
-    
+
     if (ERROR_DISPLAY_CONFIG.showStackTrace && errorStack) {
         html += `
             <details style="margin-top: 10px; cursor: pointer;">
@@ -123,24 +123,24 @@ function displayError(error, context = '') {
             </details>
         `;
     }
-    
+
     html += `
         <div style="margin-top: 10px; font-size: 11px; opacity: 0.9;">
             💡 Tip: Press F12 to open browser console for more details
         </div>
     `;
-    
+
     errorDiv.innerHTML = html;
-    
+
     // Add click handler for close button using event listener (not inline onclick)
     const closeBtn = errorDiv.querySelector(`#close-${errorId}`);
     if (closeBtn) {
         closeBtn.addEventListener('click', () => errorDiv.remove());
     }
-    
+
     // Add to page
     document.body.appendChild(errorDiv);
-    
+
     // Auto-remove after configured time
     setTimeout(() => {
         if (document.getElementById(errorId)) {
@@ -148,7 +148,7 @@ function displayError(error, context = '') {
             setTimeout(() => errorDiv.remove(), 300);
         }
     }, ERROR_DISPLAY_CONFIG.displayTime);
-    
+
     // Also log to console
     console.error(`[${context || 'Error'}]`, errorMessage);
     if (errorStack) {
@@ -181,7 +181,7 @@ style.textContent = `
             opacity: 1;
         }
     }
-    
+
     @keyframes slideOut {
         from {
             transform: translateX(0);
@@ -201,11 +201,11 @@ function getAuthHeaders() {
     const headers = {
         'Content-Type': 'application/json'
     };
-    
+
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return headers;
 }
 
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeForms();
     initializeLogout();
     checkConnection();
-    
+
     // Auto-refresh every 10 seconds
     setInterval(checkConnection, 10000);
 });
@@ -225,19 +225,19 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeUserContext() {
     // Check for authentication token first
     const token = localStorage.getItem('pbx_token');
-    
+
     if (!token) {
         // No token - redirect to login page
         window.location.href = '/admin/login.html';
         return;
     }
-    
+
     // Verify token is still valid by making an authenticated request
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/extensions`, {
             headers: getAuthHeaders()
         }, 5000); // Short timeout for auth check
-        
+
         if (response.status === 401 || response.status === 403) {
             // Token is invalid or expired - redirect to login
             localStorage.removeItem('pbx_token');
@@ -251,28 +251,28 @@ async function initializeUserContext() {
         console.error('Error verifying authentication:', error);
         // Continue anyway - user might be able to login again or system is starting up
     }
-    
+
     // Get user info from localStorage (set during login)
     const extensionNumber = localStorage.getItem('pbx_extension');
     const isAdmin = localStorage.getItem('pbx_is_admin') === 'true';
     const name = localStorage.getItem('pbx_name') || 'User';
-    
+
     if (!extensionNumber) {
         // No extension stored - redirect to login
         window.location.href = '/admin/login.html';
         return;
     }
-    
+
     // Set current user from stored data
     currentUser = {
         number: extensionNumber,
         is_admin: isAdmin,
         name: name
     };
-    
+
     // Apply role-based UI filtering
     applyRoleBasedUI();
-    
+
     // Load initial content based on role
     if (currentUser.is_admin) {
         loadDashboard();
@@ -297,12 +297,12 @@ function showExtensionSelectionModal() {
         justify-content: center;
         z-index: 10000;
     `;
-    
+
     modal.innerHTML = `
         <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; text-align: center;">
             <h2 style="margin-top: 0;">📞 Select Your Extension</h2>
             <p>Please enter your extension number to continue:</p>
-            <input type="text" id="ext-input" placeholder="Extension (e.g., 1001)" 
+            <input type="text" id="ext-input" placeholder="Extension (e.g., 1001)"
                    style="width: 100%; padding: 10px; font-size: 16px; margin: 10px 0; text-align: center; border: 2px solid #ddd; border-radius: 4px;"
                    pattern="[0-9]+" maxlength="6">
             <div style="margin-top: 20px;">
@@ -312,15 +312,15 @@ function showExtensionSelectionModal() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     const input = document.getElementById('ext-input');
     const submitBtn = document.getElementById('ext-submit');
-    
+
     // Focus on input
     input.focus();
-    
+
     // Handle submit
     const handleSubmit = () => {
         const extension = input.value.trim();
@@ -331,7 +331,7 @@ function showExtensionSelectionModal() {
             window.location.href = newUrl.toString();
         }
     };
-    
+
     submitBtn.addEventListener('click', handleSubmit);
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -342,17 +342,17 @@ function showExtensionSelectionModal() {
 
 function applyRoleBasedUI() {
     const isAdmin = currentUser?.is_admin || false;
-    
+
     // Define admin-only tabs
     const adminOnlyTabs = [
         'dashboard', 'analytics', 'extensions', 'phones',
-        'provisioning', 'auto-attendant', 'calls', 
+        'provisioning', 'auto-attendant', 'calls',
         'qos', 'emergency', 'codecs', 'config'
     ];
-    
+
     // Define user-accessible tabs (phone and voicemail)
     const userTabs = ['webrtc-phone', 'voicemail'];
-    
+
     if (!isAdmin) {
         // Hide admin-only tabs for regular users
         adminOnlyTabs.forEach(tabName => {
@@ -361,7 +361,7 @@ function applyRoleBasedUI() {
                 tabButton.style.display = 'none';
             }
         });
-        
+
         // Hide admin-only sidebar sections
         const sidebarSections = document.querySelectorAll('.sidebar-section');
         sidebarSections.forEach(section => {
@@ -373,13 +373,13 @@ function applyRoleBasedUI() {
                 section.style.display = 'none';
             }
         });
-        
+
         // Update header to show non-admin status
         const header = document.querySelector('header h1');
         if (header) {
             header.innerHTML = `📞 PBX User Panel - Extension ${currentUser.number}`;
         }
-        
+
         // Show info banner for non-admin users
         showNonAdminBanner();
     } else {
@@ -394,22 +394,22 @@ function applyRoleBasedUI() {
 function showNonAdminBanner() {
     const mainContent = document.querySelector('.main-content');
     if (!mainContent) return;
-    
+
     // Check if banner already exists
     if (document.getElementById('non-admin-info-banner')) return;
-    
+
     const banner = document.createElement('div');
     banner.id = 'non-admin-info-banner';
     banner.className = 'info-box';
     banner.style.cssText = 'margin-bottom: 20px; background: #e3f2fd; border-left: 4px solid #2196f3;';
     banner.innerHTML = `
         <p style="margin: 0; font-size: 14px;">
-            ℹ️ <strong>Welcome, ${currentUser.name || currentUser.number}!</strong> 
+            ℹ️ <strong>Welcome, ${currentUser.name || currentUser.number}!</strong>
             You have access to the <strong>📞 Phone</strong> and <strong>📧 Voicemail</strong> features.
             ${currentUser.email ? `<br>Email: ${currentUser.email}` : ''}
         </p>
     `;
-    
+
     // Insert banner at the top of main content, before the feature info banner
     const featureBanner = document.getElementById('feature-info-banner');
     if (featureBanner) {
@@ -422,18 +422,18 @@ function showNonAdminBanner() {
 function initializeLogout() {
     const logoutButton = document.getElementById('logout-button');
     if (!logoutButton) return;
-    
+
     logoutButton.addEventListener('click', async function() {
         // Get token before clearing it
         const token = localStorage.getItem('pbx_token');
-        
+
         // Clear local storage
         localStorage.removeItem('pbx_token');
         localStorage.removeItem('pbx_extension');
         localStorage.removeItem('pbx_is_admin');
         localStorage.removeItem('pbx_name');
         localStorage.removeItem('pbx_current_extension');
-        
+
         // Optionally call logout endpoint
         try {
             if (token) {
@@ -445,7 +445,7 @@ function initializeLogout() {
         } catch (error) {
             console.error('Logout API error:', error);
         }
-        
+
         // Redirect to login page
         window.location.href = '/admin/login.html';
     });
@@ -454,7 +454,7 @@ function initializeLogout() {
 // Tab Management
 function initializeTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
-    
+
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tabName = this.getAttribute('data-tab');
@@ -468,25 +468,25 @@ function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-    
+
     // Remove active from all buttons
     document.querySelectorAll('.tab-button').forEach(button => {
         button.classList.remove('active');
     });
-    
+
     // Show selected tab
     const tabElement = document.getElementById(tabName);
     if (!tabElement) {
         console.error(`Tab element with id '${tabName}' not found`);
         return;
     }
-    
+
     tabElement.classList.add('active');
     const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
     if (tabButton) {
         tabButton.classList.add('active');
     }
-    
+
     // Load data for the tab
     switch(tabName) {
         case 'dashboard':
@@ -536,7 +536,7 @@ async function checkConnection() {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/status`, {}, 5000);
         const statusBadge = document.getElementById('connection-status');
-        
+
         if (response.ok) {
             statusBadge.textContent = '✓ Connected';
             statusBadge.classList.remove('disconnected');
@@ -557,15 +557,15 @@ async function loadDashboard() {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/status`);
         const data = await response.json();
-        
+
         document.getElementById('stat-extensions').textContent = data.registered_extensions || 0;
         document.getElementById('stat-calls').textContent = data.active_calls || 0;
         document.getElementById('stat-total-calls').textContent = data.total_calls || 0;
         document.getElementById('stat-recordings').textContent = data.active_recordings || 0;
-        
+
         const systemStatus = document.getElementById('system-status');
         systemStatus.textContent = `System: ${data.running ? 'Running' : 'Stopped'}`;
-        
+
         // Load AD integration status
         loadADStatus();
     } catch (error) {
@@ -584,7 +584,7 @@ async function loadADStatus() {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`);
         const data = await response.json();
-        
+
         // Update status badge
         const statusBadge = document.getElementById('ad-status-badge');
         if (data.enabled) {
@@ -594,7 +594,7 @@ async function loadADStatus() {
             statusBadge.textContent = 'Disabled';
             statusBadge.className = 'status-badge disabled';
         }
-        
+
         // Update connection status
         const connectionStatus = document.getElementById('ad-connection-status');
         if (data.connected) {
@@ -604,16 +604,16 @@ async function loadADStatus() {
             connectionStatus.textContent = '✗ Not Connected';
             connectionStatus.style.color = '#ef4444';
         }
-        
+
         // Update server
         document.getElementById('ad-server').textContent = data.server || 'Not configured';
-        
+
         // Update auto provision
         document.getElementById('ad-auto-provision').textContent = data.auto_provision ? 'Yes' : 'No';
-        
+
         // Update synced users count
         document.getElementById('ad-synced-users').textContent = data.synced_users || 0;
-        
+
         // Update error message
         const errorElement = document.getElementById('ad-error');
         if (data.error) {
@@ -623,7 +623,7 @@ async function loadADStatus() {
             errorElement.textContent = 'None';
             errorElement.style.color = '#10b981';
         }
-        
+
         // Enable/disable sync button based on status
         const syncBtn = document.getElementById('ad-sync-btn');
         if (data.enabled && data.connected) {
@@ -646,24 +646,24 @@ function refreshADStatus() {
 async function syncADUsers() {
     const syncBtn = document.getElementById('ad-sync-btn');
     const originalText = syncBtn.textContent;
-    
+
     // Disable button and show loading state
     syncBtn.disabled = true;
     syncBtn.textContent = '⏳ Syncing...';
-    
+
     try {
         // AD sync can take a while, so use a longer timeout
         const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/sync`, {
             method: 'POST'
         }, AD_SYNC_TIMEOUT);
-        
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
             throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showNotification(data.message || `Successfully synced ${data.synced_count} users`, 'success');
             // Refresh both AD status and extensions
@@ -674,8 +674,8 @@ async function syncADUsers() {
         }
     } catch (error) {
         console.error('Error syncing AD users:', error);
-        const errorMsg = error.message === 'Request timed out' 
-            ? 'AD sync timed out. This may happen with large directories. Check the server logs.' 
+        const errorMsg = error.message === 'Request timed out'
+            ? 'AD sync timed out. This may happen with large directories. Check the server logs.'
             : 'Error syncing AD users';
         showNotification(errorMsg, 'error');
     } finally {
@@ -689,8 +689,8 @@ async function syncADUsers() {
 function getRetryButtonsHtml() {
     const retryBtn = '<button class="btn btn-primary" onclick="loadExtensions()" style="margin-left: 10px;">🔄 Retry</button>';
     // currentUser.is_admin is a boolean, safe for conditional rendering
-    const syncBtn = (currentUser && currentUser.is_admin === true) 
-        ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>' 
+    const syncBtn = (currentUser && currentUser.is_admin === true)
+        ? '<button class="btn btn-success" onclick="syncADUsers()" style="margin-left: 10px;">🔄 Sync from AD</button>'
         : '';
     return retryBtn + syncBtn;
 }
@@ -699,35 +699,35 @@ function getRetryButtonsHtml() {
 async function loadExtensions() {
     const tbody = document.getElementById('extensions-table-body');
     tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading extensions...</td></tr>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/extensions`, {
             headers: getAuthHeaders()
         }, EXTENSION_LOAD_TIMEOUT);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const extensions = await response.json();
         currentExtensions = extensions;
-        
+
         if (extensions.length === 0) {
             tbody.innerHTML = `
                 <tr><td colspan="7" class="loading">
-                    No extensions found. 
+                    No extensions found.
                     ${getRetryButtonsHtml()}
                 </td></tr>
             `;
             return;
         }
-        
+
         // Helper function to escape HTML to prevent XSS
         const escapeHtml = (text) => {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         };
-        
+
         // Helper function to generate extension badges
         const generateBadges = (ext) => {
             let badges = '';
@@ -739,7 +739,7 @@ async function loadExtensions() {
             }
             return badges;
         };
-        
+
         tbody.innerHTML = extensions.map(ext => `
             <tr>
                 <td><strong>${escapeHtml(ext.number)}</strong>${generateBadges(ext)}</td>
@@ -760,7 +760,7 @@ async function loadExtensions() {
     } catch (error) {
         console.error('Error loading extensions:', error);
         const errorMsg = error.message === 'Request timed out'
-            ? 'Request timed out. The system may still be starting up.' 
+            ? 'Request timed out. The system may still be starting up.'
             : 'Error loading extensions';
         tbody.innerHTML = `
             <tr><td colspan="7" class="loading">
@@ -785,14 +785,14 @@ function closeAddExtensionModal() {
 function editExtension(number) {
     const ext = currentExtensions.find(e => e.number === number);
     if (!ext) return;
-    
+
     document.getElementById('edit-ext-number').value = ext.number;
     document.getElementById('edit-ext-name').value = ext.name;
     document.getElementById('edit-ext-email').value = ext.email || '';
     document.getElementById('edit-ext-allow-external').checked = Boolean(ext.allow_external);
     document.getElementById('edit-ext-is-admin').checked = Boolean(ext.is_admin);
     document.getElementById('edit-ext-password').value = '';
-    
+
     document.getElementById('edit-extension-modal').classList.add('active');
 }
 
@@ -804,13 +804,13 @@ async function deleteExtension(number) {
     if (!confirm(`Are you sure you want to delete extension ${number}?`)) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        
+
         if (response.ok) {
             showNotification('Extension deleted successfully', 'success');
             loadExtensions();
@@ -828,16 +828,16 @@ async function deleteExtension(number) {
 async function loadCalls() {
     const callsList = document.getElementById('calls-list');
     callsList.innerHTML = '<div class="loading">Loading calls...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/calls`);
         const calls = await response.json();
-        
+
         if (calls.length === 0) {
             callsList.innerHTML = '<div class="loading">No active calls</div>';
             return;
         }
-        
+
         callsList.innerHTML = calls.map(call => `
             <div class="call-item">
                 <strong>Call:</strong> ${call}
@@ -857,7 +857,7 @@ async function loadConfig() {
         });
         if (response.ok) {
             const config = await response.json();
-            
+
             // Feature Toggles
             if (config.features) {
                 document.getElementById('feature-call-recording').checked = config.features.call_recording || false;
@@ -871,7 +871,7 @@ async function loadConfig() {
                 document.getElementById('feature-music-on-hold').checked = config.features.music_on_hold || false;
                 document.getElementById('feature-auto-attendant').checked = config.features.auto_attendant || false;
             }
-            
+
             // Voicemail Settings
             if (config.voicemail) {
                 document.getElementById('voicemail-max-duration').value = config.voicemail.max_message_duration || 180;
@@ -879,7 +879,7 @@ async function loadConfig() {
                 document.getElementById('voicemail-no-answer-timeout').value = config.voicemail.no_answer_timeout || 30;
                 document.getElementById('voicemail-allow-custom-greetings').checked = config.voicemail.allow_custom_greetings || false;
                 document.getElementById('voicemail-email-notifications').checked = config.voicemail.email_notifications || false;
-                
+
                 // SMTP Settings
                 if (config.voicemail.smtp) {
                     document.getElementById('smtp-host').value = config.voicemail.smtp.host || '';
@@ -887,21 +887,21 @@ async function loadConfig() {
                     document.getElementById('smtp-use-tls').checked = config.voicemail.smtp.use_tls !== false;
                     document.getElementById('smtp-username').value = config.voicemail.smtp.username || '';
                 }
-                
+
                 // Email Settings
                 if (config.voicemail.email) {
                     document.getElementById('email-from').value = config.voicemail.email.from_address || '';
                     document.getElementById('email-from-name').value = config.voicemail.email.from_name || '';
                 }
             }
-            
+
             // Recording Settings
             if (config.recording) {
                 document.getElementById('recording-auto-record').checked = config.recording.auto_record || false;
                 document.getElementById('recording-format').value = config.recording.format || 'wav';
                 document.getElementById('recording-storage-path').value = config.recording.storage_path || 'recordings';
             }
-            
+
             // Security Settings
             if (config.security) {
                 if (config.security.password) {
@@ -917,7 +917,7 @@ async function loadConfig() {
                 }
                 document.getElementById('security-fips-mode').checked = config.security.fips_mode || false;
             }
-            
+
             // Advanced Features
             if (config.features) {
                 if (config.features.webrtc) {
@@ -937,20 +937,20 @@ async function loadConfig() {
                     document.getElementById('advanced-transcription-enabled').checked = config.features.voicemail_transcription.enabled || false;
                 }
             }
-            
+
             // Conference Settings
             if (config.conference) {
                 document.getElementById('conference-max-participants').value = config.conference.max_participants || 50;
                 document.getElementById('conference-record').checked = config.conference.record_conferences || false;
             }
-            
+
             // Server Info (Read-Only)
             if (config.server) {
                 document.getElementById('config-sip-port').value = config.server.sip_port || 5060;
                 document.getElementById('config-api-port').value = config.api?.port || 8080;
                 document.getElementById('config-external-ip').value = config.server.external_ip || '';
                 document.getElementById('config-server-name').value = config.server.server_name || '';
-                
+
                 // Pre-fill SSL hostname with external IP
                 const sslHostnameInput = document.getElementById('ssl-hostname');
                 if (sslHostnameInput && config.server.external_ip) {
@@ -958,7 +958,7 @@ async function loadConfig() {
                 }
             }
         }
-        
+
         // Load SSL status separately
         await loadSSLStatus();
     } catch (error) {
@@ -973,13 +973,13 @@ async function loadFeaturesStatus() {
         const response = await fetch(`${API_BASE}/api/config/full`, {
             headers: getAuthHeaders()
         });
-        
+
         if (!response.ok) {
             throw new Error('Failed to load configuration');
         }
-        
+
         const config = await response.json();
-        
+
         // Define feature mappings
         const coreFeatures = [
             { key: 'call_recording', name: 'Call Recording', description: 'Record calls for quality and compliance' },
@@ -993,7 +993,7 @@ async function loadFeaturesStatus() {
             { key: 'music_on_hold', name: 'Music on Hold', description: 'Play music while calls are on hold' },
             { key: 'auto_attendant', name: 'Auto Attendant', description: 'Automated call routing menu' }
         ];
-        
+
         const advancedFeatures = [
             { key: 'webrtc.enabled', name: 'WebRTC Phone', description: 'Browser-based phone client' },
             { key: 'webhooks.enabled', name: 'Webhooks', description: 'HTTP callbacks for events' },
@@ -1001,14 +1001,14 @@ async function loadFeaturesStatus() {
             { key: 'hot_desking.enabled', name: 'Hot Desking', description: 'Flexible workspace login' },
             { key: 'voicemail_transcription.enabled', name: 'Voicemail Transcription', description: 'Convert voicemail to text' }
         ];
-        
+
         const integrationFeatures = [
             { key: 'ad_integration', name: 'Active Directory', description: 'User sync with AD' },
             { key: 'jitsi_integration', name: 'Jitsi Video', description: 'Video conferencing integration' },
             { key: 'matrix_integration', name: 'Matrix Chat', description: 'Team messaging integration' },
             { key: 'espocrm_integration', name: 'EspoCRM', description: 'Open-source CRM integration' }
         ];
-        
+
         // Helper function to get nested config value
         const getConfigValue = (obj, path) => {
             const keys = path.split('.');
@@ -1019,14 +1019,14 @@ async function loadFeaturesStatus() {
             }
             return Boolean(value);
         };
-        
+
         // Helper function to render feature row
         const renderFeatureRow = (feature, config) => {
             const enabled = getConfigValue(config.features || {}, feature.key);
-            const statusBadge = enabled ? 
-                '<span class="status-badge status-online">✅ Enabled</span>' : 
+            const statusBadge = enabled ?
+                '<span class="status-badge status-online">✅ Enabled</span>' :
                 '<span class="status-badge status-offline">❌ Disabled</span>';
-            
+
             return `
                 <tr>
                     <td><strong>${feature.name}</strong></td>
@@ -1035,18 +1035,18 @@ async function loadFeaturesStatus() {
                 </tr>
             `;
         };
-        
+
         // Update tables
         const coreTableBody = document.getElementById('core-features-table');
         if (coreTableBody) {
             coreTableBody.innerHTML = coreFeatures.map(f => renderFeatureRow(f, config)).join('');
         }
-        
+
         const advancedTableBody = document.getElementById('advanced-features-table');
         if (advancedTableBody) {
             advancedTableBody.innerHTML = advancedFeatures.map(f => renderFeatureRow(f, config)).join('');
         }
-        
+
         // For integrations, check different config sections
         const integrationTableBody = document.getElementById('integration-features-table');
         if (integrationTableBody) {
@@ -1061,11 +1061,11 @@ async function loadFeaturesStatus() {
                 } else if (feature.key === 'espocrm_integration') {
                     enabled = config.integrations?.espocrm?.enabled || false;
                 }
-                
-                const statusBadge = enabled ? 
-                    '<span class="status-badge status-online">✅ Enabled</span>' : 
+
+                const statusBadge = enabled ?
+                    '<span class="status-badge status-online">✅ Enabled</span>' :
                     '<span class="status-badge status-offline">❌ Disabled</span>';
-                
+
                 return `
                     <tr>
                         <td><strong>${feature.name}</strong></td>
@@ -1074,10 +1074,10 @@ async function loadFeaturesStatus() {
                     </tr>
                 `;
             }).join('');
-            
+
             integrationTableBody.innerHTML = integrationRows;
         }
-        
+
     } catch (error) {
         console.error('Error loading features status:', error);
         // Show error in tables
@@ -1101,7 +1101,7 @@ async function saveConfigSection(section, data) {
                 data: data
             })
         });
-        
+
         if (response.ok) {
             showNotification(CONFIG_SAVE_SUCCESS_MESSAGE, 'success');
             // Reload configuration to reflect changes
@@ -1121,7 +1121,7 @@ function initializeForms() {
     // Add Extension Form
     document.getElementById('add-extension-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const extensionData = {
             number: document.getElementById('new-ext-number').value,
             name: document.getElementById('new-ext-name').value,
@@ -1131,14 +1131,14 @@ function initializeForms() {
             voicemail_pin: document.getElementById('new-ext-voicemail-pin').value,
             is_admin: document.getElementById('new-ext-is-admin').checked
         };
-        
+
         try {
             const response = await fetch(`${API_BASE}/api/extensions`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(extensionData)
             });
-            
+
             if (response.ok) {
                 showNotification('Extension added successfully', 'success');
                 closeAddExtensionModal();
@@ -1152,11 +1152,11 @@ function initializeForms() {
             showNotification('Failed to add extension', 'error');
         }
     });
-    
+
     // Edit Extension Form
     document.getElementById('edit-extension-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const number = document.getElementById('edit-ext-number').value;
         const extensionData = {
             name: document.getElementById('edit-ext-name').value,
@@ -1164,24 +1164,24 @@ function initializeForms() {
             allow_external: document.getElementById('edit-ext-allow-external').checked,
             is_admin: document.getElementById('edit-ext-is-admin').checked
         };
-        
+
         const password = document.getElementById('edit-ext-password').value;
         if (password) {
             extensionData.password = password;
         }
-        
+
         const voicemailPin = document.getElementById('edit-ext-voicemail-pin').value;
         if (voicemailPin) {
             extensionData.voicemail_pin = voicemailPin;
         }
-        
+
         try {
             const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(extensionData)
             });
-            
+
             if (response.ok) {
                 showNotification('Extension updated successfully', 'success');
                 closeEditExtensionModal();
@@ -1195,7 +1195,7 @@ function initializeForms() {
             showNotification('Failed to update extension', 'error');
         }
     });
-    
+
     // Features Config Form
     const featuresForm = document.getElementById('features-config-form');
     if (featuresForm) {
@@ -1215,7 +1215,7 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Voicemail Config Form
     const voicemailForm = document.getElementById('voicemail-config-form');
     if (voicemailForm) {
@@ -1230,7 +1230,7 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Email Config Form
     const emailForm = document.getElementById('email-config-form');
     if (emailForm) {
@@ -1251,7 +1251,7 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Recording Config Form
     const recordingForm = document.getElementById('recording-config-form');
     if (recordingForm) {
@@ -1264,7 +1264,7 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Security Config Form
     const securityForm = document.getElementById('security-config-form');
     if (securityForm) {
@@ -1286,7 +1286,7 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Advanced Features Form
     const advancedForm = document.getElementById('advanced-features-form');
     if (advancedForm) {
@@ -1312,7 +1312,7 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Conference Config Form
     const conferenceForm = document.getElementById('conference-config-form');
     if (conferenceForm) {
@@ -1324,21 +1324,21 @@ function initializeForms() {
             });
         });
     }
-    
+
     // Initialize SSL Config Form
     initializeSSLConfigForm();
-    
+
     // Add Device Form
     const addDeviceForm = document.getElementById('add-device-form');
     if (addDeviceForm) {
         addDeviceForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const mac = document.getElementById('device-mac').value;
             const extension = document.getElementById('device-extension').value;
             const vendor = document.getElementById('device-vendor').value;
             const model = document.getElementById('device-model').value;
-            
+
             try {
                 const response = await fetch(`${API_BASE}/api/provisioning/devices`, {
                     method: 'POST',
@@ -1350,7 +1350,7 @@ function initializeForms() {
                         model: model
                     })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     const msg = 'Device registered successfully! Config URL: ' + data.device.config_url;
@@ -1367,11 +1367,11 @@ function initializeForms() {
             }
         });
     }
-    
+
     // Provisioning settings change handlers
     const serverIPInput = document.getElementById('provisioning-server-ip');
     const portInput = document.getElementById('provisioning-port');
-    
+
     if (serverIPInput) {
         serverIPInput.addEventListener('input', updateProvisioningUrlFormat);
     }
@@ -1384,7 +1384,7 @@ function initializeForms() {
 function showNotification(message, type = 'info') {
     // Log to console for debugging
     console.log(`[${type.toUpperCase()}] ${message}`);
-    
+
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -1403,12 +1403,12 @@ function showNotification(message, type = 'info') {
         font-size: 14px;
         line-height: 1.4;
     `;
-    
+
     const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
     notification.innerHTML = `<strong>${icon}</strong> ${escapeHtml(message)}`;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease-in';
@@ -1438,10 +1438,10 @@ async function loadVoicemailTab() {
             headers: getAuthHeaders()
         });
         const extensions = await response.json();
-        
+
         const select = document.getElementById('vm-extension-select');
         select.innerHTML = '<option value="">Select Extension</option>';
-        
+
         extensions.forEach(ext => {
             const option = document.createElement('option');
             option.value = ext.number;
@@ -1456,29 +1456,29 @@ async function loadVoicemailTab() {
 
 window.loadVoicemailForExtension = async function() {
     const extension = document.getElementById('vm-extension-select').value;
-    
+
     if (!extension) {
         document.getElementById('voicemail-pin-section').style.display = 'none';
         document.getElementById('voicemail-messages-section').style.display = 'none';
         document.getElementById('voicemail-box-overview').style.display = 'none';
         return;
     }
-    
+
     // Show sections
     document.getElementById('voicemail-pin-section').style.display = 'block';
     document.getElementById('voicemail-messages-section').style.display = 'block';
     document.getElementById('voicemail-box-overview').style.display = 'block';
     document.getElementById('vm-current-extension').textContent = extension;
-    
+
     try {
         // Load voicemail messages
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
         const data = await response.json();
-        
+
         // Update both views
         updateVoicemailCardsView(data.messages, extension);
         updateVoicemailTableView(data.messages, extension);
-        
+
     } catch (error) {
         console.error('Error loading voicemail:', error);
         showNotification('Failed to load voicemail messages', 'error');
@@ -1487,20 +1487,20 @@ window.loadVoicemailForExtension = async function() {
 
 function updateVoicemailCardsView(messages, extension) {
     const cardsContainer = document.getElementById('voicemail-cards-view');
-    
+
     if (!messages || messages.length === 0) {
         cardsContainer.innerHTML = '<div class="info-box">No voicemail messages</div>';
         return;
     }
-    
+
     cardsContainer.innerHTML = messages.map(msg => {
         const timestamp = new Date(msg.timestamp).toLocaleString();
         const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
         const isUnread = !msg.listened;
-        
+
         let transcriptionHtml = '';
         if (msg.transcription && msg.transcription.text) {
-            const confidencePercent = msg.transcription.confidence ? 
+            const confidencePercent = msg.transcription.confidence ?
                 (msg.transcription.confidence * 100).toFixed(0) : 'N/A';
             transcriptionHtml = `
                 <div class="voicemail-transcription">
@@ -1511,7 +1511,7 @@ function updateVoicemailCardsView(messages, extension) {
                 </div>
             `;
         }
-        
+
         return `
             <div class="voicemail-card ${isUnread ? 'unread' : ''}">
                 <div class="voicemail-card-header">
@@ -1552,19 +1552,19 @@ function updateVoicemailCardsView(messages, extension) {
 
 function updateVoicemailTableView(messages, extension) {
     const tbody = document.getElementById('voicemail-table-body');
-    
+
     if (!messages || messages.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="no-data">No voicemail messages</td></tr>';
         return;
     }
-    
+
     tbody.innerHTML = '';
     messages.forEach(msg => {
         const row = document.createElement('tr');
         const timestamp = new Date(msg.timestamp).toLocaleString();
         const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
         const status = msg.listened ? 'Read' : 'Unread';
-        
+
         row.innerHTML = `
             <td>${timestamp}</td>
             <td>${msg.caller_id}</td>
@@ -1585,7 +1585,7 @@ window.toggleVoicemailView = function() {
     const cardsView = document.getElementById('voicemail-cards-view');
     const tableView = document.getElementById('voicemail-table-view');
     const toggleText = document.getElementById('view-toggle-text');
-    
+
     if (cardsView.style.display === 'none') {
         // Switch to cards view
         cardsView.style.display = 'grid';
@@ -1605,48 +1605,48 @@ window.openVoicemailPlayer = async function(extension, messageId) {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
         const data = await response.json();
         const message = data.messages.find(m => m.id === messageId);
-        
+
         if (!message) {
             showNotification('Message not found', 'error');
             return;
         }
-        
+
         // Update player details
         const detailsDiv = document.getElementById('vm-player-details');
         const timestamp = new Date(message.timestamp).toLocaleString();
         const duration = message.duration ? `${message.duration}s` : 'Unknown';
-        
+
         detailsDiv.innerHTML = `
             <p><strong>From:</strong> ${message.caller_id}</p>
             <p><strong>Received:</strong> ${timestamp}</p>
             <p><strong>Duration:</strong> ${duration}</p>
             <p><strong>Status:</strong> ${message.listened ? 'Read' : 'Unread'}</p>
         `;
-        
+
         // Set audio source
         const audioPlayer = document.getElementById('vm-audio-player');
         audioPlayer.src = `${API_BASE}/api/voicemail/${extension}/${messageId}`;
-        
+
         // Show/hide transcription
         const transcriptionDiv = document.getElementById('vm-transcription-display');
         if (message.transcription && message.transcription.text) {
             document.getElementById('vm-transcription-text').textContent = message.transcription.text;
-            const confidence = message.transcription.confidence ? 
+            const confidence = message.transcription.confidence ?
                 `Confidence: ${(message.transcription.confidence * 100).toFixed(0)}%` : '';
             document.getElementById('vm-transcription-confidence').textContent = confidence;
             transcriptionDiv.style.display = 'block';
         } else {
             transcriptionDiv.style.display = 'none';
         }
-        
+
         // Show modal
         document.getElementById('voicemail-player-modal').style.display = 'block';
-        
+
         // Mark as read after playing starts
         audioPlayer.onplay = () => {
             markVoicemailRead(extension, messageId, false);
         };
-        
+
     } catch (error) {
         console.error('Error opening voicemail player:', error);
         showNotification('Failed to open voicemail player', 'error');
@@ -1656,11 +1656,11 @@ window.openVoicemailPlayer = async function(extension, messageId) {
 window.closeVoicemailPlayer = function() {
     const modal = document.getElementById('voicemail-player-modal');
     const audioPlayer = document.getElementById('vm-audio-player');
-    
+
     audioPlayer.pause();
     audioPlayer.src = '';
     modal.style.display = 'none';
-    
+
     // Reload messages to update read status
     loadVoicemailForExtension();
 };
@@ -1693,7 +1693,7 @@ window.markVoicemailRead = async function(extension, messageId, showMsg = true) 
             method: 'PUT',
             headers: getAuthHeaders()
         });
-        
+
         if (response.ok) {
             if (showMsg) {
                 showNotification('Message marked as read', 'success');
@@ -1714,12 +1714,12 @@ window.deleteVoicemail = async function(extension, messageId) {
     if (!confirm('Are you sure you want to delete this voicemail message?')) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}/${messageId}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showNotification('Voicemail deleted successfully', 'success');
             loadVoicemailForExtension();
@@ -1738,20 +1738,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (pinForm) {
         pinForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const extension = document.getElementById('vm-extension-select').value;
             const pin = document.getElementById('vm-pin').value;
-            
+
             if (!extension) {
                 showNotification('Please select an extension', 'error');
                 return;
             }
-            
+
             if (!/^\d{4}$/.test(pin)) {
                 showNotification('PIN must be exactly 4 digits', 'error');
                 return;
             }
-            
+
             try {
                 const response = await fetch(`${API_BASE}/api/voicemail/${extension}/pin`, {
                     method: 'PUT',
@@ -1760,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({ pin })
                 });
-                
+
                 if (response.ok) {
                     showNotification('Voicemail PIN updated successfully', 'success');
                     document.getElementById('vm-pin').value = '';
@@ -1781,14 +1781,14 @@ async function rebootPhone(extension) {
     if (!confirm(`Send reboot signal to phone at extension ${extension}?\n\nThe phone will restart and reload its configuration.`)) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/phones/${extension}/reboot`, {
             method: 'POST'
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             showNotification(`Reboot signal sent to extension ${extension}`, 'success');
         } else {
@@ -1804,19 +1804,19 @@ async function rebootAllPhones() {
     if (!confirm('Send reboot signal to ALL registered phones?\n\nAll online phones will restart and reload their configurations. This may take a few minutes.')) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/phones/reboot`, {
             method: 'POST'
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
-            const message = `Rebooted ${data.success_count} phone(s)` + 
+            const message = `Rebooted ${data.success_count} phone(s)` +
                           (data.failed_count > 0 ? `, ${data.failed_count} failed` : '');
             showNotification(message, 'success');
-            
+
             // Refresh extensions list after a delay to show new status
             setTimeout(loadExtensions, 2000);
         } else {
@@ -1832,10 +1832,10 @@ async function rebootAllPhones() {
 async function loadRegisteredPhones() {
     const tbody = document.getElementById('registered-phones-table-body');
     tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading registered phones...</td></tr>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/registered-phones`);
-        
+
         if (!response.ok) {
             // Try to parse error response from API
             let errorMessage = `HTTP ${response.status}`;
@@ -1852,65 +1852,65 @@ async function loadRegisteredPhones() {
             }
             throw new Error(errorMessage);
         }
-        
+
         const phones = await response.json();
-        
+
         if (!phones || phones.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="loading">No registered phones found in database</td></tr>';
             return;
         }
-        
+
         // Clear table body
         tbody.innerHTML = '';
-        
+
         // Create rows safely using DOM methods to prevent XSS
         phones.forEach(phone => {
             const row = document.createElement('tr');
-            
+
             // Extension number
             const extCell = document.createElement('td');
             const extStrong = document.createElement('strong');
             extStrong.textContent = phone.extension_number || 'Unknown';
             extCell.appendChild(extStrong);
             row.appendChild(extCell);
-            
+
             // IP Address
             const ipCell = document.createElement('td');
             ipCell.textContent = phone.ip_address || 'Unknown';
             row.appendChild(ipCell);
-            
+
             // MAC Address
             const macCell = document.createElement('td');
             macCell.textContent = phone.mac_address || 'Unknown';
             row.appendChild(macCell);
-            
+
             // User Agent
             const uaCell = document.createElement('td');
             uaCell.textContent = phone.user_agent || 'Unknown';
             row.appendChild(uaCell);
-            
+
             // Last Registration
             const regCell = document.createElement('td');
             regCell.textContent = phone.last_registered ? new Date(phone.last_registered).toLocaleString() : 'Never';
             row.appendChild(regCell);
-            
+
             tbody.appendChild(row);
         });
     } catch (error) {
         console.error('Error loading registered phones:', error);
-        
+
         // Display error message in table
         const errorCell = document.createElement('td');
         errorCell.colSpan = 5;
         errorCell.className = 'error-message';
         errorCell.textContent = `Error: ${error.message}`;
-        
+
         const errorRow = document.createElement('tr');
         errorRow.appendChild(errorCell);
-        
+
         tbody.innerHTML = '';
         tbody.appendChild(errorRow);
-        
+
         showNotification(`Failed to load registered phones: ${error.message}`, 'error');
     }
 }
@@ -1937,10 +1937,10 @@ async function loadPhonebookSettings() {
             const serverIP = data.server_ip || window.location.hostname;
             const port = data.api_port || '8080';
             const protocol = window.location.protocol; // Use current protocol (http: or https:)
-            
+
             // Pre-populate remote phonebook URL
             document.getElementById('remote-phonebook-url').value = `${protocol}//${serverIP}:${port}/api/phone-book/export/xml`;
-            
+
             // Set default values
             document.getElementById('ldap-phonebook-port').value = '636';
             document.getElementById('ldap-phonebook-display-name').value = 'Company Directory';
@@ -1959,7 +1959,7 @@ async function loadProvisioningSettings() {
             // Get current server IP from status or use default
             const serverIP = data.server_ip || window.location.hostname;
             document.getElementById('provisioning-server-ip').value = serverIP;
-            
+
             // Update URL format display
             updateProvisioningUrlFormat();
         }
@@ -1988,19 +1988,19 @@ async function saveProvisioningSettings() {
     const port = document.getElementById('provisioning-port').value;
     const customDir = document.getElementById('provisioning-custom-dir').value;
     const protocol = window.location.protocol; // Use current protocol (http: or https:)
-    
+
     if (!serverIP) {
         showNotification('Please enter a server IP address', 'error');
         return;
     }
-    
+
     const configMsg = `Provisioning settings need to be updated in config.yml:\n\n` +
           `provisioning:\n` +
           `  enabled: ${enabled}\n` +
           `  url_format: ${protocol}//${serverIP}:${port}/provision/{mac}.cfg\n` +
           `  custom_templates_dir: "${customDir}"\n\n` +
           'Then restart the PBX server.';
-    
+
     showNotification('Settings saved. Update config.yml and restart required.', 'info');
     console.log(configMsg);
 }
@@ -2016,7 +2016,7 @@ function toggleRemotePhonebookSettings() {
     const enabled = document.getElementById('remote-phonebook-enabled').checked;
     const settingsDiv = document.getElementById('remote-phonebook-settings');
     settingsDiv.style.display = enabled ? 'block' : 'none';
-    
+
     if (enabled) {
         // Auto-populate remote phonebook URL based on server settings
         const serverIP = document.getElementById('provisioning-server-ip').value || window.location.hostname;
@@ -2036,17 +2036,17 @@ async function savePhonebookSettings() {
     const ldapPassword = document.getElementById('ldap-phonebook-password').value;
     const ldapTls = document.getElementById('ldap-phonebook-tls').checked ? 1 : 0;
     const ldapDisplayName = document.getElementById('ldap-phonebook-display-name').value || 'Company Directory';
-    
+
     // Remote phonebook settings
     const remoteEnabled = document.getElementById('remote-phonebook-enabled').checked;
     const remoteUrl = document.getElementById('remote-phonebook-url').value;
     const remoteRefresh = document.getElementById('remote-phonebook-refresh').value || '60';
-    
+
     // Build configuration message
     let configMsg = `Phone Book settings need to be updated in config.yml:\n\n`;
     configMsg += `provisioning:\n`;
     configMsg += `  # ... existing provisioning settings ...\n\n`;
-    
+
     if (ldapEnabled) {
         configMsg += `  # LDAP/LDAPS Phone Book Configuration\n`;
         configMsg += `  ldap_phonebook:\n`;
@@ -2063,27 +2063,27 @@ async function savePhonebookSettings() {
         configMsg += `    name_attr: cn\n`;
         configMsg += `    number_attr: telephoneNumber\n`;
         configMsg += `    display_name: ${ldapDisplayName}\n\n`;
-        
+
         if (ldapPassword) {
             configMsg += `Also add to .env file:\n`;
             configMsg += `LDAP_PHONEBOOK_PASSWORD=${ldapPassword}\n\n`;
         }
     }
-    
+
     if (remoteEnabled) {
         configMsg += `  # Remote Phone Book URL (Fallback)\n`;
         configMsg += `  remote_phonebook:\n`;
         configMsg += `    url: ${remoteUrl}\n`;
         configMsg += `    refresh_interval: ${remoteRefresh}\n\n`;
     }
-    
+
     configMsg += `Then restart the PBX server for changes to take effect.\n`;
     configMsg += `\nPhones will need to be reprovisioned to receive the new phone book settings.`;
-    
+
     // Show notification
     showNotification('Phone Book settings saved. Update config.yml and restart required.', 'info');
     console.log(configMsg);
-    
+
     // Also show in alert for easy copy-paste
     alert(configMsg);
 }
@@ -2095,7 +2095,7 @@ async function loadSupportedVendors() {
             const data = await response.json();
             supportedVendors = data.vendors || [];
             supportedModels = data.models || {};
-            
+
             // Display supported vendors
             const vendorsList = document.getElementById('supported-vendors-list');
             if (supportedVendors.length > 0) {
@@ -2114,7 +2114,7 @@ async function loadSupportedVendors() {
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
-        document.getElementById('supported-vendors-list').innerHTML = 
+        document.getElementById('supported-vendors-list').innerHTML =
             '<p class="error">Error loading vendors: ' + error.message + '</p>';
     }
 }
@@ -2123,17 +2123,17 @@ async function loadProvisioningDevices() {
     try {
         const response = await fetch(`${API_BASE}/api/provisioning/devices`);
         const tbody = document.getElementById('provisioning-devices-table-body');
-        
+
         if (response.ok) {
             const devices = await response.json();
-            
+
             if (devices.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Click "Add Device" to register phones.</td></tr>';
             } else {
                 tbody.innerHTML = devices.map(device => {
                     const createdDate = device.created_at ? new Date(device.created_at).toLocaleString() : '-';
                     const provisionedDate = device.last_provisioned ? new Date(device.last_provisioned).toLocaleString() : 'Never';
-                    
+
                     return `
                         <tr>
                             <td><code>${device.mac_address}</code></td>
@@ -2154,7 +2154,7 @@ async function loadProvisioningDevices() {
         }
     } catch (error) {
         console.error('Error loading provisioning devices:', error);
-        document.getElementById('provisioning-devices-table-body').innerHTML = 
+        document.getElementById('provisioning-devices-table-body').innerHTML =
             '<tr><td colspan="7" class="error">Error: ' + error.message + '</td></tr>';
     }
 }
@@ -2163,7 +2163,7 @@ async function showAddDeviceModal() {
     // Populate extension dropdown
     const extensionSelect = document.getElementById('device-extension');
     extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
-    
+
     // Fetch extensions if not already loaded
     try {
         const response = await fetch(`${API_BASE}/api/extensions`, {
@@ -2172,7 +2172,7 @@ async function showAddDeviceModal() {
         if (response.ok) {
             const extensions = await response.json();
             extensionSelect.innerHTML = '<option value="">Select Extension</option>';
-            
+
             extensions.forEach(ext => {
                 const option = document.createElement('option');
                 option.value = ext.number;
@@ -2186,21 +2186,21 @@ async function showAddDeviceModal() {
         console.error('Error loading extensions:', error);
         extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
     }
-    
+
     // Populate vendor dropdown
     const vendorSelect = document.getElementById('device-vendor');
     vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-    
+
     supportedVendors.forEach(vendor => {
         const option = document.createElement('option');
         option.value = vendor;
         option.textContent = vendor.toUpperCase();
         vendorSelect.appendChild(option);
     });
-    
+
     // Reset model dropdown
     document.getElementById('device-model').innerHTML = '<option value="">Select Vendor First</option>';
-    
+
     // Show modal
     document.getElementById('add-device-modal').style.display = 'block';
 }
@@ -2213,15 +2213,15 @@ function closeAddDeviceModal() {
 function updateModelOptions() {
     const vendor = document.getElementById('device-vendor').value;
     const modelSelect = document.getElementById('device-model');
-    
+
     if (!vendor) {
         modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
         return;
     }
-    
+
     const models = supportedModels[vendor] || [];
     modelSelect.innerHTML = '<option value="">Select Model</option>';
-    
+
     models.forEach(model => {
         const option = document.createElement('option');
         option.value = model;
@@ -2234,12 +2234,12 @@ async function deleteDevice(mac) {
     if (!confirm(`Are you sure you want to delete device ${mac}?`)) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/provisioning/devices/${mac}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showNotification('Device deleted successfully', 'success');
             loadProvisioningDevices();
@@ -2272,29 +2272,29 @@ async function loadProvisioningTemplates() {
 function displayTemplatesList(templates) {
     const tbody = document.getElementById('templates-table-body');
     if (!tbody) return;
-    
+
     if (templates.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5">No templates found</td></tr>';
         return;
     }
-    
+
     // Clear existing content
     tbody.innerHTML = '';
-    
+
     // Create rows safely without XSS vulnerabilities
     templates.forEach(template => {
         const row = document.createElement('tr');
-        
+
         // Vendor cell
         const vendorCell = document.createElement('td');
         vendorCell.textContent = template.vendor;
         row.appendChild(vendorCell);
-        
+
         // Model cell
         const modelCell = document.createElement('td');
         modelCell.textContent = template.model;
         row.appendChild(modelCell);
-        
+
         // Type cell
         const typeCell = document.createElement('td');
         const badge = document.createElement('span');
@@ -2302,29 +2302,29 @@ function displayTemplatesList(templates) {
         badge.textContent = template.is_custom ? 'Custom' : 'Built-in';
         typeCell.appendChild(badge);
         row.appendChild(typeCell);
-        
+
         // Size cell
         const sizeCell = document.createElement('td');
         sizeCell.textContent = (template.size / 1024).toFixed(1) + ' KB';
         row.appendChild(sizeCell);
-        
+
         // Actions cell
         const actionsCell = document.createElement('td');
-        
+
         // View button
         const viewBtn = document.createElement('button');
         viewBtn.className = 'btn btn-sm btn-primary';
         viewBtn.textContent = '👁️ View';
         viewBtn.onclick = () => viewTemplate(template.vendor, template.model);
         actionsCell.appendChild(viewBtn);
-        
+
         // Export button
         const exportBtn = document.createElement('button');
         exportBtn.className = 'btn btn-sm btn-success';
         exportBtn.textContent = '💾 Export';
         exportBtn.onclick = () => exportTemplate(template.vendor, template.model);
         actionsCell.appendChild(exportBtn);
-        
+
         // Edit button (only for custom templates)
         if (template.is_custom) {
             const editBtn = document.createElement('button');
@@ -2333,7 +2333,7 @@ function displayTemplatesList(templates) {
             editBtn.onclick = () => editTemplate(template.vendor, template.model);
             actionsCell.appendChild(editBtn);
         }
-        
+
         row.appendChild(actionsCell);
         tbody.appendChild(row);
     });
@@ -2394,23 +2394,23 @@ function showTemplateViewModal(vendor, model, content, placeholders, editable) {
     const textarea = document.getElementById('template-content');
     const placeholdersDiv = document.getElementById('template-placeholders');
     const saveBtn = document.getElementById('save-template-btn');
-    
+
     if (!modal) return;
-    
-    title.textContent = editable ? 
-        `Edit Template: ${vendor} ${model}` : 
+
+    title.textContent = editable ?
+        `Edit Template: ${vendor} ${model}` :
         `View Template: ${vendor} ${model}`;
-    
+
     textarea.value = content;
     textarea.readOnly = !editable;
-    
+
     // Display available placeholders safely
     placeholdersDiv.innerHTML = ''; // Clear first
-    
+
     const strong = document.createElement('strong');
     strong.textContent = 'Available Placeholders:';
     placeholdersDiv.appendChild(strong);
-    
+
     const ul = document.createElement('ul');
     placeholders.forEach(p => {
         const li = document.createElement('li');
@@ -2420,19 +2420,19 @@ function showTemplateViewModal(vendor, model, content, placeholders, editable) {
         ul.appendChild(li);
     });
     placeholdersDiv.appendChild(ul);
-    
+
     const p = document.createElement('p');
     const small = document.createElement('small');
     small.textContent = 'These placeholders will be automatically replaced with device-specific information when a phone requests configuration.';
     p.appendChild(small);
     placeholdersDiv.appendChild(p);
-    
+
     // Set up save button
     saveBtn.style.display = editable ? 'inline-block' : 'none';
     saveBtn.onclick = async () => {
         await saveTemplateContent(vendor, model, textarea.value);
     };
-    
+
     modal.style.display = 'block';
 }
 
@@ -2452,7 +2452,7 @@ async function saveTemplateContent(vendor, model, content) {
             },
             body: JSON.stringify({ content })
         });
-        
+
         if (response.ok) {
             showNotification('Template updated successfully', 'success');
             closeTemplateViewModal();
@@ -2472,7 +2472,7 @@ async function reloadTemplates() {
         const response = await fetch(`${API_BASE}/api/provisioning/reload-templates`, {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             showNotification(`Templates reloaded: ${data.statistics.total_templates} templates from ${data.statistics.vendors} vendors`, 'success');
@@ -2521,10 +2521,10 @@ function isChartJsAvailable(ctx = null) {
 
 async function loadAnalytics() {
     const days = document.getElementById('analytics-period')?.value || 7;
-    
+
     // Check if Chart.js is loaded
     const chartJsAvailable = isChartJsAvailable();
-    
+
     // Show warning if Chart.js is not available, but continue to load data
     if (!chartJsAvailable) {
         showNotification('Chart library not available - displaying data in tables only. Charts require internet connection.', 'warning');
@@ -2540,18 +2540,18 @@ async function loadAnalytics() {
             container.style.display = '';
         });
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/statistics?days=${days}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Update overview stats (always available)
         updateAnalyticsOverview(data.overview);
-        
+
         // Render charts only if Chart.js is available
         if (chartJsAvailable) {
             renderDailyTrendsChart(data.daily_trends);
@@ -2559,13 +2559,13 @@ async function loadAnalytics() {
             renderDispositionChart(data.call_disposition);
             renderQualityChart(data.call_quality);
         }
-        
+
         // Update top callers table (always available)
         updateTopCallersTable(data.top_callers);
-        
+
         // Update peak hours display (always available)
         updatePeakHours(data.peak_hours);
-        
+
         if (chartJsAvailable) {
             showNotification('Analytics refreshed successfully', 'success');
         } else {
@@ -2587,20 +2587,20 @@ function updateAnalyticsOverview(overview) {
 function renderDailyTrendsChart(trends) {
     const ctx = document.getElementById('daily-trends-chart');
     if (!ctx) return;
-    
+
     // Check if Chart.js is available
     if (!isChartJsAvailable(ctx)) return;
-    
+
     // Destroy existing chart if it exists
     if (analyticsCharts.dailyTrends) {
         analyticsCharts.dailyTrends.destroy();
     }
-    
+
     const labels = trends.map(t => t.date);
     const totalData = trends.map(t => t.total_calls);
     const answeredData = trends.map(t => t.answered);
     const missedData = trends.map(t => t.missed);
-    
+
     analyticsCharts.dailyTrends = new Chart(ctx, {
         type: 'line',
         data: {
@@ -2649,17 +2649,17 @@ function renderDailyTrendsChart(trends) {
 function renderHourlyDistributionChart(distribution) {
     const ctx = document.getElementById('hourly-distribution-chart');
     if (!ctx) return;
-    
+
     // Check if Chart.js is available
     if (!isChartJsAvailable(ctx)) return;
-    
+
     if (analyticsCharts.hourlyDistribution) {
         analyticsCharts.hourlyDistribution.destroy();
     }
-    
+
     const labels = distribution.map(d => `${d.hour}:00`);
     const data = distribution.map(d => d.calls);
-    
+
     analyticsCharts.hourlyDistribution = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -2692,14 +2692,14 @@ function renderHourlyDistributionChart(distribution) {
 function renderDispositionChart(dispositions) {
     const ctx = document.getElementById('disposition-chart');
     if (!ctx) return;
-    
+
     // Check if Chart.js is available
     if (!isChartJsAvailable(ctx)) return;
-    
+
     if (analyticsCharts.disposition) {
         analyticsCharts.disposition.destroy();
     }
-    
+
     const labels = dispositions.map(d => d.disposition);
     const data = dispositions.map(d => d.count);
     const colors = {
@@ -2709,9 +2709,9 @@ function renderDispositionChart(dispositions) {
         'failed': '#6c757d',
         'cancelled': '#3b82f6'
     };
-    
+
     const backgroundColors = labels.map(label => colors[label] || '#667eea');
-    
+
     analyticsCharts.disposition = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -2738,16 +2738,16 @@ function renderDispositionChart(dispositions) {
 function renderQualityChart(quality) {
     const ctx = document.getElementById('quality-chart');
     if (!ctx) return;
-    
+
     // Check if Chart.js is available
     if (!isChartJsAvailable(ctx)) return;
-    
+
     if (analyticsCharts.quality) {
         analyticsCharts.quality.destroy();
     }
-    
+
     const qualityDist = quality.quality_distribution || {};
-    
+
     analyticsCharts.quality = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -2795,12 +2795,12 @@ function renderQualityChart(quality) {
 function updateTopCallersTable(topCallers) {
     const tbody = document.getElementById('top-callers-table');
     if (!tbody) return;
-    
+
     if (!topCallers || topCallers.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="no-data">No call data available</td></tr>';
         return;
     }
-    
+
     tbody.innerHTML = topCallers.map(caller => `
         <tr>
             <td><strong>${caller.extension}</strong></td>
@@ -2814,16 +2814,16 @@ function updateTopCallersTable(topCallers) {
 function updatePeakHours(peakHours) {
     const display = document.getElementById('peak-hours-display');
     if (!display) return;
-    
+
     if (!peakHours || peakHours.length === 0) {
         display.innerHTML = '<p>No peak hours data available</p>';
         return;
     }
-    
-    const html = '<ul>' + peakHours.map((peak, index) => 
+
+    const html = '<ul>' + peakHours.map((peak, index) =>
         `<li><strong>#${index + 1}:</strong> ${peak.hour} with ${peak.calls} calls</li>`
     ).join('') + '</ul>';
-    
+
     display.innerHTML = html;
 }
 
@@ -2835,21 +2835,21 @@ async function loadSSLStatus() {
     try {
         const response = await fetch(`${API_BASE}/api/ssl/status`);
         const data = await response.json();
-        
+
         if (response.ok) {
             updateSSLStatusDisplay(data);
-            
+
             // Update form fields
             document.getElementById('ssl-enabled').checked = data.enabled;
             document.getElementById('ssl-cert-file').value = data.cert_file || 'certs/server.crt';
             document.getElementById('ssl-key-file').value = data.key_file || 'certs/server.key';
-            
+
             // Show/hide certificate section based on enabled status
             const certSection = document.getElementById('ssl-certificate-section');
             if (certSection) {
                 certSection.style.display = data.enabled ? 'block' : 'none';
             }
-            
+
             // Show certificate details if available
             if (data.cert_details) {
                 displayCertificateDetails(data.cert_details);
@@ -2865,15 +2865,15 @@ async function loadSSLStatus() {
 function updateSSLStatusDisplay(data) {
     const statusInfo = document.getElementById('ssl-status-info');
     if (!statusInfo) return;
-    
+
     let statusHtml = '';
-    
+
     if (data.enabled) {
         if (data.cert_exists && data.key_exists) {
             if (data.cert_details) {
                 const isExpired = data.cert_details.is_expired;
                 const daysLeft = data.cert_details.days_until_expiry;
-                
+
                 if (isExpired) {
                     statusHtml = `<p>❌ <strong>HTTPS Enabled</strong> but certificate has <strong>EXPIRED</strong></p>`;
                 } else if (daysLeft < 30) {
@@ -2896,24 +2896,24 @@ function updateSSLStatusDisplay(data) {
     } else {
         statusHtml = '<p>⚠️ <strong>HTTPS Disabled</strong> - Using unencrypted HTTP</p>';
     }
-    
+
     statusInfo.innerHTML = statusHtml;
 }
 
 function displayCertificateDetails(details) {
     const certDetailsSection = document.getElementById('cert-details-section');
     if (!certDetailsSection) return;
-    
+
     certDetailsSection.style.display = 'block';
-    
+
     document.getElementById('cert-subject').value = details.subject || 'N/A';
     document.getElementById('cert-issuer').value = details.issuer || 'N/A';
     document.getElementById('cert-valid-from').value = formatDate(details.valid_from) || 'N/A';
     document.getElementById('cert-valid-until').value = formatDate(details.valid_until) || 'N/A';
-    
+
     const daysField = document.getElementById('cert-days-expiry');
     const daysLeft = details.days_until_expiry;
-    
+
     if (details.is_expired) {
         daysField.value = 'EXPIRED';
         daysField.style.color = '#d32f2f';
@@ -2942,16 +2942,16 @@ function formatDate(dateString) {
 async function generateSSLCertificate() {
     const hostname = document.getElementById('ssl-hostname').value.trim();
     const daysValid = parseInt(document.getElementById('ssl-days-valid').value) || 365;
-    
+
     if (!hostname) {
         alert('Please enter a hostname or IP address');
         return;
     }
-    
+
     if (!confirm(`Generate self-signed SSL certificate for ${hostname}?\n\nThis will create new certificate files and may overwrite existing ones.`)) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/ssl/generate-certificate`, {
             method: 'POST',
@@ -2963,16 +2963,16 @@ async function generateSSLCertificate() {
                 days_valid: daysValid
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             alert(`✅ SSL certificate generated successfully!\n\n` +
                   `Certificate: ${data.cert_file}\n` +
                   `Private Key: ${data.key_file}\n` +
                   `Valid for: ${data.valid_days} days\n\n` +
                   `⚠️ You must restart the PBX server for HTTPS to take effect.`);
-            
+
             // Reload SSL status
             await loadSSLStatus();
         } else {
@@ -2997,7 +2997,7 @@ function initializeSSLConfigForm() {
             await saveSSLSettings();
         });
     }
-    
+
     // Toggle certificate section visibility
     const sslEnabledCheckbox = document.getElementById('ssl-enabled');
     if (sslEnabledCheckbox) {
@@ -3012,7 +3012,7 @@ function initializeSSLConfigForm() {
 
 async function saveSSLSettings() {
     const enabled = document.getElementById('ssl-enabled').checked;
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/config/section`, {
             method: 'PUT',
@@ -3028,9 +3028,9 @@ async function saveSSLSettings() {
                 }
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             alert('✅ SSL settings saved successfully!\n\n⚠️ Server restart required for changes to take effect.');
             await loadSSLStatus();
@@ -3052,19 +3052,19 @@ async function loadQoSMetrics() {
         // Load statistics
         const statsResponse = await fetch(`${API_BASE}/api/qos/statistics`);
         const stats = await statsResponse.json();
-        
+
         // Update overview stats
         document.getElementById('qos-active-calls').textContent = stats.active_calls || 0;
         document.getElementById('qos-total-calls').textContent = stats.total_calls || 0;
         document.getElementById('qos-avg-mos').textContent = stats.average_mos ? stats.average_mos.toFixed(2) : '-';
         document.getElementById('qos-calls-with-issues').textContent = stats.calls_with_issues || 0;
-        
+
         // Load active call metrics
         const activeResponse = await fetch(`${API_BASE}/api/qos/metrics`);
         const activeData = await activeResponse.json();
         const activeMetrics = activeData.metrics || [];
         const activeTable = document.getElementById('qos-active-calls-table');
-        
+
         if (activeMetrics.length === 0) {
             activeTable.innerHTML = '<tr><td colspan="7" class="no-data">No active calls being monitored</td></tr>';
         } else {
@@ -3072,13 +3072,13 @@ async function loadQoSMetrics() {
             const callGroups = groupBidirectionalCalls(activeMetrics);
             activeTable.innerHTML = callGroups.map(group => generateCallRowsWithDiagnostics(group)).join('');
         }
-        
+
         // Load alerts
         const alertsResponse = await fetch(`${API_BASE}/api/qos/alerts`);
         const alertsData = await alertsResponse.json();
         const alerts = alertsData.alerts || [];
         const alertsContainer = document.getElementById('qos-alerts-container');
-        
+
         if (alerts.length === 0) {
             alertsContainer.innerHTML = '<div class="info-box">✅ No quality alerts</div>';
         } else {
@@ -3089,13 +3089,13 @@ async function loadQoSMetrics() {
                 </div>
             `).join('');
         }
-        
+
         // Load historical metrics
         const historyResponse = await fetch(`${API_BASE}/api/qos/history?limit=50`);
         const historyData = await historyResponse.json();
         const history = historyData.metrics || [];
         const historyTable = document.getElementById('qos-history-table');
-        
+
         if (history.length === 0) {
             historyTable.innerHTML = '<tr><td colspan="8" class="no-data">No historical data available</td></tr>';
         } else {
@@ -3103,7 +3103,7 @@ async function loadQoSMetrics() {
             const callGroups = groupBidirectionalCalls(history);
             historyTable.innerHTML = callGroups.map(group => generateCallRowsWithDiagnostics(group, true)).join('');
         }
-        
+
     } catch (error) {
         console.error('Error loading QoS metrics:', error);
         showNotification('Failed to load QoS metrics', 'error');
@@ -3117,24 +3117,24 @@ async function loadQoSMetrics() {
 function groupBidirectionalCalls(metrics) {
     const groups = [];
     const processed = new Set();
-    
+
     for (const call of metrics) {
         if (processed.has(call.call_id)) {
             continue;
         }
-        
+
         // Check if this is a bidirectional call (ends with _a_to_b or _b_to_a)
         const baseCallId = call.call_id.replace(/_a_to_b$|_b_to_a$/, '');
         const isDirectional = call.call_id.endsWith('_a_to_b') || call.call_id.endsWith('_b_to_a');
-        
+
         if (isDirectional) {
             // Look for the paired direction
-            const pairedCallId = call.call_id.endsWith('_a_to_b') 
-                ? `${baseCallId}_b_to_a` 
+            const pairedCallId = call.call_id.endsWith('_a_to_b')
+                ? `${baseCallId}_b_to_a`
                 : `${baseCallId}_a_to_b`;
-            
+
             const pairedCall = metrics.find(c => c.call_id === pairedCallId);
-            
+
             if (pairedCall) {
                 // Both directions found - create a group
                 groups.push({
@@ -3164,7 +3164,7 @@ function groupBidirectionalCalls(metrics) {
             processed.add(call.call_id);
         }
     }
-    
+
     return groups;
 }
 
@@ -3175,13 +3175,13 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
     if (!group.isBidirectional) {
         // Single direction or non-directional call
         const call = group.call;
-        const cols = includeStartTime 
+        const cols = includeStartTime
             ? `<td>${call.call_id}</td>
                <td>${new Date(call.start_time).toLocaleString()}</td>
                <td>${call.duration_seconds}s</td>`
             : `<td>${call.call_id}</td>
                <td>${call.duration_seconds}s</td>`;
-        
+
         return `<tr>
             ${cols}
             <td class="${getQualityClass(call.mos_score)}">${call.mos_score.toFixed(2)}</td>
@@ -3191,27 +3191,27 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
             <td>${call.latency_avg_ms.toFixed(1)}</td>
         </tr>`;
     }
-    
+
     // Bidirectional call - show both directions and diagnostics
     const { baseCallId, a_to_b, b_to_a } = group;
-    
+
     // Detect one-way audio issues (check packets_received exists and is > 0)
     const aToBAudioOK = a_to_b.mos_score > 1.0 && (a_to_b.packets_received || 0) > 0;
     const bToAAudioOK = b_to_a.mos_score > 1.0 && (b_to_a.packets_received || 0) > 0;
     const hasOneWayAudio = !aToBAudioOK || !bToAAudioOK;
-    
+
     // Diagnostic message templates
     const DIAGNOSTIC_MESSAGES = {
         bothDirections: '⚠️ <strong>No Audio in Both Directions</strong> - No RTP packets received',
         aToB: '⚠️ <strong>One-Way Audio Issue</strong> - No audio A→B (only B→A working)',
         bToA: '⚠️ <strong>One-Way Audio Issue</strong> - No audio B→A (only A→B working)'
     };
-    
+
     const TROUBLESHOOTING_STEPS = `1) Check firewall/NAT rules for RTP ports (10000-20000)
                     2) Verify symmetric RTP is working
                     3) Check endpoint is sending RTP packets
                     4) Verify network path with tcpdump`;
-    
+
     // Generate diagnostic message
     let diagnosticHTML = '';
     if (hasOneWayAudio) {
@@ -3223,30 +3223,30 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
         } else {
             issueDesc = DIAGNOSTIC_MESSAGES.bToA;
         }
-        
+
         diagnosticHTML = `<tr class="diagnostic-row">
             <td colspan="${includeStartTime ? 8 : 7}" class="diagnostic-cell">
                 <div class="diagnostic-alert">
                     ${issueDesc}
-                    <br><small><strong>Troubleshooting:</strong> 
+                    <br><small><strong>Troubleshooting:</strong>
                     ${TROUBLESHOOTING_STEPS}
                     </small>
                 </div>
             </td>
         </tr>`;
     }
-    
+
     // Build call ID cell with direction indicator
     const callIdWithDirection = `${baseCallId}<br><small style="color: #6b7280;">↳ A→B</small>`;
-    
+
     // Generate rows for both directions
-    const aToRowCols = includeStartTime 
+    const aToRowCols = includeStartTime
         ? `<td>${callIdWithDirection}</td>
            <td>${new Date(a_to_b.start_time).toLocaleString()}</td>
            <td>${a_to_b.duration_seconds}s</td>`
         : `<td>${callIdWithDirection}</td>
            <td>${a_to_b.duration_seconds}s</td>`;
-    
+
     const aToRow = `<tr ${!aToBAudioOK ? 'class="one-way-audio-issue"' : ''}>
         ${aToRowCols}
         <td class="${getQualityClass(a_to_b.mos_score)}">${a_to_b.mos_score.toFixed(2)}</td>
@@ -3255,9 +3255,9 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
         <td>${a_to_b.jitter_avg_ms.toFixed(1)}</td>
         <td>${a_to_b.latency_avg_ms.toFixed(1)}</td>
     </tr>`;
-    
+
     const bToRow = `<tr ${!bToAAudioOK ? 'class="one-way-audio-issue"' : ''}>
-        ${includeStartTime 
+        ${includeStartTime
             ? `<td style="padding-left: 20px;">↳ B→A</td>
                <td>${new Date(b_to_a.start_time).toLocaleString()}</td>
                <td>${b_to_a.duration_seconds}s</td>`
@@ -3269,7 +3269,7 @@ function generateCallRowsWithDiagnostics(group, includeStartTime = false) {
         <td>${b_to_a.jitter_avg_ms.toFixed(1)}</td>
         <td>${b_to_a.latency_avg_ms.toFixed(1)}</td>
     </tr>`;
-    
+
     return diagnosticHTML + aToRow + bToRow;
 }
 
@@ -3285,12 +3285,12 @@ async function clearQoSAlerts() {
     if (!confirm('Are you sure you want to clear all QoS alerts?')) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/qos/clear-alerts`, {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             showNotification('QoS alerts cleared successfully', 'success');
             await loadQoSMetrics();
@@ -3305,14 +3305,14 @@ async function clearQoSAlerts() {
 
 async function saveQoSThresholds(event) {
     event.preventDefault();
-    
+
     const thresholds = {
         mos_min: parseFloat(document.getElementById('qos-threshold-mos').value),
         packet_loss_max: parseFloat(document.getElementById('qos-threshold-loss').value),
         jitter_max: parseFloat(document.getElementById('qos-threshold-jitter').value),
         latency_max: parseFloat(document.getElementById('qos-threshold-latency').value)
     };
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/qos/thresholds`, {
             method: 'PUT',
@@ -3321,7 +3321,7 @@ async function saveQoSThresholds(event) {
             },
             body: JSON.stringify(thresholds)
         });
-        
+
         if (response.ok) {
             showNotification('QoS thresholds updated successfully', 'success');
         } else {
@@ -3341,25 +3341,25 @@ async function loadEmergencyContacts() {
     try {
         const response = await fetch(`${API_BASE}/api/emergency/contacts`);
         const data = await response.json();
-        
+
         // Update stats
         document.getElementById('emergency-contacts-count').textContent = data.total || 0;
-        
+
         // Update contacts table
         const tbody = document.getElementById('emergency-contacts-table');
-        
+
         if (!data.contacts || data.contacts.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="no-data">No emergency contacts configured</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = data.contacts.map(contact => {
             const priorityBadge = getPriorityBadge(contact.priority);
             const methods = contact.notification_methods.map(m => {
                 const icons = { call: '📞', page: '📢', email: '📧', sms: '💬' };
                 return `<span style="margin-right: 5px;" title="${m}">${icons[m] || m}</span>`;
             }).join('');
-            
+
             return `
                 <tr>
                     <td>${priorityBadge}</td>
@@ -3376,10 +3376,10 @@ async function loadEmergencyContacts() {
                 </tr>
             `;
         }).join('');
-        
+
         // Load notification history
         await loadEmergencyHistory();
-        
+
     } catch (error) {
         console.error('Error loading emergency contacts:', error);
         showNotification('Failed to load emergency contacts', 'error');
@@ -3401,10 +3401,10 @@ async function loadEmergencyHistory() {
     try {
         const response = await fetch(`${API_BASE}/api/emergency/history?limit=20`);
         const data = await response.json();
-        
+
         // Update notifications sent stat
         document.getElementById('emergency-notifications-sent').textContent = data.total || 0;
-        
+
         // Update last test
         if (data.history && data.history.length > 0) {
             const lastNotification = data.history[data.history.length - 1];
@@ -3413,22 +3413,22 @@ async function loadEmergencyHistory() {
         } else {
             document.getElementById('emergency-last-test').textContent = 'Never';
         }
-        
+
         // Update history table
         const tbody = document.getElementById('emergency-history-table');
-        
+
         if (!data.history || data.history.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="no-data">No emergency notifications sent</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = data.history.slice().reverse().map(notification => {
             const timestamp = new Date(notification.timestamp).toLocaleString();
             const triggerType = notification.trigger_type;
             const details = JSON.stringify(notification.details);
             const contactsNotified = notification.contacts_notified.join(', ') || 'None';
             const methods = notification.methods_used.join(', ') || 'None';
-            
+
             return `
                 <tr>
                     <td>${timestamp}</td>
@@ -3439,7 +3439,7 @@ async function loadEmergencyHistory() {
                 </tr>
             `;
         }).join('');
-        
+
     } catch (error) {
         console.error('Error loading emergency history:', error);
     }
@@ -3463,25 +3463,25 @@ function closeAddEmergencyContactModal() {
 
 async function addEmergencyContact(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('emergency-contact-name').value;
     const extension = document.getElementById('emergency-contact-extension').value;
     const phone = document.getElementById('emergency-contact-phone').value;
     const email = document.getElementById('emergency-contact-email').value;
     const priority = parseInt(document.getElementById('emergency-contact-priority').value);
-    
+
     // Get selected notification methods
     const methods = [];
     if (document.getElementById('method-call').checked) methods.push('call');
     if (document.getElementById('method-page').checked) methods.push('page');
     if (document.getElementById('method-email').checked) methods.push('email');
     if (document.getElementById('method-sms').checked) methods.push('sms');
-    
+
     if (methods.length === 0) {
         showNotification('Please select at least one notification method', 'error');
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/emergency/contacts`, {
             method: 'POST',
@@ -3497,7 +3497,7 @@ async function addEmergencyContact(event) {
                 notification_methods: methods
             })
         });
-        
+
         if (response.ok) {
             showNotification('Emergency contact added successfully', 'success');
             closeAddEmergencyContactModal();
@@ -3506,7 +3506,7 @@ async function addEmergencyContact(event) {
             const error = await response.json();
             showNotification(error.error || 'Failed to add emergency contact', 'error');
         }
-        
+
     } catch (error) {
         console.error('Error adding emergency contact:', error);
         showNotification('Failed to add emergency contact', 'error');
@@ -3517,12 +3517,12 @@ async function deleteEmergencyContact(contactId, contactName) {
     if (!confirm(`Delete emergency contact "${contactName}"?\n\nThis contact will no longer receive emergency notifications.`)) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/emergency/contacts/${contactId}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showNotification('Emergency contact deleted successfully', 'success');
             loadEmergencyContacts();
@@ -3530,7 +3530,7 @@ async function deleteEmergencyContact(contactId, contactName) {
             const error = await response.json();
             showNotification(error.error || 'Failed to delete emergency contact', 'error');
         }
-        
+
     } catch (error) {
         console.error('Error deleting emergency contact:', error);
         showNotification('Failed to delete emergency contact', 'error');
@@ -3548,18 +3548,18 @@ function closeTriggerEmergencyModal() {
 
 async function triggerEmergency(event) {
     event.preventDefault();
-    
+
     const triggerType = document.getElementById('trigger-type').value;
     const location = document.getElementById('trigger-details').value;
     const additionalInfo = document.getElementById('trigger-info').value;
-    
+
     // Extra confirmation for non-test emergencies
     if (triggerType !== 'test') {
         if (!confirm('⚠️ This will send REAL emergency notifications to all contacts.\n\nAre you sure you want to continue?')) {
             return;
         }
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/emergency/trigger`, {
             method: 'POST',
@@ -3576,7 +3576,7 @@ async function triggerEmergency(event) {
                 }
             })
         });
-        
+
         if (response.ok) {
             showNotification('🚨 Emergency notification sent to all contacts', 'success');
             closeTriggerEmergencyModal();
@@ -3585,7 +3585,7 @@ async function triggerEmergency(event) {
             const error = await response.json();
             showNotification(error.error || 'Failed to trigger emergency notification', 'error');
         }
-        
+
     } catch (error) {
         console.error('Error triggering emergency:', error);
         showNotification('Failed to trigger emergency notification', 'error');
@@ -3596,18 +3596,18 @@ async function testEmergencyNotification() {
     if (!confirm('Test the emergency notification system?\n\nThis will send a clearly marked TEST notification to all configured contacts.')) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/emergency/test`);
         const data = await response.json();
-        
+
         if (data.success) {
             showNotification(`✅ ${data.message}\n\nContacts configured: ${data.contacts_configured}\nMethods: ${data.notification_methods.join(', ')}`, 'success');
             loadEmergencyContacts();
         } else {
             showNotification('Emergency notification test failed', 'error');
         }
-        
+
     } catch (error) {
         console.error('Error testing emergency notification:', error);
         showNotification('Failed to test emergency notification', 'error');
@@ -3622,14 +3622,14 @@ async function loadCodecStatus() {
     try {
         // For now, show static codec information
         // In production, this would query the PBX for actual codec status
-        
+
         document.getElementById('codecs-supported').textContent = '4';
         document.getElementById('codecs-enabled').textContent = '3';
         document.getElementById('codecs-active').textContent = '0';
         document.getElementById('codecs-quality').textContent = 'Yes';
-        
+
         showNotification('Codec status loaded', 'info');
-        
+
     } catch (error) {
         console.error('Error loading codec status:', error);
         showNotification('Failed to load codec status', 'error');
@@ -3638,7 +3638,7 @@ async function loadCodecStatus() {
 
 async function saveCodecConfig(event) {
     event.preventDefault();
-    
+
     const g722Enabled = document.getElementById('codec-g722-enabled').checked;
     const g722Bitrate = parseInt(document.getElementById('codec-g722-bitrate').value);
     const opusEnabled = document.getElementById('codec-opus-enabled').checked;
@@ -3646,7 +3646,7 @@ async function saveCodecConfig(event) {
         .split('\n')
         .map(c => c.trim())
         .filter(c => c.length > 0);
-    
+
     const codecConfig = {
         codecs: {
             g722: {
@@ -3659,15 +3659,15 @@ async function saveCodecConfig(event) {
             preference_order: preferenceOrder
         }
     };
-    
+
     try {
         // In production, this would save to config via API
         // For now, just show success message
-        
+
         console.log('Codec configuration:', codecConfig);
-        
+
         showNotification('✅ Codec configuration saved\n\n⚠️ PBX restart required for changes to take effect', 'success');
-        
+
     } catch (error) {
         console.error('Error saving codec config:', error);
         showNotification('Failed to save codec configuration', 'error');
@@ -3682,15 +3682,15 @@ async function saveCodecConfig(event) {
 async function loadDTMFConfig() {
     try {
         const response = await fetch('/api/config/dtmf');
-        
+
         if (!response.ok) {
             console.error('Failed to load DTMF config:', response.status);
             showNotification('Failed to load DTMF configuration', 'error');
             return;
         }
-        
+
         const config = await response.json();
-        
+
         // Populate form fields
         if (document.getElementById('dtmf-mode')) {
             document.getElementById('dtmf-mode').value = config.mode;
@@ -3714,9 +3714,9 @@ async function loadDTMFConfig() {
         if (document.getElementById('dtmf-relay-enabled')) {
             document.getElementById('dtmf-relay-enabled').checked = config.relay_enabled;
         }
-        
+
         console.log('DTMF configuration loaded:', config);
-        
+
     } catch (error) {
         console.error('Error loading DTMF config:', error);
         showNotification('Failed to load DTMF configuration', 'error');
@@ -3728,7 +3728,7 @@ async function loadDTMFConfig() {
  */
 async function saveDTMFConfig(event) {
     event.preventDefault();
-    
+
     // Get and validate DOM elements
     const modeEl = document.getElementById('dtmf-mode');
     const payloadTypeEl = document.getElementById('dtmf-payload-type');
@@ -3737,13 +3737,13 @@ async function saveDTMFConfig(event) {
     const inbandFallbackEl = document.getElementById('dtmf-inband-fallback');
     const detectionThresholdEl = document.getElementById('dtmf-detection-threshold');
     const relayEnabledEl = document.getElementById('dtmf-relay-enabled');
-    
-    if (!modeEl || !payloadTypeEl || !durationEl || !sipInfoFallbackEl || 
+
+    if (!modeEl || !payloadTypeEl || !durationEl || !sipInfoFallbackEl ||
         !inbandFallbackEl || !detectionThresholdEl || !relayEnabledEl) {
         showNotification('Error: DTMF configuration form elements not found', 'error');
         return;
     }
-    
+
     // Get values from form
     const mode = modeEl.value;
     const payloadType = parseInt(payloadTypeEl.value, 10);
@@ -3752,7 +3752,7 @@ async function saveDTMFConfig(event) {
     const inbandFallback = inbandFallbackEl.checked;
     const detectionThreshold = parseFloat(detectionThresholdEl.value);
     const relayEnabled = relayEnabledEl.checked;
-    
+
     // Validate parsed numbers
     if (isNaN(payloadType) || payloadType < 96 || payloadType > 127) {
         showNotification('Error: Invalid payload type. Must be between 96 and 127', 'error');
@@ -3766,7 +3766,7 @@ async function saveDTMFConfig(event) {
         showNotification('Error: Invalid detection threshold. Must be between 0.1 and 0.9', 'error');
         return;
     }
-    
+
     const dtmfConfig = {
         dtmf: {
             mode: mode,
@@ -3778,16 +3778,16 @@ async function saveDTMFConfig(event) {
             relay_enabled: relayEnabled
         }
     };
-    
+
     try {
         const response = await fetch('/api/config/dtmf', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(dtmfConfig)
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok && result.success) {
             // Use simple message for notification since it uses textContent
             showNotification(
@@ -3797,7 +3797,7 @@ async function saveDTMFConfig(event) {
         } else {
             showNotification(result.error || 'Failed to save DTMF configuration', 'error');
         }
-        
+
     } catch (error) {
         console.error('Error saving DTMF config:', error);
         showNotification('Failed to save DTMF configuration', 'error');
@@ -3810,15 +3810,15 @@ async function saveDTMFConfig(event) {
 function updateDTMFThresholdDisplay() {
     const thresholdSlider = document.getElementById('dtmf-detection-threshold');
     const thresholdValue = document.getElementById('dtmf-threshold-value');
-    
+
     // Validate both elements exist
     if (!thresholdSlider || !thresholdValue) {
         return;
     }
-    
+
     // Set initial value
     thresholdValue.textContent = thresholdSlider.value;
-    
+
     // Add event listener only once (check if already attached)
     if (!thresholdSlider.dataset.listenerAttached) {
         thresholdSlider.addEventListener('input', function() {
@@ -3834,7 +3834,7 @@ const TAB_CONTENT_LOAD_DELAY_MS = 100;
 // Initialize DTMF threshold display update on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateDTMFThresholdDisplay();
-    
+
     // Load DTMF config when Codecs tab is shown
     const codecsTab = document.querySelector('[data-tab="codecs"]');
     if (codecsTab) {
@@ -3912,15 +3912,15 @@ function loadSIPTrunks() {
             if (data.trunks) {
                 // Update stats
                 document.getElementById('trunk-total').textContent = data.count || 0;
-                
+
                 const healthyCount = data.trunks.filter(t => t.health_status === 'healthy').length;
                 const registeredCount = data.trunks.filter(t => t.status === 'registered').length;
                 const totalChannels = data.trunks.reduce((sum, t) => sum + t.channels_available, 0);
-                
+
                 document.getElementById('trunk-healthy').textContent = healthyCount;
                 document.getElementById('trunk-registered').textContent = registeredCount;
                 document.getElementById('trunk-channels').textContent = totalChannels;
-                
+
                 // Update table
                 const tbody = document.getElementById('trunks-list');
                 if (data.trunks.length === 0) {
@@ -3930,7 +3930,7 @@ function loadSIPTrunks() {
                         const statusBadge = getStatusBadge(trunk.status);
                         const healthBadge = getHealthBadge(trunk.health_status);
                         const successRate = (trunk.success_rate * 100).toFixed(1);
-                        
+
                         return `
                             <tr>
                                 <td><strong>${escapeHtml(trunk.name)}</strong><br/><small>${escapeHtml(trunk.trunk_id)}</small></td>
@@ -3992,9 +3992,9 @@ function loadTrunkHealth() {
             if (data.health) {
                 const section = document.getElementById('trunk-health-section');
                 const container = document.getElementById('trunk-health-container');
-                
+
                 section.style.display = 'block';
-                
+
                 container.innerHTML = data.health.map(h => `
                     <div class="config-section" style="margin-bottom: 15px;">
                         <h4>${escapeHtml(h.name)} (${escapeHtml(h.trunk_id)})</h4>
@@ -4028,7 +4028,7 @@ function loadTrunkHealth() {
                         </div>
                     </div>
                 `).join('');
-                
+
                 showNotification('Health metrics loaded', 'success');
             }
         })
@@ -4049,10 +4049,10 @@ function closeAddTrunkModal() {
 
 function addSIPTrunk(event) {
     event.preventDefault();
-    
+
     const selectedCodecs = Array.from(document.querySelectorAll('input[name="trunk-codecs"]:checked'))
         .map(cb => cb.value);
-    
+
     const trunkData = {
         trunk_id: document.getElementById('trunk-id').value,
         name: document.getElementById('trunk-name').value,
@@ -4064,7 +4064,7 @@ function addSIPTrunk(event) {
         max_channels: parseInt(document.getElementById('trunk-channels').value),
         codec_preferences: selectedCodecs.length > 0 ? selectedCodecs : ['G.711', 'G.729']
     };
-    
+
     fetch('/api/sip-trunks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4090,7 +4090,7 @@ function deleteTrunk(trunkId, trunkName) {
     if (!confirm(`Are you sure you want to delete trunk "${trunkName}"?`)) {
         return;
     }
-    
+
     fetch(`/api/sip-trunks/${trunkId}`, {
         method: 'DELETE'
     })
@@ -4111,7 +4111,7 @@ function deleteTrunk(trunkId, trunkName) {
 
 function testTrunk(trunkId) {
     showNotification('Testing trunk...', 'info');
-    
+
     fetch('/api/sip-trunks/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4146,7 +4146,7 @@ function loadLCRRates() {
                 // Update stats
                 document.getElementById('lcr-total-rates').textContent = data.count || 0;
                 document.getElementById('lcr-time-rates').textContent = data.time_rates ? data.time_rates.length : 0;
-                
+
                 // Update rate entries table
                 const ratesBody = document.getElementById('lcr-rates-list');
                 if (data.rates.length === 0) {
@@ -4164,7 +4164,7 @@ function loadLCRRates() {
                         </tr>
                     `).join('');
                 }
-                
+
                 // Update time-based rates table
                 const timeRatesBody = document.getElementById('lcr-time-rates-list');
                 if (!data.time_rates || data.time_rates.length === 0) {
@@ -4173,7 +4173,7 @@ function loadLCRRates() {
                     timeRatesBody.innerHTML = data.time_rates.map(tr => {
                         const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                         const days = tr.days_of_week.map(d => dayNames[d]).join(', ');
-                        
+
                         return `
                             <tr>
                                 <td><strong>${escapeHtml(tr.name)}</strong></td>
@@ -4186,7 +4186,7 @@ function loadLCRRates() {
                     }).join('');
                 }
             }
-            
+
             // Load statistics
             loadLCRStatistics();
         })
@@ -4202,10 +4202,10 @@ function loadLCRStatistics() {
         .then(data => {
             // Update stats
             document.getElementById('lcr-total-routes').textContent = data.total_routes || 0;
-            document.getElementById('lcr-status').innerHTML = data.enabled ? 
-                '<span class="badge" style="background: #10b981;">✅ Enabled</span>' : 
+            document.getElementById('lcr-status').innerHTML = data.enabled ?
+                '<span class="badge" style="background: #10b981;">✅ Enabled</span>' :
                 '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
-            
+
             // Update recent decisions table
             const decisionsBody = document.getElementById('lcr-decisions-list');
             if (!data.recent_decisions || data.recent_decisions.length === 0) {
@@ -4241,39 +4241,39 @@ function showAddLCRRateModal() {
                         <input type="text" id="lcr-trunk-id" required>
                         <small>The SIP trunk ID this rate applies to</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="lcr-pattern">Dial Pattern (Regex):</label>
                         <input type="text" id="lcr-pattern" required placeholder="^\\d{10}$">
                         <small>Regex pattern to match dialed numbers (e.g., ^\\d{10}$ for US local)</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="lcr-description">Description:</label>
                         <input type="text" id="lcr-description" placeholder="US Local Calls">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="lcr-rate-per-minute">Rate per Minute ($):</label>
                         <input type="number" id="lcr-rate-per-minute" step="0.0001" min="0" required placeholder="0.0100">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="lcr-connection-fee">Connection Fee ($):</label>
                         <input type="number" id="lcr-connection-fee" step="0.0001" min="0" value="0.0000">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="lcr-minimum-seconds">Minimum Billable Seconds:</label>
                         <input type="number" id="lcr-minimum-seconds" min="0" value="0">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="lcr-billing-increment">Billing Increment (seconds):</label>
                         <input type="number" id="lcr-billing-increment" min="1" value="1">
                         <small>Round up billing to this increment (e.g., 6 for 6-second increments)</small>
                     </div>
-                    
+
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Add Rate</button>
                         <button type="button" class="btn btn-secondary" onclick="closeLCRRateModal()">Cancel</button>
@@ -4282,7 +4282,7 @@ function showAddLCRRateModal() {
             </div>
         </div>
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modal);
 }
 
@@ -4293,7 +4293,7 @@ function closeLCRRateModal() {
 
 function addLCRRate(event) {
     event.preventDefault();
-    
+
     const rateData = {
         trunk_id: document.getElementById('lcr-trunk-id').value,
         pattern: document.getElementById('lcr-pattern').value,
@@ -4303,7 +4303,7 @@ function addLCRRate(event) {
         minimum_seconds: parseInt(document.getElementById('lcr-minimum-seconds').value),
         billing_increment: parseInt(document.getElementById('lcr-billing-increment').value)
     };
-    
+
     fetch('/api/lcr/rate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4335,7 +4335,7 @@ function showAddTimeRateModal() {
                         <label for="time-rate-name">Period Name:</label>
                         <input type="text" id="time-rate-name" required placeholder="Peak Hours">
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="time-rate-start-hour">Start Hour (0-23):</label>
@@ -4346,7 +4346,7 @@ function showAddTimeRateModal() {
                             <input type="number" id="time-rate-start-minute" min="0" max="59" required value="0">
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="time-rate-end-hour">End Hour (0-23):</label>
@@ -4357,7 +4357,7 @@ function showAddTimeRateModal() {
                             <input type="number" id="time-rate-end-minute" min="0" max="59" required value="0">
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Days of Week:</label>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -4370,13 +4370,13 @@ function showAddTimeRateModal() {
                             <label><input type="checkbox" name="time-days" value="6"> Sun</label>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="time-rate-multiplier">Rate Multiplier:</label>
                         <input type="number" id="time-rate-multiplier" step="0.1" min="0.1" required value="1.0">
                         <small>Multiply rates by this factor during this period (e.g., 1.2 for 20% increase)</small>
                     </div>
-                    
+
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Add Time Rate</button>
                         <button type="button" class="btn btn-secondary" onclick="closeTimeRateModal()">Cancel</button>
@@ -4385,7 +4385,7 @@ function showAddTimeRateModal() {
             </div>
         </div>
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modal);
 }
 
@@ -4396,10 +4396,10 @@ function closeTimeRateModal() {
 
 function addTimeRate(event) {
     event.preventDefault();
-    
+
     const selectedDays = Array.from(document.querySelectorAll('input[name="time-days"]:checked'))
         .map(cb => parseInt(cb.value));
-    
+
     const timeRateData = {
         name: document.getElementById('time-rate-name').value,
         start_hour: parseInt(document.getElementById('time-rate-start-hour').value),
@@ -4409,7 +4409,7 @@ function addTimeRate(event) {
         days: selectedDays,
         multiplier: parseFloat(document.getElementById('time-rate-multiplier').value)
     };
-    
+
     fetch('/api/lcr/time-rate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4435,7 +4435,7 @@ function clearLCRRates() {
     if (!confirm('Are you sure you want to clear all LCR rates? This cannot be undone.')) {
         return;
     }
-    
+
     fetch('/api/lcr/clear-rates', {
         method: 'POST'
     })
@@ -4467,15 +4467,15 @@ function loadFMFMExtensions() {
             if (data.extensions) {
                 // Update stats
                 document.getElementById('fmfm-total-extensions').textContent = data.count || 0;
-                
+
                 const sequentialCount = data.extensions.filter(e => e.mode === 'sequential').length;
                 const simultaneousCount = data.extensions.filter(e => e.mode === 'simultaneous').length;
                 const enabledCount = data.extensions.filter(e => e.enabled !== false).length;
-                
+
                 document.getElementById('fmfm-sequential').textContent = sequentialCount;
                 document.getElementById('fmfm-simultaneous').textContent = simultaneousCount;
                 document.getElementById('fmfm-enabled').textContent = enabledCount;
-                
+
                 // Update table
                 const tbody = document.getElementById('fmfm-list');
                 if (data.extensions.length === 0) {
@@ -4483,20 +4483,20 @@ function loadFMFMExtensions() {
                 } else {
                     tbody.innerHTML = data.extensions.map(config => {
                         const enabled = config.enabled !== false;
-                        const modeBadge = config.mode === 'sequential' 
+                        const modeBadge = config.mode === 'sequential'
                             ? '<span class="badge" style="background: #3b82f6;">⏩ Sequential</span>'
                             : '<span class="badge" style="background: #10b981;">🔀 Simultaneous</span>';
                         const statusBadge = enabled
                             ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
                             : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
-                        
+
                         const destinations = config.destinations || [];
-                        const destList = destinations.map(d => 
+                        const destList = destinations.map(d =>
                             `${escapeHtml(d.number)}${d.ring_time ? ` (${d.ring_time}s)` : ''}`
                         ).join(', ');
-                        
+
                         const updated = config.updated_at ? new Date(config.updated_at).toLocaleString() : 'N/A';
-                        
+
                         return `
                             <tr>
                                 <td><strong>${escapeHtml(config.extension)}</strong></td>
@@ -4544,7 +4544,7 @@ let fmfmDestinationCounter = 0;
 function addFMFMDestinationRow() {
     const container = document.getElementById('fmfm-destinations-list');
     const rowId = `fmfm-dest-${fmfmDestinationCounter++}`;
-    
+
     const row = document.createElement('div');
     row.id = rowId;
     row.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
@@ -4558,45 +4558,45 @@ function addFMFMDestinationRow() {
 
 function saveFMFMConfig(event) {
     event.preventDefault();
-    
+
     console.log('saveFMFMConfig called');
-    
+
     const extension = document.getElementById('fmfm-extension').value;
     const mode = document.getElementById('fmfm-mode').value;
     const enabled = document.getElementById('fmfm-enabled').checked;
     const noAnswer = document.getElementById('fmfm-no-answer').value;
-    
+
     console.log('FMFM form values:', { extension, mode, enabled, noAnswer });
-    
+
     // Collect destinations
     const destNumbers = Array.from(document.querySelectorAll('.fmfm-dest-number'));
     const destRingTimes = Array.from(document.querySelectorAll('.fmfm-dest-ringtime'));
-    
+
     const destinations = destNumbers.map((input, idx) => ({
         number: input.value,
         ring_time: parseInt(destRingTimes[idx].value) || 20
     })).filter(d => d.number);
-    
+
     console.log('FMFM destinations collected:', destinations);
-    
+
     if (destinations.length === 0) {
         showNotification('At least one destination is required', 'error');
         return;
     }
-    
+
     const configData = {
         extension: extension,
         mode: mode,
         enabled: enabled,
         destinations: destinations
     };
-    
+
     if (noAnswer) {
         configData.no_answer_destination = noAnswer;
     }
-    
+
     console.log('FMFM config data to send:', configData);
-    
+
     fetch('/api/fmfm/config', {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -4625,17 +4625,17 @@ function saveFMFMConfig(event) {
 
 function editFMFMConfig(config) {
     showAddFMFMModal();
-    
+
     document.getElementById('fmfm-extension').value = config.extension;
     document.getElementById('fmfm-extension').readOnly = true;  // Don't allow changing extension
     document.getElementById('fmfm-mode').value = config.mode;
     document.getElementById('fmfm-enabled').checked = config.enabled !== false;
     document.getElementById('fmfm-no-answer').value = config.no_answer_destination || '';
-    
+
     // Clear and add destination rows
     const container = document.getElementById('fmfm-destinations-list');
     container.innerHTML = '';
-    
+
     if (config.destinations && config.destinations.length > 0) {
         config.destinations.forEach(dest => {
             addFMFMDestinationRow();
@@ -4653,7 +4653,7 @@ function deleteFMFMConfig(extension) {
     if (!confirm(`Are you sure you want to delete FMFM configuration for extension ${extension}?`)) {
         return;
     }
-    
+
     fetch(`/api/fmfm/config/${extension}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
@@ -4684,19 +4684,19 @@ function loadTimeRoutingRules() {
             if (data.rules) {
                 // Update stats
                 document.getElementById('time-routing-total').textContent = data.count || 0;
-                
+
                 const activeCount = data.rules.filter(r => r.enabled !== false).length;
-                const businessCount = data.rules.filter(r => 
+                const businessCount = data.rules.filter(r =>
                     r.name && (r.name.toLowerCase().includes('business') || r.name.toLowerCase().includes('hours'))
                 ).length;
-                const afterCount = data.rules.filter(r => 
+                const afterCount = data.rules.filter(r =>
                     r.name && (r.name.toLowerCase().includes('after') || r.name.toLowerCase().includes('closed'))
                 ).length;
-                
+
                 document.getElementById('time-routing-active').textContent = activeCount;
                 document.getElementById('time-routing-business').textContent = businessCount;
                 document.getElementById('time-routing-after').textContent = afterCount;
-                
+
                 // Update table
                 const tbody = document.getElementById('time-routing-list');
                 if (data.rules.length === 0) {
@@ -4707,10 +4707,10 @@ function loadTimeRoutingRules() {
                         const statusBadge = enabled
                             ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
                             : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
-                        
+
                         const conditions = rule.time_conditions || {};
                         const schedule = getScheduleDescription(conditions);
-                        
+
                         return `
                             <tr>
                                 <td><strong>${escapeHtml(rule.name)}</strong></td>
@@ -4736,23 +4736,23 @@ function loadTimeRoutingRules() {
 
 function getScheduleDescription(conditions) {
     const parts = [];
-    
+
     if (conditions.days_of_week) {
         const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const days = conditions.days_of_week.map(d => dayNames[d]).join(', ');
         parts.push(days);
     }
-    
+
     if (conditions.start_time && conditions.end_time) {
         parts.push(`${conditions.start_time}-${conditions.end_time}`);
     }
-    
+
     if (conditions.holidays === true) {
         parts.push('Holidays');
     } else if (conditions.holidays === false) {
         parts.push('Non-holidays');
     }
-    
+
     return parts.length > 0 ? parts.join(' | ') : 'Always';
 }
 
@@ -4767,7 +4767,7 @@ function closeAddTimeRuleModal() {
 
 function saveTimeRoutingRule(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('time-rule-name').value;
     const destination = document.getElementById('time-rule-destination').value;
     const routeTo = document.getElementById('time-rule-route-to').value;
@@ -4775,16 +4775,16 @@ function saveTimeRoutingRule(event) {
     const endTime = document.getElementById('time-rule-end').value;
     const priority = parseInt(document.getElementById('time-rule-priority').value);
     const enabled = document.getElementById('time-rule-enabled').checked;
-    
+
     // Collect selected days
     const selectedDays = Array.from(document.querySelectorAll('input[name="time-rule-days"]:checked'))
         .map(cb => parseInt(cb.value));
-    
+
     if (selectedDays.length === 0) {
         showNotification('Please select at least one day of the week', 'error');
         return;
     }
-    
+
     const ruleData = {
         name: name,
         destination: destination,
@@ -4797,7 +4797,7 @@ function saveTimeRoutingRule(event) {
             end_time: endTime
         }
     };
-    
+
     fetch('/api/time-routing/rule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4823,7 +4823,7 @@ function deleteTimeRoutingRule(ruleId, ruleName) {
     if (!confirm(`Are you sure you want to delete time routing rule "${ruleName}"?`)) {
         return;
     }
-    
+
     fetch(`/api/time-routing/rule/${ruleId}`, {
         method: 'DELETE'
     })
@@ -4860,11 +4860,11 @@ function loadWebhooks() {
                         const statusBadge = enabled
                             ? '<span class="badge" style="background: #10b981;">✅ Active</span>'
                             : '<span class="badge" style="background: #6b7280;">⏸️ Disabled</span>';
-                        
+
                         const events = webhook.event_types || [];
                         const eventList = events.join(', ');
                         const hasSecret = webhook.secret ? '🔒 Yes' : '🔓 No';
-                        
+
                         return `
                             <tr>
                                 <td>
@@ -4905,30 +4905,30 @@ function closeAddWebhookModal() {
 
 function addWebhook(event) {
     event.preventDefault();
-    
+
     const url = document.getElementById('webhook-url').value;
     const secret = document.getElementById('webhook-secret').value;
     const enabled = document.getElementById('webhook-enabled').checked;
-    
+
     // Collect selected events
     const selectedEvents = Array.from(document.querySelectorAll('input[name="webhook-events"]:checked'))
         .map(cb => cb.value);
-    
+
     if (selectedEvents.length === 0) {
         showNotification('Please select at least one event type', 'error');
         return;
     }
-    
+
     const webhookData = {
         url: url,
         event_types: selectedEvents,
         enabled: enabled
     };
-    
+
     if (secret) {
         webhookData.secret = secret;
     }
-    
+
     fetch('/api/webhooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4954,10 +4954,10 @@ function deleteWebhook(url) {
     if (!confirm(`Are you sure you want to delete webhook for ${url}?`)) {
         return;
     }
-    
+
     // URL encode the webhook URL for the path
     const encodedUrl = encodeURIComponent(url);
-    
+
     fetch(`/api/webhooks/${encodedUrl}`, {
         method: 'DELETE'
     })
@@ -4989,7 +4989,7 @@ function loadHotDeskSessions() {
                 const activeSessions = data.sessions.filter(s => s.active !== false);
                 document.getElementById('hotdesk-active').textContent = activeSessions.length;
                 document.getElementById('hotdesk-total').textContent = data.sessions.length;
-                
+
                 // Update table
                 const tbody = document.getElementById('hotdesk-sessions-list');
                 if (activeSessions.length === 0) {
@@ -4998,7 +4998,7 @@ function loadHotDeskSessions() {
                     tbody.innerHTML = activeSessions.map(session => {
                         const loginTime = session.login_time ? new Date(session.login_time).toLocaleString() : 'N/A';
                         const duration = session.login_time ? getDuration(new Date(session.login_time)) : 'N/A';
-                        
+
                         return `
                             <tr>
                                 <td><strong>${escapeHtml(session.extension)}</strong></td>
@@ -5024,10 +5024,10 @@ function loadHotDeskSessions() {
 function getDuration(startTime) {
     const now = new Date();
     const diff = now - startTime;
-    
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
         return `${hours}h ${minutes}m`;
     }
@@ -5038,7 +5038,7 @@ function logoutHotDesk(extension) {
     if (!confirm(`Are you sure you want to log out extension ${extension} from hot desk?`)) {
         return;
     }
-    
+
     fetch('/api/hot-desk/logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5078,7 +5078,7 @@ function loadRetentionPolicies() {
             const lastCleanup = statsData.last_cleanup ? new Date(statsData.last_cleanup).toLocaleDateString() : 'Never';
             document.getElementById('retention-last-cleanup').textContent = lastCleanup;
         }
-        
+
         // Update policies table
         if (policiesData && policiesData.policies) {
             const tbody = document.getElementById('retention-policies-list');
@@ -5088,7 +5088,7 @@ function loadRetentionPolicies() {
                 tbody.innerHTML = policiesData.policies.map(policy => {
                     const created = policy.created_at ? new Date(policy.created_at).toLocaleDateString() : 'N/A';
                     const tags = policy.tags ? policy.tags.join(', ') : 'None';
-                    
+
                     return `
                         <tr>
                             <td><strong>${escapeHtml(policy.name)}</strong></td>
@@ -5121,32 +5121,32 @@ function closeAddRetentionPolicyModal() {
 
 function addRetentionPolicy(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('retention-policy-name').value;
     const retentionDays = parseInt(document.getElementById('retention-days').value);
     const tagsInput = document.getElementById('retention-tags').value;
-    
+
     // Validate input
     if (!name.match(/^[a-zA-Z0-9_\s-]+$/)) {
         showNotification('Policy name contains invalid characters', 'error');
         return;
     }
-    
+
     if (retentionDays < 1 || retentionDays > 3650) {
         showNotification('Retention days must be between 1 and 3650', 'error');
         return;
     }
-    
+
     const policyData = {
         name: name,
         retention_days: retentionDays
     };
-    
+
     // Parse tags if provided
     if (tagsInput.trim()) {
         policyData.tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
     }
-    
+
     fetch('/api/recording-retention/policy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5172,7 +5172,7 @@ function deleteRetentionPolicy(policyId, policyName) {
     if (!confirm(`Are you sure you want to delete retention policy "${policyName}"?`)) {
         return;
     }
-    
+
     fetch(`/api/recording-retention/policy/${encodeURIComponent(policyId)}`, {
         method: 'DELETE'
     })
@@ -5209,7 +5209,7 @@ function loadFraudAlerts() {
             document.getElementById('fraud-blocked-patterns').textContent = statsData.blocked_patterns_count || 0;
             document.getElementById('fraud-extensions-flagged').textContent = statsData.extensions_flagged || 0;
         }
-        
+
         // Update alerts table
         if (alertsData && alertsData.alerts) {
             const tbody = document.getElementById('fraud-alerts-list');
@@ -5221,7 +5221,7 @@ function loadFraudAlerts() {
                     const scoreColor = alert.fraud_score > 0.8 ? '#ef4444' : alert.fraud_score > 0.5 ? '#f59e0b' : '#10b981';
                     const scorePercent = (alert.fraud_score * 100).toFixed(0);
                     const alertTypes = (alert.alert_types || []).join(', ');
-                    
+
                     return `
                         <tr>
                             <td><small>${timestamp}</small></td>
@@ -5241,7 +5241,7 @@ function loadFraudAlerts() {
                 }).join('');
             }
         }
-        
+
         // Load blocked patterns from statistics response
         if (statsData && statsData.blocked_patterns) {
             const tbody = document.getElementById('blocked-patterns-list');
@@ -5277,10 +5277,10 @@ function closeAddBlockedPatternModal() {
 
 function addBlockedPattern(event) {
     event.preventDefault();
-    
+
     const pattern = document.getElementById('blocked-pattern').value;
     const reason = document.getElementById('blocked-reason').value;
-    
+
     // Client-side validation: test if pattern is a valid regex
     try {
         new RegExp(pattern);
@@ -5288,12 +5288,12 @@ function addBlockedPattern(event) {
         showNotification('Invalid regex pattern: ' + e.message, 'error');
         return;
     }
-    
+
     const patternData = {
         pattern: pattern,
         reason: reason
     };
-    
+
     fetch('/api/fraud-detection/blocked-pattern', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5319,7 +5319,7 @@ function deleteBlockedPattern(patternIndex, pattern) {
     if (!confirm(`Are you sure you want to unblock pattern "${pattern}"?`)) {
         return;
     }
-    
+
     fetch(`/api/fraud-detection/blocked-pattern/${patternIndex}`, {
         method: 'DELETE'
     })
@@ -5349,14 +5349,14 @@ function loadCallbackQueue() {
         // Update statistics
         if (statsData) {
             document.getElementById('callback-total').textContent = statsData.total_callbacks || 0;
-            
+
             const statusBreakdown = statsData.status_breakdown || {};
             document.getElementById('callback-scheduled').textContent = statusBreakdown.scheduled || 0;
             document.getElementById('callback-in-progress').textContent = statusBreakdown.in_progress || 0;
             document.getElementById('callback-completed').textContent = statusBreakdown.completed || 0;
             document.getElementById('callback-failed').textContent = statusBreakdown.failed || 0;
         }
-        
+
         // Update callback list table
         if (listData && listData.callbacks) {
             const tbody = document.getElementById('callback-list');
@@ -5366,7 +5366,7 @@ function loadCallbackQueue() {
                 tbody.innerHTML = listData.callbacks.map(callback => {
                     const requestedTime = new Date(callback.requested_at).toLocaleString();
                     const callbackTime = new Date(callback.callback_time).toLocaleString();
-                    
+
                     // Status badge color
                     let statusClass = '';
                     switch(callback.status) {
@@ -5377,7 +5377,7 @@ function loadCallbackQueue() {
                         case 'cancelled': statusClass = 'badge-secondary'; break;
                         default: statusClass = 'badge-info';
                     }
-                    
+
                     return `
                         <tr>
                             <td><code>${escapeHtml(callback.callback_id)}</code></td>
@@ -5422,17 +5422,17 @@ function showRequestCallbackModal() {
             <form id="request-callback-form" onsubmit="requestCallback(event)">
                 <div class="form-group">
                     <label for="callback-queue-id">Queue ID: *</label>
-                    <input type="text" id="callback-queue-id" required 
+                    <input type="text" id="callback-queue-id" required
                            placeholder="e.g., sales, support, general">
                 </div>
                 <div class="form-group">
                     <label for="callback-caller-number">Caller Number: *</label>
-                    <input type="tel" id="callback-caller-number" required 
+                    <input type="tel" id="callback-caller-number" required
                            placeholder="e.g., +1234567890">
                 </div>
                 <div class="form-group">
                     <label for="callback-caller-name">Caller Name:</label>
-                    <input type="text" id="callback-caller-name" 
+                    <input type="text" id="callback-caller-name"
                            placeholder="Optional">
                 </div>
                 <div class="form-group">
@@ -5460,26 +5460,26 @@ function closeRequestCallbackModal() {
 
 function requestCallback(event) {
     event.preventDefault();
-    
+
     const queueId = document.getElementById('callback-queue-id').value;
     const callerNumber = document.getElementById('callback-caller-number').value;
     const callerName = document.getElementById('callback-caller-name').value;
     const preferredTime = document.getElementById('callback-preferred-time').value;
-    
+
     const callbackData = {
         queue_id: queueId,
         caller_number: callerNumber
     };
-    
+
     if (callerName) {
         callbackData.caller_name = callerName;
     }
-    
+
     if (preferredTime) {
         // Convert to ISO format
         callbackData.preferred_time = new Date(preferredTime).toISOString();
     }
-    
+
     fetch('/api/callback-queue/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5507,7 +5507,7 @@ function startCallback(callbackId) {
     if (!agentId) {
         return;
     }
-    
+
     fetch('/api/callback-queue/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5536,7 +5536,7 @@ function completeCallback(callbackId, success) {
     if (!success) {
         notes = prompt('Enter reason for failure (optional):') || '';
     }
-    
+
     fetch('/api/callback-queue/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5565,7 +5565,7 @@ function cancelCallback(callbackId) {
     if (!confirm('Are you sure you want to cancel this callback request?')) {
         return;
     }
-    
+
     fetch('/api/callback-queue/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5601,13 +5601,13 @@ function loadMobilePushDevices() {
         if (statsData) {
             document.getElementById('push-total-devices').textContent = statsData.total_devices || 0;
             document.getElementById('push-total-users').textContent = statsData.total_users || 0;
-            
+
             const platforms = statsData.platforms || {};
             document.getElementById('push-ios-devices').textContent = platforms.ios || 0;
             document.getElementById('push-android-devices').textContent = platforms.android || 0;
             document.getElementById('push-recent-notifications').textContent = statsData.recent_notifications || 0;
         }
-        
+
         // Update devices table
         if (devicesData && devicesData.devices) {
             const tbody = document.getElementById('mobile-devices-list');
@@ -5617,7 +5617,7 @@ function loadMobilePushDevices() {
                 tbody.innerHTML = devicesData.devices.map(device => {
                     const registeredTime = new Date(device.registered_at).toLocaleString();
                     const lastSeenTime = new Date(device.last_seen).toLocaleString();
-                    
+
                     let platformBadge = '';
                     if (device.platform === 'ios') {
                         platformBadge = '<span class="badge badge-info">📱 iOS</span>';
@@ -5626,7 +5626,7 @@ function loadMobilePushDevices() {
                     } else {
                         platformBadge = `<span class="badge badge-secondary">${escapeHtml(device.platform)}</span>`;
                     }
-                    
+
                     return `
                         <tr>
                             <td><strong>${escapeHtml(device.user_id)}</strong></td>
@@ -5641,7 +5641,7 @@ function loadMobilePushDevices() {
                 }).join('');
             }
         }
-        
+
         // Update history table
         if (historyData && historyData.history) {
             const tbody = document.getElementById('push-history-list');
@@ -5652,7 +5652,7 @@ function loadMobilePushDevices() {
                     const sentTime = new Date(notif.sent_at).toLocaleString();
                     const successCount = notif.success_count || 0;
                     const failureCount = notif.failure_count || 0;
-                    
+
                     return `
                         <tr>
                             <td>${escapeHtml(notif.user_id)}</td>
@@ -5686,7 +5686,7 @@ function showRegisterDeviceModal() {
             <form id="register-device-form" onsubmit="registerDevice(event)">
                 <div class="form-group">
                     <label for="device-user-id">User ID / Extension: *</label>
-                    <input type="text" id="device-user-id" required 
+                    <input type="text" id="device-user-id" required
                            placeholder="e.g., 1001 or user@example.com">
                 </div>
                 <div class="form-group">
@@ -5724,17 +5724,17 @@ function closeRegisterDeviceModal() {
 
 function registerDevice(event) {
     event.preventDefault();
-    
+
     const userId = document.getElementById('device-user-id').value;
     const deviceToken = document.getElementById('device-token').value.trim();
     const platform = document.getElementById('device-platform').value;
-    
+
     const deviceData = {
         user_id: userId,
         device_token: deviceToken,
         platform: platform
     };
-    
+
     fetch('/api/mobile-push/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5767,7 +5767,7 @@ function showTestNotificationModal() {
             <form id="test-notification-form" onsubmit="sendTestNotificationForm(event)">
                 <div class="form-group">
                     <label for="test-user-id">User ID / Extension: *</label>
-                    <input type="text" id="test-user-id" required 
+                    <input type="text" id="test-user-id" required
                            placeholder="e.g., 1001 or user@example.com">
                 </div>
                 <div class="form-actions">
@@ -5834,11 +5834,11 @@ function loadRecordingAnnouncementsStats() {
             document.getElementById('announcements-played').textContent = statsData.announcements_played || 0;
             document.getElementById('consent-accepted').textContent = statsData.consent_accepted || 0;
             document.getElementById('consent-declined').textContent = statsData.consent_declined || 0;
-            
+
             document.getElementById('announcement-type').textContent = statsData.announcement_type || 'N/A';
             document.getElementById('require-consent').textContent = statsData.require_consent ? 'Yes' : 'No';
         }
-        
+
         // Update configuration
         if (configData) {
             document.getElementById('audio-file-path').textContent = configData.audio_path || 'N/A';
@@ -5866,7 +5866,7 @@ function loadSpeechAnalyticsConfigs() {
             tableBody.innerHTML = '<tr><td colspan="5" class="loading">No extension-specific configurations. Using system defaults.</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.configs.map(config => `
             <tr>
                 <td>${config.extension}</td>
@@ -5892,14 +5892,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const config = {
                 enabled: document.getElementById('speech-analytics-enabled').checked,
                 engine: document.getElementById('speech-engine').value,
                 sentiment_enabled: document.getElementById('sentiment-analysis-enabled').checked,
                 summarization_enabled: document.getElementById('call-summarization-enabled').checked
             };
-            
+
             fetch('/api/framework/speech-analytics/config', {
                 method: 'POST',
                 headers: getAuthHeaders(),
@@ -5936,7 +5936,7 @@ function loadCRMActivityLog() {
             tableBody.innerHTML = '<tr><td colspan="5" class="loading">No integration activity yet</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.activities.map(activity => {
             const statusClass = activity.status === 'success' ? 'success' : 'error';
             const statusIcon = activity.status === 'success' ? '✅' : '❌';
@@ -5961,7 +5961,7 @@ function clearCRMActivityLog() {
     if (!confirm('Clear old activity log entries? This will remove entries older than 30 days.')) {
         return;
     }
-    
+
     fetch('/api/framework/integrations/activity-log/clear', {
         method: 'POST',
         headers: getAuthHeaders()
@@ -5993,10 +5993,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 hubspotSettings.style.display = this.checked ? 'block' : 'none';
             });
         }
-        
+
         hubspotForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const config = {
                 enabled: document.getElementById('hubspot-enabled').checked,
                 api_key: document.getElementById('hubspot-api-key').value,
@@ -6005,7 +6005,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 create_deals: document.getElementById('hubspot-create-deals').checked,
                 log_calls: document.getElementById('hubspot-log-calls').checked
             };
-            
+
             fetch('/api/framework/integrations/hubspot/config', {
                 method: 'POST',
                 headers: getAuthHeaders(),
@@ -6039,10 +6039,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 zendeskSettings.style.display = this.checked ? 'block' : 'none';
             });
         }
-        
+
         zendeskForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const config = {
                 enabled: document.getElementById('zendesk-enabled').checked,
                 subdomain: document.getElementById('zendesk-subdomain').value,
@@ -6052,7 +6052,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 update_tickets: document.getElementById('zendesk-update-tickets').checked,
                 default_priority: document.getElementById('zendesk-default-priority').value
             };
-            
+
             fetch('/api/framework/integrations/zendesk/config', {
                 method: 'POST',
                 headers: getAuthHeaders(),
@@ -6089,7 +6089,7 @@ function loadE911Sites() {
             tableBody.innerHTML = '<tr><td colspan="5" class="loading">No E911 sites configured</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.sites.map(site => `
             <tr>
                 <td>${site.site_name}</td>
@@ -6120,7 +6120,7 @@ function loadExtensionLocations() {
             tableBody.innerHTML = '<tr><td colspan="5" class="loading">No location data available</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.locations.map(loc => `
             <tr>
                 <td>${loc.extension}</td>
@@ -6141,10 +6141,10 @@ function loadExtensionLocations() {
 
 function loadLocationHistory() {
     const extension = document.getElementById('location-history-extension')?.value || '';
-    const url = extension 
+    const url = extension
         ? `/api/framework/nomadic-e911/history/${extension}`
         : '/api/framework/nomadic-e911/history';
-    
+
     fetch(url, {
         headers: getAuthHeaders()
     })
@@ -6155,7 +6155,7 @@ function loadLocationHistory() {
             tableBody.innerHTML = '<tr><td colspan="5" class="loading">No location history available</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.history.map(entry => `
             <tr>
                 <td>${new Date(entry.timestamp).toLocaleString()}</td>
@@ -6185,16 +6185,16 @@ async function loadPagingData() {
 async function loadActivePages() {
     const tableBody = document.getElementById('active-pages-table-body');
     if (!tableBody) return;
-    
+
     try {
         const response = await fetch('/api/paging/active');
         const data = await response.json();
-        
+
         if (!data.active_pages || data.active_pages.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No active paging sessions</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.active_pages.map(page => `
             <tr>
                 <td>${escapeHtml(page.page_id)}</td>
@@ -6214,11 +6214,11 @@ async function loadPagingZones() {
     const tableBody = document.getElementById('paging-zones-table-body');
     const zoneSelect = document.getElementById('test-page-zone');
     if (!tableBody) return;
-    
+
     try {
         const response = await fetch('/api/paging/zones');
         const data = await response.json();
-        
+
         if (!data.zones || data.zones.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No paging zones configured. Click "Add Zone" to create one.</td></tr>';
             if (zoneSelect) {
@@ -6226,7 +6226,7 @@ async function loadPagingZones() {
             }
             return;
         }
-        
+
         tableBody.innerHTML = data.zones.map(zone => `
             <tr>
                 <td>${escapeHtml(zone.extension)}</td>
@@ -6238,14 +6238,14 @@ async function loadPagingZones() {
                 </td>
             </tr>
         `).join('');
-        
+
         // Populate test zone select
         if (zoneSelect) {
             zoneSelect.innerHTML = '<option value="">Select Zone</option>' +
                 (data.all_call_extension ? `<option value="${data.all_call_extension}">All Zones (${data.all_call_extension})</option>` : '') +
                 data.zones.map(zone => `<option value="${zone.extension}">${zone.name} (${zone.extension})</option>`).join('');
         }
-        
+
         // Add event listeners for delete buttons
         document.querySelectorAll('.btn-delete-zone').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -6262,16 +6262,16 @@ async function loadPagingZones() {
 async function loadPagingDevices() {
     const tableBody = document.getElementById('paging-devices-table-body');
     if (!tableBody) return;
-    
+
     try {
         const response = await fetch('/api/paging/devices');
         const data = await response.json();
-        
+
         if (!data.devices || data.devices.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No DAC devices configured. Click "Add Device" to create one.</td></tr>';
             return;
         }
-        
+
         tableBody.innerHTML = data.devices.map(device => `
             <tr>
                 <td>${escapeHtml(device.device_id)}</td>
@@ -6284,7 +6284,7 @@ async function loadPagingDevices() {
                 </td>
             </tr>
         `).join('');
-        
+
         // Add event listeners for delete buttons
         document.querySelectorAll('.btn-delete-device').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -6301,20 +6301,20 @@ async function loadPagingDevices() {
 function showAddZoneModal() {
     const extension = prompt('Zone Extension (e.g., 701):');
     if (!extension) return;
-    
+
     const name = prompt('Zone Name (e.g., "Warehouse"):');
     if (!name) return;
-    
+
     const description = prompt('Description (optional):') || '';
     const deviceId = prompt('Device ID (optional):') || '';
-    
+
     const zoneData = {
         extension: extension,
         name: name,
         description: description,
         device_id: deviceId
     };
-    
+
     fetch('/api/paging/zones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -6337,7 +6337,7 @@ function showAddZoneModal() {
 
 function deletePagingZone(extension) {
     if (!confirm(`Delete paging zone ${extension}?`)) return;
-    
+
     fetch(`/api/paging/zones/${extension}`, { method: 'DELETE' })
         .then(response => response.json())
         .then(data => {
@@ -6357,20 +6357,20 @@ function deletePagingZone(extension) {
 function showAddDeviceModal() {
     const deviceId = prompt('Device ID (e.g., "dac-1"):');
     if (!deviceId) return;
-    
+
     const name = prompt('Device Name (e.g., "Main PA System"):');
     if (!name) return;
-    
+
     const type = prompt('Device Type (e.g., "sip_gateway"):') || 'sip_gateway';
     const sipAddress = prompt('SIP Address (e.g., "paging@192.168.1.10:5060"):') || '';
-    
+
     const deviceData = {
         device_id: deviceId,
         name: name,
         type: type,
         sip_address: sipAddress
     };
-    
+
     fetch('/api/paging/devices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -6393,7 +6393,7 @@ function showAddDeviceModal() {
 
 function deletePagingDevice(deviceId) {
     if (!confirm(`Delete paging device ${deviceId}?`)) return;
-    
+
     fetch(`/api/paging/devices/${deviceId}`, { method: 'DELETE' })
         .then(response => response.json())
         .then(data => {
@@ -6418,12 +6418,12 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const fromExt = document.getElementById('test-page-from').value;
             const zoneExt = document.getElementById('test-page-zone').value;
-            
+
             if (!fromExt || !zoneExt) {
                 showNotification('Please fill in all fields', 'error');
                 return;
             }
-            
+
             showNotification(`To test paging: Dial ${zoneExt} from extension ${fromExt}. Note: This form doesn't initiate the actual SIP call - you need to dial from a phone.`, 'info');
         });
     }
@@ -6482,16 +6482,16 @@ async function loadClickToDialConfigs() {
     try {
         const response = await fetch(`${API_BASE}/api/framework/click-to-dial/configs`);
         const data = await response.json();
-        
+
         if (data.error) {
             console.error('Error loading click-to-dial configs:', data.error);
             return;
         }
-        
+
         // Populate extension selects
         const extensionSelect = document.getElementById('ctd-extension-select');
         const historyExtensionSelect = document.getElementById('ctd-history-extension');
-        
+
         if (extensionSelect && currentExtensions) {
             extensionSelect.innerHTML = '<option value="">Select Extension</option>';
             currentExtensions.forEach(ext => {
@@ -6501,7 +6501,7 @@ async function loadClickToDialConfigs() {
                 extensionSelect.appendChild(option);
             });
         }
-        
+
         if (historyExtensionSelect && currentExtensions) {
             historyExtensionSelect.innerHTML = '<option value="">All Extensions</option>';
             currentExtensions.forEach(ext => {
@@ -6511,16 +6511,16 @@ async function loadClickToDialConfigs() {
                 historyExtensionSelect.appendChild(option);
             });
         }
-        
+
         // Populate configurations table
         const tbody = document.getElementById('ctd-configs-table');
         if (!tbody) return;
-        
+
         if (!data.configs || data.configs.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No configurations found. Configure extensions above.</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = data.configs.map(config => `
             <tr>
                 <td>${escapeHtml(config.extension)}</td>
@@ -6533,7 +6533,7 @@ async function loadClickToDialConfigs() {
                 </td>
             </tr>
         `).join('');
-        
+
     } catch (error) {
         console.error('Error loading click-to-dial configs:', error);
         displayError(error, 'Loading click-to-dial configurations');
@@ -6546,7 +6546,7 @@ async function loadClickToDialConfigs() {
 function toggleClickToDialConfigSections(showConfig) {
     const configSection = document.getElementById('ctd-config-section');
     const noExtensionSection = document.getElementById('ctd-no-extension');
-    
+
     if (configSection && noExtensionSection) {
         configSection.style.display = showConfig ? 'block' : 'none';
         noExtensionSection.style.display = showConfig ? 'none' : 'block';
@@ -6558,16 +6558,16 @@ function toggleClickToDialConfigSections(showConfig) {
  */
 async function loadClickToDialConfig() {
     const extension = document.getElementById('ctd-extension-select')?.value;
-    
+
     if (!extension) {
         toggleClickToDialConfigSections(false);
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/framework/click-to-dial/config/${extension}`);
         const data = await response.json();
-        
+
         if (data.error) {
             console.error('Error loading config:', data.error);
             // Show default config for new extension
@@ -6583,9 +6583,9 @@ async function loadClickToDialConfig() {
             document.getElementById('ctd-auto-answer').checked = data.config.auto_answer;
             document.getElementById('ctd-browser-notification').checked = data.config.browser_notification;
         }
-        
+
         toggleClickToDialConfigSections(true);
-        
+
     } catch (error) {
         console.error('Error loading click-to-dial config:', error);
         displayError(error, 'Loading click-to-dial configuration');
@@ -6597,29 +6597,29 @@ async function loadClickToDialConfig() {
  */
 async function saveClickToDialConfig(event) {
     event.preventDefault();
-    
+
     const extension = document.getElementById('ctd-current-extension')?.textContent;
     if (!extension) {
         showNotification('No extension selected', 'error');
         return;
     }
-    
+
     const config = {
         enabled: document.getElementById('ctd-enabled').checked,
         default_caller_id: document.getElementById('ctd-caller-id').value.trim() || null,
         auto_answer: document.getElementById('ctd-auto-answer').checked,
         browser_notification: document.getElementById('ctd-browser-notification').checked
     };
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/framework/click-to-dial/config/${extension}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         });
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             showNotification(`Error: ${data.error}`, 'error');
         } else {
@@ -6653,17 +6653,17 @@ async function editClickToDialConfig(extension) {
 async function initiateClickToDial() {
     const extension = document.getElementById('ctd-extension-select')?.value;
     const phoneNumber = document.getElementById('ctd-phone-number')?.value.trim();
-    
+
     if (!extension) {
         showNotification('Please select an extension', 'error');
         return;
     }
-    
+
     if (!phoneNumber) {
         showNotification('Please enter a phone number', 'error');
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/framework/click-to-dial/call/${extension}`, {
             method: 'POST',
@@ -6672,9 +6672,9 @@ async function initiateClickToDial() {
                 destination: phoneNumber
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             showNotification(`Error: ${data.error}`, 'error');
         } else {
@@ -6697,14 +6697,14 @@ async function initiateClickToDial() {
 async function loadClickToDialHistory() {
     const extension = document.getElementById('ctd-history-extension')?.value;
     const tbody = document.getElementById('ctd-history-table');
-    
+
     if (!tbody) return;
-    
+
     if (!extension) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Select an extension to view history</td></tr>';
         return;
     }
-    
+
     // Status to CSS class mapping
     const statusClassMap = {
         'completed': 'success',
@@ -6713,26 +6713,26 @@ async function loadClickToDialHistory() {
         'busy': 'warning',
         'no-answer': 'warning'
     };
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/framework/click-to-dial/history/${extension}`);
         const data = await response.json();
-        
+
         if (data.error) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Error: ${escapeHtml(data.error)}</td></tr>`;
             return;
         }
-        
+
         if (!data.history || data.history.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No call history found</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = data.history.map(call => {
             const timestamp = new Date(call.timestamp).toLocaleString();
             const duration = call.duration ? `${call.duration}s` : '-';
             const statusClass = statusClassMap[call.status] || 'warning';
-            
+
             return `
                 <tr>
                     <td>${timestamp}</td>
@@ -6743,7 +6743,7 @@ async function loadClickToDialHistory() {
                 </tr>
             `;
         }).join('');
-        
+
     } catch (error) {
         console.error('Error loading history:', error);
         displayError(error, 'Loading click-to-dial history');
@@ -6759,13 +6759,13 @@ async function loadWebRTCPhoneConfig() {
     try {
         const response = await fetch('/api/webrtc/phone-config');
         const data = await response.json();
-        
+
         if (data.success) {
             const extensionInput = document.getElementById('webrtc-phone-extension');
             if (extensionInput) {
                 extensionInput.value = data.extension || DEFAULT_WEBRTC_EXTENSION;
             }
-            
+
             // Reinitialize the WebRTC phone with the new extension
             if (typeof initWebRTCPhone === 'function') {
                 initWebRTCPhone();
@@ -6780,24 +6780,24 @@ async function loadWebRTCPhoneConfig() {
 
 async function saveWebRTCPhoneConfig(event) {
     event.preventDefault();
-    
+
     const extensionInput = document.getElementById('webrtc-phone-extension');
     const extension = extensionInput.value.trim();
-    
+
     if (!extension) {
         alert('Please enter an extension');
         return;
     }
-    
+
     try {
         const response = await fetch('/api/webrtc/phone-config', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({extension})
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             alert('Phone extension saved successfully! Reloading phone...');
             // Reinitialize the WebRTC phone with the new extension

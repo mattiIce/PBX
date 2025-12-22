@@ -508,37 +508,37 @@ header h1 {
     header {
         padding: 15px 20px;
     }
-    
+
     header h1 {
         font-size: 1.5rem;
     }
-    
+
     .tabs {
         padding: 0 20px;
     }
-    
+
     .tab-button {
         padding: 12px 16px;
         font-size: 0.9rem;
     }
-    
+
     .tab-content {
         padding: 20px;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .section-header {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .data-table {
         font-size: 0.9rem;
     }
-    
+
     .data-table th,
     .data-table td {
         padding: 10px;
@@ -965,12 +965,12 @@ textarea:focus {
 
 /* Subtle animation for tab content */
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
+    from {
+        opacity: 0;
         transform: translateY(8px);
     }
-    to { 
-        opacity: 1; 
+    to {
+        opacity: 1;
         transform: translateY(0);
     }
 }
@@ -980,12 +980,12 @@ textarea:focus {
     header, .tabs, .action-buttons {
         display: none;
     }
-    
+
     .container {
         max-width: 100%;
         box-shadow: none;
     }
-    
+
     .tab-content {
         display: block !important;
         padding: 0;
@@ -1279,11 +1279,11 @@ input[type="range"]::-moz-range-thumb:hover {
     .webrtc-phone-widget {
         padding: 20px;
     }
-    
+
     .phone-display {
         padding: 15px;
     }
-    
+
     .phone-controls button {
         font-size: 16px !important;
         padding: 12px !important;
@@ -1513,7 +1513,7 @@ input[type="range"]::-moz-range-thumb:hover {
     .voicemail-cards-container {
         grid-template-columns: 1fr;
     }
-    
+
     /* Make sidebar collapsible on mobile */
     .sidebar {
         position: fixed;
@@ -1523,19 +1523,19 @@ input[type="range"]::-moz-range-thumb:hover {
         z-index: 200;
         transition: left 0.3s ease;
     }
-    
+
     .sidebar.open {
         left: 0;
     }
-    
+
     .main-content {
         width: 100%;
     }
-    
+
     .tab-content {
         padding: 20px 15px;
     }
-    
+
     header {
         padding: 15px 20px;
     }
@@ -1546,17 +1546,17 @@ input[type="range"]::-moz-range-thumb:hover {
     .sidebar {
         width: 200px;
     }
-    
+
     .sidebar-section-title {
         font-size: 0.7rem;
         padding: 0 15px 8px 15px;
     }
-    
+
     .tab-button {
         padding: 10px 15px;
         font-size: 0.9rem;
     }
-    
+
     .tab-icon {
         font-size: 1.1rem;
         width: 20px;
@@ -1594,7 +1594,7 @@ input[type="range"]::-moz-range-thumb:hover {
     .sidebar {
         display: none;
     }
-    
+
     .main-content {
         width: 100%;
     }

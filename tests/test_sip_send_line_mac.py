@@ -4,7 +4,8 @@ Tests P-Asserted-Identity, Remote-Party-ID, and X-MAC-Address headers
 """
 
 import unittest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 
 
@@ -16,21 +17,18 @@ class TestSIPCallerIDHeaders(unittest.TestCase):
         message = SIPMessage()
         message.method = "INVITE"
         message.uri = "sip:1002@192.168.1.100"
-        
+
         # Add caller ID headers
         SIPMessageBuilder.add_caller_id_headers(
-            message,
-            extension_number="1001",
-            display_name="John Doe",
-            server_ip="192.168.1.100"
+            message, extension_number="1001", display_name="John Doe", server_ip="192.168.1.100"
         )
-        
+
         # Verify P-Asserted-Identity header
         pai = message.get_header("P-Asserted-Identity")
         self.assertIsNotNone(pai)
         self.assertIn("John Doe", pai)
         self.assertIn("sip:1001@192.168.1.100", pai)
-        
+
         # Verify Remote-Party-ID header
         rpid = message.get_header("Remote-Party-ID")
         self.assertIsNotNone(rpid)
@@ -44,18 +42,15 @@ class TestSIPCallerIDHeaders(unittest.TestCase):
         """Test caller ID headers are properly formatted"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         SIPMessageBuilder.add_caller_id_headers(
-            message,
-            extension_number="2001",
-            display_name="Sales Department",
-            server_ip="10.0.0.1"
+            message, extension_number="2001", display_name="Sales Department", server_ip="10.0.0.1"
         )
-        
+
         pai = message.get_header("P-Asserted-Identity")
         # Should be in format: "Display Name" <sip:ext@server>
         self.assertEqual(pai, '"Sales Department" <sip:2001@10.0.0.1>')
-        
+
         rpid = message.get_header("Remote-Party-ID")
         # Should have proper parameters
         self.assertIn('"Sales Department" <sip:2001@10.0.0.1>', rpid)
@@ -68,13 +63,10 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         """Test adding MAC address header with colon format"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         # Test with colon-separated MAC
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address="00:11:22:33:44:55"
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address="00:11:22:33:44:55")
+
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNotNone(x_mac)
         self.assertEqual(x_mac, "00:11:22:33:44:55")
@@ -83,13 +75,10 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         """Test adding MAC address header with dash format"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         # Test with dash-separated MAC
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address="AA-BB-CC-DD-EE-FF"
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address="AA-BB-CC-DD-EE-FF")
+
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNotNone(x_mac)
         # Should be normalized to colon format and lowercase
@@ -99,13 +88,10 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         """Test adding MAC address header without separators"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         # Test with no separators
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address="001122334455"
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address="001122334455")
+
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNotNone(x_mac)
         # Should be formatted with colons
@@ -115,13 +101,10 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         """Test adding invalid MAC address doesn't add header"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         # Test with invalid MAC (too short)
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address="00:11:22"
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address="00:11:22")
+
         x_mac = message.get_header("X-MAC-Address")
         # Should not add header for invalid MAC
         self.assertIsNone(x_mac)
@@ -130,13 +113,10 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         """Test adding None MAC address doesn't crash"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         # Test with None
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address=None
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address=None)
+
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNone(x_mac)
 
@@ -144,13 +124,10 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         """Test adding MAC with invalid characters doesn't add header"""
         message = SIPMessage()
         message.method = "INVITE"
-        
+
         # Test with invalid characters (G is not hex)
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address="GG:11:22:33:44:55"
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address="GG:11:22:33:44:55")
+
         x_mac = message.get_header("X-MAC-Address")
         # Should not add header for invalid MAC
         self.assertIsNone(x_mac)
@@ -173,15 +150,15 @@ class TestSIPMessageParsing(unittest.TestCase):
             "Content-Length: 0\r\n"
             "\r\n"
         )
-        
+
         message = SIPMessage(raw_message)
-        
+
         self.assertEqual(message.method, "INVITE")
-        
+
         pai = message.get_header("P-Asserted-Identity")
         self.assertIsNotNone(pai)
         self.assertIn("John Doe", pai)
-        
+
         rpid = message.get_header("Remote-Party-ID")
         self.assertIsNotNone(rpid)
         self.assertIn("John Doe", rpid)
@@ -199,11 +176,11 @@ class TestSIPMessageParsing(unittest.TestCase):
             "Content-Length: 0\r\n"
             "\r\n"
         )
-        
+
         message = SIPMessage(raw_message)
-        
+
         self.assertEqual(message.method, "INVITE")
-        
+
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNotNone(x_mac)
         self.assertEqual(x_mac, "00:11:22:33:44:55")
@@ -221,33 +198,27 @@ class TestSIPMessageBuilding(unittest.TestCase):
             to_addr="<sip:1002@192.168.1.100>",
             call_id="test-call-789",
             cseq=1,
-            body=""
+            body="",
         )
-        
+
         # Add caller ID headers
         SIPMessageBuilder.add_caller_id_headers(
-            message,
-            extension_number="1001",
-            display_name="Alice Smith",
-            server_ip="192.168.1.100"
+            message, extension_number="1001", display_name="Alice Smith", server_ip="192.168.1.100"
         )
-        
+
         # Add MAC address header
-        SIPMessageBuilder.add_mac_address_header(
-            message,
-            mac_address="AA:BB:CC:DD:EE:FF"
-        )
-        
+        SIPMessageBuilder.add_mac_address_header(message, mac_address="AA:BB:CC:DD:EE:FF")
+
         # Build the message
         raw_message = message.build()
-        
+
         # Verify all headers are present
         self.assertIn("P-Asserted-Identity", raw_message)
         self.assertIn("Remote-Party-ID", raw_message)
         self.assertIn("X-MAC-Address", raw_message)
         self.assertIn("Alice Smith", raw_message)
         self.assertIn("aa:bb:cc:dd:ee:ff", raw_message)
-        
+
         # Verify it can be parsed back
         parsed = SIPMessage(raw_message)
         self.assertEqual(parsed.method, "INVITE")

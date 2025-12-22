@@ -95,7 +95,7 @@ class CallbackQueue:
             # Create index on queue_id for faster lookups
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_callback_queue_id 
+                CREATE INDEX IF NOT EXISTS idx_callback_queue_id
                 ON callback_requests(queue_id)
             """
             )
@@ -103,7 +103,7 @@ class CallbackQueue:
             # Create index on status for filtering
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_callback_status 
+                CREATE INDEX IF NOT EXISTS idx_callback_status
                 ON callback_requests(status)
             """
             )
@@ -111,7 +111,7 @@ class CallbackQueue:
             # Create index on callback_time for scheduling
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_callback_time 
+                CREATE INDEX IF NOT EXISTS idx_callback_time
                 ON callback_requests(callback_time)
             """
             )

@@ -9,26 +9,26 @@ on:
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
       with:
         ref: main
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
-    
+
     - name: Install pip-tools
       run: |
         python -m pip install --upgrade pip pip-tools
-    
+
     - name: Update requirements
       run: |
         # Generate updated requirements with latest versions
         pip-compile --upgrade requirements.txt --output-file requirements-updated.txt
-        
+
     - name: Check for updates
       id: check
       run: |
@@ -40,7 +40,7 @@ jobs:
           echo "updates_available=false" >> $GITHUB_OUTPUT
           echo "No updates available"
         fi
-    
+
     - name: Create Pull Request
       if: steps.check.outputs.updates_available == 'true'
       uses: peter-evans/create-pull-request@v5
@@ -49,16 +49,16 @@ jobs:
         title: 'chore(deps): Weekly dependency updates'
         body: |
           ## Automated Dependency Updates
-          
+
           This PR updates Python dependencies to their latest compatible versions.
-          
+
           ### Changes
           - Updated dependencies in requirements.txt
-          
+
           ### Testing
           - [ ] CI tests pass
           - [ ] Manual testing completed
-          
+
           **Note:** Review the changes carefully before merging. Check for breaking changes in the changelog of updated packages.
         branch: automated/dependency-updates
         delete-branch: true

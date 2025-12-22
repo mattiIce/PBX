@@ -1,6 +1,6 @@
 # AT&T SIP Trunk Configuration Template
 # This configuration is for AT&T IP Flexible Reach (SIP Trunking)
-# 
+#
 # Prerequisites:
 # - AT&T IP Flexible Reach account
 # - Public static IP address for your PBX
@@ -17,7 +17,7 @@ server:
   sip_port: 5060                # Standard SIP port
   public_ip: "YOUR_PUBLIC_IP"   # Your public IP address (required for AT&T)
                                  # Example: "203.0.113.10"
-  
+
   # RTP port range for media
   rtp_port_range_start: 10000
   rtp_port_range_end: 20000
@@ -28,12 +28,12 @@ server:
 sip_trunks:
   - id: att_primary
     name: "AT&T Primary Trunk"
-    
+
     # AT&T SIP Proxy addresses (use closest to your location)
     # Primary proxy - replace with your regional proxy
     host: "sbc.ipfr.att.com"     # AT&T SIP proxy hostname
     port: 5060                    # Standard SIP port
-    
+
     # Authentication credentials from AT&T
     username: "YOUR_ATT_USERNAME"          # From AT&T portal
                                             # Example: "company123"
@@ -41,26 +41,26 @@ sip_trunks:
                                             # Example: "SecureP@ssw0rd!"
     auth_username: "YOUR_ATT_AUTH_USER"    # May be same as username
                                             # Example: "company123" or "company123@att.com"
-    
+
     # Trunk settings
     max_channels: 23              # Number of concurrent calls (adjust based on your plan)
     codec_preferences:
       - "G.711u"                  # AT&T prefers G.711 ulaw (PCMU)
       - "G.711a"                  # G.711 alaw (PCMA) as fallback
       - "G.729"                   # Compressed codec option
-    
+
     # AT&T specific settings
     registration_required: true   # AT&T requires registration
     registration_expire: 3600     # Re-register every hour
     keep_alive_interval: 30       # Send OPTIONS keepalive every 30 seconds
-    
+
     # SIP transport
     transport: "UDP"              # AT&T typically uses UDP
-    
+
     # Caller ID settings
     from_domain: "your-domain.att.com"     # Your registered domain with AT&T
                                             # Example: "acmecompany.att.com"
-    
+
   # Optional: Secondary trunk for redundancy
   - id: att_secondary
     name: "AT&T Secondary Trunk"
@@ -85,21 +85,21 @@ outbound_routes:
     pattern: "^911$"
     trunk_id: att_primary
     priority: 1
-    
+
   # Toll-free numbers (1-8XX)
   - id: tollfree
     name: "Toll-Free Numbers"
     pattern: "^1[8][0-9]{2}[0-9]{7}$"
     trunk_id: att_primary
     priority: 2
-    
+
   # Long distance (1 + 10 digits)
   - id: long_distance
     name: "US/Canada Long Distance"
     pattern: "^1[2-9][0-9]{9}$"
     trunk_id: att_primary
     priority: 3
-    
+
   # Local 10-digit dialing
   - id: local_10digit
     name: "Local 10-Digit"
@@ -107,7 +107,7 @@ outbound_routes:
     trunk_id: att_primary
     prepend: "1"                  # Add leading 1
     priority: 4
-    
+
   # Local 7-digit dialing (if applicable in your area)
   - id: local_7digit
     name: "Local 7-Digit"
@@ -115,7 +115,7 @@ outbound_routes:
     trunk_id: att_primary
     prepend: "1YOUR_AREA_CODE"    # Add 1 + your area code
     priority: 5
-    
+
   # International calls (011 + country code)
   - id: international
     name: "International"
@@ -131,16 +131,16 @@ inbound_routes:
   - did: "+1234567890"            # Your main AT&T number
     destination: "1000"           # Extension or IVR menu
     description: "Main Line"
-    
+
   # Department DIDs
   - did: "+1234567891"
     destination: "8001"           # Sales queue
     description: "Sales Department"
-    
+
   - did: "+1234567892"
     destination: "8002"           # Support queue
     description: "Support Department"
-    
+
   # Direct dial to extensions (DID range)
   - did_pattern: "+123456789[0-9]"    # Range of 10 numbers
     destination_type: "extension"      # Route based on last digits
@@ -157,14 +157,14 @@ network:
       - "12.122.0.0/16"          # AT&T IP range
       - "135.25.0.0/16"          # AT&T IP range
       - "204.14.239.0/24"        # AT&T IP range
-    
+
   # Media Network (for RTP)
   media:
     allowed_ips:                  # AT&T media server IPs
       - "12.122.0.0/16"
       - "135.25.0.0/16"
       - "204.14.239.0/24"
-  
+
   # NAT settings (if behind firewall)
   nat:
     enabled: true
@@ -179,7 +179,7 @@ network:
 qos:
   sip_dscp: 26                    # EF (Expedited Forwarding) for signaling
   rtp_dscp: 46                    # EF for media/voice
-  
+
 # ============================================================
 # Codec Configuration
 # ============================================================
@@ -188,12 +188,12 @@ codecs:
     enabled: true
     priority: 1
     ptime: 20                     # Packet time in ms
-    
+
   - name: "G.711a"
     enabled: true
     priority: 2
     ptime: 20
-    
+
   - name: "G.729"
     enabled: false                # Enable if bandwidth is limited
     priority: 3
@@ -205,7 +205,7 @@ codecs:
 att_features:
   # CNAM (Caller Name) lookup
   cnam_lookup: true
-  
+
   # Emergency location (E911)
   e911:
     enabled: true
@@ -214,12 +214,12 @@ att_features:
       city: "Your City"
       state: "CA"
       zip: "12345"
-  
+
   # Call Recording compliance
   call_recording:
     enabled: true
     announcement: true            # Play announcement for compliance
-    
+
   # Fax over IP (T.38)
   fax:
     enabled: false                # Enable if you need fax
@@ -236,7 +236,7 @@ security:
       - "12.122.0.0/16"
       - "135.25.0.0/16"
       - "204.14.239.0/24"
-  
+
   # Toll fraud prevention
   fraud_prevention:
     enabled: true
@@ -254,7 +254,7 @@ logging:
   file: "logs/pbx_att.log"
   sip_trace: true                 # Enable SIP message tracing
   sip_trace_file: "logs/sip_att.log"
-  
+
 monitoring:
   enabled: true
   trunk_status_check: 60          # Check trunk status every 60 seconds
@@ -270,7 +270,7 @@ extensions:
     email: "reception@yourcompany.com"
     password: "secure_password_here"
     allow_external: true
-    
+
   - number: "1001"
     name: "John Doe"
     email: "john@yourcompany.com"
@@ -280,7 +280,7 @@ extensions:
 # ============================================================
 # Notes and Important Information
 # ============================================================
-# 
+#
 # SETUP STEPS:
 # 1. Contact AT&T to provision IP Flexible Reach service
 # 2. Obtain your SIP credentials and proxy addresses from AT&T portal
@@ -289,17 +289,17 @@ extensions:
 # 5. Set up NAT/port forwarding if behind a firewall
 # 6. Register your public IP with AT&T
 # 7. Test with a single call before going live
-# 
+#
 # FIREWALL RULES NEEDED:
 # - Allow UDP 5060 from AT&T IPs (SIP signaling)
 # - Allow UDP 10000-20000 from AT&T IPs (RTP media)
 # - Allow outbound to AT&T SIP proxies
-# 
+#
 # AT&T SUPPORT:
 # - Technical Support: 1-888-321-0088
 # - Online Portal: https://businessdirect.att.com
 # - Documentation: Contact your AT&T account manager
-# 
+#
 # TESTING:
 # - Test emergency calls (911) in a controlled manner
 # - Verify caller ID is transmitted correctly

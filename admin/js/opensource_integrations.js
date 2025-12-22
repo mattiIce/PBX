@@ -41,7 +41,7 @@ function showQuickSetupNotification(message, type = 'info', duration = 5000) {
         `;
         document.body.appendChild(notificationContainer);
     }
-    
+
     // Create notification
     const notification = document.createElement('div');
     const bgColors = {
@@ -50,7 +50,7 @@ function showQuickSetupNotification(message, type = 'info', duration = 5000) {
         warning: '#ff9800',
         info: '#2196F3'
     };
-    
+
     notification.style.cssText = `
         background-color: ${bgColors[type] || bgColors.info};
         color: white;
@@ -63,7 +63,7 @@ function showQuickSetupNotification(message, type = 'info', duration = 5000) {
         justify-content: space-between;
         animation: slideIn 0.3s ease-out;
     `;
-    
+
     notification.innerHTML = `
         <div style="flex: 1; padding-right: 10px;">${escapeHtml(message)}</div>
         <button onclick="this.parentElement.remove()" style="
@@ -80,7 +80,7 @@ function showQuickSetupNotification(message, type = 'info', duration = 5000) {
             justify-content: center;
         ">×</button>
     `;
-    
+
     // Add animation keyframes if not already added
     if (!document.getElementById('notification-animations')) {
         const style = document.createElement('style');
@@ -99,9 +99,9 @@ function showQuickSetupNotification(message, type = 'info', duration = 5000) {
         `;
         document.head.appendChild(style);
     }
-    
+
     notificationContainer.appendChild(notification);
-    
+
     // Auto-remove after duration
     if (duration > 0) {
         setTimeout(() => {
@@ -131,7 +131,7 @@ async function updateQuickSetupStatus() {
         const response = await fetch('/api/config');
         const data = await response.json();
         const integrations = data.integrations || {};
-        
+
         // Update Jitsi status
         const jitsiEnabled = integrations.jitsi?.enabled || false;
         const jitsiCheckbox = document.getElementById('quick-jitsi-enabled');
@@ -145,7 +145,7 @@ async function updateQuickSetupStatus() {
             jitsiBadge.style.color = 'white';
             jitsiBadge.textContent = '● Enabled';
         }
-        
+
         // Update Matrix status
         const matrixEnabled = integrations.matrix?.enabled || false;
         const matrixCheckbox = document.getElementById('quick-matrix-enabled');
@@ -159,7 +159,7 @@ async function updateQuickSetupStatus() {
             matrixBadge.style.color = 'white';
             matrixBadge.textContent = '● Enabled';
         }
-        
+
         // Update EspoCRM status
         const espocrmEnabled = integrations.espocrm?.enabled || false;
         const espocrmCheckbox = document.getElementById('quick-espocrm-enabled');
@@ -173,7 +173,7 @@ async function updateQuickSetupStatus() {
             espocrmBadge.style.color = 'white';
             espocrmBadge.textContent = '● Enabled';
         }
-        
+
     } catch (error) {
         console.error('Failed to load integration status:', error);
     }
@@ -185,7 +185,7 @@ async function updateQuickSetupStatus() {
 async function quickToggleIntegration(integration) {
     const checkbox = document.getElementById(`quick-${integration}-enabled`);
     const isEnabled = checkbox.checked;
-    
+
     if (isEnabled) {
         // Enable with default settings
         await quickSetupIntegration(integration);
@@ -225,39 +225,39 @@ async function quickSetupIntegration(integration) {
             screen_pop: true
         }
     };
-    
+
     const config = defaults[integration];
-    
+
     if (!config) {
         showQuickSetupNotification('Unknown integration: ' + integration, 'error');
         return;
     }
-    
+
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 section: 'integrations',
-                data: { 
-                    [integration]: config 
-                } 
+                data: {
+                    [integration]: config
+                }
             })
         });
-        
+
         if (response.ok) {
             // Update the checkbox
             const checkbox = document.getElementById(`quick-${integration}-enabled`);
             if (checkbox) {
                 checkbox.checked = true;
             }
-            
+
             // Update status badge
             updateQuickSetupStatus();
-            
+
             // Show success message
             let message = `✅ ${INTEGRATION_NAMES[integration]} enabled with default settings! The integration is now active.`;
-            
+
             // Show additional info for specific integrations
             if (integration === 'matrix') {
                 message += ' Note: You need to set MATRIX_BOT_PASSWORD in your .env file for Matrix to work.';
@@ -268,7 +268,7 @@ async function quickSetupIntegration(integration) {
             } else {
                 showQuickSetupNotification(message, 'success');
             }
-            
+
             // Reload the detailed config if on that tab
             if (integration === 'jitsi') {
                 loadJitsiConfig();
@@ -304,28 +304,28 @@ async function disableIntegration(integration) {
         const response = await fetch('/api/config');
         const data = await response.json();
         const currentConfig = data.integrations?.[integration] || {};
-        
+
         // Set enabled to false
         currentConfig.enabled = false;
-        
+
         // Update config
         const updateResponse = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 section: 'integrations',
-                data: { 
-                    [integration]: currentConfig 
-                } 
+                data: {
+                    [integration]: currentConfig
+                }
             })
         });
-        
+
         if (updateResponse.ok) {
             // Update status
             updateQuickSetupStatus();
-            
+
             showQuickSetupNotification(`${INTEGRATION_NAMES[integration]} has been disabled.`, 'info');
-            
+
             // Reload the detailed config if on that tab
             if (integration === 'jitsi') {
                 loadJitsiConfig();
@@ -361,13 +361,13 @@ function loadJitsiConfig() {
         .then(response => response.json())
         .then(data => {
             const config = data.integrations?.jitsi || {};
-            
+
             document.getElementById('jitsi-enabled').checked = config.enabled || false;
             document.getElementById('jitsi-server-url').value = config.server_url || 'https://localhost';
             document.getElementById('jitsi-auto-create-rooms').checked = config.auto_create_rooms !== false;
             document.getElementById('jitsi-app-id').value = config.app_id || '';
             document.getElementById('jitsi-app-secret').value = config.app_secret || '';
-            
+
             toggleJitsiSettings();
         })
         .catch(error => {
@@ -384,7 +384,7 @@ document.getElementById('jitsi-enabled')?.addEventListener('change', toggleJitsi
 
 document.getElementById('jitsi-config-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const config = {
         enabled: document.getElementById('jitsi-enabled').checked,
         server_url: document.getElementById('jitsi-server-url').value,
@@ -392,17 +392,17 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
         app_id: document.getElementById('jitsi-app-id').value,
         app_secret: document.getElementById('jitsi-app-secret').value
     };
-    
+
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 section: 'integrations',
-                data: { jitsi: config } 
+                data: { jitsi: config }
             })
         });
-        
+
         if (response.ok) {
             showJitsiStatus('Configuration saved successfully!', 'success');
             updateQuickSetupStatus(); // Update quick setup checkboxes
@@ -416,17 +416,17 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
 
 async function testJitsiConnection() {
     const serverUrl = document.getElementById('jitsi-server-url').value;
-    
+
     showJitsiStatus('Testing connection to ' + escapeHtml(serverUrl) + '...', 'info');
-    
+
     try {
         // Test if server is reachable
         const testUrl = serverUrl + '/external_api.js';
         const response = await fetch(testUrl, { mode: 'no-cors' });
-        
+
         // If no error, server is likely reachable
         showJitsiStatus('✅ Connection successful! Jitsi server is accessible.', 'success');
-        
+
         // Create a test meeting URL
         const testMeetingUrl = serverUrl + '/test-pbx-' + Date.now();
         showJitsiStatus(
@@ -453,7 +453,7 @@ function loadMatrixConfig() {
         .then(response => response.json())
         .then(data => {
             const config = data.integrations?.matrix || {};
-            
+
             document.getElementById('matrix-enabled').checked = config.enabled || false;
             document.getElementById('matrix-homeserver-url').value = config.homeserver_url || 'https://localhost:8008';
             document.getElementById('matrix-bot-username').value = config.bot_username || '';
@@ -461,7 +461,7 @@ function loadMatrixConfig() {
             document.getElementById('matrix-notification-room').value = config.notification_room || '';
             document.getElementById('matrix-voicemail-room').value = config.voicemail_room || '';
             document.getElementById('matrix-missed-call-notifications').checked = config.missed_call_notifications !== false;
-            
+
             toggleMatrixSettings();
         })
         .catch(error => {
@@ -478,7 +478,7 @@ document.getElementById('matrix-enabled')?.addEventListener('change', toggleMatr
 
 document.getElementById('matrix-config-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const config = {
         enabled: document.getElementById('matrix-enabled').checked,
         homeserver_url: document.getElementById('matrix-homeserver-url').value,
@@ -488,17 +488,17 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
         voicemail_room: document.getElementById('matrix-voicemail-room').value,
         missed_call_notifications: document.getElementById('matrix-missed-call-notifications').checked
     };
-    
+
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 section: 'integrations',
-                data: { matrix: config } 
+                data: { matrix: config }
             })
         });
-        
+
         if (response.ok) {
             showMatrixStatus('Configuration saved successfully!', 'success');
             updateQuickSetupStatus(); // Update quick setup checkboxes
@@ -514,25 +514,25 @@ async function testMatrixConnection() {
     const homeserverUrl = document.getElementById('matrix-homeserver-url').value;
     const username = document.getElementById('matrix-bot-username').value;
     const password = document.getElementById('matrix-bot-password').value;
-    
+
     if (!username || !password) {
         showMatrixStatus('Please enter bot username and password', 'error');
         return;
     }
-    
+
     showMatrixStatus('Testing Matrix connection...', 'info');
-    
+
     try {
         // Test homeserver connectivity
         const versionUrl = homeserverUrl + '/_matrix/client/versions';
         const versionResponse = await fetch(versionUrl);
-        
+
         if (!versionResponse.ok) {
             throw new Error('Homeserver not accessible');
         }
-        
+
         const versions = await versionResponse.json();
-        
+
         showMatrixStatus(
             '✅ Homeserver is accessible!<br>' +
             'Supported versions: ' + (versions.versions?.join(', ') || 'Unknown') + '<br>' +
@@ -558,14 +558,14 @@ function loadEspoCRMConfig() {
         .then(response => response.json())
         .then(data => {
             const config = data.integrations?.espocrm || {};
-            
+
             document.getElementById('espocrm-enabled').checked = config.enabled || false;
             document.getElementById('espocrm-api-url').value = config.api_url || 'https://localhost/api/v1';
             document.getElementById('espocrm-api-key').value = config.api_key || '';
             document.getElementById('espocrm-auto-create-contacts').checked = config.auto_create_contacts !== false;
             document.getElementById('espocrm-auto-log-calls').checked = config.auto_log_calls !== false;
             document.getElementById('espocrm-screen-pop').checked = config.screen_pop !== false;
-            
+
             toggleEspoCRMSettings();
         })
         .catch(error => {
@@ -582,7 +582,7 @@ document.getElementById('espocrm-enabled')?.addEventListener('change', toggleEsp
 
 document.getElementById('espocrm-config-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const config = {
         enabled: document.getElementById('espocrm-enabled').checked,
         api_url: document.getElementById('espocrm-api-url').value,
@@ -591,17 +591,17 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
         auto_log_calls: document.getElementById('espocrm-auto-log-calls').checked,
         screen_pop: document.getElementById('espocrm-screen-pop').checked
     };
-    
+
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 section: 'integrations',
-                data: { espocrm: config } 
+                data: { espocrm: config }
             })
         });
-        
+
         if (response.ok) {
             showEspoCRMStatus('Configuration saved successfully!', 'success');
             updateQuickSetupStatus(); // Update quick setup checkboxes
@@ -616,14 +616,14 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
 async function testEspoCRMConnection() {
     const apiUrl = document.getElementById('espocrm-api-url').value;
     const apiKey = document.getElementById('espocrm-api-key').value;
-    
+
     if (!apiUrl || !apiKey) {
         showEspoCRMStatus('Please enter API URL and API Key', 'error');
         return;
     }
-    
+
     showEspoCRMStatus('Testing EspoCRM connection...', 'info');
-    
+
     try {
         // Test API endpoint
         const testUrl = apiUrl + '/App/user';
@@ -633,7 +633,7 @@ async function testEspoCRMConnection() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             showEspoCRMStatus(
@@ -664,24 +664,24 @@ function showTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-    
+
     // Remove active from all buttons
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active');
     });
-    
+
     // Show selected tab
     const selectedTab = document.getElementById(tabId);
     if (selectedTab) {
         selectedTab.classList.add('active');
     }
-    
+
     // Activate button
     const selectedButton = document.querySelector(`[data-tab="${tabId}"]`);
     if (selectedButton) {
         selectedButton.classList.add('active');
     }
-    
+
     // Initialize if it's an open source integration tab
     if (tabId.includes('integration') || tabId === 'opensource-integrations') {
         initializeOpenSourceIntegrations();
@@ -697,22 +697,22 @@ function showTab(tabId) {
  */
 async function createInstantJitsiMeeting() {
     const roomName = document.getElementById('jitsi-instant-room').value || '';
-    
+
     try {
         const response = await fetch('/api/integrations/jitsi/instant', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 room_name: roomName,
                 extension: 'admin'  // Current user extension
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to create meeting');
         }
-        
+
         const data = await response.json();
         displayJitsiMeetingResult(data.meeting_url);
         showQuickSetupNotification('Meeting created successfully!', 'success');
@@ -727,28 +727,28 @@ async function createInstantJitsiMeeting() {
 async function scheduleJitsiMeeting() {
     const subject = document.getElementById('jitsi-schedule-subject').value;
     const duration = document.getElementById('jitsi-schedule-duration').value;
-    
+
     if (!subject) {
         showQuickSetupNotification('Please enter a meeting subject', 'warning');
         return;
     }
-    
+
     try {
         const response = await fetch('/api/integrations/jitsi/meetings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 subject: subject,
                 duration: parseInt(duration),
                 moderator_name: 'Admin'
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to schedule meeting');
         }
-        
+
         const data = await response.json();
         displayJitsiMeetingResult(data.meeting_url);
         showQuickSetupNotification('Meeting scheduled successfully!', 'success');
@@ -763,7 +763,7 @@ async function scheduleJitsiMeeting() {
 function displayJitsiMeetingResult(url) {
     const resultDiv = document.getElementById('jitsi-meeting-result');
     const urlInput = document.getElementById('jitsi-meeting-url');
-    
+
     urlInput.value = url;
     resultDiv.style.display = 'block';
 }
@@ -774,7 +774,7 @@ function displayJitsiMeetingResult(url) {
 async function copyJitsiMeetingUrl() {
     const urlInput = document.getElementById('jitsi-meeting-url');
     const url = urlInput.value;
-    
+
     try {
         // Use modern Clipboard API
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -832,12 +832,12 @@ async function sendMatrixMessage() {
     const roomSelect = document.getElementById('matrix-room-select').value;
     const customRoomId = document.getElementById('matrix-custom-room-id').value;
     const message = document.getElementById('matrix-message-text').value;
-    
+
     if (!message) {
         showQuickSetupNotification('Please enter a message', 'warning');
         return;
     }
-    
+
     // Determine which room to use
     let roomId = null;
     if (roomSelect === 'custom') {
@@ -850,23 +850,23 @@ async function sendMatrixMessage() {
         // Room ID will be determined by the backend based on config
         roomId = null; // Backend will use configured room
     }
-    
+
     try {
         const response = await fetch('/api/integrations/matrix/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 room_id: roomId,
                 message: message,
                 msg_type: 'm.text'
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to send message');
         }
-        
+
         const data = await response.json();
         showMatrixMessageResult('✅ Message sent successfully!', 'success');
         document.getElementById('matrix-message-text').value = ''; // Clear message
@@ -883,16 +883,16 @@ async function sendMatrixTestNotification() {
         const response = await fetch('/api/integrations/matrix/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 message: '🧪 Test notification from PBX Admin Panel - ' + new Date().toLocaleString()
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to send notification');
         }
-        
+
         showMatrixMessageResult('✅ Test notification sent successfully!', 'success');
     } catch (error) {
         showMatrixMessageResult('❌ Failed to send notification: ' + error.message, 'error');
@@ -905,31 +905,31 @@ async function sendMatrixTestNotification() {
 async function createMatrixRoom() {
     const roomName = document.getElementById('matrix-new-room-name').value;
     const roomTopic = document.getElementById('matrix-new-room-topic').value;
-    
+
     if (!roomName) {
         showQuickSetupNotification('Please enter a room name', 'warning');
         return;
     }
-    
+
     try {
         const response = await fetch('/api/integrations/matrix/rooms', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 name: roomName,
                 topic: roomTopic
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to create room');
         }
-        
+
         const data = await response.json();
         showMatrixRoomResult(data.room_id);
         showQuickSetupNotification('Room created successfully!', 'success');
-        
+
         // Clear form
         document.getElementById('matrix-new-room-name').value = '';
         document.getElementById('matrix-new-room-topic').value = '';
@@ -944,12 +944,12 @@ async function createMatrixRoom() {
 function showMatrixMessageResult(message, type) {
     const resultDiv = document.getElementById('matrix-message-result');
     const textEl = document.getElementById('matrix-message-result-text');
-    
+
     textEl.innerHTML = message;
     resultDiv.style.display = 'block';
-    resultDiv.querySelector('.info-box').style.backgroundColor = 
+    resultDiv.querySelector('.info-box').style.backgroundColor =
         type === 'success' ? '#e8f5e9' : '#ffebee';
-    
+
     // Auto-hide after 5 seconds
     setTimeout(() => {
         resultDiv.style.display = 'none';
@@ -962,7 +962,7 @@ function showMatrixMessageResult(message, type) {
 function showMatrixRoomResult(roomId) {
     const resultDiv = document.getElementById('matrix-room-result');
     const roomIdEl = document.getElementById('matrix-new-room-id');
-    
+
     roomIdEl.textContent = roomId;
     resultDiv.style.display = 'block';
 }
@@ -977,28 +977,28 @@ function showMatrixRoomResult(roomId) {
 async function searchEspoCRMContact() {
     const searchType = document.getElementById('espocrm-search-type').value;
     const searchTerm = document.getElementById('espocrm-search-term').value;
-    
+
     if (!searchTerm) {
         showQuickSetupNotification('Please enter a search term', 'warning');
         return;
     }
-    
+
     try {
         // Build query parameter based on search type
-        const queryParam = searchType === 'phone' ? 'phone' : 
-                          searchType === 'email' ? 'email' : 
+        const queryParam = searchType === 'phone' ? 'phone' :
+                          searchType === 'email' ? 'email' :
                           'name';
-        
+
         const response = await fetch(`/api/integrations/espocrm/contacts/search?${queryParam}=${encodeURIComponent(searchTerm)}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to search contact');
         }
-        
+
         const data = await response.json();
         displayEspoCRMSearchResults(data);
     } catch (error) {
@@ -1012,27 +1012,27 @@ async function searchEspoCRMContact() {
 function displayEspoCRMSearchResults(data) {
     const resultsDiv = document.getElementById('espocrm-search-results');
     const detailsDiv = document.getElementById('espocrm-contact-details');
-    
+
     if (!data.success || !data.contact) {
         detailsDiv.innerHTML = '<div class="info-box" style="background-color: #fff3e0;">No contact found</div>';
         resultsDiv.style.display = 'block';
         return;
     }
-    
+
     const contact = data.contact;
     let html = '<div class="info-box" style="background-color: #e8f5e9;">';
     html += '<h4>✅ Contact Found</h4>';
     html += '<table style="width: 100%; margin-top: 10px;">';
-    
+
     if (contact.name) html += `<tr><td><strong>Name:</strong></td><td>${escapeHtml(contact.name)}</td></tr>`;
     if (contact.email) html += `<tr><td><strong>Email:</strong></td><td>${escapeHtml(contact.email)}</td></tr>`;
     if (contact.phone) html += `<tr><td><strong>Phone:</strong></td><td>${escapeHtml(contact.phone)}</td></tr>`;
     if (contact.company) html += `<tr><td><strong>Company:</strong></td><td>${escapeHtml(contact.company)}</td></tr>`;
     if (contact.title) html += `<tr><td><strong>Title:</strong></td><td>${escapeHtml(contact.title)}</td></tr>`;
     if (contact.id) html += `<tr><td><strong>CRM ID:</strong></td><td>${escapeHtml(contact.id)}</td></tr>`;
-    
+
     html += '</table></div>';
-    
+
     detailsDiv.innerHTML = html;
     resultsDiv.style.display = 'block';
 }
@@ -1047,22 +1047,22 @@ async function createEspoCRMContact() {
     const email = document.getElementById('espocrm-new-email').value;
     const company = document.getElementById('espocrm-new-company').value;
     const title = document.getElementById('espocrm-new-title').value;
-    
+
     if (!firstName || !lastName) {
         showQuickSetupNotification('Please enter first and last name', 'warning');
         return;
     }
-    
+
     if (!phone && !email) {
         showQuickSetupNotification('Please enter at least phone or email', 'warning');
         return;
     }
-    
+
     try {
         const response = await fetch('/api/integrations/espocrm/contacts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 name: `${firstName} ${lastName}`,
                 phone: phone,
                 email: email,
@@ -1070,15 +1070,15 @@ async function createEspoCRMContact() {
                 title: title
             })
         });
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error || 'Failed to create contact');
         }
-        
+
         const data = await response.json();
         showEspoCRMCreateResult('✅ Contact created successfully! CRM ID: ' + (data.contact?.id || 'unknown'));
-        
+
         // Clear form
         document.getElementById('espocrm-new-firstname').value = '';
         document.getElementById('espocrm-new-lastname').value = '';
@@ -1097,10 +1097,10 @@ async function createEspoCRMContact() {
 function showEspoCRMCreateResult(message) {
     const resultDiv = document.getElementById('espocrm-create-result');
     const textEl = document.getElementById('espocrm-create-result-text');
-    
+
     textEl.innerHTML = message;
     resultDiv.style.display = 'block';
-    
+
     // Auto-hide after 5 seconds
     setTimeout(() => {
         resultDiv.style.display = 'none';

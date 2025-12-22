@@ -358,4 +358,3 @@ If you prefer manual setup or the script fails, see the complete manual guide:
 
 **Last Updated:** 2025-12-17  
 **For:** PBX v1.0.0 with abps.albl.com domain
-

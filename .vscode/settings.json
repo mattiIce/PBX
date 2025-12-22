@@ -1,14 +1,14 @@
 {
     // Python Language Settings
     "files.defaultLanguage": "python",
-    
+
     // Python Interpreter
     // Note: VS Code will auto-detect the interpreter in venv/
     // If needed, set manually per OS:
     // Linux/macOS: "${workspaceFolder}/venv/bin/python"
     // Windows: "${workspaceFolder}/venv/Scripts/python.exe"
     "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
-    
+
     // Linting - Modern extension-specific settings
     "pylint.enabled": true,
     "pylint.args": [
@@ -22,7 +22,7 @@
     "mypy-type-checker.args": [
         "--config-file=${workspaceFolder}/mypy.ini"
     ],
-    
+
     // Legacy linting settings (for backward compatibility with older VS Code)
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
@@ -37,7 +37,7 @@
     "python.linting.mypyArgs": [
         "--config-file=${workspaceFolder}/mypy.ini"
     ],
-    
+
     // Formatting
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
@@ -49,24 +49,24 @@
     "black-formatter.args": [
         "--line-length=100"
     ],
-    
+
     // Import Sorting
     "isort.args": [
         "--profile=black",
         "--line-length=100"
     ],
-    
+
     // Type Checking
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.diagnosticMode": "workspace",
-    
+
     // Testing
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [
         "tests"
     ],
-    
+
     // File Associations
     "files.associations": {
         "*.yml": "yaml",
@@ -77,14 +77,14 @@
         "*.conf": "plaintext",
         "Dockerfile*": "dockerfile"
     },
-    
+
     // Editor Settings
     "editor.rulers": [100],
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    
+
     // Python-specific paths
     "python.analysis.extraPaths": [
         "${workspaceFolder}/pbx"
@@ -92,7 +92,7 @@
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/pbx"
     ],
-    
+
     // Exclude patterns
     "files.exclude": {
         "**/__pycache__": true,
@@ -102,7 +102,7 @@
         "**/venv": true,
         "**/env": true
     },
-    
+
     // Search exclusions
     "search.exclude": {
         "**/node_modules": true,
@@ -113,7 +113,7 @@
         "**/venv": true,
         "**/env": true
     },
-    
+
     // Terminal settings
     "terminal.integrated.env.linux": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -124,7 +124,7 @@
     "terminal.integrated.env.windows": {
         "PYTHONPATH": "${workspaceFolder}"
     },
-    
+
     // Git settings
     "git.ignoreLimitWarning": true
 }

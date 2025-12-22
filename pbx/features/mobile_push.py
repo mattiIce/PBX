@@ -130,14 +130,14 @@ class MobilePushNotifications:
             # Create indexes
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_mobile_devices_user_id 
+                CREATE INDEX IF NOT EXISTS idx_mobile_devices_user_id
                 ON mobile_devices(user_id)
             """
             )
 
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_push_notifications_user_id 
+                CREATE INDEX IF NOT EXISTS idx_push_notifications_user_id
                 ON push_notifications(user_id)
             """
             )
@@ -246,7 +246,7 @@ class MobilePushNotifications:
             if self.database.db_type == "postgresql":
                 cursor.execute(
                     """
-                    UPDATE mobile_devices 
+                    UPDATE mobile_devices
                     SET enabled = FALSE, updated_at = %s
                     WHERE user_id = %s AND device_token = %s
                 """,
@@ -255,7 +255,7 @@ class MobilePushNotifications:
             else:
                 cursor.execute(
                     """
-                    UPDATE mobile_devices 
+                    UPDATE mobile_devices
                     SET enabled = 0, updated_at = ?
                     WHERE user_id = ? AND device_token = ?
                 """,

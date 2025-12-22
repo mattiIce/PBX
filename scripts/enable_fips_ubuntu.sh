@@ -71,10 +71,10 @@ case $choice in
         echo "Enabling Ubuntu Pro FIPS"
         echo "=============================================================================="
         echo ""
-        
+
         # Check if Ubuntu Pro is attached
         ua_status=$(ua status --format json 2>/dev/null | grep -o '"attached": *[^,}]*' | cut -d ':' -f2 | tr -d ' "')
-        
+
         if [ "$ua_status" != "true" ]; then
             echo -e "${YELLOW}Ubuntu Pro is not attached to this system.${NC}"
             echo ""
@@ -85,12 +85,12 @@ case $choice in
             echo ""
             exit 1
         fi
-        
+
         echo "Ubuntu Pro is attached. Enabling FIPS..."
-        
+
         # Enable FIPS
         ua enable fips --assume-yes
-        
+
         echo ""
         echo -e "${GREEN}✓ FIPS enabled successfully${NC}"
         echo ""
@@ -101,17 +101,17 @@ case $choice in
             reboot
         fi
         ;;
-        
+
     2)
         echo ""
         echo "=============================================================================="
         echo "Configuring OpenSSL FIPS Module"
         echo "=============================================================================="
         echo ""
-        
+
         # Check OpenSSL version (need 3.0+)
         openssl_version=$(openssl version | awk '{print $2}' | cut -d'.' -f1)
-        
+
         if [ "$openssl_version" -lt 3 ]; then
             echo -e "${RED}OpenSSL 3.0+ is required for FIPS module${NC}"
             echo "Your version: $(openssl version)"
@@ -120,38 +120,38 @@ case $choice in
             echo "Consider upgrading Ubuntu or using Ubuntu Pro FIPS"
             exit 1
         fi
-        
+
         echo "OpenSSL version: $(openssl version)"
         echo ""
-        
+
         # Install FIPS module if available
         echo "Installing OpenSSL FIPS provider..."
         apt-get update
         apt-get install -y openssl
-        
+
         # Check if FIPS module exists
         fips_module="/usr/lib/x86_64-linux-gnu/ossl-modules/fips.so"
         if [ ! -f "$fips_module" ]; then
             echo -e "${YELLOW}FIPS module not found. Installing from source...${NC}"
-            
+
             # Build FIPS module
             apt-get install -y build-essential
-            
+
             # Create temp directory
             tmp_dir=$(mktemp -d)
             cd "$tmp_dir"
-            
+
             # Download OpenSSL source with verification
             openssl_src_version="3.0.13"
             openssl_tar="openssl-${openssl_src_version}.tar.gz"
             openssl_url="https://www.openssl.org/source/${openssl_tar}"
-            
+
             echo "Downloading OpenSSL ${openssl_src_version}..."
             wget "${openssl_url}"
-            
+
             # Download SHA256 checksum
             wget "${openssl_url}.sha256"
-            
+
             # Verify checksum
             echo "Verifying download integrity..."
             if ! sha256sum -c "${openssl_tar}.sha256"; then
@@ -159,34 +159,34 @@ case $choice in
                 echo "Download may be corrupted or tampered with."
                 exit 1
             fi
-            
+
             echo "Checksum verified successfully"
             tar -xzf "${openssl_tar}"
             cd "openssl-${openssl_src_version}"
-            
+
             # Configure with FIPS
             ./Configure enable-fips
             make -j$(nproc)
-            
+
             # Install FIPS module
             make install_fips
-            
+
             # Cleanup
             cd /
             rm -rf "$tmp_dir"
-            
+
             echo -e "${GREEN}✓ FIPS module built and installed${NC}"
         fi
-        
+
         # Configure OpenSSL to use FIPS
         echo ""
         echo "Configuring OpenSSL FIPS..."
-        
+
         openssl_conf="/etc/ssl/openssl.cnf"
-        
+
         # Backup original config
         cp "$openssl_conf" "${openssl_conf}.backup"
-        
+
         # Add FIPS configuration
         cat >> "$openssl_conf" << 'EOF'
 
@@ -206,18 +206,18 @@ activate = 1
 [fips_sect]
 activate = 1
 EOF
-        
+
         # Note: /proc/sys/crypto/fips_enabled is typically read-only
         # FIPS mode must be enabled via kernel boot parameters
         echo ""
         echo "Note: FIPS mode will be enabled on next boot via kernel parameter"
-        
+
         # Make it persistent via GRUB
         if ! grep -q "fips=1" /etc/default/grub; then
             sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="fips=1 /' /etc/default/grub
             update-grub
         fi
-        
+
         echo ""
         echo -e "${GREEN}✓ OpenSSL FIPS module configured${NC}"
         echo ""
@@ -228,12 +228,12 @@ EOF
             reboot
         fi
         ;;
-        
+
     q)
         echo "Exiting without changes"
         exit 0
         ;;
-        
+
     *)
         echo -e "${RED}Invalid choice${NC}"
         exit 1

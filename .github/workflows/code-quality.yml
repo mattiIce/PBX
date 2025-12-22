@@ -9,38 +9,38 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
         cache: 'pip'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pylint flake8 black isort mypy
         pip install -r requirements.txt
-    
+
     - name: Check code formatting with Black
       run: |
         black --check --diff pbx/ tests/
-    
+
     - name: Check import sorting with isort
       run: |
         isort --check-only --diff pbx/ tests/
-    
+
     - name: Lint with flake8
       run: |
         flake8 pbx/ tests/ --count --statistics
-    
+
     - name: Lint with pylint
       run: |
         pylint pbx/ --exit-zero
-    
+
     - name: Type check with mypy
       run: |
         mypy pbx/ --ignore-missing-imports --no-strict-optional
@@ -48,24 +48,24 @@ jobs:
 
   security:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install bandit safety
-    
+
     - name: Security check with bandit
       run: |
         bandit -r pbx/ -ll
-    
+
     - name: Check dependencies with safety
       run: |
         pip install -r requirements.txt
