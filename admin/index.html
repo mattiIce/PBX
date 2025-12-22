@@ -308,6 +308,29 @@
         <div id="webrtc-phone" class="tab-content">
             <h2>📞 WebRTC Browser Phone</h2>
             
+            <!-- Phone Extension Configuration -->
+            <div class="config-section" style="max-width: 600px; margin: 0 auto 20px;">
+                <h3>⚙️ Phone Configuration</h3>
+                <form id="webrtc-phone-config-form" onsubmit="saveWebRTCPhoneConfig(event)">
+                    <div class="form-group">
+                        <label for="webrtc-phone-extension">Phone Extension:</label>
+                        <input 
+                            type="text" 
+                            id="webrtc-phone-extension" 
+                            placeholder="webrtc-admin" 
+                            pattern="[a-zA-Z0-9-]+" 
+                            maxlength="20"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+                        >
+                        <small style="display: block; margin-top: 5px; color: #666;">
+                            The extension this browser phone will use when making calls (e.g., "1000", "webrtc-admin")
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Save Phone Extension</button>
+                    <button type="button" class="btn btn-primary" onclick="loadWebRTCPhoneConfig()" style="margin-left: 10px;">🔄 Reload</button>
+                </form>
+            </div>
+            
             <!-- Microphone Requirement Alert -->
             
             <div class="config-section" style="max-width: 600px; margin: 0 auto;">

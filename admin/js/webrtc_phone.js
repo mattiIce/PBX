@@ -665,25 +665,53 @@ class WebRTCPhone {
 // Initialize WebRTC phone when admin panel loads
 let webrtcPhone = null;
 
+// Default extension for the WebRTC phone if no configuration is set
+const DEFAULT_WEBRTC_EXTENSION = 'webrtc-admin';
+
 async function initWebRTCPhone() {
     const apiUrl = window.location.origin;
     
-    // Use a WebRTC-only extension identifier for the admin browser phone
-    // Note: This is a virtual extension identifier used for session tracking.
-    // The WebRTC backend creates a session for this identifier without requiring
-    // a pre-registered extension in the PBX. Outbound calls are made as this
-    // virtual extension to any target extension.
-    // 
-    // If your PBX requires authenticated extensions, you can change this to
-    // an actual extension number (e.g., '1000') that exists in your system.
-    const adminExtension = 'webrtc-admin'; 
+    // Fetch the configured extension from the server
+    let adminExtension = DEFAULT_WEBRTC_EXTENSION; // default fallback
+    
+    try {
+        const response = await fetch('/api/webrtc/phone-config');
+        const data = await response.json();
+        
+        if (data.success && data.extension) {
+            adminExtension = data.extension;
+            console.log('WebRTC Phone using configured extension:', adminExtension);
+        } else {
+            console.log('WebRTC Phone using default extension:', adminExtension);
+        }
+    } catch (error) {
+        console.warn('Failed to load WebRTC phone config, using default:', error);
+    }
+    
+    // Create or recreate the WebRTC phone with the configured extension
+    if (webrtcPhone) {
+        // Clean up existing phone
+        if (webrtcPhone.isCallActive) {
+            await webrtcPhone.hangup();
+        }
+    }
     
     webrtcPhone = new WebRTCPhone(apiUrl, adminExtension);
-    console.log('WebRTC Phone initialized');
+    console.log('WebRTC Phone initialized with extension:', adminExtension);
     
     // Automatically request microphone access on load
     // This prompts the user for permission immediately rather than waiting for a call
     await webrtcPhone.requestMicrophoneAccess();
+    
+    // Update the UI to show the configured extension
+    const statusDiv = document.getElementById('webrtc-status');
+    if (statusDiv) {
+        if (adminExtension !== DEFAULT_WEBRTC_EXTENSION) {
+            statusDiv.textContent = `Ready to call (Extension: ${adminExtension})`;
+        } else {
+            statusDiv.textContent = `Ready to call (Default extension)`;
+        }
+    }
 }
 
 // Call this after DOM is loaded

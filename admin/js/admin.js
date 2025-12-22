@@ -491,6 +491,9 @@ function showTab(tabName) {
         case 'features-status':
             loadFeaturesStatus();
             break;
+        case 'webrtc-phone':
+            loadWebRTCPhoneConfig();
+            break;
     }
 }
 
@@ -6686,5 +6689,68 @@ async function loadClickToDialHistory() {
         console.error('Error loading history:', error);
         displayError(error, 'Loading click-to-dial history');
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading history</td></tr>';
+    }
+}
+
+// ========== WebRTC Phone Configuration ==========
+
+// Default extension for the WebRTC phone (must match webrtc_phone.js)
+const DEFAULT_WEBRTC_EXTENSION = 'webrtc-admin';
+
+async function loadWebRTCPhoneConfig() {
+    try {
+        const response = await fetch('/api/webrtc/phone-config');
+        const data = await response.json();
+        
+        if (data.success) {
+            const extensionInput = document.getElementById('webrtc-phone-extension');
+            if (extensionInput) {
+                extensionInput.value = data.extension || DEFAULT_WEBRTC_EXTENSION;
+            }
+            
+            // Reinitialize the WebRTC phone with the new extension
+            if (typeof initWebRTCPhone === 'function') {
+                initWebRTCPhone();
+            }
+        } else {
+            console.error('Failed to load WebRTC phone config:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading WebRTC phone config:', error);
+    }
+}
+
+async function saveWebRTCPhoneConfig(event) {
+    event.preventDefault();
+    
+    const extensionInput = document.getElementById('webrtc-phone-extension');
+    const extension = extensionInput.value.trim();
+    
+    if (!extension) {
+        alert('Please enter an extension');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/webrtc/phone-config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({extension})
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Phone extension saved successfully! Reloading phone...');
+            // Reinitialize the WebRTC phone with the new extension
+            if (typeof initWebRTCPhone === 'function') {
+                initWebRTCPhone();
+            }
+        } else {
+            alert('Error: ' + (data.error || 'Failed to save phone extension'));
+        }
+    } catch (error) {
+        console.error('Error saving WebRTC phone config:', error);
+        alert('Error: ' + error.message);
     }
 }
