@@ -13,6 +13,11 @@ let currentUser = null; // Stores current extension info including is_admin stat
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
+    // Prevent caller from passing their own signal which would conflict with timeout
+    if (options.signal) {
+        throw new Error('fetchWithTimeout does not support custom abort signals. Use the timeout parameter instead.');
+    }
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
@@ -21,13 +26,15 @@ async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEO
             ...options,
             signal: controller.signal
         });
-        clearTimeout(timeoutId);
         return response;
     } catch (error) {
         if (error.name === 'AbortError') {
             throw new Error('Request timed out');
         }
         throw error;
+    } finally {
+        // Always clear timeout to prevent memory leaks
+        clearTimeout(timeoutId);
     }
 }
 
