@@ -1,0 +1,48 @@
+{
+  "licenses": [
+    {
+      "type": "trial",
+      "issued_to": "Demo User Inc",
+      "expiration_days": 30
+    },
+    {
+      "type": "basic",
+      "issued_to": "Small Business LLC",
+      "expiration_days": 365,
+      "max_extensions": 50,
+      "max_concurrent_calls": 25
+    },
+    {
+      "type": "professional",
+      "issued_to": "Medium Corp",
+      "expiration_days": 365,
+      "max_extensions": 200,
+      "max_concurrent_calls": 100
+    },
+    {
+      "type": "enterprise",
+      "issued_to": "BigCo International",
+      "expiration_days": 730
+    },
+    {
+      "type": "perpetual",
+      "issued_to": "Forever Client Ltd",
+      "max_extensions": 500,
+      "max_concurrent_calls": 250
+    },
+    {
+      "type": "custom",
+      "issued_to": "Custom Solutions Inc",
+      "expiration_days": 365,
+      "features": [
+        "basic_calling",
+        "voicemail",
+        "call_recording",
+        "webrtc",
+        "ai_features",
+        "max_extensions:100",
+        "max_concurrent_calls:50"
+      ]
+    }
+  ]
+}
