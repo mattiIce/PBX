@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup script for PBX System
+Setup script for Warden Voip System
 
 This setup.py is provided for backward compatibility.
 Modern installations should use pyproject.toml via:

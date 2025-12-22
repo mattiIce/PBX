@@ -1,5 +1,5 @@
 """
-Dependency Checker for PBX System
+Dependency Checker for Warden Voip System
 Verifies that all required and optional dependencies are installed at startup
 Reads dependencies from requirements.txt
 """

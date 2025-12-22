@@ -2694,7 +2694,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 "server": {
                     "sip_port": self.pbx_core.config.get("server.sip_port", 5060),
                     "external_ip": self.pbx_core.config.get("server.external_ip", ""),
-                    "server_name": self.pbx_core.config.get("server.server_name", "PBX System"),
+                    "server_name": self.pbx_core.config.get("server.server_name", "Warden Voip"),
                 },
                 "api": {
                     "port": self.pbx_core.config.get("api.port", 8080),
@@ -3024,7 +3024,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
                     x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "State"),
                     x509.NameAttribute(NameOID.LOCALITY_NAME, "City"),
-                    x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PBX System"),
+                    x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Warden Voip"),
                     x509.NameAttribute(NameOID.COMMON_NAME, hostname),
                 ]
             )
@@ -9895,7 +9895,7 @@ class PBXAPIServer:
                             x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
                             x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "State"),
                             x509.NameAttribute(NameOID.LOCALITY_NAME, "City"),
-                            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "PBX System"),
+                            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Warden Voip"),
                             x509.NameAttribute(NameOID.COMMON_NAME, hostname),
                         ]
                     )

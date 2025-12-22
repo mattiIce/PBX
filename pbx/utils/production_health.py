@@ -114,7 +114,7 @@ class ProductionHealthChecker:
             "readiness": readiness_details,
             "metrics": self._get_metrics(),
             "version": self.config.get("server", {}).get("version", "unknown"),
-            "server_name": self.config.get("server", {}).get("server_name", "PBX System"),
+            "server_name": self.config.get("server", {}).get("server_name", "Warden Voip"),
         }
 
     def _check_pbx_core(self) -> Tuple[bool, Dict[str, Any]]:
