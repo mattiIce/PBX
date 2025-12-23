@@ -1,5 +1,26 @@
 // API Base URL
-const API_BASE = window.location.origin;
+// If the page is served from the API server, use same origin
+// Otherwise, construct URL from hostname and default API port
+function getAPIBase() {
+    // Check if we're on the API port (9000) already
+    if (window.location.port === '9000') {
+        return window.location.origin;
+    }
+    
+    // Check if there's a meta tag specifying the API URL
+    const apiMeta = document.querySelector('meta[name="api-base-url"]');
+    if (apiMeta && apiMeta.content) {
+        return apiMeta.content;
+    }
+    
+    // Default: use current hostname with port 9000
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname || 'localhost';
+    return `${protocol}//${hostname}:9000`;
+}
+
+const API_BASE = getAPIBase();
+console.log('API Base URL:', API_BASE);
 
 // Constants
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
@@ -228,7 +249,8 @@ async function initializeUserContext() {
 
     if (!token) {
         // No token - redirect to login page
-        window.location.href = '/admin/login.html';
+        console.log('No authentication token found, redirecting to login...');
+        window.location.replace('/admin/login.html');
         return;
     }
 
@@ -240,16 +262,22 @@ async function initializeUserContext() {
 
         if (response.status === 401 || response.status === 403) {
             // Token is invalid or expired - redirect to login
+            console.log('Authentication token is invalid, redirecting to login...');
             localStorage.removeItem('pbx_token');
             localStorage.removeItem('pbx_extension');
             localStorage.removeItem('pbx_is_admin');
             localStorage.removeItem('pbx_name');
-            window.location.href = '/admin/login.html';
+            window.location.replace('/admin/login.html');
             return;
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
     } catch (error) {
         console.error('Error verifying authentication:', error);
-        // Continue anyway - user might be able to login again or system is starting up
+        // If we can't verify auth (server down), show error but allow page to load
+        showNotification('Unable to verify authentication - server may be starting up', 'error');
     }
 
     // Get user info from localStorage (set during login)
@@ -259,7 +287,8 @@ async function initializeUserContext() {
 
     if (!extensionNumber) {
         // No extension stored - redirect to login
-        window.location.href = '/admin/login.html';
+        console.log('No extension number found, redirecting to login...');
+        window.location.replace('/admin/login.html');
         return;
     }
 
@@ -269,6 +298,8 @@ async function initializeUserContext() {
         is_admin: isAdmin,
         name: name
     };
+
+    console.log('User context initialized:', currentUser);
 
     // Apply role-based UI filtering
     applyRoleBasedUI();
@@ -539,9 +570,16 @@ window.switchTab = showTab;
 
 // Connection Check
 async function checkConnection() {
+    const statusBadge = document.getElementById('connection-status');
+    
+    // Always ensure the status badge exists before trying to update it
+    if (!statusBadge) {
+        console.error('Connection status badge element not found');
+        return;
+    }
+    
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/status`, {}, 5000);
-        const statusBadge = document.getElementById('connection-status');
 
         if (response.ok) {
             statusBadge.textContent = '✓ Connected';
@@ -551,7 +589,7 @@ async function checkConnection() {
             throw new Error('Connection failed');
         }
     } catch (error) {
-        const statusBadge = document.getElementById('connection-status');
+        console.error('Connection check failed:', error);
         statusBadge.textContent = '✗ Disconnected';
         statusBadge.classList.remove('connected');
         statusBadge.classList.add('disconnected');
@@ -561,8 +599,15 @@ async function checkConnection() {
 // Dashboard Functions
 async function loadDashboard() {
     try {
+        console.log('Loading dashboard data from API...');
         const response = await fetchWithTimeout(`${API_BASE}/api/status`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('Dashboard data loaded:', data);
 
         document.getElementById('stat-extensions').textContent = data.registered_extensions || 0;
         document.getElementById('stat-calls').textContent = data.active_calls || 0;
@@ -571,12 +616,24 @@ async function loadDashboard() {
 
         const systemStatus = document.getElementById('system-status');
         systemStatus.textContent = `System: ${data.running ? 'Running' : 'Stopped'}`;
+        systemStatus.className = 'status-badge ' + (data.running ? 'connected' : 'disconnected');
 
         // Load AD integration status
         loadADStatus();
     } catch (error) {
         console.error('Error loading dashboard:', error);
-        showNotification('Failed to load dashboard data', 'error');
+        
+        // Set error state for stats
+        document.getElementById('stat-extensions').textContent = 'Error';
+        document.getElementById('stat-calls').textContent = 'Error';
+        document.getElementById('stat-total-calls').textContent = 'Error';
+        document.getElementById('stat-recordings').textContent = 'Error';
+        
+        const systemStatus = document.getElementById('system-status');
+        systemStatus.textContent = 'System: Error';
+        systemStatus.className = 'status-badge disconnected';
+        
+        showNotification(`Failed to load dashboard: ${error.message}`, 'error');
     }
 }
 
@@ -589,6 +646,11 @@ function refreshDashboard() {
 async function loadADStatus() {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
 
         // Update status badge
@@ -632,15 +694,21 @@ async function loadADStatus() {
 
         // Enable/disable sync button based on status
         const syncBtn = document.getElementById('ad-sync-btn');
-        if (data.enabled && data.connected) {
-            syncBtn.disabled = false;
-        } else {
-            syncBtn.disabled = true;
+        if (syncBtn) {
+            if (data.enabled && data.connected) {
+                syncBtn.disabled = false;
+            } else {
+                syncBtn.disabled = true;
+            }
         }
     } catch (error) {
         console.error('Error loading AD status:', error);
-        document.getElementById('ad-status-badge').textContent = 'Error';
-        document.getElementById('ad-status-badge').className = 'status-badge disconnected';
+        const statusBadge = document.getElementById('ad-status-badge');
+        if (statusBadge) {
+            statusBadge.textContent = 'Error';
+            statusBadge.className = 'status-badge disconnected';
+        }
+        // Don't show error notification for AD status - it's optional
     }
 }
 
