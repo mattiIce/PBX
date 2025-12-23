@@ -140,35 +140,20 @@ class FIPSEncryption:
             salt: Base64-encoded salt
 
         Returns:
-            True if password matches, False if any input is invalid
+            True if password matches
         """
-        # Validate inputs - return False instead of raising exceptions
-        # This prevents information leakage about invalid credentials
-        if password is None or hashed_password is None or salt is None:
-            return False
-        
-        # Empty password should be rejected
-        if password == "" or hashed_password == "" or salt == "":
-            return False
-        
-        try:
-            # Decode from base64
-            if isinstance(hashed_password, str):
-                hashed_password = base64.b64decode(hashed_password)
-            if isinstance(salt, str):
-                salt = base64.b64decode(salt)
+        # Decode from base64
+        if isinstance(hashed_password, str):
+            hashed_password = base64.b64decode(hashed_password)
+        if isinstance(salt, str):
+            salt = base64.b64decode(salt)
 
-            # Hash the provided password with the same salt
-            new_hash, _ = self.hash_password(password, salt)
-            new_hash = base64.b64decode(new_hash)
+        # Hash the provided password with the same salt
+        new_hash, _ = self.hash_password(password, salt)
+        new_hash = base64.b64decode(new_hash)
 
-            # Constant-time comparison to prevent timing attacks
-            return secrets.compare_digest(new_hash, hashed_password)
-        except (ValueError, TypeError, base64.binascii.Error) as e:
-            # Invalid base64 encoding or other format errors
-            # Log for debugging but return False to prevent information leakage
-            self.logger.debug(f"Password verification error: {e}")
-            return False
+        # Constant-time comparison to prevent timing attacks
+        return secrets.compare_digest(new_hash, hashed_password)
 
     def encrypt_data(self, data, key):
         """
