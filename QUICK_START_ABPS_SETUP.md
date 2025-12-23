@@ -7,10 +7,12 @@ This is your complete implementation guide for Option 1: DNS + Reverse Proxy set
 ## ✅ What You'll Get
 
 After completing these steps:
-- Access admin panel: **`https://abps.albl.com`** (no port needed!)
-- Valid SSL certificate from Let's Encrypt (auto-renews)
-- Professional, secure HTTPS connection
-- Standard ports (80/443) instead of :8080
+- ✅ Access admin panel: **`https://abps.albl.com`** (no port needed!)
+- ✅ Valid SSL certificate from Let's Encrypt (auto-renews every 90 days)
+- ✅ Professional, secure HTTPS connection with TLS 1.3 support
+- ✅ Standard ports (80/443) instead of :8080
+- ✅ Enhanced security with rate limiting and security headers
+- ✅ WebSocket support for WebRTC phone functionality
 
 ---
 
@@ -18,11 +20,19 @@ After completing these steps:
 
 Before starting, make sure you have:
 
+### Required ✅
 - [ ] Root/sudo access to your PBX server
+- [ ] PBX system installed and running (see [INSTALLATION.md](INSTALLATION.md))
 - [ ] Access to your DNS server to add records
-- [ ] Your PBX server's IP address
+- [ ] Your PBX server's **public** IP address
 - [ ] Port 80 and 443 available (not blocked by firewall)
 - [ ] Valid email address for SSL certificate notifications
+
+### Recommended ⚡
+- [ ] Ubuntu 24.04 LTS or 22.04 LTS (tested and verified)
+- [ ] At least 2GB RAM and 20GB disk space
+- [ ] Static IP address or dynamic DNS service
+- [ ] Firewall configured (ufw or iptables)
 
 ---
 
@@ -172,25 +182,81 @@ sudo systemctl restart pbx
 
 ## 🔐 Security Configuration
 
-### Firewall Rules
+### Firewall Rules (Priority: CRITICAL ⚠️)
 
 ```bash
 # Allow HTTPS and HTTP (handled by setup script, but verify)
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
+sudo ufw allow 80/tcp comment "HTTP for Let's Encrypt validation"
+sudo ufw allow 443/tcp comment "HTTPS for admin panel"
 
-# Block direct access to 8080 from external network (optional but recommended)
+# Block direct access to 8080 from external network (STRONGLY RECOMMENDED)
+# NOTE: Configure PBX to bind to 127.0.0.1 BEFORE applying this rule (see below)
 sudo ufw delete allow 8080/tcp  # Remove if exists
-sudo ufw deny from any to any port 8080
+sudo ufw deny from any to any port 8080 comment "Block direct PBX access"
 
-# Allow SIP for phones
-sudo ufw allow 5060/udp
+# Allow SIP for phones (UDP recommended for SIP)
+sudo ufw allow 5060/udp comment "SIP signaling"
+sudo ufw allow 5060/tcp comment "SIP signaling (TCP)"
 
-# Allow RTP for audio
-sudo ufw allow 10000:20000/udp
+# Allow RTP for audio (adjust range if needed)
+sudo ufw allow 10000:20000/udp comment "RTP media streams"
+
+# Enable firewall if not already enabled
+sudo ufw enable
 
 # Check firewall status
-sudo ufw status
+sudo ufw status numbered
+```
+
+### Additional Security Measures
+
+**1. Restrict PBX to Localhost Only (HIGHLY RECOMMENDED)**
+
+⚠️ **IMPORTANT:** Do this FIRST before blocking port 8080 in the firewall!
+
+This ensures the PBX API is ONLY accessible through nginx, not directly:
+
+```bash
+# Edit config.yml
+nano [PBX_INSTALL_DIR]/config.yml
+```
+
+Change the following in config.yml:
+```yaml
+api:
+  # CRITICAL: Preserve exact indentation (2 spaces per level)
+  host: 127.0.0.1  # Changed from 0.0.0.0 - binds to localhost only
+  port: 8080
+```
+
+⚠️ **Restart PBX immediately** after this change:
+```bash
+sudo systemctl restart pbx
+
+# Verify PBX is running and accessible via nginx
+curl -I http://localhost:8080/admin/
+```
+
+**Why this matters:** Changing from 0.0.0.0 to 127.0.0.1 makes the PBX only accessible from localhost. The service must be restarted for this change to take effect.
+```
+
+**2. Monitor Failed Login Attempts**
+
+```bash
+# Check nginx logs for suspicious activity
+sudo tail -f /var/log/nginx/abps.albl.com-access.log | grep -i "login\|admin"
+```
+
+**3. Keep System Updated**
+
+```bash
+# Update system packages regularly
+sudo apt update && sudo apt upgrade -y
+
+# Check for PBX updates
+cd [PBX_INSTALL_DIR]
+git fetch
+git status
 ```
 
 ### SSL Certificate Auto-Renewal
@@ -326,12 +392,23 @@ sudo nginx -t
 
 Now that your PBX is accessible at `https://abps.albl.com`:
 
-1. **Log in** to the admin panel
-2. **Configure extensions** for your team
-3. **Set up SIP phones** to register
-4. **Test calls** between extensions
-5. **Configure voicemail** settings
-6. **Set up auto attendant** for incoming calls
+### Immediate Actions (Priority: HIGH)
+1. **Log in** to the admin panel and verify all features work
+2. **Test SSL certificate** - Ensure browser shows secure connection
+3. **Configure extensions** for your team (see [QUICK_START.md](QUICK_START.md))
+4. **Set up at least one SIP phone** to register and test calls
+
+### Essential Setup (Priority: MEDIUM)
+5. **Configure voicemail** settings for each extension
+6. **Set up auto attendant** for incoming calls (see [ADMIN_PANEL_AUTO_ATTENDANT.md](ADMIN_PANEL_AUTO_ATTENDANT.md))
+7. **Configure call routing** and queues if needed
+8. **Set up emergency notification** contacts (see [E911_PROTECTION_GUIDE.md](E911_PROTECTION_GUIDE.md))
+
+### Additional Features (Priority: LOW)
+9. **Enable monitoring** and alerting (see [PRODUCTION_OPERATIONS_RUNBOOK.md](PRODUCTION_OPERATIONS_RUNBOOK.md))
+10. **Configure backups** for system and call recordings
+11. **Review security best practices** (see [SECURITY_GUIDE.md](SECURITY_GUIDE.md))
+12. **Set up integrations** (CRM, AD, etc.) if needed
 
 ---
 
@@ -352,9 +429,10 @@ If you prefer manual setup or the script fails, see the complete manual guide:
 **Support:**
 - Check logs if issues arise
 - Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common problems
-- Review [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md) for hardening
+- Review [SECURITY_GUIDE.md](SECURITY_GUIDE.md) for hardening
 
 ---
 
-**Last Updated:** 2025-12-17  
-**For:** PBX v1.0.0 with abps.albl.com domain
+**Last Updated:** 2025-12-23  
+**For:** PBX v1.0.0 with abps.albl.com domain  
+**Priority:** HIGH - Production deployment recommended

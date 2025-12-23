@@ -213,22 +213,29 @@ This guide contains:
 - Testing and verification steps
 - Troubleshooting help
 
-### 🌐 Production URL Setup (Optional)
+### 🌐 Production URL Setup (RECOMMENDED for Production)
 
-For production deployments, you can access the admin panel via a friendly URL (e.g., `https://abps.albl.com`) instead of `IP:8080`:
+For production deployments, you **should** access the admin panel via a friendly URL (e.g., `https://abps.albl.com`) instead of `IP:8080`:
 
-**Quick Setup (Automated):**
+**Quick Setup (Automated - 5-10 minutes):**
 ```bash
 sudo scripts/setup_reverse_proxy.sh
 ```
 
-**Manual Setup:** See [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) for detailed nginx/Apache configuration instructions.
+**Documentation:**
+- **Quick Start:** [QUICK_START_ABPS_SETUP.md](QUICK_START_ABPS_SETUP.md) - Step-by-step guide
+- **Manual Setup:** [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) - Detailed nginx/Apache configuration
+- **Implementation:** [ABPS_IMPLEMENTATION_GUIDE.md](ABPS_IMPLEMENTATION_GUIDE.md) - Setup summary
 
 **Benefits:**
 - ✅ Access via friendly domain name (no port number needed)
-- ✅ HTTPS with free Let's Encrypt SSL certificate
-- ✅ Enhanced security with reverse proxy
-- ✅ Professional appearance
+- ✅ HTTPS with free Let's Encrypt SSL certificate (auto-renews)
+- ✅ Enhanced security with reverse proxy and rate limiting
+- ✅ Professional appearance and industry best practice
+- ✅ WebSocket support for WebRTC phones
+- ✅ Better monitoring and logging
+
+**Priority:** HIGH - This is the recommended configuration for any production deployment.
 
 ## 🖥️ Admin Panel
 
