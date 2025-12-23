@@ -159,6 +159,10 @@ echo "2. Restart the PBX service: systemctl restart pbx"
 echo "3. Check service status: systemctl status pbx"
 echo "4. Monitor logs: journalctl -u pbx -f"
 echo ""
+echo "⚠️  IMPORTANT: Clear your browser cache!"
+echo "   - Press Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)"
+echo "   - Or see BROWSER_CACHE_FIX.md for detailed instructions"
+echo ""
 
 # Ask if user wants to restart service
 read -p "Restart PBX service now? (yes/no): " -r
@@ -175,4 +179,10 @@ if [[ $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
 fi
 
 echo ""
-echo "Update complete!"
+echo "=========================================="
+echo "✅ Update complete!"
+echo "=========================================="
+echo ""
+echo "🔔 Don't forget to clear your browser cache!"
+echo "   Press Ctrl+Shift+R (or Cmd+Shift+R on Mac) when accessing the admin panel"
+echo ""

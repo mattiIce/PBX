@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>PBX System Status Check</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status-item {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .status-item.warning {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .status-item.error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .status-item h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .status-item p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .status-item code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .check-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .check-list li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .check-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 PBX System Status Check</h1>
+        <p class="subtitle">Verify your admin panel is working correctly</p>
+        
+        <div class="status-item">
+            <h3>✅ This Page Loaded Successfully</h3>
+            <p>If you can see this page, it means:</p>
+            <ul class="check-list">
+                <li>Your web server is running</li>
+                <li>Your browser can connect to the PBX</li>
+                <li>HTML files are being served correctly</li>
+            </ul>
+        </div>
+        
+        <div class="status-item">
+            <h3>📋 Checking Admin Panel Files</h3>
+            <p id="file-check-status">Checking...</p>
+        </div>
+        
+        <div class="status-item warning">
+            <h3>⚠️ Common Issue: Browser Cache</h3>
+            <p>If the admin panel is not working correctly after an update, the most common cause is browser cache. The browser is using old cached versions of CSS and JavaScript files.</p>
+            <p style="margin-top: 10px;"><strong>Fix:</strong> Press <code>Ctrl+Shift+R</code> (Windows/Linux) or <code>Cmd+Shift+R</code> (Mac) to force a refresh without cache.</p>
+            <p style="margin-top: 10px;">For detailed instructions, see <a href="../BROWSER_CACHE_FIX.md" style="color: #667eea;">BROWSER_CACHE_FIX.md</a></p>
+        </div>
+        
+        <div class="status-item">
+            <h3>🌐 Browser Information</h3>
+            <p id="browser-info"></p>
+        </div>
+        
+        <div class="status-item">
+            <h3>🔗 Quick Links</h3>
+            <p>
+                <a href="login.html" class="btn">Go to Login Page</a>
+                <a href="index.html" class="btn" style="background: #28a745; margin-left: 10px;">Go to Admin Panel</a>
+            </p>
+        </div>
+        
+        <div class="timestamp">
+            Page loaded at: <span id="timestamp"></span>
+        </div>
+    </div>
+    
+    <script>
+        // Display timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // Display browser info
+        const browserInfo = document.getElementById('browser-info');
+        browserInfo.innerHTML = `
+            <strong>User Agent:</strong> ${navigator.userAgent}<br>
+            <strong>Platform:</strong> ${navigator.platform}<br>
+            <strong>Language:</strong> ${navigator.language}<br>
+            <strong>Screen:</strong> ${window.screen.width}x${window.screen.height}<br>
+            <strong>Cookies Enabled:</strong> ${navigator.cookieEnabled ? 'Yes' : 'No'}
+        `;
+        
+        // Check if admin files are accessible
+        const filesToCheck = [
+            { url: 'css/admin.css?v=20231223', name: 'CSS File' },
+            { url: 'js/admin.js?v=20231223', name: 'JavaScript File' }
+        ];
+        
+        let checksCompleted = 0;
+        const results = [];
+        
+        filesToCheck.forEach(file => {
+            fetch(file.url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        results.push(`✓ ${file.name} (${file.url}) - OK`);
+                    } else {
+                        results.push(`✗ ${file.name} (${file.url}) - Error ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    results.push(`✗ ${file.name} (${file.url}) - Failed to load: ${error.message}`);
+                })
+                .finally(() => {
+                    checksCompleted++;
+                    if (checksCompleted === filesToCheck.length) {
+                        document.getElementById('file-check-status').innerHTML = results.join('<br>');
+                    }
+                });
+        });
+        
+        // Log to console
+        console.log('PBX Status Check Page loaded successfully');
+        console.log('Timestamp:', new Date().toISOString());
+        console.log('If you are seeing errors in the admin panel, clear your browser cache:');
+        console.log('  - Press Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)');
+        console.log('  - See BROWSER_CACHE_FIX.md for detailed instructions');
+    </script>
+</body>
+</html>

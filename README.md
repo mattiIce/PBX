@@ -581,6 +581,13 @@ For issues and questions, please open a GitHub issue.
 
 ### Known Issues
 
+⚠️ **Admin Panel After Updates**
+- **Issue**: After running server update scripts, the admin panel may not display correctly or buttons may not be clickable
+- **Cause**: Browser caching old CSS/JavaScript files
+- **Fix**: Press `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) to force refresh
+- **Details**: See [BROWSER_CACHE_FIX.md](BROWSER_CACHE_FIX.md) for comprehensive troubleshooting
+- **Status Check**: Visit `/admin/status-check.html` to verify your installation
+
 ⚠️ **Audio Features**
 - **WebRTC Browser Phone**: Currently disabled and not working. Use physical IP phones or SIP clients for calls.
 - ~~**Hardphone Audio**: Audio sample rate mismatch issue~~ - ✅ **FIXED** (December 19, 2025)

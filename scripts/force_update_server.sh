@@ -39,7 +39,17 @@ if [ $ERROR_COUNT -eq 0 ]; then
     echo "✓ All files valid"
     echo "Restarting service..."
     systemctl restart pbx
-    echo "✓ Complete"
+    echo ""
+    echo "=========================================="
+    echo "✓ Update Complete"
+    echo "=========================================="
+    echo ""
+    echo "⚠️  IMPORTANT: Clear your browser cache!"
+    echo "   Press Ctrl+Shift+R (or Cmd+Shift+R on Mac)"
+    echo "   when accessing the admin panel"
+    echo ""
+    echo "See BROWSER_CACHE_FIX.md for details"
+    echo ""
     exit 0
 else
     echo "✗ Found $ERROR_COUNT errors - NOT restarting service"
