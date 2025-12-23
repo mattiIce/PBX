@@ -67,9 +67,8 @@ class TestLicenseAdminLogin(unittest.TestCase):
 
     def test_license_admin_credentials_wrong_username(self):
         """Test license admin login with wrong username."""
-        result = verify_license_admin_credentials(extension="9322",
-            username="ADMIN",
-            pin="26697647"
+        result = verify_license_admin_credentials(
+            extension="9322", username="ADMIN", pin="26697647"
         )
         self.assertFalse(result, "License admin login should fail with wrong username")
 
@@ -82,10 +81,11 @@ class TestLicenseAdminLogin(unittest.TestCase):
 
     def test_license_admin_credentials_empty_fields(self):
         """Test license admin login with empty fields."""
-        result = verify_license_admin_credentials(extension="", username="ICE", pin="26697647"
+        result = verify_license_admin_credentials(
+            extension="", username="ICE", pin="26697647"
         )
         self.assertFalse(result, "License admin login should fail with empty extension")
-        
+
         result = verify_license_admin_credentials(
             extension="9322",
             username="",

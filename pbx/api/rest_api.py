@@ -4,7 +4,6 @@ Provides HTTP/HTTPS API for managing PBX features.
 """
 
 import base64
-import binascii
 import errno
 import ipaddress
 import json
@@ -162,8 +161,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         return {}
 
     def _get_provisioning_url_info(self):
-        """
-        Get provisioning URL information (protocol, server IP, port)
+        """Get provisioning URL information (protocol, server IP, port).
 
         Returns:
             tuple: (protocol, server_ip, port, base_url)
@@ -537,7 +535,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_matrix_send_notification()
             elif path == "/api/integrations/matrix/rooms":
                 self._handle_matrix_create_room()
-            
+
             # License Management APIs
             elif path == "/api/license/generate":
                 self._handle_license_generate()
@@ -1185,7 +1183,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
 
     def _handle_liveness(self):
-        """Kubernetes-style liveness probe - is the app alive?"""
+        """Kubernetes-style liveness probe - check if the app is alive."""
         try:
             checker = self._get_health_checker()
             is_alive, details = checker.check_liveness()
@@ -1199,7 +1197,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
 
     def _handle_readiness(self):
-        """Kubernetes-style readiness probe - is the app ready for traffic?"""
+        """Kubernetes-style readiness probe - check if the app is ready for traffic."""
         try:
             checker = self._get_health_checker()
             is_ready, details = checker.check_readiness()
@@ -1318,11 +1316,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({"error": "PBX not initialized"}, 500)
 
-    def _validate_limit_parameter(
+    def _validate_limit_param(
         self, params: dict, default: int, max_value: int
     ) -> Optional[int]:
-        """
-        Helper method to validate limit query parameters
+        """Validate limit query parameters.
 
         Args:
             params: Parsed query parameters
@@ -2275,8 +2272,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         return None
 
     def _verify_authentication(self):
-        """
-        Verify authentication token and return payload
+        """Verify authentication token and return payload.
 
         Returns:
             Tuple of (is_authenticated, payload)
@@ -2293,8 +2289,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         return token_manager.verify_token(token)
 
     def _require_admin(self):
-        """
-        Check if current user has admin privileges
+        """Check if current user has admin privileges.
 
         Returns:
             Tuple of (is_admin, payload)
@@ -2328,7 +2323,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 verify_license_admin_credentials,
                 LICENSE_ADMIN_USERNAME
             )
-            
+
             if is_license_admin_extension(extension_number):
                 # Handle license admin authentication separately
                 # For license admin, the password is the PIN
@@ -2337,7 +2332,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if verify_license_admin_credentials(extension_number, username, password):
                     # Generate session token for license admin
                     from pbx.utils.session_token import get_session_token_manager
-                    
+
                     token_manager = get_session_token_manager()
                     token = token_manager.generate_token(
                         extension=extension_number,
@@ -2345,7 +2340,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         name='License Administrator',
                         email='',
                     )
-                    
+
                     self._send_json(
                         {
                             "success": True,
@@ -5419,8 +5414,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(e)}, 500)
 
     def _regenerate_voice_prompts(self, custom_prompts=None, company_name=None):
-        """
-        Regenerate voice prompts using gTTS
+        """Regenerate voice prompts using gTTS.
 
         Args:
             custom_prompts: Optional dict of custom prompt texts
@@ -7851,8 +7845,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Query integration activity log directly from database
                 result = self.pbx_core.database.execute(
                     """SELECT * FROM integration_activity_log
-                       ORDER BY created_at DESC LIMIT 100""".
-                ).
+                       ORDER BY created_at DESC LIMIT 100"""
+                )
 
                 activities = []
                 for row in result or []:
@@ -9597,8 +9591,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     # ============================================================================
 
     def _require_license_admin(self):
-        """
-        Check if current user is the license administrator (extension 9322)
+        """Check if current user is the license administrator (extension 9322).
 
         Returns:
             Tuple of (is_authorized, payload)
@@ -9622,14 +9615,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # User is authenticated but not the license admin -> should be treated as 403 Forbidden
         return False, {"status_code": 403, "error": "forbidden", "extension": extension}
+
     def _handle_license_status(self):
         """Get current license status and information."""
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
             info = license_manager.get_license_info()
-            
+
             self._send_json({
                 'success': True,
                 'license': info
@@ -9645,9 +9639,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """List all available features for current license."""
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
-            
+
             # If licensing is disabled, all features available
             if not license_manager.enabled:
                 self._send_json({
@@ -9656,24 +9650,24 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'licensing_enabled': False
                 })
                 return
-            
+
             # Get license type
             if license_manager.current_license:
                 license_type = license_manager.current_license.get('type', 'trial')
             else:
                 license_type = 'trial'
-            
+
             # Get features for this license type
             features = license_manager.features.get(license_type, [])
-            
+
             # For custom license, get custom features
             if license_type == 'custom' and license_manager.current_license:
                 features = license_manager.current_license.get('custom_features', [])
-            
+
             # Separate features and limits
             feature_list = []
             limits = {}
-            
+
             for feature in features:
                 if ':' in feature and any(feature.startswith(f'{limit}:') for limit in ['max_extensions', 'max_concurrent_calls']):
                     limit_name, limit_value = feature.split(':', 1)
@@ -9692,7 +9686,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         continue
                 else:
                     feature_list.append(feature)
-            
+
             self._send_json({
                 'success': True,
                 'license_type': license_type,
@@ -9711,20 +9705,20 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Check if a specific feature is available."""
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             body = self._get_body()
             feature_name = body.get('feature')
-            
+
             if not feature_name:
                 self._send_json({
                     'success': False,
                     'error': 'Missing feature name'
                 }, 400)
                 return
-            
+
             license_manager = get_license_manager()
             available = license_manager.has_feature(feature_name)
-            
+
             self._send_json({
                 'success': True,
                 'feature': feature_name,
@@ -9749,23 +9743,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'error': 'Unauthorized. License management requires administrator authentication.'
             }, status_code)
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager, LicenseType
-            
+
             body = self._get_body()
-            
+
             # Validate required fields
             license_type_str = body.get('type')
             issued_to = body.get('issued_to')
-            
+
             if not license_type_str or not issued_to:
                 self._send_json({
                     'success': False,
                     'error': 'Missing required fields: type, issued_to'
                 }, 400)
                 return
-            
+
             # Parse license type
             try:
                 license_type = LicenseType(license_type_str)
@@ -9775,13 +9769,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'error': f'Invalid license type: {license_type_str}'
                 }, 400)
                 return
-            
+
             # Get optional fields
             max_extensions = body.get('max_extensions')
             max_concurrent_calls = body.get('max_concurrent_calls')
             expiration_days = body.get('expiration_days')
             custom_features = body.get('custom_features')
-            
+
             # Generate license
             license_manager = get_license_manager()
             license_data = license_manager.generate_license_key(
@@ -9792,7 +9786,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 expiration_days=expiration_days,
                 custom_features=custom_features
             )
-            
+
             self._send_json({
                 'success': True,
                 'license': license_data
@@ -9814,14 +9808,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'error': 'Unauthorized. License management requires administrator authentication.'
             }, status_code or 401)
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             body = self._get_body()
             license_data = body.get('license_data') or body
             enforce_licensing = body.get('enforce_licensing', False)
-            
+
             # Validate license data
             if 'key' not in license_data:
                 self._send_json({
@@ -9829,15 +9823,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'error': 'Missing license key'
                 }, 400)
                 return
-            
+
             # Save license with optional enforcement
             license_manager = get_license_manager()
             success = license_manager.save_license(license_data, enforce_licensing=enforce_licensing)
-            
+
             message = 'License installed successfully'
             if enforce_licensing:
                 message += ' (licensing enforcement enabled - cannot be disabled)'
-            
+
             if success:
                 self._send_json({
                     'success': True,
@@ -9867,13 +9861,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'error': 'Unauthorized. License management requires administrator authentication.'
             }, 401)
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
             success = license_manager.revoke_license()
-            
+
             if success:
                 self._send_json({
                     'success': True,
@@ -9907,32 +9901,32 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'error': 'Unauthorized. License management requires administrator authentication.'
             }, status_code)
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager, initialize_license_manager
-            
+
             body = self._get_body()
             enabled = body.get('enabled')
-            
+
             if enabled is None:
                 self._send_json({
                     'success': False,
                     'error': 'Missing enabled flag'
                 }, 400)
                 return
-            
+
             # Update licensing status
             license_manager = get_license_manager()
-            
+
             # Update .env file for persistence
             env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
-            
+
             # Read existing .env
             env_lines = []
             if os.path.exists(env_file):
                 with open(env_file, 'r') as f:
                     env_lines = f.readlines()
-            
+
             # Check if license lock exists
             lock_path = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.license_lock'
@@ -9944,7 +9938,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'licensing_enabled': True
                 }, 403)
                 return
-            
+
             # Update or add PBX_LICENSING_ENABLED
             found = False
             for i, line in enumerate(env_lines):
@@ -9952,10 +9946,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     env_lines[i] = f"PBX_LICENSING_ENABLED={'true' if enabled else 'false'}\n"
                     found = True
                     break
-            
+
             if not found:
                 env_lines.append(f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n')
-            
+
             # Write back atomically to avoid corrupting .env on partial failures
             env_dir = os.path.dirname(env_file)
             tmp_fd, tmp_path = tempfile.mkstemp(dir=env_dir, prefix='.env.', suffix='.tmp')
@@ -9978,13 +9972,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     'error': 'Failed to persist licensing configuration'
                 }, 500)
                 return
-            
+
             # Also update runtime environment for immediate effect
             os.environ['PBX_LICENSING_ENABLED'] = 'true' if enabled else 'false'
-            
+
             # Reinitialize license manager
             license_manager = initialize_license_manager(license_manager.config)
-            
+
             self._send_json({
                 'success': True,
                 'licensing_enabled': license_manager.enabled,
@@ -10009,13 +10003,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 'error': 'Unauthorized. License management requires administrator authentication.'
             }, status_code)
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
             success = license_manager.remove_license_lock()
-            
+
             if success:
                 self._send_json({
                     'success': True,
@@ -10057,8 +10051,7 @@ class ReusableHTTPServer(HTTPServer):
 
 
 def get_process_using_port(port):
-    """
-    Detect what process is using a specific port
+    """Detect what process is using a specific port.
 
     Args:
         port (int): Port number to check
@@ -10109,8 +10102,7 @@ class PBXAPIServer:
         host="0.0.0.0",
         port=8080,  # nosec B104 - PBX API needs to bind all interfaces for network access
     ):
-        """
-        Initialize API server
+        """Initialize API server.
 
         Args:
             pbx_core: PBXCore instance
@@ -10281,8 +10273,7 @@ class PBXAPIServer:
             traceback.print_exc()
 
     def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
-        """
-        Request certificate from in-house CA
+        """Request certificate from in-house CA.
 
         This generates a CSR (Certificate Signing Request) and submits it to
         the in-house CA for signing.
