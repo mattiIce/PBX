@@ -5,7 +5,26 @@ When trying to log into the admin panel at `/admin/login.html`, you see the erro
 - "Connection error. Please try again."
 - "Cannot reach API server at http://hostname:9000"
 
-## Quick Diagnosis
+## NEW FIX (December 2025)
+
+**✅ RESOLVED**: The login page now automatically detects reverse proxy configurations.
+
+### What Changed
+The login page now uses smart API endpoint detection:
+
+1. **Meta tag override** (if specified in HTML)
+2. **Port 9000** - Direct API access
+3. **Ports 80/443 or no port** - Assumes reverse proxy, uses same origin
+4. **Other ports** - Falls back to port 9000
+
+This means:
+- ✅ **Reverse proxy setups** (nginx, Apache) work automatically  
+- ✅ **Direct access** (`http://server:9000`) works  
+- ✅ **Custom setups** can use meta tag override
+
+### If You Still Have Connection Issues
+
+This usually means one of the following:
 
 ### Step 1: Open Browser Console
 1. Press `F12` to open Developer Tools

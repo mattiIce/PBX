@@ -243,26 +243,40 @@
     </div>
 
     <script>
+        // Constants for API endpoint detection
+        const STANDARD_HTTP_PORT = '80';
+        const STANDARD_HTTPS_PORT = '443';
+        const API_PORT = '9000';
+        
         // API Base URL - auto-detect or use configured value
         function getAPIBase() {
-            // Check if we're on the API port (9000) already
-            if (window.location.port === '9000') {
-                console.log('Detected API port in URL, using current origin');
-                return window.location.origin;
-            }
-            
-            // Check for meta tag
+            // Check for meta tag override first
             const apiMeta = document.querySelector('meta[name="api-base-url"]');
             if (apiMeta && apiMeta.content) {
                 console.log('Using API base URL from meta tag:', apiMeta.content);
                 return apiMeta.content;
             }
             
-            // Default: use current hostname with port 9000
+            // If we're on the API port, use current origin
+            if (window.location.port === API_PORT) {
+                console.log('Detected API port in URL, using current origin');
+                return window.location.origin;
+            }
+            
+            // If accessed through reverse proxy or standard HTTP/HTTPS ports,
+            // try same origin first (API should be proxied)
+            if (window.location.port === '' || 
+                window.location.port === STANDARD_HTTP_PORT || 
+                window.location.port === STANDARD_HTTPS_PORT) {
+                console.log('Accessed via standard port, will try same origin (reverse proxy)');
+                return window.location.origin;
+            }
+            
+            // Fallback: use current hostname with API port (direct API access)
             const protocol = window.location.protocol;
             const hostname = window.location.hostname || 'localhost';
-            const apiBase = `${protocol}//${hostname}:9000`;
-            console.log('Using default API base URL:', apiBase);
+            const apiBase = `${protocol}//${hostname}:${API_PORT}`;
+            console.log('Using direct API access:', apiBase);
             console.log('Current location:', window.location.href);
             return apiBase;
         }
