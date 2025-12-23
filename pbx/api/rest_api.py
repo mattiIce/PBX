@@ -9677,7 +9677,19 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             for feature in features:
                 if ':' in feature and any(feature.startswith(f'{limit}:') for limit in ['max_extensions', 'max_concurrent_calls']):
                     limit_name, limit_value = feature.split(':', 1)
-                    limits[limit_name] = None if limit_value == 'unlimited' else int(limit_value)
+                    try:
+                        if limit_value == 'unlimited':
+                            limits[limit_name] = None
+                        else:
+                            limits[limit_name] = int(limit_value)
+                    except ValueError:
+                        # Malformed limit; log and skip this entry instead of failing the entire request
+                        self.logger.warning(
+                            "Ignoring malformed license limit value '%s' for '%s'",
+                            limit_value,
+                            limit_name,
+                        )
+                        continue
                 else:
                     feature_list.append(feature)
             
