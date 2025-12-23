@@ -130,13 +130,13 @@ When DTMF isn't working properly, this tool helps you identify which payload typ
 
 ```bash
 # Interactive mode (recommended)
-python scripts/dtmf_payload_selector.py
+python3 scripts/dtmf_payload_selector.py
 
 # Show all available payload types
-python scripts/dtmf_payload_selector.py --list
+python3 scripts/dtmf_payload_selector.py --list
 
 # Show help
-python scripts/dtmf_payload_selector.py --help
+python3 scripts/dtmf_payload_selector.py --help
 ```
 
 **Features:**
@@ -148,7 +148,7 @@ python scripts/dtmf_payload_selector.py --help
 
 **Example session:**
 ```
-$ python scripts/dtmf_payload_selector.py
+$ python3 scripts/dtmf_payload_selector.py
 
 ═══════════════════════════════════════════════════════════
    DTMF RFC2833 Payload Type Selector
@@ -256,7 +256,7 @@ See [README_VOICE_GENERATION.md](README_VOICE_GENERATION.md) for voice and TTS p
 **Python scripts (.py files):**
 
 ```bash
-python scripts/<script_name>.py
+python3 scripts/<script_name>.py
 ```
 
 **Shell scripts (.sh files):**
@@ -270,7 +270,7 @@ Some scripts may require root privileges or specific configuration.
 For script-specific help, run:
 
 ```bash
-python scripts/<script_name>.py --help
+python3 scripts/<script_name>.py --help
 ```
 
 Or check the script's source code for documentation.
