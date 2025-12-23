@@ -1,3 +1,8 @@
+// Constants for API endpoint detection
+const STANDARD_HTTP_PORT = '80';
+const STANDARD_HTTPS_PORT = '443';
+const API_PORT = '9000';
+
 // API Base URL
 // If the page is served from the API server, use same origin
 // Otherwise, construct URL from hostname and default API port
@@ -8,21 +13,23 @@ function getAPIBase() {
         return apiMeta.content;
     }
     
-    // If we're on the API port (9000), use current origin
-    if (window.location.port === '9000') {
+    // If we're on the API port, use current origin
+    if (window.location.port === API_PORT) {
         return window.location.origin;
     }
     
     // If accessed through reverse proxy or standard HTTP/HTTPS ports,
     // try same origin first (API should be proxied)
-    if (window.location.port === '' || window.location.port === '80' || window.location.port === '443') {
+    if (window.location.port === '' || 
+        window.location.port === STANDARD_HTTP_PORT || 
+        window.location.port === STANDARD_HTTPS_PORT) {
         return window.location.origin;
     }
     
-    // Fallback: use current hostname with port 9000 (direct API access)
+    // Fallback: use current hostname with API port (direct API access)
     const protocol = window.location.protocol;
     const hostname = window.location.hostname || 'localhost';
-    return `${protocol}//${hostname}:9000`;
+    return `${protocol}//${hostname}:${API_PORT}`;
 }
 
 const API_BASE = getAPIBase();
