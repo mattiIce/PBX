@@ -14,7 +14,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
-from pbx.utils.session_token import get_session_token_manager
 
 
 class MockPBXCore:
