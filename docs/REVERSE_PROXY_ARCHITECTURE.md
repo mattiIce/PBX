@@ -1,6 +1,10 @@
 # Reverse Proxy Architecture Diagram
 
-## Before (Direct Access)
+**Last Updated:** 2025-12-23  
+**Priority:** HIGH - Production Best Practice  
+**Purpose:** Visual guide to understand the security and architecture benefits of reverse proxy setup
+
+## Before (Direct Access) ❌ NOT RECOMMENDED
 ```
 ┌─────────────┐
 │   Browser   │
@@ -16,38 +20,54 @@
 └─────────────────────────┘
 ```
 
-## After (Reverse Proxy - Recommended)
+## After (Reverse Proxy - Recommended) ✅ PRODUCTION READY
 ```
 ┌─────────────┐
 │   Browser   │
 └──────┬──────┘
        │
        │ https://abps.albl.com
-       │ (Friendly URL, no port)
+       │ (Friendly URL, no port, encrypted)
        ▼
 ┌─────────────────────────┐
 │   DNS Server            │
 │   abps.albl.com         │
-│   → 192.168.1.14        │
+│   → 192.168.1.14        │  ◄── Public IP address
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│   Firewall (ufw)        │
+│   - Allow 80, 443       │  ◄── HTTP/HTTPS only
+│   - Allow 5060 (SIP)    │  ◄── Phone signaling
+│   - Allow 10000-20000   │  ◄── RTP media
+│   - DENY 8080           │  ◄── Block direct PBX access
 └──────┬──────────────────┘
        │
        ▼
 ┌─────────────────────────┐
 │   Nginx (Port 443)      │  ◄── SSL/TLS Termination
-│   - HTTPS enabled       │  ◄── Let's Encrypt cert
-│   - Security headers    │  ◄── Rate limiting
-│   - WebSocket support   │  ◄── Request logging
+│   - HTTPS enabled       │  ◄── Let's Encrypt cert (auto-renew)
+│   - TLS 1.3 support     │  ◄── Modern encryption
+│   - Security headers    │  ◄── HSTS, X-Frame-Options
+│   - Rate limiting       │  ◄── 10 req/sec API limit
+│   - WebSocket support   │  ◄── For WebRTC phones
+│   - Request logging     │  ◄── Detailed access logs
+│   - DDoS protection     │  ◄── Burst handling
 └──────┬──────────────────┘
        │
        │ Proxies to localhost:8080
+       │ (Internal, not internet-facing)
        ▼
 ┌─────────────────────────┐
 │   PBX Server (8080)     │
 │   - Listens on          │
-│     127.0.0.1:8080      │
+│     127.0.0.1:8080      │  ◄── Localhost only
 │   - Not exposed to      │
-│     internet            │
+│     internet            │  ◄── Enhanced security
+│   - No SSL overhead     │  ◄── Nginx handles it
 └─────────────────────────┘
+```
 ```
 
 ## Traffic Flow
@@ -96,16 +116,22 @@ Nginx Reverse Proxy
 
 ## Security Comparison
 
-| Feature | Direct Access | Reverse Proxy |
-|---------|---------------|---------------|
-| SSL/TLS | Manual setup | Automated (Let's Encrypt) |
-| Certificate | Self-signed | Trusted CA |
-| Port in URL | Yes (:8080) | No |
-| Rate limiting | No | Yes |
-| Request logging | Basic | Detailed |
-| Security headers | Basic | Enhanced |
-| Attack surface | Full | Reduced |
-| Professional URL | No | Yes |
+| Feature | Direct Access ❌ | Reverse Proxy ✅ | Priority |
+|---------|-----------------|------------------|----------|
+| SSL/TLS | Manual setup, complex | Automated (Let's Encrypt) | CRITICAL |
+| Certificate | Self-signed (warnings) | Trusted CA (green lock) | CRITICAL |
+| Port in URL | Yes (:8080) ugly | No (standard 443) | HIGH |
+| Rate limiting | No protection | Yes (10 req/sec API) | HIGH |
+| Request logging | Basic | Detailed nginx logs | MEDIUM |
+| Security headers | Basic | Enhanced (HSTS, CSP) | HIGH |
+| Attack surface | Full PBX exposed | Only nginx exposed | CRITICAL |
+| Professional URL | No | Yes (https://abps.albl.com) | MEDIUM |
+| DDoS protection | None | Burst handling | HIGH |
+| Auto-renewal | Manual | Automatic (90 days) | HIGH |
+| WebSocket support | Manual config | Built-in | MEDIUM |
+| Monitoring | Limited | Extensive logs | MEDIUM |
+
+**Bottom Line:** Reverse proxy is NOT optional for production - it's essential for security.
 
 ## Setup Summary
 
