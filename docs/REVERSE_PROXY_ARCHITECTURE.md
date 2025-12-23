@@ -68,7 +68,6 @@
 │   - No SSL overhead     │  ◄── Nginx handles it
 └─────────────────────────┘
 ```
-```
 
 ## Traffic Flow
 

@@ -364,9 +364,9 @@ dig abps.albl.com
 
 2. **Restrict PBX to Localhost** - Prevent direct access to port 8080
    ```yaml
-   # In config.yml
+   # In config.yml - keep existing indentation structure
    api:
-     host: 127.0.0.1  # Only localhost
+     host: 127.0.0.1  # Only localhost (changed from 0.0.0.0)
      port: 8080
    ```
 

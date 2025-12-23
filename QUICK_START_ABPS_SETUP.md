@@ -186,19 +186,19 @@ sudo systemctl restart pbx
 
 ```bash
 # Allow HTTPS and HTTP (handled by setup script, but verify)
-sudo ufw allow 80/tcp comment 'HTTP for Let\'s Encrypt validation'
-sudo ufw allow 443/tcp comment 'HTTPS for admin panel'
+sudo ufw allow 80/tcp comment "HTTP for Let's Encrypt validation"
+sudo ufw allow 443/tcp comment "HTTPS for admin panel"
 
 # Block direct access to 8080 from external network (STRONGLY RECOMMENDED)
 sudo ufw delete allow 8080/tcp  # Remove if exists
-sudo ufw deny from any to any port 8080 comment 'Block direct PBX access'
+sudo ufw deny from any to any port 8080 comment "Block direct PBX access"
 
 # Allow SIP for phones (UDP recommended for SIP)
-sudo ufw allow 5060/udp comment 'SIP signaling'
-sudo ufw allow 5060/tcp comment 'SIP signaling (TCP)'
+sudo ufw allow 5060/udp comment "SIP signaling"
+sudo ufw allow 5060/tcp comment "SIP signaling (TCP)"
 
 # Allow RTP for audio (adjust range if needed)
-sudo ufw allow 10000:20000/udp comment 'RTP media streams'
+sudo ufw allow 10000:20000/udp comment "RTP media streams"
 
 # Enable firewall if not already enabled
 sudo ufw enable
