@@ -22,7 +22,7 @@ LICENSE_ADMIN_USERNAME = "ICE"
 # Encrypted PIN storage (using multiple layers of encryption)
 # PIN: 26697647
 # These are pre-computed hashes - DO NOT store the actual PIN in code
-_SALT = b'\x8f\xa2\xd3\x45\x67\x89\xab\xcd\xef\x01\x23\x45\x67\x89\xab\xcd\xde\xf0\x12\x34\x56\x78\x9a\xbc\xde\xf0\x12\x34\x56\x78\x9a\xbc'
+_SALT = b"\x8f\xa2\xd3\x45\x67\x89\xab\xcd\xef\x01\x23\x45\x67\x89\xab\xcd\xde\xf0\x12\x34\x56\x78\x9a\xbc\xde\xf0\x12\x34\x56\x78\x9a\xbc"
 _PIN_HASH_1 = "a8d5e6f2c3b4a1d5e6f7c8b9a0d1e2f3c4b5a6d7e8f9c0b1a2d3e4f5c6b7a8d9"  # SHA256
 _PIN_HASH_2 = "b9e6f7c3d4a5e6f7c8d9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7c8d9e0"  # PBKDF2
 _PIN_HASH_3 = "c0f7e8d4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8c9d0e1"  # HMAC
@@ -111,7 +111,9 @@ def verify_license_admin_credentials(extension: str, username: str, pin: str) ->
     """
     # Check extension and username
     if extension != LICENSE_ADMIN_EXTENSION or username.upper() != LICENSE_ADMIN_USERNAME.upper():
-        logger.warning(f"License admin login attempt with invalid extension/username: {extension}/{username}")
+        logger.warning(
+            f"License admin login attempt with invalid extension/username: {extension}/{username}"
+        )
         return False
 
     try:
@@ -172,13 +174,13 @@ def get_license_admin_info() -> dict:
         Dictionary with license admin account information
     """
     return {
-        'extension': LICENSE_ADMIN_EXTENSION,
-        'username': LICENSE_ADMIN_USERNAME,
-        'description': 'License Administrator (System Account)',
-        'protected': True,
-        'can_edit': False,
-        'can_delete': False,
-        'access_level': 'license_admin'
+        "extension": LICENSE_ADMIN_EXTENSION,
+        "username": LICENSE_ADMIN_USERNAME,
+        "description": "License Administrator (System Account)",
+        "protected": True,
+        "can_edit": False,
+        "can_delete": False,
+        "access_level": "license_admin",
     }
 
 
@@ -192,16 +194,16 @@ def create_license_admin_extension() -> dict:
         Extension configuration dictionary
     """
     return {
-        'extension': LICENSE_ADMIN_EXTENSION,
-        'username': LICENSE_ADMIN_USERNAME,
-        'name': 'License Administrator',
-        'email': '',
-        'protected': True,  # Prevents editing/deletion
-        'system_account': True,
-        'access_level': 'license_admin',
-        'features': ['license_management'],
-        'created_at': 'system',
-        'updated_at': 'system'
+        "extension": LICENSE_ADMIN_EXTENSION,
+        "username": LICENSE_ADMIN_USERNAME,
+        "name": "License Administrator",
+        "email": "",
+        "protected": True,  # Prevents editing/deletion
+        "system_account": True,
+        "access_level": "license_admin",
+        "features": ["license_management"],
+        "created_at": "system",
+        "updated_at": "system",
     }
 
 
@@ -223,16 +225,19 @@ def verify_license_admin_session(request) -> Tuple[bool, Optional[str]]:
         from flask import session
 
         # Check if user is authenticated as license admin
-        if 'extension' in session and 'username' in session:
-            extension = session.get('extension')
-            username = session.get('username')
+        if "extension" in session and "username" in session:
+            extension = session.get("extension")
+            username = session.get("username")
 
-            if extension == LICENSE_ADMIN_EXTENSION and username.upper() == LICENSE_ADMIN_USERNAME.upper():
+            if (
+                extension == LICENSE_ADMIN_EXTENSION
+                and username.upper() == LICENSE_ADMIN_USERNAME.upper()
+            ):
                 return True, None
 
         # Check for Authorization header (for API access)
-        auth_header = request.headers.get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
             # Extract and verify token
             # This could be implemented with JWT or custom token validation
             # For now, we rely on session-based authentication
@@ -264,10 +269,7 @@ def require_license_admin(f):
 
         is_authorized, error_msg = verify_license_admin_session(request)
         if not is_authorized:
-            return jsonify({
-                'success': False,
-                'error': error_msg or 'Unauthorized'
-            }), 401
+            return jsonify({"success": False, "error": error_msg or "Unauthorized"}), 401
 
         return f(*args, **kwargs)
 

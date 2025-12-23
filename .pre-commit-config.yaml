@@ -69,7 +69,7 @@ repos:
     rev: 1.9.2
     hooks:
       - id: bandit
-        args: ['-ll', '-r', '.']
+        args: ['-c', '.bandit', '-r', '.']
         exclude: 'tests/'
 
   # YAML linting

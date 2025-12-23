@@ -66,15 +66,14 @@ class LicenseManager:
 
         # License storage path
         self.license_path = self.config.get(
-            'license_file',
-            os.path.join(os.path.dirname(__file__), '..', '..', '.license')
+            "license_file", os.path.join(os.path.dirname(__file__), "..", "..", ".license")
         )
 
         # Grace period in days
-        self.grace_period_days = self.config.get('grace_period_days', 7)
+        self.grace_period_days = self.config.get("grace_period_days", 7)
 
         # Trial period in days
-        self.trial_period_days = self.config.get('trial_period_days', 30)
+        self.trial_period_days = self.config.get("trial_period_days", 30)
 
         # Feature definitions per license tier
         self.features = self._initialize_features()
@@ -104,23 +103,21 @@ class LicenseManager:
         # Check for license lock file (highest priority - enforces licensing)
         # This file is created when a commercial license is first installed
         # and prevents users from disabling licensing via config/env
-        license_lock_path = os.path.join(
-            os.path.dirname(__file__), '..', '..', '.license_lock'
-        )
+        license_lock_path = os.path.join(os.path.dirname(__file__), "..", "..", ".license_lock")
         if os.path.exists(license_lock_path):
             logger.info("License lock file detected - licensing enforcement is mandatory")
             return True
 
         # Environment variable (second priority)
-        env_enabled = os.getenv('PBX_LICENSING_ENABLED', '').lower()
-        if env_enabled in ('true', '1', 'yes', 'on'):
+        env_enabled = os.getenv("PBX_LICENSING_ENABLED", "").lower()
+        if env_enabled in ("true", "1", "yes", "on"):
             return True
-        if env_enabled in ('false', '0', 'no', 'off'):
+        if env_enabled in ("false", "0", "no", "off"):
             return False
 
         # Config file (third priority)
-        if 'licensing' in self.config:
-            return self.config['licensing'].get('enabled', False)
+        if "licensing" in self.config:
+            return self.config["licensing"].get("enabled", False)
 
         # Default: disabled (open-source friendly)
         return False
@@ -133,78 +130,78 @@ class LicenseManager:
             Dictionary mapping license types to available features
         """
         return {
-            'trial': [
-                'basic_calling',
-                'voicemail',
-                'call_recording',
-                'basic_ivr',
-                'max_extensions:10',
-                'max_concurrent_calls:5',
+            "trial": [
+                "basic_calling",
+                "voicemail",
+                "call_recording",
+                "basic_ivr",
+                "max_extensions:10",
+                "max_concurrent_calls:5",
             ],
-            'basic': [
-                'basic_calling',
-                'voicemail',
-                'call_recording',
-                'ivr',
-                'call_queues',
-                'conference',
-                'max_extensions:50',
-                'max_concurrent_calls:25',
+            "basic": [
+                "basic_calling",
+                "voicemail",
+                "call_recording",
+                "ivr",
+                "call_queues",
+                "conference",
+                "max_extensions:50",
+                "max_concurrent_calls:25",
             ],
-            'professional': [
-                'basic_calling',
-                'voicemail',
-                'call_recording',
-                'ivr',
-                'call_queues',
-                'conference',
-                'call_parking',
-                'hot_desking',
-                'webrtc',
-                'crm_integration',
-                'ad_integration',
-                'mfa',
-                'max_extensions:200',
-                'max_concurrent_calls:100',
+            "professional": [
+                "basic_calling",
+                "voicemail",
+                "call_recording",
+                "ivr",
+                "call_queues",
+                "conference",
+                "call_parking",
+                "hot_desking",
+                "webrtc",
+                "crm_integration",
+                "ad_integration",
+                "mfa",
+                "max_extensions:200",
+                "max_concurrent_calls:100",
             ],
-            'enterprise': [
-                'basic_calling',
-                'voicemail',
-                'call_recording',
-                'ivr',
-                'call_queues',
-                'conference',
-                'call_parking',
-                'hot_desking',
-                'webrtc',
-                'crm_integration',
-                'ad_integration',
-                'mfa',
-                'ai_features',
-                'advanced_analytics',
-                'high_availability',
-                'multi_site',
-                'sbc',
-                'max_extensions:unlimited',
-                'max_concurrent_calls:unlimited',
+            "enterprise": [
+                "basic_calling",
+                "voicemail",
+                "call_recording",
+                "ivr",
+                "call_queues",
+                "conference",
+                "call_parking",
+                "hot_desking",
+                "webrtc",
+                "crm_integration",
+                "ad_integration",
+                "mfa",
+                "ai_features",
+                "advanced_analytics",
+                "high_availability",
+                "multi_site",
+                "sbc",
+                "max_extensions:unlimited",
+                "max_concurrent_calls:unlimited",
             ],
-            'perpetual': [
-                'basic_calling',
-                'voicemail',
-                'call_recording',
-                'ivr',
-                'call_queues',
-                'conference',
-                'call_parking',
-                'hot_desking',
-                'webrtc',
-                'crm_integration',
-                'ad_integration',
-                'mfa',
-                'max_extensions:unlimited',
-                'max_concurrent_calls:unlimited',
+            "perpetual": [
+                "basic_calling",
+                "voicemail",
+                "call_recording",
+                "ivr",
+                "call_queues",
+                "conference",
+                "call_parking",
+                "hot_desking",
+                "webrtc",
+                "crm_integration",
+                "ad_integration",
+                "mfa",
+                "max_extensions:unlimited",
+                "max_concurrent_calls:unlimited",
             ],
-            'custom': [],  # Defined per-license
+            "custom": [],  # Defined per-license
         }
 
     def _load_license(self) -> None:
@@ -215,7 +212,7 @@ class LicenseManager:
             return
 
         try:
-            with open(self.license_path, 'r') as f:
+            with open(self.license_path, "r") as f:
                 license_data = json.load(f)
 
             # Validate and decrypt license
@@ -243,7 +240,7 @@ class LicenseManager:
         Returns:
             Validated license dict or None if invalid
         """
-        required_fields = ['key', 'type', 'issued_to', 'issued_date']
+        required_fields = ["key", "type", "issued_to", "issued_date"]
 
         # Check required fields
         for field in required_fields:
@@ -269,27 +266,25 @@ class LicenseManager:
             True if signature is valid, False otherwise
         """
         # Extract signature
-        signature = license_data.get('signature')
+        signature = license_data.get("signature")
         if not signature:
             return False
 
         # Create payload (all fields except signature)
-        payload = {k: v for k, v in license_data.items() if k != 'signature'}
+        payload = {k: v for k, v in license_data.items() if k != "signature"}
         payload_str = json.dumps(payload, sort_keys=True)
 
         # Generate expected signature
         # In production, use a private/public key pair and change the secret key!
-        secret_key = self.config.get('license_secret_key')
-        if not secret_key or secret_key == 'default_secret_key':
+        secret_key = self.config.get("license_secret_key")
+        if not secret_key or secret_key == "default_secret_key":
             logger.warning(
                 "Using default license secret key! "
                 "Set 'licensing.license_secret_key' in config.yml for production."
             )
-            secret_key = 'default_secret_key'
+            secret_key = "default_secret_key"
 
-        expected_signature = hashlib.sha256(
-            f"{payload_str}{secret_key}".encode()
-        ).hexdigest()
+        expected_signature = hashlib.sha256(f"{payload_str}{secret_key}".encode()).hexdigest()
 
         return signature == expected_signature
 
@@ -300,7 +295,7 @@ class LicenseManager:
         max_extensions: Optional[int] = None,
         max_concurrent_calls: Optional[int] = None,
         expiration_days: Optional[int] = None,
-        custom_features: Optional[List[str]] = None
+        custom_features: Optional[List[str]] = None,
     ) -> Dict:
         """
         Generate a new license key.
@@ -328,27 +323,25 @@ class LicenseManager:
 
         # Build license data
         license_data = {
-            'key': license_key,
-            'type': license_type.value,
-            'issued_to': issued_to,
-            'issued_date': issued_date,
-            'expiration': expiration,
-            'max_extensions': max_extensions,
-            'max_concurrent_calls': max_concurrent_calls,
+            "key": license_key,
+            "type": license_type.value,
+            "issued_to": issued_to,
+            "issued_date": issued_date,
+            "expiration": expiration,
+            "max_extensions": max_extensions,
+            "max_concurrent_calls": max_concurrent_calls,
         }
 
         # Add custom features for custom license type
         if license_type == LicenseType.CUSTOM and custom_features:
-            license_data['custom_features'] = custom_features
+            license_data["custom_features"] = custom_features
 
         # Generate signature
         payload_str = json.dumps(license_data, sort_keys=True)
-        secret_key = self.config.get('license_secret_key', 'default_secret_key')
-        signature = hashlib.sha256(
-            f"{payload_str}{secret_key}".encode()
-        ).hexdigest()
+        secret_key = self.config.get("license_secret_key", "default_secret_key")
+        signature = hashlib.sha256(f"{payload_str}{secret_key}".encode()).hexdigest()
 
-        license_data['signature'] = signature
+        license_data["signature"] = signature
 
         return license_data
 
@@ -371,7 +364,7 @@ class LicenseManager:
 
         # Format as XXXX-XXXX-XXXX-XXXX
         parts = [key_hash[i : i + 4].upper() for i in range(0, 16, 4)]
-        return '-'.join(parts)
+        return "-".join(parts)
 
     def save_license(self, license_data: Dict, enforce_licensing: bool = False) -> bool:
         """
@@ -386,7 +379,7 @@ class LicenseManager:
             True if saved successfully, False otherwise
         """
         try:
-            with open(self.license_path, 'w') as f:
+            with open(self.license_path, "w") as f:
                 json.dump(license_data, f, indent=2)
 
             logger.info(f"License saved to {self.license_path}")
@@ -414,26 +407,26 @@ class LicenseManager:
         Args:
             license_data: License data to include in lock file
         """
-        lock_path = os.path.join(
-            os.path.dirname(self.license_path), '.license_lock'
-        )
+        lock_path = os.path.join(os.path.dirname(self.license_path), ".license_lock")
 
         try:
             lock_data = {
-                'created': datetime.now().isoformat(),
-                'license_key': license_data.get('key', '')[:19] + '...',  # Partial key
-                'issued_to': license_data.get('issued_to', ''),
-                'type': license_data.get('type', ''),
-                'enforcement': 'mandatory'
+                "created": datetime.now().isoformat(),
+                "license_key": license_data.get("key", "")[:19] + "...",  # Partial key
+                "issued_to": license_data.get("issued_to", ""),
+                "type": license_data.get("type", ""),
+                "enforcement": "mandatory",
             }
 
-            with open(lock_path, 'w') as f:
+            with open(lock_path, "w") as f:
                 json.dump(lock_data, f, indent=2)
 
             # Restrict permissions (owner read/write only)
             os.chmod(lock_path, 0o600)
 
-            logger.info(f"License lock file created at {lock_path} - licensing enforcement is now mandatory")
+            logger.info(
+                f"License lock file created at {lock_path} - licensing enforcement is now mandatory"
+            )
 
         except Exception as e:
             logger.error(f"Error creating license lock file: {e}")
@@ -448,9 +441,7 @@ class LicenseManager:
         Returns:
             True if removed successfully, False otherwise
         """
-        lock_path = os.path.join(
-            os.path.dirname(self.license_path), '.license_lock'
-        )
+        lock_path = os.path.join(os.path.dirname(self.license_path), ".license_lock")
 
         try:
             if os.path.exists(lock_path):
@@ -481,7 +472,7 @@ class LicenseManager:
             return self._check_trial_eligibility()
 
         # Check expiration
-        expiration = self.current_license.get('expiration')
+        expiration = self.current_license.get("expiration")
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
             now = datetime.now()
@@ -493,7 +484,7 @@ class LicenseManager:
                     days_left = (grace_end - now).days
                     return (
                         LicenseStatus.GRACE_PERIOD,
-                        f"License expired. Grace period ends in {days_left} days"
+                        f"License expired. Grace period ends in {days_left} days",
                     )
                 else:
                     return LicenseStatus.EXPIRED, "License has expired"
@@ -504,7 +495,7 @@ class LicenseManager:
             days_until_expiration = (expiration_date - datetime.now()).days
             return (
                 LicenseStatus.ACTIVE,
-                f"License active. Expires in {days_until_expiration} days"
+                f"License active. Expires in {days_until_expiration} days",
             )
         else:
             return LicenseStatus.ACTIVE, "License active (perpetual)"
@@ -516,20 +507,17 @@ class LicenseManager:
         Returns:
             Tuple of (status, message)
         """
-        trial_marker = os.path.join(
-            os.path.dirname(self.license_path),
-            '.trial_start'
-        )
+        trial_marker = os.path.join(os.path.dirname(self.license_path), ".trial_start")
 
         if not os.path.exists(trial_marker):
             # Start trial
             try:
-                with open(trial_marker, 'w') as f:
+                with open(trial_marker, "w") as f:
                     f.write(datetime.now().isoformat())
 
                 return (
                     LicenseStatus.ACTIVE,
-                    f"Trial mode activated ({self.trial_period_days} days)"
+                    f"Trial mode activated ({self.trial_period_days} days)",
                 )
             except Exception as e:
                 logger.error(f"Error creating trial marker: {e}")
@@ -537,7 +525,7 @@ class LicenseManager:
 
         # Check trial expiration
         try:
-            with open(trial_marker, 'r') as f:
+            with open(trial_marker, "r") as f:
                 trial_start = datetime.fromisoformat(f.read().strip())
 
             trial_end = trial_start + timedelta(days=self.trial_period_days)
@@ -545,10 +533,7 @@ class LicenseManager:
 
             if now <= trial_end:
                 days_left = (trial_end - now).days
-                return (
-                    LicenseStatus.ACTIVE,
-                    f"Trial mode active ({days_left} days remaining)"
-                )
+                return (LicenseStatus.ACTIVE, f"Trial mode active ({days_left} days remaining)")
             else:
                 return LicenseStatus.EXPIRED, "Trial period has expired"
 
@@ -572,7 +557,7 @@ class LicenseManager:
 
         # If no license, use trial features
         if not self.current_license:
-            return feature_name in self.features.get('trial', [])
+            return feature_name in self.features.get("trial", [])
 
         # Check license status
         status, _ = self.get_license_status()
@@ -580,11 +565,11 @@ class LicenseManager:
             return False
 
         # Get license type
-        license_type = self.current_license.get('type', 'trial')
+        license_type = self.current_license.get("type", "trial")
 
         # For custom license, check custom features
-        if license_type == 'custom':
-            custom_features = self.current_license.get('custom_features', [])
+        if license_type == "custom":
+            custom_features = self.current_license.get("custom_features", [])
             return feature_name in custom_features
 
         # Check standard features
@@ -607,21 +592,21 @@ class LicenseManager:
 
         # If no license, use trial
         if not self.current_license:
-            license_type = 'trial'
+            license_type = "trial"
         else:
-            license_type = self.current_license.get('type', 'trial')
+            license_type = self.current_license.get("type", "trial")
 
         # Check for explicit limit in license
         limit_value = self.current_license.get(limit_name) if self.current_license else None
         if limit_value is not None:
-            return None if limit_value == 'unlimited' else limit_value
+            return None if limit_value == "unlimited" else limit_value
 
         # Check features for limits
         allowed_features = self.features.get(license_type, [])
         for feature in allowed_features:
-            if feature.startswith(f'{limit_name}:'):
-                value = feature.split(':', 1)[1]
-                return None if value == 'unlimited' else int(value)
+            if feature.startswith(f"{limit_name}:"):
+                value = feature.split(":", 1)[1]
+                return None if value == "unlimited" else int(value)
 
         # No limit found
         return None
@@ -655,29 +640,29 @@ class LicenseManager:
         status, message = self.get_license_status()
 
         info = {
-            'enabled': self.enabled,
-            'status': status.value,
-            'message': message,
+            "enabled": self.enabled,
+            "status": status.value,
+            "message": message,
         }
 
         if not self.enabled:
-            info['type'] = 'disabled'
-            info['features'] = 'all'
+            info["type"] = "disabled"
+            info["features"] = "all"
             return info
 
         if self.current_license:
-            info['type'] = self.current_license.get('type')
-            info['issued_to'] = self.current_license.get('issued_to')
-            info['issued_date'] = self.current_license.get('issued_date')
-            info['expiration'] = self.current_license.get('expiration', 'never')
-            info['key'] = self.current_license.get('key', '')[:19] + '...'  # Partial key
+            info["type"] = self.current_license.get("type")
+            info["issued_to"] = self.current_license.get("issued_to")
+            info["issued_date"] = self.current_license.get("issued_date")
+            info["expiration"] = self.current_license.get("expiration", "never")
+            info["key"] = self.current_license.get("key", "")[:19] + "..."  # Partial key
         else:
-            info['type'] = 'trial'
+            info["type"] = "trial"
 
         # Add limits
-        info['limits'] = {
-            'max_extensions': self.get_limit('max_extensions'),
-            'max_concurrent_calls': self.get_limit('max_concurrent_calls'),
+        info["limits"] = {
+            "max_extensions": self.get_limit("max_extensions"),
+            "max_concurrent_calls": self.get_limit("max_concurrent_calls"),
         }
 
         return info
