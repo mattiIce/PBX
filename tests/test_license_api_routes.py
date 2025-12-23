@@ -98,7 +98,7 @@ def test_license_routes():
         })
         conn.request("POST", "/api/license/generate", body=body, headers={"Content-Type": "application/json"})
         response = conn.getresponse()
-        data = json.loads(response.read().decode())
+        json.loads(response.read().decode())
         conn.close()
 
         if response.status == 401:
