@@ -81,11 +81,11 @@ repos:
         exclude: '(config.*\.yml|test_config\.yml)'
 
   # Markdown linting
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.15.0
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.17.1
     hooks:
-      - id: markdownlint
-        args: ['--style', '.markdownlint.json']
+      - id: markdownlint-cli2
+        args: ['--config', '.markdownlint.json']
         exclude: '^(CHANGELOG\.md|docs/)'
 
 # Configuration for specific file types
