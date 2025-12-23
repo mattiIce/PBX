@@ -4,7 +4,6 @@ Provides HTTP/HTTPS API for managing PBX features.
 """
 
 import base64
-import binascii
 import errno
 import ipaddress
 import json
@@ -75,7 +74,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     _health_checker = None  # Production health checker instance
 
     def _get_integration_endpoints(self):
-        """Get integration endpoints (cached)"""
+        """Get integration endpoints (cached)."""
         if PBXAPIHandler._integration_endpoints is None:
             from pbx.api.opensource_integration_api import add_opensource_integration_endpoints
 
@@ -162,8 +161,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         return {}
 
     def _get_provisioning_url_info(self):
-        """
-        Get provisioning URL information (protocol, server IP, port)
+        """Get provisioning URL information (protocol, server IP, port).
 
         Returns:
             tuple: (protocol, server_ip, port, base_url)
@@ -537,7 +535,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_matrix_send_notification()
             elif path == "/api/integrations/matrix/rooms":
                 self._handle_matrix_create_room()
-            
+
             # License Management APIs
             elif path == "/api/license/generate":
                 self._handle_license_generate()
@@ -1185,7 +1183,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
 
     def _handle_liveness(self):
-        """Kubernetes-style liveness probe - is the app alive?"""
+        """Kubernetes-style liveness probe - is the app alive?."""
         try:
             checker = self._get_health_checker()
             is_alive, details = checker.check_liveness()
@@ -2116,9 +2114,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     logger.error(
                         f"  ✓ Polycom Phones - Use: {protocol}://{server_ip}:{port}/provision/$mac.cfg"
                     )
-                    logger.error(
-                        "    Configure in: Web Interface → Settings → Provisioning Server"
-                    )
+                    logger.error("    Configure in: Web Interface → Settings → Provisioning Server")
                 elif "cisco" in user_agent:
                     logger.error(
                         f"  ✓ Cisco Phones - Use: {protocol}://{server_ip}:{port}/provision/$MA.cfg"
@@ -2280,7 +2276,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         Returns:
             Tuple of (is_authenticated, payload)
             - is_authenticated: True if token is valid
-            - payload: Token payload if valid, None otherwise
+            - payload: Token payload if valid, None otherwise.
         """
         token = self._get_auth_token()
         if not token:
@@ -2298,7 +2294,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         Returns:
             Tuple of (is_admin, payload)
             - is_admin: True if user is authenticated and has admin privileges
-            - payload: Token payload if authenticated, None otherwise
+            - payload: Token payload if authenticated, None otherwise.
         """
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
@@ -2323,11 +2319,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             # Check if this is the special license admin extension (9322)
             from pbx.utils.license_admin import (
+                LICENSE_ADMIN_USERNAME,
                 is_license_admin_extension,
                 verify_license_admin_credentials,
-                LICENSE_ADMIN_USERNAME
             )
-            
+
             if is_license_admin_extension(extension_number):
                 # Handle license admin authentication separately
                 # For license admin, the password is the PIN
@@ -2336,23 +2332,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 if verify_license_admin_credentials(extension_number, username, password):
                     # Generate session token for license admin
                     from pbx.utils.session_token import get_session_token_manager
-                    
+
                     token_manager = get_session_token_manager()
                     token = token_manager.generate_token(
                         extension=extension_number,
                         is_admin=True,  # License admin has admin privileges
-                        name='License Administrator',
-                        email='',
+                        name="License Administrator",
+                        email="",
                     )
-                    
+
                     self._send_json(
                         {
                             "success": True,
                             "token": token,
                             "extension": extension_number,
                             "is_admin": True,
-                            "name": 'License Administrator',
-                            "email": '',
+                            "name": "License Administrator",
+                            "email": "",
                         }
                     )
                     return
@@ -5423,7 +5419,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         Args:
             custom_prompts: Optional dict of custom prompt texts
-            company_name: Optional company name override
+            company_name: Optional company name override.
         """
         try:
             # Check if TTS is available
@@ -7849,7 +7845,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             try:
                 # Query integration activity log directly from database
                 result = self.pbx_core.database.execute(
-                    """SELECT * FROM integration_activity_log
+                    """SELECT * FROM integration_activity_log.
                        ORDER BY created_at DESC LIMIT 100"""
                 )
 
@@ -9605,7 +9601,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         The payload will be:
             - On success: the authenticated user payload from _verify_authentication()
             - On authentication failure: a dict including at least {"status_code": 401}
-            - On authorization failure: a dict including at least {"status_code": 403}
+            - On authorization failure: a dict including at least {"status_code": 403}.
         """
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
@@ -9614,6 +9610,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # Check if user is extension 9322 (license admin)
         from pbx.utils.license_admin import LICENSE_ADMIN_EXTENSION
+
         extension = payload.get("extension")
 
         if extension == LICENSE_ADMIN_EXTENSION:
@@ -9621,63 +9618,57 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # User is authenticated but not the license admin -> should be treated as 403 Forbidden
         return False, {"status_code": 403, "error": "forbidden", "extension": extension}
+
     def _handle_license_status(self):
         """Get current license status and information."""
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
             info = license_manager.get_license_info()
-            
-            self._send_json({
-                'success': True,
-                'license': info
-            })
+
+            self._send_json({"success": True, "license": info})
         except Exception as e:
             self.logger.error(f"Error getting license status: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_features(self):
         """List all available features for current license."""
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
-            
+
             # If licensing is disabled, all features available
             if not license_manager.enabled:
-                self._send_json({
-                    'success': True,
-                    'features': 'all',
-                    'licensing_enabled': False
-                })
+                self._send_json({"success": True, "features": "all", "licensing_enabled": False})
                 return
-            
+
             # Get license type
             if license_manager.current_license:
-                license_type = license_manager.current_license.get('type', 'trial')
+                license_type = license_manager.current_license.get("type", "trial")
             else:
-                license_type = 'trial'
-            
+                license_type = "trial"
+
             # Get features for this license type
             features = license_manager.features.get(license_type, [])
-            
+
             # For custom license, get custom features
-            if license_type == 'custom' and license_manager.current_license:
-                features = license_manager.current_license.get('custom_features', [])
-            
+            if license_type == "custom" and license_manager.current_license:
+                features = license_manager.current_license.get("custom_features", [])
+
             # Separate features and limits
             feature_list = []
             limits = {}
-            
+
             for feature in features:
-                if ':' in feature and any(feature.startswith(f'{limit}:') for limit in ['max_extensions', 'max_concurrent_calls']):
-                    limit_name, limit_value = feature.split(':', 1)
+                if ":" in feature and any(
+                    feature.startswith(f"{limit}:")
+                    for limit in ["max_extensions", "max_concurrent_calls"]
+                ):
+                    limit_name, limit_value = feature.split(":", 1)
                     try:
-                        if limit_value == 'unlimited':
+                        if limit_value == "unlimited":
                             limits[limit_name] = None
                         else:
                             limits[limit_name] = int(limit_value)
@@ -9691,50 +9682,39 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         continue
                 else:
                     feature_list.append(feature)
-            
-            self._send_json({
-                'success': True,
-                'license_type': license_type,
-                'features': feature_list,
-                'limits': limits,
-                'licensing_enabled': True
-            })
+
+            self._send_json(
+                {
+                    "success": True,
+                    "license_type": license_type,
+                    "features": feature_list,
+                    "limits": limits,
+                    "licensing_enabled": True,
+                }
+            )
         except Exception as e:
             self.logger.error(f"Error listing features: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_check_feature(self):
         """Check if a specific feature is available."""
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             body = self._get_body()
-            feature_name = body.get('feature')
-            
+            feature_name = body.get("feature")
+
             if not feature_name:
-                self._send_json({
-                    'success': False,
-                    'error': 'Missing feature name'
-                }, 400)
+                self._send_json({"success": False, "error": "Missing feature name"}, 400)
                 return
-            
+
             license_manager = get_license_manager()
             available = license_manager.has_feature(feature_name)
-            
-            self._send_json({
-                'success': True,
-                'feature': feature_name,
-                'available': available
-            })
+
+            self._send_json({"success": True, "feature": feature_name, "available": available})
         except Exception as e:
             self.logger.error(f"Error checking feature: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_generate(self):
         """Generate a new license key (license admin only)"""
@@ -9743,44 +9723,45 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if not is_authorized:
             if not status_code:
                 status_code = 401
-            self._send_json({
-                'success': False,
-                'error': 'Unauthorized. License management requires administrator authentication.'
-            }, status_code)
+            self._send_json(
+                {
+                    "success": False,
+                    "error": "Unauthorized. License management requires administrator authentication.",
+                },
+                status_code,
+            )
             return
-        
+
         try:
-            from pbx.utils.licensing import get_license_manager, LicenseType
-            
+            from pbx.utils.licensing import LicenseType, get_license_manager
+
             body = self._get_body()
-            
+
             # Validate required fields
-            license_type_str = body.get('type')
-            issued_to = body.get('issued_to')
-            
+            license_type_str = body.get("type")
+            issued_to = body.get("issued_to")
+
             if not license_type_str or not issued_to:
-                self._send_json({
-                    'success': False,
-                    'error': 'Missing required fields: type, issued_to'
-                }, 400)
+                self._send_json(
+                    {"success": False, "error": "Missing required fields: type, issued_to"}, 400
+                )
                 return
-            
+
             # Parse license type
             try:
                 license_type = LicenseType(license_type_str)
             except ValueError:
-                self._send_json({
-                    'success': False,
-                    'error': f'Invalid license type: {license_type_str}'
-                }, 400)
+                self._send_json(
+                    {"success": False, "error": f"Invalid license type: {license_type_str}"}, 400
+                )
                 return
-            
+
             # Get optional fields
-            max_extensions = body.get('max_extensions')
-            max_concurrent_calls = body.get('max_concurrent_calls')
-            expiration_days = body.get('expiration_days')
-            custom_features = body.get('custom_features')
-            
+            max_extensions = body.get("max_extensions")
+            max_concurrent_calls = body.get("max_concurrent_calls")
+            expiration_days = body.get("expiration_days")
+            custom_features = body.get("custom_features")
+
             # Generate license
             license_manager = get_license_manager()
             license_data = license_manager.generate_license_key(
@@ -9789,106 +9770,92 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 max_extensions=max_extensions,
                 max_concurrent_calls=max_concurrent_calls,
                 expiration_days=expiration_days,
-                custom_features=custom_features
+                custom_features=custom_features,
             )
-            
-            self._send_json({
-                'success': True,
-                'license': license_data
-            })
+
+            self._send_json({"success": True, "license": license_data})
         except Exception as e:
             self.logger.error(f"Error generating license: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_install(self):
         """Install a license key (license admin only)"""
         # Check license admin authorization
         is_authorized, status_code = self._require_license_admin()
         if not is_authorized:
-            self._send_json({
-                'success': False,
-                'error': 'Unauthorized. License management requires administrator authentication.'
-            }, status_code or 401)
+            self._send_json(
+                {
+                    "success": False,
+                    "error": "Unauthorized. License management requires administrator authentication.",
+                },
+                status_code or 401,
+            )
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             body = self._get_body()
-            license_data = body.get('license_data') or body
-            enforce_licensing = body.get('enforce_licensing', False)
-            
+            license_data = body.get("license_data") or body
+            enforce_licensing = body.get("enforce_licensing", False)
+
             # Validate license data
-            if 'key' not in license_data:
-                self._send_json({
-                    'success': False,
-                    'error': 'Missing license key'
-                }, 400)
+            if "key" not in license_data:
+                self._send_json({"success": False, "error": "Missing license key"}, 400)
                 return
-            
+
             # Save license with optional enforcement
             license_manager = get_license_manager()
-            success = license_manager.save_license(license_data, enforce_licensing=enforce_licensing)
-            
-            message = 'License installed successfully'
+            success = license_manager.save_license(
+                license_data, enforce_licensing=enforce_licensing
+            )
+
+            message = "License installed successfully"
             if enforce_licensing:
-                message += ' (licensing enforcement enabled - cannot be disabled)'
-            
+                message += " (licensing enforcement enabled - cannot be disabled)"
+
             if success:
-                self._send_json({
-                    'success': True,
-                    'message': message,
-                    'license': license_manager.get_license_info(),
-                    'enforcement_locked': enforce_licensing
-                })
+                self._send_json(
+                    {
+                        "success": True,
+                        "message": message,
+                        "license": license_manager.get_license_info(),
+                        "enforcement_locked": enforce_licensing,
+                    }
+                )
             else:
-                self._send_json({
-                    'success': False,
-                    'error': 'Failed to install license'
-                }, 500)
+                self._send_json({"success": False, "error": "Failed to install license"}, 500)
         except Exception as e:
             self.logger.error(f"Error installing license: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_revoke(self):
         """Revoke current license (license admin only)"""
         # Check license admin authorization
         is_authorized, _ = self._require_license_admin()
         if not is_authorized:
-            self._send_json({
-                'success': False,
-                'error': 'Unauthorized. License management requires administrator authentication.'
-            }, 401)
+            self._send_json(
+                {
+                    "success": False,
+                    "error": "Unauthorized. License management requires administrator authentication.",
+                },
+                401,
+            )
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
             success = license_manager.revoke_license()
-            
+
             if success:
-                self._send_json({
-                    'success': True,
-                    'message': 'License revoked successfully'
-                })
+                self._send_json({"success": True, "message": "License revoked successfully"})
             else:
-                self._send_json({
-                    'success': False,
-                    'error': 'Failed to revoke license'
-                }, 500)
+                self._send_json({"success": False, "error": "Failed to revoke license"}, 500)
         except Exception as e:
             self.logger.error(f"Error revoking license: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_toggle(self):
         """Enable or disable licensing enforcement (license admin only)"""
@@ -9901,65 +9868,72 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             status_code = 401
             if isinstance(auth_status, int) and auth_status in (401, 403):
                 status_code = auth_status
-            self._send_json({
-                'success': False,
-                'error': 'Unauthorized. License management requires administrator authentication.'
-            }, status_code)
+            self._send_json(
+                {
+                    "success": False,
+                    "error": "Unauthorized. License management requires administrator authentication.",
+                },
+                status_code,
+            )
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager, initialize_license_manager
-            
+
             body = self._get_body()
-            enabled = body.get('enabled')
-            
+            enabled = body.get("enabled")
+
             if enabled is None:
-                self._send_json({
-                    'success': False,
-                    'error': 'Missing enabled flag'
-                }, 400)
+                self._send_json({"success": False, "error": "Missing enabled flag"}, 400)
                 return
-            
+
             # Update licensing status
             license_manager = get_license_manager()
-            
+
             # Update .env file for persistence
-            env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
-            
+            env_file = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env"
+            )
+
             # Read existing .env
             env_lines = []
             if os.path.exists(env_file):
-                with open(env_file, 'r') as f:
+                with open(env_file, "r") as f:
                     env_lines = f.readlines()
-            
+
             # Check if license lock exists
             lock_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.license_lock'
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".license_lock"
             )
             if os.path.exists(lock_path):
-                self._send_json({
-                    'success': False,
-                    'error': 'Cannot disable licensing - license lock file exists. Use remove_lock endpoint first.',
-                    'licensing_enabled': True
-                }, 403)
+                self._send_json(
+                    {
+                        "success": False,
+                        "error": "Cannot disable licensing - license lock file exists. Use remove_lock endpoint first.",
+                        "licensing_enabled": True,
+                    },
+                    403,
+                )
                 return
-            
+
             # Update or add PBX_LICENSING_ENABLED
             found = False
             for i, line in enumerate(env_lines):
-                if line.startswith('PBX_LICENSING_ENABLED='):
+                if line.startswith("PBX_LICENSING_ENABLED="):
                     env_lines[i] = f"PBX_LICENSING_ENABLED={'true' if enabled else 'false'}\n"
                     found = True
                     break
-            
+
             if not found:
-                env_lines.append(f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n')
-            
+                env_lines.append(
+                    f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n'
+                )
+
             # Write back atomically to avoid corrupting .env on partial failures
             env_dir = os.path.dirname(env_file)
-            tmp_fd, tmp_path = tempfile.mkstemp(dir=env_dir, prefix='.env.', suffix='.tmp')
+            tmp_fd, tmp_path = tempfile.mkstemp(dir=env_dir, prefix=".env.", suffix=".tmp")
             try:
-                with os.fdopen(tmp_fd, 'w') as tmp_file:
+                with os.fdopen(tmp_fd, "w") as tmp_file:
                     tmp_file.writelines(env_lines)
                 # Atomically replace the original .env with the new version
                 os.replace(tmp_path, env_file)
@@ -9971,30 +9945,30 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 except OSError:
                     pass
                 logger = get_logger(__name__)
-                logger.error("Failed to update .env file for licensing: %s", write_err, exc_info=True)
-                self._send_json({
-                    'success': False,
-                    'error': 'Failed to persist licensing configuration'
-                }, 500)
+                logger.error(
+                    "Failed to update .env file for licensing: %s", write_err, exc_info=True
+                )
+                self._send_json(
+                    {"success": False, "error": "Failed to persist licensing configuration"}, 500
+                )
                 return
-            
+
             # Also update runtime environment for immediate effect
-            os.environ['PBX_LICENSING_ENABLED'] = 'true' if enabled else 'false'
-            
+            os.environ["PBX_LICENSING_ENABLED"] = "true" if enabled else "false"
+
             # Reinitialize license manager
             license_manager = initialize_license_manager(license_manager.config)
-            
-            self._send_json({
-                'success': True,
-                'licensing_enabled': license_manager.enabled,
-                'message': f'Licensing {"enabled" if enabled else "disabled"} successfully'
-            })
+
+            self._send_json(
+                {
+                    "success": True,
+                    "licensing_enabled": license_manager.enabled,
+                    "message": f'Licensing {"enabled" if enabled else "disabled"} successfully',
+                }
+            )
         except Exception as e:
             self.logger.error(f"Error toggling licensing: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_remove_lock(self):
         """Remove license lock file (license admin only)"""
@@ -10003,34 +9977,39 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if not is_authorized:
             if not status_code:
                 status_code = 401
-            self._send_json({
-                'success': False,
-                'error': 'Unauthorized. License management requires administrator authentication.'
-            }, status_code)
+            self._send_json(
+                {
+                    "success": False,
+                    "error": "Unauthorized. License management requires administrator authentication.",
+                },
+                status_code,
+            )
             return
-        
+
         try:
             from pbx.utils.licensing import get_license_manager
-            
+
             license_manager = get_license_manager()
             success = license_manager.remove_license_lock()
-            
+
             if success:
-                self._send_json({
-                    'success': True,
-                    'message': 'License lock removed - licensing can now be disabled'
-                })
+                self._send_json(
+                    {
+                        "success": True,
+                        "message": "License lock removed - licensing can now be disabled",
+                    }
+                )
             else:
-                self._send_json({
-                    'success': False,
-                    'error': 'License lock file does not exist or could not be removed'
-                }, 404)
+                self._send_json(
+                    {
+                        "success": False,
+                        "error": "License lock file does not exist or could not be removed",
+                    },
+                    404,
+                )
         except Exception as e:
             self.logger.error(f"Error removing license lock: {e}")
-            self._send_json({
-                'success': False,
-                'error': str(e)
-            }, 500)
+            self._send_json({"success": False, "error": str(e)}, 500)
 
 
 class ReusableHTTPServer(HTTPServer):
@@ -10063,7 +10042,7 @@ def get_process_using_port(port):
         port (int): Port number to check
 
     Returns:
-        str: Description of the process using the port, or None if not found
+        str: Description of the process using the port, or None if not found.
     """
     try:
         # Try lsof first (most reliable)
@@ -10114,7 +10093,7 @@ class PBXAPIServer:
         Args:
             pbx_core: PBXCore instance
             host: Host to bind to
-            port: Port to bind to
+            port: Port to bind to.
         """
         self.pbx_core = pbx_core
         self.host = host
@@ -10292,7 +10271,7 @@ class PBXAPIServer:
             key_file: Path where to save the private key
 
         Returns:
-            True if certificate was successfully obtained
+            True if certificate was successfully obtained.
         """
         try:
             import requests
