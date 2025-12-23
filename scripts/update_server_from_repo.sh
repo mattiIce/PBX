@@ -17,8 +17,7 @@ if [ "$EUID" -ne 0 ]; then
     echo ""
 fi
 
-# Determine the script directory and PBX root
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Determine PBX root
 PBX_ROOT="${PBX_ROOT:-/root/PBX}"
 
 echo "PBX Root Directory: $PBX_ROOT"
@@ -65,7 +64,7 @@ if [ -n "$(git status --porcelain)" ]; then
     mkdir -p "$BACKUP_DIR"
     
     # Backup modified files
-    git status --porcelain | while read status file; do
+    git status --porcelain | while read -r _ file; do
         if [ -f "$file" ]; then
             mkdir -p "$BACKUP_DIR/$(dirname "$file")"
             cp "$file" "$BACKUP_DIR/$file"
@@ -88,7 +87,7 @@ echo ""
 
 # Show what will be updated
 echo "Changes to be pulled:"
-git log HEAD..origin/$CURRENT_BRANCH --oneline
+git log HEAD..origin/"$CURRENT_BRANCH" --oneline
 echo ""
 
 # Option 1: Hard reset to match repository exactly
@@ -104,7 +103,7 @@ if [ "$REPLY" = "1" ]; then
     git stash push -u -m "Auto-stash before hard reset $(date)"
     
     # Hard reset to match remote exactly
-    git reset --hard origin/$CURRENT_BRANCH
+    git reset --hard origin/"$CURRENT_BRANCH"
     
     # Clean untracked files
     git clean -fd

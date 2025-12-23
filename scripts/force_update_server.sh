@@ -20,7 +20,7 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 
 # Fetch and hard reset
 git fetch --all
-git reset --hard origin/$CURRENT_BRANCH
+git reset --hard origin/"$CURRENT_BRANCH"
 git clean -fd
 
 echo "✓ Repository synced"
@@ -28,12 +28,12 @@ echo "✓ Repository synced"
 # Verify syntax
 echo "Verifying Python files..."
 ERROR_COUNT=0
-for file in $(find . -name "*.py" -type f ! -path "./.git/*" ! -path "./venv/*"); do
+while IFS= read -r -d '' file; do
     if ! python3 -m py_compile "$file" 2>/dev/null; then
         echo "✗ Error in: $file"
         ERROR_COUNT=$((ERROR_COUNT + 1))
     fi
-done
+done < <(find . -name "*.py" -type f ! -path "./.git/*" ! -path "./venv/*" -print0)
 
 if [ $ERROR_COUNT -eq 0 ]; then
     echo "✓ All files valid"
