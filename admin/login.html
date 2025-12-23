@@ -245,24 +245,31 @@
     <script>
         // API Base URL - auto-detect or use configured value
         function getAPIBase() {
-            // Check if we're on the API port (9000) already
-            if (window.location.port === '9000') {
-                console.log('Detected API port in URL, using current origin');
-                return window.location.origin;
-            }
-            
-            // Check for meta tag
+            // Check for meta tag override first
             const apiMeta = document.querySelector('meta[name="api-base-url"]');
             if (apiMeta && apiMeta.content) {
                 console.log('Using API base URL from meta tag:', apiMeta.content);
                 return apiMeta.content;
             }
             
-            // Default: use current hostname with port 9000
+            // If we're on the API port (9000), use current origin
+            if (window.location.port === '9000') {
+                console.log('Detected API port in URL, using current origin');
+                return window.location.origin;
+            }
+            
+            // If accessed through reverse proxy or standard HTTP/HTTPS ports,
+            // try same origin first (API should be proxied)
+            if (window.location.port === '' || window.location.port === '80' || window.location.port === '443') {
+                console.log('Accessed via standard port, will try same origin (reverse proxy)');
+                return window.location.origin;
+            }
+            
+            // Fallback: use current hostname with port 9000 (direct API access)
             const protocol = window.location.protocol;
             const hostname = window.location.hostname || 'localhost';
             const apiBase = `${protocol}//${hostname}:9000`;
-            console.log('Using default API base URL:', apiBase);
+            console.log('Using direct API access:', apiBase);
             console.log('Current location:', window.location.href);
             return apiBase;
         }

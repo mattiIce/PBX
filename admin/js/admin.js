@@ -2,18 +2,24 @@
 // If the page is served from the API server, use same origin
 // Otherwise, construct URL from hostname and default API port
 function getAPIBase() {
-    // Check if we're on the API port (9000) already
-    if (window.location.port === '9000') {
-        return window.location.origin;
-    }
-    
-    // Check if there's a meta tag specifying the API URL
+    // Check for meta tag override first
     const apiMeta = document.querySelector('meta[name="api-base-url"]');
     if (apiMeta && apiMeta.content) {
         return apiMeta.content;
     }
     
-    // Default: use current hostname with port 9000
+    // If we're on the API port (9000), use current origin
+    if (window.location.port === '9000') {
+        return window.location.origin;
+    }
+    
+    // If accessed through reverse proxy or standard HTTP/HTTPS ports,
+    // try same origin first (API should be proxied)
+    if (window.location.port === '' || window.location.port === '80' || window.location.port === '443') {
+        return window.location.origin;
+    }
+    
+    // Fallback: use current hostname with port 9000 (direct API access)
     const protocol = window.location.protocol;
     const hostname = window.location.hostname || 'localhost';
     return `${protocol}//${hostname}:9000`;
