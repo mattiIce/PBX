@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""License Admin Security Module.
+"""
+License Admin Security Module
 
 Manages the special license administrator account with heavily encrypted credentials.
 This account has exclusive access to license management functionality.
@@ -8,8 +9,10 @@ This account has exclusive access to license management functionality.
 import hashlib
 import hmac
 import logging
+import os
 from typing import Optional, Tuple
 
+from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
@@ -30,8 +33,7 @@ _PIN_HASH_3 = "c0f7e8d4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8c9d0e1"  
 
 def _derive_key_from_pin(pin: str, salt: bytes) -> bytes:
     """
-    Derive an encryption key from the PIN using PBKDF2.
-
+    Derive an encryption key from the PIN using PBKDF2
     Args:
         pin: PIN to derive key from
         salt: Salt for key derivation
@@ -50,8 +52,7 @@ def _derive_key_from_pin(pin: str, salt: bytes) -> bytes:
 
 def _hash_pin_sha256(pin: str) -> str:
     """
-    Hash PIN using SHA256.
-
+    Hash PIN using SHA256
     Args:
         pin: PIN to hash
 
@@ -63,8 +64,7 @@ def _hash_pin_sha256(pin: str) -> str:
 
 def _hash_pin_pbkdf2(pin: str, salt: bytes) -> str:
     """
-    Hash PIN using PBKDF2.
-
+    Hash PIN using PBKDF2
     Args:
         pin: PIN to hash
         salt: Salt for hashing
@@ -78,8 +78,7 @@ def _hash_pin_pbkdf2(pin: str, salt: bytes) -> str:
 
 def _hash_pin_hmac(pin: str, key: bytes) -> str:
     """
-    Hash PIN using HMAC.
-
+    Hash PIN using HMAC
     Args:
         pin: PIN to hash
         key: HMAC key
@@ -99,8 +98,7 @@ def verify_license_admin_credentials(extension: str, username: str, pin: str) ->
     2. PBKDF2 key derivation (100,000 iterations)
     3. HMAC signature
 
-    All three must match for authentication to succeed.
-
+    All three must match for authentication to succeed
     Args:
         extension: Extension number
         username: Username
@@ -155,8 +153,7 @@ def verify_license_admin_credentials(extension: str, username: str, pin: str) ->
 
 def is_license_admin_extension(extension: str) -> bool:
     """
-    Check if an extension number is the special license admin extension.
-
+    Check if an extension number is the special license admin extension
     Args:
         extension: Extension number to check
 
@@ -168,8 +165,7 @@ def is_license_admin_extension(extension: str) -> bool:
 
 def get_license_admin_info() -> dict:
     """
-    Get information about the license admin account (without sensitive data).
-
+    Get information about the license admin account (without sensitive data)
     Returns:
         Dictionary with license admin account information
     """
@@ -188,8 +184,7 @@ def create_license_admin_extension() -> dict:
     """
     Create the license administrator extension configuration.
 
-    This extension is automatically created and cannot be edited or deleted.
-
+    This extension is automatically created and cannot be edited or deleted
     Returns:
         Extension configuration dictionary
     """
@@ -212,8 +207,7 @@ def verify_license_admin_session(request) -> Tuple[bool, Optional[str]]:
     Verify that the current session belongs to the license administrator.
 
     This function checks the session token or authorization header to ensure
-    the request is from the authenticated license admin.
-
+    the request is from the authenticated license admin
     Args:
         request: Flask request object
 
@@ -253,8 +247,7 @@ def verify_license_admin_session(request) -> Tuple[bool, Optional[str]]:
 
 # Decorator for protecting license admin endpoints
 def require_license_admin(f):
-    """Require license admin authentication for an endpoint.
-
+    """Require license admin authentication for an endpoint
     Usage:
         @license_api.route('/api/license/admin-only', methods=['POST'])
         @require_license_admin
