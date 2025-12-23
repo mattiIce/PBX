@@ -9950,9 +9950,28 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if not found:
                 env_lines.append(f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n')
             
-            # Write back
-            with open(env_file, 'w') as f:
-                f.writelines(env_lines)
+            # Write back atomically to avoid corrupting .env on partial failures
+            env_dir = os.path.dirname(env_file)
+            tmp_fd, tmp_path = tempfile.mkstemp(dir=env_dir, prefix='.env.', suffix='.tmp')
+            try:
+                with os.fdopen(tmp_fd, 'w') as tmp_file:
+                    tmp_file.writelines(env_lines)
+                # Atomically replace the original .env with the new version
+                os.replace(tmp_path, env_file)
+            except OSError as write_err:
+                # Best-effort cleanup of temporary file
+                try:
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+                except OSError:
+                    pass
+                logger = get_logger(__name__)
+                logger.error("Failed to update .env file for licensing: %s", write_err, exc_info=True)
+                self._send_json({
+                    'success': False,
+                    'error': 'Failed to persist licensing configuration'
+                }, 500)
+                return
             
             # Also update runtime environment for immediate effect
             os.environ['PBX_LICENSING_ENABLED'] = 'true' if enabled else 'false'
