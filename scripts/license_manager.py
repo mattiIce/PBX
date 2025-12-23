@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""License Management CLI Tool.
+"""
+License Management CLI Tool
 
 Command-line utility for generating, installing, and managing licenses.
 
@@ -17,11 +18,12 @@ import json
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.utils.licensing import LicenseManager, LicenseType
+from pbx.utils.licensing import LicenseManager, LicenseType, LicenseStatus
 
 
 def setup_config():

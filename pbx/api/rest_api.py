@@ -1,4 +1,4 @@
-"""REST API Server for PBX Management.
+"""REST API Server for PBX Management
 
 Provides HTTP/HTTPS API for managing PBX features.
 """
@@ -161,7 +161,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         return {}
 
     def _get_provisioning_url_info(self):
-        """Get provisioning URL information (protocol, server IP, port).
+        """Get provisioning URL information (protocol, server IP, port)
 
         Returns:
             tuple: (protocol, server_ip, port, base_url)
@@ -1319,7 +1319,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _validate_limit_parameter(
         self, params: dict, default: int, max_value: int
     ) -> Optional[int]:
-        """Validate limit query parameters.
+        """Validate limit query parameters
 
         Args:
             params: Parsed query parameters
@@ -7845,7 +7845,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             try:
                 # Query integration activity log directly from database
                 result = self.pbx_core.database.execute(
-                    """SELECT * FROM integration_activity_log.
+                    """SELECT * FROM integration_activity_log
                        ORDER BY created_at DESC LIMIT 100"""
                 )
 

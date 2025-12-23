@@ -69,9 +69,8 @@ repos:
     rev: 1.9.2
     hooks:
       - id: bandit
-        args: ['-r', '-ll']
+        args: ['-r', 'pbx/', '-ll']
         exclude: 'tests/'
-        files: '^pbx/.*\.py$'
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint
