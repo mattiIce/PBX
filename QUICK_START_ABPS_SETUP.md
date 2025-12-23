@@ -216,13 +216,17 @@ This ensures the PBX API is ONLY accessible through nginx, not directly:
 ```bash
 # Edit config.yml
 nano [PBX_INSTALL_DIR]/config.yml
+```
 
-# Change host from 0.0.0.0 to 127.0.0.1:
+Change the following in config.yml:
+```yaml
 api:
   host: 127.0.0.1  # Changed from 0.0.0.0
   port: 8080
+```
 
-# Restart PBX
+Restart PBX:
+```bash
 sudo systemctl restart pbx
 ```
 

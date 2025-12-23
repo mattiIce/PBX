@@ -32,7 +32,7 @@
 ┌─────────────────────────┐
 │   DNS Server            │
 │   abps.albl.com         │
-│   → 192.168.1.14        │  ◄── Public IP address
+│   → 203.0.113.14        │  ◄── Your server's public IP
 └──────┬──────────────────┘
        │
        ▼
