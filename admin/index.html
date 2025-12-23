@@ -3,11 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Warden VoIP Admin Panel</title>
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
     <link rel="icon" type="image/png" sizes="192x192" href="assets/images/favicon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="assets/images/favicon-512.png">
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin.css?v=20231223">
+    <!-- Error tracking for debugging -->
+    <script>
+        // Track JavaScript errors for debugging
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error || e.message, '\nFile:', e.filename, '\nLine:', e.lineno);
+        });
+        
+        // Track unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled Promise Rejection:', e.reason);
+        });
+        
+        // Log page load status
+        console.log('Admin panel loading...', new Date().toISOString());
+    </script>
     <!-- Define fallback function before loading Chart.js -->
     <script>
         // Fallback function to load Chart.js from alternative CDNs
@@ -5077,10 +5095,10 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         </div>
     </div>
 
-    <script src="js/webrtc_phone.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/auto_attendant.js"></script>
-    <script src="js/voicemail_enhanced.js"></script>
-    <script src="js/opensource_integrations.js"></script>
+    <script src="js/webrtc_phone.js?v=20231223"></script>
+    <script src="js/admin.js?v=20231223"></script>
+    <script src="js/auto_attendant.js?v=20231223"></script>
+    <script src="js/voicemail_enhanced.js?v=20231223"></script>
+    <script src="js/opensource_integrations.js?v=20231223"></script>
 </body>
 </html>

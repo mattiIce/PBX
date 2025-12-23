@@ -2,6 +2,14 @@
 
 This guide explains how to update your PBX server with the latest code from the repository.
 
+## ⚠️ Important: Clear Browser Cache After Update
+
+After updating the server, **you MUST clear your browser cache** or the admin panel may not work correctly!
+
+**Quick Fix**: Press `Ctrl + Shift + R` (Windows/Linux) or `Cmd + Shift + R` (Mac) to hard refresh the page.
+
+See [BROWSER_CACHE_FIX.md](BROWSER_CACHE_FIX.md) for detailed instructions if the admin panel is not working after update.
+
 ## Quick Update (Recommended)
 
 If you trust the repository and want to quickly sync your server:
@@ -16,6 +24,8 @@ This will:
 2. Hard reset to match the repository exactly
 3. Verify all Python files for syntax errors
 4. Restart the PBX service automatically
+
+**⚠️ After Update**: Clear your browser cache with `Ctrl + Shift + R` to see the latest changes!
 
 ## Interactive Update
 
