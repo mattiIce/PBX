@@ -9807,12 +9807,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_license_install(self):
         """Install a license key (license admin only)"""
         # Check license admin authorization
-        is_authorized, _ = self._require_license_admin()
+        is_authorized, status_code = self._require_license_admin()
         if not is_authorized:
             self._send_json({
                 'success': False,
                 'error': 'Unauthorized. License management requires administrator authentication.'
-            }, 401)
+            }, status_code or 401)
             return
         
         try:
