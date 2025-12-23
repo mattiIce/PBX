@@ -2,7 +2,123 @@
 
 This directory contains utility scripts for managing and configuring the PBX system.
 
-## DTMF Configuration
+## ⚠️ IMPORTANT: Shell Scripts vs Python Scripts
+
+This directory contains **two types** of scripts:
+
+### Shell Scripts (.sh files) - Run with `bash`
+Shell scripts **MUST** be run with `bash` or `sh`, **NOT** with `python3`:
+
+```bash
+# ✅ CORRECT - Run with bash
+bash scripts/update_server_from_repo.sh
+bash scripts/diagnose_server.sh
+bash scripts/emergency_recovery.sh
+
+# ❌ WRONG - Do NOT run with python3
+python3 scripts/update_server_from_repo.sh  # This will cause syntax errors!
+```
+
+**Common Error:**
+```
+File "/root/PBX/scripts/update_server_from_repo.sh", line 8
+    echo "=========================================="
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: invalid syntax
+```
+
+If you see this error, you're trying to run a shell script with Python. Use `bash` instead.
+
+### Python Scripts (.py files) - Run with `python3`
+Python scripts should be run with `python3`:
+
+```bash
+# ✅ CORRECT - Run with python3
+python3 scripts/dtmf_payload_selector.py
+python3 scripts/init_database.py
+```
+
+---
+
+## Server Management Scripts (Shell Scripts)
+
+### update_server_from_repo.sh
+Interactive script to update the server from the git repository with safety checks and confirmations.
+
+**Usage:**
+```bash
+cd /root/PBX
+bash scripts/update_server_from_repo.sh
+```
+
+See [SERVER_UPDATE_GUIDE.md](../SERVER_UPDATE_GUIDE.md) for details.
+
+### force_update_server.sh
+Non-interactive script for automated updates without prompts.
+
+**Usage:**
+```bash
+cd /root/PBX
+bash scripts/force_update_server.sh
+```
+
+### diagnose_server.sh
+Diagnostic script to check server status, git state, and common issues.
+
+**Usage:**
+```bash
+cd /root/PBX
+bash scripts/diagnose_server.sh
+```
+
+### emergency_recovery.sh
+Emergency recovery script for restoring server to a working state.
+
+**Usage:**
+```bash
+cd /root/PBX
+bash scripts/emergency_recovery.sh
+```
+
+### setup_reverse_proxy.sh
+Setup script for configuring Nginx reverse proxy with SSL.
+
+**Usage:**
+```bash
+sudo bash scripts/setup_reverse_proxy.sh
+```
+
+See [ABPS_IMPLEMENTATION_GUIDE.md](../ABPS_IMPLEMENTATION_GUIDE.md) for details.
+
+### enable_fips_ubuntu.sh
+Enable FIPS 140-2 compliance mode on Ubuntu systems.
+
+**Usage:**
+```bash
+sudo bash scripts/enable_fips_ubuntu.sh
+```
+
+See [UBUNTU_FIPS_GUIDE.md](../UBUNTU_FIPS_GUIDE.md) for details.
+
+### deploy_production_pilot.sh
+Automated production deployment script for Ubuntu 24.04 LTS.
+
+**Usage:**
+```bash
+# Dry run (test without making changes)
+sudo bash scripts/deploy_production_pilot.sh --dry-run
+
+# Actual deployment (requires root)
+sudo bash scripts/deploy_production_pilot.sh
+```
+
+See [README_CRITICAL_BLOCKERS.md](README_CRITICAL_BLOCKERS.md) for details.
+
+---
+
+## Python Scripts
+
+### DTMF Configuration
 
 ### dtmf_payload_selector.py
 
@@ -116,7 +232,7 @@ See [README_VOICE_GENERATION.md](README_VOICE_GENERATION.md) for voice and TTS p
 
 - `generate_ssl_cert.py` - Generate self-signed SSL certificates
 - `request_ca_cert.py` - Request certificate from internal CA
-- `enable_fips_ubuntu.sh` - Enable FIPS mode on Ubuntu
+- `enable_fips_ubuntu.sh` - **(Shell script)** Enable FIPS mode on Ubuntu - run with `bash`
 - `check_fips_health.py` - Check FIPS compliance status
 
 ### Phone Provisioning
@@ -137,10 +253,16 @@ See [README_VOICE_GENERATION.md](README_VOICE_GENERATION.md) for voice and TTS p
 
 ## General Usage Notes
 
-Most scripts can be run directly:
+**Python scripts (.py files):**
 
 ```bash
 python scripts/<script_name>.py
+```
+
+**Shell scripts (.sh files):**
+
+```bash
+bash scripts/<script_name>.sh
 ```
 
 Some scripts may require root privileges or specific configuration.
