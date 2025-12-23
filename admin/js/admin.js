@@ -389,7 +389,7 @@ function applyRoleBasedUI() {
             header.innerHTML = `📞 PBX Admin Dashboard - ${currentUser.name} (${currentUser.number}) 👑`;
         }
     }
-    
+
     // Update license management visibility (only for extension 9322)
     updateLicenseManagementVisibility();
 }
@@ -6829,53 +6829,53 @@ async function saveWebRTCPhoneConfig(event) {
 async function loadLicenseStatus() {
     const container = document.getElementById('license-status-container');
     if (!container) return;
-    
+
     container.innerHTML = '<div class="loading">Loading license status...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/status`);
         const data = await response.json();
-        
+
         if (data.success && data.license) {
             const license = data.license;
-            
+
             // Build status display
             let html = '<div style="background: #f9f9f9; padding: 15px; border-radius: 4px;">';
-            
+
             // Licensing enabled/disabled status
             const statusColor = license.enabled ? '#4caf50' : '#ff9800';
             html += `<div style="margin-bottom: 15px;">
-                <strong>Licensing Status:</strong> 
+                <strong>Licensing Status:</strong>
                 <span style="color: ${statusColor}; font-weight: bold;">
                     ${license.enabled ? '✅ ENABLED' : '❌ DISABLED (Open-Source Mode)'}
                 </span>
             </div>`;
-            
+
             if (license.enabled) {
                 // License status
-                const statusBadgeColor = 
+                const statusBadgeColor =
                     license.status === 'active' ? '#4caf50' :
                     license.status === 'grace_period' ? '#ff9800' :
                     license.status === 'expired' ? '#f44336' : '#9e9e9e';
-                
+
                 html += `<div style="margin-bottom: 10px;">
-                    <strong>License Status:</strong> 
+                    <strong>License Status:</strong>
                     <span style="color: ${statusBadgeColor}; font-weight: bold; text-transform: uppercase;">
                         ${license.status}
                     </span>
                 </div>`;
-                
+
                 html += `<div style="margin-bottom: 10px;">
                     <strong>Message:</strong> ${escapeHtml(license.message)}
                 </div>`;
-                
+
                 // License details if available
                 if (license.type && license.type !== 'disabled') {
                     html += `<div style="margin-bottom: 10px;">
                         <strong>Type:</strong> ${escapeHtml(license.type).toUpperCase()}
                     </div>`;
                 }
-                
+
                 if (license.issued_to) {
                     html += `<div style="margin-bottom: 10px;">
                         <strong>Issued To:</strong> ${escapeHtml(license.issued_to)}
@@ -6890,24 +6890,24 @@ async function loadLicenseStatus() {
                         <strong>License Key:</strong> <code>${escapeHtml(license.key || 'N/A')}</code>
                     </div>`;
                 }
-                
+
                 // Limits
                 if (license.limits) {
                     html += '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">';
                     html += '<strong>Limits:</strong><ul style="margin: 10px 0; padding-left: 20px;">';
-                    
+
                     for (const [key, value] of Object.entries(license.limits)) {
                         const displayValue = value === null ? 'Unlimited' : value.toLocaleString();
                         const limitName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         html += `<li><strong>${limitName}:</strong> ${displayValue}</li>`;
                     }
-                    
+
                     html += '</ul></div>';
                 }
             } else {
                 html += '<div style="margin-top: 10px; color: #666;">All features are available in open-source mode.</div>';
             }
-            
+
             html += '</div>';
             container.innerHTML = html;
         } else {
@@ -6925,51 +6925,51 @@ async function loadLicenseStatus() {
 async function loadLicenseFeatures() {
     const container = document.getElementById('license-features-container');
     if (!container) return;
-    
+
     container.innerHTML = '<div class="loading">Loading features...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/features`);
         const data = await response.json();
-        
+
         if (data.success) {
             let html = '<div style="background: #f9f9f9; padding: 15px; border-radius: 4px;">';
-            
+
             if (!data.licensing_enabled) {
                 html += '<div style="color: #4caf50; font-weight: bold; margin-bottom: 10px;">✅ All features available (Licensing disabled)</div>';
             } else {
                 html += `<div style="margin-bottom: 15px;">
                     <strong>License Type:</strong> ${escapeHtml(data.license_type || 'N/A').toUpperCase()}
                 </div>`;
-                
+
                 // Features list
                 if (data.features && data.features !== 'all') {
                     html += '<div style="margin-bottom: 15px;"><strong>Available Features:</strong>';
                     html += '<ul style="margin: 10px 0; padding-left: 20px; columns: 2; column-gap: 20px;">';
-                    
+
                     data.features.sort().forEach(feature => {
                         const displayName = feature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         html += `<li>✓ ${escapeHtml(displayName)}</li>`;
                     });
-                    
+
                     html += '</ul></div>';
                 }
-                
+
                 // Limits
                 if (data.limits) {
                     html += '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">';
                     html += '<strong>Limits:</strong><ul style="margin: 10px 0; padding-left: 20px;">';
-                    
+
                     for (const [key, value] of Object.entries(data.limits)) {
                         const displayValue = value === null ? 'Unlimited' : value.toLocaleString();
                         const limitName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         html += `<li><strong>${limitName}:</strong> ${displayValue}</li>`;
                     }
-                    
+
                     html += '</ul></div>';
                 }
             }
-            
+
             html += '</div>';
             container.innerHTML = html;
         } else {
@@ -6987,27 +6987,27 @@ async function loadLicenseFeatures() {
 async function toggleLicensing(enabled) {
     const resultDiv = document.getElementById('licensing-toggle-result');
     if (!resultDiv) return;
-    
+
     const action = enabled ? 'enable' : 'disable';
-    const confirmMsg = enabled 
+    const confirmMsg = enabled
         ? 'Enable licensing enforcement? This will require a valid license for features.'
         : 'Disable licensing? This will make all features available for free (open-source mode).';
-    
+
     if (!confirm(confirmMsg)) {
         return;
     }
-    
+
     resultDiv.innerHTML = '<div class="loading">Processing...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/toggle`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({enabled: enabled})
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             resultDiv.innerHTML = `<div style="color: #4caf50; padding: 10px; background: #e8f5e9; border-radius: 4px;">
                 ✅ ${escapeHtml(data.message || `Licensing ${action}d successfully`)}
@@ -7036,17 +7036,17 @@ async function toggleLicensing(enabled) {
  */
 async function generateLicense(event) {
     event.preventDefault();
-    
+
     const form = event.target;
     const formData = new FormData(form);
     const resultDiv = document.getElementById('generate-license-result');
-    
+
     // Build request data
     const requestData = {
         type: formData.get('type'),
         issued_to: formData.get('issued_to')
     };
-    
+
     // Add optional fields if provided
     if (formData.get('expiration_days')) {
         requestData.expiration_days = parseInt(formData.get('expiration_days'));
@@ -7057,21 +7057,21 @@ async function generateLicense(event) {
     if (formData.get('max_concurrent_calls')) {
         requestData.max_concurrent_calls = parseInt(formData.get('max_concurrent_calls'));
     }
-    
+
     resultDiv.innerHTML = '<div class="loading">Generating license...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/generate`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(requestData)
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.license) {
             const license = data.license;
-            
+
             // Display generated license
             let html = '<div style="background: #e8f5e9; padding: 15px; border-radius: 4px; margin-bottom: 15px;">';
             html += '<h4 style="margin-top: 0; color: #4caf50;">✅ License Generated Successfully!</h4>';
@@ -7080,18 +7080,18 @@ async function generateLicense(event) {
             html += `<p><strong>Issued To:</strong> ${escapeHtml(license.issued_to)}</p>`;
             html += `<p><strong>Expiration:</strong> ${escapeHtml(license.expiration || 'Never (Perpetual)')}</p>`;
             html += '</div>';
-            
+
             // Add JSON download option
             html += '<div style="margin-bottom: 15px;">';
             html += '<p><strong>License Data (JSON):</strong></p>';
             html += `<textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${JSON.stringify(license, null, 2)}</textarea>`;
             html += '</div>';
-            
+
             html += '<div class="action-buttons">';
             html += `<button class="btn btn-primary" onclick="copyToClipboard(${escapeHtml(JSON.stringify(JSON.stringify(license)))})">📋 Copy JSON</button>`;
             html += `<button class="btn btn-success" onclick="downloadLicense(${escapeHtml(JSON.stringify(license))})">💾 Download JSON</button>`;
             html += '</div>';
-            
+
             resultDiv.innerHTML = html;
         } else {
             resultDiv.innerHTML = `<div style="color: #f44336; padding: 10px; background: #ffebee; border-radius: 4px;">
@@ -7111,11 +7111,11 @@ async function generateLicense(event) {
  */
 async function installLicense(event) {
     event.preventDefault();
-    
+
     const form = event.target;
     const formData = new FormData(form);
     const resultDiv = document.getElementById('install-license-result');
-    
+
     // Parse JSON
     let licenseData;
     try {
@@ -7126,11 +7126,11 @@ async function installLicense(event) {
         </div>`;
         return;
     }
-    
+
     const enforceLicensing = formData.get('enforce_licensing') === 'on';
-    
+
     resultDiv.innerHTML = '<div class="loading">Installing license...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/install`, {
             method: 'POST',
@@ -7140,20 +7140,20 @@ async function installLicense(event) {
                 enforce_licensing: enforceLicensing
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             let html = '<div style="color: #4caf50; padding: 10px; background: #e8f5e9; border-radius: 4px;">';
             html += `<p style="margin: 0 0 10px 0;"><strong>✅ ${escapeHtml(data.message)}</strong></p>`;
-            
+
             if (data.enforcement_locked) {
                 html += '<p style="margin: 0; color: #ff9800;">⚠️ License lock file created - licensing cannot be disabled</p>';
             }
-            
+
             html += '</div>';
             resultDiv.innerHTML = html;
-            
+
             // Clear form and reload status
             form.reset();
             setTimeout(() => {
@@ -7180,23 +7180,23 @@ async function revokeLicense() {
     if (!confirm('Are you sure you want to revoke the current license? This action cannot be undone.')) {
         return;
     }
-    
+
     const resultDiv = document.getElementById('revoke-license-result');
     resultDiv.innerHTML = '<div class="loading">Revoking license...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/revoke`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'}
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             resultDiv.innerHTML = `<div style="color: #4caf50; padding: 10px; background: #e8f5e9; border-radius: 4px;">
                 ✅ ${escapeHtml(data.message || 'License revoked successfully')}
             </div>`;
-            
+
             // Reload status
             setTimeout(() => {
                 loadLicenseStatus();
@@ -7222,18 +7222,18 @@ async function removeLicenseLock() {
     if (!confirm('Remove license lock file? This will allow disabling licensing. Only use when transitioning from commercial to open-source deployment.')) {
         return;
     }
-    
+
     const resultDiv = document.getElementById('remove-lock-result');
     resultDiv.innerHTML = '<div class="loading">Removing lock file...</div>';
-    
+
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/remove_lock`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'}
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             resultDiv.innerHTML = `<div style="color: #4caf50; padding: 10px; background: #e8f5e9; border-radius: 4px;">
                 ✅ ${escapeHtml(data.message || 'License lock removed successfully')}
@@ -7261,7 +7261,7 @@ function copyToClipboard(text) {
     textarea.style.opacity = '0';
     document.body.appendChild(textarea);
     textarea.select();
-    
+
     try {
         document.execCommand('copy');
         alert('License data copied to clipboard!');
@@ -7280,15 +7280,15 @@ function downloadLicense(licenseData) {
     const dataStr = JSON.stringify(licenseData, null, 2);
     const dataBlob = new Blob([dataStr], {type: 'application/json'});
     const url = URL.createObjectURL(dataBlob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `license_${licenseData.issued_to.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     URL.revokeObjectURL(url);
 }
 
@@ -7340,4 +7340,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
