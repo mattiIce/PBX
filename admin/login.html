@@ -234,7 +234,7 @@
         
         <div id="troubleshooting" class="security-note" style="display:none; background: #fff3cd; color: #856404; margin-top: 10px;">
             <strong>Connection Troubleshooting:</strong><br>
-            <small id="troubleshooting-details"></small>
+            <small id="troubleshooting-details" style="white-space: pre-line;"></small>
         </div>
 
         <div class="login-footer">
@@ -305,10 +305,20 @@
             }
         }
         
+        // Helper function to safely escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         function showTroubleshooting(message) {
             const troubleshooting = document.getElementById('troubleshooting');
             const details = document.getElementById('troubleshooting-details');
-            details.innerHTML = message;
+            
+            // Use textContent for security (no HTML injection)
+            // Convert <br> to newlines for readability
+            details.textContent = message.replace(/<br>/g, '\n');
             troubleshooting.style.display = 'block';
         }
         
@@ -376,12 +386,13 @@
             } catch (error) {
                 console.error('Login error:', error);
                 
-                // Provide more specific error messages
+                // Provide more specific error messages (without exposing sensitive data)
                 let errorMsg = 'Connection error. ';
                 if (error.message && error.message.includes('PBX API server')) {
-                    errorMsg = error.message;
+                    // Use a safe, predefined message
+                    errorMsg = 'Server returned invalid response. Please check if the PBX API server is running on port 9000.';
                 } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                    errorMsg += `Cannot reach API server at ${API_BASE}. Please verify the server is running.`;
+                    errorMsg += 'Cannot reach API server. Please verify the server is running.';
                 } else if (error.name === 'SyntaxError') {
                     errorMsg += 'Server returned invalid data. Please contact your administrator.';
                 } else {
