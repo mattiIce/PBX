@@ -1,27 +1,16 @@
 #!/usr/bin/env python3
-"""
-License Management API Endpoints
+"""License Management API Endpoints.
 
 Provides REST API for managing licensing and subscriptions.
 Protected by license administrator authentication.
 """
 
 import logging
-import os
-from datetime import datetime
-from typing import Dict
 
 from flask import Blueprint, jsonify, request
 
-from pbx.utils.licensing import (
-    get_license_manager,
-    LicenseType,
-    LicenseStatus
-)
-from pbx.utils.license_admin import (
-    require_license_admin,
-    verify_license_admin_session
-)
+from pbx.utils.license_admin import require_license_admin, verify_license_admin_session
+from pbx.utils.licensing import LicenseType, get_license_manager
 
 logger = logging.getLogger(__name__)
 
@@ -463,8 +452,6 @@ def verify_admin():
     Returns:
         JSON with verification status
     """
-    from pbx.utils.license_admin import verify_license_admin_session
-    
     is_authorized, error_msg = verify_license_admin_session(request)
     
     return jsonify({

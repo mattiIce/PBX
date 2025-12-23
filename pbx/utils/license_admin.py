@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-License Admin Security Module
+"""License Admin Security Module.
 
 Manages the special license administrator account with heavily encrypted credentials.
 This account has exclusive access to license management functionality.
@@ -9,10 +8,8 @@ This account has exclusive access to license management functionality.
 import hashlib
 import hmac
 import logging
-import os
 from typing import Optional, Tuple
 
-from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
@@ -251,8 +248,7 @@ def verify_license_admin_session(request) -> Tuple[bool, Optional[str]]:
 
 # Decorator for protecting license admin endpoints
 def require_license_admin(f):
-    """
-    Decorator to require license admin authentication for an endpoint.
+    """Require license admin authentication for an endpoint.
     
     Usage:
         @license_api.route('/api/license/admin-only', methods=['POST'])

@@ -29,16 +29,16 @@ from pbx.utils.license_admin import (
 
 
 class TestLicenseAdminLogin(unittest.TestCase):
-    """Test license admin authentication"""
+    """Test license admin authentication."""
 
     def test_is_license_admin_extension(self):
-        """Test identifying the license admin extension"""
+        """Test identifying the license admin extension."""
         self.assertTrue(is_license_admin_extension("9322"))
         self.assertFalse(is_license_admin_extension("1001"))
         self.assertFalse(is_license_admin_extension(""))
 
     def test_license_admin_credentials_valid(self):
-        """Test license admin login with valid credentials"""
+        """Test license admin login with valid credentials."""
         # Valid credentials
         result = verify_license_admin_credentials(
             extension="9322",
@@ -48,7 +48,7 @@ class TestLicenseAdminLogin(unittest.TestCase):
         self.assertTrue(result, "License admin login should succeed with correct credentials")
 
     def test_license_admin_credentials_case_insensitive_username(self):
-        """Test that username is case insensitive"""
+        """Test that username is case insensitive."""
         # Test lowercase
         result = verify_license_admin_credentials(
             extension="9322",
@@ -66,7 +66,7 @@ class TestLicenseAdminLogin(unittest.TestCase):
         self.assertTrue(result, "License admin login should succeed with mixed case username")
 
     def test_license_admin_credentials_wrong_extension(self):
-        """Test license admin login with wrong extension"""
+        """Test license admin login with wrong extension."""
         result = verify_license_admin_credentials(
             extension="1001",
             username="ICE",
@@ -75,7 +75,7 @@ class TestLicenseAdminLogin(unittest.TestCase):
         self.assertFalse(result, "License admin login should fail with wrong extension")
 
     def test_license_admin_credentials_wrong_username(self):
-        """Test license admin login with wrong username"""
+        """Test license admin login with wrong username."""
         result = verify_license_admin_credentials(
             extension="9322",
             username="ADMIN",
@@ -84,7 +84,7 @@ class TestLicenseAdminLogin(unittest.TestCase):
         self.assertFalse(result, "License admin login should fail with wrong username")
 
     def test_license_admin_credentials_wrong_pin(self):
-        """Test license admin login with wrong PIN"""
+        """Test license admin login with wrong PIN."""
         result = verify_license_admin_credentials(
             extension="9322",
             username="ICE",
@@ -93,7 +93,7 @@ class TestLicenseAdminLogin(unittest.TestCase):
         self.assertFalse(result, "License admin login should fail with wrong PIN")
 
     def test_license_admin_credentials_empty_fields(self):
-        """Test license admin login with empty fields"""
+        """Test license admin login with empty fields."""
         result = verify_license_admin_credentials(
             extension="",
             username="ICE",

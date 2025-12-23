@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-License Management CLI Tool
+"""License Management CLI Tool.
 
 Command-line utility for generating, installing, and managing licenses.
 
@@ -18,12 +17,11 @@ import json
 import os
 import sys
 from datetime import datetime
-from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from pbx.utils.licensing import LicenseManager, LicenseType, LicenseStatus
+from pbx.utils.licensing import LicenseManager, LicenseType
 
 
 def setup_config():
@@ -80,7 +78,7 @@ def cmd_generate(args):
     with open(output_file, 'w') as f:
         json.dump(license_data, f, indent=2)
     
-    print(f"\n✓ License generated successfully!")
+    print("\n✓ License generated successfully!")
     print(f"\nLicense Key: {license_data['key']}")
     print(f"Type: {license_data['type']}")
     print(f"Issued To: {license_data['issued_to']}")
@@ -160,7 +158,7 @@ def cmd_status(args):
         print(f"License Key: {info.get('key', 'N/A')}")
     
     if info.get('limits'):
-        print(f"\nLimits:")
+        print("\nLimits:")
         for limit_name, limit_value in info['limits'].items():
             display_value = 'Unlimited' if limit_value is None else limit_value
             print(f"  {limit_name}: {display_value}")
@@ -332,7 +330,7 @@ def cmd_features(args):
     
     # Print limits
     if limits:
-        print(f"\nLimits:")
+        print("\nLimits:")
         for limit_name, limit_value in limits.items():
             display_value = 'Unlimited' if limit_value is None else f"{limit_value:,}"
             print(f"  • {limit_name.replace('_', ' ').title()}: {display_value}")
@@ -432,7 +430,7 @@ def cmd_batch_generate(args):
     # Summary
     print()
     print("=" * 60)
-    print(f"Batch generation complete!")
+    print("Batch generation complete!")
     print(f"Successfully generated: {generated_count}/{len(licenses_to_generate)} licenses")
     
     if errors:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Flexible Licensing and Subscription System for PBX
+"""Flexible Licensing and Subscription System for PBX.
 
 Features:
 - Multiple license types (trial, basic, professional, enterprise, perpetual)
@@ -21,14 +20,11 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-
 logger = logging.getLogger(__name__)
 
 
 class LicenseType(Enum):
-    """License type enumeration"""
+    """License type enumeration."""
     TRIAL = "trial"
     BASIC = "basic"
     PROFESSIONAL = "professional"
@@ -38,7 +34,7 @@ class LicenseType(Enum):
 
 
 class LicenseStatus(Enum):
-    """License status enumeration"""
+    """License status enumeration."""
     ACTIVE = "active"
     EXPIRED = "expired"
     INVALID = "invalid"
