@@ -24,7 +24,7 @@ psycopg2-binary>=2.9.10  # PostgreSQL adapter for Python
 # For enterprise integrations (Teams, Outlook, Zoom):
 # Note: requests pinned to 2.31.0 for docker-compose v1 compatibility
 # See: https://github.com/docker/docker-py/issues/3256
-requests==2.31.0
+requests==2.32.4
 msal>=1.31.1  # Microsoft Authentication Library
 
 # For FIDO2/WebAuthn authentication

@@ -25,7 +25,7 @@
 # Core Dependencies
 # ============================================================================
 PyYAML==6.0.2
-cryptography==44.0.0
+cryptography==44.0.1
 
 # SIP/RTP Support
 aiortc==1.10.0
@@ -46,7 +46,7 @@ psycopg2-binary==2.9.10
 # Enterprise Integrations
 # Note: requests pinned to 2.31.0 for docker-compose v1 compatibility
 # See: https://github.com/docker/docker-py/issues/3256
-requests==2.31.0
+requests==2.32.4
 msal==1.31.1
 
 # Authentication
@@ -71,7 +71,7 @@ imageio-ffmpeg==0.5.1
 av==14.0.1
 
 # Web Interface
-flask==3.1.0
+flask==3.1.1
 websockets==14.1
 
 # Monitoring
