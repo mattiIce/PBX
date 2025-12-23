@@ -545,5 +545,5 @@ sudo nginx -t
 **Additional Resources:**
 - [QUICK_START_ABPS_SETUP.md](QUICK_START_ABPS_SETUP.md) - Automated setup guide
 - [ABPS_IMPLEMENTATION_GUIDE.md](ABPS_IMPLEMENTATION_GUIDE.md) - Implementation summary
-- [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md) - Security hardening
+- [SECURITY_GUIDE.md](SECURITY_GUIDE.md) - Security hardening
 - [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Production readiness

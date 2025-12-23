@@ -407,7 +407,7 @@ Now that your PBX is accessible at `https://abps.albl.com`:
 ### Additional Features (Priority: LOW)
 9. **Enable monitoring** and alerting (see [PRODUCTION_OPERATIONS_RUNBOOK.md](PRODUCTION_OPERATIONS_RUNBOOK.md))
 10. **Configure backups** for system and call recordings
-11. **Review security best practices** (see [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md))
+11. **Review security best practices** (see [SECURITY_GUIDE.md](SECURITY_GUIDE.md))
 12. **Set up integrations** (CRM, AD, etc.) if needed
 
 ---
@@ -429,7 +429,7 @@ If you prefer manual setup or the script fails, see the complete manual guide:
 **Support:**
 - Check logs if issues arise
 - Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common problems
-- Review [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md) for hardening
+- Review [SECURITY_GUIDE.md](SECURITY_GUIDE.md) for hardening
 
 ---
 
