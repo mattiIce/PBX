@@ -5100,5 +5100,53 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
     <script src="js/auto_attendant.js?v=20231223"></script>
     <script src="js/voicemail_enhanced.js?v=20231223"></script>
     <script src="js/opensource_integrations.js?v=20231223"></script>
+    
+    <!-- Page load verification and troubleshooting helper -->
+    <script>
+        // Check if page loaded correctly after 3 seconds
+        setTimeout(function() {
+            // Check if main initialization happened
+            if (!window.currentUser && !document.querySelector('.tab-content.active')) {
+                console.warn('Page may not have loaded correctly. Checking for common issues...');
+                
+                // Check if CSS is loaded
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    const computedStyle = window.getComputedStyle(sidebar);
+                    if (computedStyle.width === 'auto' || computedStyle.width === '0px') {
+                        console.error('CSS may not be loaded correctly. Try clearing your browser cache:');
+                        console.error('  - Press Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)');
+                        console.error('  - See BROWSER_CACHE_FIX.md for detailed instructions');
+                        
+                        // Show visual alert
+                        const alert = document.createElement('div');
+                        alert.style.cssText = `
+                            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                            background: #ff5252; color: white; padding: 20px 30px;
+                            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                            z-index: 99999; font-family: Arial, sans-serif; max-width: 500px;
+                            text-align: center; font-size: 14px; line-height: 1.6;
+                        `;
+                        alert.innerHTML = `
+                            <strong style="font-size: 18px; display: block; margin-bottom: 10px;">⚠️ Page Loading Issue</strong>
+                            <p style="margin: 10px 0;">The admin panel may not be displaying correctly due to cached files.</p>
+                            <p style="margin: 10px 0; font-weight: bold;">
+                                Press <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">Ctrl+Shift+R</code> 
+                                (or <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">Cmd+Shift+R</code> on Mac)
+                                to reload without cache
+                            </p>
+                            <button onclick="this.parentElement.remove()" style="
+                                background: white; color: #ff5252; border: none; padding: 8px 16px;
+                                border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;
+                            ">Dismiss</button>
+                        `;
+                        document.body.appendChild(alert);
+                    }
+                }
+            } else {
+                console.log('Page loaded successfully at', new Date().toISOString());
+            }
+        }, 3000);
+    </script>
 </body>
 </html>

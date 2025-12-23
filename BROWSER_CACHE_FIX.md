@@ -1,5 +1,9 @@
 # Browser Cache Fix for Admin Panel Issues
 
+## Quick Diagnosis
+
+**Test if your system is working:** Visit `/admin/status-check.html` to verify your PBX installation.
+
 ## Problem
 After running `scripts/update_server_from_repo.sh` with option 1 (full reset), the admin panel may not display correctly or buttons may not be clickable. This is typically caused by browser caching of old CSS and JavaScript files.
 
