@@ -93,8 +93,8 @@ header h1 {
 
 /* Layout Wrapper - Sidebar + Main Content */
 .layout-wrapper {
-    display: flex;
-    flex-direction: row; /* Explicitly set horizontal layout */
+    display: flex !important;
+    flex-direction: row !important; /* Explicitly set horizontal layout */
     flex: 1;
     overflow: hidden;
     min-height: 0; /* Important: allows flex children to shrink below content size */
@@ -107,7 +107,7 @@ header h1 {
     border-right: 1px solid #e1e8ed;
     overflow-y: auto;
     overflow-x: hidden; /* Prevent horizontal scrolling */
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
     min-height: 0; /* Important: allows scrolling within flex container */
 }
@@ -186,7 +186,7 @@ header h1 {
 
 /* Main Content Area */
 .main-content {
-    flex: 1;
+    flex: 1 !important;
     overflow-y: auto;
     overflow-x: hidden; /* Prevent horizontal scrolling */
     background: #f5f7fa;
