@@ -123,11 +123,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # Content-Security-Policy: Restrict resource loading
         # Allow Chart.js from trusted CDNs for analytics visualization
+        # Allow API connections to the same host on different ports
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:;"
+            "img-src 'self' data:; "
+            "connect-src 'self' http://*:9000 https://*:9000;"
         )
         self.send_header("Content-Security-Policy", csp)
 
