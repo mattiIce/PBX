@@ -360,63 +360,63 @@ class PagingSystem:
 
 
 # Implementation notes for future development:
-"""
-To implement full paging functionality, the following steps are needed:
-
-1. Hardware Setup:
-   - Install a SIP-to-analog gateway device (e.g., Cisco VG202, VG204, VG224)
-   - Or use an analog telephone adapter (ATA) like Grandstream HT801/HT802
-   - Connect analog output to overhead paging amplifier
-   - Configure the gateway with a SIP account on the PBX
-
-2. Software Integration:
-   - Extend this stub to handle SIP INVITE to the gateway device
-   - Route RTP audio stream from calling extension to gateway
-   - Handle DTMF tones for zone selection (if multi-zone)
-   - Implement auto-answer on gateway side
-   - Add timeout handling (e.g., max 2 minutes per page)
-
-3. Configuration:
-   - Add gateway device to config.yml under features.paging.dac_devices
-   - Define zones with their corresponding extensions
-   - Map zones to specific analog outputs on multi-port gateways
-   - Configure audio levels and quality settings
-
-4. Advanced Features:
-   - Priority paging (emergency override)
-   - Scheduled paging (e.g., bell schedules)
-   - Background music integration
-   - Recording of pages for compliance
-   - Integration with emergency notification systems
-
-Example configuration in config.yml:
-
-features:
-  paging:
-    enabled: true
-    prefix: "7"
-    all_call_extension: "700"
-    dac_type: "sip_gateway"
-    dac_devices:
-      - device_id: "paging-gateway-1"
-        device_type: "cisco_vg224"
-        sip_uri: "sip:paging@192.168.1.100:5060"
-        ip_address: "192.168.1.100"
-        port: 5060
-    zones:
-      - extension: "701"
-        name: "Zone 1 - Office"
-        description: "Main office area"
-        dac_device: "paging-gateway-1"
-        analog_port: 1
-      - extension: "702"
-        name: "Zone 2 - Warehouse"
-        description: "Warehouse and loading dock"
-        dac_device: "paging-gateway-1"
-        analog_port: 2
-      - extension: "703"
-        name: "Zone 3 - Outside"
-        description: "Exterior speakers"
-        dac_device: "paging-gateway-1"
-        analog_port: 3
-"""
+#
+# To implement full paging functionality, the following steps are needed:
+#
+# 1. Hardware Setup:
+#    - Install a SIP-to-analog gateway device (e.g., Cisco VG202, VG204, VG224)
+#    - Or use an analog telephone adapter (ATA) like Grandstream HT801/HT802
+#    - Connect analog output to overhead paging amplifier
+#    - Configure the gateway with a SIP account on the PBX
+#
+# 2. Software Integration:
+#    - Extend this stub to handle SIP INVITE to the gateway device
+#    - Route RTP audio stream from calling extension to gateway
+#    - Handle DTMF tones for zone selection (if multi-zone)
+#    - Implement auto-answer on gateway side
+#    - Add timeout handling (e.g., max 2 minutes per page)
+#
+# 3. Configuration:
+#    - Add gateway device to config.yml under features.paging.dac_devices
+#    - Define zones with their corresponding extensions
+#    - Map zones to specific analog outputs on multi-port gateways
+#    - Configure audio levels and quality settings
+#
+# 4. Advanced Features:
+#    - Priority paging (emergency override)
+#    - Scheduled paging (e.g., bell schedules)
+#    - Background music integration
+#    - Recording of pages for compliance
+#    - Integration with emergency notification systems
+#
+# Example configuration in config.yml:
+#
+# features:
+#   paging:
+#     enabled: true
+#     prefix: "7"
+#     all_call_extension: "700"
+#     dac_type: "sip_gateway"
+#     dac_devices:
+#       - device_id: "paging-gateway-1"
+#         device_type: "cisco_vg224"
+#         sip_uri: "sip:paging@192.168.1.100:5060"
+#         ip_address: "192.168.1.100"
+#         port: 5060
+#     zones:
+#       - extension: "701"
+#         name: "Zone 1 - Office"
+#         description: "Main office area"
+#         dac_device: "paging-gateway-1"
+#         analog_port: 1
+#       - extension: "702"
+#         name: "Zone 2 - Warehouse"
+#         description: "Warehouse and loading dock"
+#         dac_device: "paging-gateway-1"
+#         analog_port: 2
+#       - extension: "703"
+#         name: "Zone 3 - Outside"
+#         description: "Exterior speakers"
+#         dac_device: "paging-gateway-1"
+#         analog_port: 3
+#

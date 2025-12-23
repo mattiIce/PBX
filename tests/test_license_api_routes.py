@@ -3,10 +3,10 @@
 Test license API routes integration
 Tests that license management routes are accessible and working
 """
-import sys
-import json
-import time
 import http.client
+import json
+import sys
+import time
 from pathlib import Path
 
 # Add parent directory to path
@@ -87,14 +87,13 @@ def test_license_routes():
 
         # Test 3: License generate endpoint (requires admin auth)
         print("Test 3: POST /api/license/generate (requires admin auth)")
-        
+
         # First, try without authentication (should fail)
         conn = http.client.HTTPConnection("127.0.0.1", test_port)
-        body = json.dumps({
-            "type": "trial",
-            "issued_to": "Test Organization"
-        })
-        conn.request("POST", "/api/license/generate", body=body, headers={"Content-Type": "application/json"})
+        body = json.dumps({"type": "trial", "issued_to": "Test Organization"})
+        conn.request(
+            "POST", "/api/license/generate", body=body, headers={"Content-Type": "application/json"}
+        )
         response = conn.getresponse()
         json.loads(response.read().decode())
         conn.close()
@@ -109,12 +108,10 @@ def test_license_routes():
         # Test 4: Get license admin token
         print("Test 4: Login as license admin and test authenticated endpoint")
         conn = http.client.HTTPConnection("127.0.0.1", test_port)
-        login_body = json.dumps({
-            "extension": "9322",
-            "username": "ICE",
-            "password": "26697647"
-        })
-        conn.request("POST", "/api/auth/login", body=login_body, headers={"Content-Type": "application/json"})
+        login_body = json.dumps({"extension": "9322", "username": "ICE", "password": "26697647"})
+        conn.request(
+            "POST", "/api/auth/login", body=login_body, headers={"Content-Type": "application/json"}
+        )
         response = conn.getresponse()
         login_data = json.loads(response.read().decode())
         conn.close()
@@ -129,14 +126,8 @@ def test_license_routes():
             # Test 5: Try license generate with authentication
             print("Test 5: POST /api/license/generate (with auth token)")
             conn = http.client.HTTPConnection("127.0.0.1", test_port)
-            body = json.dumps({
-                "type": "trial",
-                "issued_to": "Test Organization"
-            })
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {token}"
-            }
+            body = json.dumps({"type": "trial", "issued_to": "Test Organization"})
+            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
             conn.request("POST", "/api/license/generate", body=body, headers=headers)
             response = conn.getresponse()
             data = json.loads(response.read().decode())
@@ -166,6 +157,6 @@ def test_license_routes():
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = test_license_routes()
     sys.exit(0 if success else 1)
