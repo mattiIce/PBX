@@ -123,11 +123,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # Content-Security-Policy: Restrict resource loading
         # Allow Chart.js from trusted CDNs for analytics visualization
+        # Allow API connections on port 9000 to support both direct access
+        # and reverse proxy scenarios. The wildcard (*:9000) is necessary because:
+        # 1. Direct access: http://hostname:9000/admin/ -> http://hostname:9000/api/
+        # 2. Reverse proxy: https://hostname/admin/ -> needs http://hostname:9000/api/
+        # Note: This could be more restrictive if login.html used same-origin
+        # detection for standard ports (80/443) instead of hardcoding port 9000
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:;"
+            "img-src 'self' data:; "
+            "connect-src 'self' http://*:9000 https://*:9000;"
         )
         self.send_header("Content-Security-Policy", csp)
 

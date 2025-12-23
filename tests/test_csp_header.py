@@ -19,7 +19,8 @@ class TestCSPHeaders(unittest.TestCase):
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
         "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data:;"
+        "img-src 'self' data:; "
+        "connect-src 'self' http://*:9000 https://*:9000;"
     )
 
     def test_csp_string_contains_self_not_sel(self):
@@ -61,6 +62,26 @@ class TestCSPHeaders(unittest.TestCase):
         # default-src should contain 'self'
         self.assertIn("default-src", self.EXPECTED_CSP)
         self.assertIn("default-src 'self'", self.EXPECTED_CSP, "default-src should contain 'self'")
+
+    def test_csp_connect_src_allows_api(self):
+        """Test that connect-src directive allows API connections"""
+        # connect-src should be present
+        self.assertIn("connect-src", self.EXPECTED_CSP, "CSP should have connect-src directive")
+        
+        # Extract connect-src directive
+        directives = [d.strip() for d in self.EXPECTED_CSP.split(';')]
+        connect_src = [d for d in directives if d.startswith('connect-src')]
+        
+        self.assertEqual(len(connect_src), 1, "Should have exactly one connect-src directive")
+        
+        # Should allow 'self'
+        self.assertIn("'self'", connect_src[0], "connect-src should contain 'self'")
+        
+        # Should allow API port 9000
+        self.assertTrue(
+            "http://*:9000" in connect_src[0] or "https://*:9000" in connect_src[0],
+            "connect-src should allow connections to port 9000"
+        )
 
 
 if __name__ == "__main__":
