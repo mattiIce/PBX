@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- API Base URL - change this if your API server is on a different host/port -->
+    <meta name="api-base-url" content="">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -236,7 +238,27 @@
     </div>
 
     <script>
-        const API_BASE = window.location.origin;
+        // API Base URL - auto-detect or use configured value
+        function getAPIBase() {
+            // Check if we're on the API port (9000) already
+            if (window.location.port === '9000') {
+                return window.location.origin;
+            }
+            
+            // Check for meta tag
+            const apiMeta = document.querySelector('meta[name="api-base-url"]');
+            if (apiMeta && apiMeta.content) {
+                return apiMeta.content;
+            }
+            
+            // Default: use current hostname with port 9000
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname || 'localhost';
+            return `${protocol}//${hostname}:9000`;
+        }
+        
+        const API_BASE = getAPIBase();
+        console.log('API Base URL:', API_BASE);
 
         const loginForm = document.getElementById('login-form');
         const loginButton = document.getElementById('login-button');
