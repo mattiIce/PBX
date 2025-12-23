@@ -581,6 +581,18 @@ For issues and questions, please open a GitHub issue.
 
 ### Known Issues
 
+⚠️ **Login Connection Error**
+- **Issue**: "Connection error. Please try again." when trying to log into admin panel
+- **Diagnosis**: The login page now shows troubleshooting info automatically
+  - Open browser console (F12) for detailed diagnostics
+  - Check if API server is running: `sudo systemctl status pbx`
+  - Verify port 9000 is accessible: `curl http://localhost:9000/api/status`
+- **Common Causes**: 
+  - PBX server not running
+  - Firewall blocking port 9000
+  - Wrong hostname/port configuration
+- **Fix**: See [LOGIN_CONNECTION_TROUBLESHOOTING.md](LOGIN_CONNECTION_TROUBLESHOOTING.md) for step-by-step resolution
+
 ⚠️ **Admin Panel After Updates**
 - **Issue**: After running server update scripts, the admin panel may not display correctly or buttons may not be clickable
 - **Cause**: Browser caching old CSS/JavaScript files
