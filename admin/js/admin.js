@@ -618,8 +618,8 @@ async function loadDashboard() {
         const systemStatus = document.getElementById('system-status');
         if (systemStatus) {
             systemStatus.textContent = `System: ${data.running ? 'Running' : 'Stopped'}`;
-            systemStatus.className = 'status-badge';
-            systemStatus.classList.add(data.running ? 'connected' : 'disconnected');
+            systemStatus.classList.remove('connected', 'disconnected');
+            systemStatus.classList.add('status-badge', data.running ? 'connected' : 'disconnected');
         }
 
         // Load AD integration status
@@ -636,8 +636,8 @@ async function loadDashboard() {
         const systemStatus = document.getElementById('system-status');
         if (systemStatus) {
             systemStatus.textContent = 'System: Error';
-            systemStatus.className = 'status-badge';
-            systemStatus.classList.add('disconnected');
+            systemStatus.classList.remove('connected', 'disconnected');
+            systemStatus.classList.add('status-badge', 'disconnected');
         }
         
         showNotification(`Failed to load dashboard: ${error.message}`, 'error');
@@ -713,7 +713,8 @@ async function loadADStatus() {
         const statusBadge = document.getElementById('ad-status-badge');
         if (statusBadge) {
             statusBadge.textContent = 'Error';
-            statusBadge.className = 'status-badge disconnected';
+            statusBadge.classList.remove('enabled', 'disabled', 'connected');
+            statusBadge.classList.add('status-badge', 'disconnected');
         }
         // Don't show error notification for AD status - it's optional
     }
