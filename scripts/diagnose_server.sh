@@ -19,9 +19,11 @@ cd "$PBX_DIR"
 # 1. Git Status
 echo "1. GIT STATUS"
 echo "─────────────────────────────────────────────────────────────────"
-git status --short | head -20
-if [ $(git status --porcelain 2>/dev/null | wc -l) -gt 20 ]; then
-    echo "... and $(($(git status --porcelain | wc -l) - 20)) more files modified"
+GIT_STATUS=$(git status --porcelain 2>/dev/null)
+echo "$GIT_STATUS" | head -20
+STATUS_COUNT=$(echo "$GIT_STATUS" | wc -l)
+if [ "$STATUS_COUNT" -gt 20 ]; then
+    echo "... and $(($STATUS_COUNT - 20)) more files modified"
 fi
 echo ""
 
@@ -123,7 +125,7 @@ else
     echo "Service Status: ✗ NOT RUNNING ($SERVICE_STATUS)"
 fi
 
-if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+if [ -n "$GIT_STATUS" ]; then
     echo "Local Changes: ⚠️  YES (files differ from repository)"
 else
     echo "Local Changes: ✓ NO (matches repository)"

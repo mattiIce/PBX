@@ -65,7 +65,7 @@ if [ -n "$(git status --porcelain)" ]; then
     
     # Backup modified files
     git status --porcelain | while IFS= read -r line; do
-        # Extract filename from porcelain format (skip first 3 characters)
+        # Extract filename from porcelain format (skip first 2 status characters + space)
         file="${line:3}"
         if [ -f "$file" ]; then
             mkdir -p "$BACKUP_DIR/$(dirname "$file")"

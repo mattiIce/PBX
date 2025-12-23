@@ -50,11 +50,13 @@ echo ""
 
 # Step 2: Show what will be reset
 echo "Step 2/5: Checking current state..."
-if [ -n "$(git status --porcelain)" ]; then
+GIT_STATUS=$(git status --porcelain)
+if [ -n "$GIT_STATUS" ]; then
     echo "⚠️  The following files will be reset:"
-    git status --short | head -20
-    if [ $(git status --porcelain | wc -l) -gt 20 ]; then
-        echo "... and $(($(git status --porcelain | wc -l) - 20)) more files"
+    echo "$GIT_STATUS" | head -20
+    STATUS_COUNT=$(echo "$GIT_STATUS" | wc -l)
+    if [ "$STATUS_COUNT" -gt 20 ]; then
+        echo "... and $(($STATUS_COUNT - 20)) more files"
     fi
 else
     echo "✓ No local changes detected"
