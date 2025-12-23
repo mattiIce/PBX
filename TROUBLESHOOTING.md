@@ -10,6 +10,7 @@ This comprehensive guide covers common issues and their solutions for the PBX sy
 - [Network and Connectivity](#network-and-connectivity)
 - [Configuration Issues](#configuration-issues)
 - [Service Management](#service-management)
+  - [Script Execution Errors](#script-execution-errors)
 
 ---
 
@@ -630,6 +631,42 @@ sudo systemctl restart pbx
 # Verify logs are being written
 tail -f ~/PBX/logs/pbx.log
 ```
+
+### Script Execution Errors
+
+**Symptoms:**
+- Getting `SyntaxError` when trying to run scripts
+- Scripts show Python syntax errors for bash commands like `echo`
+
+**Common Error:**
+```
+File "/root/PBX/scripts/update_server_from_repo.sh", line 8
+    echo "=========================================="
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: invalid syntax
+```
+
+**Root Cause:**
+You're trying to run a **shell script** (.sh file) with the Python interpreter (`python3`).
+
+**Solution:**
+Shell scripts must be run with `bash`, not `python3`:
+
+```bash
+# ❌ WRONG - causes syntax error
+python3 scripts/update_server_from_repo.sh
+python3 scripts/diagnose_server.sh
+
+# ✅ CORRECT - run with bash
+bash scripts/update_server_from_repo.sh
+bash scripts/diagnose_server.sh
+```
+
+**Quick Reference:**
+- **Shell scripts (.sh)** → Run with `bash scripts/name.sh`
+- **Python scripts (.py)** → Run with `python3 scripts/name.py`
+
+See [scripts/README.md](scripts/README.md) for complete documentation on all available scripts.
 
 ---
 
