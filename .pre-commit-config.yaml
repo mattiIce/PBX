@@ -69,7 +69,7 @@ repos:
     rev: 1.9.2
     hooks:
       - id: bandit
-        args: ['-r', 'pbx/', '-ll']
+        args: ['-ll', '-r', '.']
         exclude: 'tests/'
 
   # YAML linting

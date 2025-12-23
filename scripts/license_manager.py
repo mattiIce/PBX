@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-License Management CLI Tool
+"""License Management CLI Tool.
 
 Command-line utility for generating, installing, and managing licenses.
 
@@ -18,12 +17,11 @@ import json
 import os
 import sys
 from datetime import datetime
-from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from pbx.utils.licensing import LicenseManager, LicenseType, LicenseStatus
+from pbx.utils.licensing import LicenseManager, LicenseType
 
 
 def setup_config():
@@ -79,8 +77,7 @@ def cmd_generate(args):
     
     with open(output_file, 'w') as f:
         json.dump(license_data, f, indent=2)
-    
-    print(f"\n✓ License generated successfully!")
+    print("\n✓ License generated successfully!")
     print(f"\nLicense Key: {license_data['key']}")
     print(f"Type: {license_data['type']}")
     print(f"Issued To: {license_data['issued_to']}")
@@ -160,11 +157,11 @@ def cmd_status(args):
         print(f"License Key: {info.get('key', 'N/A')}")
     
     if info.get('limits'):
-        print(f"\nLimits:")
+        print("\nLimits:")
         for limit_name, limit_value in info['limits'].items():
             display_value = 'Unlimited' if limit_value is None else limit_value
             print(f"  {limit_name}: {display_value}")
-    
+
     print()
     return 0
 
@@ -345,7 +342,7 @@ def cmd_batch_generate(args):
     """Generate multiple licenses from a configuration file."""
     config = setup_config()
     lm = LicenseManager(config)
-    
+
     # Load batch configuration
     if not os.path.exists(args.batch_file):
         print(f"Error: Batch file not found: {args.batch_file}")
@@ -445,7 +442,7 @@ def cmd_batch_generate(args):
 
 
 def main():
-    """Main entry point."""
+    """Main entry point for the license management CLI tool."""
     parser = argparse.ArgumentParser(
         description='License Management CLI Tool',
         formatter_class=argparse.RawDescriptionHelpFormatter,
