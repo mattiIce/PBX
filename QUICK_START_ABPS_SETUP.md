@@ -190,6 +190,7 @@ sudo ufw allow 80/tcp comment "HTTP for Let's Encrypt validation"
 sudo ufw allow 443/tcp comment "HTTPS for admin panel"
 
 # Block direct access to 8080 from external network (STRONGLY RECOMMENDED)
+# NOTE: Configure PBX to bind to 127.0.0.1 BEFORE applying this rule (see below)
 sudo ufw delete allow 8080/tcp  # Remove if exists
 sudo ufw deny from any to any port 8080 comment "Block direct PBX access"
 
@@ -211,6 +212,8 @@ sudo ufw status numbered
 
 **1. Restrict PBX to Localhost Only (HIGHLY RECOMMENDED)**
 
+⚠️ **IMPORTANT:** Do this FIRST before blocking port 8080 in the firewall!
+
 This ensures the PBX API is ONLY accessible through nginx, not directly:
 
 ```bash
@@ -221,13 +224,20 @@ nano [PBX_INSTALL_DIR]/config.yml
 Change the following in config.yml:
 ```yaml
 api:
-  host: 127.0.0.1  # Changed from 0.0.0.0
+  # CRITICAL: Preserve exact indentation (2 spaces per level)
+  host: 127.0.0.1  # Changed from 0.0.0.0 - binds to localhost only
   port: 8080
 ```
 
-Restart PBX:
+⚠️ **Restart PBX immediately** after this change:
 ```bash
 sudo systemctl restart pbx
+
+# Verify PBX is running and accessible via nginx
+curl -I http://localhost:8080/admin/
+```
+
+**Why this matters:** Changing from 0.0.0.0 to 127.0.0.1 makes the PBX only accessible from localhost. The service must be restarted for this change to take effect.
 ```
 
 **2. Monitor Failed Login Attempts**

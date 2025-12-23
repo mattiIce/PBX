@@ -364,12 +364,19 @@ dig abps.albl.com
 
 2. **Restrict PBX to Localhost** - Prevent direct access to port 8080
    
+   ⚠️ **Do this FIRST before blocking port 8080 in firewall!**
+   
    Edit config.yml:
    ```yaml
-   # Keep existing indentation structure
+   # CRITICAL: Preserve exact YAML indentation (2 spaces per level)
    api:
-     host: 127.0.0.1  # Only localhost (changed from 0.0.0.0)
+     host: 127.0.0.1  # Binds to localhost only (changed from 0.0.0.0)
      port: 8080
+   ```
+   
+   Then restart PBX immediately:
+   ```bash
+   sudo systemctl restart pbx
    ```
 
 3. **Keep certificates updated** - Let's Encrypt auto-renews every 90 days
