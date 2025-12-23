@@ -9894,12 +9894,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_license_toggle(self):
         """Enable or disable licensing enforcement (license admin only)"""
         # Check license admin authorization
-        is_authorized, _ = self._require_license_admin()
+        is_authorized, auth_status = self._require_license_admin()
         if not is_authorized:
+            # Determine appropriate status code:
+            # - 401 for authentication failures
+            # - 403 for authenticated users lacking license-admin privileges
+            status_code = 401
+            if isinstance(auth_status, int) and auth_status in (401, 403):
+                status_code = auth_status
             self._send_json({
                 'success': False,
                 'error': 'Unauthorized. License management requires administrator authentication.'
-            }, 401)
+            }, status_code)
             return
         
         try:
