@@ -4,6 +4,7 @@ Test HEAD Request Support for Admin Panel File Checks
 Tests that the API server properly responds to HEAD requests
 """
 import http.client
+import os
 import sys
 import time
 from pathlib import Path
@@ -31,7 +32,11 @@ def test_head_request_for_static_files():
     print("Test: HEAD Request for Static Files")
     print("=" * 60)
 
-    config = Config("test_config.yml")
+    # Get the test config file path relative to this file
+    test_dir = Path(__file__).parent
+    config_path = test_dir.parent / "test_config.yml"
+    
+    config = Config(str(config_path))
     mock_pbx = MockPBXCore(config)
 
     # Create API server on test port

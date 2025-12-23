@@ -20,6 +20,7 @@ import traceback
 import zipfile
 from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, unquote, urlparse
@@ -1167,15 +1168,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         This is commonly used to check if a resource exists without downloading it.
         The response headers and status code should be the same as for GET.
         
-        We implement this by temporarily replacing wfile with a wrapper that
-        separates headers from body content.
+        We implement this by temporarily replacing wfile with a BytesIO buffer that
+        captures the entire response (headers + body), then we extract and send only
+        the headers portion (everything up to the double CRLF separator).
         """
-        from io import BytesIO
-        
         # Store original wfile
         original_wfile = self.wfile
         
-        # Create a temporary buffer
+        # Create a temporary buffer to capture the response
         temp_buffer = BytesIO()
         
         # Replace wfile with buffer
