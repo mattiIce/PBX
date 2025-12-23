@@ -125,8 +125,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # Allow Chart.js from trusted CDNs for analytics visualization
         csp = (
             "default-src 'self'; "
-            "script-src 'sel' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
-            "style-src 'sel' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:;"
         )
         self.send_header("Content-Security-Policy", csp)
