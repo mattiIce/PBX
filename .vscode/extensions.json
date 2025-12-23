@@ -1,42 +1,23 @@
 {
     "recommendations": [
-        // Python Development
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-python.black-formatter",
         "ms-python.isort",
         "ms-python.mypy-type-checker",
-
-        // Testing
         "littlefoxteam.vscode-python-test-adapter",
-
-        // YAML Support (for docker-compose, workflows, config files)
         "redhat.vscode-yaml",
-
-        // Docker Support
         "ms-azuretools.vscode-docker",
-
-        // Git Integration
         "eamodio.gitlens",
         "mhutchie.git-graph",
-
-        // Code Quality
         "njpwerner.autodocstring",
         "shardulm94.trailing-spaces",
-
-        // Markdown (for documentation)
         "yzhang.markdown-all-in-one",
         "davidanson.vscode-markdownlint",
-
-        // EditorConfig Support
         "editorconfig.editorconfig",
-
-        // Additional Utilities
         "gruntfuggly.todo-tree",
         "aaron-bond.better-comments",
         "visualstudioexptteam.vscodeintellicode",
-
-        // VoIP/Telephony Development
         "hediet.vscode-drawio",
         "jebbs.plantuml"
     ]
