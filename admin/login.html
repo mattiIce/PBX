@@ -285,7 +285,7 @@
                     console.log('✓ API server is reachable');
                 } else {
                     console.warn('⚠ API server responded with status:', response.status);
-                    showTroubleshooting(`API server responded with status ${response.status}. The PBX may be starting up.`);
+                    showTroubleshooting('API server responded with status ' + response.status + '. The PBX may be starting up.');
                 }
             } catch (error) {
                 console.error('✗ Cannot reach API server:', error);
@@ -296,20 +296,13 @@
                 console.error('4. The hostname', window.location.hostname, 'resolves correctly');
                 
                 showTroubleshooting(
-                    `Cannot reach API server at ${API_BASE}<br>` +
-                    `Please check:<br>` +
-                    `• PBX server is running<br>` +
-                    `• Port 9000 is not blocked by firewall<br>` +
-                    `• Console (F12) for detailed error logs`
+                    'Cannot reach API server at ' + window.location.hostname + ':9000\n' +
+                    'Please check:\n' +
+                    '• PBX server is running\n' +
+                    '• Port 9000 is not blocked by firewall\n' +
+                    '• Console (F12) for detailed error logs'
                 );
             }
-        }
-        
-        // Helper function to safely escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
         
         function showTroubleshooting(message) {
@@ -317,8 +310,7 @@
             const details = document.getElementById('troubleshooting-details');
             
             // Use textContent for security (no HTML injection)
-            // Convert <br> to newlines for readability
-            details.textContent = message.replace(/<br>/g, '\n');
+            details.textContent = message;
             troubleshooting.style.display = 'block';
         }
         
