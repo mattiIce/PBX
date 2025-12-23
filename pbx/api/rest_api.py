@@ -9599,23 +9599,29 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _require_license_admin(self):
         """
         Check if current user is the license administrator (extension 9322)
-        
+
         Returns:
             Tuple of (is_authorized, payload)
+
+        The payload will be:
+            - On success: the authenticated user payload from _verify_authentication()
+            - On authentication failure: a dict including at least {"status_code": 401}
+            - On authorization failure: a dict including at least {"status_code": 403}
         """
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
-            return False, None
-        
+            # User is not authenticated -> should be treated as 401 Unauthorized
+            return False, {"status_code": 401, "error": "unauthenticated"}
+
         # Check if user is extension 9322 (license admin)
         from pbx.utils.license_admin import LICENSE_ADMIN_EXTENSION
         extension = payload.get("extension")
-        
+
         if extension == LICENSE_ADMIN_EXTENSION:
             return True, payload
-        
-        return False, None
 
+        # User is authenticated but not the license admin -> should be treated as 403 Forbidden
+        return False, {"status_code": 403, "error": "forbidden", "extension": extension}
     def _handle_license_status(self):
         """Get current license status and information"""
         try:
