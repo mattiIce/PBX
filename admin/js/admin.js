@@ -422,7 +422,7 @@ function applyRoleBasedUI() {
         // Update header to show non-admin status
         const header = document.querySelector('header h1');
         if (header) {
-            header.innerHTML = `📞 PBX User Panel - Extension ${currentUser.number}`;
+            header.innerHTML = `📞 Warden VoIP User Panel - Extension ${currentUser.number}`;
         }
 
         // Show info banner for non-admin users
@@ -431,7 +431,7 @@ function applyRoleBasedUI() {
         // Update header to show admin status
         const header = document.querySelector('header h1');
         if (header) {
-            header.innerHTML = `📞 PBX Admin Dashboard - ${currentUser.name} (${currentUser.number}) 👑`;
+            header.innerHTML = `📞 Warden VoIP Admin Dashboard - ${currentUser.name} (${currentUser.number}) 👑`;
         }
     }
 
@@ -6922,7 +6922,9 @@ async function loadLicenseStatus() {
     container.innerHTML = '<div class="loading">Loading license status...</div>';
 
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/license/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/license/status`, {
+            headers: getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success && data.license) {
@@ -7018,7 +7020,9 @@ async function loadLicenseFeatures() {
     container.innerHTML = '<div class="loading">Loading features...</div>';
 
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/license/features`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/license/features`, {
+            headers: getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -7091,7 +7095,7 @@ async function toggleLicensing(enabled) {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/toggle`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: getAuthHeaders(),
             body: JSON.stringify({enabled: enabled})
         });
 
@@ -7152,7 +7156,7 @@ async function generateLicense(event) {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/generate`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: getAuthHeaders(),
             body: JSON.stringify(requestData)
         });
 
@@ -7223,7 +7227,7 @@ async function installLicense(event) {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/install`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 license_data: licenseData,
                 enforce_licensing: enforceLicensing
@@ -7276,7 +7280,7 @@ async function revokeLicense() {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/revoke`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'}
+            headers: getAuthHeaders()
         });
 
         const data = await response.json();
@@ -7318,7 +7322,7 @@ async function removeLicenseLock() {
     try {
         const response = await fetchWithTimeout(`${API_BASE}/api/license/remove_lock`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'}
+            headers: getAuthHeaders()
         });
 
         const data = await response.json();
