@@ -23,6 +23,7 @@ const API_BASE = getAPIBase();
 console.log('API Base URL:', API_BASE);
 
 // Constants
+const LOGIN_PAGE_PATH = '/admin/login.html';
 const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart may be required for some changes.';
 const EXTENSION_LOAD_TIMEOUT = 10000; // 10 seconds
 const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds for general requests
@@ -250,7 +251,7 @@ async function initializeUserContext() {
     if (!token) {
         // No token - redirect to login page
         console.log('No authentication token found, redirecting to login...');
-        window.location.replace('/admin/login.html');
+        window.location.replace(LOGIN_PAGE_PATH);
         return;
     }
 
@@ -267,7 +268,7 @@ async function initializeUserContext() {
             localStorage.removeItem('pbx_extension');
             localStorage.removeItem('pbx_is_admin');
             localStorage.removeItem('pbx_name');
-            window.location.replace('/admin/login.html');
+            window.location.replace(LOGIN_PAGE_PATH);
             return;
         }
         
@@ -288,7 +289,7 @@ async function initializeUserContext() {
     if (!extensionNumber) {
         // No extension stored - redirect to login
         console.log('No extension number found, redirecting to login...');
-        window.location.replace('/admin/login.html');
+        window.location.replace(LOGIN_PAGE_PATH);
         return;
     }
 
@@ -481,7 +482,7 @@ function initializeLogout() {
         }
 
         // Redirect to login page
-        window.location.href = '/admin/login.html';
+        window.location.href = LOGIN_PAGE_PATH;
     });
 }
 
@@ -615,8 +616,11 @@ async function loadDashboard() {
         document.getElementById('stat-recordings').textContent = data.active_recordings || 0;
 
         const systemStatus = document.getElementById('system-status');
-        systemStatus.textContent = `System: ${data.running ? 'Running' : 'Stopped'}`;
-        systemStatus.className = 'status-badge ' + (data.running ? 'connected' : 'disconnected');
+        if (systemStatus) {
+            systemStatus.textContent = `System: ${data.running ? 'Running' : 'Stopped'}`;
+            systemStatus.className = 'status-badge';
+            systemStatus.classList.add(data.running ? 'connected' : 'disconnected');
+        }
 
         // Load AD integration status
         loadADStatus();
@@ -630,8 +634,11 @@ async function loadDashboard() {
         document.getElementById('stat-recordings').textContent = 'Error';
         
         const systemStatus = document.getElementById('system-status');
-        systemStatus.textContent = 'System: Error';
-        systemStatus.className = 'status-badge disconnected';
+        if (systemStatus) {
+            systemStatus.textContent = 'System: Error';
+            systemStatus.className = 'status-badge';
+            systemStatus.classList.add('disconnected');
+        }
         
         showNotification(`Failed to load dashboard: ${error.message}`, 'error');
     }
