@@ -1692,6 +1692,81 @@ class PBXCore:
 
         return False
 
+    def _send_cancel_to_callee(self, call, call_id):
+        """Send CANCEL to callee to stop their phone from ringing"""
+        from pbx.sip.message import SIPMessageBuilder
+
+        if not (
+            hasattr(call, "callee_addr")
+            and call.callee_addr
+            and hasattr(call, "callee_invite")
+            and call.callee_invite
+        ):
+            return
+
+        cancel_request = SIPMessageBuilder.build_request(
+            method="CANCEL",
+            uri=call.callee_invite.uri,
+            from_addr=call.callee_invite.get_header("From"),
+            to_addr=call.callee_invite.get_header("To"),
+            call_id=call_id,
+            cseq=int(call.callee_invite.get_header("CSeq").split()[0]),
+        )
+        cancel_request.set_header("Via", call.callee_invite.get_header("Via"))
+        self.sip_server._send_message(cancel_request.build(), call.callee_addr)
+        self.logger.info(f"Sent CANCEL to callee {call.to_extension} to stop ringing")
+
+    def _answer_call_for_voicemail(self, call, call_id):
+        """Answer call for voicemail recording"""
+        from pbx.sip.message import SIPMessageBuilder
+        from pbx.sip.sdp import SDPBuilder
+
+        if not (call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports):
+            return False
+
+        server_ip = self._get_server_ip()
+        caller_user_agent = self._get_phone_user_agent(call.from_extension)
+        caller_phone_model = self._detect_phone_model(caller_user_agent)
+        caller_codecs = call.caller_rtp.get("formats", None) if call.caller_rtp else None
+        codecs_for_caller = self._get_codecs_for_phone_model(
+            caller_phone_model, default_codecs=caller_codecs
+        )
+
+        if caller_phone_model:
+            self.logger.info(
+                f"Voicemail: Detected caller phone model: {caller_phone_model}, "
+                f"offering codecs: {codecs_for_caller}"
+            )
+
+        # Build SDP for the voicemail recording endpoint
+        dtmf_payload_type = self._get_dtmf_payload_type()
+        ilbc_mode = self._get_ilbc_mode()
+        voicemail_sdp = SDPBuilder.build_audio_sdp(
+            server_ip,
+            call.rtp_ports[0],
+            session_id=call_id,
+            codecs=codecs_for_caller,
+            dtmf_payload_type=dtmf_payload_type,
+            ilbc_mode=ilbc_mode,
+        )
+
+        # Send 200 OK to answer the call for voicemail recording
+        ok_response = SIPMessageBuilder.build_response(
+            200, "OK", call.original_invite, body=voicemail_sdp
+        )
+        ok_response.set_header("Content-Type", "application/sdp")
+
+        # Build Contact header
+        sip_port = self.config.get("server.sip_port", 5060)
+        contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+        ok_response.set_header("Contact", contact_uri)
+
+        # Send to caller
+        self.sip_server._send_message(ok_response.build(), call.caller_addr)
+        self.logger.info(f"Answered call {call_id} for voicemail recording")
+        call.connect()
+        return True
+
     def _handle_no_answer(self, call_id):
         """
         Handle no-answer timeout - route call to voicemail
@@ -1699,18 +1774,14 @@ class PBXCore:
         Args:
             call_id: Call identifier
         """
-        from pbx.rtp.handler import RTPPlayer, RTPRecorder
-        from pbx.sip.message import SIPMessageBuilder
-        from pbx.sip.sdp import SDPBuilder
+        from pbx.core.call import CallState
 
         call = self.call_manager.get_call(call_id)
         if not call:
             self.logger.warning(f"No-answer timeout for non-existent call {call_id}")
             return
 
-        # Check if call was already answered
-        from pbx.core.call import CallState
-
+        # Check if call was already answered or routed
         if call.state == CallState.CONNECTED:
             self.logger.debug(f"Call {call_id} already answered, ignoring no-answer timeout")
             return
@@ -1723,164 +1794,89 @@ class PBXCore:
         self.logger.info(f"No answer for call {call_id}, routing to voicemail")
 
         # Send CANCEL to the callee to stop their phone from ringing
-        if (
-            hasattr(call, "callee_addr")
-            and call.callee_addr
-            and hasattr(call, "callee_invite")
-            and call.callee_invite
-        ):
-            cancel_request = SIPMessageBuilder.build_request(
-                method="CANCEL",
-                uri=call.callee_invite.uri,
-                from_addr=call.callee_invite.get_header("From"),
-                to_addr=call.callee_invite.get_header("To"),
-                call_id=call_id,
-                cseq=int(call.callee_invite.get_header("CSeq").split()[0]),
-            )
-            cancel_request.set_header("Via", call.callee_invite.get_header("Via"))
-
-            self.sip_server._send_message(cancel_request.build(), call.callee_addr)
-            self.logger.info(
-                f"Sent CANCEL to callee {
-                    call.to_extension} to stop ringing"
-            )
+        self._send_cancel_to_callee(call, call_id)
 
         # Answer the call to allow voicemail recording
-        if call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports:
-            server_ip = self._get_server_ip()
+        if not self._answer_call_for_voicemail(call, call_id):
+            return
 
-            # Determine which codecs to offer based on caller's phone model
-            # Get caller's User-Agent to detect phone model
-            caller_user_agent = self._get_phone_user_agent(call.from_extension)
-            caller_phone_model = self._detect_phone_model(caller_user_agent)
+        # Play voicemail greeting and beep tone to caller
+        if call.caller_rtp:
+            try:
+                import os
+                import tempfile
 
-            # Extract caller's codecs from the stored RTP info
-            caller_codecs = call.caller_rtp.get("formats", None) if call.caller_rtp else None
+                from pbx.rtp.handler import RTPPlayer, RTPRecorder
+                from pbx.utils.audio import get_prompt_audio
 
-            # Select appropriate codecs for the caller's phone
-            codecs_for_caller = self._get_codecs_for_phone_model(
-                caller_phone_model, default_codecs=caller_codecs
-            )
-
-            if caller_phone_model:
-                self.logger.info(
-                    f"Voicemail: Detected caller phone model: {caller_phone_model}, "
-                    f"offering codecs: {codecs_for_caller}"
+                # Create RTP player to send audio to caller
+                # Use the same port as the RTPRecorder since both bind to 0.0.0.0
+                # and can handle bidirectional RTP communication
+                player = RTPPlayer(
+                    # Same port as RTPRecorder
+                    local_port=call.rtp_ports[0],
+                    remote_host=call.caller_rtp["address"],
+                    remote_port=call.caller_rtp["port"],
+                    call_id=call_id,
                 )
+                if player.start():
+                    # Check for custom greeting first
+                    mailbox = self.voicemail_system.get_mailbox(call.to_extension)
+                    custom_greeting_path = mailbox.get_greeting_path()
+                    greeting_file = None
+                    temp_file_created = False
 
-            # Build SDP for the voicemail recording endpoint
-            # Get DTMF payload type from config
-            dtmf_payload_type = self._get_dtmf_payload_type()
-            ilbc_mode = self._get_ilbc_mode()
-            voicemail_sdp = SDPBuilder.build_audio_sdp(
-                server_ip,
-                call.rtp_ports[0],
-                session_id=call_id,
-                codecs=codecs_for_caller,
-                dtmf_payload_type=dtmf_payload_type,
-                ilbc_mode=ilbc_mode,
-            )
-
-            # Send 200 OK to answer the call for voicemail recording
-            ok_response = SIPMessageBuilder.build_response(
-                200, "OK", call.original_invite, body=voicemail_sdp
-            )
-            ok_response.set_header("Content-Type", "application/sdp")
-
-            # Build Contact header
-            sip_port = self.config.get("server.sip_port", 5060)
-            contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
-            ok_response.set_header("Contact", contact_uri)
-
-            # Send to caller
-            self.sip_server._send_message(ok_response.build(), call.caller_addr)
-            self.logger.info(f"Answered call {call_id} for voicemail recording")
-
-            # Mark call as connected
-            call.connect()
-
-            # Play voicemail greeting and beep tone to caller
-            if call.caller_rtp:
-                try:
-                    import os
-                    import tempfile
-
-                    from pbx.utils.audio import get_prompt_audio
-
-                    # Create RTP player to send audio to caller
-                    # Use the same port as the RTPRecorder since both bind to 0.0.0.0
-                    # and can handle bidirectional RTP communication
-                    player = RTPPlayer(
-                        # Same port as RTPRecorder
-                        local_port=call.rtp_ports[0],
-                        remote_host=call.caller_rtp["address"],
-                        remote_port=call.caller_rtp["port"],
-                        call_id=call_id,
-                    )
-                    if player.start():
-                        # Check for custom greeting first
-                        mailbox = self.voicemail_system.get_mailbox(call.to_extension)
-                        custom_greeting_path = mailbox.get_greeting_path()
-                        greeting_file = None
-                        temp_file_created = False
-
-                        if custom_greeting_path:
-                            # Use custom greeting
-                            greeting_file = custom_greeting_path
-                            self.logger.info(
-                                f"Using custom greeting for extension {
-                                    call.to_extension}: {custom_greeting_path}"
-                            )
-                            # Verify file exists and is readable
-                            if os.path.exists(custom_greeting_path):
-                                file_size = os.path.getsize(custom_greeting_path)
-                                self.logger.info(f"Custom greeting file exists ({file_size} bytes)")
-                            else:
-                                self.logger.warning(
-                                    f"Custom greeting file not found at {custom_greeting_path}, using default"
-                                )
-                                custom_greeting_path = None  # Fall back to default
-
-                        if not custom_greeting_path:
-                            # Use default prompt: "Please leave a message after the tone"
-                            # Try to load from
-                            # voicemail_prompts/leave_message.wav, fallback to
-                            # tone generation
-                            greeting_prompt = get_prompt_audio("leave_message")
-                            with tempfile.NamedTemporaryFile(
-                                suffix=".wav", delete=False
-                            ) as temp_file:
-                                temp_file.write(greeting_prompt)
-                                greeting_file = temp_file.name
-                                temp_file_created = True
-                            self.logger.info(
-                                f"Using default greeting for extension {
-                                    call.to_extension}"
-                            )
-
-                        try:
-                            player.play_file(greeting_file)
-                            import time
-
-                            time.sleep(0.3)  # Brief pause before beep
-                        finally:
-                            # Clean up temp file only if we created one
-                            if temp_file_created:
-                                try:
-                                    os.unlink(greeting_file)
-                                except (OSError, FileNotFoundError) as e:
-                                    self.logger.debug(f"Could not delete temp greeting file: {e}")
-
-                        # Play beep tone (1000 Hz, 500ms)
-                        player.play_beep(frequency=1000, duration_ms=500)
-                        player.stop()
-                        self.logger.info(f"Played voicemail greeting and beep for call {call_id}")
-                    else:
-                        self.logger.warning(
-                            f"Failed to start RTP player for greeting on call {call_id}"
+                    if custom_greeting_path:
+                        # Use custom greeting
+                        greeting_file = custom_greeting_path
+                        self.logger.info(
+                            f"Using custom greeting for extension {call.to_extension}: {custom_greeting_path}"
                         )
-                except Exception as e:
-                    self.logger.error(f"Error playing voicemail greeting: {e}")
+                        # Verify file exists and is readable
+                        if os.path.exists(custom_greeting_path):
+                            file_size = os.path.getsize(custom_greeting_path)
+                            self.logger.info(f"Custom greeting file exists ({file_size} bytes)")
+                        else:
+                            self.logger.warning(
+                                f"Custom greeting file not found at {custom_greeting_path}, using default"
+                            )
+                            custom_greeting_path = None  # Fall back to default
+
+                    if not custom_greeting_path:
+                        # Use default prompt: "Please leave a message after the tone"
+                        # Try to load from voicemail_prompts/leave_message.wav, fallback to tone generation
+                        greeting_prompt = get_prompt_audio("leave_message")
+                        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                            temp_file.write(greeting_prompt)
+                            greeting_file = temp_file.name
+                            temp_file_created = True
+                        self.logger.info(
+                            f"Using default greeting for extension {call.to_extension}"
+                        )
+
+                    try:
+                        player.play_file(greeting_file)
+                        import time
+
+                        time.sleep(0.3)  # Brief pause before beep
+                    finally:
+                        # Clean up temp file only if we created one
+                        if temp_file_created:
+                            try:
+                                os.unlink(greeting_file)
+                            except (OSError, FileNotFoundError) as e:
+                                self.logger.debug(f"Could not delete temp greeting file: {e}")
+
+                    # Play beep tone (1000 Hz, 500ms)
+                    player.play_beep(frequency=1000, duration_ms=500)
+                    player.stop()
+                    self.logger.info(f"Played voicemail greeting and beep for call {call_id}")
+                else:
+                    self.logger.warning(
+                        f"Failed to start RTP player for greeting on call {call_id}"
+                    )
+            except Exception as e:
+                self.logger.error(f"Error playing voicemail greeting: {e}")
 
             # Start RTP recorder on the allocated port
             recorder = RTPRecorder(call.rtp_ports[0], call_id)

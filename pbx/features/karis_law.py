@@ -264,6 +264,25 @@ class KarisLawCompliance:
             self.logger.warning(f"Could not create nomadic E911 engine: {e}")
             return None
 
+    def _format_dispatchable_location(self, location: Dict) -> str:
+        """Format location dictionary as dispatchable location string"""
+        parts = []
+        if location.get("street_address"):
+            parts.append(location["street_address"])
+        if location.get("building"):
+            parts.append(f"Building: {location['building']}")
+        if location.get("floor"):
+            parts.append(f"Floor {location['floor']}")
+        if location.get("room"):
+            parts.append(f"Room {location['room']}")
+        if location.get("city"):
+            parts.append(location["city"])
+        if location.get("state"):
+            parts.append(location["state"])
+        if location.get("postal_code"):
+            parts.append(location["postal_code"])
+        return ", ".join(parts) if parts else "Location on file"
+
     def _get_location_info(self, extension: str) -> Optional[Dict]:
         """
         Get location information for extension (Ray Baum's Act)
@@ -280,26 +299,7 @@ class KarisLawCompliance:
             try:
                 location = nomadic_e911.get_location(extension)
                 if location:
-                    # Format as dispatchable location string
-                    parts = []
-                    if location.get("street_address"):
-                        parts.append(location["street_address"])
-                    if location.get("building"):
-                        parts.append(f"Building: {location['building']}")
-                    if location.get("floor"):
-                        parts.append(f"Floor {location['floor']}")
-                    if location.get("room"):
-                        parts.append(f"Room {location['room']}")
-                    if location.get("city"):
-                        parts.append(location["city"])
-                    if location.get("state"):
-                        parts.append(location["state"])
-                    if location.get("postal_code"):
-                        parts.append(location["postal_code"])
-
-                    location["dispatchable_location"] = (
-                        ", ".join(parts) if parts else "Location on file"
-                    )
+                    location["dispatchable_location"] = self._format_dispatchable_location(location)
                     return location
             except Exception as e:
                 self.logger.warning(f"Could not get nomadic E911 location: {e}")
