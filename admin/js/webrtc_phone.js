@@ -145,7 +145,7 @@ class WebRTCPhone {
      */
     _checkWebRTCSupport() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            const errorMsg = 'WebRTC not supported. Please use HTTPS or a modern browser.';
+            const errorMsg = 'WebRTC not supported in this browser or context. Try using HTTPS or a modern browser.';
             this.updateStatus(errorMsg, 'error');
             console.error('[WebRTC Phone]', errorMsg);
             return false;
