@@ -222,6 +222,63 @@ class ConversationalAI:
 
         return response
 
+    def _build_response_handlers(self):
+        """Build intent-to-response handler mapping"""
+        return {
+            "emergency_request": lambda entities: (
+                "I'm connecting you to emergency services immediately.",
+                1.0,
+            ),
+            "transfer_request": lambda entities: (
+                f"I'll transfer you to the {entities.get('departments', ['general'])[0] if entities.get('departments') else 'general'} department right away.",
+                None,
+            ),
+            "sales_department": lambda entities: (
+                "Let me connect you with our sales team. They'll be happy to help you.",
+                None,
+            ),
+            "support_department": lambda entities: (
+                "I'll transfer you to technical support. They're ready to assist you.",
+                None,
+            ),
+            "billing_department": lambda entities: (
+                "Connecting you to our billing department now.",
+                None,
+            ),
+            "business_hours_inquiry": lambda entities: (
+                "Our business hours are Monday through Friday, 9 AM to 5 PM. Is there anything else you'd like to know?",
+                None,
+            ),
+            "location_inquiry": lambda entities: (
+                "We're located at our main office. Would you like me to provide the full address?",
+                None,
+            ),
+            "pricing_inquiry": lambda entities: (
+                "I can help you with pricing information. Let me connect you with our sales team who can provide detailed quotes.",
+                None,
+            ),
+            "voicemail_request": lambda entities: (
+                "I'll direct you to voicemail where you can leave a detailed message.",
+                None,
+            ),
+            "callback_request": lambda entities: (
+                (
+                    f"I'll arrange a callback to {entities.get('phone_numbers', [None])[0]}. Is that the best number to reach you?"
+                    if entities.get("phone_numbers", [None])[0]
+                    else "I can arrange a callback for you. What's the best number to reach you at?"
+                ),
+                None,
+            ),
+            "complaint": lambda entities: (
+                "I'm sorry to hear about your experience. Let me connect you with a supervisor who can help resolve this.",
+                None,
+            ),
+            "cancel_request": lambda entities: (
+                "No problem at all. Is there anything else I can help you with today?",
+                None,
+            ),
+        }
+
     def _generate_response(self, context: ConversationContext, user_input: str) -> Dict:
         """
         Generate AI response using enhanced intent detection and entity extraction
@@ -254,58 +311,14 @@ class ConversationalAI:
         previous_intent = context.intent  # ConversationContext has intent attribute
         message_count = len(context.messages)
 
+        # Build response handlers
+        handlers = self._build_response_handlers()
+
         # Generate contextual response based on intent and conversation flow
-        if intent == "emergency_request":
-            response = "I'm connecting you to emergency services immediately."
-            confidence = 1.0  # High confidence for emergency
-
-        elif intent == "transfer_request":
-            dept = (
-                entities.get("departments", ["general"])[0]
-                if entities.get("departments")
-                else "general"
-            )
-            response = f"I'll transfer you to the {dept} department right away."
-
-        elif intent == "sales_department":
-            response = "Let me connect you with our sales team. They'll be happy to help you."
-
-        elif intent == "support_department":
-            response = "I'll transfer you to technical support. They're ready to assist you."
-
-        elif intent == "billing_department":
-            response = "Connecting you to our billing department now."
-
-        elif intent == "business_hours_inquiry":
-            response = "Our business hours are Monday through Friday, 9 AM to 5 PM. Is there anything else you'd like to know?"
-
-        elif intent == "location_inquiry":
-            response = (
-                "We're located at our main office. Would you like me to provide the full address?"
-            )
-
-        elif intent == "pricing_inquiry":
-            response = "I can help you with pricing information. Let me connect you with our sales team who can provide detailed quotes."
-
-        elif intent == "voicemail_request":
-            response = "I'll direct you to voicemail where you can leave a detailed message."
-
-        elif intent == "callback_request":
-            phone = entities.get("phone_numbers", [None])[0]
-            if phone:
-                response = (
-                    f"I'll arrange a callback to {phone}. Is that the best number to reach you?"
-                )
-            else:
-                response = (
-                    "I can arrange a callback for you. What's the best number to reach you at?"
-                )
-
-        elif intent == "complaint":
-            response = "I'm sorry to hear about your experience. Let me connect you with a supervisor who can help resolve this."
-
-        elif intent == "cancel_request":
-            response = "No problem at all. Is there anything else I can help you with today?"
+        if intent in handlers:
+            response, override_confidence = handlers[intent](entities)
+            if override_confidence is not None:
+                confidence = override_confidence
 
         elif intent == "gratitude":
             if message_count > 3:
