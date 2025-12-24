@@ -122,7 +122,7 @@ def test_signal_handling_simulation():
 
     def signal_handler_test():
         """Simulate the signal handler"""
-        nonlocal running, pbx
+        nonlocal running
         print("Signal handler called")
         running = False
         if pbx:
