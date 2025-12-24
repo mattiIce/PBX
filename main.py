@@ -3,7 +3,6 @@
 Main entry point for PBX system
 """
 import logging
-import signal
 import sys
 import time
 
@@ -29,7 +28,7 @@ shutdown_handler = None
 
 def signal_handler(sig, frame):  # pylint: disable=unused-argument
     """Handle shutdown signal"""
-    global running, pbx
+    global running
     print("\nShutting down PBX system...")
     running = False
     if pbx:

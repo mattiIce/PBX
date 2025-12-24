@@ -4,7 +4,6 @@ DTMF Payload Type Selector
 Interactive tool to help choose the right RFC2833 payload type
 """
 
-import os
 import sys
 
 # ANSI color codes
@@ -123,21 +122,21 @@ def recommend_payload_type():
         print(f"\n{GREEN}✓ Recommendation: Try payload type 100 first{RESET}\n")
         print_payload_info("100", PAYLOAD_TYPES["100"], is_recommended=True)
         print("Cisco systems commonly use payload type 100.")
-        print(f"If 100 doesn't work, try: 101 → 102 → 96")
+        print("If 100 doesn't work, try: 101 → 102 → 96")
         return "100"
 
     elif equipment == 1:  # Polycom
         print(f"\n{GREEN}✓ Recommendation: Try payload type 121 or 100{RESET}\n")
         print_payload_info("121", PAYLOAD_TYPES["121"], is_recommended=True)
         print("Polycom phones sometimes need payload type 121.")
-        print(f"If 121 doesn't work, try: 100 → 101 → 102")
+        print("If 121 doesn't work, try: 100 → 101 → 102")
         return "121"
 
     elif equipment == 3:  # Carrier
         print(f"\n{GREEN}✓ Recommendation: Try payload type 102 or 100{RESET}\n")
         print_payload_info("102", PAYLOAD_TYPES["102"], is_recommended=True)
         print("Major carriers often require payload type 102 or 100.")
-        print(f"If 102 doesn't work, try: 100 → 101 → 96")
+        print("If 102 doesn't work, try: 100 → 101 → 96")
         print(f"\n{YELLOW}TIP: Check your carrier's documentation for required payload type{RESET}")
         return "102"
 
@@ -172,25 +171,25 @@ def show_configuration_example(payload_type):
     print(f"\n{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}Configuration Instructions{RESET}\n")
 
-    print(f"1. Edit config.yml:")
+    print("1. Edit config.yml:")
     print(f"{BOLD}   vim config.yml{RESET}\n")
 
-    print(f"2. Find the DTMF configuration section and change:")
+    print("2. Find the DTMF configuration section and change:")
     print(f"   {YELLOW}features:")
-    print(f"     dtmf:")
+    print("     dtmf:")
     print(f"       payload_type: {payload_type}  # Changed from 101{RESET}\n")
 
-    print(f"3. Restart the PBX:")
+    print("3. Restart the PBX:")
     print(f"{BOLD}   sudo systemctl restart pbx{RESET}\n")
 
-    print(f"4. Reprovision phones:")
-    print(f"   - Reboot phones, OR")
-    print(f"   - On phone: Menu → Settings → Auto Provision → Provision Now\n")
+    print("4. Reprovision phones:")
+    print("   - Reboot phones, OR")
+    print("   - On phone: Menu → Settings → Auto Provision → Provision Now\n")
 
-    print(f"5. Test DTMF:")
-    print(f"   - Call voicemail: *<extension>")
-    print(f"   - Enter PIN and verify it's recognized")
-    print(f"   - Test auto-attendant navigation\n")
+    print("5. Test DTMF:")
+    print("   - Call voicemail: *<extension>")
+    print("   - Enter PIN and verify it's recognized")
+    print("   - Test auto-attendant navigation\n")
 
     print(f"{GREEN}✓ See DTMF_PAYLOAD_TYPE_CONFIGURATION.md for detailed guide{RESET}")
     print(f"{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}\n")

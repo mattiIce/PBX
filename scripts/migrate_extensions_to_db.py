@@ -21,7 +21,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
-from pbx.utils.logger import get_logger
 
 
 def main():
@@ -34,7 +33,6 @@ def main():
     )
 
     args = parser.parse_args()
-    logger = get_logger()
 
     print("=" * 70)
     print("Extension Migration: config.yml → Database")
@@ -147,16 +145,16 @@ def main():
                 )
 
                 if success:
-                    print(f"  ✓ Migrated successfully")
+                    print("  ✓ Migrated successfully")
                     migrated += 1
                 else:
-                    print(f"  ✗ Failed to migrate")
+                    print("  ✗ Failed to migrate")
                     errors += 1
             except Exception as e:
                 print(f"  ✗ Error: {e}")
                 errors += 1
         else:
-            print(f"  (would migrate)")
+            print("  (would migrate)")
             migrated += 1
 
         print()

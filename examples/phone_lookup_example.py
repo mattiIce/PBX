@@ -161,7 +161,7 @@ def find_phones_without_mac_in_sip(pbx_url="https://localhost:8080"):
                 print(f"  → MAC from provisioning: {mac}")
                 print(f"  → Device: {vendor} {model}")
             else:
-                print(f"  → No provisioning data found")
+                print("  → No provisioning data found")
         print()
 
 

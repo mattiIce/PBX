@@ -122,7 +122,6 @@ def generate_self_signed_cert(cert_dir="certs", hostname="localhost", days_valid
 
 if __name__ == "__main__":
     import argparse
-    import ipaddress
 
     parser = argparse.ArgumentParser(
         description="Generate self-signed SSL certificate for PBX HTTPS API"
