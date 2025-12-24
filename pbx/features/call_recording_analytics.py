@@ -172,6 +172,61 @@ class RecordingAnalytics:
 
         return results
 
+    def _load_vosk_model(self):
+        """Load Vosk speech recognition model"""
+        from vosk import Model
+
+        model_path = "models/vosk-model-small-en-us-0.15"
+
+        try:
+            if os.path.exists(model_path):
+                return Model(model_path)
+            else:
+                self.logger.warning(f"Vosk model not found at {model_path}")
+                self.logger.info("Download from: https://alphacephei.com/vosk/models")
+        except Exception as e:
+            self.logger.warning(f"Could not load Vosk model: {e}")
+
+        return None
+
+    def _process_vosk_audio(self, recognizer, wf):
+        """Process audio file with Vosk recognizer"""
+        import json
+
+        full_transcript = []
+        all_words = []
+        total_confidence = 0.0
+        confidence_count = 0
+
+        while True:
+            data = wf.readframes(4000)
+            if len(data) == 0:
+                break
+
+            if recognizer.AcceptWaveform(data):
+                result = json.loads(recognizer.Result())
+                if result.get("text"):
+                    full_transcript.append(result["text"])
+                    if "result" in result:
+                        all_words.extend(result["result"])
+                        for word in result["result"]:
+                            if "conf" in word:
+                                total_confidence += word["conf"]
+                                confidence_count += 1
+
+        # Get final result
+        final_result = json.loads(recognizer.FinalResult())
+        if final_result.get("text"):
+            full_transcript.append(final_result["text"])
+            if "result" in final_result:
+                all_words.extend(final_result["result"])
+                for word in final_result["result"]:
+                    if "conf" in word:
+                        total_confidence += word["conf"]
+                        confidence_count += 1
+
+        return full_transcript, all_words, total_confidence, confidence_count
+
     def _transcribe(self, audio_path: str) -> Dict:
         """
         Transcribe audio to text using Vosk (offline speech-to-text)
@@ -184,23 +239,12 @@ class RecordingAnalytics:
         """
         try:
             # Try to use Vosk for offline transcription (already in requirements.txt)
-            import json
             import wave
 
-            from vosk import KaldiRecognizer, Model
+            from vosk import KaldiRecognizer
 
-            # Try to get Vosk model from voicemail transcription if available
-            vosk_model = None
-            model_path = "models/vosk-model-small-en-us-0.15"
-
-            try:
-                if os.path.exists(model_path):
-                    vosk_model = Model(model_path)
-                else:
-                    self.logger.warning(f"Vosk model not found at {model_path}")
-                    self.logger.info("Download from: https://alphacephei.com/vosk/models")
-            except Exception as e:
-                self.logger.warning(f"Could not load Vosk model: {e}")
+            # Try to get Vosk model
+            vosk_model = self._load_vosk_model()
 
             if not vosk_model:
                 # Return empty result if model not available
@@ -221,37 +265,9 @@ class RecordingAnalytics:
                 rec.SetWords(True)
 
                 # Process audio
-                full_transcript = []
-                all_words = []
-                total_confidence = 0.0
-                confidence_count = 0
-
-                while True:
-                    data = wf.readframes(4000)
-                    if len(data) == 0:
-                        break
-
-                    if rec.AcceptWaveform(data):
-                        result = json.loads(rec.Result())
-                        if result.get("text"):
-                            full_transcript.append(result["text"])
-                            if "result" in result:
-                                all_words.extend(result["result"])
-                                for word in result["result"]:
-                                    if "con" in word:
-                                        total_confidence += word["con"]
-                                        confidence_count += 1
-
-                # Get final result
-                final_result = json.loads(rec.FinalResult())
-                if final_result.get("text"):
-                    full_transcript.append(final_result["text"])
-                    if "result" in final_result:
-                        all_words.extend(final_result["result"])
-                        for word in final_result["result"]:
-                            if "con" in word:
-                                total_confidence += word["conf"]
-                                confidence_count += 1
+                full_transcript, all_words, total_confidence, confidence_count = (
+                    self._process_vosk_audio(rec, wf)
+                )
 
                 # Get duration from wave file before closing
                 duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
