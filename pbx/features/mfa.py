@@ -19,7 +19,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from pbx.utils.encryption import get_encryption
@@ -288,7 +287,7 @@ class YubiKeyOTPVerifier:
 
                     # Verify nonce matches
                     if response_dict.get("nonce") != nonce:
-                        self.logger.warning(f"Nonce mismatch in YubiCloud response")
+                        self.logger.warning("Nonce mismatch in YubiCloud response")
                         continue
 
                     # Verify HMAC signature if we have an API key
@@ -506,7 +505,7 @@ class FIDO2Verifier:
                         return (
                             False,
                             f"Invalid client_data_json format: {
-                            str(e)}",
+                                str(e)}",
                         )
 
                     # Verify challenge if provided
@@ -558,7 +557,7 @@ class FIDO2Verifier:
                         return (
                             False,
                             f"Signature verification failed: {
-                            str(e)}",
+                                str(e)}",
                         )
 
                 except Exception as e:

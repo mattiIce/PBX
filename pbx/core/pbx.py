@@ -608,7 +608,7 @@ class PBXCore:
                         self.logger.warning("=" * 70)
                         self.logger.warning("FIRST-TIME SETUP - EXTENSION 1001 CREDENTIALS")
                         self.logger.warning("=" * 70)
-                        self.logger.warning(f"Extension: 1001")
+                        self.logger.warning("Extension: 1001")
                         self.logger.warning(
                             f"Password:  {
                                 ext_config['password']}"
@@ -1025,7 +1025,7 @@ class PBXCore:
         to_match = re.search(r"sip:(\*?\d+)@", to_header)
 
         if not from_match or not to_match:
-            self.logger.warning(f"Could not parse extensions from headers")
+            self.logger.warning("Could not parse extensions from headers")
             return False
 
         from_ext = from_match.group(1)
@@ -2227,7 +2227,7 @@ class PBXCore:
                 player.stop()
                 return
             self.logger.info(
-                f"Auto attendant RTP setup complete - bidirectional audio channel established"
+                "Auto attendant RTP setup complete - bidirectional audio channel established"
             )
 
             # Play welcome greeting
@@ -2241,13 +2241,13 @@ class PBXCore:
                 self.logger.info(f"[Auto Attendant] Playing welcome file: {audio_file}")
                 audio_played = player.play_file(audio_file)
                 if audio_played:
-                    self.logger.info(f"[Auto Attendant] ✓ Welcome audio played successfully")
+                    self.logger.info("[Auto Attendant] ✓ Welcome audio played successfully")
                 else:
-                    self.logger.error(f"[Auto Attendant] ✗ Failed to play welcome audio")
+                    self.logger.error("[Auto Attendant] ✗ Failed to play welcome audio")
             else:
                 # Try to load from auto_attendant/welcome.wav, fallback to tone
                 # generation
-                self.logger.info(f"[Auto Attendant] Generating welcome prompt audio")
+                self.logger.info("[Auto Attendant] Generating welcome prompt audio")
                 prompt_data = get_prompt_audio("welcome", prompt_dir="auto_attendant")
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
                     temp_file.write(prompt_data)
@@ -2256,11 +2256,11 @@ class PBXCore:
                     audio_played = player.play_file(temp_file_path)
                     if audio_played:
                         self.logger.info(
-                            f"[Auto Attendant] ✓ Generated welcome audio played successfully"
+                            "[Auto Attendant] ✓ Generated welcome audio played successfully"
                         )
                     else:
                         self.logger.error(
-                            f"[Auto Attendant] ✗ Failed to play generated welcome audio"
+                            "[Auto Attendant] ✗ Failed to play generated welcome audio"
                         )
                 finally:
                     try:
@@ -2277,13 +2277,13 @@ class PBXCore:
                 self.logger.info(f"[Auto Attendant] Playing menu file: {menu_audio}")
                 audio_played = player.play_file(menu_audio)
                 if audio_played:
-                    self.logger.info(f"[Auto Attendant] ✓ Menu audio played successfully")
+                    self.logger.info("[Auto Attendant] ✓ Menu audio played successfully")
                 else:
-                    self.logger.error(f"[Auto Attendant] ✗ Failed to play menu audio")
+                    self.logger.error("[Auto Attendant] ✗ Failed to play menu audio")
             else:
                 # Try to load from auto_attendant/main_menu.wav, fallback to
                 # tone generation
-                self.logger.info(f"[Auto Attendant] Generating menu prompt audio")
+                self.logger.info("[Auto Attendant] Generating menu prompt audio")
                 prompt_data = get_prompt_audio("main_menu", prompt_dir="auto_attendant")
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
                     temp_file.write(prompt_data)
@@ -2292,10 +2292,10 @@ class PBXCore:
                     audio_played = player.play_file(temp_file_path)
                     if audio_played:
                         self.logger.info(
-                            f"[Auto Attendant] ✓ Generated menu audio played successfully"
+                            "[Auto Attendant] ✓ Generated menu audio played successfully"
                         )
                     else:
-                        self.logger.error(f"[Auto Attendant] ✗ Failed to play generated menu audio")
+                        self.logger.error("[Auto Attendant] ✗ Failed to play generated menu audio")
                 finally:
                     try:
                         os.unlink(temp_file_path)
@@ -2449,13 +2449,13 @@ class PBXCore:
         # Extract the target extension from *xxxx pattern
         target_ext = to_ext[1:]  # Remove the * prefix
 
-        self.logger.info(f"=" * 70)
-        self.logger.info(f"VOICEMAIL ACCESS INITIATED")
+        self.logger.info("=" * 70)
+        self.logger.info("VOICEMAIL ACCESS INITIATED")
         self.logger.info(f"  Call ID: {call_id}")
         self.logger.info(f"  From Extension: {from_ext}")
         self.logger.info(f"  Target Extension: {target_ext}")
         self.logger.info(f"  Caller Address: {from_addr}")
-        self.logger.info(f"=" * 70)
+        self.logger.info("=" * 70)
 
         # Verify the target extension exists (check both database and config)
         self.logger.info(f"[VM Access] Step 1: Verifying target extension {target_ext} exists")
@@ -2480,10 +2480,10 @@ class PBXCore:
         # Get the voicemail box
         self.logger.info(f"[VM Access] Step 2: Loading voicemail box for extension {target_ext}")
         mailbox = self.voicemail_system.get_mailbox(target_ext)
-        self.logger.info(f"[VM Access] ✓ Voicemail box loaded")
+        self.logger.info("[VM Access] ✓ Voicemail box loaded")
 
         # Parse SDP from caller's INVITE
-        self.logger.info(f"[VM Access] Step 3: Parsing SDP from caller INVITE")
+        self.logger.info("[VM Access] Step 3: Parsing SDP from caller INVITE")
         caller_sdp = None
         caller_codecs = None
         if message.body:
@@ -2500,12 +2500,12 @@ class PBXCore:
                 # Extract caller's codec list for negotiation
                 caller_codecs = caller_sdp.get("formats", None)
             else:
-                self.logger.warning(f"[VM Access] ⚠ No audio info found in caller SDP")
+                self.logger.warning("[VM Access] ⚠ No audio info found in caller SDP")
         else:
-            self.logger.warning(f"[VM Access] ⚠ No SDP body in INVITE message")
+            self.logger.warning("[VM Access] ⚠ No SDP body in INVITE message")
 
         # Create call for voicemail access
-        self.logger.info(f"[VM Access] Step 4: Creating call object in call manager")
+        self.logger.info("[VM Access] Step 4: Creating call object in call manager")
         call = self.call_manager.create_call(call_id, from_ext, f"*{target_ext}")
         call.start()
         call.original_invite = message
@@ -2519,26 +2519,26 @@ class PBXCore:
         )
 
         # Start CDR record for analytics
-        self.logger.info(f"[VM Access] Step 5: Starting CDR record for analytics")
+        self.logger.info("[VM Access] Step 5: Starting CDR record for analytics")
         self.cdr_system.start_record(call_id, from_ext, f"*{target_ext}")
 
         # Allocate RTP ports for bidirectional audio communication
         # These ports will be used by RTPPlayer (sending prompts) and RTPRecorder (receiving DTMF)
         # in the IVR session thread. The RTP relay handler manages the socket
         # binding and packet forwarding.
-        self.logger.info(f"[VM Access] Step 6: Allocating RTP relay ports")
+        self.logger.info("[VM Access] Step 6: Allocating RTP relay ports")
         rtp_ports = self.rtp_relay.allocate_relay(call_id)
         if rtp_ports:
             call.rtp_ports = rtp_ports
             self.logger.info(f"[VM Access] ✓ RTP ports allocated: {rtp_ports[0]}/{rtp_ports[1]}")
         else:
             self.logger.error(
-                f"[VM Access] ✗ Failed to allocate RTP ports - aborting voicemail access"
+                "[VM Access] ✗ Failed to allocate RTP ports - aborting voicemail access"
             )
             return False
 
         # Answer the call
-        self.logger.info(f"[VM Access] Step 7: Building SIP 200 OK response")
+        self.logger.info("[VM Access] Step 7: Building SIP 200 OK response")
         server_ip = self._get_server_ip()
         self.logger.info(f"[VM Access] Server IP: {server_ip}")
 
@@ -2576,7 +2576,7 @@ class PBXCore:
         )
 
         # Send 200 OK to answer the call
-        self.logger.info(f"[VM Access] Step 8: Building and sending 200 OK response")
+        self.logger.info("[VM Access] Step 8: Building and sending 200 OK response")
         ok_response = SIPMessageBuilder.build_response(
             200, "OK", call.original_invite, body=voicemail_sdp
         )
@@ -2597,7 +2597,7 @@ class PBXCore:
         self.logger.info(f"[VM Access] ✓ Call state changed to: {call.state}")
 
         # Create VoicemailIVR for this call
-        self.logger.info(f"[VM Access] Step 9: Initializing Voicemail IVR")
+        self.logger.info("[VM Access] Step 9: Initializing Voicemail IVR")
         from pbx.features.voicemail import VoicemailIVR
 
         voicemail_ivr = VoicemailIVR(self.voicemail_system, target_ext)
@@ -2605,7 +2605,7 @@ class PBXCore:
         self.logger.info(f"[VM Access] ✓ Voicemail IVR created for extension {target_ext}")
 
         # Get message count
-        self.logger.info(f"[VM Access] Step 10: Checking voicemail message count")
+        self.logger.info("[VM Access] Step 10: Checking voicemail message count")
         messages = mailbox.get_messages(unread_only=False)
         unread = mailbox.get_messages(unread_only=True)
         self.logger.info(
@@ -2616,21 +2616,21 @@ class PBXCore:
 
         # Start IVR-based voicemail management
         # This runs in a separate thread so it doesn't block
-        self.logger.info(f"[VM Access] Step 11: Starting IVR session thread")
+        self.logger.info("[VM Access] Step 11: Starting IVR session thread")
         playback_thread = threading.Thread(
             target=self._voicemail_ivr_session, args=(call_id, call, mailbox, voicemail_ivr)
         )
         playback_thread.daemon = True
         playback_thread.start()
-        self.logger.info(f"[VM Access] ✓ IVR session thread started (daemon)")
+        self.logger.info("[VM Access] ✓ IVR session thread started (daemon)")
 
-        self.logger.info(f"=" * 70)
-        self.logger.info(f"VOICEMAIL ACCESS SETUP COMPLETE")
+        self.logger.info("=" * 70)
+        self.logger.info("VOICEMAIL ACCESS SETUP COMPLETE")
         self.logger.info(f"  Call ID: {call_id}")
         self.logger.info(f"  Extension: {target_ext}")
         self.logger.info(f"  State: {call.state}")
-        self.logger.info(f"  Ready for user interaction")
-        self.logger.info(f"=" * 70)
+        self.logger.info("  Ready for user interaction")
+        self.logger.info("=" * 70)
 
         return True
 
@@ -2989,9 +2989,9 @@ class PBXCore:
         from pbx.utils.audio import get_prompt_audio
         from pbx.utils.dtmf import DTMFDetector
 
-        self.logger.info(f"")
+        self.logger.info("")
         self.logger.info(f"{'=' * 70}")
-        self.logger.info(f"VOICEMAIL IVR SESSION STARTING")
+        self.logger.info("VOICEMAIL IVR SESSION STARTING")
         self.logger.info(f"  Call ID: {call_id}")
         self.logger.info(f"  Extension: {call.voicemail_extension}")
         self.logger.info(f"  Call State: {call.state}")
@@ -2999,22 +2999,22 @@ class PBXCore:
 
         try:
             # Wait a moment for RTP to stabilize
-            self.logger.info(f"[VM IVR] Waiting 0.5s for RTP to stabilize...")
+            self.logger.info("[VM IVR] Waiting 0.5s for RTP to stabilize...")
             time.sleep(0.5)
 
             # Check if call was terminated during RTP stabilization
             if call.state == CallState.ENDED:
-                self.logger.info(f"")
-                self.logger.info(f"[VM IVR] ✗ call ended before IVR could start")
+                self.logger.info("")
+                self.logger.info("[VM IVR] ✗ call ended before IVR could start")
                 self.logger.info(f"[VM IVR] Extension: {call.voicemail_extension}")
                 self.logger.info(f"[VM IVR] State: {call.state}")
-                self.logger.info(f"[VM IVR] Exiting IVR session")
-                self.logger.info(f"")
+                self.logger.info("[VM IVR] Exiting IVR session")
+                self.logger.info("")
                 return
 
-            self.logger.info(f"[VM IVR] Checking caller RTP information...")
+            self.logger.info("[VM IVR] Checking caller RTP information...")
             if not call.caller_rtp:
-                self.logger.warning(f"[VM IVR] ✗ No caller RTP info available - cannot proceed")
+                self.logger.warning("[VM IVR] ✗ No caller RTP info available - cannot proceed")
                 time.sleep(2)
                 self.end_call(call_id)
                 return
@@ -3036,7 +3036,7 @@ class PBXCore:
 
             # Create RTP player for sending audio prompts to the caller
             # This sends voicemail prompts, menus, and messages to the user
-            self.logger.info(f"[VM IVR] Creating RTP player for audio prompts...")
+            self.logger.info("[VM IVR] Creating RTP player for audio prompts...")
             self.logger.info(f"[VM IVR]   Local port: {call.rtp_ports[0]}")
             self.logger.info(
                 f"[VM IVR]   Remote: {
@@ -3051,17 +3051,17 @@ class PBXCore:
             )
 
             if not player.start():
-                self.logger.error(f"[VM IVR] ✗ Failed to start RTP player")
+                self.logger.error("[VM IVR] ✗ Failed to start RTP player")
                 time.sleep(2)
                 self.end_call(call_id)
                 return
-            self.logger.info(f"[VM IVR] ✓ RTP player started successfully")
+            self.logger.info("[VM IVR] ✓ RTP player started successfully")
 
             # Create DTMF detector for processing user input (menu selections,
             # PIN, etc.)
-            self.logger.info(f"[VM IVR] Creating DTMF detector (sample_rate=8000Hz)...")
+            self.logger.info("[VM IVR] Creating DTMF detector (sample_rate=8000Hz)...")
             dtmf_detector = DTMFDetector(sample_rate=8000)
-            self.logger.info(f"[VM IVR] ✓ DTMF detector created")
+            self.logger.info("[VM IVR] ✓ DTMF detector created")
 
             # Create RTP recorder to receive audio from caller for DTMF detection
             # This listens on the same port, captures incoming RTP packets, and
@@ -3072,21 +3072,21 @@ class PBXCore:
             )
             recorder = RTPRecorder(call.rtp_ports[0], call_id)
             if not recorder.start():
-                self.logger.error(f"[VM IVR] ✗ Failed to start RTP recorder")
+                self.logger.error("[VM IVR] ✗ Failed to start RTP recorder")
                 player.stop()
                 time.sleep(2)
                 self.end_call(call_id)
                 return
-            self.logger.info(f"[VM IVR] ✓ RTP recorder started successfully")
+            self.logger.info("[VM IVR] ✓ RTP recorder started successfully")
             self.logger.info(
-                f"[VM IVR] ✓ RTP setup complete - bidirectional audio channel established"
+                "[VM IVR] ✓ RTP setup complete - bidirectional audio channel established"
             )
 
             try:
                 # Start the IVR flow - transition from WELCOME to PIN_ENTRY state
                 # Use '*' which won't be collected as part of PIN (only 0-9 are
                 # collected)
-                self.logger.info(f"[VM IVR] Initializing IVR state machine...")
+                self.logger.info("[VM IVR] Initializing IVR state machine...")
                 initial_action = voicemail_ivr.handle_dtmf("*")
 
                 # Play the PIN entry prompt that the IVR returned
@@ -3134,7 +3134,7 @@ class PBXCore:
                         pass
 
                 time.sleep(0.5)
-                self.logger.info(f"[VM IVR] Post-prompt pause complete, checking call state...")
+                self.logger.info("[VM IVR] Post-prompt pause complete, checking call state...")
 
                 # Check if call was terminated early (e.g., immediate BYE after answering)
                 # Log the actual call state for debugging
@@ -3146,26 +3146,26 @@ class PBXCore:
                 )
 
                 if call.state == CallState.ENDED:
-                    self.logger.info(f"")
-                    self.logger.info(f"[VM IVR] ✗ call ended before IVR could start")
+                    self.logger.info("")
+                    self.logger.info("[VM IVR] ✗ call ended before IVR could start")
                     self.logger.info(
                         f"[VM IVR] Extension: {
                             call.voicemail_extension}"
                     )
                     self.logger.info(f"[VM IVR] State: {call.state}")
-                    self.logger.info(f"[VM IVR] Exiting IVR session")
-                    self.logger.info(f"")
+                    self.logger.info("[VM IVR] Exiting IVR session")
+                    self.logger.info("")
                     return
 
-                self.logger.info(f"")
-                self.logger.info(f"[VM IVR] ✓ IVR fully started and ready for user input")
+                self.logger.info("")
+                self.logger.info("[VM IVR] ✓ IVR fully started and ready for user input")
                 self.logger.info(
                     f"[VM IVR] Extension: {
                         call.voicemail_extension}"
                 )
                 self.logger.info(f"[VM IVR] State: {call.state}")
-                self.logger.info(f"[VM IVR] Waiting for PIN entry...")
-                self.logger.info(f"")
+                self.logger.info("[VM IVR] Waiting for PIN entry...")
+                self.logger.info("")
 
                 # Main IVR loop - listen for DTMF input
                 ivr_active = True
@@ -3336,7 +3336,7 @@ class PBXCore:
                                 ivr_active = False
                                 break
                             self.logger.info(
-                                f"[VM IVR] User requested hangup - playing goodbye and ending call"
+                                "[VM IVR] User requested hangup - playing goodbye and ending call"
                             )
                             # Play goodbye and end call
                             # Try to load from voicemail_prompts/ directory,
@@ -3440,7 +3440,7 @@ class PBXCore:
                                             stop_digit = None
 
                                 if stop_digit == "#":
-                                    self.logger.info(f"Recording stopped by user (#)")
+                                    self.logger.info("Recording stopped by user (#)")
                                     recording = False
                                     # Process through IVR to transition state
                                     action = voicemail_ivr.handle_dtmf("#")
@@ -3480,7 +3480,7 @@ class PBXCore:
                                     elif action.get("action") == "stop_recording":
                                         # Also valid, just log it
                                         self.logger.info(
-                                            f"IVR returned stop_recording action, continuing"
+                                            "IVR returned stop_recording action, continuing"
                                         )
                                     else:
                                         # Unexpected action type
@@ -3539,7 +3539,7 @@ class PBXCore:
                                         pass
                             else:
                                 self.logger.warning(
-                                    f"No recorded greeting data available for playback"
+                                    "No recorded greeting data available for playback"
                                 )
 
                         elif action["action"] == "collect_digit":
@@ -3547,7 +3547,7 @@ class PBXCore:
                             # No additional action needed - digit is already stored in IVR state
                             # Just continue the loop to wait for more digits
                             self.logger.debug(
-                                f"[VM IVR] Collecting digit, waiting for more input..."
+                                "[VM IVR] Collecting digit, waiting for more input..."
                             )
 
                         else:
@@ -3570,29 +3570,29 @@ class PBXCore:
                         )
                         ivr_active = False
 
-                self.logger.info(f"")
+                self.logger.info("")
                 self.logger.info(f"{'=' * 70}")
-                self.logger.info(f"VOICEMAIL IVR SESSION COMPLETED")
+                self.logger.info("VOICEMAIL IVR SESSION COMPLETED")
                 self.logger.info(f"  Call ID: {call_id}")
                 self.logger.info(f"  Extension: {call.voicemail_extension}")
                 self.logger.info(f"  Final State: {call.state}")
                 self.logger.info(f"{'=' * 70}")
 
             finally:
-                self.logger.info(f"[VM IVR] Cleaning up RTP player and recorder...")
+                self.logger.info("[VM IVR] Cleaning up RTP player and recorder...")
                 player.stop()
                 recorder.stop()
-                self.logger.info(f"[VM IVR] ✓ RTP resources released")
+                self.logger.info("[VM IVR] ✓ RTP resources released")
 
             # End the call
             self.logger.info(f"[VM IVR] Ending call {call_id}...")
             self.end_call(call_id)
-            self.logger.info(f"[VM IVR] ✓ Call ended")
+            self.logger.info("[VM IVR] ✓ Call ended")
 
         except Exception as e:
-            self.logger.error(f"")
+            self.logger.error("")
             self.logger.error(f"{'=' * 70}")
-            self.logger.error(f"ERROR IN VOICEMAIL IVR SESSION")
+            self.logger.error("ERROR IN VOICEMAIL IVR SESSION")
             self.logger.error(f"  Call ID: {call_id}")
             self.logger.error(f"  Error: {e}")
             self.logger.error(f"{'=' * 70}")
@@ -3736,7 +3736,7 @@ class PBXCore:
                 if relay_info:
                     handler = relay_info["handler"]
                     handler.set_endpoint1(caller_endpoint)
-                    self.logger.info(f"Emergency call RTP relay configured")
+                    self.logger.info("Emergency call RTP relay configured")
 
         # In production, this would:
         # 1. Route the call through the emergency trunk to 911

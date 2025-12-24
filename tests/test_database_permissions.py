@@ -5,7 +5,6 @@ Tests for database permission error handling
 import os
 import sys
 import tempfile
-from unittest.mock import MagicMock, patch
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

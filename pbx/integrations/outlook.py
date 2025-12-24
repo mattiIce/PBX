@@ -342,7 +342,7 @@ class OutlookIntegration:
                 "subject": f'Phone Call - {from_number if direction == "inbound" else to_number}',
                 "body": {
                     "contentType": "text",
-                    "content": f"Phone call details:\n"
+                    "content": "Phone call details:\n"
                     f"Direction: {direction}\n"
                     f"From: {from_number}\n"
                     f"To: {to_number}\n"

@@ -5,7 +5,7 @@ AI-powered call classification and tagging
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -667,7 +667,7 @@ class CallTagging:
             category: Call category (optional)
         """
         if not self.enabled:
-            self.logger.error(f"Cannot add tagging rule: Call tagging feature is not enabled")
+            self.logger.error("Cannot add tagging rule: Call tagging feature is not enabled")
             return False
 
         rule = {"name": name, "keywords": keywords, "tag": tag, "category": category}
@@ -724,7 +724,7 @@ class CallTagging:
         """Get all tagging rules"""
         return self.tagging_rules.copy()
 
-    def create_tag(self, name: str, description: str = "", color: str = "#007bff") -> str:
+    def create_tag(self, name: str, description: str = "", color: str = "#007bf") -> str:
         """
         Create a new custom tag
 

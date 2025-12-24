@@ -109,7 +109,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # Security headers
         # X-Content-Type-Options: Prevent MIME type sniffing
-        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Content-Type-Options", "nosnif")
 
         # X-Frame-Options: Prevent clickjacking
         self.send_header("X-Frame-Options", "DENY")
@@ -130,11 +130,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # Note: This could be more restrictive if login.html used same-origin
         # detection for standard ports (80/443) instead of hardcoding port 9000
         csp = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; "
-            "connect-src 'self' http://*:9000 https://*:9000;"
+            "default-src 'sel'; "
+            "script-src 'sel' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'sel' 'unsafe-inline'; "
+            "img-src 'sel' data:; "
+            "connect-src 'sel' http://*:9000 https://*:9000;"
         )
         self.send_header("Content-Security-Policy", csp)
 
@@ -271,7 +271,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_call()
             elif path == "/api/webrtc/hangup":
                 self._handle_webrtc_hangup()
-            elif path == "/api/webrtc/dtmf":
+            elif path == "/api/webrtc/dtm":
                 self._handle_webrtc_dtmf()
             elif path == "/api/emergency/contacts":
                 self._handle_add_emergency_contact()
@@ -596,7 +596,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_config()
             elif path == "/api/config/section":
                 self._handle_update_config_section()
-            elif path == "/api/config/dtmf":
+            elif path == "/api/config/dtm":
                 self._handle_update_dtmf_config()
             elif path.startswith("/api/voicemail/"):
                 self._handle_update_voicemail(path)
@@ -793,7 +793,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_config()
             elif path == "/api/config/full":
                 self._handle_get_full_config()
-            elif path == "/api/config/dtmf":
+            elif path == "/api/config/dtm":
                 self._handle_get_dtmf_config()
             elif path == "/api/ssl/status":
                 self._handle_get_ssl_status()
@@ -2260,7 +2260,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
                 logger.warning("      -H 'Content-Type: application/json' \\")
                 logger.warning(
-                    f'      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
+                    '      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
                 )
                 self._send_json({"error": "Device or template not found"}, 404)
         except Exception as e:
@@ -10089,7 +10089,7 @@ def get_process_using_port(port):
     try:
         # Try lsof first (most reliable)
         result = subprocess.run(
-            ["lsof", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
+            ["lso", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
         )
         if result.returncode == 0 and result.stdout:
             lines = result.stdout.strip().split("\n")

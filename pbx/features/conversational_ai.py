@@ -3,9 +3,8 @@ Conversational AI Assistant
 Auto-responses and smart call handling using AI
 """
 
-import re
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -14,7 +13,7 @@ try:
     import nltk
     from nltk.corpus import stopwords
     from nltk.stem import WordNetLemmatizer
-    from nltk.tokenize import sent_tokenize, word_tokenize
+    from nltk.tokenize import word_tokenize
 
     NLTK_AVAILABLE = True
 except ImportError:
@@ -660,9 +659,7 @@ class ConversationalAI:
                 - endpoint: Custom API endpoint
         """
         if not self.enabled:
-            self.logger.error(
-                f"Cannot configure provider: Conversational AI feature is not enabled"
-            )
+            self.logger.error("Cannot configure provider: Conversational AI feature is not enabled")
             return False
 
         self.provider = provider.lower()

@@ -3,7 +3,6 @@ Lansweeper Integration
 Integration with Lansweeper IT asset management system (free API)
 """
 
-import json
 from datetime import datetime
 from typing import Dict, List, Optional
 

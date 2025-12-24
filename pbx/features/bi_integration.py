@@ -231,7 +231,6 @@ class BIIntegration:
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.xlsx"
 
         try:
-            import openpyxl
             from openpyxl import Workbook
 
             wb = Workbook()
@@ -329,9 +328,6 @@ class BIIntegration:
                 CreateMode,
                 HyperProcess,
                 Inserter,
-                SqlType,
-                TableDefinition,
-                TableName,
                 Telemetry,
             )
 

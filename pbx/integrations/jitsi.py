@@ -3,17 +3,15 @@ Jitsi Meet Integration (Free, Open-Source Alternative to Zoom)
 Enables video conferencing, screen sharing, and recording
 """
 
-import hashlib
-import json
 import re
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
 try:
-    import requests
+    pass
 
     REQUESTS_AVAILABLE = True
 except ImportError:
@@ -288,7 +286,7 @@ class JitsiIntegration:
                 "aud": self.app_id,
                 "room": room_name,
                 "exp": now + (expiry_hours * 3600),
-                "nbf": now - 10,
+                "nb": now - 10,
                 "context": {"user": {"name": user_name, "moderator": is_moderator}},
             }
 

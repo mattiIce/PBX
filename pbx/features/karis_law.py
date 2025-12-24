@@ -16,7 +16,6 @@ References:
 """
 
 import re
-import time
 from datetime import datetime
 from typing import Dict, Optional, Tuple
 
@@ -84,7 +83,7 @@ class KarisLawCompliance:
 
         if self.enabled:
             self.logger.info("Kari's Law compliance module initialized")
-            self.logger.info(f"Direct 911 dialing: ENABLED")
+            self.logger.info("Direct 911 dialing: ENABLED")
             self.logger.info(f"Auto-notification: {'ENABLED' if self.auto_notify else 'DISABLED'}")
             self.logger.info(
                 f"Location requirement: {'ENABLED' if self.require_location else 'DISABLED'}"

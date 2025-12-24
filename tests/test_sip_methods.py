@@ -9,7 +9,7 @@ import unittest
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pbx.sip.message import SIPMessage, SIPMessageBuilder
+from pbx.sip.message import SIPMessage
 from pbx.sip.server import SIPServer
 
 
@@ -44,7 +44,6 @@ class MockPBXCore:
 
     def end_call(self, call_id):
         """Mock end call"""
-        pass
 
 
 class TestSIPMethods(unittest.TestCase):
@@ -111,15 +110,15 @@ class TestSIPMethods(unittest.TestCase):
         for idx, content_type in enumerate(content_types):
             body = "Test data"
             sip_message = (
-                f"MESSAGE sip:1002@192.168.1.100:5060 SIP/2.0\r\n"
+                "MESSAGE sip:1002@192.168.1.100:5060 SIP/2.0\r\n"
                 f"Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds{idx}\r\n"
-                f"From: <sip:1001@192.168.1.100>;tag=1928301774\r\n"
-                f"To: <sip:1002@192.168.1.100>\r\n"
+                "From: <sip:1001@192.168.1.100>;tag=1928301774\r\n"
+                "To: <sip:1002@192.168.1.100>\r\n"
                 f"Call-ID: msg-call-{125 + idx}\r\n"
                 f"CSeq: {idx + 1} MESSAGE\r\n"
                 f"Content-Type: {content_type}\r\n"
                 f"Content-Length: {len(body)}\r\n"
-                f"\r\n"
+                "\r\n"
                 f"{body}"
             )
             message = SIPMessage(sip_message)
@@ -367,13 +366,13 @@ class TestSIPMethods(unittest.TestCase):
         for method in test_methods:
             sip_message = (
                 f"{method} sip:test@192.168.1.100:5060 SIP/2.0\r\n"
-                f"Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds\r\n"
-                f"From: <sip:1001@192.168.1.100>;tag=1928301774\r\n"
-                f"To: <sip:1002@192.168.1.100>\r\n"
+                "Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds\r\n"
+                "From: <sip:1001@192.168.1.100>;tag=1928301774\r\n"
+                "To: <sip:1002@192.168.1.100>\r\n"
                 f"Call-ID: test-{method.lower()}-123\r\n"
                 f"CSeq: 1 {method}\r\n"
-                f"Content-Length: 0\r\n"
-                f"\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n"
             )
             message = SIPMessage(sip_message)
 

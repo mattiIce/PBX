@@ -19,7 +19,6 @@ Supports all G.726 bitrate variants:
 - G.726-40: 40 kbit/s (5 bits per sample)
 """
 
-import logging
 import warnings
 from typing import Optional
 
@@ -258,7 +257,7 @@ class G726Codec:
         # G.726-32 is supported via audioop
         if bitrate_kbps == 32:
             try:
-                import audioop
+                pass
 
                 return True
             except ImportError:

@@ -5,7 +5,7 @@ iOS and Android mobile client support
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -289,7 +289,7 @@ class MobileAppFramework:
             # Track notification
             self.total_push_sent += 1
 
-            self.logger.info(f"Push notification sent successfully")
+            self.logger.info("Push notification sent successfully")
             self.logger.info(f"  Platform: {device.platform.value}")
             self.logger.info(f"  Type: {notification.get('type', 'unknown')}")
             self.logger.info(f"  Notification ID: {notification_id}")

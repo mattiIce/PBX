@@ -14,7 +14,6 @@ from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import (
     PasswordPolicy,
     RateLimiter,
-    SecurePasswordManager,
     SecurityAuditor,
     get_password_manager,
 )

@@ -3,10 +3,8 @@
 Test PBX shutdown functionality
 """
 import os
-import signal
 import sys
 import tempfile
-import threading
 import time
 
 import yaml

@@ -9,9 +9,8 @@ import json
 import queue
 import threading
 import time
-import traceback
 from datetime import datetime
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 

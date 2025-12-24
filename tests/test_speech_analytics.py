@@ -198,7 +198,7 @@ class TestSpeechAnalytics(unittest.TestCase):
         """
 
         call_id = "call-125"
-        summary = self.engine.generate_summary(call_id, transcript)
+        self.engine.generate_summary(call_id, transcript)
 
         # Retrieve from database
         retrieved = self.engine.get_call_summary(call_id)

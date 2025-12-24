@@ -3,7 +3,7 @@ Call Quality Prediction
 Proactive network issue detection using ML
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -481,7 +481,7 @@ class CallQualityPrediction:
                 ]
                 importance = self.rf_model.feature_importances_
 
-                self.logger.info(f"RandomForest model training completed")
+                self.logger.info("RandomForest model training completed")
                 self.logger.info(f"  Training R-squared: {r_squared:.3f}")
                 self.logger.info(f"  Features: {X.shape[1]}")
                 self.logger.info(
@@ -584,7 +584,7 @@ class CallQualityPrediction:
 
             r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
-            self.logger.info(f"Linear regression model training completed")
+            self.logger.info("Linear regression model training completed")
             self.logger.info(f"  Training R-squared: {r_squared:.3f}")
             self.logger.info(f"  Features: {n_features}")
             self.logger.info(f"  Model weights: {[f'{w:.3f}' for w in self.model_weights[:4]]}")

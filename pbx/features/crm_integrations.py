@@ -3,7 +3,6 @@ CRM Integration Framework
 HubSpot and Zendesk integration for marketing and support
 """
 
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
@@ -184,9 +183,9 @@ class HubSpotIntegration:
                 )
             else:
                 # Direct API integration
-                portal_id = config.get("portal_id", "")
+                config.get("portal_id", "")
                 response = requests.post(
-                    f"https://api.hubapi.com/crm/v3/objects/contacts",
+                    "https://api.hubapi.com/crm/v3/objects/contacts",
                     json=payload,
                     headers=headers,
                     timeout=10,

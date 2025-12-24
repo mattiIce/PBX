@@ -52,14 +52,14 @@ def test_ssl_configuration():
 
         # Check if files exist
         if os.path.exists(cert_file):
-            print(f"  ✓ Certificate file exists")
+            print("  ✓ Certificate file exists")
         else:
-            print(f"  ✗ Certificate file not found")
+            print("  ✗ Certificate file not found")
 
         if os.path.exists(key_file):
-            print(f"  ✓ Key file exists")
+            print("  ✓ Key file exists")
         else:
-            print(f"  ✗ Key file not found")
+            print("  ✗ Key file not found")
 
     print()
     return True
@@ -114,7 +114,7 @@ def test_certificate_files():
 
     if not os.path.exists(cert_file):
         print(f"  ⚠ Certificate not found: {cert_file}")
-        print(f"  Generate with: python scripts/generate_ssl_cert.py")
+        print("  Generate with: python scripts/generate_ssl_cert.py")
         print()
         return True  # Not a failure, just skip
 
@@ -127,8 +127,8 @@ def test_certificate_files():
     try:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(cert_file, key_file)
-        print(f"  ✓ Certificate and key files are valid")
-        print(f"  ✓ SSL context created successfully")
+        print("  ✓ Certificate and key files are valid")
+        print("  ✓ SSL context created successfully")
     except Exception as e:
         print(f"  ✗ Error loading certificate: {e}")
         return False
@@ -262,7 +262,7 @@ def test_https_connection():
 
         with urllib.request.urlopen(url, context=ctx, timeout=5) as response:
             data = json.loads(response.read().decode())
-            print(f"  ✓ HTTPS request successful")
+            print("  ✓ HTTPS request successful")
             print(f"  Response: {data}")
 
             if "registered_extensions" in data:

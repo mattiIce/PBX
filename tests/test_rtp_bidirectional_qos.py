@@ -3,11 +3,9 @@ Test RTP bidirectional QoS tracking to verify packet loss calculation fix
 """
 
 import os
-import struct
 import sys
-import time
 import unittest
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

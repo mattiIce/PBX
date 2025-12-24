@@ -6,7 +6,7 @@ Automatically sets DND status based on calendar events and scheduled rules
 import threading
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from pbx.features.presence import PresenceStatus
 from pbx.utils.logger import get_logger

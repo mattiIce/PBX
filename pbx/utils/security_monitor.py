@@ -6,7 +6,7 @@ Continuously monitors and enforces security compliance during PBX operation
 import threading
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
 
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 from pbx.utils.logger import get_logger

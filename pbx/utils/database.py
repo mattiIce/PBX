@@ -92,7 +92,7 @@ class DatabaseBackend:
         database = self.config.get("database.name", "pbx")
         user = self.config.get("database.user", "pbx")
 
-        self.logger.info(f"Connecting to PostgreSQL database...")
+        self.logger.info("Connecting to PostgreSQL database...")
         self.logger.info(f"  Host: {host}")
         self.logger.info(f"  Port: {port}")
         self.logger.info(f"  Database: {database}")
@@ -129,7 +129,7 @@ class DatabaseBackend:
             return False
 
         db_path = self.config.get("database.path", "pbx.db")
-        self.logger.info(f"Connecting to SQLite database...")
+        self.logger.info("Connecting to SQLite database...")
         self.logger.info(f"  Database file: {db_path}")
 
         try:
@@ -140,7 +140,7 @@ class DatabaseBackend:
             # other methods
             self.connection.autocommit = False
             self.enabled = True
-            self.logger.info(f"✓ Successfully connected to SQLite database")
+            self.logger.info("✓ Successfully connected to SQLite database")
             self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
             return True
         except Exception as e:
@@ -1435,7 +1435,7 @@ class ExtensionDB:
         # Add number to params for WHERE clause
         params.append(number)
 
-        query = f"""
+        query = """
         UPDATE extensions
         SET {', '.join(updates)}
         WHERE number = {'%s' if self.db.db_type == 'postgresql' else '?'}

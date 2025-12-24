@@ -4,7 +4,6 @@ Test HEAD Request Support for Admin Panel File Checks
 Tests that the API server properly responds to HEAD requests
 """
 import http.client
-import os
 import sys
 import time
 from pathlib import Path

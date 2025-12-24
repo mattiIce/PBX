@@ -53,7 +53,7 @@ def test_hot_desking_initialization():
     assert hot_desk.enabled, "Should be enabled"
     assert hot_desk.auto_logout_timeout == 28800, "Timeout should be 28800"
     assert hot_desk.require_pin, "Should require PIN"
-    assert hot_desk.allow_concurrent_logins == False, "Should not allow concurrent logins"
+    assert hot_desk.allow_concurrent_logins is False, "Should not allow concurrent logins"
 
     hot_desk.stop()
 
@@ -112,7 +112,7 @@ def test_hot_desk_login_logout():
     assert session is None, "Session should be removed"
 
     # Verify extension is logged out
-    assert hot_desk.is_logged_in("1001") == False, "Extension should be logged out"
+    assert hot_desk.is_logged_in("1001") is False, "Extension should be logged out"
 
     hot_desk.stop()
 
@@ -152,7 +152,7 @@ def test_hot_desk_invalid_pin():
 
     # Test login with wrong PIN
     success = hot_desk.login("1002", "device-xyz", "192.168.1.60", "9999")
-    assert success == False, "Login should fail with wrong PIN"
+    assert success is False, "Login should fail with wrong PIN"
 
     # Verify no session was created
     session = hot_desk.get_session("device-xyz")
@@ -160,7 +160,7 @@ def test_hot_desk_invalid_pin():
 
     # Test login without PIN (when required)
     success = hot_desk.login("1002", "device-xyz", "192.168.1.60", None)
-    assert success == False, "Login should fail without PIN"
+    assert success is False, "Login should fail without PIN"
 
     hot_desk.stop()
 
@@ -322,7 +322,7 @@ def test_hot_desk_extension_logout():
     assert count == 3, "Should log out from 3 devices"
 
     # Verify all sessions are removed
-    assert hot_desk.is_logged_in("1005") == False, "Extension should be logged out"
+    assert hot_desk.is_logged_in("1005") is False, "Extension should be logged out"
 
     hot_desk.stop()
 

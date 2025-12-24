@@ -5,7 +5,6 @@ Automatic server failover using DNS SRV records
 
 import random
 import socket
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger

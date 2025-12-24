@@ -238,8 +238,8 @@ class SIPServer:
     def _handle_bye(self, message, addr):
         """Handle BYE request"""
         call_id = message.get_header("Call-ID")
-        self.logger.info(f"")
-        self.logger.info(f">>> BYE REQUEST RECEIVED <<<")
+        self.logger.info("")
+        self.logger.info(">>> BYE REQUEST RECEIVED <<<")
         self.logger.info(f"  Call ID: {call_id}")
         self.logger.info(f"  From: {addr}")
 
@@ -293,7 +293,7 @@ class SIPServer:
 
         self._send_response(200, "OK", message, addr)
         self.logger.info(f"  ✓ Sent 200 OK response to {addr}")
-        self.logger.info(f"")
+        self.logger.info("")
 
     def _handle_cancel(self, message, addr):
         """Handle CANCEL request"""
@@ -378,7 +378,7 @@ class SIPServer:
             # parameters)
             if content_type_lower.startswith(
                 "application/dtmf-relay"
-            ) or content_type_lower.startswith("application/dtmf"):
+            ) or content_type_lower.startswith("application/dtm"):
                 # Parse DTMF from body
                 # Format can be:
                 # Signal=1

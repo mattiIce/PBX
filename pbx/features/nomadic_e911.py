@@ -4,7 +4,6 @@ Location-based emergency routing for remote workers
 """
 
 import ipaddress
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger

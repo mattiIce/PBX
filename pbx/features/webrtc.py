@@ -3,7 +3,6 @@ WebRTC Browser Calling Support
 Provides WebRTC signaling and integration with PBX SIP infrastructure
 """
 
-import json
 import os
 import threading
 import time
@@ -236,7 +235,7 @@ class WebRTCSignalingServer:
         self.logger.info(f"Created WebRTC session: {session_id} (extension: {extension})")
 
         if self.verbose_logging:
-            self.logger.info(f"[VERBOSE] Session created details:")
+            self.logger.info("[VERBOSE] Session created details:")
             self.logger.info(f"  Session ID: {session_id}")
             self.logger.info(f"  Extension: {extension}")
             self.logger.info(
@@ -280,9 +279,9 @@ class WebRTCSignalingServer:
                     self.logger.info(f"Created virtual extension {extension} in registry")
 
                     if self.verbose_logging:
-                        self.logger.info(f"[VERBOSE] Virtual extension created:")
+                        self.logger.info("[VERBOSE] Virtual extension created:")
                         self.logger.info(f"  Extension: {extension}")
-                        self.logger.info(f"  Type: Virtual WebRTC")
+                        self.logger.info("  Type: Virtual WebRTC")
 
                 if ext_obj:
                     # Register as active with a virtual WebRTC address
@@ -295,7 +294,7 @@ class WebRTCSignalingServer:
                     )
 
                     if self.verbose_logging:
-                        self.logger.info(f"[VERBOSE] Extension registered:")
+                        self.logger.info("[VERBOSE] Extension registered:")
                         self.logger.info(f"  Extension: {extension}")
                         self.logger.info(f"  WebRTC Address: {webrtc_addr}")
 
@@ -325,10 +324,10 @@ class WebRTCSignalingServer:
                                     f"Registered WebRTC session in phones database: ext={extension}"
                                 )
                                 if self.verbose_logging:
-                                    self.logger.info(f"[VERBOSE] Phone DB registration successful")
+                                    self.logger.info("[VERBOSE] Phone DB registration successful")
                             else:
                                 self.logger.warning(
-                                    f"Failed to register WebRTC session in phones database"
+                                    "Failed to register WebRTC session in phones database"
                                 )
                         except Exception as e:
                             self.logger.error(
@@ -413,9 +412,9 @@ class WebRTCSignalingServer:
                         )
 
                         if self.verbose_logging:
-                            self.logger.info(f"[VERBOSE] Extension unregistered:")
+                            self.logger.info("[VERBOSE] Extension unregistered:")
                             self.logger.info(f"  Extension: {extension}")
-                            self.logger.info(f"  Reason: Last WebRTC session closed")
+                            self.logger.info("  Reason: Last WebRTC session closed")
                     except Exception as e:
                         self.logger.error(f"Error unregistering WebRTC extension: {e}")
 
@@ -444,7 +443,7 @@ class WebRTCSignalingServer:
         if not session:
             self.logger.warning(f"Received offer for unknown session: {session_id}")
             if self.verbose_logging:
-                self.logger.warning(f"[VERBOSE] Unknown session details:")
+                self.logger.warning("[VERBOSE] Unknown session details:")
                 self.logger.warning(f"  Session ID: {session_id}")
                 self.logger.warning(
                     f"  Active sessions: {
@@ -461,10 +460,10 @@ class WebRTCSignalingServer:
         self.logger.debug(f"SDP offer: {sdp[:100]}...")
 
         if self.verbose_logging:
-            self.logger.info(f"[VERBOSE] SDP offer received:")
+            self.logger.info("[VERBOSE] SDP offer received:")
             self.logger.info(f"  Session ID: {session_id}")
             self.logger.info(f"  Extension: {session.extension}")
-            self.logger.info(f"  State transition: -> connecting")
+            self.logger.info("  State transition: -> connecting")
             self.logger.info(f"  SDP length: {len(sdp)} bytes")
             self.logger.info(f"  Full SDP offer:\n{sdp}")
 
@@ -529,7 +528,7 @@ class WebRTCSignalingServer:
         self.logger.debug(f"Added ICE candidate for session: {session_id}")
 
         if self.verbose_logging:
-            self.logger.info(f"[VERBOSE] ICE candidate added:")
+            self.logger.info("[VERBOSE] ICE candidate added:")
             self.logger.info(f"  Session ID: {session_id}")
             self.logger.info(
                 f"  Candidate: {
@@ -770,7 +769,7 @@ class WebRTCGateway:
                 # feedback)
                 if media.get("protocol") == "RTP/AVP":
                     media["protocol"] = "RTP/SAVPF"
-                    self.logger.debug(f"Converted protocol to RTP/SAVPF for WebRTC")
+                    self.logger.debug("Converted protocol to RTP/SAVPF for WebRTC")
 
                 # Get existing attributes
                 attrs = media.get("attributes", [])
@@ -822,7 +821,7 @@ class WebRTCGateway:
         self.logger.info(f"Initiating call from WebRTC session {session_id} to {target_extension}")
 
         if self.verbose_logging:
-            self.logger.info(f"[VERBOSE] Call initiation details:")
+            self.logger.info("[VERBOSE] Call initiation details:")
             self.logger.info(f"  Session ID: {session_id}")
             self.logger.info(f"  Target Extension: {target_extension}")
 
@@ -835,7 +834,7 @@ class WebRTCGateway:
             if not session:
                 self.logger.error(f"WebRTC session {session_id} not found")
                 if self.verbose_logging:
-                    self.logger.error(f"[VERBOSE] Session lookup failed:")
+                    self.logger.error("[VERBOSE] Session lookup failed:")
                     if webrtc_signaling:
                         self.logger.error(
                             f"  Active sessions: {
@@ -843,14 +842,14 @@ class WebRTCGateway:
                                     webrtc_signaling.sessions.keys())}"
                         )
                     else:
-                        self.logger.error(f"  No signaling server provided")
+                        self.logger.error("  No signaling server provided")
                 return None
 
             # Get source extension from session
             from_extension = session.extension
 
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] Session found:")
+                self.logger.info("[VERBOSE] Session found:")
                 self.logger.info(f"  From Extension: {from_extension}")
                 self.logger.info(f"  Session State: {session.state}")
                 self.logger.info(
@@ -873,7 +872,7 @@ class WebRTCGateway:
                     f"Target extension {target_extension} not found and doesn't match any dialplan pattern"
                 )
                 if self.verbose_logging:
-                    self.logger.error(f"[VERBOSE] Extension validation failed:")
+                    self.logger.error("[VERBOSE] Extension validation failed:")
                     all_exts = (
                         list(self.pbx_core.extension_registry.extensions.keys())
                         if hasattr(self.pbx_core.extension_registry, "extensions")
@@ -886,21 +885,21 @@ class WebRTCGateway:
                 return None
 
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] Target extension validated:")
+                self.logger.info("[VERBOSE] Target extension validated:")
                 self.logger.info(f"  Extension: {target_extension}")
                 if target_ext_obj:
                     self.logger.info(f"  Extension Object: {target_ext_obj}")
-                    self.logger.info(f"  Found in registry: Yes")
+                    self.logger.info("  Found in registry: Yes")
                 else:
-                    self.logger.info(f"  Extension Object: None")
-                    self.logger.info(f"  Found in registry: No")
-                    self.logger.info(f"  Matches dialplan pattern: Yes")
+                    self.logger.info("  Extension Object: None")
+                    self.logger.info("  Found in registry: No")
+                    self.logger.info("  Matches dialplan pattern: Yes")
 
             # 2. Create SIP call through CallManager
             call_id = str(uuid.uuid4())
 
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] Creating call through CallManager:")
+                self.logger.info("[VERBOSE] Creating call through CallManager:")
                 self.logger.info(f"  Call ID: {call_id}")
                 self.logger.info(f"  From: {from_extension}")
                 self.logger.info(f"  To: {target_extension}")
@@ -916,20 +915,20 @@ class WebRTCGateway:
             call.start()
 
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] Call started successfully")
+                self.logger.info("[VERBOSE] Call started successfully")
 
             # 3. Bridge WebRTC and SIP media
             # Get WebRTC SDP from session
             if session.local_sdp:
                 if self.verbose_logging:
-                    self.logger.info(f"[VERBOSE] Processing WebRTC SDP for media bridge:")
+                    self.logger.info("[VERBOSE] Processing WebRTC SDP for media bridge:")
                     self.logger.info(f"  SDP length: {len(session.local_sdp)} bytes")
 
                 # Convert WebRTC SDP to SIP-compatible SDP
                 sip_sdp = self.webrtc_to_sip_sdp(session.local_sdp)
 
                 if self.verbose_logging:
-                    self.logger.info(f"[VERBOSE] Converted WebRTC SDP to SIP SDP")
+                    self.logger.info("[VERBOSE] Converted WebRTC SDP to SIP SDP")
                     self.logger.info(f"  SIP SDP length: {len(sip_sdp)} bytes")
 
                 # Parse SDP to get RTP info
@@ -952,7 +951,7 @@ class WebRTCGateway:
                     )
 
                     if self.verbose_logging:
-                        self.logger.info(f"[VERBOSE] RTP endpoint info extracted:")
+                        self.logger.info("[VERBOSE] RTP endpoint info extracted:")
                         self.logger.info(
                             f"  Address: {
                                 audio_info.get('address')}"
@@ -965,10 +964,10 @@ class WebRTCGateway:
                         )
                 else:
                     if self.verbose_logging:
-                        self.logger.warning(f"[VERBOSE] No audio info found in SDP")
+                        self.logger.warning("[VERBOSE] No audio info found in SDP")
             else:
                 if self.verbose_logging:
-                    self.logger.warning(f"[VERBOSE] No local SDP available in session")
+                    self.logger.warning("[VERBOSE] No local SDP available in session")
 
             # 4. Associate call ID with WebRTC session
             if webrtc_signaling:
@@ -995,7 +994,7 @@ class WebRTCGateway:
                 and target_extension == self.pbx_core.auto_attendant.get_extension()
             ):
                 if self.verbose_logging:
-                    self.logger.info(f"[VERBOSE] Target is auto attendant, starting session")
+                    self.logger.info("[VERBOSE] Target is auto attendant, starting session")
 
                 # Mark as auto attendant call
                 call.auto_attendant_active = True
@@ -1005,7 +1004,7 @@ class WebRTCGateway:
                 call.aa_session = aa_session
 
                 if self.verbose_logging:
-                    self.logger.info(f"[VERBOSE] Auto attendant session started")
+                    self.logger.info("[VERBOSE] Auto attendant session started")
                     self.logger.info(
                         f"[VERBOSE] Initial action: {
                             aa_session.get('action')}"
@@ -1088,7 +1087,7 @@ class WebRTCGateway:
                     mailbox = self.pbx_core.voicemail_system.get_mailbox(target_mailbox)
 
                     if self.verbose_logging:
-                        self.logger.info(f"[VERBOSE] Setting up voicemail IVR for WebRTC")
+                        self.logger.info("[VERBOSE] Setting up voicemail IVR for WebRTC")
                         self.logger.info(f"  Mailbox: {target_mailbox}")
                         self.logger.info(f"  Call ID: {call_id}")
 
@@ -1113,7 +1112,7 @@ class WebRTCGateway:
                             call_id, from_extension, target_extension
                         )
                         if self.verbose_logging:
-                            self.logger.info(f"[VERBOSE] CDR record started")
+                            self.logger.info("[VERBOSE] CDR record started")
 
                     # Get caller's RTP endpoint from call
                     if call.caller_rtp and isinstance(call.caller_rtp, dict):
@@ -1123,7 +1122,7 @@ class WebRTCGateway:
                         if caller_address and caller_port and call.rtp_ports:
                             if self.verbose_logging:
                                 self.logger.info(
-                                    f"[VERBOSE] Starting voicemail IVR session with RTP"
+                                    "[VERBOSE] Starting voicemail IVR session with RTP"
                                 )
                                 self.logger.info(f"  Caller RTP: {caller_address}:{caller_port}")
                                 self.logger.info(
@@ -1148,14 +1147,14 @@ class WebRTCGateway:
                             )
                             if self.verbose_logging:
                                 self.logger.info(
-                                    f"[VERBOSE] Voicemail IVR thread started successfully"
+                                    "[VERBOSE] Voicemail IVR thread started successfully"
                                 )
                         else:
                             self.logger.warning(
                                 f"Incomplete RTP info for WebRTC voicemail call {call_id}"
                             )
                             if self.verbose_logging:
-                                self.logger.warning(f"[VERBOSE] Missing RTP data:")
+                                self.logger.warning("[VERBOSE] Missing RTP data:")
                                 self.logger.warning(f"  caller_address: {caller_address}")
                                 self.logger.warning(f"  caller_port: {caller_port}")
                                 self.logger.warning(f"  rtp_ports: {call.rtp_ports}")
@@ -1171,7 +1170,7 @@ class WebRTCGateway:
                 else:
                     self.logger.error(f"Voicemail system not available for WebRTC call {call_id}")
                     if self.verbose_logging:
-                        self.logger.error(f"[VERBOSE] pbx_core.voicemail_system is None")
+                        self.logger.error("[VERBOSE] pbx_core.voicemail_system is None")
 
             # For regular extension calls, the call is set up
             # When the target extension answers, the CallManager will bridge
@@ -1182,14 +1181,14 @@ class WebRTCGateway:
             )
 
             if self.verbose_logging:
-                self.logger.info(f"[VERBOSE] ===== Call initiation SUCCESSFUL =====")
+                self.logger.info("[VERBOSE] ===== Call initiation SUCCESSFUL =====")
 
             return call_id
 
         except Exception as e:
             self.logger.error(f"Error initiating call from WebRTC: {e}")
             if self.verbose_logging:
-                self.logger.error(f"[VERBOSE] ===== Call initiation FAILED =====")
+                self.logger.error("[VERBOSE] ===== Call initiation FAILED =====")
                 self.logger.error(
                     f"[VERBOSE] Exception type: {
                         type(e).__name__}"
@@ -1268,7 +1267,7 @@ class WebRTCGateway:
 
             self.logger.info(f"Incoming call {call_id} routed to WebRTC session {session_id}")
             self.logger.info(
-                f"Client should be notified via signaling channel to accept/reject call"
+                "Client should be notified via signaling channel to accept/reject call"
             )
 
             return True

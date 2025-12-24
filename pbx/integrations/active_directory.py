@@ -10,7 +10,6 @@ from typing import Dict, List, Optional
 from pbx.utils.logger import get_logger
 
 try:
-    import ldap3
     from ldap3 import ALL, SUBTREE, Connection, Server
 
     LDAP3_AVAILABLE = True
@@ -132,7 +131,7 @@ class ActiveDirectoryIntegration:
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberO"],
             )
 
             if not self.connection.entries:
@@ -167,7 +166,7 @@ class ActiveDirectoryIntegration:
                     ),
                     "groups": (
                         [str(g) for g in user_entry.memberOf]
-                        if hasattr(user_entry, "memberOf")
+                        if hasattr(user_entry, "memberO")
                         else []
                     ),
                 }
@@ -215,7 +214,7 @@ class ActiveDirectoryIntegration:
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberO"],
             )
 
             if not self.connection.entries:
@@ -280,7 +279,7 @@ class ActiveDirectoryIntegration:
 
                     # Get user's AD groups and map to PBX permissions
                     user_groups = (
-                        [str(g) for g in entry.memberOf] if hasattr(entry, "memberOf") else []
+                        [str(g) for g in entry.memberOf] if hasattr(entry, "memberO") else []
                     )
                     permissions = self._map_groups_to_permissions(user_groups)
 
@@ -496,7 +495,7 @@ class ActiveDirectoryIntegration:
                 pbx_config.save()
 
             self.logger.info(
-                f"User synchronization complete: "
+                "User synchronization complete: "
                 f"{synced_count} total, {created_count} created, {updated_count} updated, "
                 f"{deactivated_count} deactivated, {skipped_count} skipped"
             )
@@ -627,7 +626,7 @@ class ActiveDirectoryIntegration:
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["memberOf"],
+                attributes=["memberO"],
             )
 
             if not self.connection.entries:
@@ -638,7 +637,7 @@ class ActiveDirectoryIntegration:
 
             # Extract group names from DNs
             groups = []
-            if hasattr(user_entry, "memberOf"):
+            if hasattr(user_entry, "memberO"):
                 for group_dn in user_entry.memberOf:
                     # Extract CN from DN (e.g.,
                     # "CN=Sales,OU=Groups,DC=domain,DC=local" -> "Sales")
@@ -683,7 +682,7 @@ class ActiveDirectoryIntegration:
 
             # Build search filter for multiple attributes
             search_filter = (
-                f"(&(objectClass=user)"
+                "(&(objectClass=user)"
                 f"(|(cn=*{safe_query}*)(displayName=*{safe_query}*)"
                 f"(mail=*{safe_query}*)(telephoneNumber=*{safe_query}*)))"
             )

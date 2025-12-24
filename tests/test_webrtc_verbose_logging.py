@@ -30,7 +30,7 @@ def test_verbose_logging_disabled():
     signaling = WebRTCSignalingServer(config)
 
     assert signaling.enabled, "Should be enabled"
-    assert signaling.verbose_logging == False, "Verbose logging should be disabled"
+    assert signaling.verbose_logging is False, "Verbose logging should be disabled"
 
     signaling.stop()
 
@@ -70,7 +70,7 @@ def test_verbose_logging_enabled():
     assert signaling.verbose_logging, "Verbose logging should be enabled"
 
     # Create a session to test verbose logging
-    session = signaling.create_session("1001")
+    signaling.create_session("1001")
 
     # Get log output
     log_output = log_stream.getvalue()

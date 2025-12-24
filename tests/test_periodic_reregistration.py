@@ -11,7 +11,6 @@ existing MAC, IP, and extension information instead of stripping/losing it.
 """
 import os
 import sys
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

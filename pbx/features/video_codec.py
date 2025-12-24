@@ -3,17 +3,16 @@ H.264/H.265 Video Codec Support
 Video codec support for video calling using FREE open-source FFmpeg
 """
 
-import os
 import subprocess
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
 # Try to import PyAV (Python binding for FFmpeg)
 try:
-    import av
+    pass
 
     PYAV_AVAILABLE = True
 except ImportError:
@@ -21,7 +20,7 @@ except ImportError:
 
 # Try to import imageio-ffmpeg (simpler FFmpeg wrapper)
 try:
-    import imageio_ffmpeg
+    pass
 
     IMAGEIO_FFMPEG_AVAILABLE = True
 except ImportError:
@@ -254,12 +253,12 @@ class VideoCodecManager:
         #
         #     # Encode using FFmpeg
         #     result = subprocess.run([
-        #         'ffmpeg', '-f', 'rawvideo', '-pix_fmt', 'yuv420p',
+        #         'ffmpeg', '-', 'rawvideo', '-pix_fmt', 'yuv420p',
         #         '-s', f'{resolution[0]}x{resolution[1]}',
         #         '-i', temp_in.name,
         #         '-c:v', 'libx264',  # or libx265 for H.265
         #         '-b:v', f'{bitrate}k',
-        #         '-f', 'h264',  # Output format
+        #         '-', 'h264',  # Output format
         #         'pipe:1'  # Output to stdout
         #     ], capture_output=True)
         #
@@ -327,7 +326,7 @@ class VideoCodecManager:
         #     # Decode using FFmpeg
         #     result = subprocess.run([
         #         'ffmpeg', '-i', temp_in.name,
-        #         '-f', 'rawvideo', '-pix_fmt', 'yuv420p',
+        #         '-', 'rawvideo', '-pix_fmt', 'yuv420p',
         #         'pipe:1'  # Output to stdout
         #     ], capture_output=True)
         #

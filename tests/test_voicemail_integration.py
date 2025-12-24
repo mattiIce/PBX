@@ -52,7 +52,7 @@ def test_complete_voicemail_flow():
 
         assert len(messages) == 1, f"Expected 1 message, got {len(messages)}"
         assert messages[0]["caller_id"] == "1002"
-        assert messages[0]["listened"] == False
+        assert messages[0]["listened"] is False
         assert messages[0]["id"] == message_id
 
         print("  ✓ Voicemail stored correctly in mailbox")
@@ -136,9 +136,9 @@ def test_multiple_voicemails():
         # Save 3 voicemails from different callers
         msg1 = vm_system.save_message("1001", "1002", wav_data, duration=1)
         time.sleep(0.1)  # Small delay to ensure different timestamps
-        msg2 = vm_system.save_message("1001", "1003", wav_data, duration=1)
+        vm_system.save_message("1001", "1003", wav_data, duration=1)
         time.sleep(0.1)
-        msg3 = vm_system.save_message("1001", "1004", wav_data, duration=1)
+        vm_system.save_message("1001", "1004", wav_data, duration=1)
 
         # Verify all messages were saved
         mailbox = vm_system.get_mailbox("1001")

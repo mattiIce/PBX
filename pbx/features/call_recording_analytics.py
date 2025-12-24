@@ -12,9 +12,9 @@ from pbx.utils.logger import get_logger
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
-    import json
+    pass
 
-    from vosk import KaldiRecognizer, Model
+    from vosk import Model
 
     VOSK_AVAILABLE = True
 except ImportError:
@@ -238,8 +238,8 @@ class RecordingAnalytics:
                             if "result" in result:
                                 all_words.extend(result["result"])
                                 for word in result["result"]:
-                                    if "conf" in word:
-                                        total_confidence += word["conf"]
+                                    if "con" in word:
+                                        total_confidence += word["con"]
                                         confidence_count += 1
 
                 # Get final result
@@ -249,7 +249,7 @@ class RecordingAnalytics:
                     if "result" in final_result:
                         all_words.extend(final_result["result"])
                         for word in final_result["result"]:
-                            if "conf" in word:
+                            if "con" in word:
                                 total_confidence += word["conf"]
                                 confidence_count += 1
 
@@ -354,7 +354,6 @@ class RecordingAnalytics:
 
         sentiment_score = 0.0
         overall_sentiment = "neutral"
-        confidence = 0.0
 
         # Use spaCy for enhanced sentiment analysis if available
         if transcript and self.spacy_nlp:
@@ -370,9 +369,7 @@ class RecordingAnalytics:
                 total_indicators = positive_count + negative_count
                 if total_indicators > 0:
                     sentiment_score = (positive_count - negative_count) / total_indicators
-                    confidence = min(
-                        total_indicators / 10.0, 1.0
-                    )  # More indicators = higher confidence
+                    # Confidence based on number of indicators (more = higher confidence)
 
                 # Determine overall sentiment
                 if sentiment_score > 0.2:
@@ -399,7 +396,7 @@ class RecordingAnalytics:
             total_indicators = positive_count + negative_count
             if total_indicators > 0:
                 sentiment_score = (positive_count - negative_count) / total_indicators
-                confidence = min(total_indicators / 10.0, 1.0)
+                min(total_indicators / 10.0, 1.0)
 
             # Determine overall sentiment
             if sentiment_score > 0.2:

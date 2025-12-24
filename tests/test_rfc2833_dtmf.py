@@ -6,7 +6,6 @@ Validates RFC 2833 RTP event handling for DTMF signaling with payload type 101
 import os
 import struct
 import sys
-import time
 import unittest
 
 # Add parent directory to path
@@ -217,7 +216,7 @@ class TestRFC2833Integration(unittest.TestCase):
 
     def test_rtp_packet_building(self):
         """Test that RFC 2833 can build valid RTP packet structure"""
-        sender = RFC2833Sender(local_port=20004, remote_host="127.0.0.1", remote_port=20005)
+        RFC2833Sender(local_port=20004, remote_host="127.0.0.1", remote_port=20005)
 
         # Create an event packet
         event_packet = RFC2833EventPacket("5", end=False, volume=10, duration=160)

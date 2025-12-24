@@ -8,7 +8,7 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.utils.encryption import FIPSEncryption, get_encryption
+from pbx.utils.encryption import get_encryption
 
 
 def test_fips_password_hashing():

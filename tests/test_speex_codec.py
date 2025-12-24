@@ -6,7 +6,7 @@ Tests codec initialization, SDP negotiation, and encoding/decoding
 import os
 import sys
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -333,8 +333,8 @@ class TestSpeexCodecManager(unittest.TestCase):
         pbx.config = {}
 
         manager = SpeexCodecManager(pbx)
-        codec1 = manager.create_codec("call-1")
-        codec2 = manager.create_codec("call-2")
+        manager.create_codec("call-1")
+        manager.create_codec("call-2")
 
         all_codecs = manager.get_all_codecs()
 

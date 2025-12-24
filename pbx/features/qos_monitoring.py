@@ -6,8 +6,8 @@ Tracks call quality metrics including jitter, packet loss, latency, and MOS scor
 import threading
 import time
 from collections import deque
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 

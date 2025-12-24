@@ -152,7 +152,7 @@ class Config:
 
             # Validate email format if provided
             if email and not self.validate_email(email):
-                print(f"Error adding extension: Invalid email format")
+                print("Error adding extension: Invalid email format")
                 return False
 
             # Add new extension
@@ -192,7 +192,7 @@ class Config:
 
             # Validate email format if provided
             if email is not None and email and not self.validate_email(email):
-                print(f"Error updating extension: Invalid email format")
+                print("Error updating extension: Invalid email format")
                 return False
 
             # Find and update extension
@@ -305,7 +305,7 @@ class Config:
 
             # Validate PIN format
             if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
-                print(f"Error updating voicemail PIN: Invalid PIN format")
+                print("Error updating voicemail PIN: Invalid PIN format")
                 return False
 
             # Find and update extension
@@ -358,14 +358,14 @@ class Config:
                 self.config["features"] = {}
             if "webrtc" not in self.config["features"]:
                 self.config["features"]["webrtc"] = {}
-            if "dtmf" not in self.config["features"]["webrtc"]:
+            if "dtm" not in self.config["features"]["webrtc"]:
                 self.config["features"]["webrtc"]["dtmf"] = {}
 
             # Update DTMF settings
-            dtmf = config_data.get("dtmf", config_data)
+            dtmf = config_data.get("dtm", config_data)
 
             if "mode" in dtmf:
-                self.config["features"]["webrtc"]["dtmf"]["mode"] = dtmf["mode"]
+                self.config["features"]["webrtc"]["dtm"]["mode"] = dtmf["mode"]
             if "payload_type" in dtmf:
                 payload_type = int(dtmf["payload_type"])
                 if payload_type < 96 or payload_type > 127:
@@ -373,7 +373,7 @@ class Config:
                         f"Error updating DTMF config: Invalid payload type {payload_type}. Must be between 96 and 127"
                     )
                     return False
-                self.config["features"]["webrtc"]["dtmf"]["payload_type"] = payload_type
+                self.config["features"]["webrtc"]["dtm"]["payload_type"] = payload_type
             if "duration" in dtmf:
                 duration = int(dtmf["duration"])
                 if duration < 80 or duration > 500:
@@ -381,13 +381,13 @@ class Config:
                         f"Error updating DTMF config: Invalid duration {duration}ms. Must be between 80 and 500ms"
                     )
                     return False
-                self.config["features"]["webrtc"]["dtmf"]["duration"] = duration
+                self.config["features"]["webrtc"]["dtm"]["duration"] = duration
             if "sip_info_fallback" in dtmf:
-                self.config["features"]["webrtc"]["dtmf"]["sip_info_fallback"] = bool(
+                self.config["features"]["webrtc"]["dtm"]["sip_info_fallback"] = bool(
                     dtmf["sip_info_fallback"]
                 )
             if "inband_fallback" in dtmf:
-                self.config["features"]["webrtc"]["dtmf"]["inband_fallback"] = bool(
+                self.config["features"]["webrtc"]["dtm"]["inband_fallback"] = bool(
                     dtmf["inband_fallback"]
                 )
             if "detection_threshold" in dtmf:
@@ -397,9 +397,9 @@ class Config:
                         f"Error updating DTMF config: Invalid detection threshold {threshold}. Must be between 0.1 and 0.9"
                     )
                     return False
-                self.config["features"]["webrtc"]["dtmf"]["detection_threshold"] = threshold
+                self.config["features"]["webrtc"]["dtm"]["detection_threshold"] = threshold
             if "relay_enabled" in dtmf:
-                self.config["features"]["webrtc"]["dtmf"]["relay_enabled"] = bool(
+                self.config["features"]["webrtc"]["dtm"]["relay_enabled"] = bool(
                     dtmf["relay_enabled"]
                 )
 
