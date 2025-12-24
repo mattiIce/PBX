@@ -35,7 +35,7 @@ def test_head_request_for_static_files():
     # Get the test config file path relative to this file
     test_dir = Path(__file__).parent
     config_path = test_dir.parent / "test_config.yml"
-    
+
     config = Config(str(config_path))
     mock_pbx = MockPBXCore(config)
 

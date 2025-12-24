@@ -1170,41 +1170,41 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         """Handle HEAD requests.
-        
+
         HEAD requests are like GET requests but should not return a body.
         This is commonly used to check if a resource exists without downloading it.
         The response headers and status code should be the same as for GET.
-        
+
         We implement this by temporarily replacing wfile with a BytesIO buffer that
         captures the entire response (headers + body), then we extract and send only
         the headers portion (everything up to the double CRLF separator).
         """
         # Store original wfile
         original_wfile = self.wfile
-        
+
         # Create a temporary buffer to capture the response
         temp_buffer = BytesIO()
-        
+
         # Replace wfile with buffer
         self.wfile = temp_buffer
-        
+
         try:
             # Process the request like a GET
             self.do_GET()
         finally:
             # Restore original wfile
             self.wfile = original_wfile
-            
+
             # Get the response content
             response_data = temp_buffer.getvalue()
             temp_buffer.close()
-            
+
             # Send only the headers (everything up to the double CRLF that separates headers from body)
             # The headers are already in response_data, we just need to find where they end
-            header_end = response_data.find(b'\r\n\r\n')
+            header_end = response_data.find(b"\r\n\r\n")
             if header_end != -1:
                 # Send only headers (including the double CRLF)
-                self.wfile.write(response_data[:header_end + 4])
+                self.wfile.write(response_data[: header_end + 4])
             else:
                 # If no double CRLF found, send everything (shouldn't happen in normal cases)
                 self.wfile.write(response_data)
