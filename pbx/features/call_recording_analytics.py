@@ -795,23 +795,8 @@ class RecordingAnalytics:
         """
         return self.analyses.get(recording_id)
 
-    def get_trend_analysis(self, start_date: datetime, end_date: datetime) -> Dict:
-        """
-        Analyze trends over time with aggregated metrics
-
-        Args:
-            start_date: Start date for analysis
-            end_date: End date for analysis
-
-        Returns:
-            Dict: Trend analysis with sentiment, quality, keywords, and compliance data
-        """
-        sentiment_trend = []
-        quality_trend = []
-        keyword_trends = {}
-        compliance_data = {"compliant": 0, "non_compliant": 0}
-
-        # Filter analyses by date range
+    def _filter_analyses_by_date(self, start_date: datetime, end_date: datetime) -> list:
+        """Filter analyses by date range"""
         filtered_analyses = []
         for recording_id, analysis in self.analyses.items():
             try:
@@ -822,18 +807,11 @@ class RecordingAnalytics:
                 self.logger.warning(
                     f"Skipping analysis {recording_id} due to invalid timestamp: {e}"
                 )
-                continue
+        return filtered_analyses
 
-        if not filtered_analyses:
-            return {
-                "sentiment_trend": [],
-                "quality_trend": [],
-                "keyword_trends": {},
-                "compliance_rate": 0.0,
-                "total_recordings": 0,
-            }
-
-        # Aggregate sentiment data
+    def _aggregate_sentiment_data(self, filtered_analyses: list) -> list:
+        """Aggregate sentiment data from analyses"""
+        sentiment_trend = []
         for analysis in filtered_analyses:
             sentiment_data = analysis["analyses"].get("sentiment", {})
             if sentiment_data:
@@ -844,8 +822,11 @@ class RecordingAnalytics:
                         "score": sentiment_data.get("sentiment_score", 0.0),
                     }
                 )
+        return sentiment_trend
 
-        # Aggregate quality data
+    def _aggregate_quality_data(self, filtered_analyses: list) -> list:
+        """Aggregate quality data from analyses"""
+        quality_trend = []
         for analysis in filtered_analyses:
             quality_data = analysis["analyses"].get("quality", {})
             if quality_data:
@@ -857,18 +838,21 @@ class RecordingAnalytics:
                         "customer_satisfaction": quality_data.get("customer_satisfaction", 0.0),
                     }
                 )
+        return quality_trend
 
-        # Aggregate keyword trends
+    def _aggregate_keyword_trends(self, filtered_analyses: list) -> dict:
+        """Aggregate and sort keyword trends"""
+        keyword_trends = {}
         for analysis in filtered_analyses:
             keyword_data = analysis["analyses"].get("keywords", {})
             if keyword_data:
                 for keyword in keyword_data.get("keywords", []):
                     keyword_trends[keyword] = keyword_trends.get(keyword, 0) + 1
+        return dict(sorted(keyword_trends.items(), key=lambda x: x[1], reverse=True))
 
-        # Sort keyword trends by frequency
-        keyword_trends = dict(sorted(keyword_trends.items(), key=lambda x: x[1], reverse=True))
-
-        # Calculate compliance rate
+    def _calculate_compliance_data(self, filtered_analyses: list) -> dict:
+        """Calculate compliance statistics"""
+        compliance_data = {"compliant": 0, "non_compliant": 0}
         for analysis in filtered_analyses:
             compliance_data_item = analysis["analyses"].get("compliance", {})
             if compliance_data_item:
@@ -876,6 +860,34 @@ class RecordingAnalytics:
                     compliance_data["compliant"] += 1
                 else:
                     compliance_data["non_compliant"] += 1
+        return compliance_data
+
+    def get_trend_analysis(self, start_date: datetime, end_date: datetime) -> Dict:
+        """
+        Analyze trends over time with aggregated metrics
+
+        Args:
+            start_date: Start date for analysis
+            end_date: End date for analysis
+
+        Returns:
+            Dict: Trend analysis with sentiment, quality, keywords, and compliance data
+        """
+        filtered_analyses = self._filter_analyses_by_date(start_date, end_date)
+
+        if not filtered_analyses:
+            return {
+                "sentiment_trend": [],
+                "quality_trend": [],
+                "keyword_trends": {},
+                "compliance_rate": 0.0,
+                "total_recordings": 0,
+            }
+
+        sentiment_trend = self._aggregate_sentiment_data(filtered_analyses)
+        quality_trend = self._aggregate_quality_data(filtered_analyses)
+        keyword_trends = self._aggregate_keyword_trends(filtered_analyses)
+        compliance_data = self._calculate_compliance_data(filtered_analyses)
 
         total_compliance_checks = compliance_data["compliant"] + compliance_data["non_compliant"]
         compliance_rate = (
