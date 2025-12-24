@@ -224,6 +224,84 @@ class YubiKeyOTPVerifier:
             return None
         return otp[:12]
 
+    def _build_yubico_params(self, otp: str, nonce: str) -> dict:
+        """Build YubiCloud API request parameters"""
+        params = {
+            "id": self.client_id,
+            "otp": otp,
+            "nonce": nonce,
+            "timestamp": "1",  # Request timestamp in response
+            "sl": "50",  # Sync level - percentage of servers that must sync
+        }
+
+        # Add HMAC signature if API key is provided
+        if self.api_key:
+            # Sort parameters alphabetically for signature
+            sorted_params = sorted(params.items())
+            param_string = "&".join(f"{k}={v}" for k, v in sorted_params)
+
+            # Generate HMAC-SHA1 signature
+            api_key_bytes = base64.b64decode(self.api_key)
+            signature = hmac.new(api_key_bytes, param_string.encode("utf-8"), hashlib.sha1)
+            signature_b64 = base64.b64encode(signature.digest()).decode("utf-8")
+            params["h"] = signature_b64
+
+        return params
+
+    def _verify_yubico_response_signature(self, response_dict: dict, nonce: str) -> bool:
+        """Verify HMAC signature in YubiCloud response"""
+        # Verify nonce matches
+        if response_dict.get("nonce") != nonce:
+            self.logger.warning("Nonce mismatch in YubiCloud response")
+            return False
+
+        # Verify HMAC signature if we have an API key
+        if self.api_key and "h" in response_dict:
+            response_signature = response_dict.pop("h")
+
+            # Sort response parameters for signature verification
+            sorted_response = sorted(response_dict.items())
+            response_string = "&".join(f"{k}={v}" for k, v in sorted_response)
+
+            # Calculate expected signature
+            api_key_bytes = base64.b64decode(self.api_key)
+            expected_signature = hmac.new(
+                api_key_bytes, response_string.encode("utf-8"), hashlib.sha1
+            )
+            expected_signature_b64 = base64.b64encode(expected_signature.digest()).decode("utf-8")
+
+            if response_signature != expected_signature_b64:
+                self.logger.warning("HMAC signature mismatch in YubiCloud response")
+                return False
+
+        return True
+
+    def _query_yubico_server(self, server_url: str, params: dict) -> Optional[dict]:
+        """Query a single YubiCloud validation server"""
+        try:
+            # Build full URL with parameters
+            query_string = urllib.parse.urlencode(params)
+            full_url = f"{server_url}?{query_string}"
+
+            # Make HTTP request with timeout
+            request = urllib.request.Request(full_url)
+            with urllib.request.urlopen(
+                request, timeout=5
+            ) as response:  # nosec B310 - URL is from configured MFA provider
+                response_data = response.read().decode("utf-8")
+
+            # Parse response (key=value pairs separated by newlines)
+            response_dict = {}
+            for line in response_data.strip().split("\n"):
+                if "=" in line:
+                    key, value = line.split("=", 1)
+                    response_dict[key.strip()] = value.strip()
+
+            return response_dict
+        except Exception as e:
+            self.logger.debug(f"Failed to query {server_url}: {e}")
+            return None
+
     def _verify_via_yubico(self, otp: str) -> Tuple[bool, Optional[str]]:
         """
         Verify OTP via YubiCloud API
@@ -240,25 +318,7 @@ class YubiKeyOTPVerifier:
             nonce = base64.b64encode(secrets.token_bytes(16)).decode("utf-8")
 
             # Build request parameters
-            params = {
-                "id": self.client_id,
-                "otp": otp,
-                "nonce": nonce,
-                "timestamp": "1",  # Request timestamp in response
-                "sl": "50",  # Sync level - percentage of servers that must sync
-            }
-
-            # Add HMAC signature if API key is provided
-            if self.api_key:
-                # Sort parameters alphabetically for signature
-                sorted_params = sorted(params.items())
-                param_string = "&".join(f"{k}={v}" for k, v in sorted_params)
-
-                # Generate HMAC-SHA1 signature
-                api_key_bytes = base64.b64decode(self.api_key)
-                signature = hmac.new(api_key_bytes, param_string.encode("utf-8"), hashlib.sha1)
-                signature_b64 = base64.b64encode(signature.digest()).decode("utf-8")
-                params["h"] = signature_b64
+            params = self._build_yubico_params(otp, nonce)
 
             # Try each validation server (for redundancy)
             servers = self.YUBICO_SERVERS.copy()
@@ -266,85 +326,40 @@ class YubiKeyOTPVerifier:
 
             last_error = None
             for server_url in servers:
-                try:
-                    # Build full URL with parameters
-                    query_string = urllib.parse.urlencode(params)
-                    full_url = f"{server_url}?{query_string}"
-
-                    # Make HTTP request with timeout
-                    request = urllib.request.Request(full_url)
-                    with urllib.request.urlopen(
-                        request, timeout=5
-                    ) as response:  # nosec B310 - URL is from configured MFA provider
-                        response_data = response.read().decode("utf-8")
-
-                    # Parse response (key=value pairs separated by newlines)
-                    response_dict = {}
-                    for line in response_data.strip().split("\n"):
-                        if "=" in line:
-                            key, value = line.split("=", 1)
-                            response_dict[key.strip()] = value.strip()
-
-                    # Verify nonce matches
-                    if response_dict.get("nonce") != nonce:
-                        self.logger.warning("Nonce mismatch in YubiCloud response")
-                        continue
-
-                    # Verify HMAC signature if we have an API key
-                    if self.api_key and "h" in response_dict:
-                        response_signature = response_dict.pop("h")
-
-                        # Sort response parameters for signature verification
-                        sorted_response = sorted(response_dict.items())
-                        response_string = "&".join(f"{k}={v}" for k, v in sorted_response)
-
-                        # Calculate expected signature
-                        expected_signature = hmac.new(
-                            api_key_bytes, response_string.encode("utf-8"), hashlib.sha1
-                        )
-                        expected_signature_b64 = base64.b64encode(
-                            expected_signature.digest()
-                        ).decode("utf-8")
-
-                        if response_signature != expected_signature_b64:
-                            self.logger.warning("HMAC signature mismatch in YubiCloud response")
-                            continue
-
-                    # Check status
-                    status = response_dict.get("status")
-
-                    if status == "OK":
-                        # Verify OTP matches
-                        if response_dict.get("otp") == otp:
-                            self.logger.info(f"YubiKey OTP verified successfully via {server_url}")
-                            return True, None
-                        else:
-                            return False, "OTP mismatch in response"
-                    elif status == "REPLAYED_OTP":
-                        return False, "OTP has been used before (replay detected)"
-                    elif status == "BAD_OTP":
-                        return False, "Invalid OTP format or signature"
-                    elif status == "NO_SUCH_CLIENT":
-                        return False, "Invalid client ID"
-                    elif status == "BAD_SIGNATURE":
-                        return False, "Invalid request signature"
-                    elif status == "MISSING_PARAMETER":
-                        return False, "Missing required parameter"
-                    elif status == "OPERATION_NOT_ALLOWED":
-                        return False, "Operation not allowed for this client"
-                    else:
-                        # Backend errors - try next server
-                        last_error = f"Backend error: {status}"
-                        self.logger.warning(f"YubiCloud server {server_url} returned: {status}")
-                        continue
-
-                except urllib.error.URLError as e:
-                    last_error = f"Network error: {str(e)}"
-                    self.logger.warning(f"Failed to connect to {server_url}: {e}")
+                response_dict = self._query_yubico_server(server_url, params)
+                if response_dict is None:
                     continue
-                except Exception as e:
-                    last_error = f"Error: {str(e)}"
-                    self.logger.warning(f"Error with {server_url}: {e}")
+
+                # Verify response signature and nonce
+                if not self._verify_yubico_response_signature(response_dict, nonce):
+                    continue
+
+                # Check status
+                status = response_dict.get("status")
+
+                if status == "OK":
+                    # Verify OTP matches
+                    if response_dict.get("otp") == otp:
+                        self.logger.info(f"YubiKey OTP verified successfully via {server_url}")
+                        return True, None
+                    else:
+                        return False, "OTP mismatch in response"
+                elif status == "REPLAYED_OTP":
+                    return False, "OTP has been used before (replay detected)"
+                elif status == "BAD_OTP":
+                    return False, "Invalid OTP format or signature"
+                elif status == "NO_SUCH_CLIENT":
+                    return False, "Invalid client ID"
+                elif status == "BAD_SIGNATURE":
+                    return False, "Invalid request signature"
+                elif status == "MISSING_PARAMETER":
+                    return False, "Missing required parameter"
+                elif status == "OPERATION_NOT_ALLOWED":
+                    return False, "Operation not allowed for this client"
+                else:
+                    # Backend errors - try next server
+                    last_error = f"Backend error: {status}"
+                    self.logger.warning(f"YubiCloud server {server_url} returned: {status}")
                     continue
 
             # If we get here, all servers failed
