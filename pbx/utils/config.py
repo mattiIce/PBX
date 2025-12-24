@@ -342,6 +342,57 @@ class Config:
             print(f"Error getting DTMF config: {e}")
             return None
 
+    def _ensure_dtmf_config_structure(self):
+        """Ensure DTMF config structure exists"""
+        if "features" not in self.config:
+            self.config["features"] = {}
+        if "webrtc" not in self.config["features"]:
+            self.config["features"]["webrtc"] = {}
+        if "dtmf" not in self.config["features"]["webrtc"]:
+            self.config["features"]["webrtc"]["dtmf"] = {}
+        return self.config["features"]["webrtc"]["dtmf"]
+
+    def _update_dtmf_simple_fields(self, dtmf_config, dtmf):
+        """Update simple boolean/string DTMF fields"""
+        if "mode" in dtmf:
+            dtmf_config["mode"] = dtmf["mode"]
+        if "sip_info_fallback" in dtmf:
+            dtmf_config["sip_info_fallback"] = bool(dtmf["sip_info_fallback"])
+        if "inband_fallback" in dtmf:
+            dtmf_config["inband_fallback"] = bool(dtmf["inband_fallback"])
+        if "relay_enabled" in dtmf:
+            dtmf_config["relay_enabled"] = bool(dtmf["relay_enabled"])
+
+    def _validate_dtmf_payload_type(self, payload_type):
+        """Validate DTMF payload type"""
+        payload_type = int(payload_type)
+        if payload_type < 96 or payload_type > 127:
+            print(
+                f"Error updating DTMF config: Invalid payload type {payload_type}. Must be between 96 and 127"
+            )
+            return None
+        return payload_type
+
+    def _validate_dtmf_duration(self, duration):
+        """Validate DTMF duration"""
+        duration = int(duration)
+        if duration < 80 or duration > 500:
+            print(
+                f"Error updating DTMF config: Invalid duration {duration}ms. Must be between 80 and 500ms"
+            )
+            return None
+        return duration
+
+    def _validate_dtmf_threshold(self, threshold):
+        """Validate DTMF detection threshold"""
+        threshold = float(threshold)
+        if threshold < 0.1 or threshold > 0.9:
+            print(
+                f"Error updating DTMF config: Invalid detection threshold {threshold}. Must be between 0.1 and 0.9"
+            )
+            return None
+        return threshold
+
     def update_dtmf_config(self, config_data):
         """
         Update DTMF configuration
@@ -353,55 +404,30 @@ class Config:
             True if successful, False otherwise
         """
         try:
-            # Ensure the structure exists
-            if "features" not in self.config:
-                self.config["features"] = {}
-            if "webrtc" not in self.config["features"]:
-                self.config["features"]["webrtc"] = {}
-            if "dtm" not in self.config["features"]["webrtc"]:
-                self.config["features"]["webrtc"]["dtmf"] = {}
+            dtmf_config = self._ensure_dtmf_config_structure()
+            dtmf = config_data.get("dtmf", config_data)
 
-            # Update DTMF settings
-            dtmf = config_data.get("dtm", config_data)
+            # Update simple fields
+            self._update_dtmf_simple_fields(dtmf_config, dtmf)
 
-            if "mode" in dtmf:
-                self.config["features"]["webrtc"]["dtm"]["mode"] = dtmf["mode"]
+            # Update and validate complex fields
             if "payload_type" in dtmf:
-                payload_type = int(dtmf["payload_type"])
-                if payload_type < 96 or payload_type > 127:
-                    print(
-                        f"Error updating DTMF config: Invalid payload type {payload_type}. Must be between 96 and 127"
-                    )
+                validated = self._validate_dtmf_payload_type(dtmf["payload_type"])
+                if validated is None:
                     return False
-                self.config["features"]["webrtc"]["dtm"]["payload_type"] = payload_type
+                dtmf_config["payload_type"] = validated
+
             if "duration" in dtmf:
-                duration = int(dtmf["duration"])
-                if duration < 80 or duration > 500:
-                    print(
-                        f"Error updating DTMF config: Invalid duration {duration}ms. Must be between 80 and 500ms"
-                    )
+                validated = self._validate_dtmf_duration(dtmf["duration"])
+                if validated is None:
                     return False
-                self.config["features"]["webrtc"]["dtm"]["duration"] = duration
-            if "sip_info_fallback" in dtmf:
-                self.config["features"]["webrtc"]["dtm"]["sip_info_fallback"] = bool(
-                    dtmf["sip_info_fallback"]
-                )
-            if "inband_fallback" in dtmf:
-                self.config["features"]["webrtc"]["dtm"]["inband_fallback"] = bool(
-                    dtmf["inband_fallback"]
-                )
+                dtmf_config["duration"] = validated
+
             if "detection_threshold" in dtmf:
-                threshold = float(dtmf["detection_threshold"])
-                if threshold < 0.1 or threshold > 0.9:
-                    print(
-                        f"Error updating DTMF config: Invalid detection threshold {threshold}. Must be between 0.1 and 0.9"
-                    )
+                validated = self._validate_dtmf_threshold(dtmf["detection_threshold"])
+                if validated is None:
                     return False
-                self.config["features"]["webrtc"]["dtm"]["detection_threshold"] = threshold
-            if "relay_enabled" in dtmf:
-                self.config["features"]["webrtc"]["dtm"]["relay_enabled"] = bool(
-                    dtmf["relay_enabled"]
-                )
+                dtmf_config["detection_threshold"] = validated
 
             return self.save()
         except Exception as e:
