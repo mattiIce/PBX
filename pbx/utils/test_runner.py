@@ -128,11 +128,11 @@ def _log_test_failure(log_file, test_file, success, test_stdout, test_stderr):
     log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FAILED: {test_file}\n")
     log_file.write(f"  Return value: {success} (expected True)\n")
     if test_stdout:
-        log_file.write(f"\n  Test Output:\n")
+        log_file.write("\n  Test Output:\n")
         for line in test_stdout.splitlines():
             log_file.write(f"    {line}\n")
     if test_stderr:
-        log_file.write(f"\n  Test Errors:\n")
+        log_file.write("\n  Test Errors:\n")
         for line in test_stderr.splitlines():
             log_file.write(f"    {line}\n")
     log_file.write("\n")
@@ -153,7 +153,7 @@ def _log_test_error(log_file, test_file, error, error_trace):
 
     log_file.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: {test_file}\n")
     log_file.write(f"  Exception: {error}\n")
-    log_file.write(f"  Traceback:\n")
+    log_file.write("  Traceback:\n")
     log_file.write(error_trace)
     log_file.write("\n")
 

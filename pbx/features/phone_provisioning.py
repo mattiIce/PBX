@@ -1061,18 +1061,18 @@ P30 = 13   # GMT-8
             api_port = self.config.get("api.port", 8080)
             server_ip = self.config.get("server.external_ip", "192.168.1.14")
 
-            self.logger.warning(f"  → Device needs to be registered first")
-            self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
-            self.logger.warning(f"  → Example:")
+            self.logger.warning("  → Device needs to be registered first")
+            self.logger.warning("  → Register via API: POST /api/provisioning/devices")
+            self.logger.warning("  → Example:")
             self.logger.warning(
                 f"     curl -X POST {api_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\"
             )
-            self.logger.warning(f"       -H 'Content-Type: application/json' \\")
+            self.logger.warning("       -H 'Content-Type: application/json' \\")
             self.logger.warning(
-                f'       -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
+                '       -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
             )
             self.logger.warning(
-                f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys"
+                "  → Available vendors: yealink, polycom, cisco, grandstream, zultys"
             )
 
             # Check if there are similar MACs (might be a format issue)
@@ -1080,7 +1080,7 @@ P30 = 13   # GMT-8
             similar_macs = [m for m in self.devices.keys() if m.startswith(mac_prefix)]
             if similar_macs:
                 self.logger.warning(f"  → Similar MACs found (same vendor): {similar_macs}")
-                self.logger.warning(f"     This might be a typo in the MAC address")
+                self.logger.warning("     This might be a typo in the MAC address")
 
             request_log["error"] = error_msg
             self._add_request_log(request_log)
@@ -1476,7 +1476,7 @@ P30 = 13   # GMT-8
             self.add_template(vendor, model, content)
 
             self.logger.info(f"Updated template: {vendor} {model}")
-            return True, f"Template updated successfully"
+            return True, "Template updated successfully"
         except Exception as e:
             self.logger.error(f"Failed to update template: {e}")
             return False, f"Failed to update template: {e}"

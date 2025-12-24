@@ -12,9 +12,9 @@ from pbx.utils.logger import get_logger
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
-    import json
+    pass
 
-    from vosk import KaldiRecognizer, Model
+    from vosk import Model
 
     VOSK_AVAILABLE = True
 except ImportError:
@@ -172,6 +172,61 @@ class RecordingAnalytics:
 
         return results
 
+    def _load_vosk_model(self):
+        """Load Vosk speech recognition model"""
+        from vosk import Model
+
+        model_path = "models/vosk-model-small-en-us-0.15"
+
+        try:
+            if os.path.exists(model_path):
+                return Model(model_path)
+            else:
+                self.logger.warning(f"Vosk model not found at {model_path}")
+                self.logger.info("Download from: https://alphacephei.com/vosk/models")
+        except Exception as e:
+            self.logger.warning(f"Could not load Vosk model: {e}")
+
+        return None
+
+    def _process_vosk_audio(self, recognizer, wf):
+        """Process audio file with Vosk recognizer"""
+        import json
+
+        full_transcript = []
+        all_words = []
+        total_confidence = 0.0
+        confidence_count = 0
+
+        while True:
+            data = wf.readframes(4000)
+            if len(data) == 0:
+                break
+
+            if recognizer.AcceptWaveform(data):
+                result = json.loads(recognizer.Result())
+                if result.get("text"):
+                    full_transcript.append(result["text"])
+                    if "result" in result:
+                        all_words.extend(result["result"])
+                        for word in result["result"]:
+                            if "conf" in word:
+                                total_confidence += word["conf"]
+                                confidence_count += 1
+
+        # Get final result
+        final_result = json.loads(recognizer.FinalResult())
+        if final_result.get("text"):
+            full_transcript.append(final_result["text"])
+            if "result" in final_result:
+                all_words.extend(final_result["result"])
+                for word in final_result["result"]:
+                    if "conf" in word:
+                        total_confidence += word["conf"]
+                        confidence_count += 1
+
+        return full_transcript, all_words, total_confidence, confidence_count
+
     def _transcribe(self, audio_path: str) -> Dict:
         """
         Transcribe audio to text using Vosk (offline speech-to-text)
@@ -184,23 +239,12 @@ class RecordingAnalytics:
         """
         try:
             # Try to use Vosk for offline transcription (already in requirements.txt)
-            import json
             import wave
 
-            from vosk import KaldiRecognizer, Model
+            from vosk import KaldiRecognizer
 
-            # Try to get Vosk model from voicemail transcription if available
-            vosk_model = None
-            model_path = "models/vosk-model-small-en-us-0.15"
-
-            try:
-                if os.path.exists(model_path):
-                    vosk_model = Model(model_path)
-                else:
-                    self.logger.warning(f"Vosk model not found at {model_path}")
-                    self.logger.info("Download from: https://alphacephei.com/vosk/models")
-            except Exception as e:
-                self.logger.warning(f"Could not load Vosk model: {e}")
+            # Try to get Vosk model
+            vosk_model = self._load_vosk_model()
 
             if not vosk_model:
                 # Return empty result if model not available
@@ -221,37 +265,9 @@ class RecordingAnalytics:
                 rec.SetWords(True)
 
                 # Process audio
-                full_transcript = []
-                all_words = []
-                total_confidence = 0.0
-                confidence_count = 0
-
-                while True:
-                    data = wf.readframes(4000)
-                    if len(data) == 0:
-                        break
-
-                    if rec.AcceptWaveform(data):
-                        result = json.loads(rec.Result())
-                        if result.get("text"):
-                            full_transcript.append(result["text"])
-                            if "result" in result:
-                                all_words.extend(result["result"])
-                                for word in result["result"]:
-                                    if "conf" in word:
-                                        total_confidence += word["conf"]
-                                        confidence_count += 1
-
-                # Get final result
-                final_result = json.loads(rec.FinalResult())
-                if final_result.get("text"):
-                    full_transcript.append(final_result["text"])
-                    if "result" in final_result:
-                        all_words.extend(final_result["result"])
-                        for word in final_result["result"]:
-                            if "conf" in word:
-                                total_confidence += word["conf"]
-                                confidence_count += 1
+                full_transcript, all_words, total_confidence, confidence_count = (
+                    self._process_vosk_audio(rec, wf)
+                )
 
                 # Get duration from wave file before closing
                 duration = wf.getnframes() / sample_rate if sample_rate > 0 else 0
@@ -354,7 +370,6 @@ class RecordingAnalytics:
 
         sentiment_score = 0.0
         overall_sentiment = "neutral"
-        confidence = 0.0
 
         # Use spaCy for enhanced sentiment analysis if available
         if transcript and self.spacy_nlp:
@@ -370,9 +385,7 @@ class RecordingAnalytics:
                 total_indicators = positive_count + negative_count
                 if total_indicators > 0:
                     sentiment_score = (positive_count - negative_count) / total_indicators
-                    confidence = min(
-                        total_indicators / 10.0, 1.0
-                    )  # More indicators = higher confidence
+                    # Confidence based on number of indicators (more = higher confidence)
 
                 # Determine overall sentiment
                 if sentiment_score > 0.2:
@@ -399,7 +412,7 @@ class RecordingAnalytics:
             total_indicators = positive_count + negative_count
             if total_indicators > 0:
                 sentiment_score = (positive_count - negative_count) / total_indicators
-                confidence = min(total_indicators / 10.0, 1.0)
+                min(total_indicators / 10.0, 1.0)
 
             # Determine overall sentiment
             if sentiment_score > 0.2:
@@ -798,23 +811,8 @@ class RecordingAnalytics:
         """
         return self.analyses.get(recording_id)
 
-    def get_trend_analysis(self, start_date: datetime, end_date: datetime) -> Dict:
-        """
-        Analyze trends over time with aggregated metrics
-
-        Args:
-            start_date: Start date for analysis
-            end_date: End date for analysis
-
-        Returns:
-            Dict: Trend analysis with sentiment, quality, keywords, and compliance data
-        """
-        sentiment_trend = []
-        quality_trend = []
-        keyword_trends = {}
-        compliance_data = {"compliant": 0, "non_compliant": 0}
-
-        # Filter analyses by date range
+    def _filter_analyses_by_date(self, start_date: datetime, end_date: datetime) -> list:
+        """Filter analyses by date range"""
         filtered_analyses = []
         for recording_id, analysis in self.analyses.items():
             try:
@@ -825,18 +823,11 @@ class RecordingAnalytics:
                 self.logger.warning(
                     f"Skipping analysis {recording_id} due to invalid timestamp: {e}"
                 )
-                continue
+        return filtered_analyses
 
-        if not filtered_analyses:
-            return {
-                "sentiment_trend": [],
-                "quality_trend": [],
-                "keyword_trends": {},
-                "compliance_rate": 0.0,
-                "total_recordings": 0,
-            }
-
-        # Aggregate sentiment data
+    def _aggregate_sentiment_data(self, filtered_analyses: list) -> list:
+        """Aggregate sentiment data from analyses"""
+        sentiment_trend = []
         for analysis in filtered_analyses:
             sentiment_data = analysis["analyses"].get("sentiment", {})
             if sentiment_data:
@@ -847,8 +838,11 @@ class RecordingAnalytics:
                         "score": sentiment_data.get("sentiment_score", 0.0),
                     }
                 )
+        return sentiment_trend
 
-        # Aggregate quality data
+    def _aggregate_quality_data(self, filtered_analyses: list) -> list:
+        """Aggregate quality data from analyses"""
+        quality_trend = []
         for analysis in filtered_analyses:
             quality_data = analysis["analyses"].get("quality", {})
             if quality_data:
@@ -860,18 +854,21 @@ class RecordingAnalytics:
                         "customer_satisfaction": quality_data.get("customer_satisfaction", 0.0),
                     }
                 )
+        return quality_trend
 
-        # Aggregate keyword trends
+    def _aggregate_keyword_trends(self, filtered_analyses: list) -> dict:
+        """Aggregate and sort keyword trends"""
+        keyword_trends = {}
         for analysis in filtered_analyses:
             keyword_data = analysis["analyses"].get("keywords", {})
             if keyword_data:
                 for keyword in keyword_data.get("keywords", []):
                     keyword_trends[keyword] = keyword_trends.get(keyword, 0) + 1
+        return dict(sorted(keyword_trends.items(), key=lambda x: x[1], reverse=True))
 
-        # Sort keyword trends by frequency
-        keyword_trends = dict(sorted(keyword_trends.items(), key=lambda x: x[1], reverse=True))
-
-        # Calculate compliance rate
+    def _calculate_compliance_data(self, filtered_analyses: list) -> dict:
+        """Calculate compliance statistics"""
+        compliance_data = {"compliant": 0, "non_compliant": 0}
         for analysis in filtered_analyses:
             compliance_data_item = analysis["analyses"].get("compliance", {})
             if compliance_data_item:
@@ -879,6 +876,34 @@ class RecordingAnalytics:
                     compliance_data["compliant"] += 1
                 else:
                     compliance_data["non_compliant"] += 1
+        return compliance_data
+
+    def get_trend_analysis(self, start_date: datetime, end_date: datetime) -> Dict:
+        """
+        Analyze trends over time with aggregated metrics
+
+        Args:
+            start_date: Start date for analysis
+            end_date: End date for analysis
+
+        Returns:
+            Dict: Trend analysis with sentiment, quality, keywords, and compliance data
+        """
+        filtered_analyses = self._filter_analyses_by_date(start_date, end_date)
+
+        if not filtered_analyses:
+            return {
+                "sentiment_trend": [],
+                "quality_trend": [],
+                "keyword_trends": {},
+                "compliance_rate": 0.0,
+                "total_recordings": 0,
+            }
+
+        sentiment_trend = self._aggregate_sentiment_data(filtered_analyses)
+        quality_trend = self._aggregate_quality_data(filtered_analyses)
+        keyword_trends = self._aggregate_keyword_trends(filtered_analyses)
+        compliance_data = self._calculate_compliance_data(filtered_analyses)
 
         total_compliance_checks = compliance_data["compliant"] + compliance_data["non_compliant"]
         compliance_rate = (

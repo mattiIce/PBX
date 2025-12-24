@@ -6,7 +6,6 @@ Tests the scenario where SSL is enabled in config but certificates are missing
 import os
 import sys
 import time
-from io import StringIO
 from pathlib import Path
 
 # Add parent directory to path
@@ -100,7 +99,7 @@ def test_ssl_enabled_missing_certificates():
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8083)
 
     print("Checking API server state:")
-    print(f"  SSL enabled in config: True")
+    print("  SSL enabled in config: True")
     print(f"  SSL actually enabled: {api_server.ssl_enabled}")
     print(f"  SSL context created: {api_server.ssl_context is not None}")
     print()
@@ -204,7 +203,7 @@ def test_ssl_enabled_with_valid_certificates():
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8084)
 
     print("Checking API server state:")
-    print(f"  SSL enabled in config: True")
+    print("  SSL enabled in config: True")
     print(f"  SSL actually enabled: {api_server.ssl_enabled}")
     print(f"  SSL context created: {api_server.ssl_context is not None}")
     print()

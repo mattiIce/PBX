@@ -3,10 +3,8 @@
 Test PBX shutdown functionality
 """
 import os
-import signal
 import sys
 import tempfile
-import threading
 import time
 
 import yaml
@@ -122,7 +120,7 @@ def test_signal_handling_simulation():
 
     def signal_handler_test():
         """Simulate the signal handler"""
-        nonlocal running, pbx
+        nonlocal running
         print("Signal handler called")
         running = False
         if pbx:

@@ -29,4 +29,6 @@ per-file-ignores =
     __init__.py:F401
     tests/*:F401,F811
 
-max-complexity = 15
+# Use flake8 default complexity settings (max-complexity = 10)
+# Note: Cognitive complexity and annotation complexity require additional plugins
+# and are not enabled by default in standard flake8

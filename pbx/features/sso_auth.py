@@ -3,7 +3,6 @@ Single Sign-On (SSO) Support
 SAML/OAuth enterprise authentication using free libraries
 """
 
-import hashlib
 import secrets
 from datetime import datetime, timedelta
 from typing import Dict, Optional
@@ -12,8 +11,7 @@ from pbx.utils.logger import get_logger
 
 # Try to import SAML library (free)
 try:
-    from onelogin.saml2.auth import OneLogin_Saml2_Auth
-    from onelogin.saml2.settings import OneLogin_Saml2_Settings
+    pass
 
     SAML_AVAILABLE = True
 except ImportError:
@@ -46,7 +44,7 @@ class SSOAuthService:
         self.saml_settings = sso_config.get("saml_settings", {})
 
         if self.enabled:
-            self.logger.info(f"SSO authentication service initialized")
+            self.logger.info("SSO authentication service initialized")
             self.logger.info(f"  Provider: {self.provider}")
             if self.provider == "saml" and not SAML_AVAILABLE:
                 self.logger.warning("SAML provider selected but python3-saml not installed")
@@ -134,9 +132,9 @@ class SSOAuthService:
             f"{self.oauth_provider_url}/authorize"
             f"?client_id={self.oauth_client_id}"
             f"&redirect_uri={redirect_uri}"
-            f"&response_type=code"
+            "&response_type=code"
             f"&state={state}"
-            f"&scope=openid profile email"
+            "&scope=openid profile email"
         )
 
         self.logger.info(f"Initiated OAuth auth with state: {state}")

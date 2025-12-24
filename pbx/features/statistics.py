@@ -3,8 +3,6 @@ Enhanced Statistics and Analytics System
 Provides comprehensive analytics for dashboard visualization
 """
 
-import json
-import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -34,7 +32,7 @@ class StatisticsEngine:
         Returns:
             Dictionary with comprehensive statistics
         """
-        today = datetime.now()
+        datetime.now()
         stats = {
             "overview": self._get_overview_stats(days),
             "daily_trends": self._get_daily_trends(days),
@@ -117,7 +115,6 @@ class StatisticsEngine:
                         hourly_counts[hour] += 1
                     except (ValueError, TypeError) as e:
                         self.logger.debug(f"Error parsing timestamp: {e}")
-                        pass
 
         # Convert to sorted list
         distribution = [{"hour": hour, "calls": hourly_counts[hour]} for hour in range(24)]
@@ -194,7 +191,6 @@ class StatisticsEngine:
                         hourly_counts[hour] += 1
                     except (ValueError, TypeError) as e:
                         self.logger.debug(f"Error parsing timestamp: {e}")
-                        pass
 
         # Get top 3 peak hours
         peak_hours = sorted(hourly_counts.items(), key=lambda x: x[1], reverse=True)[:3]

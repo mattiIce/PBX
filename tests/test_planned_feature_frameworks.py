@@ -8,25 +8,24 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.features.bi_integration import BIIntegration, get_bi_integration
-from pbx.features.call_blending import CallBlending, get_call_blending
-from pbx.features.call_quality_prediction import CallQualityPrediction, get_quality_prediction
-from pbx.features.call_recording_analytics import RecordingAnalytics, get_recording_analytics
-from pbx.features.call_tagging import CallTagging, get_call_tagging
-from pbx.features.conversational_ai import ConversationalAI, get_conversational_ai
-from pbx.features.data_residency_controls import DataResidencyControls, get_data_residency
-from pbx.features.dns_srv_failover import DNSSRVFailover, get_dns_srv_failover
-from pbx.features.geographic_redundancy import GeographicRedundancy, get_geographic_redundancy
-from pbx.features.mobile_apps import MobileAppFramework, get_mobile_app_framework
+from pbx.features.bi_integration import BIIntegration
+from pbx.features.call_blending import CallBlending
+from pbx.features.call_quality_prediction import CallQualityPrediction
+from pbx.features.call_recording_analytics import RecordingAnalytics
+from pbx.features.call_tagging import CallTagging
+from pbx.features.conversational_ai import ConversationalAI
+from pbx.features.data_residency_controls import DataResidencyControls
+from pbx.features.dns_srv_failover import DNSSRVFailover
+from pbx.features.geographic_redundancy import GeographicRedundancy
+from pbx.features.mobile_apps import MobileAppFramework
 from pbx.features.mobile_number_portability import (
     MobileNumberPortability,
-    get_mobile_number_portability,
 )
-from pbx.features.predictive_dialing import PredictiveDialer, get_predictive_dialer
-from pbx.features.predictive_voicemail_drop import VoicemailDropSystem, get_voicemail_drop
-from pbx.features.session_border_controller import SessionBorderController, get_sbc
-from pbx.features.video_codec import VideoCodecManager, get_video_codec_manager
-from pbx.features.voice_biometrics import VoiceBiometrics, get_voice_biometrics
+from pbx.features.predictive_dialing import PredictiveDialer
+from pbx.features.predictive_voicemail_drop import VoicemailDropSystem
+from pbx.features.session_border_controller import SessionBorderController
+from pbx.features.video_codec import VideoCodecManager
+from pbx.features.voice_biometrics import VoiceBiometrics
 
 
 def test_conversational_ai():
@@ -369,8 +368,6 @@ def test_session_border_controller():
 def test_data_residency_controls():
     """Test Data Residency Controls framework"""
     print("\nTesting Data Residency Controls...")
-
-    from pbx.features.data_residency_controls import DataCategory
 
     residency = DataResidencyControls()
     assert residency is not None, "Residency should initialize"

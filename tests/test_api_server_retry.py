@@ -11,7 +11,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pbx.api.rest_api import PBXAPIServer, ReusableHTTPServer
+from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
 
@@ -127,7 +127,7 @@ def test_retry_on_port_in_use():
     finally:
         # Always close the blocker socket
         blocker.close()
-        print(f"  ✓ Blocker socket closed")
+        print("  ✓ Blocker socket closed")
         time.sleep(0.5)  # Give time for OS to release the port
 
     # Create a new API server instance and try again

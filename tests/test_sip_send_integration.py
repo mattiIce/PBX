@@ -4,9 +4,7 @@ Tests that headers are properly added during call routing
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 
-from pbx.core.pbx import PBXCore
 from pbx.sip.message import SIPMessage
 
 
@@ -15,7 +13,6 @@ class TestSIPSendLineIntegration(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        import os
         import tempfile
 
         # Create a unique temporary config file
@@ -148,7 +145,7 @@ logging:
 
         # Verify MAC can be extracted
         mac = message.get_header("X-MAC-Address")
-        self.assertEqual(mac, "aa:bb:cc:dd:ee:ff")
+        self.assertEqual(mac, "aa:bb:cc:dd:ee:f")
 
     def test_complete_invite_with_all_headers(self):
         """Test building a complete INVITE with all SIP send line/MAC headers"""

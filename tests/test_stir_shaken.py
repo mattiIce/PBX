@@ -8,8 +8,6 @@ import json
 import os
 import sys
 import tempfile
-import time
-from datetime import datetime, timedelta
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -238,7 +236,7 @@ def test_create_identity_header():
     assert "ppt=" in identity, "Identity should contain ppt parameter"
     assert "shaken" in identity, "Identity should contain shaken"
 
-    print(f"  ✓ Created Identity header")
+    print("  ✓ Created Identity header")
     return True
 
 

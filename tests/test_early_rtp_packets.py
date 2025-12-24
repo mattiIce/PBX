@@ -58,7 +58,7 @@ def test_early_rtp_packets():
     relay_handler = relay.active_relays[call_id]["handler"]
     relay_handler.set_endpoints(expected_a, None)  # Note: endpoint B is None
     print(f"   ✓ Endpoint A set to: {expected_a}")
-    print(f"   ⚠ Endpoint B NOT set yet (simulating pre-200 OK state)")
+    print("   ⚠ Endpoint B NOT set yet (simulating pre-200 OK state)")
 
     # Create test sockets for "phones"
     print("\n3. Creating test endpoints...")

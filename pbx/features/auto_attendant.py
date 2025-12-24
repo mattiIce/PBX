@@ -5,7 +5,6 @@ Provides automated call answering and menu navigation
 
 import os
 import sqlite3
-import threading
 import time
 from enum import Enum
 
@@ -260,7 +259,7 @@ class AutoAttendant:
     def add_menu_option(self, digit, destination, description=""):
         """Add or update a menu option and persist to database"""
         if not self.enabled:
-            self.logger.error(f"Cannot add menu option: Auto attendant feature is not enabled")
+            self.logger.error("Cannot add menu option: Auto attendant feature is not enabled")
             return False
 
         self.menu_options[digit] = {"destination": destination, "description": description}
@@ -270,7 +269,7 @@ class AutoAttendant:
     def remove_menu_option(self, digit):
         """Remove a menu option and delete from database"""
         if not self.enabled:
-            self.logger.error(f"Cannot remove menu option: Auto attendant feature is not enabled")
+            self.logger.error("Cannot remove menu option: Auto attendant feature is not enabled")
             return False
 
         if digit in self.menu_options:
@@ -484,10 +483,8 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     Args:
         output_dir: Directory to save audio files
     """
-    import math
-    import struct
 
-    from pbx.utils.audio import build_wav_header, generate_voice_prompt
+    from pbx.utils.audio import generate_voice_prompt
 
     logger = get_logger()
 

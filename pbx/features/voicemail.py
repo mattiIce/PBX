@@ -5,7 +5,6 @@ Voicemail system
 import os
 from datetime import datetime
 
-from pbx.utils.config import Config
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
 
 try:
@@ -16,7 +15,7 @@ except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
 try:
-    from pbx.features.voicemail_transcription import VoicemailTranscriptionService
+    pass
 
     TRANSCRIPTION_AVAILABLE = True
 except ImportError:
@@ -169,10 +168,9 @@ class VoicemailBox:
 
         # Save to database if available
         if self.database and self.database.enabled:
-            self.logger.info(f"Saving voicemail metadata to database...")
+            self.logger.info("Saving voicemail metadata to database...")
             try:
-                placeholder = self._get_db_placeholder()
-                query = f"""
+                query = """
                 INSERT INTO voicemail_messages
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
                 VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
@@ -210,9 +208,7 @@ class VoicemailBox:
                 self.logger.error(f"  Message ID: {message_id}")
                 self.logger.error(f"  Extension: {self.extension_number}")
         else:
-            self.logger.warning(
-                f"Database not available - voicemail metadata NOT saved to database"
-            )
+            self.logger.warning("Database not available - voicemail metadata NOT saved to database")
             self.logger.warning(f"  Message ID: {message_id} stored as file only")
 
         # Transcribe voicemail if enabled
@@ -222,7 +218,7 @@ class VoicemailBox:
             transcription_result = self.transcription_service.transcribe(file_path)
 
             if transcription_result["success"]:
-                self.logger.info(f"✓ Voicemail transcribed successfully")
+                self.logger.info("✓ Voicemail transcribed successfully")
                 self.logger.info(
                     f"  Confidence: {
                         transcription_result['confidence']:.2%}"
@@ -239,8 +235,7 @@ class VoicemailBox:
                 # Update database with transcription
                 if self.database and self.database.enabled:
                     try:
-                        placeholder = self._get_db_placeholder()
-                        query = f"""
+                        query = """
                         UPDATE voicemail_messages
                         SET transcription_text = {placeholder},
                             transcription_confidence = {placeholder},
@@ -260,7 +255,7 @@ class VoicemailBox:
                                 message_id,
                             ),
                         )
-                        self.logger.info(f"✓ Transcription saved to database")
+                        self.logger.info("✓ Transcription saved to database")
                     except Exception as e:
                         self.logger.error(f"✗ Error saving transcription to database: {e}")
             else:
@@ -366,10 +361,9 @@ class VoicemailBox:
 
                 # Update database if available
                 if self.database and self.database.enabled:
-                    self.logger.info(f"Updating voicemail listened status in database...")
+                    self.logger.info("Updating voicemail listened status in database...")
                     try:
-                        placeholder = self._get_db_placeholder()
-                        query = f"""
+                        query = """
                         UPDATE voicemail_messages
                         SET listened = {placeholder}
                         WHERE message_id = {placeholder}
@@ -383,7 +377,7 @@ class VoicemailBox:
                         self.logger.error(f"✗ Error updating voicemail in database: {e}")
                 else:
                     self.logger.warning(
-                        f"Database not available - listened status not persisted to database"
+                        "Database not available - listened status not persisted to database"
                     )
 
                 break
@@ -412,10 +406,9 @@ class VoicemailBox:
 
                 # Delete from database if available
                 if self.database and self.database.enabled:
-                    self.logger.info(f"Deleting voicemail from database...")
+                    self.logger.info("Deleting voicemail from database...")
                     try:
-                        placeholder = self._get_db_placeholder()
-                        query = f"""
+                        query = """
                         DELETE FROM voicemail_messages
                         WHERE message_id = {placeholder}
                         """  # nosec B608 - placeholders are safely parameterized
@@ -427,7 +420,7 @@ class VoicemailBox:
                     except Exception as e:
                         self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
                 else:
-                    self.logger.warning(f"  Database not available - only file deleted")
+                    self.logger.warning("  Database not available - only file deleted")
 
                 # Remove from list
                 self.messages.pop(i)
@@ -474,7 +467,7 @@ class VoicemailBox:
                             else:
                                 # Fallback for Python < 3.7
                                 # Try common timestamp formats
-                                for fmt in ["%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"]:
+                                for fmt in ["%Y-%m-%d %H:%M:%S.%", "%Y-%m-%d %H:%M:%S"]:
                                     try:
                                         timestamp = datetime.strptime(timestamp, fmt)
                                         break
@@ -533,12 +526,10 @@ class VoicemailBox:
                 return
             except Exception as e:
                 self.logger.error(f"✗ Error loading voicemail messages from database: {e}")
-                self.logger.warning(f"  Falling back to loading from file system")
+                self.logger.warning("  Falling back to loading from file system")
                 # Fall back to loading from disk
         else:
-            self.logger.warning(
-                f"Database not available - loading voicemails from file system only"
-            )
+            self.logger.warning("Database not available - loading voicemails from file system only")
 
         # Load from disk if database is not available or failed
         if not os.path.exists(self.storage_path):
@@ -653,14 +644,14 @@ class VoicemailBox:
         try:
             # Verify audio data exists
             if not audio_data:
-                self.logger.error(f"Cannot save greeting: audio data is empty")
+                self.logger.error("Cannot save greeting: audio data is empty")
                 return False
 
             # Check for complete WAV/RIFF header (warn but don't fail for tests)
             if len(audio_data) >= MIN_WAV_HEADER_SIZE:
                 if not (audio_data.startswith(b"RIFF") and audio_data[8:12] == b"WAVE"):
                     self.logger.warning(
-                        f"Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
+                        "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
                     )
 
             with open(self.greeting_path, "wb") as f:
@@ -875,7 +866,7 @@ class VoicemailIVR:
                 f"[VM IVR] ⚠️  PIN DEBUG LOGGING ENABLED for extension {extension_number} - TESTING ONLY!"
             )
             self.logger.warning(
-                f"[VM IVR] ⚠️  Set DEBUG_VM_PIN=false to disable sensitive PIN logging"
+                "[VM IVR] ⚠️  Set DEBUG_VM_PIN=false to disable sensitive PIN logging"
             )
 
         self.logger.info(f"Voicemail IVR initialized for extension {extension_number}")
@@ -958,7 +949,7 @@ class VoicemailIVR:
             if pin_valid:
                 self.state = self.STATE_MAIN_MENU
                 unread_count = len(self.mailbox.get_messages(unread_only=True))
-                self.logger.info(f"[VM IVR PIN] ✓ PIN accepted, transitioning to main menu")
+                self.logger.info("[VM IVR PIN] ✓ PIN accepted, transitioning to main menu")
                 return {
                     "action": "play_prompt",
                     "prompt": "main_menu",
@@ -971,7 +962,7 @@ class VoicemailIVR:
                 )
                 if self.pin_attempts >= self.max_pin_attempts:
                     self.state = self.STATE_GOODBYE
-                    self.logger.warning(f"[VM IVR PIN] Maximum PIN attempts reached, hanging up")
+                    self.logger.warning("[VM IVR PIN] Maximum PIN attempts reached, hanging up")
                     return {
                         "action": "hangup",
                         "prompt": "goodbye",

@@ -81,7 +81,7 @@ class JitterBuffer:
         self.transit_time_variance = 0.0
 
         self.logger.info(
-            f"Jitter buffer initialized: "
+            "Jitter buffer initialized: "
             f"initial={self.initial_length_ms}ms, "
             f"max={self.max_length_ms}ms, "
             f"adaptive={self.adaptive}"
@@ -237,7 +237,7 @@ class JitterBuffer:
         self.current_length_ms += (target_ms - self.current_length_ms) * 0.1
 
         self.logger.debug(
-            f"Adaptive jitter buffer: jitter={self.jitter_estimate*1000:.1f}ms, "
+            f"Adaptive jitter buffer: jitter={self.jitter_estimate * 1000:.1f}ms, "
             f"buffer={self.current_length_ms:.1f}ms"
         )
 

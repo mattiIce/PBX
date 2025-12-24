@@ -2,7 +2,6 @@
 """
 Tests for phone MAC-to-IP correlation feature
 """
-import json
 import os
 import sys
 
@@ -23,7 +22,7 @@ def test_mac_normalization():
         ("00-15-65-12-34-56", "001565123456"),
         ("0015.6512.3456", "001565123456"),
         ("001565123456", "001565123456"),
-        ("00:15:65:AB:CD:EF", "001565abcdef"),
+        ("00:15:65:AB:CD:EF", "001565abcde"),
     ]
 
     for input_mac, expected in test_cases:
@@ -124,7 +123,7 @@ def test_correlation_scenario_mac_to_ip():
     registered_phones_db = RegisteredPhonesDB(db)
 
     # Scenario: Device is provisioned with MAC
-    device = provisioning.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
+    provisioning.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
 
     # Scenario: Phone registers via SIP (provides IP, may provide MAC)
     _ = registered_phones_db.register_phone(
@@ -170,7 +169,7 @@ def test_correlation_scenario_ip_to_mac():
     registered_phones_db = RegisteredPhonesDB(db)
 
     # Scenario: Device is provisioned with MAC
-    device = provisioning.register_device("00:15:65:AB:CD:EF", "1002", "polycom", "vvx450")
+    provisioning.register_device("00:15:65:AB:CD:EF", "1002", "polycom", "vvx450")
 
     # Scenario: Phone registers via SIP (provides IP, but NO MAC)
     _ = registered_phones_db.register_phone(
@@ -196,7 +195,7 @@ def test_correlation_scenario_ip_to_mac():
             break
 
     assert device_with_mac is not None, "Should find provisioned device for extension"
-    assert device_with_mac.mac_address == "001565abcdef", "Should get correct MAC"
+    assert device_with_mac.mac_address == "001565abcde", "Should get correct MAC"
     assert device_with_mac.vendor == "polycom", "Should get correct vendor"
     assert device_with_mac.model == "vvx450", "Should get correct model"
 

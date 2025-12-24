@@ -8,7 +8,6 @@ import os
 import socket
 import struct
 import sys
-import threading
 import time
 
 # Add parent directory to path

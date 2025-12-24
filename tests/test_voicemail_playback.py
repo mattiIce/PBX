@@ -85,7 +85,7 @@ def test_rtp_player_play_file():
         player.stop()
 
         # Test should succeed if file was parsed correctly
-        assert result or result == False  # Either outcome is acceptable for this test
+        assert result or result is False  # Either outcome is acceptable for this test
 
         print("✓ RTP player play_file works")
 
@@ -124,7 +124,7 @@ def test_voicemail_access_plays_messages():
         messages = mailbox.get_messages()
         assert len(messages) == 1
         assert messages[0]["caller_id"] == "1002"
-        assert messages[0]["listened"] == False
+        assert messages[0]["listened"] is False
 
         print("✓ Voicemail message saved successfully")
 

@@ -103,7 +103,7 @@ def test_webhook_subscription():
     # Test event matching
     assert subscription.matches_event("call.started"), "Should match call.started"
     assert subscription.matches_event("call.ended"), "Should match call.ended"
-    assert subscription.matches_event("voicemail.new") == False, "Should not match voicemail.new"
+    assert subscription.matches_event("voicemail.new") is False, "Should not match voicemail.new"
 
     # Test wildcard subscription
     wildcard_sub = WebhookSubscription(url="http://localhost:9999/all", events=["*"])
@@ -113,7 +113,7 @@ def test_webhook_subscription():
     # Test disabled subscription
     subscription.enabled = False
     assert (
-        subscription.matches_event("call.started") == False
+        subscription.matches_event("call.started") is False
     ), "Disabled subscription should not match"
 
     print("✓ Webhook subscription works")
@@ -191,7 +191,7 @@ def test_webhook_subscription_management():
     # Disable subscription
     success = webhook_system.disable_subscription("http://localhost:9999/test")
     assert success, "Should disable successfully"
-    assert webhook_system.subscriptions[0].enabled == False, "Should be disabled"
+    assert webhook_system.subscriptions[0].enabled is False, "Should be disabled"
 
     # Enable subscription
     success = webhook_system.enable_subscription("http://localhost:9999/test")
@@ -205,7 +205,7 @@ def test_webhook_subscription_management():
 
     # Try to remove non-existent subscription
     success = webhook_system.remove_subscription("http://localhost:9999/nonexistent")
-    assert success == False, "Should return False for non-existent"
+    assert success is False, "Should return False for non-existent"
 
     webhook_system.stop()
 
@@ -225,7 +225,7 @@ def test_webhook_disabled():
     config = MockConfig()
     webhook_system = WebhookSystem(config)
 
-    assert webhook_system.enabled == False, "Should be disabled"
+    assert webhook_system.enabled is False, "Should be disabled"
 
     # Try to trigger event (should not fail, just not deliver)
     webhook_system.trigger_event(WebhookEvent.CALL_STARTED, {"call_id": "test-call-789"})

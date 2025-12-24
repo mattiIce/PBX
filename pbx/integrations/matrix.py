@@ -214,7 +214,7 @@ class MatrixIntegration:
             return False
 
         message = (
-            f"📞 **Missed Call**\n\n"
+            "📞 **Missed Call**\n\n"
             f"Extension: {extension}\n"
             f"From: {caller_id}\n"
             f"Time: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
@@ -246,7 +246,7 @@ class MatrixIntegration:
             return False
 
         message = (
-            f"📬 **New Voicemail**\n\n"
+            "📬 **New Voicemail**\n\n"
             f"Extension: {extension}\n"
             f"From: {caller_id}\n"
             f"Duration: {duration}s"

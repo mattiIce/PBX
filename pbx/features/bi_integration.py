@@ -8,7 +8,10 @@ import json
 import os
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from tableauhyperapi import TableDefinition
 
 from pbx.utils.logger import get_logger
 
@@ -228,7 +231,6 @@ class BIIntegration:
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.xlsx"
 
         try:
-            import openpyxl
             from openpyxl import Workbook
 
             wb = Workbook()
@@ -326,9 +328,6 @@ class BIIntegration:
                 CreateMode,
                 HyperProcess,
                 Inserter,
-                SqlType,
-                TableDefinition,
-                TableName,
                 Telemetry,
             )
 

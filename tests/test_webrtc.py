@@ -4,7 +4,6 @@ Test WebRTC browser calling support
 """
 import os
 import sys
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -424,7 +423,7 @@ def test_incoming_call_routing():
 
     # Create incoming call
     call_id = "incoming-call-123"
-    call = pbx_core.call_manager.create_call(call_id, "1001", "1002")
+    pbx_core.call_manager.create_call(call_id, "1001", "1002")
 
     # Caller SDP
     caller_sdp = """v=0
@@ -468,11 +467,11 @@ def test_webrtc_disabled():
     config = MockConfig()
     signaling = WebRTCSignalingServer(config)
 
-    assert signaling.enabled == False, "Should be disabled"
+    assert signaling.enabled is False, "Should be disabled"
 
     # Try to create session (should raise exception)
     try:
-        session = signaling.create_session("1004")
+        signaling.create_session("1004")
         assert False, "Should raise exception when disabled"
     except RuntimeError as e:
         assert "not enabled" in str(e).lower(), "Should have appropriate error message"

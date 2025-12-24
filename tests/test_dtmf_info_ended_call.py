@@ -11,9 +11,8 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.core.call import Call, CallState
+from pbx.core.call import CallState
 from pbx.core.pbx import PBXCore
-from pbx.utils.config import Config
 
 
 def test_dtmf_info_for_ended_call_no_warning():
@@ -92,7 +91,7 @@ def test_dtmf_info_for_ended_call_no_warning():
     # Split log into lines and check that lines mentioning DTMF don't contain
     # WARNING
     log_lines = log_output.split("\n")
-    dtmf_lines = [line for line in log_lines if "dtmf" in line.lower() and "ended" in line.lower()]
+    dtmf_lines = [line for line in log_lines if "dtm" in line.lower() and "ended" in line.lower()]
     for line in dtmf_lines:
         assert "WARNING" not in line, f"Found WARNING in DTMF log line: {line}"
 

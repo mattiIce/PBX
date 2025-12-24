@@ -38,8 +38,8 @@ def test_security_monitor_initialization():
 
     monitor = SecurityMonitor(config)
     assert monitor is not None, "Monitor should be created"
-    assert monitor.fips_mode == True, "FIPS mode should be enabled"
-    assert monitor.enforce_fips == True, "FIPS enforcement should be enabled"
+    assert monitor.fips_mode is True, "FIPS mode should be enabled"
+    assert monitor.enforce_fips is True, "FIPS enforcement should be enabled"
 
     print("  ✓ Security monitor initialization works")
 
@@ -131,7 +131,7 @@ def test_audit_logging_check():
     result = monitor._check_audit_logging()
 
     assert result["status"] == "PASS", "Audit logging check should pass"
-    assert result["details"]["enabled"] == True, "Audit logging should be enabled"
+    assert result["details"]["enabled"] is True, "Audit logging should be enabled"
     print("  ✓ Audit logging check works")
 
 

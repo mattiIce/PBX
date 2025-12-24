@@ -4,13 +4,11 @@ Test paging system integration with PBX core
 """
 import os
 import sys
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.paging import PagingSystem
-from pbx.utils.config import Config
 
 
 def test_paging_system_initialization():
@@ -89,8 +87,8 @@ def test_paging_extension_detection():
     assert paging.is_paging_extension("702"), "702 should be paging extension"
 
     # Test non-paging extensions
-    assert paging.is_paging_extension("1001") == False, "1001 should not be paging extension"
-    assert paging.is_paging_extension("8001") == False, "8001 should not be paging extension"
+    assert paging.is_paging_extension("1001") is False, "1001 should not be paging extension"
+    assert paging.is_paging_extension("8001") is False, "8001 should not be paging extension"
 
     print("✓ Paging extension detection works")
     return True
@@ -132,7 +130,7 @@ def test_zone_management():
 
     # Try to add duplicate zone
     success = paging.add_zone(extension="701", name="Duplicate Zone", description="Should fail")
-    assert success == False, "Should not add duplicate zone"
+    assert success is False, "Should not add duplicate zone"
 
     # Remove zone
     success = paging.remove_zone("701")
@@ -141,7 +139,7 @@ def test_zone_management():
 
     # Try to remove non-existent zone
     success = paging.remove_zone("999")
-    assert success == False, "Should not remove non-existent zone"
+    assert success is False, "Should not remove non-existent zone"
 
     print("✓ Zone management works")
     return True
@@ -273,7 +271,7 @@ def test_dac_device_configuration():
     success = paging.configure_dac_device(
         device_id="gateway-1", device_type="grandstream_ht802", ip_address="192.168.1.101"
     )
-    assert success == False, "Should not add duplicate device"
+    assert success is False, "Should not add duplicate device"
 
     print("✓ DAC device configuration works")
     return True
@@ -291,8 +289,8 @@ def test_paging_disabled():
     config = MockConfig()
     paging = PagingSystem(config)
 
-    assert paging.enabled == False, "Paging should be disabled"
-    assert paging.is_paging_extension("700") == False, "Should not detect paging extensions"
+    assert paging.enabled is False, "Paging should be disabled"
+    assert paging.is_paging_extension("700") is False, "Should not detect paging extensions"
     assert paging.initiate_page("1001", "700") is None, "Should not initiate page"
     assert len(paging.get_zones()) == 0, "Should return empty zones"
 

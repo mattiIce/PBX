@@ -3,7 +3,7 @@ Call Quality Prediction
 Proactive network issue detection using ML
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -391,6 +391,41 @@ class CallQualityPrediction:
         if call_id in self.active_predictions:
             del self.active_predictions[call_id]
 
+    def _extract_features_and_targets(self, historical_data: List[Dict]) -> tuple:
+        """Extract features and targets from historical data"""
+        features = []
+        targets = []
+
+        for sample in historical_data:
+            # Feature vector: [latency, jitter, packet_loss, bandwidth]
+            feature_vector = [
+                sample.get("latency", 0),
+                sample.get("jitter", 0),
+                sample.get("packet_loss", 0),
+                sample.get("bandwidth", 0),
+            ]
+
+            # Add time-based feature if available
+            if "time_of_day" in sample:
+                # Normalize hour to 0-1 range
+                feature_vector.append(sample["time_of_day"] / 24.0)
+            else:
+                feature_vector.append(0.5)  # Default to midday
+
+            # Add codec feature if available (one-hot encoded)
+            codec = sample.get("codec", "unknown")
+            codec_features = [
+                1.0 if codec == "g711" else 0.0,
+                1.0 if codec == "g722" else 0.0,
+                1.0 if codec == "opus" else 0.0,
+            ]
+            feature_vector.extend(codec_features)
+
+            features.append(feature_vector)
+            targets.append(sample.get("mos_score", 4.0))
+
+        return np.array(features), np.array(targets)
+
     def train_model(self, historical_data: List[Dict]):
         """
         Train ML model with historical data using RandomForest
@@ -412,39 +447,7 @@ class CallQualityPrediction:
         if SKLEARN_AVAILABLE:
             try:
                 # Extract features and target
-                features = []
-                targets = []
-
-                for sample in historical_data:
-                    # Feature vector: [latency, jitter, packet_loss, bandwidth]
-                    feature_vector = [
-                        sample.get("latency", 0),
-                        sample.get("jitter", 0),
-                        sample.get("packet_loss", 0),
-                        sample.get("bandwidth", 0),
-                    ]
-
-                    # Add time-based feature if available
-                    if "time_of_day" in sample:
-                        # Normalize hour to 0-1 range
-                        feature_vector.append(sample["time_of_day"] / 24.0)
-                    else:
-                        feature_vector.append(0.5)  # Default to midday
-
-                    # Add codec feature if available (one-hot encoded)
-                    codec = sample.get("codec", "unknown")
-                    codec_features = [
-                        1.0 if codec == "g711" else 0.0,
-                        1.0 if codec == "g722" else 0.0,
-                        1.0 if codec == "opus" else 0.0,
-                    ]
-                    feature_vector.extend(codec_features)
-
-                    features.append(feature_vector)
-                    targets.append(sample.get("mos_score", 4.0))
-
-                X = np.array(features)
-                y = np.array(targets)
+                X, y = self._extract_features_and_targets(historical_data)
 
                 # Normalize features for better performance
                 self.scaler = StandardScaler()
@@ -481,7 +484,7 @@ class CallQualityPrediction:
                 ]
                 importance = self.rf_model.feature_importances_
 
-                self.logger.info(f"RandomForest model training completed")
+                self.logger.info("RandomForest model training completed")
                 self.logger.info(f"  Training R-squared: {r_squared:.3f}")
                 self.logger.info(f"  Features: {X.shape[1]}")
                 self.logger.info(
@@ -584,7 +587,7 @@ class CallQualityPrediction:
 
             r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
-            self.logger.info(f"Linear regression model training completed")
+            self.logger.info("Linear regression model training completed")
             self.logger.info(f"  Training R-squared: {r_squared:.3f}")
             self.logger.info(f"  Features: {n_features}")
             self.logger.info(f"  Model weights: {[f'{w:.3f}' for w in self.model_weights[:4]]}")

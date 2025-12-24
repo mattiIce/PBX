@@ -3,7 +3,6 @@ Database layer for Conversational AI Assistant
 Provides persistence for conversations, intents, and statistics
 """
 
-import json
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -340,7 +339,7 @@ class ConversationalAIDatabase:
             cursor.execute(sql)
 
             if self.db.db_type == "postgresql":
-                columns = [desc[0] for desc in cursor.description]
+                [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 return {row[0]: row[1] for row in rows}
             else:

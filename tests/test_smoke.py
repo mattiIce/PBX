@@ -3,9 +3,7 @@
 Smoke Tests for PBX System
 Quick validation of critical functionality
 """
-import os
 import sys
-import time
 import urllib.request
 from pathlib import Path
 
@@ -37,11 +35,6 @@ class SmokeTestRunner:
 
     def test_imports(self):
         """Test that core modules can be imported"""
-        from pbx.api.rest_api import PBXAPIServer
-        from pbx.core.pbx import PBXCore
-        from pbx.rtp.handler import RTPHandler
-        from pbx.sip.server import SIPServer
-        from pbx.utils.config import Config
 
     def test_config_loading(self):
         """Test configuration loading"""

@@ -109,7 +109,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # Security headers
         # X-Content-Type-Options: Prevent MIME type sniffing
-        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Content-Type-Options", "nosnif")
 
         # X-Frame-Options: Prevent clickjacking
         self.send_header("X-Frame-Options", "DENY")
@@ -130,11 +130,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # Note: This could be more restrictive if login.html used same-origin
         # detection for standard ports (80/443) instead of hardcoding port 9000
         csp = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; "
-            "connect-src 'self' http://*:9000 https://*:9000;"
+            "default-src 'sel'; "
+            "script-src 'sel' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'sel' 'unsafe-inline'; "
+            "img-src 'sel' data:; "
+            "connect-src 'sel' http://*:9000 https://*:9000;"
         )
         self.send_header("Content-Security-Policy", csp)
 
@@ -271,7 +271,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_call()
             elif path == "/api/webrtc/hangup":
                 self._handle_webrtc_hangup()
-            elif path == "/api/webrtc/dtmf":
+            elif path == "/api/webrtc/dtm":
                 self._handle_webrtc_dtmf()
             elif path == "/api/emergency/contacts":
                 self._handle_add_emergency_contact()
@@ -596,7 +596,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_config()
             elif path == "/api/config/section":
                 self._handle_update_config_section()
-            elif path == "/api/config/dtmf":
+            elif path == "/api/config/dtm":
                 self._handle_update_dtmf_config()
             elif path.startswith("/api/voicemail/"):
                 self._handle_update_voicemail(path)
@@ -793,7 +793,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_config()
             elif path == "/api/config/full":
                 self._handle_get_full_config()
-            elif path == "/api/config/dtmf":
+            elif path == "/api/config/dtm":
                 self._handle_get_dtmf_config()
             elif path == "/api/ssl/status":
                 self._handle_get_ssl_status()
@@ -1170,41 +1170,41 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         """Handle HEAD requests.
-        
+
         HEAD requests are like GET requests but should not return a body.
         This is commonly used to check if a resource exists without downloading it.
         The response headers and status code should be the same as for GET.
-        
+
         We implement this by temporarily replacing wfile with a BytesIO buffer that
         captures the entire response (headers + body), then we extract and send only
         the headers portion (everything up to the double CRLF separator).
         """
         # Store original wfile
         original_wfile = self.wfile
-        
+
         # Create a temporary buffer to capture the response
         temp_buffer = BytesIO()
-        
+
         # Replace wfile with buffer
         self.wfile = temp_buffer
-        
+
         try:
             # Process the request like a GET
             self.do_GET()
         finally:
             # Restore original wfile
             self.wfile = original_wfile
-            
+
             # Get the response content
             response_data = temp_buffer.getvalue()
             temp_buffer.close()
-            
+
             # Send only the headers (everything up to the double CRLF that separates headers from body)
             # The headers are already in response_data, we just need to find where they end
-            header_end = response_data.find(b'\r\n\r\n')
+            header_end = response_data.find(b"\r\n\r\n")
             if header_end != -1:
                 # Send only headers (including the double CRLF)
-                self.wfile.write(response_data[:header_end + 4])
+                self.wfile.write(response_data[: header_end + 4])
             else:
                 # If no double CRLF found, send everything (shouldn't happen in normal cases)
                 self.wfile.write(response_data)
@@ -2260,7 +2260,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
                 logger.warning("      -H 'Content-Type: application/json' \\")
                 logger.warning(
-                    f'      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
+                    '      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
                 )
                 self._send_json({"error": "Device or template not found"}, 404)
         except Exception as e:
@@ -10089,7 +10089,7 @@ def get_process_using_port(port):
     try:
         # Try lsof first (most reliable)
         result = subprocess.run(
-            ["lsof", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
+            ["lso", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
         )
         if result.returncode == 0 and result.stdout:
             lines = result.stdout.strip().split("\n")

@@ -4,7 +4,7 @@ Routes calls to agents based on their skills and expertise
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Set
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 

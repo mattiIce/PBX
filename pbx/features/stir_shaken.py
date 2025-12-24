@@ -6,14 +6,13 @@ Provides cryptographic verification of caller identity to prevent spoofing.
 """
 
 import base64
-import hashlib
 import json
 import logging
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional, Tuple
 
 try:
     from cryptography import x509

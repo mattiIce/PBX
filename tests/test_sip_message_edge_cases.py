@@ -8,7 +8,7 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.sip.message import SIPMessage, SIPMessageBuilder
+from pbx.sip.message import SIPMessage
 
 
 def test_empty_message():

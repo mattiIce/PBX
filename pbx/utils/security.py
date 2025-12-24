@@ -90,14 +90,14 @@ class PasswordPolicy:
             return (
                 False,
                 f"Password must be at least {
-                self.min_length} characters",
+                    self.min_length} characters",
             )
 
         if len(password) > self.max_length:
             return (
                 False,
                 f"Password must be no more than {
-                self.max_length} characters",
+                    self.max_length} characters",
             )
 
         # Check for common weak passwords (case-insensitive)
@@ -119,7 +119,7 @@ class PasswordPolicy:
             return (
                 False,
                 f"Password must contain at least one special character: {
-                self.SPECIAL_CHARS}",
+                    self.SPECIAL_CHARS}",
             )
 
         # Check for sequential characters (4 or more in sequence)
@@ -929,7 +929,7 @@ class ThreatDetector:
                 "masscan",
                 "zap",
                 "burp",
-                "w3af",
+                "w3a",
                 "metasploit",
             ]
             user_agent_lower = user_agent.lower()
@@ -1012,7 +1012,7 @@ class ThreatDetector:
             else:
                 # SQLite: build the interval string manually (validated hours
                 # parameter)
-                query = f"""
+                query = """
                 SELECT event_type, severity, COUNT(*) as count
                 FROM security_threat_events
                 WHERE timestamp > datetime('now', '-{int(hours)} hours')

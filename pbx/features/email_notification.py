@@ -194,11 +194,11 @@ class EmailNotifier:
             msg["Date"] = formatdate(localtime=True)
             msg["Subject"] = (
                 f"Voicemail Reminder: {unread_count} Unread Message{
-                's' if unread_count > 1 else ''}"
+                    's' if unread_count > 1 else ''}"
             )
 
             # Create body
-            body = f"Hello,\n\n"
+            body = "Hello,\n\n"
             body += f"You have {unread_count} unread voicemail message{
                 's' if unread_count > 1 else ''} "
             body += f"in your mailbox (Extension {extension_number}):\n\n"

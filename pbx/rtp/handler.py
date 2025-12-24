@@ -95,11 +95,11 @@ class RTPHandler:
         #             timestamp(32), SSRC(32)
 
         header = struct.unpack("!BBHII", data[:12])
-        version = (header[0] >> 6) & 0x03
+        (header[0] >> 6) & 0x03
         payload_type = header[1] & 0x7F
         seq_num = header[2]
-        timestamp = header[3]
-        ssrc = header[4]
+        header[3]
+        header[4]
 
         payload = data[12:]
 
@@ -416,7 +416,7 @@ class RTPRelayHandler:
                         is_from_a = True
                         expected_str = (
                             f" (expected {
-                            self.endpoint_a})"
+                                self.endpoint_a})"
                             if self.endpoint_a
                             else " (no SDP endpoint set)"
                         )
@@ -443,7 +443,7 @@ class RTPRelayHandler:
                         is_from_b = True
                         expected_str = (
                             f" (expected {
-                            self.endpoint_b})"
+                                self.endpoint_b})"
                             if self.endpoint_b
                             else " (no SDP endpoint set)"
                         )
@@ -526,11 +526,11 @@ class RTPRelayHandler:
                         # From A but B not known at all yet - must drop packet
                         # This is rare since endpoint_b is usually set soon
                         # after endpoint_a
-                        self.logger.debug(f"Packet from A dropped - waiting for B endpoint")
+                        self.logger.debug("Packet from A dropped - waiting for B endpoint")
                     elif is_from_b:
                         # From B but A not known at all yet - must drop packet
                         # This is rare since endpoint_a is usually set first
-                        self.logger.debug(f"Packet from B dropped - waiting for A endpoint")
+                        self.logger.debug("Packet from B dropped - waiting for A endpoint")
 
             except Exception as e:
                 if self.running:
@@ -622,7 +622,7 @@ class RTPRecorder:
                     # These are DTMF signaling packets, not audio
                     if payload_type == 101:
                         self.logger.debug(
-                            f"Received RFC 2833 telephone-event packet (filtered from recording)"
+                            "Received RFC 2833 telephone-event packet (filtered from recording)"
                         )
                         # If we have an RFC 2833 handler, delegate event
                         # processing
@@ -756,7 +756,7 @@ class RTPPlayer:
             bool: True if successful
         """
         if not self.running or not self.socket:
-            self.logger.warning(f"Cannot send audio - RTP player not running")
+            self.logger.warning("Cannot send audio - RTP player not running")
             return False
 
         try:
@@ -791,8 +791,6 @@ class RTPPlayer:
                     self.timestamp = (self.timestamp + samples_per_packet) & 0xFFFFFFFF
 
                 # Small delay to pace packets (20ms for 160 samples at 8kHz)
-                import time
-
                 time.sleep(0.020)
 
             self.logger.info(
@@ -890,7 +888,7 @@ class RTPPlayer:
                 if len(size_bytes) < 4:
                     self.logger.error(f"Truncated WAV file (no file size): {file_path}")
                     return False
-                file_size = struct.unpack("<I", size_bytes)[0]
+                struct.unpack("<I", size_bytes)[0]
 
                 wave = f.read(4)
                 if wave != b"WAVE" or len(wave) < 4:
@@ -926,13 +924,12 @@ class RTPPlayer:
                         audio_format = struct.unpack("<H", fmt_data[0:2])[0]
                         num_channels = struct.unpack("<H", fmt_data[2:4])[0]
                         sample_rate = struct.unpack("<I", fmt_data[4:8])[0]
-                        byte_rate = struct.unpack("<I", fmt_data[8:12])[0]
-                        block_align = struct.unpack("<H", fmt_data[12:14])[0]
+                        # Skip byte_rate and block_align - not needed for playback
                         bits_per_sample = struct.unpack("<H", fmt_data[14:16])[0]
 
                         # Skip any extra format bytes
                         if chunk_size > 16:
-                            extra_bytes = f.read(chunk_size - 16)
+                            f.read(chunk_size - 16)
 
                         # Determine payload type based on format
                         convert_to_pcmu = False
@@ -944,7 +941,7 @@ class RTPPlayer:
                             # G.722 format - already encoded, no conversion
                             # needed
                             payload_type = 9  # G.722
-                            self.logger.info(f"G.722 format detected - already encoded for VoIP.")
+                            self.logger.info("G.722 format detected - already encoded for VoIP.")
                         elif audio_format == WAV_FORMAT_PCM:
                             # PCM format - convert to PCMU (G.711 μ-law) for maximum compatibility
                             # Note: Previously converted to G.722, but G.722
@@ -952,8 +949,8 @@ class RTPPlayer:
                             payload_type = 0  # PCMU
                             convert_to_pcmu = True
                             self.logger.info(
-                                f"PCM format detected - will convert to PCMU (G.711 μ-law) "
-                                f"for maximum compatibility."
+                                "PCM format detected - will convert to PCMU (G.711 μ-law) "
+                                "for maximum compatibility."
                             )
                         else:
                             self.logger.error(f"Unsupported audio format: {audio_format}")
@@ -967,7 +964,7 @@ class RTPPlayer:
 
                     elif chunk_id == b"data":
                         # Found data before fmt - invalid
-                        self.logger.error(f"Invalid WAV structure")
+                        self.logger.error("Invalid WAV structure")
                         return False
                     else:
                         # Skip unknown chunk
@@ -1012,7 +1009,7 @@ class RTPPlayer:
                         # For stereo, we'd need to downmix (take left channel)
                         if num_channels == 2:
                             self.logger.warning(
-                                f"Stereo audio detected, extracting left channel only"
+                                "Stereo audio detected, extracting left channel only"
                             )
                             # Extract left channel (assuming interleaved
                             # samples)
@@ -1169,7 +1166,6 @@ class RTPDTMFListener:
 
     def _listen_loop(self):
         """Listen for RTP packets and detect DTMF tones"""
-        import time
 
         while self.running:
             try:

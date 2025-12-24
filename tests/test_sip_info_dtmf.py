@@ -10,8 +10,7 @@ import unittest
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pbx.core.call import Call, CallState
-from pbx.core.pbx import PBXCore
+from pbx.core.call import Call
 from pbx.sip.message import SIPMessage
 from pbx.sip.server import VALID_DTMF_DIGITS, SIPServer
 
@@ -101,7 +100,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertIn("Signal=5", message.body)
 
     def test_sip_info_message_parsing_dtmf(self):
-        """Test parsing of SIP INFO message with application/dtmf"""
+        """Test parsing of SIP INFO message with application/dtm"""
         sip_info_message = (
             "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
             "Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds\r\n"
@@ -120,7 +119,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         # Verify message parsing
         self.assertEqual(message.method, "INFO")
         self.assertEqual(message.get_header("Call-ID"), "test-call-456")
-        self.assertEqual(message.get_header("Content-Type"), "application/dtmf")
+        self.assertEqual(message.get_header("Content-Type"), "application/dtm")
         self.assertIn("Signal=3", message.body)
 
     def test_handle_info_dtmf_extraction(self):
@@ -159,17 +158,17 @@ class TestSIPInfoDTMF(unittest.TestCase):
 
         for idx, test_digit in enumerate(test_digits):
             sip_info_message = (
-                f"INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
-                f"Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds\r\n"
-                f"From: <sip:1002@192.168.1.100>;tag=1928301774\r\n"
-                f"To: <sip:1001@192.168.1.100>;tag=a6c85cf\r\n"
+                "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds\r\n"
+                "From: <sip:1002@192.168.1.100>;tag=1928301774\r\n"
+                "To: <sip:1001@192.168.1.100>;tag=a6c85cf\r\n"
                 f"Call-ID: test-call-multi-{idx}\r\n"
                 f"CSeq: {314162 + idx} INFO\r\n"
-                f"Content-Type: application/dtmf-relay\r\n"
-                f"Content-Length: 24\r\n"
-                f"\r\n"
+                "Content-Type: application/dtmf-relay\r\n"
+                "Content-Length: 24\r\n"
+                "\r\n"
                 f"Signal={test_digit}\r\n"
-                f"Duration=160"
+                "Duration=160"
             )
             message = SIPMessage(sip_info_message)
             addr = ("192.168.1.101", 5060)

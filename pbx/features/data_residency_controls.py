@@ -5,7 +5,7 @@ Geographic data storage options for compliance
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict
 
 from pbx.utils.logger import get_logger
 
@@ -101,7 +101,7 @@ class DataResidencyControls:
         """
         if not self.enabled:
             self.logger.error(
-                f"Cannot configure region: Data residency controls feature is not enabled"
+                "Cannot configure region: Data residency controls feature is not enabled"
             )
             return False
 
@@ -122,7 +122,7 @@ class DataResidencyControls:
         """
         if not self.enabled:
             self.logger.error(
-                f"Cannot set category region: Data residency controls feature is not enabled"
+                "Cannot set category region: Data residency controls feature is not enabled"
             )
             return False
 

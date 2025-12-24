@@ -3,7 +3,6 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger

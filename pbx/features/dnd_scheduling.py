@@ -6,7 +6,7 @@ Automatically sets DND status based on calendar events and scheduled rules
 import threading
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from pbx.features.presence import PresenceStatus
 from pbx.utils.logger import get_logger
@@ -481,6 +481,64 @@ class DNDScheduler:
                     break
                 time.sleep(1)
 
+    def _check_manual_override(self, extension: str, now: datetime) -> bool:
+        """Check if extension has active manual override. Returns True if override is active."""
+        if extension not in self.manual_overrides:
+            return False
+
+        status, until_time = self.manual_overrides[extension]
+        if until_time and now > until_time:
+            # Override expired
+            del self.manual_overrides[extension]
+            return False
+        # Override still active
+        return True
+
+    def _should_apply_dnd(self, extension: str, now: datetime) -> bool:
+        """Determine if DND should be active for extension"""
+        should_dnd = False
+        highest_priority = -1
+
+        # Check time-based rules
+        if extension in self.rules:
+            for rule in self.rules[extension]:
+                if rule.should_apply(now) and rule.priority > highest_priority:
+                    should_dnd = True
+                    highest_priority = rule.priority
+
+        # Check calendar-based DND
+        if self.calendar_dnd_enabled:
+            in_meeting, meeting_info = self.calendar_monitor.is_in_meeting(extension)
+            if in_meeting:
+                # Calendar DND has high priority
+                should_dnd = True
+
+        return should_dnd
+
+    def _apply_dnd_status(self, extension: str, current_status):
+        """Apply DND or IN_MEETING status"""
+        # Save previous status for restoration
+        if extension not in self.previous_statuses:
+            self.previous_statuses[extension] = current_status
+
+        # Set DND or IN_MEETING
+        if self.calendar_dnd_enabled and self.calendar_monitor.is_in_meeting(extension)[0]:
+            self.presence_system.set_status(
+                extension, PresenceStatus.IN_MEETING, "In calendar meeting"
+            )
+        else:
+            self.presence_system.set_status(
+                extension, PresenceStatus.DO_NOT_DISTURB, "Auto-DND (scheduled)"
+            )
+
+    def _remove_dnd_status(self, extension: str):
+        """Remove DND status and restore previous"""
+        # Check if we set this status (not user)
+        if extension in self.previous_statuses:
+            # Restore previous status
+            previous = self.previous_statuses[extension]
+            self.presence_system.set_status(extension, previous)
+
     def _check_all_rules(self):
         """Check all rules and update presence accordingly"""
         if not self.presence_system:
@@ -493,32 +551,11 @@ class DNDScheduler:
         ):
             try:
                 # Check manual override first
-                if extension in self.manual_overrides:
-                    status, until_time = self.manual_overrides[extension]
-                    if until_time and now > until_time:
-                        # Override expired
-                        del self.manual_overrides[extension]
-                    else:
-                        # Override still active
-                        continue
+                if self._check_manual_override(extension, now):
+                    continue
 
                 # Determine if DND should be active
-                should_dnd = False
-                highest_priority = -1
-
-                # Check time-based rules
-                if extension in self.rules:
-                    for rule in self.rules[extension]:
-                        if rule.should_apply(now) and rule.priority > highest_priority:
-                            should_dnd = True
-                            highest_priority = rule.priority
-
-                # Check calendar-based DND
-                if self.calendar_dnd_enabled:
-                    in_meeting, meeting_info = self.calendar_monitor.is_in_meeting(extension)
-                    if in_meeting:
-                        # Calendar DND has high priority
-                        should_dnd = True
+                should_dnd = self._should_apply_dnd(extension, now)
 
                 # Get current status
                 user = self.presence_system.users.get(extension)
@@ -532,33 +569,14 @@ class DNDScheduler:
                     PresenceStatus.DO_NOT_DISTURB,
                     PresenceStatus.IN_MEETING,
                 ]:
-                    # Save previous status for restoration
-                    if extension not in self.previous_statuses:
-                        self.previous_statuses[extension] = current_status
-
-                    # Set DND or IN_MEETING
-                    if (
-                        self.calendar_dnd_enabled
-                        and self.calendar_monitor.is_in_meeting(extension)[0]
-                    ):
-                        self.presence_system.set_status(
-                            extension, PresenceStatus.IN_MEETING, "In calendar meeting"
-                        )
-                    else:
-                        self.presence_system.set_status(
-                            extension, PresenceStatus.DO_NOT_DISTURB, "Auto-DND (scheduled)"
-                        )
+                    self._apply_dnd_status(extension, current_status)
 
                 elif not should_dnd and current_status in [
                     PresenceStatus.DO_NOT_DISTURB,
                     PresenceStatus.IN_MEETING,
                 ]:
-                    # Check if we set this status (not user)
-                    if extension in self.previous_statuses:
-                        # Restore previous status
-                        previous = self.previous_statuses[extension]
-                        self.presence_system.set_status(extension, previous)
-                        del self.previous_statuses[extension]
+                    self._remove_dnd_status(extension)
+                    del self.previous_statuses[extension]
 
             except Exception as e:
                 self.logger.error(f"Error checking DND for {extension}: {e}")

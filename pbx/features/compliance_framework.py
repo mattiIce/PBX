@@ -5,7 +5,7 @@ Note: GDPR and PCI DSS engines are commented out as they are not required for US
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 

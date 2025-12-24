@@ -60,7 +60,7 @@ class VoicemailTranscriptionService:
             )
 
             if self.enabled:
-                self.logger.info(f"Voicemail transcription service initialized")
+                self.logger.info("Voicemail transcription service initialized")
                 self.logger.info(f"  Provider: {self.provider}")
                 if self.provider == "vosk":
                     self.logger.info(f"  Model path: {self.vosk_model_path}")
@@ -238,7 +238,7 @@ class VoicemailTranscriptionService:
                 rec.SetWords(True)  # Enable word-level timestamps
 
                 # Process audio in chunks
-                self.logger.info(f"Processing audio with Vosk (offline)...")
+                self.logger.info("Processing audio with Vosk (offline)...")
                 results = []
 
                 while True:
@@ -259,7 +259,7 @@ class VoicemailTranscriptionService:
             text = " ".join(results).strip()
 
             if text:
-                self.logger.info(f"✓ Transcription successful (offline)")
+                self.logger.info("✓ Transcription successful (offline)")
                 self.logger.info(f"  Text length: {len(text)} characters")
                 self.logger.debug(f"  Text: {text[:100]}...")
                 return {
@@ -324,7 +324,7 @@ class VoicemailTranscriptionService:
             )
 
             # Perform transcription
-            self.logger.info(f"Calling Google Cloud Speech-to-Text API...")
+            self.logger.info("Calling Google Cloud Speech-to-Text API...")
             response = client.recognize(config=config, audio=audio)
 
             # Extract best result
@@ -336,7 +336,7 @@ class VoicemailTranscriptionService:
                     confidence = alternative.confidence
 
                     if text:
-                        self.logger.info(f"✓ Transcription successful")
+                        self.logger.info("✓ Transcription successful")
                         self.logger.info(
                             f"  Text length: {
                                 len(text)} characters"

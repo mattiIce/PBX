@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
-from pbx.utils.database import DatabaseBackend, ProvisionedDevicesDB
+from pbx.utils.database import DatabaseBackend
 
 
 def test_provisioning_persistence():
@@ -40,8 +40,8 @@ def test_provisioning_persistence():
         provisioning1 = PhoneProvisioning(config, database=db1)
 
         # Register some devices
-        device1 = provisioning1.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
-        device2 = provisioning1.register_device("00:15:65:12:34:57", "1002", "polycom", "vvx450")
+        provisioning1.register_device("00:15:65:12:34:56", "1001", "yealink", "t46s")
+        provisioning1.register_device("00:15:65:12:34:57", "1002", "polycom", "vvx450")
 
         # Verify devices were registered
         assert (

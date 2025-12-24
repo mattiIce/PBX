@@ -196,9 +196,7 @@ class SpeechAnalyticsEngine:
         """
         try:
             # Import vosk only when needed
-            import io
             import json
-            import wave
 
             import vosk
 

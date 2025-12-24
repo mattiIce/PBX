@@ -50,7 +50,7 @@ def test_ldap_config_from_ad_credentials():
     for field in required_fields:
         assert field in ldap_config, f"Missing required field: {field}"
 
-    print(f"✓ LDAP config contains all required fields")
+    print("✓ LDAP config contains all required fields")
     print(f"  Server: {ldap_config['server']}")
     print(f"  Port: {ldap_config['port']}")
     print(f"  TLS Mode: {ldap_config['tls_mode']}")
@@ -66,7 +66,7 @@ def test_ldap_config_from_ad_credentials():
         ad_bind_dn = config.get("integrations.active_directory.bind_dn", "")
 
         if ad_server and ad_bind_dn:
-            print(f"✓ AD credentials are available and will be used for LDAP phonebook")
+            print("✓ AD credentials are available and will be used for LDAP phonebook")
     else:
         print("ℹ AD integration is disabled, using explicit ldap_phonebook config")
 

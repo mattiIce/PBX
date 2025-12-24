@@ -3,8 +3,7 @@ Recording Retention Policies
 Automated management of call recording retention and cleanup
 """
 
-import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 

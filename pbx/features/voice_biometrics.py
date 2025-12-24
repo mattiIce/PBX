@@ -4,12 +4,11 @@ Speaker authentication and fraud detection using voice analysis
 """
 
 import hashlib
-import math
 import random
 import struct
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -17,7 +16,6 @@ from pbx.utils.logger import get_logger
 try:
     import numpy as np
     from sklearn.mixture import GaussianMixture
-    from sklearn.preprocessing import StandardScaler
 
     SKLEARN_AVAILABLE = True
 except ImportError:
@@ -26,7 +24,7 @@ except ImportError:
 
 # pyAudioAnalysis for FREE open-source audio feature extraction
 try:
-    from pyAudioAnalysis import audioBasicIO, audioFeatureExtraction
+    from pyAudioAnalysis import audioFeatureExtraction
 
     PYAUDIO_ANALYSIS_AVAILABLE = True
 except ImportError:
@@ -595,7 +593,7 @@ class VoiceBiometrics:
 
         try:
             # Parse 16-bit PCM audio data first
-            sample_count = len(audio_data) // 2
+            len(audio_data) // 2
             samples = []
 
             # Process in pairs of bytes (16-bit samples)
@@ -640,7 +638,7 @@ class VoiceBiometrics:
                             features["spectral_centroid"] = float(np.mean(stFeatures[3]))
                             features["spectral_spread"] = float(np.mean(stFeatures[4]))
                             features["spectral_entropy"] = float(np.mean(stFeatures[5]))
-                            features["spectral_rolloff"] = float(np.mean(stFeatures[7]))
+                            features["spectral_rollof"] = float(np.mean(stFeatures[7]))
 
                             self.logger.debug("Extracted features using pyAudioAnalysis")
 
