@@ -134,7 +134,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
-            "connect-src 'self' http://*:9000 https://*:9000;"
+            "connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
         )
         self.send_header("Content-Security-Policy", csp)
 
