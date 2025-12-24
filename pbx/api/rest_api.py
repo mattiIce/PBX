@@ -130,11 +130,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # Note: This could be more restrictive if login.html used same-origin
         # detection for standard ports (80/443) instead of hardcoding port 9000
         csp = (
-            "default-src 'sel'; "
-            "script-src 'sel' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
-            "style-src 'sel' 'unsafe-inline'; "
-            "img-src 'sel' data:; "
-            "connect-src 'sel' http://*:9000 https://*:9000;"
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "connect-src 'self' http://*:9000 https://*:9000;"
         )
         self.send_header("Content-Security-Policy", csp)
 
