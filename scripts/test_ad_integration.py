@@ -345,7 +345,7 @@ class ADIntegrationTester:
 
         if all_valid:
             self.print_test(
-                "User attributes", "PASS", f"All checked users have required attributes"
+                "User attributes", "PASS", "All checked users have required attributes"
             )
         else:
             self.print_test(

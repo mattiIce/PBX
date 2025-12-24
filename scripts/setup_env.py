@@ -13,7 +13,6 @@ The .env file location:
     - This file is automatically loaded when the PBX system starts
     - It's ignored by Git, so your credentials stay private
 """
-import os
 import sys
 from pathlib import Path
 
@@ -206,11 +205,11 @@ def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
             print(f"  Current: {current_value}")
 
     # Prompt for new value
-    prompt = f"  New value"
+    prompt = "  New value"
     if default and not required:
-        prompt += f" (press Enter to keep current/default)"
+        prompt += " (press Enter to keep current/default)"
     elif required and not current_value:
-        prompt += f" [REQUIRED]"
+        prompt += " [REQUIRED]"
     prompt += ": "
 
     new_value = input(prompt).strip()

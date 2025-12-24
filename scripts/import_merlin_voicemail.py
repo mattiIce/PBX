@@ -32,7 +32,6 @@ import argparse
 import csv
 import json
 import os
-import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -40,9 +39,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.features.voicemail import VoicemailBox, VoicemailSystem
+from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
-from pbx.utils.database import DatabaseBackend, ExtensionDB
+from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 
 
@@ -292,7 +291,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
         print(f"  Status: {'listened' if listened else 'new'}")
 
         if dry_run:
-            print(f"  [DRY RUN] Would import this message")
+            print("  [DRY RUN] Would import this message")
             imported += 1
             continue
 
@@ -336,7 +335,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
         # Check if message already exists
         existing_messages = mailbox.get_messages()
         if any(m["id"] == message_id for m in existing_messages):
-            print(f"  ⚠ Message already exists, skipping")
+            print("  ⚠ Message already exists, skipping")
             skipped += 1
             continue
 
@@ -383,7 +382,7 @@ def import_voicemail_pins(pins, config, database, dry_run=False):
         print(f"  PIN: {pin}")
 
         if dry_run:
-            print(f"  [DRY RUN] Would set this PIN")
+            print("  [DRY RUN] Would set this PIN")
             imported += 1
             continue
 
@@ -393,10 +392,10 @@ def import_voicemail_pins(pins, config, database, dry_run=False):
         # Set PIN
         try:
             if mailbox.set_pin(pin):
-                print(f"  ✓ PIN set successfully")
+                print("  ✓ PIN set successfully")
                 imported += 1
             else:
-                print(f"  ✗ Invalid PIN format (must be 4 digits)")
+                print("  ✗ Invalid PIN format (must be 4 digits)")
                 errors += 1
         except (ValueError, TypeError, RuntimeError) as e:
             print(f"  ✗ Failed to set PIN: {e}")
@@ -440,7 +439,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
         print(f"  File: {greeting_file.name}")
 
         if dry_run:
-            print(f"  [DRY RUN] Would import this greeting")
+            print("  [DRY RUN] Would import this greeting")
             imported += 1
             continue
 
@@ -459,10 +458,10 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
         # Save greeting
         try:
             if mailbox.save_greeting(audio_data):
-                print(f"  ✓ Greeting imported successfully")
+                print("  ✓ Greeting imported successfully")
                 imported += 1
             else:
-                print(f"  ✗ Failed to save greeting")
+                print("  ✗ Failed to save greeting")
                 errors += 1
         except (IOError, OSError, ValueError, RuntimeError) as e:
             print(f"  ✗ Import failed: {e}")
@@ -617,7 +616,7 @@ def main():
     if args.greetings_dir:
         print()
         print("=" * 70)
-        print(f"Importing custom greetings...")
+        print("Importing custom greetings...")
         print("=" * 70)
 
         imported, errors = import_greetings(args.greetings_dir, config, database, args.dry_run)

@@ -6,7 +6,6 @@ This script provides an interactive way to set up phone auto-provisioning
 by asking the user for settings rather than requiring manual REST API calls
 or config file editing.
 """
-import json
 import os
 import sys
 from pathlib import Path
@@ -263,7 +262,7 @@ class PhoneProvisioningSetup:
         # Build provisioning URL
         url_format = f"https://{server_ip}:{port}/provision/{{mac}}.cfg"
 
-        print(f"\nℹ️  Phones will download configuration from:")
+        print("\nℹ️  Phones will download configuration from:")
         print(f"   {url_format}")
         print()
 
@@ -464,7 +463,7 @@ class PhoneProvisioningSetup:
                     if self.add_device_to_config(
                         device["mac"], device["extension"], device["vendor"], device["model"]
                     ):
-                        print(f"   → Added to config.yml as fallback")
+                        print("   → Added to config.yml as fallback")
             else:
                 if self.add_device_to_config(
                     device["mac"], device["extension"], device["vendor"], device["model"]

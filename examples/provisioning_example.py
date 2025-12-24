@@ -17,7 +17,7 @@ def check_pbx_status():
         response = requests.get(f"{BASE_URL}/api/status")
         if response.status_code == 200:
             status = response.json()
-            print(f"✓ PBX is running")
+            print("✓ PBX is running")
             print(f"  - Extensions registered: {status.get('registered_extensions', 0)}")
             print(f"  - Active calls: {status.get('active_calls', 0)}")
             return True
@@ -62,7 +62,7 @@ def register_device(mac, extension, vendor, model):
         result = response.json()
         if result.get("success"):
             device = result.get("device", {})
-            print(f"✓ Device registered successfully!")
+            print("✓ Device registered successfully!")
             print(f"  - Config URL: {device.get('config_url')}")
             return True
 
@@ -124,7 +124,7 @@ def unregister_device(mac):
     if response.status_code == 200:
         result = response.json()
         if result.get("success"):
-            print(f"✓ Device unregistered successfully!")
+            print("✓ Device unregistered successfully!")
             return True
 
     print(f"✗ Unregistration failed: {response.text}")

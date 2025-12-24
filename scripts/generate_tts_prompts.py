@@ -31,7 +31,7 @@ if not is_tts_available():
     print("ERROR: TTS dependencies not installed!")
     print("=" * 70)
     print("")
-    print(f"Please install required packages:")
+    print("Please install required packages:")
     print(f"  {get_tts_requirements()}")
     print("")
     print("After installation, run this script again.")
@@ -296,7 +296,7 @@ The generated files are in proper telephony format:
     logger.info(
         f"Sample Rate: {args.sample_rate} Hz ({'Wideband/G.722' if args.sample_rate == 16000 else 'Narrowband/PCMU'})"
     )
-    logger.info(f"Format: PCM WAV (16-bit, mono)")
+    logger.info("Format: PCM WAV (16-bit, mono)")
     logger.info("")
 
     total_success = 0

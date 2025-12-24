@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from pbx.utils.config import Config
-from pbx.utils.encryption import CRYPTO_AVAILABLE, FIPSEncryption, get_encryption
+from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 
 
 def print_header(text):

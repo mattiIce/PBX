@@ -104,7 +104,7 @@ def example_permission_mapping():
     print("Test Case 2: Sales Representative")
     user_groups = ["CN=Sales,OU=Groups,DC=test,DC=local"]
     permissions = ad._map_groups_to_permissions(user_groups)
-    print(f"  Groups: Sales")
+    print("  Groups: Sales")
     print(f"  Permissions: {', '.join(permissions.keys())}")
     print()
 
@@ -112,7 +112,7 @@ def example_permission_mapping():
     print("Test Case 3: Multi-Role User (Sales + Support)")
     user_groups = ["CN=Sales,OU=Groups,DC=test,DC=local", "CN=Support,OU=Groups,DC=test,DC=local"]
     permissions = ad._map_groups_to_permissions(user_groups)
-    print(f"  Groups: Sales, Support")
+    print("  Groups: Sales, Support")
     print(f"  Permissions: {', '.join(permissions.keys())}")
     print("  Note: User gets combined permissions from both groups")
     print()

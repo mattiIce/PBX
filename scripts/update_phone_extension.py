@@ -20,7 +20,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
-from pbx.utils.logger import get_logger
 
 
 def update_phone_extension(mac_address: str, new_extension: str):
@@ -31,7 +30,6 @@ def update_phone_extension(mac_address: str, new_extension: str):
         mac_address: MAC address of the phone
         new_extension: New extension number to assign
     """
-    logger = get_logger()
 
     print("=" * 60)
     print("Phone Extension Update Tool")
@@ -72,7 +70,7 @@ def update_phone_extension(mac_address: str, new_extension: str):
             db.disconnect()
             return False
     else:
-        print(f"\nFound phone:")
+        print("\nFound phone:")
         print(f"  MAC Address:       {existing_phone['mac_address']}")
         print(f"  Current Extension: {existing_phone['extension_number']}")
         print(f"  IP Address:        {existing_phone['ip_address']}")
@@ -121,7 +119,7 @@ def update_phone_extension(mac_address: str, new_extension: str):
         print("3. Verify the phone registers with new extension")
         print("=" * 60)
     else:
-        print(f"✗ Failed to update phone extension")
+        print("✗ Failed to update phone extension")
 
     # Disconnect
     db.disconnect()

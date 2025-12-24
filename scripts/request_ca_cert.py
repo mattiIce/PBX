@@ -238,7 +238,7 @@ if __name__ == "__main__":
             with open(args.config, "r") as f:
                 config = yaml.safe_load(f)
             hostname = config.get("server", {}).get("external_ip", "localhost")
-        except:
+        except Exception:
             hostname = "localhost"
 
     if not ca_server:

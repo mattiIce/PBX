@@ -18,7 +18,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
 from pbx.utils.encryption import get_encryption
-from pbx.utils.logger import get_logger
 
 
 def main():
@@ -28,7 +27,6 @@ def main():
     )
 
     args = parser.parse_args()
-    logger = get_logger()
 
     print("=" * 70)
     print("Extension Database Seeding")
@@ -175,10 +173,10 @@ def main():
             )
 
             if success:
-                print(f"  ✓ Seeded successfully")
+                print("  ✓ Seeded successfully")
                 seeded += 1
             else:
-                print(f"  ✗ Failed to seed")
+                print("  ✗ Failed to seed")
                 errors += 1
         except Exception as e:
             print(f"  ✗ Error: {e}")

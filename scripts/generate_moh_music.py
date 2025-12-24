@@ -339,7 +339,7 @@ def main():
     print("=" * 60)
     print(f"Output directory: {args.output_dir}")
     print(f"Track duration: {args.duration} seconds")
-    print(f"Audio format: 8000 Hz, 16-bit, mono WAV")
+    print("Audio format: 8000 Hz, 16-bit, mono WAV")
     print("=" * 60)
     print()
 

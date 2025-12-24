@@ -32,7 +32,7 @@ if not is_tts_available():
     print("ERROR: TTS dependencies not installed!")
     print("=" * 70)
     print("")
-    print(f"Please install required packages:")
+    print("Please install required packages:")
     print(f"  {get_tts_requirements()}")
     print("")
     print("After installation, run this script again.")
@@ -92,7 +92,6 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
     for filename, info in prompts.items():
         output_file = os.path.join(output_dir, filename)
         text = info["text"]
-        description = info["description"]
 
         logger.info(f"Generating {filename}...")
         logger.info(f'  Text: "{text}"')
@@ -103,7 +102,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
                 logger.info(f"  ✓ SUCCESS - Generated ({file_size:,} bytes)")
                 success_count += 1
             else:
-                logger.error(f"  ✗ FAILED to generate")
+                logger.error("  ✗ FAILED to generate")
         except Exception as e:
             logger.error(f"  ✗ ERROR: {e}")
 
@@ -195,7 +194,6 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
     for filename, info in prompts.items():
         output_file = os.path.join(output_dir, filename)
         text = info["text"]
-        description = info["description"]
 
         logger.info(f"Generating {filename}...")
         logger.info(f'  Text: "{text}"')
@@ -206,7 +204,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
                 logger.info(f"  ✓ SUCCESS - Generated ({file_size:,} bytes)")
                 success_count += 1
             else:
-                logger.error(f"  ✗ FAILED to generate")
+                logger.error("  ✗ FAILED to generate")
         except Exception as e:
             logger.error(f"  ✗ ERROR: {e}")
 

@@ -16,8 +16,6 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pbx.features.qos_monitoring import QoSMetrics
-
 
 def diagnose_call_quality(
     call_id, packets_sent, packets_received, packets_lost, jitter_avg, latency_avg, duration
