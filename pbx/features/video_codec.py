@@ -128,6 +128,80 @@ class VideoCodecManager:
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
 
+    def _detect_codecs_via_ffmpeg(self) -> list:
+        """Detect codecs using FFmpeg"""
+        available = []
+        if not self.ffmpeg_available:
+            return available
+
+        try:
+            result = subprocess.run(
+                ["ffmpeg", "-encoders"], capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0:
+                output = result.stdout
+
+                # Check for H.264 encoders
+                if "libx264" in output or "h264" in output.lower():
+                    available.append("H.264")
+                    self.logger.debug("H.264 codec available (libx264)")
+
+                # Check for H.265 encoders
+                if "libx265" in output or "hevc" in output.lower():
+                    available.append("H.265")
+                    self.logger.debug("H.265 codec available (libx265)")
+
+                # Check for VP8/VP9
+                if "libvpx" in output or "vp8" in output.lower():
+                    available.append("VP8")
+                    self.logger.debug("VP8 codec available (libvpx)")
+
+                if "libvpx-vp9" in output or "vp9" in output.lower():
+                    available.append("VP9")
+                    self.logger.debug("VP9 codec available (libvpx-vp9)")
+
+                # Check for AV1
+                if "libaom" in output or "av1" in output.lower():
+                    available.append("AV1")
+                    self.logger.debug("AV1 codec available (libaom)")
+
+        except (subprocess.TimeoutExpired, Exception) as e:
+            self.logger.debug(f"FFmpeg encoder detection error: {e}")
+
+        return available
+
+    def _detect_openh264(self, available: list) -> list:
+        """Detect OpenH264 library"""
+        try:
+            import ctypes
+
+            for lib_name in ["libopenh264.so", "openh264.dll", "libopenh264.dylib"]:
+                try:
+                    ctypes.CDLL(lib_name)
+                    self.logger.info(f"OpenH264 library detected: {lib_name}")
+                    if "H.264" not in available:
+                        available.append("H.264")
+                    break
+                except OSError:
+                    continue
+        except Exception as e:
+            self.logger.debug(f"OpenH264 detection error: {e}")
+        return available
+
+    def _detect_x265(self, available: list) -> list:
+        """Detect x265 encoder"""
+        try:
+            result = subprocess.run(
+                ["x265", "--version"], capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0:
+                self.logger.info("x265 encoder detected")
+                if "H.265" not in available:
+                    available.append("H.265")
+        except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
+            self.logger.debug(f"x265 not found: {e}")
+        return available
+
     def _detect_available_codecs(self) -> list:
         """
         Detect which video codecs are available using FFmpeg
@@ -142,73 +216,9 @@ class VideoCodecManager:
         Returns:
             list: List of available codec names
         """
-        available = []
-
-        # Check FFmpeg for codec support
-        if self.ffmpeg_available:
-            try:
-                # Query FFmpeg for available encoders
-                result = subprocess.run(
-                    ["ffmpeg", "-encoders"], capture_output=True, text=True, timeout=5
-                )
-                if result.returncode == 0:
-                    output = result.stdout
-
-                    # Check for H.264 encoders
-                    if "libx264" in output or "h264" in output.lower():
-                        available.append("H.264")
-                        self.logger.debug("H.264 codec available (libx264)")
-
-                    # Check for H.265 encoders
-                    if "libx265" in output or "hevc" in output.lower():
-                        available.append("H.265")
-                        self.logger.debug("H.265 codec available (libx265)")
-
-                    # Check for VP8/VP9
-                    if "libvpx" in output or "vp8" in output.lower():
-                        available.append("VP8")
-                        self.logger.debug("VP8 codec available (libvpx)")
-
-                    if "libvpx-vp9" in output or "vp9" in output.lower():
-                        available.append("VP9")
-                        self.logger.debug("VP9 codec available (libvpx-vp9)")
-
-                    # Check for AV1
-                    if "libaom" in output or "av1" in output.lower():
-                        available.append("AV1")
-                        self.logger.debug("AV1 codec available (libaom)")
-
-            except (subprocess.TimeoutExpired, Exception) as e:
-                self.logger.debug(f"FFmpeg encoder detection error: {e}")
-
-        # Try to detect OpenH264
-        try:
-            import ctypes
-
-            # Try to load OpenH264 library
-            for lib_name in ["libopenh264.so", "openh264.dll", "libopenh264.dylib"]:
-                try:
-                    ctypes.CDLL(lib_name)
-                    self.logger.info(f"OpenH264 library detected: {lib_name}")
-                    if "H.264" not in available:
-                        available.append("H.264")
-                    break
-                except OSError:
-                    continue
-        except Exception as e:
-            self.logger.debug(f"OpenH264 detection error: {e}")
-
-        # Try to detect x265
-        try:
-            result = subprocess.run(
-                ["x265", "--version"], capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                self.logger.info("x265 encoder detected")
-                if "H.265" not in available:
-                    available.append("H.265")
-        except (FileNotFoundError, subprocess.TimeoutExpired, Exception) as e:
-            self.logger.debug(f"x265 not found: {e}")
+        available = self._detect_codecs_via_ffmpeg()
+        available = self._detect_openh264(available)
+        available = self._detect_x265(available)
 
         # If nothing detected, provide framework placeholders
         if not available:
