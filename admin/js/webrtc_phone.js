@@ -149,6 +149,14 @@ class WebRTCPhone {
         try {
             this.updateStatus('Requesting microphone access...', 'info');
 
+            // Check if browser supports getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const errorMsg = 'WebRTC not supported. Please use HTTPS or a modern browser.';
+                this.updateStatus(errorMsg, 'error');
+                console.error('[WebRTC Phone]', errorMsg);
+                return false;
+            }
+
             // Request microphone access with ZIP33G-compatible audio settings
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
@@ -327,6 +335,15 @@ class WebRTCPhone {
 
             this.updateUIState('connecting');
             this.updateStatus('Requesting microphone access...', 'info');
+
+            // Check if browser supports getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const errorMsg = 'WebRTC not supported. Please use HTTPS or a modern browser.';
+                this.updateStatus(errorMsg, 'error');
+                console.error('[WebRTC Phone]', errorMsg);
+                this.updateUIState('idle');
+                return;
+            }
 
             // Get user media (microphone)
             try {
