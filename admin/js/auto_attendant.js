@@ -550,8 +550,14 @@ let availableMenus = [];  // Cache of available menus
 async function parseErrorResponse(response) {
     try {
         return await response.json();
-    } catch (e) {
-        return {};
+    } catch (error) {
+        // If JSON parsing fails (e.g., response is not JSON or empty body),
+        // return a fallback error object
+        if (error instanceof SyntaxError) {
+            return { error: 'Unable to parse error response from server' };
+        }
+        // For other errors (e.g., network issues), provide a generic message
+        return { error: 'An unexpected error occurred while processing the response' };
     }
 }
 
