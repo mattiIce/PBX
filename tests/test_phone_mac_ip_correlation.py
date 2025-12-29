@@ -22,7 +22,7 @@ def test_mac_normalization():
         ("00-15-65-12-34-56", "001565123456"),
         ("0015.6512.3456", "001565123456"),
         ("001565123456", "001565123456"),
-        ("00:15:65:AB:CD:EF", "001565abcde"),
+        ("00:15:65:AB:CD:EF", "001565abcdef"),
     ]
 
     for input_mac, expected in test_cases:
@@ -195,7 +195,7 @@ def test_correlation_scenario_ip_to_mac():
             break
 
     assert device_with_mac is not None, "Should find provisioned device for extension"
-    assert device_with_mac.mac_address == "001565abcde", "Should get correct MAC"
+    assert device_with_mac.mac_address == "001565abcdef", "Should get correct MAC"
     assert device_with_mac.vendor == "polycom", "Should get correct vendor"
     assert device_with_mac.model == "vvx450", "Should get correct model"
 
