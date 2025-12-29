@@ -15,7 +15,15 @@
 
 ---
 
-> **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) or [EXECUTIVE_SUMMARY.pdf](EXECUTIVE_SUMMARY.pdf) for a complete business overview, ROI analysis, and strategic recommendations.
+## 📚 Documentation
+
+> **📖 Complete Guide**: See **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** for comprehensive documentation covering installation, deployment, features, integrations, security, troubleshooting, and API reference - all in one place!
+
+> **🔧 Troubleshooting**: See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** for a comprehensive troubleshooting guide for administrators with solutions to all known issues.
+
+> **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) for business overview, ROI analysis, and strategic recommendations.
+
+> **🗂️ Documentation Index**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for a full navigation guide.
 
 ## 🌟 Features
 
@@ -41,7 +49,7 @@
 - **SIP Trunk Support** - Connect to external SIP providers
 - **Phone Provisioning** - Auto-configuration for multiple IP phone brands (Zultys, Yealink, Polycom, Cisco, Grandstream) with customizable templates
 - **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
-- **SIP Send Line & Send MAC** - Caller ID headers (P-Asserted-Identity, Remote-Party-ID) and device MAC tracking for enhanced call identification (see [SIP_SEND_LINE_MAC_GUIDE.md](SIP_SEND_LINE_MAC_GUIDE.md))
+- **SIP Send Line & Send MAC** - Caller ID headers (P-Asserted-Identity, Remote-Party-ID) and device MAC tracking for enhanced call identification (see [docs/reference/SIP_SEND_LINE_MAC_GUIDE.md](docs/reference/SIP_SEND_LINE_MAC_GUIDE.md))
 - **Phone Book System** - Centralized directory with AD sync, pushed to IP phones in multiple formats (Yealink, Cisco XML)
 - **Paging System** - Full overhead paging support with SIP/RTP integration (hardware-ready)
 - **Webhook System** - Event-driven integrations with HMAC signature support for real-time notifications
@@ -68,10 +76,9 @@
 - **OpenLDAP** - Directory services (Active Directory compatible) - ✅ Compatible
 
 **📖 Documentation:**
-- **[FREE_INTEGRATION_OPTIONS.md](FREE_INTEGRATION_OPTIONS.md)** - 💚 **Complete guide to free/open-source integration options**
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🆘 **Comprehensive troubleshooting guide**
-- **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Complete setup guides
-- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Full integration reference
+- **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - 📘 **Complete comprehensive documentation (all-in-one)**
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🔧 **Comprehensive troubleshooting guide for administrators**
+- **[docs/reference/](docs/reference/)** - Technical reference documentation
 
 **💰 Cost Savings**: $0/year vs $3,726+/user/year for proprietary stack
 
@@ -82,14 +89,14 @@
 - **Microsoft Teams** - Presence sync and meeting escalation
 
 ### Security & Compliance
-- **HTTPS/SSL Support** - Secure API communication with TLS 1.2+ (see [HTTPS_SETUP_GUIDE.md](HTTPS_SETUP_GUIDE.md))
+- **HTTPS/SSL Support** - Secure API communication with TLS 1.2+ (see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md#62-ssltls-configuration))
 - **In-House CA Integration** - Automatic certificate request from enterprise Certificate Authority
 - **FIPS 140-2 Compliant Encryption** - Government-grade security
 - **TLS/SIPS** - Encrypted SIP signaling
 - **SRTP** - Encrypted media streams
 - **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
 - **Password Security** - PBKDF2-HMAC-SHA256 hashing with 600,000 iterations (OWASP 2024 recommendation)
-- **E911 Protection** - Automatic blocking of emergency calls during testing to prevent accidental 911 calls (see [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#e911-protection))
+- **E911 Protection** - Automatic blocking of emergency calls during testing to prevent accidental 911 calls (see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md#63-compliance---e911))
 
 ## 📋 Requirements
 
@@ -137,7 +144,7 @@ python scripts/verify_database.py
 # Just configure database.type: sqlite in config.yml
 ```
 
-See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for detailed database setup.
+See [COMPLETE_GUIDE.md - Section 1.3](COMPLETE_GUIDE.md#13-environment-configuration) for detailed database setup.
 
 4. Set up environment variables:
 ```bash
@@ -149,7 +156,7 @@ cp .env.example .env
 nano .env
 ```
 
-See [ENV_SETUP_GUIDE.md](ENV_SETUP_GUIDE.md) for detailed instructions on configuring credentials.
+See [COMPLETE_GUIDE.md - Section 1.3](COMPLETE_GUIDE.md#13-environment-configuration) for detailed instructions on configuring credentials.
 
 5. Generate SSL certificate (required for HTTPS):
 ```bash
@@ -157,7 +164,7 @@ See [ENV_SETUP_GUIDE.md](ENV_SETUP_GUIDE.md) for detailed instructions on config
 python scripts/generate_ssl_cert.py --hostname YOUR_IP_OR_HOSTNAME
 
 # For production, use a trusted CA like Let's Encrypt
-# See HTTPS_SETUP_GUIDE.md for detailed instructions
+# See COMPLETE_GUIDE.md - Section 6.2 for detailed instructions
 ```
 
 6. Configure the system:
@@ -204,11 +211,10 @@ sudo bash scripts/deploy_production_pilot.sh --dry-run
 - ✓ Monitoring (Prometheus + Node Exporter)
 - ✓ Systemd service for automatic startup
 
-**After deployment completes, read:** [POST_DEPLOYMENT.md](POST_DEPLOYMENT.md)
+**After deployment completes, see:** [COMPLETE_GUIDE.md - Section 2.2](COMPLETE_GUIDE.md#22-post-deployment-steps)
 
-This guide contains:
+This section contains:
 - Critical first steps (database password, SSL setup)
-- Essential documentation to read (in order)
 - Voice prompt generation (REQUIRED)
 - Testing and verification steps
 - Troubleshooting help
@@ -223,9 +229,7 @@ sudo scripts/setup_reverse_proxy.sh
 ```
 
 **Documentation:**
-- **Quick Start:** [QUICK_START_ABPS_SETUP.md](QUICK_START_ABPS_SETUP.md) - Step-by-step guide
-- **Manual Setup:** [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) - Detailed nginx/Apache configuration
-- **Implementation:** [ABPS_IMPLEMENTATION_GUIDE.md](ABPS_IMPLEMENTATION_GUIDE.md) - Setup summary
+- **Setup Guide:** [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-recommended) - Reverse proxy configuration
 
 **Benefits:**
 - ✅ Access via friendly domain name (no port number needed)
@@ -380,7 +384,7 @@ curl -X PUT http://localhost:8080/api/config \
 
 ## 🛠️ Architecture
 
-For a detailed architecture overview including data flows, component interactions, and deployment options, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For a detailed architecture overview including data flows, component interactions, and deployment options, see [COMPLETE_GUIDE.md - Section 8](COMPLETE_GUIDE.md#8-developer-guide).
 
 ### Quick Overview
 
@@ -442,7 +446,7 @@ python tests/test_basic.py
 python tests/test_e911_protection.py
 ```
 
-**Important:** The E911 protection system automatically prevents emergency calls during testing. See [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#e911-protection) for details.
+**Important:** The E911 protection system automatically prevents emergency calls during testing. See [COMPLETE_GUIDE.md - Section 6.3](COMPLETE_GUIDE.md#63-compliance---e911) for details.
 
 ## 🔐 Security
 
@@ -454,7 +458,7 @@ python tests/test_e911_protection.py
 - **Rate Limiting** - Protection against brute force attacks
 - **IP Banning** - Automatic blocking after failed attempts
 
-For detailed security information, see [SECURITY_GUIDE.md](SECURITY_GUIDE.md) for comprehensive security reference and implementation details.
+For detailed security information, see [COMPLETE_GUIDE.md - Section 6](COMPLETE_GUIDE.md#6-security--compliance) for comprehensive security reference and implementation details.
 
 ## 📊 Monitoring
 
@@ -527,9 +531,8 @@ For issues and questions, please open a GitHub issue.
   - Stores VIP caller database
   - Stores registered phone tracking (MAC addresses, IP addresses, extensions)
   - Audio files stored efficiently on file system
-  - See [VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md) for setup guide
-  - See [PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md) for phone tracking details
-  - See [CLEAR_REGISTERED_PHONES.md](CLEAR_REGISTERED_PHONES.md) for clearing phone registration data
+  - See [COMPLETE_GUIDE.md - Section 7.3](COMPLETE_GUIDE.md#73-database-management) for setup guide
+  - See [COMPLETE_GUIDE.md - Section 4.3](COMPLETE_GUIDE.md#43-phone-provisioning) for phone tracking details
 
 ### Legacy System Migration
 - [x] **AT&T Merlin Legend Import** - ✅ COMPLETED
@@ -537,7 +540,7 @@ For issues and questions, please open a GitHub issue.
   - Supports CSV, JSON, and directory-based formats
   - Flexible metadata parsing from filenames
   - Batch import with dry-run preview
-  - See [MERLIN_IMPORT_GUIDE.md](MERLIN_IMPORT_GUIDE.md) for migration guide
+  - See [COMPLETE_GUIDE.md - Section 5.5](COMPLETE_GUIDE.md#55-zoom-integration) for migration guide
 
 ### Phone Provisioning
 - [x] **Auto-Configuration for IP Phones** - ✅ COMPLETED
@@ -545,8 +548,7 @@ For issues and questions, please open a GitHub issue.
   - Template-based configuration with automatic device information population
   - Customizable templates via web interface and API
   - Template management (view, export, edit, reload)
-  - See [PROVISIONING_TEMPLATE_CUSTOMIZATION.md](PROVISIONING_TEMPLATE_CUSTOMIZATION.md) for template customization
-  - See [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md) for provisioning setup guide
+  - See [COMPLETE_GUIDE.md - Section 4.3](COMPLETE_GUIDE.md#43-phone-provisioning) for provisioning setup guide
 
 ### Phone Book & Directory
 - [x] **Phone Book System** - ✅ COMPLETED
@@ -557,8 +559,7 @@ For issues and questions, please open a GitHub issue.
   - Push to IP phones automatically
   - **NEW: LDAPS configuration for IP phones** (Zultys ZIP 33G/37G)
   - Remote phone book URL as fallback method
-  - See [PHONE_BOOK_GUIDE.md](PHONE_BOOK_GUIDE.md) for setup guide
-  - See [LDAPS_PHONEBOOK_GUIDE.md](LDAPS_PHONEBOOK_GUIDE.md) for LDAPS configuration
+  - See [COMPLETE_GUIDE.md - Section 4.4](COMPLETE_GUIDE.md#44-phone-book-system) for setup guide and LDAPS configuration
 
 ### Paging System
 - [x] **Paging System** - ✅ COMPLETED (Software)
@@ -567,7 +568,7 @@ For issues and questions, please open a GitHub issue.
   - Digital-to-analog converter device management
   - All-call and zone-specific paging
   - Production-ready software (hardware deployment ready)
-  - See [PAGING_SYSTEM_GUIDE.md](PAGING_SYSTEM_GUIDE.md) for implementation guide
+  - See [COMPLETE_GUIDE.md - Section 4.6](COMPLETE_GUIDE.md#46-paging-system) for implementation guide
 
 ### Webhook System
 - [x] **Event-Driven Integrations** - ✅ COMPLETED
@@ -577,7 +578,7 @@ For issues and questions, please open a GitHub issue.
   - Configurable subscriptions with custom headers
   - Retry logic with exponential backoff
   - Asynchronous delivery with worker threads
-  - See [WEBHOOK_SYSTEM_GUIDE.md](WEBHOOK_SYSTEM_GUIDE.md) for setup guide
+  - See [COMPLETE_GUIDE.md - Section 4.7](COMPLETE_GUIDE.md#47-webhook-system) for setup guide
 
 ### Known Issues
 
@@ -591,13 +592,13 @@ For issues and questions, please open a GitHub issue.
   - PBX server not running
   - Firewall blocking port 9000
   - Wrong hostname/port configuration
-- **Fix**: See [LOGIN_CONNECTION_TROUBLESHOOTING.md](LOGIN_CONNECTION_TROUBLESHOOTING.md) for step-by-step resolution
+- **Fix**: See [COMPLETE_GUIDE.md - Section 7.1](COMPLETE_GUIDE.md#71-admin-panel) for step-by-step resolution
 
 ⚠️ **Admin Panel After Updates**
 - **Issue**: After running server update scripts, the admin panel may not display correctly or buttons may not be clickable
 - **Cause**: Browser caching old CSS/JavaScript files
 - **Fix**: Press `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) to force refresh
-- **Details**: See [BROWSER_CACHE_FIX.md](BROWSER_CACHE_FIX.md) for comprehensive troubleshooting
+- **Details**: See [COMPLETE_GUIDE.md - Section 7.1](COMPLETE_GUIDE.md#71-admin-panel) for comprehensive troubleshooting
 - **Status Check**: Visit `/admin/status-check.html` to verify your installation
 
 ⚠️ **Audio Features**
@@ -651,11 +652,11 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 - **SBC:** Kamailio, OpenSIPS, RTPEngine
 
 **Documentation:**
-- [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview with free options
+- [docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview with free options
 - [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) - Implementation status and details
-- [BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md) - Business Intelligence integration
-- [CALL_TAGGING_GUIDE.md](CALL_TAGGING_GUIDE.md) - Call tagging and categorization
-- [MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md) - Mobile app framework
+- [COMPLETE_GUIDE.md - Section 5](COMPLETE_GUIDE.md#5-integration-guides) - Business Intelligence integration
+- [docs/reference/CALL_TAGGING_GUIDE.md](docs/reference/CALL_TAGGING_GUIDE.md) - Call tagging and categorization
+- [docs/reference/MOBILE_APPS_GUIDE.md](docs/reference/MOBILE_APPS_GUIDE.md) - Mobile app framework
 
 **Note:** Framework features have complete backend implementations, database schemas, and REST APIs. All features can be implemented using free and open-source technologies - detailed integration guides available for each feature.
 

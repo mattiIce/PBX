@@ -1,15 +1,42 @@
-# PBX System Troubleshooting Guide
+# PBX System - Comprehensive Troubleshooting Guide
 
-This comprehensive guide covers common issues and their solutions for the PBX system.
+**Version:** 1.0.0  
+**Last Updated:** 2025-12-29  
+**For Administrators and Support Staff**
 
-## Quick Navigation
+This comprehensive guide covers all known issues, solutions, and troubleshooting procedures for the Warden VoIP PBX system.
 
-- [Audio Issues](#audio-issues)
-- [Integration Problems](#integration-problems)
-- [Phone Registration](#phone-registration)
-- [Network and Connectivity](#network-and-connectivity)
-- [Configuration Issues](#configuration-issues)
-- [Service Management](#service-management)
+---
+
+## Table of Contents
+
+1. [Quick Reference](#quick-reference)
+2. [Audio Issues](#audio-issues)
+3. [Registration & Connectivity](#registration--connectivity)
+4. [Admin Panel Issues](#admin-panel-issues)
+5. [Integration Problems](#integration-problems)
+6. [Phone Provisioning](#phone-provisioning)
+7. [Database Issues](#database-issues)
+8. [Service Management](#service-management)
+9. [Network & Firewall](#network--firewall)
+10. [Configuration Issues](#configuration-issues)
+11. [Performance & Monitoring](#performance--monitoring)
+12. [Historical Fixes Reference](#historical-fixes-reference)
+
+---
+
+## Quick Reference
+
+| Issue | Quick Fix | Section |
+|-------|-----------|---------|
+| No audio in calls | `sudo ufw allow 10000:20000/udp` | [Audio Issues](#audio-issues) |
+| Phones won't register | `sudo ufw allow 5060/udp` | [Registration](#registration--connectivity) |
+| Admin panel login fails | `Ctrl+Shift+R` then check `systemctl status pbx` | [Admin Panel](#admin-panel-issues) |
+| Email not sending | `python scripts/test_email.py` | [Integration Problems](#integration-problems) |
+| Database errors | `python scripts/verify_database.py` | [Database Issues](#database-issues) |
+| Voice prompts missing | `python scripts/generate_voice_prompts.py` | [Audio Issues](#audio-issues) |
+| Phone won't provision | Check DHCP Option 66 or manual server | [Phone Provisioning](#phone-provisioning) |
+| High CPU usage | Check active calls, restart service | [Performance](#performance--monitoring) |
 
 ---
 
@@ -20,25 +47,63 @@ This comprehensive guide covers common issues and their solutions for the PBX sy
 **Symptoms:**
 - Phones connect but no audio in either direction
 - Silent calls or one-way audio
+- Call establishes but no voice transmission
 
-**Root Cause:**
-Race condition in RTP relay setup where packets arriving before both endpoints are known get dropped.
+**Root Causes:**
+1. **RTP Firewall Blocked** (Most Common)
+2. **Codec Mismatch**
+3. **RTP Relay Issues**
+4. **NAT/Network Issues**
 
-**Solution:**
-This has been fixed in the current version. The RTP relay now:
-1. Sets caller endpoint immediately when INVITE is received
-2. Removes blocking condition that required both endpoints
-3. Accepts and forwards packets as soon as first endpoint is known
+**Solutions:**
 
-**Verification:**
+**1. Check RTP Firewall Rules:**
 ```bash
-# Check logs for RTP relay activity
-tail -f ~/PBX/logs/pbx.log | grep RTP
+# Open RTP port range
+sudo ufw allow 10000:20000/udp
+
+# Verify firewall status
+sudo ufw status numbered
 
 # Should see:
-# - "RTP relay allocated on port XXXXX"
-# - "Relayed XXX bytes: A->B"
-# - "Relayed XXX bytes: B->A"
+# 10000:20000/udp ALLOW IN  Anywhere
+```
+
+**2. Verify Codec Compatibility:**
+```bash
+# Check config.yml
+grep -A 10 "codecs:" config.yml
+
+# Ensure phones support enabled codecs
+# Common codecs: PCMU, PCMA, G722, Opus
+```
+
+**3. Check RTP Relay Logs:**
+```bash
+tail -f logs/pbx.log | grep RTP
+
+# Should see:
+# "RTP relay allocated on port XXXXX"
+# "Relayed XXX bytes: A->B"
+# "Relayed XXX bytes: B->A"
+```
+
+**4. Test Audio Path:**
+```bash
+# Make test call between extensions
+# Check both directions
+
+# View SIP/RTP debug
+tail -f logs/pbx.log | grep -E "(SIP|RTP)"
+```
+
+**5. Network/NAT Issues:**
+```bash
+# If behind NAT, configure external IP in config.yml
+external_ip: "YOUR_PUBLIC_IP"
+
+# Verify RTP can traverse NAT
+# May need STUN/TURN configuration
 ```
 
 ### Distorted or Garbled Audio
@@ -46,496 +111,824 @@ tail -f ~/PBX/logs/pbx.log | grep RTP
 **Status:** ✅ **FIXED** (December 19, 2025)
 
 **Symptoms:**
-- Audio plays but sounds distorted or garbled
+- Audio plays but sounds distorted, robotic, or garbled
 - TTS prompts sound incorrect
 - Voicemail playback is unintelligible
+- High-pitched or low-pitched audio
 
 **Root Cause:**
-Audio sample rate mismatch - voicemail prompt files were at 16kHz but system expects 8kHz for PCMU codec.
+Audio sample rate mismatch - voicemail prompt files were generated at 16kHz but system expects 8kHz for PCMU codec.
 
 **Solution Applied:**
 All voicemail and auto attendant prompts have been regenerated at the correct 8kHz sample rate.
 
-**If you need to regenerate prompts again:**
+**If Issues Persist:**
 ```bash
 # Regenerate audio prompts at correct sample rate
-cd /home/runner/work/PBX/PBX
-python3 scripts/generate_tts_prompts.py --sample-rate 8000
+python scripts/generate_voice_prompts.py
 
 # Verify generated files
 file voicemail_prompts/*.wav
-# Should show: 8000 Hz, 16 bit, mono
+# Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"
+
+# Check auto-attendant prompts
+file auto_attendant/prompts/*.wav
 ```
 
-**Additional Steps (if needed):**
-1. Clear any cached audio files
-2. Restart PBX service: `sudo systemctl restart pbx`
-3. Test voicemail prompts
+**Additional Verification:**
+```bash
+# Test specific prompt
+play voicemail_prompts/beep.wav
 
-### No Audio for Voicemail Prompts
+# If distorted, regenerate:
+python scripts/generate_tts_prompts.py --sample-rate 8000
+
+# Clear cache and restart
+sudo systemctl restart pbx
+```
+
+### No Audio for Voicemail/Auto-Attendant Prompts
 
 **Symptoms:**
-- Voicemail IVR has no beeps or prompts
+- Voicemail IVR has no beeps or voice prompts
 - Auto attendant is silent
+- Caller hears silence when routed to voicemail
 
-**Root Causes and Solutions:**
+**Root Causes & Solutions:**
 
-**1. Incorrect Audio Encoding**
-```python
-# Fixed in pbx/features/voicemail.py
-# Beeps now use PCMU encoding (G.711 μ-law)
-# Sample rate: 8000 Hz
-```
-
-**2. G.722 Codec Issues**
-If using G.722 codec, ensure proper quantization:
-```python
-# Fixed in pbx/features/g722_codec.py
-# MAX_QUANTIZATION_RANGE = 32768 (correct)
-# Was 256 (too small, causing distortion)
-```
-
-**Verification:**
+**1. Missing Voice Prompt Files:**
 ```bash
-# Test voicemail system
-# Dial *1001 and listen for prompts
-# Should hear clear beep tones
+# Check if prompts exist
+ls -lh voicemail_prompts/
+ls -lh auto_attendant/prompts/
+
+# Generate if missing
+python scripts/generate_voice_prompts.py
+
+# Verify files were created
+ls -lh voicemail_prompts/*.wav
+ls -lh auto_attendant/prompts/*.wav
 ```
 
-### Audio Quality Issues
+**2. Incorrect File Permissions:**
+```bash
+# Fix permissions
+sudo chown -R pbx:pbx voicemail_prompts/
+sudo chown -R pbx:pbx auto_attendant/prompts/
+sudo chmod 644 voicemail_prompts/*.wav
+sudo chmod 644 auto_attendant/prompts/*.wav
+```
+
+**3. Codec Encoding Issues:**
+```bash
+# Verify file encoding matches expected codec
+# For PCMU (G.711): 8kHz, 16-bit, mono
+file voicemail_prompts/beep.wav
+
+# If wrong format, regenerate with correct parameters
+```
+
+**4. Check Logs for Errors:**
+```bash
+# Look for file not found or playback errors
+tail -f logs/pbx.log | grep -i "prompt\|wav\|audio"
+```
+
+### One-Way Audio (Can Hear But Not Be Heard)
 
 **Symptoms:**
-- Choppy or broken audio
-- Intermittent silence during calls
-- Echo or feedback
-
-**Diagnostics:**
-```bash
-# Check RTP packet loss
-tail -f ~/PBX/logs/pbx.log | grep "packet loss"
-
-# Check network quality
-ping -c 100 [phone_ip_address]
-
-# Monitor RTP ports
-sudo netstat -ulnp | grep -E "10000|11000|12000"
-```
+- One party can hear, other cannot
+- Asymmetric audio flow
 
 **Solutions:**
 
-**1. Network Issues**
-- Ensure RTP ports (10000-20000) are open in firewall
-- Check for network congestion
-- Verify QoS settings for VoIP traffic
-
-**2. Bidirectional RTP Packet Loss**
+**1. NAT/Firewall Configuration:**
 ```bash
-# Check if both directions are relaying
-grep "Relayed.*bytes" ~/PBX/logs/pbx.log | tail -20
+# Ensure symmetric RTP ports
+# Check NAT traversal settings
 
-# Should see both A->B and B->A
+# Verify both directions in firewall
+sudo ufw status | grep 10000:20000
 ```
 
-**3. Codec Negotiation**
-- Verify both phones support same codec
-- Check codec configuration in config.yml
-- Ensure PCMU/PCMA is enabled (most compatible)
+**2. Check Codec Negotiation:**
+```bash
+# View SIP session details
+tail -f logs/pbx.log | grep -A 20 "200 OK"
+
+# Verify both endpoints agreed on same codec
+```
+
+**3. Phone Configuration:**
+- Check phone's network settings
+- Verify NAT keepalive is enabled
+- Check phone's RTP port range matches PBX
+
+---
+
+## Registration & Connectivity
+
+### Extensions Won't Register
+
+**Symptoms:**
+- Phone shows "Not Registered" or "Registration Failed"
+- Extensions timeout during registration
+- Cannot make or receive calls
+
+**Solutions:**
+
+**1. Check SIP Port:**
+```bash
+# Ensure SIP port is open
+sudo ufw allow 5060/udp
+sudo ufw status | grep 5060
+
+# Verify PBX is listening
+sudo netstat -ulnp | grep 5060
+```
+
+**2. Verify Credentials:**
+```bash
+# Check config.yml
+grep -A 5 "extensions:" config.yml
+
+# Verify extension number and password match phone settings
+```
+
+**3. Check Phone SIP Server Settings:**
+- Server address should be: PBX IP or hostname
+- Port: 5060
+- Transport: UDP (or TCP if configured)
+- Extension: matches config.yml
+- Password: matches config.yml
+
+**4. View Registration Logs:**
+```bash
+# Monitor SIP registration attempts
+tail -f logs/pbx.log | grep REGISTER
+
+# Should see successful 200 OK responses
+```
+
+**5. Test Connectivity:**
+```bash
+# From phone network, test SIP port
+nc -u -v PBX_IP 5060
+
+# Check if PBX is reachable
+ping PBX_IP
+```
+
+**6. Check for Registration Conflicts:**
+```bash
+# Verify no duplicate extensions
+grep "number:" config.yml | sort | uniq -d
+
+# Clear any stale registrations
+curl -k https://localhost:8080/api/extensions
+```
+
+### Intermittent Registration Drops
+
+**Symptoms:**
+- Phones register then unregister randomly
+- Periodic registration failures
+
+**Solutions:**
+
+**1. Check Registration Timeout:**
+```yaml
+# config.yml
+sip:
+  registration_timeout: 3600  # Increase if too low
+```
+
+**2. Enable NAT Keepalive:**
+- Configure phones to send keepalive packets
+- Typical interval: 30-60 seconds
+
+**3. Check Network Stability:**
+```bash
+# Monitor for network drops
+ping -c 100 PHONE_IP
+
+# Check for packet loss
+```
+
+**4. Review Firewall Timeout Settings:**
+```bash
+# Ensure firewall doesn't drop long-lived UDP connections
+# May need to adjust connection tracking timeout
+```
+
+---
+
+## Admin Panel Issues
+
+### Login Connection Errors
+
+**Symptoms:**
+- "Connection error. Please try again." message
+- Cannot access admin panel
+- Login page loads but authentication fails
+
+**Diagnostic Steps:**
+
+**1. Check PBX Service Status:**
+```bash
+sudo systemctl status pbx
+
+# If not running:
+sudo systemctl start pbx
+
+# Check for errors:
+sudo journalctl -u pbx -n 50
+```
+
+**2. Verify API Accessibility:**
+```bash
+# Test API endpoint
+curl -k https://localhost:8080/api/status
+
+# Should return JSON with status information
+```
+
+**3. Check Browser Console:**
+- Press F12 to open developer tools
+- Look at Console tab for JavaScript errors
+- Check Network tab for failed requests
+- Note: Red CORS errors or 502/504 errors indicate connectivity issues
+
+**4. Verify Firewall:**
+```bash
+sudo ufw status | grep 8080
+
+# If not allowed:
+sudo ufw allow 8080/tcp
+```
+
+**5. Check Port Binding:**
+```bash
+# Verify PBX is listening on correct port
+sudo netstat -tlnp | grep 8080
+
+# Should show python/pbx process
+```
+
+**6. Test from Different Network:**
+- Try accessing from localhost
+- Try from same network
+- Try from external network (if applicable)
+
+**7. Check Reverse Proxy (if used):**
+```bash
+# If using nginx
+sudo systemctl status nginx
+sudo nginx -t
+
+# Check nginx logs
+sudo tail -f /var/log/nginx/error.log
+```
+
+### Admin Panel Display Issues (Broken UI)
+
+**Status:** ✅ **FIXED** (December 23, 2025)
+
+**Symptoms:**
+- Admin panel displays incorrectly after updates
+- Buttons not clickable
+- Styles missing or broken
+- Only login component works
+
+**Root Cause:**
+Browser caching old CSS/JavaScript files after server code updates.
+
+**Immediate Fix:**
+```
+Press Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac) for hard refresh
+```
+
+**Permanent Prevention:**
+- Cache-control meta tags added to HTML files
+- Version query parameters added to CSS/JS includes
+- Automatic detection with warning banner
+
+**Diagnostic Page:**
+```
+Visit: https://localhost:8080/admin/status-check.html
+```
+
+This page will:
+- Test API connectivity
+- Verify JavaScript loading
+- Check for cache issues
+- Display system status
+
+**Manual Cache Clear:**
+```
+1. Chrome: Settings → Privacy → Clear browsing data → Cached images and files
+2. Firefox: Options → Privacy → Clear Data → Cached Web Content
+3. Edge: Settings → Privacy → Choose what to clear → Cached data
+```
+
+### Cannot Access Admin Panel After Installation
+
+**Symptoms:**
+- Fresh installation, admin panel not accessible
+- 404 or connection refused errors
+
+**Solutions:**
+
+**1. Verify Installation Completed:**
+```bash
+# Check if all files are present
+ls -la admin/
+
+# Should contain: index.html, login.html, css/, js/
+```
+
+**2. Check Service Started:**
+```bash
+sudo systemctl status pbx
+sudo systemctl enable pbx  # Enable auto-start
+sudo systemctl start pbx
+```
+
+**3. Wait for Initialization:**
+```bash
+# PBX may take 30-60 seconds to fully start
+# Watch logs:
+sudo journalctl -u pbx -f
+```
+
+**4. Verify SSL Certificate:**
+```bash
+# Check certificate exists
+ls -la certs/
+
+# Regenerate if needed
+python scripts/generate_ssl_cert.py --hostname YOUR_IP
+```
 
 ---
 
 ## Integration Problems
 
-### Jitsi Integration Not Working
+### Email Notifications Not Sending
 
 **Symptoms:**
-- Jitsi video conference button doesn't work
-- Can't create Jitsi meetings from PBX
-
-**Quick Fix:**
-```bash
-# 1. Enable Jitsi in config
-nano /home/runner/work/PBX/PBX/config.yml
-
-# Find and change:
-integrations:
-  jitsi:
-    enabled: true  # Change from false to true
-    server: "https://your-jitsi-server"  # Or "https://meet.jit.si" for public
-
-# 2. Restart PBX
-sudo systemctl restart pbx
-```
-
-**Port Conflict Resolution:**
-If running self-hosted Jitsi:
-```bash
-# Jitsi should use port 443 (HTTPS)
-# EspoCRM can use port 8888 or different port
-# Matrix should use port 8008
-
-# Verify no conflicts:
-sudo netstat -tlnp | grep -E "443|8080|8008|8888"
-```
-
-### Matrix Integration Issues
-
-**Symptoms:**
-- Can't send messages to Matrix
-- Bot not responding
-- Connection errors
+- Voicemail notifications not received
+- No emails from system
+- SMTP errors in logs
 
 **Solutions:**
 
-**1. Set Bot Password**
+**1. Test SMTP Configuration:**
 ```bash
-# Edit .env file
-nano /home/runner/work/PBX/PBX/.env
+# Run email test script
+python scripts/test_email.py
 
-# Add:
-MATRIX_BOT_PASSWORD=your-bot-password
+# Should show SMTP connection and send test
 ```
 
-**2. Verify Bot Username Format**
-- Should be: `@botname:server.com`
-- For local: `@pbxbot:localhost`
-- Check in Admin Panel → Integrations → Matrix
-
-**3. Test Connection**
-```bash
-# Check Matrix server is running
-curl https://localhost:8008/_matrix/client/versions
-
-# Test bot login manually
-curl -X POST https://localhost:8008/_matrix/client/r0/login \
-  -H "Content-Type: application/json" \
-  -d '{"type":"m.login.password","user":"pbxbot","password":"your-password"}'
-```
-
-### EspoCRM Integration Problems
-
-**Symptoms:**
-- Screen pop doesn't work
-- Can't log calls in CRM
-- API connection errors
-
-**Solutions:**
-
-**1. Verify API Configuration**
+**2. Verify SMTP Credentials:**
 ```bash
 # Check .env file
-nano /home/runner/work/PBX/PBX/.env
+cat .env | grep SMTP
 
-# Should have:
-ESPOCRM_API_KEY=your-api-key-here
+# Required:
+# SMTP_HOST
+# SMTP_PORT
+# SMTP_USERNAME
+# SMTP_PASSWORD
 ```
 
-**2. Test API Connection**
-```bash
-# Test API endpoint
-curl -X GET "https://localhost/api/v1/Account" \
-  -H "X-Api-Key: your-api-key"
-
-# Should return JSON response with account data
-```
-
-**3. Port Configuration**
-If EspoCRM conflicts with PBX:
+**3. Check Email Configuration:**
 ```yaml
-# In config.yml
+# config.yml
+voicemail:
+  email_notifications: true
+  smtp:
+    host: "smtp.gmail.com"
+    port: 587
+    use_tls: true
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+```
+
+**4. Gmail-Specific Issues:**
+```bash
+# For Gmail, use App Password (not regular password)
+# Enable 2FA on Google account
+# Generate app password: https://myaccount.google.com/apppasswords
+# Use app password in .env
+```
+
+**5. Office 365 Issues:**
+```yaml
+smtp:
+  host: "smtp.office365.com"
+  port: 587
+  use_tls: true
+```
+
+**6. Check Logs:**
+```bash
+tail -f logs/pbx.log | grep -i email
+
+# Look for SMTP connection errors
+```
+
+**7. Test Email Server Connectivity:**
+```bash
+# Test SMTP server reachable
+telnet smtp.gmail.com 587
+
+# Should connect successfully
+```
+
+**8. Verify Email in Extension Config:**
+```yaml
+extensions:
+  - number: "1001"
+    email: "user@company.com"  # Must be set
+```
+
+### Active Directory Integration Not Working
+
+**Symptoms:**
+- AD sync fails
+- Cannot search AD users
+- Authentication errors
+
+**Solutions:**
+
+**1. Test AD Connectivity:**
+```bash
+# Test LDAP connection
+ldapsearch -x -H ldap://ad.company.com -D "CN=pbx-service,DC=company,DC=com" -W -b "DC=company,DC=com"
+```
+
+**2. Verify AD Configuration:**
+```yaml
 integrations:
-  espocrm:
-    api_url: "https://localhost:8888/api/v1"  # Use different port
+  active_directory:
+    enabled: true
+    server: "ldap://ad.company.com"
+    port: 389
+    bind_dn: "CN=pbx-service,DC=company,DC=com"
+    bind_password: "${AD_PASSWORD}"
+    base_dn: "DC=company,DC=com"
 ```
 
-### Integration Not Initialized
+**3. Check AD Credentials:**
+```bash
+# Verify .env has AD password
+cat .env | grep AD_PASSWORD
+
+# Test credentials directly
+```
+
+**4. Enable LDAPS (if using SSL):**
+```yaml
+active_directory:
+  server: "ldaps://ad.company.com"
+  port: 636
+  use_ssl: true
+```
+
+**5. Check Firewall:**
+```bash
+# LDAP port
+sudo ufw allow 389/tcp
+
+# LDAPS port (if SSL)
+sudo ufw allow 636/tcp
+```
+
+**6. View Integration Logs:**
+```bash
+tail -f logs/pbx.log | grep -i "AD\|LDAP"
+```
+
+### Webhook Delivery Failures
 
 **Symptoms:**
-- Integration enabled but not working
-- No integration features appear in UI
+- Webhooks not triggering
+- Events not sent to external systems
+- Webhook errors in logs
 
-**Solution:**
+**Solutions:**
+
+**1. Verify Webhook Configuration:**
+```yaml
+webhooks:
+  enabled: true
+  subscriptions:
+    - url: "https://crm.company.com/api/pbx/events"
+      events: ["call.answered", "call.ended"]
+      secret: "${WEBHOOK_SECRET}"
+```
+
+**2. Test Webhook Endpoint:**
 ```bash
-# Verify integrations are initialized in PBX core
-grep "Integration initialized" ~/PBX/logs/pbx.log
+# Test destination is reachable
+curl -v https://crm.company.com/api/pbx/events
+```
 
-# Should see:
-# - "Jitsi integration initialized"
-# - "Matrix integration initialized"
-# - "EspoCRM integration initialized"
+**3. Check Webhook Logs:**
+```bash
+tail -f logs/pbx.log | grep -i webhook
 
-# If missing, check config.yml and restart:
-sudo systemctl restart pbx
+# Look for delivery attempts and errors
+```
+
+**4. Verify HMAC Signature:**
+- Ensure receiving system validates signature correctly
+- Check secret matches in both systems
+
+**5. Check Retry Configuration:**
+```yaml
+webhooks:
+  retry:
+    max_attempts: 3
+    backoff_factor: 2
 ```
 
 ---
 
-## Phone Registration
+## Phone Provisioning
 
-### Phone Won't Register
+### Phones Won't Auto-Provision
 
 **Symptoms:**
-- Phone shows "Not registered"
-- Can't make or receive calls
-- SIP registration fails
-
-**Diagnostics:**
-```bash
-# 1. Check if PBX is running
-sudo systemctl status pbx
-
-# 2. Check if SIP port is listening
-sudo netstat -ulnp | grep 5060
-
-# 3. Check firewall
-sudo ufw status | grep 5060
-
-# 4. Test from phone's network
-ping [pbx_server_ip]
-telnet [pbx_server_ip] 5060
-```
+- Phone doesn't download configuration
+- Manual configuration works but auto-provision fails
+- Phone shows "Provisioning failed" or similar
 
 **Solutions:**
 
-**1. Firewall Not Open**
+**1. Verify Provisioning Server Running:**
 ```bash
-# Open SIP port
-sudo ufw allow 5060/udp
-sudo ufw allow 10000:20000/udp
-sudo ufw reload
+# Check provisioning port
+sudo netstat -tlnp | grep 8888
+
+# Should show python/pbx listening on 8888
 ```
 
-**2. Wrong Server IP**
+**2. Check DHCP Option 66:**
 ```bash
-# Verify external_ip in config
-grep external_ip ~/PBX/config.yml
-# Should match your PBX server's IP address
+# Option 66 should point to: http://PBX_IP:8888
+
+# Test from phone network:
+curl http://PBX_IP:8888/
 ```
 
-**3. Wrong Credentials**
-- Verify extension number matches configuration
-- Check password is correct
-- Extensions are now in database, not config.yml
+**3. Manual Phone Configuration:**
+If DHCP Option 66 not available:
+- Access phone web interface
+- Set provision server: `http://PBX_IP:8888`
+- Trigger reprovisioning
 
-**4. Check Extension in Database**
+**4. Verify Template Exists:**
 ```bash
-# List all extensions
-python3 scripts/list_extensions_from_db.py
+# Check templates directory
+ls -la provisioning_templates/
 
-# Should show your extension number
+# Should have templates for your phone brand
 ```
 
-### Phone Registers But Can't Make Calls
+**5. Check Phone MAC Address:**
+```bash
+# Template filename often uses MAC address
+# e.g., 00-15-65-12-34-56.cfg
+
+# Verify MAC matches phone's actual MAC
+```
+
+**6. Check File Permissions:**
+```bash
+sudo chown -R pbx:pbx provisioning_templates/
+sudo chmod 644 provisioning_templates/*.cfg
+```
+
+**7. View Provisioning Logs:**
+```bash
+tail -f logs/pbx.log | grep -i provision
+
+# Should show HTTP requests from phones
+```
+
+**8. Test Template Generation:**
+```bash
+# View generated config for extension
+curl http://localhost:8888/provision/1001
+
+# Should return phone configuration
+```
+
+### Wrong Configuration Downloaded
 
 **Symptoms:**
-- Phone shows "Registered"
-- Dialing results in "Not Available" or error
+- Phone provisions but with wrong settings
+- Extension number incorrect
+- Server settings wrong
 
 **Solutions:**
 
-**1. Check Dialplan**
+**1. Check Template Variables:**
 ```bash
-# Verify dialplan in config.yml
-# Should have patterns for internal extensions
-nano ~/PBX/config.yml
+# View template
+cat provisioning_templates/yealink/t46s.cfg
 
-# Look for:
-dialplan:
-  - pattern: "^1[0-9]{3}$"  # Matches 1XXX extensions
-    destination: "extension"
+# Verify variables are correct:
+# {EXTENSION}, {PASSWORD}, {SIP_SERVER}, etc.
 ```
 
-**2. Verify Call Routing**
+**2. Verify Extension Exists:**
 ```bash
-# Watch logs while making call
-tail -f ~/PBX/logs/pbx.log | grep "Routing call"
-
-# Should see:
-# "Routing call: 1001 -> 1002"
+# Check extension in config
+grep -A 5 "number: \"1001\"" config.yml
 ```
 
-### Phone Registration Tracking
+**3. Clear Phone's Config:**
+- Factory reset phone
+- Reprovision from scratch
 
-**View Registered Phones:**
+**4. Manual Template Test:**
 ```bash
-# List currently registered phones
-curl http://localhost:8080/api/registered_phones
+# Test template rendering
+curl http://localhost:8888/provision/1001?debug=true
 
-# Clear registration database (if needed)
-python3 scripts/clear_registered_phones.py
+# Should show populated template
+```
+
+### Phone-Specific Provisioning Issues
+
+**Yealink:**
+```bash
+# Ensure MAC address format: 001565-AABBCC.cfg
+# Server URL: http://PBX_IP:8888/$mac.cfg
+```
+
+**Polycom:**
+```bash
+# Boot file: 000000000000.cfg (MAC address)
+# Needs both application and configuration files
+```
+
+**Cisco:**
+```bash
+# XML-based configuration
+# Separate file per line: SEPXXXXXXXXXXXXX.cnf.xml
+```
+
+**Grandstream:**
+```bash
+# cfg + cfgMAC format
+# HTTP provisioning on port 8888
 ```
 
 ---
 
-## Network and Connectivity
+## Database Issues
 
-### One-Way Audio
-
-**Symptoms:**
-- Can hear caller but they can't hear you
-- Or vice versa
-
-**Causes:**
-1. NAT/Firewall blocking return path
-2. Incorrect external_ip configuration
-3. RTP ports not open
-
-**Solutions:**
-```bash
-# 1. Verify external_ip
-nano ~/PBX/config.yml
-# Set to your public/external IP if behind NAT
-
-# 2. Open RTP ports
-sudo ufw allow 10000:20000/udp
-
-# 3. Check NAT configuration
-# If behind NAT, ensure port forwarding is set up:
-# - UDP 5060 → PBX server
-# - UDP 10000-20000 → PBX server
-```
-
-### Packet Loss Issues
+### Database Connection Errors
 
 **Symptoms:**
-- Choppy audio
-- Intermittent dropouts
-- Call quality degradation
-
-**Diagnostics:**
-```bash
-# Monitor packet loss
-tail -f ~/PBX/logs/pbx.log | grep "loss"
-
-# Check network statistics
-ip -s link show [interface]
-```
-
-**Solutions:**
-1. Implement QoS for VoIP traffic
-2. Increase network bandwidth
-3. Reduce network congestion
-4. Check for faulty network equipment
-
----
-
-## Configuration Issues
-
-### SSL/HTTPS Configuration
-
-**Symptoms:**
-- Browser shows security warnings
-- HTTPS not working
-- Certificate errors
+- "Cannot connect to database" errors
+- Voicemail fails to save
+- CDR not logging
 
 **Solutions:**
 
-**For Development (Self-Signed):**
+**1. Verify Database Running:**
 ```bash
-# Generate self-signed certificate
-python3 scripts/generate_ssl_cert.py --hostname [your_ip_or_hostname]
-
-# Browser will show warning - this is normal for self-signed
-# Click "Advanced" → "Proceed anyway"
-```
-
-**For Production (Let's Encrypt):**
-```bash
-# Install certbot
-sudo apt-get install certbot
-
-# Generate certificate
-sudo certbot certonly --standalone -d yourdomain.com
-
-# Update config.yml
-nano ~/PBX/config.yml
-
-# Set:
-api:
-  ssl:
-    cert: /etc/letsencrypt/live/yourdomain.com/fullchain.pem
-    key: /etc/letsencrypt/live/yourdomain.com/privkey.pem
-```
-
-### Database Connection Issues
-
-**Symptoms:**
-- Can't add extensions
-- Voicemail not working
-- "Database connection failed" errors
-
-**Solutions:**
-
-**For PostgreSQL:**
-```bash
-# Test connection
-python3 scripts/verify_database.py
-
-# Check PostgreSQL is running
+# PostgreSQL
 sudo systemctl status postgresql
+sudo systemctl start postgresql
 
-# Verify credentials in .env
-nano ~/PBX/.env
-
-# Should have:
-DB_HOST=localhost
-DB_NAME=pbx_system
-DB_USER=pbx_user
-DB_PASSWORD=your_password
+# Check connection
+psql -U pbx_user -d pbx_system -h localhost
 ```
 
-**For SQLite:**
+**2. Test Database Connection:**
 ```bash
-# Check database file exists
-ls -lh pbx.db
+python scripts/verify_database.py
 
-# Verify permissions
-chmod 644 pbx.db
-
-# Test manually
-sqlite3 pbx.db "SELECT * FROM extensions;"
+# Should show successful connection
 ```
 
-### YAML Configuration Errors
+**3. Check Database Credentials:**
+```bash
+# Verify .env
+cat .env | grep DB_
+
+# Required:
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_NAME=pbx_system
+# DB_USER=pbx_user
+# DB_PASSWORD=your_password
+```
+
+**4. Verify Database Exists:**
+```bash
+sudo -u postgres psql -l | grep pbx_system
+
+# If not exists, create:
+sudo -u postgres createdb pbx_system
+```
+
+**5. Check User Permissions:**
+```bash
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx_system TO pbx_user;"
+```
+
+**6. Initialize Database:**
+```bash
+# Run initialization script
+python scripts/init_voicemail_db.py
+
+# Should create tables
+```
+
+**7. Check Logs:**
+```bash
+tail -f logs/pbx.log | grep -i database
+
+# Look for connection errors
+```
+
+### Database Migration Errors
 
 **Symptoms:**
-- PBX won't start
-- "YAML parsing error"
-- Configuration not loading
+- Errors after upgrading PBX version
+- Schema mismatch errors
+- Missing table errors
 
 **Solutions:**
+
+**1. Backup Database:**
 ```bash
-# Validate YAML syntax
-python3 -c "import yaml; yaml.safe_load(open('config.yml'))"
-
-# Common issues:
-# 1. Incorrect indentation (use spaces, not tabs)
-# 2. Missing colons after keys
-# 3. Unquoted special characters
-
-# Backup before editing
-cp config.yml config.yml.backup
-
-# Use proper editor
-nano config.yml  # Shows line numbers
+sudo -u postgres pg_dump pbx_system > /backup/pbx_backup.sql
 ```
 
-### Merge Conflicts in config.yml
+**2. Run Migration:**
+```bash
+python scripts/migrate_database.py
+
+# Follow prompts
+```
+
+**3. Check Schema Version:**
+```bash
+sudo -u postgres psql pbx_system -c "SELECT * FROM schema_version;"
+```
+
+**4. Manual Table Creation:**
+```bash
+# If specific table missing
+sudo -u postgres psql pbx_system < schema/create_table.sql
+```
+
+### Voicemail Database Issues
 
 **Symptoms:**
-- Git shows merge conflicts in config.yml
-- File contains `<<<<<<<`, `=======`, `>>>>>>>` markers
+- Voicemails not saved
+- Cannot retrieve messages
+- Database errors in voicemail logs
 
-**Solution:**
-See [FIXING_YAML_MERGE_CONFLICTS.md](FIXING_YAML_MERGE_CONFLICTS.md) for detailed guide.
+**Solutions:**
 
-Quick fix:
+**1. Initialize Voicemail Tables:**
 ```bash
-# Manually edit to remove conflict markers
-nano config.yml
+python scripts/init_voicemail_db.py
 
-# Remove lines with <<<<<<< ======= >>>>>>>
-# Keep the version you want
-# Save and commit
+# Creates voicemail_messages table
+```
+
+**2. Verify Tables Exist:**
+```bash
+sudo -u postgres psql pbx_system -c "\dt"
+
+# Should show voicemail_messages table
+```
+
+**3. Check File Storage:**
+```bash
+# Verify voicemail directory exists
+ls -la voicemail/
+
+# Create if missing
+mkdir -p voicemail/1001
+sudo chown -R pbx:pbx voicemail/
+```
+
+**4. Test Voicemail Save:**
+```bash
+# Make test call to voicemail
+# Check if file created in voicemail/EXTENSION/
 ```
 
 ---
@@ -544,416 +937,589 @@ nano config.yml
 
 ### PBX Service Won't Start
 
-**Diagnostics:**
-```bash
-# Check service status
-sudo systemctl status pbx
-
-# View error logs
-sudo journalctl -u pbx -n 50
-
-# Test manually to see errors
-cd ~/PBX
-python3 main.py
-```
-
-**Common Issues:**
-
-**1. CHDIR Error (Exit Code 200)**
-```bash
-# Check service status - look for "status=200/CHDIR"
-sudo systemctl status pbx
-
-# This means WorkingDirectory is missing or incorrect
-```
-
-**Solution:**
-The service file is missing the `WorkingDirectory` directive or it points to a non-existent directory.
-
-```bash
-# Edit service file
-sudo nano /etc/systemd/system/pbx.service
-
-# Ensure it includes WorkingDirectory and uses absolute paths:
-# [Service]
-# WorkingDirectory=/root/PBX  # or your actual PBX path
-# ExecStart=/root/PBX/venv/bin/python /root/PBX/main.py
-
-# Reload and restart
-sudo systemctl daemon-reload
-sudo systemctl restart pbx
-```
-
-See [SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md) for detailed service configuration.
-
-**2. Port Already in Use**
-```bash
-# Find what's using port 5060
-sudo lsof -i :5060
-
-# Kill the process or change PBX port
-```
-
-**3. Missing Dependencies**
-```bash
-# Reinstall requirements
-pip3 install -r requirements.txt
-```
-
-**4. Permission Errors**
-```bash
-# Check file permissions
-ls -la ~/PBX
-
-# Fix if needed
-chmod +x main.py
-```
-
-### Logs Not Updating
-
 **Symptoms:**
-- Log file empty or not changing
-- Can't debug issues
+- `systemctl start pbx` fails
+- Service shows "failed" or "inactive"
+- Immediate exit after start
 
 **Solutions:**
-```bash
-# Check logging level in config.yml
-nano ~/PBX/config.yml
 
-# Set to DEBUG for troubleshooting
+**1. Check Service Status:**
+```bash
+sudo systemctl status pbx
+
+# Look for exit code and error message
+```
+
+**2. View Detailed Logs:**
+```bash
+sudo journalctl -u pbx -n 100 --no-pager
+
+# Look for Python errors or traceback
+```
+
+**3. Check Configuration File:**
+```bash
+# Validate YAML syntax
+python -c "import yaml; yaml.safe_load(open('config.yml'))"
+
+# Should complete without errors
+```
+
+**4. Verify Python Dependencies:**
+```bash
+pip list | grep -i twisted
+pip list | grep -i yaml
+
+# Reinstall if missing
+pip install -r requirements.txt
+```
+
+**5. Check File Permissions:**
+```bash
+sudo chown -R pbx:pbx /opt/pbx/
+sudo chmod 755 /opt/pbx/main.py
+```
+
+**6. Test Manual Start:**
+```bash
+# Run manually to see errors
+cd /opt/pbx
+python main.py
+
+# Should show startup messages or errors
+```
+
+**7. Check Port Conflicts:**
+```bash
+# Verify ports not in use
+sudo netstat -tlnp | grep -E "(5060|8080)"
+
+# If in use, kill conflicting process or change PBX ports
+```
+
+### Service Crashes or Restarts Frequently
+
+**Symptoms:**
+- Service keeps restarting
+- Unexpected exits
+- Crashes under load
+
+**Solutions:**
+
+**1. Check Crash Logs:**
+```bash
+sudo journalctl -u pbx -f
+
+# Watch for crash patterns
+```
+
+**2. Review Application Logs:**
+```bash
+tail -f logs/pbx.log
+
+# Look for exceptions or errors before crash
+```
+
+**3. Check Memory Usage:**
+```bash
+free -h
+top -p $(pgrep -f "python.*main.py")
+
+# Verify sufficient memory available
+```
+
+**4. Check Disk Space:**
+```bash
+df -h
+
+# Ensure /var/log and application directories have space
+```
+
+**5. Review Core Dumps:**
+```bash
+# Check for core dumps
+ls -la /var/crash/
+ls -la core.*
+
+# Analyze if present
+```
+
+**6. Enable Debug Logging:**
+```yaml
+# config.yml
 logging:
   level: "DEBUG"
+```
 
-# Restart service
-sudo systemctl restart pbx
+**7. Check SystemD Service Settings:**
+```bash
+# View service file
+cat /etc/systemd/system/pbx.service
 
-# Verify logs are being written
-tail -f ~/PBX/logs/pbx.log
+# Check Restart= settings
+# May need to adjust restart policy
 ```
 
 ---
 
-## Admin Panel and Web Interface Issues
+## Network & Firewall
 
-### Login Connection Error
+### Firewall Blocking Traffic
 
 **Symptoms:**
-- "Connection error. Please try again." when logging in
-- "Cannot reach API server" message
-- Admin panel login page fails to connect
+- Connections timeout
+- Intermittent connectivity
+- Some features work, others don't
 
-**Quick Diagnosis:**
-1. Press `F12` to open Developer Tools
-2. Go to Console tab
-3. Look for error messages
+**Solutions:**
 
-**Common Causes and Solutions:**
-
-**A) PBX Server Not Running:**
+**1. Check Firewall Status:**
 ```bash
-# Check if service is running
-sudo systemctl status pbx
-
-# If not running, start it
-sudo systemctl start pbx
-
-# Check for errors
-sudo journalctl -u pbx -n 50
-```
-
-**Expected output when starting:**
-```
-Starting REST API server on 0.0.0.0:9000...
-REST API server started successfully
-```
-
-**B) Wrong API Port:**
-```bash
-# Verify API port in config.yml
-grep -A3 "^api:" config.yml
+sudo ufw status verbose
 
 # Should show:
-# api:
-#   host: 0.0.0.0
-#   port: 9000
+# 5060/udp ALLOW IN
+# 8080/tcp ALLOW IN
+# 10000:20000/udp ALLOW IN
 ```
 
-**C) Firewall Blocking Port:**
+**2. Open Required Ports:**
 ```bash
-# Allow port 9000
-sudo ufw allow 9000/tcp
-sudo ufw status
+# SIP signaling
+sudo ufw allow 5060/udp
 
-# Check if port is open
-sudo netstat -tlnp | grep 9000
-```
+# Admin/API
+sudo ufw allow 8080/tcp
+sudo ufw allow 443/tcp
 
-**D) Reverse Proxy Configuration:**
-
-The login page now auto-detects reverse proxy setups. If using nginx or Apache reverse proxy:
-- ✅ Should work automatically
-- If issues persist, add meta tag to `admin/login.html`:
-  ```html
-  <meta name="api-base-url" content="http://your-server:9000">
-  ```
-
-### Browser Cache Issues
-
-**Symptoms:**
-- Admin panel loads but appears broken
-- Buttons are not clickable
-- Layout appears incorrect
-- Occurs after updating PBX code
-
-**Solution 1: Hard Refresh (Fastest)**
-
-**Windows/Linux:**
-- Press `Ctrl + Shift + R` (or `Ctrl + F5`)
-
-**Mac:**
-- Chrome/Edge/Firefox: Press `Cmd + Shift + R`
-- Safari: Press `Cmd + Option + R`
-
-**Solution 2: Clear Browser Cache**
-
-**Chrome/Edge:**
-1. Press `Ctrl + Shift + Delete`
-2. Select "Cached images and files"
-3. Choose "All time"
-4. Click "Clear data"
-
-**Firefox:**
-1. Press `Ctrl + Shift + Delete`
-2. Check "Cached Web Content"
-3. Choose "Everything"
-4. Click "Clear Now"
-
-**Solution 3: Test in Private/Incognito Mode**
-
-- Chrome/Edge: `Ctrl + Shift + N`
-- Firefox: `Ctrl + Shift + P`
-- Safari: `Cmd + Shift + N`
-
-If works in private mode, cache is the issue.
-
-**Solution 4: For Developers - Disable Cache**
-
-1. Press `F12` to open Developer Tools
-2. Go to Network tab
-3. Check "Disable cache"
-4. Keep Developer Tools open while testing
-
-**Test Your Installation:**
-Visit `/admin/status-check.html` to verify the PBX system is working correctly.
-
-### Auto-Attendant Menu Issues
-
-**Quick Diagnostic:**
-```bash
-# Test menu API endpoints
-cd /path/to/PBX
-python3 scripts/test_menu_endpoints.py
-
-# Test remote server
-python3 scripts/test_menu_endpoints.py --host your-server --port 9000
-```
-
-**Issue 1: 404 Errors on Menu API Endpoints**
-
-**Symptoms:**
-- Console shows 404 errors for `/api/auto-attendant/menus`
-- Parent menu dropdown is empty
-- Tree view shows "Failed to load menu tree"
-
-**Solutions:**
-
-1. **Verify code is up to date:**
-   ```bash
-   cd /path/to/PBX
-   git log --oneline -1 -- pbx/api/rest_api.py
-   ```
-
-2. **Restart PBX service:**
-   ```bash
-   sudo systemctl restart pbx
-   ```
-
-3. **Test endpoints directly:**
-   ```bash
-   curl -X GET http://localhost:9000/api/auto-attendant/menus
-   curl -X GET http://localhost:9000/api/auto-attendant/menu-tree
-   ```
-
-**Issue 2: Empty Dropdowns When Creating Submenu**
-
-**Causes:**
-- API endpoint returning 404
-- Auto attendant database tables not initialized
-- Feature not enabled in PBX core
-
-**Solutions:**
-1. Check if auto attendant is enabled in `config.yml`:
-   ```yaml
-   auto_attendant:
-     enabled: true
-   ```
-
-2. Initialize database tables:
-   ```bash
-   python3 scripts/init_database.py
-   ```
-
-3. Restart PBX:
-   ```bash
-   sudo systemctl restart pbx
-   ```
-
----
-
-## Quality of Service (QoS) and Audio Issues
-
-### One-Way Audio
-
-**Symptoms:**
-- Can hear caller but they can't hear you (or vice versa)
-- Audio works only in one direction
-
-**Common Causes:**
-
-**1. NAT/Firewall Issues**
-```bash
-# Ensure RTP ports are open
+# RTP media
 sudo ufw allow 10000:20000/udp
 
-# Check external IP in config.yml
-grep external_ip config.yml
-# Should match your actual public/external IP
+# Reload firewall
+sudo ufw reload
 ```
 
-**2. Codec Mismatch**
+**3. Check IPTables (if using):**
 ```bash
-# Check logs for codec negotiation
-grep -i codec logs/pbx.log
-
-# Verify both endpoints support same codec
+sudo iptables -L -n -v | grep -E "(5060|8080|10000)"
 ```
 
-**3. Network Configuration**
-- Check router port forwarding for RTP ports (10000-20000 UDP)
-- Verify no SIP ALG (Application Layer Gateway) interfering
-- Disable SIP ALG on router if possible
+**4. Test Connectivity:**
+```bash
+# From external host
+nc -u -v PBX_IP 5060  # SIP
+nc -v PBX_IP 8080     # HTTPS
 
-**Solutions:**
-1. Update `external_ip` in `config.yml` to your public IP
-2. Configure router NAT/port forwarding
-3. Enable STUN server in phone configuration
-4. For detailed QoS troubleshooting, see specific sections below
+# Should connect
+```
 
-### RTP Packet Loss
+**5. Disable Firewall Temporarily (Testing Only):**
+```bash
+sudo ufw disable
+
+# Test if issue resolves
+# Re-enable: sudo ufw enable
+```
+
+### NAT/Routing Issues
 
 **Symptoms:**
-- Choppy or robotic voice
-- Dropped audio segments
-- Poor call quality
-
-**Diagnosis:**
-```bash
-# Check RTP statistics in logs
-grep "RTP statistics" logs/pbx.log
-
-# Monitor network for packet loss
-ping -c 100 remote-phone-ip
-```
+- Works internally but not externally
+- One-way audio across networks
+- Registration from remote phones fails
 
 **Solutions:**
 
-**1. Enable Jitter Buffer:**
+**1. Configure External IP:**
 ```yaml
-# In config.yml
-rtp:
-  jitter_buffer:
-    enabled: true
-    max_length_ms: 200
-    adaptive: true
+# config.yml
+server:
+  external_ip: "YOUR_PUBLIC_IP"
 ```
 
-**2. QoS Prioritization:**
-- Configure network switches/routers for VoIP QoS
-- Mark RTP packets with DSCP EF (Expedited Forwarding)
-- Prioritize UDP ports 10000-20000
+**2. Enable STUN:**
+```yaml
+stun:
+  enabled: true
+  server: "stun.l.google.com:19302"
+```
 
-**3. Check Network Path:**
+**3. Port Forwarding:**
 ```bash
-# Trace route to phone
-traceroute phone-ip
-
-# Check for high latency hops
-# Ideal: < 150ms total latency
+# On router, forward these ports to PBX:
+# UDP 5060 (SIP)
+# UDP 10000-20000 (RTP)
+# TCP 8080 or 443 (HTTPS)
 ```
 
-### Audio Echo or Feedback
+**4. Check NAT Type:**
+```bash
+# Test NAT behavior
+# Symmetric NAT can cause issues
+```
+
+**5. Configure SIP NAT Keepalive:**
+```yaml
+sip:
+  nat_keepalive: true
+  keepalive_interval: 30
+```
+
+---
+
+## Configuration Issues
+
+### Invalid Configuration File
 
 **Symptoms:**
-- Hear own voice echoed back
-- Feedback loop during calls
+- PBX won't start
+- "YAML parse error" messages
+- Configuration not loading
 
 **Solutions:**
 
-**1. Phone Configuration:**
-- Enable echo cancellation on phone
-- Adjust microphone gain/sensitivity
-- Update phone firmware
-
-**2. Network Issues:**
+**1. Validate YAML Syntax:**
 ```bash
-# Check for audio loopback in config
-grep -i "loopback\|echo" config.yml
+python -c "import yaml; yaml.safe_load(open('config.yml'))"
+
+# Will show line number of syntax error
 ```
 
-**3. Codec Selection:**
-- Use codecs with built-in echo cancellation (G.722, Opus)
-- Avoid G.711 on poor networks
+**2. Common YAML Mistakes:**
+- Tabs instead of spaces (use spaces only)
+- Incorrect indentation
+- Missing colons
+- Unquoted special characters
+
+**3. Check for Merge Conflicts:**
+```bash
+grep -n "<<<<<<" config.yml
+grep -n ">>>>>>" config.yml
+
+# If found, resolve conflicts manually
+```
+
+**4. Use Example as Template:**
+```bash
+# Compare with working example
+diff config.yml config.example.yml
+```
+
+**5. Test Minimal Config:**
+```bash
+# Start with minimal config.yml
+# Add sections incrementally to find problem
+```
+
+### Environment Variables Not Loading
+
+**Symptoms:**
+- "${VAR}" appears in logs instead of value
+- Authentication fails
+- Missing credentials
+
+**Solutions:**
+
+**1. Verify .env File:**
+```bash
+cat .env
+
+# Should not have quotes around values:
+# DB_PASSWORD=mypassword  ✓
+# DB_PASSWORD="mypassword"  ✗ (quotes will be included)
+```
+
+**2. Check File Location:**
+```bash
+# .env must be in same directory as main.py
+ls -la .env
+
+# Or set ENV_FILE path
+export ENV_FILE=/opt/pbx/.env
+```
+
+**3. Test Variable Loading:**
+```bash
+python -c "from dotenv import load_dotenv; import os; load_dotenv(); print(os.getenv('DB_PASSWORD'))"
+
+# Should print password value
+```
+
+**4. Check Permissions:**
+```bash
+sudo chmod 600 .env
+sudo chown pbx:pbx .env
+```
 
 ---
 
-## Getting More Help
+## Performance & Monitoring
 
-If issues persist after trying these solutions:
+### High CPU Usage
 
-1. **Check Detailed Guides:**
-   - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deployment details
-   - [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing procedures
-   - [CALL_FLOW.md](CALL_FLOW.md) - Understanding call flow
+**Symptoms:**
+- CPU constantly high
+- System sluggish
+- Calls affected
 
-2. **Enable Debug Logging:**
-   ```yaml
-   logging:
-     level: "DEBUG"
-   ```
+**Solutions:**
 
-3. **Collect Diagnostic Information:**
-   ```bash
-   # System info
-   python3 --version
-   uname -a
-   
-   # Service status
-   sudo systemctl status pbx
-   
-   # Network info
-   sudo netstat -tlnup | grep -E "5060|8080"
-   
-   # Recent logs
-   tail -100 ~/PBX/logs/pbx.log > debug_log.txt
-   ```
+**1. Check Active Calls:**
+```bash
+curl -k https://localhost:8080/api/calls | jq '.'
 
-4. **Open GitHub Issue** with:
-   - Description of the problem
-   - Steps to reproduce
-   - Error messages from logs
-   - System configuration details
+# High call volume may be normal
+```
+
+**2. Review Process Stats:**
+```bash
+top -p $(pgrep -f "python.*main.py")
+
+# Check CPU percentage
+```
+
+**3. Check for Loops:**
+```bash
+# Look for error loops in logs
+tail -f logs/pbx.log | grep -i error
+
+# May indicate infinite retry loop
+```
+
+**4. Check Database Performance:**
+```bash
+# Slow queries can cause CPU spikes
+sudo -u postgres psql pbx_system -c "SELECT * FROM pg_stat_activity;"
+```
+
+**5. Optimize Configuration:**
+```yaml
+# Reduce logging level
+logging:
+  level: "WARNING"
+
+# Disable unnecessary features
+```
+
+### Memory Leaks
+
+**Symptoms:**
+- Memory usage grows over time
+- Eventually crashes or OOM
+- Performance degrades
+
+**Solutions:**
+
+**1. Monitor Memory:**
+```bash
+# Watch memory usage
+watch -n 5 'ps aux | grep python | grep main.py'
+```
+
+**2. Check Call Cleanup:**
+```bash
+# Verify calls are properly ended
+curl -k https://localhost:8080/api/calls
+
+# Stale calls indicate cleanup issue
+```
+
+**3. Restart Service Periodically:**
+```bash
+# Temporary workaround
+# Add cron job for nightly restart
+0 3 * * * systemctl restart pbx
+```
+
+**4. Enable Memory Profiling:**
+```python
+# Add to main.py temporarily
+import tracemalloc
+tracemalloc.start()
+```
+
+### Slow Performance
+
+**Symptoms:**
+- Delayed call setup
+- Slow API responses
+- UI lag
+
+**Solutions:**
+
+**1. Check System Resources:**
+```bash
+# CPU
+top
+
+# Memory
+free -h
+
+# Disk I/O
+iostat
+```
+
+**2. Check Database Performance:**
+```bash
+# Add indexes if needed
+sudo -u postgres psql pbx_system
+
+# Analyze slow queries
+EXPLAIN ANALYZE SELECT * FROM voicemail_messages;
+```
+
+**3. Optimize Logging:**
+```yaml
+logging:
+  level: "WARNING"  # Reduce from DEBUG
+```
+
+**4. Check Network Latency:**
+```bash
+ping -c 100 REMOTE_ENDPOINT
+
+# High latency affects performance
+```
 
 ---
 
-**Last Updated:** December 16, 2025  
-**Status:** Production Ready
+## Historical Fixes Reference
+
+This section documents significant bugs that have been fixed. Included for reference if similar issues appear.
+
+### Admin Panel Display Issues (Browser Cache)
+
+**Date Fixed:** December 23, 2025  
+**Status:** ✅ RESOLVED
+
+**Problem:**
+After server updates, admin panel displayed incorrectly with non-functional buttons.
+
+**Solution:**
+- Added cache-control meta tags
+- Added version query parameters to CSS/JS
+- Created diagnostic page: /admin/status-check.html
+- Hard refresh: Ctrl+Shift+R
+
+**Files Modified:**
+- admin/index.html
+- admin/login.html
+- admin/status-check.html
+
+### API Connection Timeout (Reverse Proxy)
+
+**Date Fixed:** December 23, 2025  
+**Status:** ✅ RESOLVED
+
+**Problem:**
+Admin panel API requests timing out through nginx reverse proxy.
+
+**Solution:**
+Added proxy timeouts to nginx configuration:
+```nginx
+proxy_connect_timeout 60s;
+proxy_send_timeout 60s;
+proxy_read_timeout 60s;
+```
+
+### Audio Sample Rate Mismatch
+
+**Date Fixed:** December 19, 2025  
+**Status:** ✅ RESOLVED
+
+**Problem:**
+Voicemail prompts sounded distorted and garbled.
+
+**Root Cause:**
+Prompts generated at 16kHz but PCMU codec expects 8kHz.
+
+**Solution:**
+Regenerated all prompts at 8kHz sample rate.
+
+**Verification:**
+```bash
+file voicemail_prompts/*.wav
+# Should show: 8000 Hz
+```
+
+### RTP One-Way Audio
+
+**Date Fixed:** December 2025  
+**Status:** ✅ RESOLVED
+
+**Problem:**
+RTP relay had race condition causing one-way or no audio.
+
+**Root Cause:**
+Relay required both endpoints before forwarding packets.
+
+**Solution:**
+Modified RTP relay to:
+- Set caller endpoint immediately
+- Remove blocking condition
+- Forward packets as soon as first endpoint known
+
+### G.722 Codec Quantization
+
+**Date Fixed:** December 2025  
+**Status:** ✅ RESOLVED
+
+**Problem:**
+G.722 audio severely distorted.
+
+**Root Cause:**
+MAX_QUANTIZATION_RANGE set to 256 instead of 32768.
+
+**Solution:**
+```python
+# pbx/features/g722_codec.py
+MAX_QUANTIZATION_RANGE = 32768  # Corrected
+```
+
+---
+
+## Additional Resources
+
+### Documentation
+- [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md) - Comprehensive PBX guide
+- [README.md](README.md) - Project overview
+- [API_DOCUMENTATION.md](docs/archive/API_DOCUMENTATION.md) - REST API reference (if available)
+
+### Support
+- GitHub Issues: https://github.com/mattiIce/PBX/issues
+- Community Forum: (if available)
+
+### External Resources
+- SIP Protocol: RFC 3261
+- RTP Protocol: RFC 3550
+- VoIP Troubleshooting: https://www.voip-info.org/
+
+---
+
+**Document Version:** 1.0.0  
+**Last Updated:** 2025-12-29  
+**Maintained by:** PBX Development Team
+
+---
+
+## Quick Diagnostic Commands
+
+```bash
+# Full system check
+sudo systemctl status pbx
+curl -k https://localhost:8080/api/status
+sudo ufw status
+sudo netstat -tlnp | grep -E "(5060|8080)"
+python scripts/verify_database.py
+
+# Check logs for errors
+tail -f logs/pbx.log | grep -i error
+
+# Test basic functionality
+curl -k https://localhost:8080/api/extensions
+curl -k https://localhost:8080/api/calls
+
+# Monitor real-time activity
+tail -f logs/pbx.log
+```
