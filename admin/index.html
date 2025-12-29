@@ -1143,18 +1143,40 @@
 
             <div class="config-section">
                 <div class="section-header">
-                    <h3>🎯 Menu Options</h3>
-                    <button class="btn btn-success" onclick="showAddMenuOptionModal()">➕ Add Menu Option</button>
+                    <h3>🎯 Menu Structure</h3>
+                    <div>
+                        <button class="btn btn-success" onclick="showAddMenuOptionModal()">➕ Add Menu Option</button>
+                        <button class="btn btn-primary" onclick="showCreateSubmenuModal()">📁 Create Submenu</button>
+                        <button class="btn btn-secondary" onclick="toggleMenuTreeView()">🌲 Tree View</button>
+                    </div>
                 </div>
+                
+                <!-- Current Menu Breadcrumb -->
+                <div id="menu-breadcrumb" style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; display: flex; align-items: center; gap: 5px;">
+                    <span style="color: #666;">Current Menu:</span>
+                    <span id="breadcrumb-path" style="font-weight: bold;">Main Menu</span>
+                </div>
+
+                <!-- Menu Tree View (collapsible) -->
+                <div id="menu-tree-container" style="display: none; margin-bottom: 15px;">
+                    <div class="config-section" style="background: #fafafa; border-left: 4px solid #4CAF50;">
+                        <h4>📂 Menu Hierarchy</h4>
+                        <div id="menu-tree-view" style="font-family: 'Courier New', monospace; padding: 10px;">
+                            Loading menu tree...
+                        </div>
+                    </div>
+                </div>
+
                 <div class="info-box" style="margin-bottom: 15px;">
-                    <p>Configure what happens when callers press digits on their phone.</p>
-                    <p><strong>Example:</strong> Press 1 for Sales (ext 1001), Press 2 for Support (ext 1002)</p>
+                    <p>Configure multi-level menu navigation for your auto attendant.</p>
+                    <p><strong>📌 Tip:</strong> Create submenus to organize related departments. Press * or 9 to go back, # to repeat.</p>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Digit</th>
+                                <th>Type</th>
                                 <th>Destination</th>
                                 <th>Description</th>
                                 <th>Actions</th>
@@ -1162,7 +1184,7 @@
                         </thead>
                         <tbody id="aa-menu-options-table-body">
                             <tr>
-                                <td colspan="4" class="loading">Loading menu options...</td>
+                                <td colspan="5" class="loading">Loading menu options...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -4637,9 +4659,27 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Which digit callers will press</small>
                 </div>
                 <div class="form-group">
-                    <label>Destination Extension:</label>
+                    <label>Destination Type:</label>
+                    <select id="new-menu-dest-type" onchange="updateDestinationFieldVisibility('new')" required>
+                        <option value="extension">Extension</option>
+                        <option value="submenu">Submenu</option>
+                        <option value="queue">Queue</option>
+                        <option value="voicemail">Voicemail</option>
+                        <option value="operator">Operator</option>
+                    </select>
+                    <small>Type of destination for this menu option</small>
+                </div>
+                <div class="form-group" id="new-dest-extension-group">
+                    <label>Destination <span id="new-dest-label">Extension</span>:</label>
                     <input type="text" id="new-menu-destination" required placeholder="1001">
-                    <small>Extension, queue, or feature code to transfer to</small>
+                    <small id="new-dest-help">Extension, queue, or feature code to transfer to</small>
+                </div>
+                <div class="form-group" id="new-dest-submenu-group" style="display: none;">
+                    <label>Select Submenu:</label>
+                    <select id="new-menu-submenu" required disabled>
+                        <option value="">Loading submenus...</option>
+                    </select>
+                    <small>Choose which submenu to navigate to</small>
                 </div>
                 <div class="form-group">
                     <label>Description:</label>
@@ -4667,8 +4707,24 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <label>Digit: <span id="edit-menu-digit-display"></span></label>
                 </div>
                 <div class="form-group">
-                    <label>Destination Extension:</label>
+                    <label>Destination Type:</label>
+                    <select id="edit-menu-dest-type" onchange="updateDestinationFieldVisibility('edit')" required>
+                        <option value="extension">Extension</option>
+                        <option value="submenu">Submenu</option>
+                        <option value="queue">Queue</option>
+                        <option value="voicemail">Voicemail</option>
+                        <option value="operator">Operator</option>
+                    </select>
+                </div>
+                <div class="form-group" id="edit-dest-extension-group">
+                    <label>Destination <span id="edit-dest-label">Extension</span>:</label>
                     <input type="text" id="edit-menu-destination" required placeholder="1001">
+                </div>
+                <div class="form-group" id="edit-dest-submenu-group" style="display: none;">
+                    <label>Select Submenu:</label>
+                    <select id="edit-menu-submenu" required disabled>
+                        <option value="">Loading submenus...</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Description:</label>
@@ -4677,6 +4733,44 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditMenuOptionModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Menu Option</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Submenu Modal -->
+    <div id="create-submenu-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 Create Submenu</h3>
+                <span class="close" onclick="closeCreateSubmenuModal()">&times;</span>
+            </div>
+            <form id="create-submenu-form">
+                <div class="form-group">
+                    <label>Menu ID:</label>
+                    <input type="text" id="submenu-id" required pattern="[a-z0-9_-]+" placeholder="shipping-submenu">
+                    <small>Unique identifier (lowercase, no spaces, e.g., shipping-submenu)</small>
+                </div>
+                <div class="form-group">
+                    <label>Parent Menu:</label>
+                    <select id="submenu-parent" required>
+                        <option value="main">Main Menu</option>
+                    </select>
+                    <small>Which menu this submenu belongs to</small>
+                </div>
+                <div class="form-group">
+                    <label>Menu Name:</label>
+                    <input type="text" id="submenu-name" required placeholder="Shipping and Receiving">
+                    <small>Display name for this menu</small>
+                </div>
+                <div class="form-group">
+                    <label>Voice Prompt Text:</label>
+                    <textarea id="submenu-prompt" rows="4" placeholder="For directions, press 1. For shipping and receiving, press 2." required></textarea>
+                    <small>This text will be converted to speech using gTTS</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateSubmenuModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Create Submenu</button>
                 </div>
             </form>
         </div>
