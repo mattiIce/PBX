@@ -46,7 +46,6 @@ P23 = 0                       # Silence Suppression: 0=No, 1=Yes
 P24 = 0                       # Voice Activity Detection: 0=No, 1=Yes
 
 # Fax Support - T.38 Fax over IP
-P191 = 1                      # T.38 Support: 0=Disable, 1=Enable
 P245 = 1                      # T.38 Fax Mode: 0=Disable, 1=Enable
 P338 = 1                      # Disable audio processing during fax: 1=Yes (recommended)
 
@@ -55,7 +54,7 @@ P89 = 0                       # Speaker Volume (dB): -12 to +12, 0=default
 P90 = 0                       # Mic Volume (dB): -12 to +12, 0=default
 
 # Regional Settings (North America / FCC)
-P24 = 0                       # Impedance: 0=600 ohm, 1=900 ohm (North America uses 600)
+P25 = 0                       # Impedance: 0=600 ohm, 1=900 ohm (North America uses 600)
 P64 = pool.ntp.org            # NTP Server
 
 # Ring Settings
