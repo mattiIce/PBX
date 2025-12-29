@@ -8,15 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- TROUBLESHOOTING_HISTORICAL_FIXES.md - Consolidated historical bug fixes and solutions
 
 ### Changed
+- Documentation consolidation: Reduced documentation files by ~26% (40 files)
+- Updated DOCUMENTATION_INDEX.md with new consolidated structure
+- Improved documentation organization and cross-referencing
 
 ### Deprecated
+- Individual codec guides (consolidated into CODEC_IMPLEMENTATION_GUIDE.md)
+- Individual DTMF guides (consolidated into DTMF_CONFIGURATION_GUIDE.md)
+- Individual WebRTC guides (consolidated into WEBRTC_GUIDE.md)
+- Individual security guides (consolidated into SECURITY_GUIDE.md)
+- Individual compliance guides (consolidated into REGULATIONS_COMPLIANCE_GUIDE.md)
 
 ### Removed
+- 40 deprecated and historical documentation files
+  - 26 individual implementation guides (now consolidated)
+  - 14 historical fix summary documents (now in TROUBLESHOOTING_HISTORICAL_FIXES.md)
 
 ### Fixed
-
 - docker-compose compatibility: Downgraded requests library from 2.32.3 to 2.31.0 to fix `URLSchemeUnknown: Not supported URL scheme http+docker` error when building with docker-compose v1.29.2
 
 ### Security
