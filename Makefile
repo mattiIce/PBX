@@ -154,9 +154,28 @@ isort: ## Run isort for import sorting
 # =============================================================================
 
 .PHONY: test
-test: ## Run all tests with pytest
-	@echo -e "$(COLOR_BOLD)Running all tests...$(COLOR_RESET)"
+test: test-python test-js ## Run all tests (Python and JavaScript)
+
+.PHONY: test-python
+test-python: ## Run Python tests with pytest
+	@echo -e "$(COLOR_BOLD)Running Python tests...$(COLOR_RESET)"
 	$(PYTHON) -m pytest $(TEST_DIR) -v
+
+.PHONY: test-js
+test-js: ## Run JavaScript tests with Jest
+	@echo -e "$(COLOR_BOLD)Running JavaScript tests...$(COLOR_RESET)"
+	npm test
+
+.PHONY: test-js-watch
+test-js-watch: ## Run JavaScript tests in watch mode
+	@echo -e "$(COLOR_BOLD)Running JavaScript tests in watch mode...$(COLOR_RESET)"
+	npm run test:watch
+
+.PHONY: test-js-cov
+test-js-cov: ## Run JavaScript tests with coverage
+	@echo -e "$(COLOR_BOLD)Running JavaScript tests with coverage...$(COLOR_RESET)"
+	npm run test:coverage
+	@echo -e "$(COLOR_GREEN)✓ JavaScript coverage report generated in coverage/index.html$(COLOR_RESET)"
 
 .PHONY: test-unit
 test-unit: ## Run unit tests only

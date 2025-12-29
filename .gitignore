@@ -68,6 +68,7 @@ local_config/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage/
 
 # OS
 .DS_Store
@@ -92,3 +93,10 @@ admin/test_framework.html
 
 # Test files
 admin/test_*.html
+
+# Node.js / JavaScript
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
