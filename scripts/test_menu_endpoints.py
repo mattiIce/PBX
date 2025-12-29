@@ -14,7 +14,7 @@ import urllib.request
 import urllib.error
 
 
-def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=200):
+def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=200, timeout=10):
     """Test a single API endpoint."""
     url = f"{base_url}{endpoint}"
     
@@ -26,7 +26,7 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
         else:
             req = urllib.request.Request(url, method=method)
         
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
             status = response.status
             body = response.read().decode('utf-8')
             
@@ -41,6 +41,7 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
                     elif isinstance(data, dict) and 'menu_tree' in data:
                         print(f"  → Menu tree loaded")
                 except json.JSONDecodeError:
+                    # Response body is not valid JSON; ignore and continue without extra details.
                     pass
                 return True
             else:
@@ -77,6 +78,8 @@ def main():
     parser.add_argument('--port', default='9000', help='API server port (default: 9000)')
     parser.add_argument('--protocol', default='http', choices=['http', 'https'], 
                        help='Protocol to use (default: http)')
+    parser.add_argument('--timeout', type=int, default=10,
+                       help='Request timeout in seconds (default: 10)')
     args = parser.parse_args()
     
     base_url = f"{args.protocol}://{args.host}:{args.port}"
@@ -89,18 +92,18 @@ def main():
     # Test GET endpoints
     print("\nGET Endpoints:")
     print("-" * 70)
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus"))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus/main"))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus/main/items"))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menu-tree"))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/config"))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/prompts"))
+    results.append(test_endpoint(base_url, "/api/auto-attendant/menus", timeout=args.timeout))
+    results.append(test_endpoint(base_url, "/api/auto-attendant/menus/main", timeout=args.timeout))
+    results.append(test_endpoint(base_url, "/api/auto-attendant/menus/main/items", timeout=args.timeout))
+    results.append(test_endpoint(base_url, "/api/auto-attendant/menu-tree", timeout=args.timeout))
+    results.append(test_endpoint(base_url, "/api/auto-attendant/config", timeout=args.timeout))
+    results.append(test_endpoint(base_url, "/api/auto-attendant/prompts", timeout=args.timeout))
     
     # Test a non-existent menu (should return 404)
     print("\nNegative Tests (should fail with 404):")
     print("-" * 70)
     results.append(test_endpoint(base_url, "/api/auto-attendant/menus/nonexistent", 
-                                 expected_status=404))
+                                 expected_status=404, timeout=args.timeout))
     
     # Summary
     print("\n" + "=" * 70)

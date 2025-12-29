@@ -552,20 +552,26 @@ async function parseErrorResponse(response) {
         const data = await response.json();
         return data;
     } catch (error) {
-        // If JSON parsing fails, check if we can provide more specific feedback
-        // based on the error message rather than error type
-        const errorMsg = error.message || String(error);
-        if (errorMsg.includes('JSON') || errorMsg.includes('Unexpected token')) {
-            // JSON parsing error - response likely not in JSON format
+        // If reading/parsing the response fails, try to classify the error using
+        // its type first, and only then fall back to best-effort message checks.
+        const errorMsg = (error && typeof error.message === 'string')
+            ? error.message
+            : String(error);
+
+        // JSON parsing error - response likely not in JSON format
+        if (error instanceof SyntaxError || /JSON|Unexpected token/i.test(errorMsg)) {
             return { error: 'Server returned an invalid response format' };
-        } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
-            // Network-related error
-            return { error: 'Network error while reading server response' };
-        } else {
-            // Generic fallback
-            console.warn('Unexpected error parsing response:', error);
-            return { error: 'Unable to read server response' };
         }
+
+        // Network-related or stream-related error typically surfaced as TypeError by fetch
+        if (error instanceof TypeError || /network|NetworkError|fetch/i.test(errorMsg)) {
+            return { error: 'Network error while reading server response' };
+        }
+
+        // Generic fallback if we cannot determine a more specific cause.
+        // This is a best-effort categorization when no reliable type information is available.
+        console.warn('Unexpected error parsing response:', error);
+        return { error: 'Unable to read server response' };
     }
 }
 
@@ -656,11 +662,11 @@ async function updateSubmenuDropdowns() {
         if (menus.length === 0) {
             const noMenusOption = document.createElement('option');
             noMenusOption.value = '';
-            noMenusOption.textContent = 'No parent menus available - API may be unavailable';
+            noMenusOption.textContent = 'No parent menus available - check API connection or server status';
             noMenusOption.disabled = true;
             noMenusOption.selected = true;
             parentSelect.appendChild(noMenusOption);
-            console.warn('No menus loaded - parent menu dropdown is empty. This usually means the API is not responding.');
+            console.warn('No menus loaded for parent dropdown');
         } else {
             menus.forEach(menu => {
                 const option = document.createElement('option');
@@ -785,7 +791,7 @@ async function loadMenuTree() {
         
         const treeView = document.getElementById('menu-tree-view');
         if (treeView) {
-            treeView.innerHTML = `<p style="color: #d32f2f; padding: 10px; background: #ffebee; border-radius: 4px;">
+            treeView.innerHTML = `<p class="error-message">
                 <strong>Error:</strong> ${error.message}<br>
                 <small>Check the browser console for more details.</small>
             </p>`;
