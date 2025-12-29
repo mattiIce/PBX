@@ -554,9 +554,7 @@ async function parseErrorResponse(response) {
     } catch (error) {
         // If reading/parsing the response fails, try to classify the error using
         // its type first, and only then fall back to best-effort message checks.
-        const errorMsg = (error && typeof error.message === 'string')
-            ? error.message
-            : String(error);
+        const errorMsg = error?.message || String(error);
 
         // JSON parsing error - response likely not in JSON format
         if (error instanceof SyntaxError || /JSON|Unexpected token/i.test(errorMsg)) {
