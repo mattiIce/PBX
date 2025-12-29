@@ -1631,6 +1631,11 @@ async function loadVoicemailTab() {
         const response = await fetch(`${API_BASE}/api/extensions`, {
             headers: getAuthHeaders()
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const extensions = await response.json();
 
         const select = document.getElementById('vm-extension-select');
@@ -1667,6 +1672,11 @@ window.loadVoicemailForExtension = async function() {
     try {
         // Load voicemail messages
         const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         // Update both views
