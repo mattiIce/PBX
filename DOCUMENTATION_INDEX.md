@@ -27,6 +27,8 @@ Start here if you're new to the PBX system:
 2. **[QUICK_START.md](QUICK_START.md)** - First-time setup checklist for quick deployment
 3. **[INSTALLATION.md](INSTALLATION.md)** - Detailed installation instructions
 4. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature status and implementation overview**
+5. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide
+6. **[TROUBLESHOOTING_HISTORICAL_FIXES.md](TROUBLESHOOTING_HISTORICAL_FIXES.md)** - Historical bug fixes reference
 
 ## Product Improvement & Roadmap
 
@@ -135,6 +137,9 @@ For developers working on or extending the PBX:
 Common issues and solutions:
 
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - ⭐ **Comprehensive troubleshooting guide** (audio, integration, networking, config)
+- **[TROUBLESHOOTING_HISTORICAL_FIXES.md](TROUBLESHOOTING_HISTORICAL_FIXES.md)** - Historical bug fixes and solutions reference
+- **[LOGIN_CONNECTION_TROUBLESHOOTING.md](LOGIN_CONNECTION_TROUBLESHOOTING.md)** - Login and connection issues
+- **[BROWSER_CACHE_FIX.md](BROWSER_CACHE_FIX.md)** - Browser cache and display issues
 - **[FIXING_YAML_MERGE_CONFLICTS.md](FIXING_YAML_MERGE_CONFLICTS.md)** - How to resolve Git merge conflicts in config.yml
 - **[TROUBLESHOOTING_PROVISIONING.md](TROUBLESHOOTING_PROVISIONING.md)** - Phone provisioning troubleshooting
 
