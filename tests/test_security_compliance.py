@@ -157,6 +157,38 @@ def test_wrapper_script_exists():
     print("✓ Wrapper script exists and is executable")
 
 
+def test_soc2_testing_script_exists():
+    """Test that SOC 2 testing script exists and is executable"""
+    print("Testing SOC 2 testing script exists...")
+    
+    script_path = os.path.join(os.path.dirname(__file__), "..", "scripts", "test_soc2_controls.py")
+    
+    assert os.path.exists(script_path), "SOC 2 testing script not found"
+    assert os.access(script_path, os.X_OK), "SOC 2 testing script not executable"
+    
+    print("✓ SOC 2 testing script exists and is executable")
+
+
+def test_soc2_testing_script_help():
+    """Test that SOC 2 testing script shows help"""
+    print("Testing SOC 2 testing script help...")
+    
+    script_path = os.path.join(os.path.dirname(__file__), "..", "scripts", "test_soc2_controls.py")
+    
+    result = subprocess.run(
+        [sys.executable, script_path, "--help"],
+        capture_output=True,
+        text=True,
+        timeout=10
+    )
+    
+    assert result.returncode == 0, "Help command should succeed"
+    assert "SOC 2" in result.stdout, "Help should mention SOC 2"
+    assert "control" in result.stdout.lower(), "Help should mention controls"
+    
+    print("✓ SOC 2 testing script shows help correctly")
+
+
 def main():
     """Run all tests"""
     print("\n" + "=" * 70)
@@ -169,6 +201,8 @@ def main():
         test_compliance_checker_json_output,
         test_fips_algorithm_checks,
         test_wrapper_script_exists,
+        test_soc2_testing_script_exists,
+        test_soc2_testing_script_help,
     ]
     
     passed = 0
