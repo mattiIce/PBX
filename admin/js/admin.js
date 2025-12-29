@@ -576,6 +576,105 @@ function showTab(tabName) {
         case 'license-management':
             initLicenseManagement();
             break;
+        case 'qos':
+            loadQoSMetrics();
+            break;
+        case 'emergency':
+            loadEmergencyContacts();
+            loadEmergencyHistory();
+            break;
+        case 'codecs':
+            loadCodecStatus();
+            loadDTMFConfig();
+            break;
+        case 'sip-trunks':
+            loadSIPTrunks();
+            loadTrunkHealth();
+            break;
+        case 'least-cost-routing':
+            loadLCRRates();
+            loadLCRStatistics();
+            break;
+        case 'find-me-follow-me':
+            loadFMFMExtensions();
+            break;
+        case 'time-routing':
+            loadTimeRoutingRules();
+            break;
+        case 'webhooks':
+            loadWebhooks();
+            break;
+        case 'hot-desking':
+            loadHotDeskSessions();
+            break;
+        case 'recording-retention':
+            loadRetentionPolicies();
+            break;
+        case 'jitsi-integration':
+            if (typeof loadJitsiConfig === 'function') {
+                loadJitsiConfig();
+            }
+            break;
+        case 'matrix-integration':
+            if (typeof loadMatrixConfig === 'function') {
+                loadMatrixConfig();
+            }
+            break;
+        case 'espocrm-integration':
+            if (typeof loadEspoCRMConfig === 'function') {
+                loadEspoCRMConfig();
+            }
+            break;
+        case 'click-to-dial':
+            if (typeof loadClickToDialTab === 'function') {
+                loadClickToDialTab();
+            }
+            break;
+        case 'fraud-detection':
+            if (typeof loadFraudDetectionData === 'function') {
+                loadFraudDetectionData();
+            }
+            break;
+        case 'nomadic-e911':
+            if (typeof loadNomadicE911Data === 'function') {
+                loadNomadicE911Data();
+            }
+            break;
+        case 'callback-queue':
+            if (typeof loadCallbackQueue === 'function') {
+                loadCallbackQueue();
+            }
+            break;
+        case 'mobile-push':
+            if (typeof loadMobilePushConfig === 'function') {
+                loadMobilePushConfig();
+            }
+            break;
+        case 'recording-announcements':
+            if (typeof loadRecordingAnnouncements === 'function') {
+                loadRecordingAnnouncements();
+            }
+            break;
+        case 'speech-analytics':
+            if (typeof loadSpeechAnalyticsConfigs === 'function') {
+                loadSpeechAnalyticsConfigs();
+            }
+            break;
+        case 'compliance':
+            if (typeof loadComplianceData === 'function') {
+                loadComplianceData();
+            }
+            break;
+        case 'crm-integrations':
+            if (typeof loadCRMActivityLog === 'function') {
+                loadCRMActivityLog();
+            }
+            break;
+        case 'opensource-integrations':
+            if (typeof loadOpenSourceIntegrations === 'function') {
+                loadOpenSourceIntegrations();
+            }
+            break;
     }
 }
 
