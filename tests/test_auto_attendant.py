@@ -11,7 +11,7 @@ import unittest
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pbx.features.auto_attendant import AAState, AutoAttendant
+from pbx.features.auto_attendant import AAState, AutoAttendant, DestinationType
 
 
 class TestAutoAttendant(unittest.TestCase):
