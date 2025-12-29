@@ -243,7 +243,7 @@ class SecurityComplianceChecker:
             from pbx.features.compliance_framework import SOC2ComplianceEngine
             from pbx.utils.database import DatabaseBackend
             from pbx.utils.config import Config
-            from pbx.utils.migrations import MigrationManager
+            from pbx.utils.migrations import MigrationManager, register_all_migrations
             
             config = Config("config.yml")
             db = DatabaseBackend(config)
@@ -260,7 +260,8 @@ class SecurityComplianceChecker:
             
             # Run migrations to ensure tables exist
             migration_manager = MigrationManager(db)
-            migration_manager.run_migrations()
+            register_all_migrations(migration_manager)
+            migration_manager.apply_migrations()
             
             engine = SOC2ComplianceEngine(db, config.config)
             

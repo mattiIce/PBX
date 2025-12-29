@@ -140,8 +140,8 @@ class MigrationManager:
             for migration in pending:
                 self.logger.info(f"Applying migration {migration['version']}: {migration['name']}")
 
-                # Execute migration SQL
-                self.db.execute(migration["sql"])
+                # Execute migration SQL using execute_script for multi-statement support
+                self.db.execute_script(migration["sql"])
 
                 # Record migration
                 self.db.execute(
