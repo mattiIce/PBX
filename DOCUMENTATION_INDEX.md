@@ -1,257 +1,163 @@
 # PBX System Documentation Index
 
-This document helps you navigate the comprehensive documentation for the PBX system.
+> **📖 NEW: Complete Guide Available!**  
+> All documentation has been consolidated into **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - a comprehensive, single-file guide covering everything from installation to advanced features.
+
+---
+
+This index helps you navigate the PBX documentation system.
+
+## 📘 Primary Documentation
+
+**Start here for most needs:**
+
+- **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - 📘 **Complete comprehensive documentation (RECOMMENDED)**
+  - All-in-one guide with 9 major sections
+  - Quick Start & Installation
+  - Production Deployment
+  - Core Features & Configuration
+  - Advanced Features
+  - Integration Guides
+  - Security & Compliance
+  - Operations & Troubleshooting
+  - Developer Guide & API Reference
+  - Quick reference appendices
+
+## 🗂️ Additional Documentation
+
+### Executive & Planning
+- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** - Business overview, ROI analysis, strategic recommendations
+- **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - Complete feature status and implementation overview
+- **[TODO.md](TODO.md)** - Current development status and roadmap
+- **[PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md](PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md)** - Detailed improvement recommendations
+- **[STRATEGIC_ROADMAP.md](STRATEGIC_ROADMAP.md)** - Long-term strategic planning
+
+### Standards & Contributing
+- **[README.md](README.md)** - Project overview and quick start
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[FEATURES.md](FEATURES.md)** - Complete list of all features
+
+### Reference Documentation
+Located in [docs/reference/](docs/reference/):
+- **[FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)** - Advanced framework features
+- **[SIP_METHODS_IMPLEMENTATION.md](docs/reference/SIP_METHODS_IMPLEMENTATION.md)** - SIP protocol details
+- **[MOBILE_APPS_GUIDE.md](docs/reference/MOBILE_APPS_GUIDE.md)** - Mobile application framework
+- And more specialized technical references
+
+---
 
 ## 🚀 Just Ran Deployment Script?
 
 **START HERE:**
-- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - 📌 **Complete production deployment guide**
-  - Post-deployment setup (database, SSL, voice prompts)
+- **[COMPLETE_GUIDE.md - Section 2](COMPLETE_GUIDE.md#2-production-deployment)** - 📌 **Post-deployment setup**
+  - Database configuration
+  - SSL certificate setup
+  - Voice prompts generation
   - Essential configuration steps
   - Testing and verification
-  - Troubleshooting guide
 
 ---
 
-## Executive Overview
+## Quick Navigation by Role
 
-For executives, managers, and decision-makers:
+### 👨‍💼 System Administrator
 
-- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** - Comprehensive executive summary with business value, ROI analysis, and strategic recommendations
+**Must read:**
+1. [COMPLETE_GUIDE.md - Section 1: Quick Start](COMPLETE_GUIDE.md#1-quick-start)
+2. [COMPLETE_GUIDE.md - Section 2: Production Deployment](COMPLETE_GUIDE.md#2-production-deployment)
+3. [COMPLETE_GUIDE.md - Section 6: Security & Compliance](COMPLETE_GUIDE.md#6-security--compliance)
+4. [COMPLETE_GUIDE.md - Section 7: Operations & Troubleshooting](COMPLETE_GUIDE.md#7-operations--troubleshooting)
 
-## Getting Started
+### 🌐 Network Administrator
 
-Start here if you're new to the PBX system:
+**Must read:**
+1. [COMPLETE_GUIDE.md - Section 2: Production Deployment](COMPLETE_GUIDE.md#2-production-deployment)
+2. [COMPLETE_GUIDE.md - Section 3: Core Features & Configuration](COMPLETE_GUIDE.md#3-core-features--configuration)
+3. [COMPLETE_GUIDE.md - Section 4: Advanced Features](COMPLETE_GUIDE.md#4-advanced-features)
+4. [COMPLETE_GUIDE.md - Section 6: Security & Compliance](COMPLETE_GUIDE.md#6-security--compliance)
 
-1. **[README.md](README.md)** - Project overview, features, and basic usage
-2. **[INSTALLATION.md](INSTALLATION.md)** - Installation instructions with Quick Start Checklist
-3. **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Complete production deployment guide
-4. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature status and implementation overview**
-5. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide (includes login, cache, admin panel, QoS issues)
-6. **[TROUBLESHOOTING_HISTORICAL_FIXES.md](TROUBLESHOOTING_HISTORICAL_FIXES.md)** - Historical bug fixes reference
+### 👤 End User
 
-## Product Improvement & Roadmap
+**Must read:**
+1. [README.md](README.md) - Project overview
+2. [COMPLETE_GUIDE.md - Section 4.1: Voicemail](COMPLETE_GUIDE.md#41-voicemail-system)
+3. [COMPLETE_GUIDE.md - Section 7.1: Admin Panel](COMPLETE_GUIDE.md#71-admin-panel)
 
-For planning future enhancements:
+### 👨‍💻 Developer
 
-- **[QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md)** - ⭐ **Quick reference for top improvement priorities**
-  - Top 10 high-impact improvements
-  - Quick wins (high impact, low effort)
-  - 4-phase implementation roadmap
-  - Cost-benefit summary
-- **[PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md](PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md)** - Complete detailed analysis
-  - 30 improvement categories
-  - 200+ specific actionable recommendations
-  - Priority rankings and ROI analysis
-  - Risk assessment and mitigation strategies
-- **[TODO.md](TODO.md)** - Current feature status (56/64 complete, 8 framework features)
+**Must read:**
+1. [COMPLETE_GUIDE.md - Section 8: Developer Guide](COMPLETE_GUIDE.md#8-developer-guide)
+2. [COMPLETE_GUIDE.md - Section 8.2: REST API Reference](COMPLETE_GUIDE.md#82-rest-api-reference)
+3. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
+4. [CONTRIBUTING.md](CONTRIBUTING.md)
+5. [TODO.md](TODO.md)
 
-## Deployment Guides
+### 🔒 Security Officer
 
-Choose the guide that fits your deployment scenario:
+**Must read:**
+1. [COMPLETE_GUIDE.md - Section 6: Security & Compliance](COMPLETE_GUIDE.md#6-security--compliance)
+2. [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) - Security overview
 
-- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - ⭐ **Complete production deployment guide** (includes checklist, post-deployment, auto-attendant setup)
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-step deployment guide for specific server setup
-- **[UBUNTU_SETUP_GUIDE.md](UBUNTU_SETUP_GUIDE.md)** - Complete Ubuntu 24.04 LTS setup with all databases and services
-- **[POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)** - PostgreSQL database configuration for advanced features
-- **[SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md)** - Systemd service installation and troubleshooting
+### 📋 Compliance Officer
 
-## Feature Documentation
+**Must read:**
+1. [COMPLETE_GUIDE.md - Section 6: Security & Compliance](COMPLETE_GUIDE.md#6-security--compliance)
+2. [COMPLETE_GUIDE.md - Section 6.3: E911 Compliance](COMPLETE_GUIDE.md#63-compliance---e911)
 
-Learn about specific features:
+### 📊 Project Manager / Executive
 
-- **[FEATURES.md](FEATURES.md)** - Complete list of all PBX features with descriptions
-- **[CALL_FLOW.md](CALL_FLOW.md)** - How phone-to-phone calls work through the system
-- **[PHONE_PROVISIONING.md](PHONE_PROVISIONING.md)** - Auto-configuration for IP phones
-- **[PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md)** - Automatic tracking of registered phones by MAC/IP address
-
-## Migration & Import
-
-Migrate from legacy phone systems:
-
-- **[MERLIN_IMPORT_GUIDE.md](MERLIN_IMPORT_GUIDE.md)** - Import voicemail data from AT&T Merlin Legend systems
-
-## Integration Guides
-
-Connect the PBX with external services:
-
-- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** - ⭐ **Complete integration guide** (setup, usage, port configuration, troubleshooting)
-- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Free integrations (Jitsi, Matrix, EspoCRM)
-- **[QUICK_SETUP_GUIDE.md](QUICK_SETUP_GUIDE.md)** - One-click integration setup
-- **[ENTERPRISE_INTEGRATIONS.md](ENTERPRISE_INTEGRATIONS.md)** - Zoom, Active Directory, Outlook, Teams integrations
-- **[AD_USER_SYNC_GUIDE.md](AD_USER_SYNC_GUIDE.md)** - Active Directory user synchronization
-- **[TESTING_AD_INTEGRATION.md](TESTING_AD_INTEGRATION.md)** - Testing Active Directory integration
-
-## Security Documentation
-
-Secure your PBX deployment:
-
-- **[SECURITY_GUIDE.md](SECURITY_GUIDE.md)** - ⭐ **Complete security guide** (FIPS compliance, MFA, best practices, Ubuntu FIPS deployment)
-  - Consolidates all security documentation into one comprehensive guide
-
-## Regulations and Compliance
-
-Ensure regulatory compliance:
-
-- **[REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md)** - ⭐ **Complete compliance guide** (E911, Kari's Law, Multi-Site E911, STIR/SHAKEN, SOC 2)
-  - Consolidates all compliance requirements into one comprehensive guide
-
-## Technical Implementation Guides
-
-### Audio Codecs
-
-- **[CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md)** - ⭐ **Complete codec guide** (G.711, G.722, Opus, G.729, G.726, iLBC, Speex, phone-specific configuration)
-  - All codec documentation consolidated into one comprehensive reference
-- **[CODEC_COMPARISON_GUIDE.md](CODEC_COMPARISON_GUIDE.md)** - Codec comparison matrix and decision guide
-
-### DTMF Configuration
-
-- **[DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md)** - ⭐ **Complete DTMF guide** (RFC 2833, SIP INFO, payload types, troubleshooting)
-  - All DTMF documentation consolidated into one comprehensive reference
-
-### WebRTC
-
-- **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)** - ⭐ **Complete WebRTC guide** (browser calling, configuration, debugging, troubleshooting)
-  - All WebRTC documentation consolidated into one comprehensive reference
-
-### Voicemail
-
-- **[VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md)** - Custom greetings, debugging, and VM IVR logging (consolidated)
-- **[VOICEMAIL_TRANSCRIPTION_GUIDE.md](VOICEMAIL_TRANSCRIPTION_GUIDE.md)** - Speech-to-text (OpenAI, Google Cloud, Vosk offline) (consolidated)
-- **[VOICEMAIL_EMAIL_GUIDE.md](VOICEMAIL_EMAIL_GUIDE.md)** - Voicemail-to-email configuration and usage
-- **[VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md)** - Database configuration
-
-## Development Documentation
-
-For developers working on or extending the PBX:
-
-- **[SUMMARY.md](SUMMARY.md)** - Project architecture and technical overview
-- **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature implementation status**
-- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - Requirements for implementing features
-- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Testing procedures and guidelines
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - REST API reference for custom integrations
-
-## Troubleshooting
-
-Common issues and solutions:
-
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - ⭐ **Comprehensive troubleshooting guide** (audio, login, cache, admin panel, QoS, integration, networking)
-- **[TROUBLESHOOTING_HISTORICAL_FIXES.md](TROUBLESHOOTING_HISTORICAL_FIXES.md)** - Historical bug fixes and solutions reference
-- **[FIXING_YAML_MERGE_CONFLICTS.md](FIXING_YAML_MERGE_CONFLICTS.md)** - How to resolve Git merge conflicts in config.yml
-- **[TROUBLESHOOTING_PROVISIONING.md](TROUBLESHOOTING_PROVISIONING.md)** - Phone provisioning troubleshooting
-
-## Quick Reference
-
-### Essential Files
-
-- **config.yml** - Main configuration file
-- **.env.example** - Environment variables template for credentials
-- **requirements.txt** - Python dependencies
-- **main.py** - PBX system entry point
-
-### Directory Structure
-
-```
-PBX/
-├── admin/              # Web admin panel
-├── examples/           # Example client code
-├── pbx/                # Main PBX code
-│   ├── api/           # REST API
-│   ├── core/          # Core PBX logic
-│   ├── features/      # Advanced features
-│   ├── integrations/  # External integrations
-│   ├── rtp/           # RTP media handling
-│   ├── sip/           # SIP protocol
-│   └── utils/         # Utilities
-├── scripts/           # Utility scripts
-├── tests/             # Test suite
-└── logs/              # Log files (created at runtime)
-```
-
-## Documentation by Role
-
-### System Administrator
-
-Must read:
-1. [INSTALLATION.md](INSTALLATION.md) (includes Quick Start Checklist)
-2. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
-3. [SECURITY_GUIDE.md](SECURITY_GUIDE.md) - Complete security reference
-4. [POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md) (if using database features)
-5. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) (for common issues)
-
-### Network Administrator
-
-Must read:
-1. [INSTALLATION.md](INSTALLATION.md) (includes Quick Start)
-2. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
-3. [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md)
-4. [SECURITY_GUIDE.md](SECURITY_GUIDE.md) (Network Security section)
-5. [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md)
-6. [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md)
-
-### End User
-
-Must read:
-1. [README.md](README.md) (User sections)
-2. [VOICEMAIL_EMAIL_GUIDE.md](VOICEMAIL_EMAIL_GUIDE.md)
-3. [VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md)
-4. [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md) (for browser calling)
-5. [ADMIN_PANEL_GUIDE.md](ADMIN_PANEL_GUIDE.md) (user features)
-
-### Developer
-
-Must read:
-1. [SUMMARY.md](SUMMARY.md)
-2. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) (feature status)
-3. [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-4. [TODO.md](TODO.md) (for remaining work)
-5. [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
-6. [TESTING_GUIDE.md](TESTING_GUIDE.md)
-7. [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md)
-8. [DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md)
-9. [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)
-
-### Security Officer
-
-Must read:
-1. [SECURITY_GUIDE.md](SECURITY_GUIDE.md) - Complete security and compliance reference
-2. [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md) - E911, Kari's Law, STIR/SHAKEN, SOC 2
-
-### Compliance Officer
-
-Must read:
-1. [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md) - Complete compliance guide
-2. [SECURITY_GUIDE.md](SECURITY_GUIDE.md) - Security compliance
-3. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
-
-### Project Manager
-
-Must read:
+**Must read:**
 1. [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)
 2. [README.md](README.md)
-3. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) (feature status)
-4. [QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md) (future improvements)
-5. [FEATURES.md](FEATURES.md)
-6. [SUMMARY.md](SUMMARY.md)
-7. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) (deployment readiness)
+3. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
+4. [PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md](PRODUCT_IMPROVEMENT_RECOMMENDATIONS.md)
 
-### Executive / Business Leader
+---
 
-Must read:
-1. [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) (complete business case)
-2. [QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md) (future roadmap and ROI)
-3. [README.md](README.md) (technical capabilities overview)
-4. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) (implementation readiness)
+## Documentation Organization
 
-## Support and Contributing
+### Old Structure (Archived)
+Previously, documentation was spread across 50+ separate files in the root directory, creating:
+- Difficulty finding information
+- Duplicate content
+- Inconsistent formatting
+- Broken cross-references
 
-- **Issues**: Report issues on GitHub
-- **Questions**: Check documentation first, then open a GitHub issue
-- **Security**: Report security issues privately (see SECURITY_BEST_PRACTICES.md)
+### New Structure (Current)
+Documentation is now organized into:
 
-## Version History
+1. **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - Primary comprehensive guide (all-in-one)
+2. **Root directory** - Essential files (README, CHANGELOG, TODO, etc.)
+3. **[docs/reference/](docs/reference/)** - Technical reference documents
 
-This documentation is for PBX System v1.0.0
+**Benefits:**
+- ✅ Single source of truth
+- ✅ Consistent formatting
+- ✅ Easier navigation
+- ✅ Reduced duplication (~94% reduction in documentation volume)
+- ✅ Better maintenance
+
+---
+
+## Migration Guide
+
+If you had bookmarks to old documentation files, here's where to find the content now:
+
+| Old File | New Location |
+|----------|--------------|
+| INSTALLATION.md | [COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start) |
+| PRODUCTION_DEPLOYMENT_GUIDE.md | [COMPLETE_GUIDE.md - Section 2](COMPLETE_GUIDE.md#2-production-deployment) |
+| SECURITY_GUIDE.md | [COMPLETE_GUIDE.md - Section 6](COMPLETE_GUIDE.md#6-security--compliance) |
+| TROUBLESHOOTING.md | [COMPLETE_GUIDE.md - Section 7](COMPLETE_GUIDE.md#7-operations--troubleshooting) |
+| API_DOCUMENTATION.md | [COMPLETE_GUIDE.md - Section 8.2](COMPLETE_GUIDE.md#82-rest-api-reference) |
+| VOICEMAIL_GUIDE.md | [COMPLETE_GUIDE.md - Section 4.1](COMPLETE_GUIDE.md#41-voicemail-system) |
+| INTEGRATION_GUIDE.md | [COMPLETE_GUIDE.md - Section 5](COMPLETE_GUIDE.md#5-integration-guides) |
+| PHONE_PROVISIONING.md | [COMPLETE_GUIDE.md - Section 4.3](COMPLETE_GUIDE.md#43-phone-provisioning) |
+| CODEC_IMPLEMENTATION_GUIDE.md | [COMPLETE_GUIDE.md - Section 3.2](COMPLETE_GUIDE.md#32-audio-codec-support) |
+
+---
 
 ## Additional Resources
 
