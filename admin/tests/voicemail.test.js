@@ -40,9 +40,20 @@ global.showNotification = jest.fn();
 global.updateVoicemailCardsView = jest.fn();
 global.updateVoicemailTableView = jest.fn();
 
-// Load the functions we're testing
-// Note: In a real setup, you'd import these from a module
-// For now, we'll define them inline for testing
+/**
+ * NOTE: The functions below are duplicated from admin.js for testing purposes.
+ * This is a temporary approach while admin.js is not modularized.
+ * 
+ * TODO: Refactor admin.js to use ES6 modules to enable proper import/testing
+ * of the actual production code instead of duplicating functions here.
+ * 
+ * For now, this approach allows us to:
+ * 1. Test the critical bug fix (response.ok checks and auth headers)
+ * 2. Ensure the logic is correct
+ * 3. Prevent regressions
+ * 
+ * Future improvement: Export functions from admin.js as modules and import them here.
+ */
 
 async function loadVoicemailTab() {
   try {
