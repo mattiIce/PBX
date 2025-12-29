@@ -1,5 +1,22 @@
 # Troubleshooting Auto-Attendant Menu Issues
 
+## Quick Diagnostic Script
+
+We've provided a test script to quickly diagnose API endpoint issues:
+
+```bash
+# Run from the PBX directory
+python3 scripts/test_menu_endpoints.py
+
+# Test a remote server
+python3 scripts/test_menu_endpoints.py --host abps.albl.com --port 9000
+
+# Test with HTTPS
+python3 scripts/test_menu_endpoints.py --protocol https --port 9000
+```
+
+This script will test all the menu-related API endpoints and report which ones are working and which are not. It's the fastest way to diagnose whether the issue is with the server configuration or the code deployment.
+
 ## Common Issues and Solutions
 
 ### Issue 1: 404 Errors on Menu API Endpoints
