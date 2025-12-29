@@ -75,11 +75,13 @@ async function loadAutoAttendantMenuOptions() {
         
         // Only fall back to legacy API if endpoint doesn't exist (404)
         if (response.status === 404) {
+            console.warn(`Menu items endpoint returned 404 for menu '${currentMenuId}', trying legacy API...`);
             return await loadLegacyMenuOptions();
         }
         
         if (!response.ok) {
-            throw new Error(`Failed to load menu options: ${response.status}`);
+            const errorData = await parseErrorResponse(response);
+            throw new Error(`Failed to load menu options: ${response.status} - ${errorData.error || response.statusText}`);
         }
 
         const data = await response.json();
@@ -544,6 +546,33 @@ function escapeHtml(text) {
 let currentMenuId = 'main';  // Track current menu being viewed
 let availableMenus = [];  // Cache of available menus
 
+// Helper function to safely parse error response JSON
+async function parseErrorResponse(response) {
+    try {
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        // If reading/parsing the response fails, try to classify the error using
+        // its type first, and only then fall back to best-effort message checks.
+        const errorMsg = error?.message || String(error);
+
+        // JSON parsing error - response likely not in JSON format
+        if (error instanceof SyntaxError || /JSON|Unexpected token/i.test(errorMsg)) {
+            return { error: 'Server returned an invalid response format' };
+        }
+
+        // Network-related or stream-related error typically surfaced as TypeError by fetch
+        if (error instanceof TypeError || /network|NetworkError|fetch/i.test(errorMsg)) {
+            return { error: 'Network error while reading server response' };
+        }
+
+        // Generic fallback if we cannot determine a more specific cause.
+        // This is a best-effort categorization when no reliable type information is available.
+        console.warn('Unexpected error parsing response:', error);
+        return { error: 'Unable to read server response' };
+    }
+}
+
 // Load all menus for submenu selection
 async function loadAvailableMenus() {
     try {
@@ -551,10 +580,23 @@ async function loadAvailableMenus() {
         if (response.ok) {
             const data = await response.json();
             availableMenus = data.menus || [];
+            console.log(`Loaded ${availableMenus.length} menu(s) for submenu selection`);
             return availableMenus;
+        } else {
+            const errorData = await parseErrorResponse(response);
+            console.error(`Failed to load menus: ${response.status} ${response.statusText}`, errorData);
+            // Provide context-specific error message based on status code
+            let errorMsg = errorData.error || response.statusText;
+            if (response.status === 404) {
+                errorMsg += '. API endpoint not found - check server version.';
+            } else if (response.status >= 500) {
+                errorMsg += '. Server error occurred.';
+            }
+            showNotification(`Failed to load menus: ${errorMsg}`, 'error');
         }
     } catch (error) {
         console.error('Error loading menus:', error);
+        showNotification(`Unable to connect to API: ${error.message}. Please check your connection.`, 'error');
     }
     return [];
 }
@@ -567,45 +609,74 @@ async function updateSubmenuDropdowns() {
     const newSubmenuSelect = document.getElementById('new-menu-submenu');
     if (newSubmenuSelect) {
         newSubmenuSelect.innerHTML = '<option value="">Select a submenu</option>';
-        menus.forEach(menu => {
-            if (menu.menu_id !== currentMenuId) {  // Don't include current menu
-                const option = document.createElement('option');
-                option.value = menu.menu_id;
-                option.textContent = `${menu.menu_name} (${menu.menu_id})`;
-                newSubmenuSelect.appendChild(option);
-            }
-        });
-        newSubmenuSelect.disabled = false;
+        if (menus.length === 0) {
+            const noMenusOption = document.createElement('option');
+            noMenusOption.value = '';
+            noMenusOption.textContent = 'No menus available - create one first';
+            noMenusOption.disabled = true;
+            newSubmenuSelect.appendChild(noMenusOption);
+            newSubmenuSelect.disabled = true;
+        } else {
+            menus.forEach(menu => {
+                if (menu.menu_id !== currentMenuId) {  // Don't include current menu
+                    const option = document.createElement('option');
+                    option.value = menu.menu_id;
+                    option.textContent = `${menu.menu_name} (${menu.menu_id})`;
+                    newSubmenuSelect.appendChild(option);
+                }
+            });
+            newSubmenuSelect.disabled = false;
+        }
     }
     
     // Update edit modal submenu dropdown
     const editSubmenuSelect = document.getElementById('edit-menu-submenu');
     if (editSubmenuSelect) {
         editSubmenuSelect.innerHTML = '<option value="">Select a submenu</option>';
-        menus.forEach(menu => {
-            if (menu.menu_id !== currentMenuId) {
-                const option = document.createElement('option');
-                option.value = menu.menu_id;
-                option.textContent = `${menu.menu_name} (${menu.menu_id})`;
-                editSubmenuSelect.appendChild(option);
-            }
-        });
-        editSubmenuSelect.disabled = false;
+        if (menus.length === 0) {
+            const noMenusOption = document.createElement('option');
+            noMenusOption.value = '';
+            noMenusOption.textContent = 'No menus available - create one first';
+            noMenusOption.disabled = true;
+            editSubmenuSelect.appendChild(noMenusOption);
+            editSubmenuSelect.disabled = true;
+        } else {
+            menus.forEach(menu => {
+                if (menu.menu_id !== currentMenuId) {
+                    const option = document.createElement('option');
+                    option.value = menu.menu_id;
+                    option.textContent = `${menu.menu_name} (${menu.menu_id})`;
+                    editSubmenuSelect.appendChild(option);
+                }
+            });
+            editSubmenuSelect.disabled = false;
+        }
     }
     
     // Update parent menu dropdown in create submenu modal
     const parentSelect = document.getElementById('submenu-parent');
     if (parentSelect) {
         parentSelect.innerHTML = '';
-        menus.forEach(menu => {
-            const option = document.createElement('option');
-            option.value = menu.menu_id;
-            option.textContent = `${menu.menu_name} (${menu.menu_id})`;
-            if (menu.menu_id === 'main') {
-                option.selected = true;
-            }
-            parentSelect.appendChild(option);
-        });
+        if (menus.length === 0) {
+            const noMenusOption = document.createElement('option');
+            noMenusOption.value = '';
+            noMenusOption.textContent = 'No parent menus available - check API connection or server status';
+            noMenusOption.disabled = true;
+            noMenusOption.selected = true;
+            parentSelect.appendChild(noMenusOption);
+            console.warn('No menus loaded for parent dropdown');
+        } else {
+            menus.forEach(menu => {
+                const option = document.createElement('option');
+                option.value = menu.menu_id;
+                option.textContent = `${menu.menu_name} (${menu.menu_id})`;
+                if (menu.menu_id === 'main') {
+                    option.selected = true;
+                }
+                parentSelect.appendChild(option);
+            });
+            console.log(`Populated parent menu dropdown with ${menus.length} menu(s)`);
+        }
     }
 }
 
@@ -689,7 +760,17 @@ async function loadMenuTree() {
     try {
         const response = await fetch(`${API_BASE}/api/auto-attendant/menu-tree`);
         if (!response.ok) {
-            throw new Error('Failed to load menu tree');
+            const errorData = await parseErrorResponse(response);
+            console.error(`Failed to load menu tree: ${response.status} ${response.statusText}`, errorData);
+            
+            // Provide helpful error message based on status code
+            if (response.status === 404) {
+                throw new Error('Menu tree endpoint not found. The server may need to be restarted to load new API routes.');
+            } else if (response.status === 500) {
+                throw new Error(`Server error: ${errorData.error || 'Internal server error'}`);
+            } else {
+                throw new Error(`Failed to load menu tree: ${errorData.error || response.statusText}`);
+            }
         }
         
         const data = await response.json();
@@ -697,12 +778,22 @@ async function loadMenuTree() {
         
         if (data.menu_tree) {
             treeView.innerHTML = renderMenuTree(data.menu_tree, 0);
+            console.log('Menu tree loaded successfully');
         } else {
             treeView.innerHTML = '<p style="color: #666;">No menu structure available</p>';
+            console.warn('Menu tree data is empty');
         }
     } catch (error) {
         console.error('Error loading menu tree:', error);
-        showNotification('Failed to load menu tree', 'error');
+        showNotification(`Failed to load menu tree: ${error.message}`, 'error');
+        
+        const treeView = document.getElementById('menu-tree-view');
+        if (treeView) {
+            treeView.innerHTML = `<p class="error-message">
+                <strong>Error:</strong> ${error.message}<br>
+                <small>Check the browser console for more details.</small>
+            </p>`;
+        }
     }
 }
 
