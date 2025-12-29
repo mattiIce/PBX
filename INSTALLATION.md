@@ -1,5 +1,273 @@
 # Installation and Deployment Guide
 
+## Table of Contents
+- [Quick Start Checklist](#quick-start-checklist)
+- [System Requirements](#system-requirements)
+- [Installation Steps](#installation-steps)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Quick Start Checklist
+
+**For first-time setup - follow these steps in order:**
+
+### ☐ Before You Start
+
+- [ ] You have SSH access to your server
+- [ ] Python 3.7+ is installed: `python3 --version`
+- [ ] You have sudo/root access
+- [ ] You know your server's IP address
+
+### ☐ Step 1: Install PBX (5 minutes)
+
+```bash
+# Connect to server
+ssh user@your-server-ip
+
+# Clone repository
+cd ~
+git clone https://github.com/mattiIce/PBX.git
+cd PBX
+
+# Install dependencies
+pip3 install -r requirements.txt
+# Or on Debian/Ubuntu:
+./install_requirements.sh
+
+# Create directories
+mkdir -p logs recordings voicemail moh cdr
+```
+
+### ☐ Step 2: Configure PBX (5 minutes)
+
+```bash
+# Edit config
+nano config.yml
+```
+
+**Check these settings:**
+
+```yaml
+server:
+  external_ip: "YOUR.SERVER.IP"  # Update with your server IP
+
+database:
+  type: sqlite  # SQLite for quick start (use postgresql for production)
+  path: pbx.db
+
+logging:
+  level: "DEBUG"  # Use DEBUG for initial setup
+```
+
+Save: `Ctrl+X`, `Y`, `Enter`
+
+**Initialize database and add extensions:**
+
+```bash
+# Seed initial extensions into database
+python3 scripts/seed_extensions.py
+
+# Verify extensions were added
+python3 scripts/list_extensions_from_db.py
+```
+
+**Note:** Extensions are now stored securely in the database, not in config.yml.
+This prevents exposing passwords in plain text configuration files.
+
+### ☐ Step 3: Open Firewall Ports (2 minutes)
+
+**CRITICAL - Without this, nothing works!**
+
+**Ubuntu/Debian:**
+```bash
+sudo ufw allow 5060/udp
+sudo ufw allow 10000:20000/udp
+sudo ufw allow 8080/tcp
+sudo ufw reload
+sudo ufw status  # Verify
+```
+
+**CentOS/RHEL:**
+```bash
+sudo firewall-cmd --permanent --add-port=5060/udp
+sudo firewall-cmd --permanent --add-port=10000-20000/udp
+sudo firewall-cmd --permanent --add-port=8080/tcp
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-ports  # Verify
+```
+
+### ☐ Step 4: Test Run (2 minutes)
+
+```bash
+cd ~/PBX
+python3 main.py
+```
+
+**Should see:**
+```
+✓ SIP server started on 0.0.0.0:5060
+✓ PBX system started successfully
+```
+
+**If errors, see [Troubleshooting](#troubleshooting) below**
+
+Stop with: `Ctrl+C`
+
+### ☐ Step 5: Set Up as Service (3 minutes)
+
+**Option A: Use Template (Recommended)**
+```bash
+# Edit the provided template
+nano pbx.service
+
+# Update WorkingDirectory, ExecStart, User paths
+# Then install:
+sudo cp pbx.service /etc/systemd/system/
+```
+
+**Option B: Create Manually**
+```bash
+# Create service file
+sudo nano /etc/systemd/system/pbx.service
+```
+
+**Copy this (replace YOUR_USERNAME):**
+
+```ini
+[Unit]
+Description=InHouse PBX System
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/PBX
+ExecStart=/usr/bin/python3 /home/YOUR_USERNAME/PBX/main.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**⚠️ IMPORTANT:** The `WorkingDirectory` line is required to avoid CHDIR errors!
+
+**Start service:**
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable pbx
+sudo systemctl start pbx
+sudo systemctl status pbx  # Should show "active (running)"
+```
+
+See [SERVICE_INSTALLATION.md](SERVICE_INSTALLATION.md) for troubleshooting.
+
+### ☐ Step 6: Configure First Phone (5 minutes)
+
+**On your SIP phone (Zultys, Yealink, etc.):**
+
+Access phone settings (web interface or phone menu)
+
+**Account Settings:**
+```
+Display Name: Phone 1
+Username: 1001
+Password: [from database - check with list_extensions_from_db.py]
+
+Server: YOUR.SERVER.IP
+Port: 5060
+Transport: UDP
+
+Registration: Enabled
+```
+
+Save and wait for "Registered" status
+
+### ☐ Step 7: Verify Registration
+
+**Check PBX logs:**
+```bash
+tail -f ~/PBX/logs/pbx.log
+```
+
+**Should see:**
+```
+INFO - Extension 1001 registered from ('192.168.x.x', 5060)
+```
+
+### ☐ Step 8: Configure Second Phone
+
+Repeat Step 6 with:
+```
+Username: 1002
+Password: [from database]
+Server: YOUR.SERVER.IP
+```
+
+### ☐ Step 9: Test Call! 🎉
+
+1. **Pick up phone 1001**
+2. **Dial: 1002**
+3. **Phone 1002 rings** ✓
+4. **Answer phone 1002**
+5. **Talk - hear each other!** ✓
+
+**Check logs for:**
+```
+INFO - INVITE request from ...
+INFO - RTP relay allocated on port 10000
+INFO - Routing call: 1001 -> 1002
+DEBUG - Relayed 160 bytes: A->B  ← Audio working!
+DEBUG - Relayed 160 bytes: B->A  ← Audio working!
+```
+
+### Success Criteria ✓
+
+You're done when:
+
+- [✓] PBX service is running: `sudo systemctl status pbx`
+- [✓] All phones show "Registered"
+- [✓] Phones can call each other
+- [✓] **Audio works in both directions** ← Main goal!
+- [✓] Calls can be ended from either phone
+
+### Useful Commands
+
+```bash
+# Service control
+sudo systemctl start pbx     # Start
+sudo systemctl stop pbx      # Stop
+sudo systemctl restart pbx   # Restart (after config changes)
+sudo systemctl status pbx    # Check status
+
+# View logs
+tail -f ~/PBX/logs/pbx.log          # Live log view
+sudo journalctl -u pbx -f           # System logs
+sudo journalctl -u pbx -n 100       # Last 100 lines
+
+# Edit config
+nano ~/PBX/config.yml
+sudo systemctl restart pbx   # Always restart after changes
+
+# Check system
+curl http://localhost:8080/api/status
+curl http://localhost:8080/api/extensions
+```
+
+### Next Steps
+
+Once basic calling works:
+
+1. **Change logging to INFO** in config.yml (reduce log verbosity)
+2. **Backup your config:** `cp config.yml config.yml.backup`
+3. **Read [FEATURES.md](FEATURES.md)** for voicemail, recording, etc.
+4. **Set up monitoring** (check logs daily)
+5. **For production deployment**, see [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
+
+---
+
 ## System Requirements
 
 ### Minimum Requirements

@@ -633,6 +633,289 @@ tail -f ~/PBX/logs/pbx.log
 
 ---
 
+## Admin Panel and Web Interface Issues
+
+### Login Connection Error
+
+**Symptoms:**
+- "Connection error. Please try again." when logging in
+- "Cannot reach API server" message
+- Admin panel login page fails to connect
+
+**Quick Diagnosis:**
+1. Press `F12` to open Developer Tools
+2. Go to Console tab
+3. Look for error messages
+
+**Common Causes and Solutions:**
+
+**A) PBX Server Not Running:**
+```bash
+# Check if service is running
+sudo systemctl status pbx
+
+# If not running, start it
+sudo systemctl start pbx
+
+# Check for errors
+sudo journalctl -u pbx -n 50
+```
+
+**Expected output when starting:**
+```
+Starting REST API server on 0.0.0.0:9000...
+REST API server started successfully
+```
+
+**B) Wrong API Port:**
+```bash
+# Verify API port in config.yml
+grep -A3 "^api:" config.yml
+
+# Should show:
+# api:
+#   host: 0.0.0.0
+#   port: 9000
+```
+
+**C) Firewall Blocking Port:**
+```bash
+# Allow port 9000
+sudo ufw allow 9000/tcp
+sudo ufw status
+
+# Check if port is open
+sudo netstat -tlnp | grep 9000
+```
+
+**D) Reverse Proxy Configuration:**
+
+The login page now auto-detects reverse proxy setups. If using nginx or Apache reverse proxy:
+- ✅ Should work automatically
+- If issues persist, add meta tag to `admin/login.html`:
+  ```html
+  <meta name="api-base-url" content="http://your-server:9000">
+  ```
+
+### Browser Cache Issues
+
+**Symptoms:**
+- Admin panel loads but appears broken
+- Buttons are not clickable
+- Layout appears incorrect
+- Occurs after updating PBX code
+
+**Solution 1: Hard Refresh (Fastest)**
+
+**Windows/Linux:**
+- Press `Ctrl + Shift + R` (or `Ctrl + F5`)
+
+**Mac:**
+- Chrome/Edge/Firefox: Press `Cmd + Shift + R`
+- Safari: Press `Cmd + Option + R`
+
+**Solution 2: Clear Browser Cache**
+
+**Chrome/Edge:**
+1. Press `Ctrl + Shift + Delete`
+2. Select "Cached images and files"
+3. Choose "All time"
+4. Click "Clear data"
+
+**Firefox:**
+1. Press `Ctrl + Shift + Delete`
+2. Check "Cached Web Content"
+3. Choose "Everything"
+4. Click "Clear Now"
+
+**Solution 3: Test in Private/Incognito Mode**
+
+- Chrome/Edge: `Ctrl + Shift + N`
+- Firefox: `Ctrl + Shift + P`
+- Safari: `Cmd + Shift + N`
+
+If works in private mode, cache is the issue.
+
+**Solution 4: For Developers - Disable Cache**
+
+1. Press `F12` to open Developer Tools
+2. Go to Network tab
+3. Check "Disable cache"
+4. Keep Developer Tools open while testing
+
+**Test Your Installation:**
+Visit `/admin/status-check.html` to verify the PBX system is working correctly.
+
+### Auto-Attendant Menu Issues
+
+**Quick Diagnostic:**
+```bash
+# Test menu API endpoints
+cd /path/to/PBX
+python3 scripts/test_menu_endpoints.py
+
+# Test remote server
+python3 scripts/test_menu_endpoints.py --host your-server --port 9000
+```
+
+**Issue 1: 404 Errors on Menu API Endpoints**
+
+**Symptoms:**
+- Console shows 404 errors for `/api/auto-attendant/menus`
+- Parent menu dropdown is empty
+- Tree view shows "Failed to load menu tree"
+
+**Solutions:**
+
+1. **Verify code is up to date:**
+   ```bash
+   cd /path/to/PBX
+   git log --oneline -1 -- pbx/api/rest_api.py
+   ```
+
+2. **Restart PBX service:**
+   ```bash
+   sudo systemctl restart pbx
+   ```
+
+3. **Test endpoints directly:**
+   ```bash
+   curl -X GET http://localhost:9000/api/auto-attendant/menus
+   curl -X GET http://localhost:9000/api/auto-attendant/menu-tree
+   ```
+
+**Issue 2: Empty Dropdowns When Creating Submenu**
+
+**Causes:**
+- API endpoint returning 404
+- Auto attendant database tables not initialized
+- Feature not enabled in PBX core
+
+**Solutions:**
+1. Check if auto attendant is enabled in `config.yml`:
+   ```yaml
+   auto_attendant:
+     enabled: true
+   ```
+
+2. Initialize database tables:
+   ```bash
+   python3 scripts/init_database.py
+   ```
+
+3. Restart PBX:
+   ```bash
+   sudo systemctl restart pbx
+   ```
+
+---
+
+## Quality of Service (QoS) and Audio Issues
+
+### One-Way Audio
+
+**Symptoms:**
+- Can hear caller but they can't hear you (or vice versa)
+- Audio works only in one direction
+
+**Common Causes:**
+
+**1. NAT/Firewall Issues**
+```bash
+# Ensure RTP ports are open
+sudo ufw allow 10000:20000/udp
+
+# Check external IP in config.yml
+grep external_ip config.yml
+# Should match your actual public/external IP
+```
+
+**2. Codec Mismatch**
+```bash
+# Check logs for codec negotiation
+grep -i codec logs/pbx.log
+
+# Verify both endpoints support same codec
+```
+
+**3. Network Configuration**
+- Check router port forwarding for RTP ports (10000-20000 UDP)
+- Verify no SIP ALG (Application Layer Gateway) interfering
+- Disable SIP ALG on router if possible
+
+**Solutions:**
+1. Update `external_ip` in `config.yml` to your public IP
+2. Configure router NAT/port forwarding
+3. Enable STUN server in phone configuration
+4. For detailed QoS troubleshooting, see specific sections below
+
+### RTP Packet Loss
+
+**Symptoms:**
+- Choppy or robotic voice
+- Dropped audio segments
+- Poor call quality
+
+**Diagnosis:**
+```bash
+# Check RTP statistics in logs
+grep "RTP statistics" logs/pbx.log
+
+# Monitor network for packet loss
+ping -c 100 remote-phone-ip
+```
+
+**Solutions:**
+
+**1. Enable Jitter Buffer:**
+```yaml
+# In config.yml
+rtp:
+  jitter_buffer:
+    enabled: true
+    max_length_ms: 200
+    adaptive: true
+```
+
+**2. QoS Prioritization:**
+- Configure network switches/routers for VoIP QoS
+- Mark RTP packets with DSCP EF (Expedited Forwarding)
+- Prioritize UDP ports 10000-20000
+
+**3. Check Network Path:**
+```bash
+# Trace route to phone
+traceroute phone-ip
+
+# Check for high latency hops
+# Ideal: < 150ms total latency
+```
+
+### Audio Echo or Feedback
+
+**Symptoms:**
+- Hear own voice echoed back
+- Feedback loop during calls
+
+**Solutions:**
+
+**1. Phone Configuration:**
+- Enable echo cancellation on phone
+- Adjust microphone gain/sensitivity
+- Update phone firmware
+
+**2. Network Issues:**
+```bash
+# Check for audio loopback in config
+grep -i "loopback\|echo" config.yml
+```
+
+**3. Codec Selection:**
+- Use codecs with built-in echo cancellation (G.722, Opus)
+- Avoid G.711 on poor networks
+
+---
+
 ## Getting More Help
 
 If issues persist after trying these solutions:

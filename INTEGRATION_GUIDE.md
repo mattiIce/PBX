@@ -1,11 +1,170 @@
-# Integration Troubleshooting Guide
+# Integration Guide
 
 **Last Updated**: December 15, 2025  
-**Purpose**: Step-by-step troubleshooting and setup for Jitsi, Matrix, and EspoCRM integrations
+**Purpose**: Complete guide for setting up, using, and troubleshooting Jitsi, Matrix, and EspoCRM integrations
+
+## Table of Contents
+- [Quick Problem Resolution](#-quick-problem-resolution)
+- [Using Integration Features](#using-integration-features)
+- [Port Configuration](#port-configuration)
+- [Jitsi Self-Hosted Integration](#-jitsi-self-hosted-integration-complete-guide)
+- [Matrix Team Messaging Setup](#-matrix-team-messaging-setup)
+- [EspoCRM Setup](#-espocrm-installation-and-setup)
+- [Testing Integrations](#-testing-your-integrations)
+- [Getting Help](#-getting-help)
 
 ---
 
-## 🎯 Quick Problem Resolution
+---
+
+## Using Integration Features
+
+After running `setup_integrations.py`, you can interact with configured integrations directly from the PBX admin interface.
+
+### Accessing Integration Features
+
+**Navigate to**: Admin Panel → Integrations → Open Source (Free)
+
+This tab shows:
+- ✅ Status of each integration (enabled/disabled)
+- 🚀 Quick Setup buttons to enable integrations with default settings
+- ⚡ Quick Action buttons to jump directly to each integration's interaction page
+
+### Jitsi Meet Video Conferencing
+
+**Navigate to**: Admin Panel → Integrations → Jitsi (Video)
+
+**What You Can Do:**
+- **Create Instant Meetings**: Generate a meeting URL immediately
+  - Optionally specify a custom room name
+  - Get a shareable meeting link
+  - Copy URL to clipboard or open directly
+
+- **Schedule Meetings**: Plan meetings for the future
+  - Set meeting subject
+  - Specify duration (15-480 minutes)
+  - Get meeting URL to share with participants
+
+**Example Use Case:**
+1. Click "🚀 Create Instant Meeting"
+2. Optional: Enter room name like "sales-team"
+3. Click "Create Instant Meeting" button
+4. Copy the meeting URL and share with participants
+5. Click "🚀 Join Now" to open the meeting
+
+### Matrix Team Messaging
+
+**Navigate to**: Admin Panel → Integrations → Matrix (Chat)
+
+**What You Can Do:**
+- **Send Messages**: Send text messages to Matrix rooms
+  - Choose notification room, voicemail room, or custom room
+  - Enter your message
+  - Send instantly to your team
+
+- **Send Test Notifications**: Verify Matrix integration is working
+  - Sends a timestamped test message
+  - Confirms bot connectivity
+
+- **Create Rooms**: Set up new Matrix rooms
+  - Specify room name
+  - Add optional topic/description
+  - Get room ID for configuration
+
+**Example Use Case:**
+1. Select "Notification Room" from dropdown
+2. Enter message: "Testing PBX integration! 👋"
+3. Click "📤 Send Message"
+4. Check your Matrix client (Element, etc.) to see the message
+
+### EspoCRM Contact Management
+
+**Navigate to**: Admin Panel → Integrations → EspoCRM (CRM)
+
+**What You Can Do:**
+- **Search Contacts**: Find existing contacts
+  - Search by phone number, email, or name
+  - View full contact details
+  - See CRM ID for reference
+
+- **Create Contacts**: Add new contacts to CRM
+  - Enter first name, last name
+  - Add phone and/or email
+  - Optional: Company and title
+  - Immediately synced to EspoCRM
+
+---
+
+## Port Configuration
+
+### Default Port Allocation
+
+All integrations use **dedicated ports** to avoid conflicts:
+
+| Integration | Default Configuration | Port Used | Purpose |
+|-------------|----------------------|-----------|---------|
+| **Jitsi Meet** | `https://localhost:8443` | 8443 | Video conferencing |
+| **Matrix** | `https://localhost:8008` | 8008 | Team messaging |
+| **EspoCRM** | `https://localhost:8001/api/v1` | 8001 | CRM API |
+| **PBX API** | `http://0.0.0.0:8080` | 8080 | PBX REST API |
+| **PBX SIP** | `udp://0.0.0.0:5060` | 5060 | SIP signaling |
+| **PBX RTP** | `udp://0.0.0.0:10000-20000` | 10000-20000 | Media streams |
+
+### Port Configuration Strategy
+
+**Jitsi Meet:**
+- **Default**: `https://localhost:8443` (dedicated HTTPS port)
+- **Network**: `https://jitsi.yourcompany.com:8443`
+- **Development**: `http://localhost:8888` (HTTP for testing)
+
+**Matrix:**
+- **Default**: `https://localhost:8008` (Matrix Synapse standard port)
+- **Alternative**: `https://localhost:8448` (Synapse federation port)
+- **Network**: `https://matrix.yourcompany.com:8008`
+
+**EspoCRM:**
+- **Default**: `https://localhost:8001/api/v1` (dedicated port)
+- **Alternative**: `http://localhost:8001/api/v1` (HTTP for development)
+- **Network**: `https://crm.yourcompany.com/api/v1` (dedicated server)
+
+### Updating Port Configuration
+
+**Option 1: Using Admin Portal**
+1. Navigate to: Admin Panel → Integrations
+2. Select the integration tab
+3. Update the server URL field
+4. Click "Test Connection" to verify
+5. Click "Save Configuration"
+
+**Option 2: Edit config.yml**
+
+```yaml
+integrations:
+  # Jitsi Meet - Video Conferencing
+  jitsi:
+    enabled: true
+    server_url: https://localhost:8443  # Update as needed
+    auto_create_rooms: true
+    
+  # Matrix - Team Messaging
+  matrix:
+    enabled: true
+    homeserver_url: https://localhost:8008  # Update as needed
+    bot_access_token: "your_token_here"
+    
+  # EspoCRM - Contact Management
+  espocrm:
+    enabled: true
+    api_url: https://localhost:8001/api/v1  # Update as needed
+    api_key: "your_api_key_here"
+```
+
+After editing config.yml, restart the PBX:
+```bash
+sudo systemctl restart pbx
+```
+
+---
 
 ### Common Issues:
 
