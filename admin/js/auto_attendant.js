@@ -551,13 +551,18 @@ async function parseErrorResponse(response) {
     try {
         return await response.json();
     } catch (error) {
-        // If JSON parsing fails (e.g., response is not JSON or empty body),
-        // return a fallback error object
+        // Provide specific error messages based on error type
         if (error instanceof SyntaxError) {
+            // JSON parsing failed - likely not a JSON response or empty body
             return { error: 'Unable to parse error response from server' };
+        } else if (error instanceof TypeError) {
+            // Type error - possibly network issue or invalid response object
+            return { error: 'Invalid response from server' };
+        } else {
+            // Catch-all for other unexpected errors
+            console.warn('Unexpected error parsing response:', error);
+            return { error: 'An unexpected error occurred while processing the response' };
         }
-        // For other errors (e.g., network issues), provide a generic message
-        return { error: 'An unexpected error occurred while processing the response' };
     }
 }
 
