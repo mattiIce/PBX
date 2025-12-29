@@ -2,6 +2,7 @@ api:
   enable_cors: true
   host: 0.0.0.0
   port: 8080
+  require_authentication: true  # Enable API authentication for security
   ssl:
     enabled: false  # Disabled for testing
 conference:
@@ -117,8 +118,8 @@ recording:
   storage_path: recordings
 security:
   ban_duration: 300
-  enable_srtp: false
-  enable_tls: false
+  enable_srtp: true  # Enable SRTP for encrypted media streams (recommended for production)
+  enable_tls: true  # Enable TLS for encrypted SIP signaling (recommended for production)
   fips_mode: true
   max_failed_attempts: 5
   min_password_length: 12

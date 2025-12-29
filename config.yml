@@ -69,6 +69,7 @@ api:
   host: 0.0.0.0
   port: 9000
   enable_cors: true
+  require_authentication: true  # Enable API authentication for security
   # HTTPS/SSL Configuration
   ssl:
     enabled: false                          # HTTPS disabled - using HTTP for compatibility with phone provisioning
@@ -434,12 +435,12 @@ security:
     log_file: 'logs/security_audit.log'
 
   # TLS/SSL Configuration
-  enable_tls: false
+  enable_tls: true  # Enable TLS for encrypted SIP signaling (recommended for production)
   tls_cert_file: ''
   tls_key_file: ''
 
   # SRTP (Secure Real-time Transport Protocol)
-  enable_srtp: false
+  enable_srtp: true  # Enable SRTP for encrypted media streams (recommended for production)
 
   # Legacy settings (kept for backward compatibility)
   max_failed_attempts: 5  # Deprecated - use rate_limit.max_attempts

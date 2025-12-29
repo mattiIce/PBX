@@ -243,9 +243,25 @@ class SecurityComplianceChecker:
             from pbx.features.compliance_framework import SOC2ComplianceEngine
             from pbx.utils.database import DatabaseBackend
             from pbx.utils.config import Config
+            from pbx.utils.migrations import MigrationManager, register_all_migrations
             
             config = Config("config.yml")
             db = DatabaseBackend(config)
+            
+            # Connect to database
+            if not db.connect():
+                soc2_results['issues'].append(
+                    "Database connection failed - cannot verify SOC 2 controls"
+                )
+                soc2_results['compliant'] = False
+                self.print_status("Database connection", False, "Failed to connect to database")
+                self.results['soc2'] = soc2_results
+                return soc2_results
+            
+            # Run migrations to ensure tables exist
+            migration_manager = MigrationManager(db)
+            register_all_migrations(migration_manager)
+            migration_manager.apply_migrations()
             
             engine = SOC2ComplianceEngine(db, config.config)
             

@@ -245,6 +245,67 @@ class DatabaseBackend:
             return False
         return self._execute_with_context(query, "query execution", params, critical=True)
 
+    def execute_script(self, script: str) -> bool:
+        """
+        Execute a multi-statement SQL script
+        Uses executescript for SQLite, splits statements for PostgreSQL
+
+        Args:
+            script: SQL script with multiple statements
+
+        Returns:
+            bool: True if successful
+        """
+        if not self.enabled or not self.connection:
+            self.logger.error("Execute script called but database is not enabled or connected")
+            self.logger.error(
+                f"  Enabled: {self.enabled}, Connection: {self.connection is not None}"
+            )
+            return False
+
+        try:
+            if self.db_type == "sqlite":
+                # SQLite has executescript for multi-statement execution
+                cursor = self.connection.cursor()
+                cursor.executescript(script)
+                cursor.close()
+                if not self.connection.autocommit:
+                    self.connection.commit()
+            else:
+                # PostgreSQL - split and execute individual statements
+                # Remove comments and split by semicolon
+                statements = []
+                current = []
+                for line in script.split('\n'):
+                    stripped = line.strip()
+                    # Skip comments
+                    if stripped.startswith('--') or not stripped:
+                        continue
+                    current.append(line)
+                    if ';' in line:
+                        statements.append('\n'.join(current))
+                        current = []
+                
+                # Execute each statement
+                cursor = self.connection.cursor()
+                for stmt in statements:
+                    stmt = stmt.strip()
+                    if stmt:
+                        cursor.execute(stmt)
+                cursor.close()
+                if not self.connection.autocommit:
+                    self.connection.commit()
+            
+            return True
+        except Exception as e:
+            self.logger.error(f"Error during script execution: {e}")
+            self.logger.error(f"  Script length: {len(script)} characters")
+            self.logger.error(f"  Database type: {self.db_type}")
+            self.logger.error(f"  Traceback: {traceback.format_exc()}")
+            if self.connection and not self.connection.autocommit:
+                self.connection.rollback()
+            return False
+
     def fetch_one(self, query: str, params: tuple = None) -> Optional[Dict]:
         """
         Fetch single row
