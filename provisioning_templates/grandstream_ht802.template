@@ -33,8 +33,8 @@ P184 = 0                      # DTMF Info Type: 0=DTMF, 1=DTMF-Relay
 P78 = {{DTMF_PAYLOAD_TYPE}}   # DTMF Payload Type (typically 101 for RFC2833)
 
 # Port 1 Analog Settings
-P2301 = 1                     # Caller ID Scheme: 1=Bellcore/Telcordia (North America)
-P2302 = 1                     # Enable Caller ID
+P3 = 1                        # Caller ID Scheme: 1=Bellcore/Telcordia (North America)
+P4 = 1                        # Enable Caller ID display
 P240 = 2                      # Stage Method (1=Dial Tone First, 2=Dial Immediately)
 
 # ============================================================================
@@ -82,9 +82,8 @@ P25 = 0                       # Impedance: 0=600 ohm, 1=900 ohm (North America u
 P104 = 2000                   # Ring Frequency (Hz): 2000 for North America
 P1361 = 2                     # Ring Cadence: 2=North America (2s on, 4s off)
 
-# Disconnect/Polarity Reversal
-P2301 = 1                     # Polarity Reversal on Answer: 1=Yes
-P2302 = 1                     # Polarity Reversal on Hangup: 1=Yes
+# Disconnect Tone
+P195 = 1                      # Disconnect Tone: 1=Enabled
 
 # Auto-Provision Settings
 P212 = 0                      # Config Server Path (0=disable auto-provision after initial setup)
