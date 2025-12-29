@@ -549,19 +549,22 @@ let availableMenus = [];  // Cache of available menus
 // Helper function to safely parse error response JSON
 async function parseErrorResponse(response) {
     try {
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
-        // Provide specific error messages based on error type
-        if (error instanceof SyntaxError) {
-            // JSON parsing failed - likely not a JSON response or empty body
-            return { error: 'Unable to parse error response from server' };
-        } else if (error instanceof TypeError) {
-            // Type error - possibly network issue or invalid response object
-            return { error: 'Invalid response from server' };
+        // If JSON parsing fails, check if we can provide more specific feedback
+        // based on the error message rather than error type
+        const errorMsg = error.message || String(error);
+        if (errorMsg.includes('JSON') || errorMsg.includes('Unexpected token')) {
+            // JSON parsing error - response likely not in JSON format
+            return { error: 'Server returned an invalid response format' };
+        } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
+            // Network-related error
+            return { error: 'Network error while reading server response' };
         } else {
-            // Catch-all for other unexpected errors
+            // Generic fallback
             console.warn('Unexpected error parsing response:', error);
-            return { error: 'An unexpected error occurred while processing the response' };
+            return { error: 'Unable to read server response' };
         }
     }
 }
@@ -578,7 +581,14 @@ async function loadAvailableMenus() {
         } else {
             const errorData = await parseErrorResponse(response);
             console.error(`Failed to load menus: ${response.status} ${response.statusText}`, errorData);
-            showNotification(`Failed to load menus: ${errorData.error || response.statusText}. The server may need to be restarted.`, 'error');
+            // Provide context-specific error message based on status code
+            let errorMsg = errorData.error || response.statusText;
+            if (response.status === 404) {
+                errorMsg += '. API endpoint not found - check server version.';
+            } else if (response.status >= 500) {
+                errorMsg += '. Server error occurred.';
+            }
+            showNotification(`Failed to load menus: ${errorMsg}`, 'error');
         }
     } catch (error) {
         console.error('Error loading menus:', error);

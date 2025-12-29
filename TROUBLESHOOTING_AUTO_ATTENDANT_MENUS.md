@@ -75,10 +75,10 @@ The API server is running an older version of the code that doesn't include the 
 - Error occurs when viewing the Create Submenu modal
 
 **Root Cause:**
-The HTML5 pattern attribute requires the hyphen character to be escaped in character classes.
+The HTML5 pattern attribute in older browsers may have issues with unescaped hyphens in character classes.
 
 **Solution:**
-This has been fixed in the latest code. The pattern is now `[a-z0-9_\-]+` with an escaped hyphen.
+This has been fixed in the latest code. The pattern is now `[a-z0-9_-]+` with the hyphen placed at the end of the character class, which is the conventional and safer approach.
 
 If you're still seeing this error:
 1. Clear your browser cache (Ctrl+Shift+Delete)

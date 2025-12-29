@@ -53,7 +53,8 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
             error_body = e.read().decode('utf-8')
             error_data = json.loads(error_body)
             error_msg = error_data.get('error', 'Unknown error')
-        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # If we can't parse the error body, use the HTTP error string
             error_msg = str(e)
         
         if status == expected_status:
