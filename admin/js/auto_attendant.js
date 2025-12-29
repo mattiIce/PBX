@@ -72,9 +72,14 @@ async function loadAutoAttendantMenuOptions() {
     try {
         // Load menu items for current menu (default: main)
         const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}/items`);
-        if (!response.ok) {
-            // Fall back to legacy API
+        
+        // Only fall back to legacy API if endpoint doesn't exist (404)
+        if (response.status === 404) {
             return await loadLegacyMenuOptions();
+        }
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load menu options: ${response.status}`);
         }
 
         const data = await response.json();
@@ -705,19 +710,19 @@ async function loadMenuTree() {
 function renderMenuTree(menu, level) {
     const indent = '  '.repeat(level);
     let html = `<div style="margin-left: ${level * 20}px; margin-top: 5px;">`;
-    html += `<strong>${menu.menu_name || menu.menu_id}</strong>`;
+    html += `<strong>${escapeHtml(menu.menu_name || menu.menu_id)}</strong>`;
     
     if (menu.items && menu.items.length > 0) {
         menu.items.forEach(item => {
             html += `<div style="margin-left: ${(level + 1) * 20}px; margin-top: 3px;">`;
-            html += `📌 ${item.digit}: ${item.description || 'No description'} `;
+            html += `📌 ${escapeHtml(item.digit)}: ${escapeHtml(item.description || 'No description')} `;
             
             if (item.destination_type === 'submenu' && item.submenu) {
                 html += `<span style="color: #4CAF50;">[Submenu]</span>`;
                 html += '</div>';
                 html += renderMenuTree(item.submenu, level + 2);
             } else {
-                html += `<span style="color: #666;">(${item.destination_type}: ${item.destination_value})</span>`;
+                html += `<span style="color: #666;">(${escapeHtml(item.destination_type)}: ${escapeHtml(item.destination_value)})</span>`;
                 html += '</div>';
             }
         });

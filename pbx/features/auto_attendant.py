@@ -385,8 +385,9 @@ class AutoAttendant:
         try:
             # Validate menu depth to prevent infinite nesting
             if parent_menu_id:
-                depth = self._get_menu_depth(parent_menu_id)
-                if depth >= 5:  # Max 5 levels
+                parent_depth = self._get_menu_depth(parent_menu_id)
+                new_depth = parent_depth + 1
+                if new_depth >= 5:  # Max 5 levels (main=0, level1=1, level2=2, level3=3, level4=4)
                     self.logger.error(f"Cannot create menu: maximum depth (5) exceeded")
                     return False
 
@@ -739,7 +740,7 @@ class AutoAttendant:
             current_depth: Current recursion depth
 
         Returns:
-            int: Depth level (0 = top level)
+            int: Depth level (0 = top level, e.g., main menu)
         """
         if current_depth > 10:  # Safety limit
             return current_depth
@@ -1188,6 +1189,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
     Returns:
         str: Path to generated audio file, or None if failed
     """
+    tmp_mp3_path = None
     try:
         # Try to use gTTS for voice generation
         try:
@@ -1231,7 +1233,9 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
                     check=True,
                     capture_output=True,
                 )
-                os.unlink(tmp_mp3_path)
+                # Clean up temp file
+                if tmp_mp3_path and os.path.exists(tmp_mp3_path):
+                    os.unlink(tmp_mp3_path)
                 logger.info(f"Generated submenu prompt: {output_file}")
                 return output_file
             except (FileNotFoundError, subprocess.CalledProcessError):
@@ -1248,6 +1252,12 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
             return None
 
     except Exception as e:
+        # Clean up temp file on error
+        if tmp_mp3_path and os.path.exists(tmp_mp3_path):
+            try:
+                os.unlink(tmp_mp3_path)
+            except Exception:
+                pass
         logger = get_logger()
         logger.error(f"Error generating submenu prompt: {e}")
         return None

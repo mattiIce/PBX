@@ -104,18 +104,18 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         self.assertTrue(would_create_circle)
 
     def test_menu_depth_validation(self):
-        """Test that menu depth is limited to 5 levels"""
-        # Create a chain of menus
+        """Test that menu depth is limited to 5 levels total (main + 4 sublevels)"""
+        # Create a chain of menus: main(0) -> level1(1) -> level2(2) -> level3(3) -> level4(4)
         parent = "main"
-        for i in range(1, 6):
+        for i in range(1, 5):  # Create 4 levels after main
             menu_id = f"level{i}"
             success = self.aa.create_menu(menu_id, parent, f"Level {i}", f"Level {i} prompt")
-            self.assertTrue(success)
+            self.assertTrue(success, f"Failed to create level{i}")
             parent = menu_id
 
-        # Try to create a 6th level (should fail)
-        success = self.aa.create_menu("level6", "level5", "Level 6", "Level 6 prompt")
-        self.assertFalse(success)
+        # Try to create a 5th level after main (would be depth 5, should fail)
+        success = self.aa.create_menu("level5", "level4", "Level 5", "Level 5 prompt")
+        self.assertFalse(success, "Should not allow depth 5")
 
     def test_add_menu_item_extension(self):
         """Test adding extension-type menu item"""

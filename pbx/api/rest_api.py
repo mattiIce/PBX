@@ -613,13 +613,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path.startswith("/api/auto-attendant/menus/") and "/items/" in path:
                 # Extract menu_id and digit from path like /api/auto-attendant/menus/{menu_id}/items/{digit}
                 parts = path.split("/")
-                menu_id = parts[4]  # /api/auto-attendant/menus/{menu_id}/items/{digit}
-                digit = parts[6]
-                self._handle_update_menu_item(menu_id, digit)
+                if len(parts) >= 7 and parts[3] == "menus" and parts[5] == "items":
+                    menu_id = parts[4]
+                    digit = parts[6]
+                    self._handle_update_menu_item(menu_id, digit)
+                else:
+                    self._send_json({"error": "Invalid path format"}, 400)
             elif path.startswith("/api/auto-attendant/menus/"):
                 # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
-                menu_id = path.split("/")[-1]
-                if not menu_id.endswith("/items"):
+                parts = path.split("/")
+                if len(parts) >= 5 and parts[3] == "menus" and not parts[4].endswith("/items"):
+                    menu_id = parts[4]
                     self._handle_update_menu(menu_id)
                 else:
                     self._send_json({"error": "Method not allowed"}, 405)
@@ -5608,6 +5612,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             if not menu_id or not menu_name:
                 self._send_json({"error": "menu_id and menu_name are required"}, 400)
+                return
+
+            # Validate menu_id format (alphanumeric, dashes, underscores only)
+            import re
+
+            if not re.match(r"^[a-z0-9_-]+$", menu_id):
+                self._send_json(
+                    {
+                        "error": "menu_id must contain only lowercase letters, numbers, dashes, and underscores"
+                    },
+                    400,
+                )
                 return
 
             aa = self.pbx_core.auto_attendant
