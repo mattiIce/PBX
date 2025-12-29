@@ -7,25 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- TROUBLESHOOTING_HISTORICAL_FIXES.md - Consolidated historical bug fixes and solutions
-
 ### Changed
-- Documentation consolidation: Reduced documentation files by ~26% (40 files)
-- Updated DOCUMENTATION_INDEX.md with new consolidated structure
-- Improved documentation organization and cross-referencing
-
-### Deprecated
-- Individual codec guides (consolidated into CODEC_IMPLEMENTATION_GUIDE.md)
-- Individual DTMF guides (consolidated into DTMF_CONFIGURATION_GUIDE.md)
-- Individual WebRTC guides (consolidated into WEBRTC_GUIDE.md)
-- Individual security guides (consolidated into SECURITY_GUIDE.md)
-- Individual compliance guides (consolidated into REGULATIONS_COMPLIANCE_GUIDE.md)
+- Documentation consolidation: Reduced documentation files from 118 to 113 (5% reduction)
+- Updated DOCUMENTATION_INDEX.md to reflect current documentation structure
+- Improved documentation clarity by removing outdated "Replaces:" and "Includes:" notes
 
 ### Removed
-- 40 deprecated and historical documentation files
-  - 26 individual implementation guides (now consolidated)
-  - 14 historical fix summary documents (now in TROUBLESHOOTING_HISTORICAL_FIXES.md)
+- Historical summary and report documents (11 files):
+  - DOCUMENTATION_CONSOLIDATION_SUMMARY.md (historical, Dec 2024)
+  - DOCUMENTATION_FINALIZATION_SUMMARY.md (historical, Dec 2025)
+  - AUTO_ATTENDANT_MENU_FIXES_SUMMARY.md (historical fix report)
+  - CRITICAL_BLOCKERS_COMPLETION_REPORT.md (historical report)
+  - CODEC_REVIEW_PHASE5.md (historical review)
+  - SECURITY_COMPLIANCE_IMPLEMENTATION.md (historical summary)
+- Already-deprecated individual guides (6 files):
+  - DEBUG_VM_PIN.md (consolidated into VOICEMAIL_CUSTOM_GREETING_GUIDE.md)
+  - ENABLE_DEBUG_VM_PIN.md (consolidated into VOICEMAIL_CUSTOM_GREETING_GUIDE.md)
+  - VM_IVR_LOGGING.md (consolidated into VOICEMAIL_CUSTOM_GREETING_GUIDE.md)
+  - VOICEMAIL_TRANSCRIPTION_VOSK.md (consolidated into VOICEMAIL_TRANSCRIPTION_GUIDE.md)
+  - SECURITY.md (consolidated into SECURITY_GUIDE.md)
+
+Note: All useful content from removed files has been preserved in consolidated guides
 
 ### Fixed
 - docker-compose compatibility: Downgraded requests library from 2.32.3 to 2.31.0 to fix `URLSchemeUnknown: Not supported URL scheme http+docker` error when building with docker-compose v1.29.2

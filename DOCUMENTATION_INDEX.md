@@ -86,39 +86,37 @@ Connect the PBX with external services:
 Secure your PBX deployment:
 
 - **[SECURITY_GUIDE.md](SECURITY_GUIDE.md)** - ⭐ **Complete security guide** (FIPS compliance, MFA, best practices, Ubuntu FIPS deployment)
-  - Replaces: SECURITY.md, SECURITY_BEST_PRACTICES.md, SECURITY_IMPLEMENTATION.md, MFA_GUIDE.md, FIPS_COMPLIANCE_STATUS.md, UBUNTU_FIPS_GUIDE.md
+  - Consolidates all security documentation into one comprehensive guide
 
 ## Regulations and Compliance
 
 Ensure regulatory compliance:
 
 - **[REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md)** - ⭐ **Complete compliance guide** (E911, Kari's Law, Multi-Site E911, STIR/SHAKEN, SOC 2)
-  - Replaces: E911_PROTECTION_GUIDE.md, KARIS_LAW_GUIDE.md, MULTI_SITE_E911_GUIDE.md, STIR_SHAKEN_GUIDE.md, SOC2_TYPE2_IMPLEMENTATION.md
+  - Consolidates all compliance requirements into one comprehensive guide
 
 ## Technical Implementation Guides
 
 ### Audio Codecs
 
 - **[CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md)** - ⭐ **Complete codec guide** (G.711, G.722, Opus, G.729, G.726, iLBC, Speex, phone-specific configuration)
-  - Replaces: G722_CODEC_GUIDE.md, G729_G726_CODEC_GUIDE.md, OPUS_CODEC_GUIDE.md, SPEEX_CODEC_GUIDE.md, ILBC_CODEC_GUIDE.md, PHONE_MODEL_CODEC_SELECTION.md, ZULTYS_ZIP33G_CODEC_CONFIGURATION.md
+  - All codec documentation consolidated into one comprehensive reference
 - **[CODEC_COMPARISON_GUIDE.md](CODEC_COMPARISON_GUIDE.md)** - Codec comparison matrix and decision guide
 
 ### DTMF Configuration
 
 - **[DTMF_CONFIGURATION_GUIDE.md](DTMF_CONFIGURATION_GUIDE.md)** - ⭐ **Complete DTMF guide** (RFC 2833, SIP INFO, payload types, troubleshooting)
-  - Replaces: DTMF_PAYLOAD_TYPE_CONFIGURATION.md, SIP_INFO_DTMF_GUIDE.md, RFC2833_IMPLEMENTATION_GUIDE.md, ZIP33G_DTMF_PAYLOAD_TYPE_RESOLUTION.md, ZULTYS_DTMF_TROUBLESHOOTING.md
+  - All DTMF documentation consolidated into one comprehensive reference
 
 ### WebRTC
 
 - **[WEBRTC_GUIDE.md](WEBRTC_GUIDE.md)** - ⭐ **Complete WebRTC guide** (browser calling, configuration, debugging, troubleshooting)
-  - Replaces: WEBRTC_IMPLEMENTATION_GUIDE.md, WEBRTC_PHONE_USAGE.md, WEBRTC_VERBOSE_LOGGING.md, WEBRTC_ZIP33G_ALIGNMENT.md
+  - All WebRTC documentation consolidated into one comprehensive reference
 
 ### Voicemail
 
-- **[VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md)** - Custom greetings, debugging, and VM IVR logging
-  - Includes: DEBUG_VM_PIN.md, ENABLE_DEBUG_VM_PIN.md, VM_IVR_LOGGING.md
-- **[VOICEMAIL_TRANSCRIPTION_GUIDE.md](VOICEMAIL_TRANSCRIPTION_GUIDE.md)** - Speech-to-text (OpenAI, Google Cloud, Vosk offline)
-  - Includes: VOICEMAIL_TRANSCRIPTION_VOSK.md
+- **[VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md)** - Custom greetings, debugging, and VM IVR logging (consolidated)
+- **[VOICEMAIL_TRANSCRIPTION_GUIDE.md](VOICEMAIL_TRANSCRIPTION_GUIDE.md)** - Speech-to-text (OpenAI, Google Cloud, Vosk offline) (consolidated)
 - **[VOICEMAIL_EMAIL_GUIDE.md](VOICEMAIL_EMAIL_GUIDE.md)** - Voicemail-to-email configuration and usage
 - **[VOICEMAIL_DATABASE_SETUP.md](VOICEMAIL_DATABASE_SETUP.md)** - Database configuration
 
