@@ -1,21 +1,231 @@
 # Voice Prompts Guide
 
-This guide explains how to create and customize voice prompts for the PBX system's Auto Attendant and Voicemail features.
+**Last Updated**: December 29, 2025  
+**Purpose**: Complete guide for creating, generating, and customizing voice prompts
+
+## Table of Contents
+- [Overview](#overview)
+- [Quick Start - Generate Voice Prompts](#quick-start---generate-voice-prompts)
+- [Voice Generation Options](#voice-generation-options)
+- [Repository Design](#repository-design)
+- [Generated Prompt Files](#generated-prompt-files)
+- [Creating Professional Voice Prompts](#creating-professional-voice-prompts)
+- [Best Practices](#best-practices)
+
+---
 
 ## Overview
 
-The PBX system includes REAL voice prompts generated using eSpeak TTS that work out of the box. The voice quality is robotic but clear and intelligible. For production use, you may want to replace these with professionally recorded voice prompts for a more natural sound.
+The PBX system uses voice prompts for Auto Attendant and Voicemail features. Voice files are **NOT included in the repository** - you must generate them after installation.
 
-## Quick Start - Regenerate Voice Prompts
+**Why generate prompts?**
+- Customize company name in greetings
+- Choose voice quality level (Google TTS vs eSpeak)
+- Keep repository size small
+- Allow different organizations to customize
 
-To regenerate the voice prompts (e.g., to change company name):
+---
+
+## Quick Start - Generate Voice Prompts
+
+### Option 1: Google TTS (RECOMMENDED - Best Quality)
+
+**Quality**: ⭐⭐⭐⭐⭐ Natural, human-sounding  
+**Cost**: FREE - No API key needed  
+**Requirement**: Internet connection
 
 ```bash
-cd /path/to/pbx
+cd /path/to/PBX
+
+# Install dependencies
+pip3 install gTTS pydub
+sudo apt-get install ffmpeg
+
+# Generate voice prompts
+python3 scripts/generate_tts_prompts.py --company "Your Company Name"
+
+# Verify files were created (should see 17 files)
+ls -lh auto_attendant/*.wav voicemail_prompts/*.wav
+```
+
+### Option 2: Festival (Good Quality, Offline)
+
+**Quality**: ⭐⭐⭐⭐☆ Better than eSpeak  
+**Cost**: FREE  
+**Requirement**: No internet needed
+
+```bash
+# Install Festival
+sudo apt-get install festival festvox-us-slt-hts ffmpeg
+
+# Generate prompts
+python3 scripts/generate_espeak_voices.py --engine festival --company "Your Company Name"
+```
+
+### Option 3: eSpeak (Basic Quality, Offline)
+
+**Quality**: ⭐⭐⭐☆☆ Robotic but clear  
+**Cost**: FREE  
+**Requirement**: No internet needed
+
+```bash
+# Install eSpeak
+sudo apt-get install espeak ffmpeg
+
+# Generate prompts
 python3 scripts/generate_espeak_voices.py --company "Your Company Name"
 ```
 
-This uses free, offline eSpeak TTS to generate actual voice prompts. No internet connection required!
+### Verify Generation
+
+```bash
+# Check which files exist
+bash scripts/verify_and_commit_voice_files.sh
+
+# Expected: 17 voice files
+# - 5 auto attendant prompts
+# - 12 voicemail prompts
+```
+
+### Restart PBX
+
+```bash
+# If using systemd service
+sudo systemctl restart pbx
+
+# Or run manually
+python3 main.py
+```
+
+---
+
+## Voice Generation Options
+
+### Google TTS (gTTS) - RECOMMENDED
+
+**Advantages:**
+- ✅ Natural, human-sounding voice
+- ✅ FREE with no limits
+- ✅ Used by Google Translate and Google Assistant
+- ✅ No account or API key required
+- ✅ Best quality available
+
+**Disadvantages:**
+- ❌ Requires internet connection
+- ❌ Requires pip packages: gTTS, pydub
+
+**Setup:**
+```bash
+pip3 install gTTS pydub
+python3 scripts/generate_tts_prompts.py --company "Your Company"
+```
+
+**Listen to Samples:** Google TTS is the same voice used in Google products - very natural!
+
+### Festival TTS
+
+**Advantages:**
+- ✅ Better quality than eSpeak
+- ✅ Works offline
+- ✅ FREE
+
+**Disadvantages:**
+- ❌ Still sounds somewhat robotic
+- ❌ Larger package size
+
+**Setup:**
+```bash
+sudo apt-get install festival festvox-us-slt-hts
+python3 scripts/generate_espeak_voices.py --engine festival
+```
+
+### eSpeak TTS
+
+**Advantages:**
+- ✅ Works offline
+- ✅ Small package size
+- ✅ Fast generation
+- ✅ FREE
+
+**Disadvantages:**
+- ❌ Robotic, mechanical voice
+- ❌ Lowest quality option
+
+**Setup:**
+```bash
+sudo apt-get install espeak
+python3 scripts/generate_espeak_voices.py
+```
+
+### Quality Comparison
+
+| TTS Engine | Quality | Internet? | Setup Complexity | Recommendation |
+|------------|---------|-----------|-----------------|----------------|
+| **Google TTS** | ⭐⭐⭐⭐⭐ | Required | Easy | **Production** |
+| **Festival** | ⭐⭐⭐⭐☆ | Not required | Easy | Development |
+| **eSpeak** | ⭐⭐⭐☆☆ | Not required | Easiest | Testing only |
+| **Professional Recording** | ⭐⭐⭐⭐⭐+ | N/A | Complex | Enterprise |
+
+---
+
+## Repository Design
+
+### Why Voice Files Are Not Included
+
+Voice `.wav` files are intentionally excluded from the repository (see `.gitignore`):
+
+```gitignore
+# Generated voice files (generate with scripts/generate_tts_prompts.py)
+auto_attendant/*.wav
+voicemail_prompts/*.wav
+```
+
+**Reasons for exclusion:**
+1. ✅ Binary files increase repository size significantly
+2. ✅ Generated files should be created by users, not in version control
+3. ✅ Allows each organization to customize with their own company name
+4. ✅ Follows software development best practices
+5. ✅ Users can choose TTS engine based on their needs
+
+### Do You Have Voice Files?
+
+Check your current status:
+```bash
+cd /path/to/PBX
+bash scripts/verify_and_commit_voice_files.sh
+```
+
+This script will:
+- ✓ Show which voice files exist
+- ✓ Show which are missing
+- ✓ Offer to generate missing files
+- ✓ Offer to commit them to git (if desired for your fork)
+
+### Committing Voice Files (Optional)
+
+If you want to include pre-generated voice files in your own fork:
+
+1. Generate the files:
+   ```bash
+   python3 scripts/generate_tts_prompts.py --company "Your Company"
+   ```
+
+2. Remove .gitignore exclusion:
+   ```bash
+   # Edit .gitignore and comment out or remove:
+   # auto_attendant/*.wav
+   # voicemail_prompts/*.wav
+   ```
+
+3. Commit the files:
+   ```bash
+   git add auto_attendant/*.wav voicemail_prompts/*.wav
+   git commit -m "Add pre-generated voice prompts"
+   ```
+
+**Note:** This is NOT recommended for the main repository, but may be useful for your own organization's fork.
+
+---
 
 ## Generated Prompt Files
 
