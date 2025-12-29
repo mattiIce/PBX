@@ -19,6 +19,8 @@
 
 > **📖 Complete Guide**: See **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** for comprehensive documentation covering installation, deployment, features, integrations, security, troubleshooting, and API reference - all in one place!
 
+> **🔧 Troubleshooting**: See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** for a comprehensive troubleshooting guide for administrators with solutions to all known issues.
+
 > **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) for business overview, ROI analysis, and strategic recommendations.
 
 > **🗂️ Documentation Index**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for a full navigation guide.
@@ -75,6 +77,7 @@
 
 **📖 Documentation:**
 - **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - 📘 **Complete comprehensive documentation (all-in-one)**
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🔧 **Comprehensive troubleshooting guide for administrators**
 - **[docs/reference/](docs/reference/)** - Technical reference documentation
 
 **💰 Cost Savings**: $0/year vs $3,726+/user/year for proprietary stack

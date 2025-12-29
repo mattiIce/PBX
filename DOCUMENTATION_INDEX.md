@@ -23,6 +23,20 @@ This index helps you navigate the PBX documentation system.
   - Developer Guide & API Reference
   - Quick reference appendices
 
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🔧 **Comprehensive troubleshooting guide for administrators**
+  - 1,525 lines covering all known issues
+  - Quick reference table
+  - Audio issues (no audio, distortion, prompts)
+  - Registration & connectivity problems
+  - Admin panel issues (login, display, cache)
+  - Integration problems (email, AD, webhooks)
+  - Phone provisioning issues
+  - Database connection & migration
+  - Service management & crashes
+  - Network & firewall configuration
+  - Performance & monitoring
+  - Historical fixes reference
+
 ## 🗂️ Additional Documentation
 
 ### Executive & Planning
