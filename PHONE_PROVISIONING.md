@@ -1,10 +1,36 @@
 # Phone Provisioning Guide
 
-The PBX system includes a comprehensive phone provisioning system that allows automatic configuration of IP phones from multiple vendors.
+**Last Updated**: December 29, 2025  
+**Purpose**: Complete guide for phone provisioning setup, configuration, and management
+
+## Table of Contents
+- [Overview](#overview)
+- [Quick Setup](#quick-setup)
+- [Supported Phone Vendors](#supported-phone-vendors)
+- [Configuration](#configuration)
+- [Database Persistence](#database-persistence)
+- [Template Customization](#template-customization)
+- [Registration Cleanup](#registration-cleanup)
+- [Troubleshooting](#troubleshooting)
+
+---
 
 ## Overview
 
+The PBX system includes a comprehensive phone provisioning system that allows automatic configuration of IP phones from multiple vendors.
+
 Phone provisioning enables zero-touch or simplified deployment of IP phones by automatically generating and serving configuration files. When a phone boots up, it can request its configuration from the PBX server, eliminating the need for manual configuration of each device.
+
+### Key Features
+
+- **Database Persistence**: Provisioning configurations stored in database, survive restarts
+- **Automatic Cleanup**: Incomplete registrations automatically removed at startup
+- **Template System**: Customizable templates for different phone vendors and models
+- **Web Admin Interface**: Easy device management through admin panel
+- **REST API**: Programmatic device registration and management
+- **Multi-Vendor Support**: Zultys, Yealink, Polycom, Cisco, Grandstream
+
+---
 
 ## Quick Setup
 
@@ -729,6 +755,401 @@ done
 
 echo "All devices registered!"
 ```
+
+---
+
+## Database Persistence
+
+### Overview
+
+The PBX system stores phone provisioning configurations persistently in the database, ensuring that device registrations and IP/MAC/extension mappings are maintained across system restarts.
+
+**Benefits:**
+- ✓ **No Data Loss**: Provisioning configurations survive server restarts
+- ✓ **Automatic Recovery**: Devices are automatically loaded from database on startup
+- ✓ **Better Tracking**: Complete history of device provisioning
+- ✓ **Static IP Support**: Assign and track static IPs for phones
+- ✓ **Simplified Management**: No need to re-register devices after maintenance
+
+### How It Works
+
+**Device Registration:**
+
+When you register a device via the API or Admin Panel:
+
+```bash
+curl -X POST http://your-server:8080/api/provisioning/devices \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mac_address": "00:15:65:12:34:56",
+    "extension_number": "1001",
+    "vendor": "yealink",
+    "model": "t46s"
+  }'
+```
+
+The system:
+1. Creates an in-memory `ProvisioningDevice` object
+2. Saves the device configuration to the `provisioned_devices` database table
+3. Records: MAC address, extension, vendor, model, config URL, timestamps
+
+**System Startup:**
+
+When the PBX starts:
+1. Connects to database
+2. Loads all provisioned devices from `provisioned_devices` table
+3. Populates the in-memory device registry
+4. Makes devices available for configuration requests
+
+**Phone Requests Configuration:**
+
+When a phone boots and requests its configuration file:
+1. Phone makes HTTP request: `GET /provision/00-15-65-12-34-56.cfg`
+2. PBX looks up device by MAC address (in memory, loaded from database)
+3. Generates configuration from template with device-specific parameters
+4. Updates `last_provisioned` timestamp in database
+5. Serves configuration file to phone
+
+### Database Tables
+
+**provisioned_devices:**
+```sql
+CREATE TABLE provisioned_devices (
+    id SERIAL PRIMARY KEY,
+    mac_address VARCHAR(17) UNIQUE NOT NULL,
+    extension_number VARCHAR(20) NOT NULL,
+    vendor VARCHAR(50) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    config_url TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    last_provisioned TIMESTAMP
+);
+```
+
+**registered_phones:**
+```sql
+CREATE TABLE registered_phones (
+    id SERIAL PRIMARY KEY,
+    mac_address VARCHAR(17),
+    ip_address VARCHAR(45),
+    extension_number VARCHAR(20),
+    vendor VARCHAR(50),
+    model VARCHAR(50),
+    user_agent TEXT,
+    registered_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Managing Persistence
+
+**List all provisioned devices:**
+```bash
+python scripts/list_provisioned_devices.py
+```
+
+**Clear provisioning data:**
+```bash
+# Clear from database
+python scripts/clear_provisioned_devices.py
+
+# Or via SQL
+psql -d pbx_system -c "DELETE FROM provisioned_devices;"
+```
+
+**Export/Import provisioning data:**
+```bash
+# Export to JSON
+python scripts/export_provisioning.py > devices.json
+
+# Import from JSON
+python scripts/import_provisioning.py devices.json
+```
+
+---
+
+## Template Customization
+
+### Overview
+
+The PBX system automatically generates phone configuration files based on templates. Each template contains placeholders that are automatically replaced with device-specific information when a phone requests its configuration.
+
+### Built-in Templates
+
+Built-in templates are embedded in the code at:
+```
+pbx/features/phone_provisioning.py
+```
+
+**Supported placeholders:**
+- `{{SERVER_IP}}` - PBX server IP address
+- `{{SIP_PORT}}` - SIP port (default: 5060)
+- `{{EXTENSION}}` - Extension number
+- `{{PASSWORD}}` - Extension password
+- `{{DISPLAY_NAME}}` - Extension display name
+- `{{MAC_ADDRESS}}` - Phone MAC address
+- `{{VENDOR}}` - Phone vendor
+- `{{MODEL}}` - Phone model
+
+### Custom Templates Directory
+
+To use custom templates:
+
+1. **Create templates directory:**
+   ```bash
+   mkdir -p provisioning_templates
+   ```
+
+2. **Configure in config.yml:**
+   ```yaml
+   provisioning:
+     enabled: true
+     custom_templates_dir: "provisioning_templates"
+   ```
+
+3. **Create template file:**
+   
+   File naming convention: `{vendor}_{model}.cfg`
+   
+   Example: `provisioning_templates/yealink_t46s.cfg`
+   
+   ```xml
+   #!version:1.0.0.1
+   
+   [ account ]
+   path=/config/voip/sipAccount0.cfg
+   Enable=1
+   Label={{DISPLAY_NAME}}
+   DisplayName={{DISPLAY_NAME}}
+   AuthName={{EXTENSION}}
+   UserName={{EXTENSION}}
+   password={{PASSWORD}}
+   SIPServerHost={{SERVER_IP}}
+   SIPServerPort={{SIP_PORT}}
+   ```
+
+### Viewing Current Templates
+
+**List available templates:**
+```bash
+python scripts/list_provisioning_templates.py
+```
+
+**View template content:**
+```bash
+python scripts/view_template.py yealink t46s
+```
+
+**Test template generation:**
+```bash
+python scripts/test_template.py \
+  --vendor yealink \
+  --model t46s \
+  --extension 1001 \
+  --mac 00:15:65:12:34:56
+```
+
+### Creating Custom Templates
+
+**Template Guidelines:**
+1. Use vendor-specific configuration format
+2. Include all required parameters for phone operation
+3. Test with actual phone before deploying
+4. Document any custom settings
+5. Keep security in mind (use HTTPS where possible)
+
+**Example: Custom Yealink Template**
+
+File: `provisioning_templates/yealink_custom.cfg`
+
+```xml
+#!version:1.0.0.1
+
+# Account Configuration
+[ account ]
+path=/config/voip/sipAccount0.cfg
+Enable=1
+Label={{DISPLAY_NAME}}
+DisplayName={{DISPLAY_NAME}}
+AuthName={{EXTENSION}}
+UserName={{EXTENSION}}
+password={{PASSWORD}}
+SIPServerHost={{SERVER_IP}}
+SIPServerPort={{SIP_PORT}}
+
+# Custom: Time Zone
+[ Time ]
+path=/config/Setting/autop/Time.cfg
+TimeZone=-5  # EST
+TimeZoneName=US-Eastern
+
+# Custom: Call Features
+[ Features ]
+path=/config/Features/features.cfg
+call_waiting.enable=1
+forward.always.enable=0
+auto_answer.enable=0
+dnd.enable=0
+
+# Custom: Network Settings
+[ Network ]
+path=/config/Network/network.cfg
+static_ip.enable=0  # Use DHCP
+vlan.enable=0
+qos.enable=1
+qos.audio.dscp=46  # Expedited Forwarding
+```
+
+### Template Priority
+
+Templates are loaded in this order (first match wins):
+1. Custom template in `custom_templates_dir`
+2. Built-in template in code
+3. Generic fallback template
+
+---
+
+## Registration Cleanup
+
+### Overview
+
+The PBX system automatically cleans up incomplete phone registrations at startup to maintain database integrity.
+
+### Automatic Cleanup at Startup
+
+When the PBX system starts:
+
+1. **Database Connection**: After database tables are created
+2. **Cleanup Execution**: `cleanup_incomplete_registrations()` is called
+3. **Removal Criteria**: Any registration missing MAC, IP, or Extension is removed
+4. **Logging**: Number of removed registrations is logged
+
+### What Gets Removed
+
+A phone registration is considered **incomplete** and will be removed if:
+- `mac_address` is NULL or empty string
+- **OR** `ip_address` is NULL or empty string
+- **OR** `extension_number` is NULL or empty string
+
+### What Gets Retained
+
+A phone registration is **retained** only if:
+- `mac_address` is NOT NULL and NOT empty
+- **AND** `ip_address` is NOT NULL and NOT empty
+- **AND** `extension_number` is NOT NULL and NOT empty
+
+### Example Scenarios
+
+**Before Cleanup:**
+```
+ID | MAC Address       | IP Address    | Extension  | Status
+1  | 00:15:65:12:34:56 | 192.168.1.100 | 1001      | ✓ Complete
+2  | NULL              | 192.168.1.101 | 1002      | ✗ Incomplete (missing MAC)
+3  | 00:15:65:ab:cd:ef | NULL          | 1003      | ✗ Incomplete (missing IP)
+4  | 00:15:65:11:22:33 | 192.168.1.102 | NULL      | ✗ Incomplete (missing Extension)
+5  | 00:15:65:44:55:66 | 192.168.1.103 | 1005      | ✓ Complete
+```
+
+**After Cleanup:**
+```
+ID | MAC Address       | IP Address    | Extension  | Status
+1  | 00:15:65:12:34:56 | 192.168.1.100 | 1001      | ✓ Complete
+5  | 00:15:65:44:55:66 | 192.168.1.103 | 1005      | ✓ Complete
+```
+
+**Logs:**
+```
+INFO - Removed 3 incomplete phone registrations
+INFO - Kept 2 complete phone registrations
+```
+
+### Manual Cleanup
+
+To manually trigger cleanup without restarting:
+
+```bash
+python scripts/cleanup_phone_registrations.py
+```
+
+### Why Cleanup is Important
+
+- Prevents database clutter
+- Avoids confusion about registered devices
+- Ensures accurate device inventory
+- Improves query performance
+- Maintains data integrity
+
+---
+
+## Troubleshooting
+
+### Phone Not Getting Configuration
+
+**Problem**: Phone requests configuration but gets 404
+
+**Solutions:**
+1. Verify device is registered:
+   ```bash
+   curl http://your-server:8080/api/provisioning/devices
+   ```
+
+2. Check MAC address format matches (hyphens vs colons)
+
+3. Verify provisioning is enabled in config.yml
+
+4. Check logs:
+   ```bash
+   tail -f logs/pbx.log | grep -i provision
+   ```
+
+### Configuration Not Updating
+
+**Problem**: Made changes but phone still has old config
+
+**Solutions:**
+1. Reboot the phone (may cache configuration)
+2. Update `last_provisioned` timestamp:
+   ```bash
+   curl -X PUT http://your-server:8080/api/provisioning/devices/00-15-65-12-34-56/touch
+   ```
+3. Clear phone's configuration cache (vendor-specific)
+
+### Template Errors
+
+**Problem**: Phone gets malformed configuration
+
+**Solutions:**
+1. Verify template syntax for vendor
+2. Test template generation:
+   ```bash
+   python scripts/test_template.py --vendor yealink --model t46s --extension 1001
+   ```
+3. Check all placeholders are replaced
+4. Review vendor documentation for required fields
+
+### Database Issues
+
+**Problem**: Devices not persisting across restarts
+
+**Solutions:**
+1. Verify database connection:
+   ```bash
+   python scripts/verify_database.py
+   ```
+2. Check `provisioned_devices` table exists
+3. Verify write permissions to database
+4. Check logs for database errors
+
+### Incomplete Registrations
+
+**Problem**: Devices being removed at startup
+
+**Solutions:**
+1. Ensure phones provide all required information during registration
+2. Check SIP REGISTER messages include Contact header with IP
+3. Verify MAC address extraction from User-Agent or Contact header
+4. Review phone's SIP configuration
+
+---
 
 ## Future Enhancements
 

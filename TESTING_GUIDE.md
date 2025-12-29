@@ -1,6 +1,273 @@
-# Testing Guide for Phone-to-Phone Audio Fix
+# PBX System Testing Guide
 
-## Problem Summary
+**Last Updated**: December 29, 2025  
+**Purpose**: Complete guide for testing PBX functionality, automated testing, and integration testing
+
+## Table of Contents
+- [Automated Testing Setup](#automated-testing-setup)
+- [Active Directory Integration Testing](#active-directory-integration-testing)
+- [Phone-to-Phone Audio Testing](#phone-to-phone-audio-testing)
+- [General Testing Procedures](#general-testing-procedures)
+
+---
+
+## Automated Testing Setup
+
+### Overview
+
+The PBX system includes an automated test runner that:
+- Runs all tests in the `tests/` directory
+- Logs failures to `test_failures.log`
+- Automatically commits the log file to git (optional)
+- Pushes changes to the remote repository (optional)
+
+### Manual Testing
+
+Run tests manually at any time:
+
+```bash
+cd /path/to/PBX
+python3 run_tests.py
+```
+
+Or use the shell script:
+
+```bash
+./run_startup_tests.sh
+```
+
+### Automatic Testing on Server Startup
+
+To run tests automatically when the server boots:
+
+#### Step 1: Install the PBX System
+
+```bash
+# Clone or copy the PBX repository to the server
+git clone https://github.com/mattiIce/PBX.git /opt/pbx
+cd /opt/pbx
+```
+
+#### Step 2: Configure Git Credentials (Optional)
+
+For automatic push to work, configure git credentials:
+
+**Option A: Personal Access Token (Recommended)**
+
+```bash
+cd /opt/pbx
+
+# Configure git to store credentials
+git config credential.helper store
+
+# Set your git identity
+git config user.name "PBX Server"
+git config user.email "pbx@yourcompany.com"
+
+# Test push (you'll be prompted for username and PAT)
+git push
+# Username: your-github-username
+# Password: ghp_your_personal_access_token
+```
+
+To generate a Personal Access Token:
+1. Go to GitHub → Settings → Developer settings → Personal access tokens
+2. Generate new token (classic)
+3. Select scopes: `repo` (full control of private repositories)
+4. Copy the token and use it as the password
+
+**Option B: SSH Keys**
+
+```bash
+# Generate SSH key if you don't have one
+ssh-keygen -t ed25519 -C "pbx@yourcompany.com"
+
+# Add the public key to GitHub
+cat ~/.ssh/id_ed25519.pub
+# Copy output and add to GitHub → Settings → SSH keys
+
+# Configure git to use SSH
+cd /opt/pbx
+git remote set-url origin git@github.com:your-username/PBX.git
+```
+
+#### Step 3: Install the Systemd Service
+
+```bash
+# Copy the service file
+sudo cp /opt/pbx/pbx-startup-tests.service /etc/systemd/system/
+
+# Edit the service file to match your installation paths
+sudo nano /etc/systemd/system/pbx-startup-tests.service
+# Update WorkingDirectory and ExecStart paths
+# Update User to match your PBX user
+
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Enable the service to run on boot
+sudo systemctl enable pbx-startup-tests.service
+
+# Start the service now (optional)
+sudo systemctl start pbx-startup-tests.service
+
+# Check status
+sudo systemctl status pbx-startup-tests.service
+```
+
+### Test Output
+
+Tests create a `test_failures.log` file with results:
+
+```bash
+# View test results
+cat test_failures.log
+
+# Monitor in real-time
+tail -f test_failures.log
+```
+
+---
+
+## Active Directory Integration Testing
+
+### Prerequisites
+
+Before testing, ensure you have:
+- [ ] Active Directory server accessible
+- [ ] Service account credentials
+- [ ] Users in AD with `telephoneNumber` attribute set
+- [ ] `ldap3` Python library installed: `pip install ldap3`
+- [ ] Database configured (SQLite or PostgreSQL)
+
+### Step 1: Test AD Connection and Configuration
+
+Run the comprehensive AD integration test:
+
+```bash
+python scripts/test_ad_integration.py
+```
+
+**What it tests:**
+- ✓ Configuration is valid and complete
+- ✓ Required dependencies (ldap3) are installed
+- ✓ Connection to AD server succeeds
+- ✓ Authentication with bind credentials works
+- ✓ User search and discovery functions
+- ✓ User attributes are retrieved correctly
+- ✓ Extensions can be synced without conflicts
+- ✓ Overall integration readiness
+
+**Expected output:**
+```
+======================================================================
+Test Summary
+======================================================================
+Total tests: 15
+Passed: 13
+Failed: 0
+Warnings: 2
+
+✓ ALL TESTS PASSED
+
+Active Directory integration is configured correctly!
+```
+
+**If tests fail:**
+- Check server address and credentials in `config.yml`
+- Verify network connectivity to AD server
+- Ensure service account has read permissions
+- Review error messages for specific issues
+
+### Step 2: Run AD User Sync (Dry Run)
+
+Test what would be synced without making changes:
+
+```bash
+python scripts/sync_ad_users.py --dry-run
+```
+
+**What to look for:**
+- Number of users found in AD
+- List of users that would be synced
+- Any users that would be skipped (missing phone numbers, etc.)
+- Extension number mappings
+
+**Example output:**
+```
+Found 15 users in Active Directory
+
+Synchronizing users...
+Creating extension 5551234 for user jdoe
+Creating extension 5555678 for user jsmith
+...
+
+Synchronization Complete: 15 users would be synchronized
+```
+
+### Step 3: Perform Actual Sync
+
+Run the real sync to create extensions:
+
+```bash
+python scripts/sync_ad_users.py
+```
+
+**What happens:**
+- ✅ Connects to database (or falls back to config.yml)
+- ✅ Searches AD for users with phone numbers
+- ✅ Creates new extensions in database
+- ✅ Updates existing extensions
+- ✅ Marks all synced extensions with `ad_synced=true`
+- ✅ Stores AD username for tracking
+
+**Success indicators:**
+```
+✓ Connected to database - extensions will be synced to database
+✓ Found 15 users in Active Directory
+✓ Synchronized 15 extensions
+✓ Sync completed successfully
+```
+
+### Step 4: Verify Synced Extensions
+
+Check the database or API:
+
+```bash
+# List all extensions
+python scripts/list_extensions_from_db.py
+
+# Or use the API
+curl http://localhost:8080/api/extensions
+```
+
+### Troubleshooting AD Integration
+
+**Connection fails:**
+- Verify AD server address and port in config.yml
+- Check network connectivity: `telnet ad-server.domain.com 389`
+- Ensure firewall allows LDAP traffic
+
+**Authentication fails:**
+- Verify bind DN format: `CN=Service Account,OU=Users,DC=domain,DC=com`
+- Check bind password is correct
+- Ensure service account is not disabled or expired
+
+**No users found:**
+- Verify search base DN is correct
+- Check users have `telephoneNumber` attribute set
+- Review search filter in config.yml
+
+**Sync creates duplicate extensions:**
+- Use `--dry-run` first to preview
+- Check for existing extensions with same numbers
+- Review conflict resolution strategy in config
+
+---
+
+## Phone-to-Phone Audio Testing
+
+### Problem Summary
 You reported that with your Zultys ZIP 37G and other Zultys phones:
 - ✅ Server IP is 192.168.1.14
 - ✅ Phones register successfully
@@ -288,3 +555,170 @@ If audio still doesn't work after following this guide:
 4. **Check** that RTP relay shows bidirectional traffic
 
 The fix is in the code - it's now a matter of configuration and network setup!
+
+---
+
+## General Testing Procedures
+
+### Unit Testing
+
+Run Python unit tests:
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/test_sip.py
+
+# Run with coverage
+pytest --cov=pbx --cov-report=html
+
+# Run with verbose output
+pytest -v
+```
+
+### Integration Testing
+
+Test complete call flows:
+
+```bash
+# Test SIP registration
+python scripts/test_sip_registration.py
+
+# Test call routing
+python scripts/test_call_routing.py
+
+# Test voicemail
+python scripts/test_voicemail.py
+```
+
+### Performance Testing
+
+Test system under load:
+
+```bash
+# Simulate multiple concurrent calls
+python scripts/load_test.py --calls 10
+
+# Monitor system resources
+htop
+```
+
+### Manual Testing Checklist
+
+**Basic Functionality:**
+- [ ] PBX starts without errors
+- [ ] Extensions register successfully
+- [ ] Internal calls work (extension to extension)
+- [ ] External calls work (if configured)
+- [ ] Voicemail works (dial *extension_number)
+- [ ] Auto attendant works (dial 0)
+- [ ] Call transfer works
+- [ ] Call forwarding works
+- [ ] Conference calling works
+
+**Audio Quality:**
+- [ ] Audio is clear in both directions
+- [ ] No echo or feedback
+- [ ] No choppy or robotic audio
+- [ ] DTMF tones work (menu navigation)
+- [ ] Music on hold plays correctly
+
+**Admin Panel:**
+- [ ] Can login to admin panel
+- [ ] Can view extensions
+- [ ] Can add/edit/delete extensions
+- [ ] Can configure auto attendant
+- [ ] Can manage voicemail boxes
+- [ ] Can view call logs
+
+**Integrations:**
+- [ ] Jitsi video conferencing works (if enabled)
+- [ ] Matrix messaging works (if enabled)
+- [ ] EspoCRM integration works (if enabled)
+- [ ] Active Directory sync works (if enabled)
+- [ ] Email notifications work (if enabled)
+
+### Continuous Integration
+
+Set up automated testing in CI/CD:
+
+```yaml
+# Example GitHub Actions workflow
+name: PBX Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: pytest
+```
+
+### Test Data Management
+
+**Create test extensions:**
+
+```bash
+python scripts/seed_extensions.py
+```
+
+**Reset test data:**
+
+```bash
+# Backup current database
+cp pbx.db pbx.db.backup
+
+# Reset to clean state
+rm pbx.db
+python scripts/init_database.py
+python scripts/seed_extensions.py
+```
+
+### Debugging Failed Tests
+
+**Enable debug logging:**
+
+```yaml
+# In config.yml
+logging:
+  level: DEBUG
+```
+
+**Capture detailed logs:**
+
+```bash
+# Run tests with verbose logging
+pytest -v --log-cli-level=DEBUG > test_output.log 2>&1
+
+# View logs
+less test_output.log
+```
+
+**Common test failures:**
+
+1. **Database connection errors**: Check database is running and accessible
+2. **Network timeouts**: Verify network connectivity and firewall rules
+3. **Missing dependencies**: Run `pip install -r requirements.txt`
+4. **Permission errors**: Check file permissions and user access
+5. **Port conflicts**: Ensure ports 5060, 8080, 10000-20000 are available
+
+---
+
+**For additional testing resources, see:**
+- [E911_TESTING_PROCEDURES.md](E911_TESTING_PROCEDURES.md) - Emergency call testing
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Troubleshooting guide
+- [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) - Complete documentation
+
+---
+
+**Last Updated**: December 29, 2025  
+**Status**: Production Ready

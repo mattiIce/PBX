@@ -1,14 +1,71 @@
-# Reverse Proxy Setup Guide for PBX System
+# Reverse Proxy Setup Guide
 
-**Last Updated:** 2025-12-23  
-**Priority:** HIGH - Production Deployment Best Practice  
-**Status:** Production-tested and verified
+**Last Updated**: December 29, 2025  
+**Priority**: HIGH - Production Deployment Best Practice  
+**Status**: ✅ Production-tested and verified
 
-This guide shows you how to access your PBX web interface via a friendly URL (like `abps.albl.com`) instead of `IP:8080`.
+**Purpose**: Complete guide for setting up reverse proxy with HTTPS for professional PBX access
 
-> **Quick Start:** For a streamlined setup, use the [QUICK_START_ABPS_SETUP.md](QUICK_START_ABPS_SETUP.md) guide which uses the automated setup script.
+This guide shows you how to access your PBX web interface via a friendly URL (like `pbx.yourcompany.com`) instead of `IP:8080`.
 
 > **Note:** Throughout this guide, `[PBX_INSTALL_DIR]` refers to your PBX installation directory. Replace it with your actual path (e.g., `/opt/PBX`, `/home/pbx/PBX`, etc.).
+
+## Table of Contents
+- [Why Use a Reverse Proxy?](#why-use-a-reverse-proxy)
+- [Quick Start with Automated Setup](#quick-start-with-automated-setup)
+- [Manual Nginx Setup](#manual-nginx-setup)
+- [Manual Apache Setup](#manual-apache-setup)
+- [SSL Certificate Setup](#ssl-certificate-setup)
+- [Security Configuration](#security-configuration)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Quick Start with Automated Setup
+
+For a streamlined setup, use the automated script:
+
+**Step 1: Configure DNS**
+Add an A record to your DNS server:
+```
+Type: A
+Name: pbx (or your preferred subdomain)
+Domain: yourcompany.com
+Value: YOUR_PBX_SERVER_IP
+TTL: 3600
+```
+
+**Verify DNS:**
+```bash
+nslookup pbx.yourcompany.com
+# Should return your PBX server IP
+```
+
+**Step 2: Run Automated Setup**
+```bash
+cd [PBX_INSTALL_DIR]
+sudo scripts/setup_reverse_proxy.sh
+```
+
+**When prompted, enter:**
+1. Domain name: `pbx.yourcompany.com`
+2. Email address: Your email for SSL notifications  
+3. Backend port: `8080` (default)
+4. Confirm: `y`
+
+**What the script does:**
+- ✅ Installs nginx (if needed)
+- ✅ Installs certbot for SSL certificates
+- ✅ Creates nginx configuration
+- ✅ Obtains free Let's Encrypt SSL certificate
+- ✅ Configures HTTPS with auto-renewal
+- ✅ Sets up rate limiting
+- ✅ Configures firewall rules
+- ✅ Starts nginx
+
+**Result:** Access PBX at `https://pbx.yourcompany.com`
+
+---
 
 ## Why Use a Reverse Proxy?
 
