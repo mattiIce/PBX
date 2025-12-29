@@ -631,55 +631,46 @@ function showTab(tabName) {
             }
             break;
         case 'fraud-detection':
-            // Load fraud detection data when function exists
             if (typeof loadFraudDetectionData === 'function') {
                 loadFraudDetectionData();
             }
             break;
         case 'nomadic-e911':
-            // Load E911 data when function exists
             if (typeof loadNomadicE911Data === 'function') {
                 loadNomadicE911Data();
             }
             break;
         case 'callback-queue':
-            // Load callback queue data when function exists
             if (typeof loadCallbackQueue === 'function') {
                 loadCallbackQueue();
             }
             break;
         case 'mobile-push':
-            // Load mobile push data when function exists
             if (typeof loadMobilePushConfig === 'function') {
                 loadMobilePushConfig();
             }
             break;
         case 'recording-announcements':
-            // Load recording announcements when function exists
             if (typeof loadRecordingAnnouncements === 'function') {
                 loadRecordingAnnouncements();
             }
             break;
         case 'speech-analytics':
-            // Load speech analytics data when function exists
             if (typeof loadSpeechAnalyticsConfigs === 'function') {
                 loadSpeechAnalyticsConfigs();
             }
             break;
         case 'compliance':
-            // Load compliance data when function exists
             if (typeof loadComplianceData === 'function') {
                 loadComplianceData();
             }
             break;
         case 'crm-integrations':
-            // Load CRM integrations when function exists
             if (typeof loadCRMActivityLog === 'function') {
                 loadCRMActivityLog();
             }
             break;
         case 'opensource-integrations':
-            // Load open source integrations overview when function exists
             if (typeof loadOpenSourceIntegrations === 'function') {
                 loadOpenSourceIntegrations();
             }
