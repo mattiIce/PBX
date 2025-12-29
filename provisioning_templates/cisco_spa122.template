@@ -1,0 +1,117 @@
+# Cisco SPA122 (2-Port ATA with Router) Configuration
+# Two FXS ports for analog phones/fax + integrated router
+# Format: XML-based configuration for Cisco Small Business ATAs
+
+<flat-profile>
+<!-- ============================================================================ -->
+<!-- Provisioning Parameters -->
+<!-- ============================================================================ -->
+<Provision_Enable>No</Provision_Enable>
+<Resync_On_Reset>No</Resync_On_Reset>
+
+<!-- ============================================================================ -->
+<!-- Regional Parameters -->
+<!-- ============================================================================ -->
+<Dictionary_Server_Script></Dictionary_Server_Script>
+<Time_Zone>GMT-08:00</Time_Zone>
+<NTP_Server>pool.ntp.org</NTP_Server>
+
+<!-- ============================================================================ -->
+<!-- Line 1 (FXS Port 1) Configuration -->
+<!-- ============================================================================ -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+
+<!-- SIP Settings -->
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Outbound_Proxy_1_></Outbound_Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codec Configuration - Optimized for analog and fax -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<Third_Preferred_Codec_1_>G729a</Third_Preferred_Codec_1_>
+<G729a_Enable_1_>Yes</G729a_Enable_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF Settings -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+<DTMF_Tx_Mode_1_>Strict</DTMF_Tx_Mode_1_>
+<RTP_Packet_Size_1_>0.020</RTP_Packet_Size_1_>
+
+<!-- Fax Settings - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+<FAX_T38_Redundancy_1_>1</FAX_T38_Redundancy_1_>
+<FAX_Passthru_Method_1_>NSE</FAX_Passthru_Method_1_>
+
+<!-- Voice Processing -->
+<Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+<Echo_Canc_Adapt_Enable_1_>Yes</Echo_Canc_Adapt_Enable_1_>
+<Echo_Supp_Enable_1_>Yes</Echo_Supp_Enable_1_>
+
+<!-- Caller ID -->
+<Caller_ID_Method_1_>Bellcore(N.Amer,China)</Caller_ID_Method_1_>
+<Caller_ID_FSK_Standard_1_>bell202</Caller_ID_FSK_Standard_1_>
+
+<!-- Audio Configuration -->
+<Txgain_1_>0</Txgain_1_>
+<Rxgain_1_>0</Rxgain_1_>
+
+<!-- ============================================================================ -->
+<!-- Line 2 (FXS Port 2) Configuration -->
+<!-- ============================================================================ -->
+<Line_Enable_2_>No</Line_Enable_2_>
+<!-- Configure separately for second extension -->
+
+<!-- ============================================================================ -->
+<!-- Router Configuration (SPA122 specific) -->
+<!-- ============================================================================ -->
+<WAN_Connection_Type>DHCP</WAN_Connection_Type>
+<Router_Enable>Yes</Router_Enable>
+
+<!-- LAN Settings -->
+<LAN_IP_Address>192.168.0.1</LAN_IP_Address>
+<LAN_Netmask>255.255.255.0</LAN_Netmask>
+<DHCP_Server_Enable>Yes</DHCP_Server_Enable>
+<DHCP_Starting_IP>192.168.0.100</DHCP_Starting_IP>
+<DHCP_Number_of_Users>50</DHCP_Number_of_Users>
+<DHCP_Lease_Time>1440</DHCP_Lease_Time>
+
+<!-- DNS Settings -->
+<DNS_Server_Order>Manual,WAN</DNS_Server_Order>
+
+<!-- ============================================================================ -->
+<!-- System Parameters -->
+<!-- ============================================================================ -->
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+<Secondary_NTP_Server>time.nist.gov</Secondary_NTP_Server>
+
+<!-- SIP Parameters -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+<SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
+<RTP_TOS_DiffServ_Value>0xb8</RTP_TOS_DiffServ_Value>
+
+<!-- Regional Settings (FCC/North America) -->
+<Ring_Waveform>Sinusoid</Ring_Waveform>
+<Ring_Frequency>20</Ring_Frequency>
+<Ring_Voltage>75</Ring_Voltage>
+
+<!-- FXS Port Parameters -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+
+<!-- Hook Flash Timer -->
+<Hook_Flash_Timer_Min>0.1</Hook_Flash_Timer_Min>
+<Hook_Flash_Timer_Max>0.9</Hook_Flash_Timer_Max>
+
+<!-- QoS Settings -->
+<Enable_QOS>Yes</Enable_QOS>
+
+</flat-profile>
