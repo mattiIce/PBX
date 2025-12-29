@@ -5,9 +5,9 @@ This document helps you navigate the comprehensive documentation for the PBX sys
 ## 🚀 Just Ran Deployment Script?
 
 **START HERE:**
-- **[POST_DEPLOYMENT.md](POST_DEPLOYMENT.md)** - 📌 **Read this after running `scripts/deploy_production_pilot.sh`**
-  - Critical first steps (database password, SSL setup)
-  - Essential documentation to read (in order)
+- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - 📌 **Complete production deployment guide**
+  - Post-deployment setup (database, SSL, voice prompts)
+  - Essential configuration steps
   - Testing and verification
   - Troubleshooting guide
 
@@ -24,10 +24,10 @@ For executives, managers, and decision-makers:
 Start here if you're new to the PBX system:
 
 1. **[README.md](README.md)** - Project overview, features, and basic usage
-2. **[QUICK_START.md](QUICK_START.md)** - First-time setup checklist for quick deployment
-3. **[INSTALLATION.md](INSTALLATION.md)** - Detailed installation instructions
+2. **[INSTALLATION.md](INSTALLATION.md)** - Installation instructions with Quick Start Checklist
+3. **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Complete production deployment guide
 4. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - ⭐ **Complete feature status and implementation overview**
-5. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide
+5. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide (includes login, cache, admin panel, QoS issues)
 6. **[TROUBLESHOOTING_HISTORICAL_FIXES.md](TROUBLESHOOTING_HISTORICAL_FIXES.md)** - Historical bug fixes reference
 
 ## Product Improvement & Roadmap
@@ -50,6 +50,7 @@ For planning future enhancements:
 
 Choose the guide that fits your deployment scenario:
 
+- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - ⭐ **Complete production deployment guide** (includes checklist, post-deployment, auto-attendant setup)
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Step-by-step deployment guide for specific server setup
 - **[UBUNTU_SETUP_GUIDE.md](UBUNTU_SETUP_GUIDE.md)** - Complete Ubuntu 24.04 LTS setup with all databases and services
 - **[POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)** - PostgreSQL database configuration for advanced features
@@ -74,9 +75,9 @@ Migrate from legacy phone systems:
 
 Connect the PBX with external services:
 
-- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - ⭐ **Free integrations (Jitsi, Matrix, EspoCRM)**
+- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** - ⭐ **Complete integration guide** (setup, usage, port configuration, troubleshooting)
+- **[OPEN_SOURCE_INTEGRATIONS.md](OPEN_SOURCE_INTEGRATIONS.md)** - Free integrations (Jitsi, Matrix, EspoCRM)
 - **[QUICK_SETUP_GUIDE.md](QUICK_SETUP_GUIDE.md)** - One-click integration setup
-- **[INTEGRATION_TROUBLESHOOTING_GUIDE.md](INTEGRATION_TROUBLESHOOTING_GUIDE.md)** - Integration setup and fixes
 - **[ENTERPRISE_INTEGRATIONS.md](ENTERPRISE_INTEGRATIONS.md)** - Zoom, Active Directory, Outlook, Teams integrations
 - **[AD_USER_SYNC_GUIDE.md](AD_USER_SYNC_GUIDE.md)** - Active Directory user synchronization
 - **[TESTING_AD_INTEGRATION.md](TESTING_AD_INTEGRATION.md)** - Testing Active Directory integration
@@ -134,10 +135,8 @@ For developers working on or extending the PBX:
 
 Common issues and solutions:
 
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - ⭐ **Comprehensive troubleshooting guide** (audio, integration, networking, config)
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - ⭐ **Comprehensive troubleshooting guide** (audio, login, cache, admin panel, QoS, integration, networking)
 - **[TROUBLESHOOTING_HISTORICAL_FIXES.md](TROUBLESHOOTING_HISTORICAL_FIXES.md)** - Historical bug fixes and solutions reference
-- **[LOGIN_CONNECTION_TROUBLESHOOTING.md](LOGIN_CONNECTION_TROUBLESHOOTING.md)** - Login and connection issues
-- **[BROWSER_CACHE_FIX.md](BROWSER_CACHE_FIX.md)** - Browser cache and display issues
 - **[FIXING_YAML_MERGE_CONFLICTS.md](FIXING_YAML_MERGE_CONFLICTS.md)** - How to resolve Git merge conflicts in config.yml
 - **[TROUBLESHOOTING_PROVISIONING.md](TROUBLESHOOTING_PROVISIONING.md)** - Phone provisioning troubleshooting
 
@@ -174,8 +173,8 @@ PBX/
 ### System Administrator
 
 Must read:
-1. [INSTALLATION.md](INSTALLATION.md)
-2. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) or [UBUNTU_SETUP_GUIDE.md](UBUNTU_SETUP_GUIDE.md)
+1. [INSTALLATION.md](INSTALLATION.md) (includes Quick Start Checklist)
+2. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
 3. [SECURITY_GUIDE.md](SECURITY_GUIDE.md) - Complete security reference
 4. [POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md) (if using database features)
 5. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) (for common issues)
@@ -183,8 +182,8 @@ Must read:
 ### Network Administrator
 
 Must read:
-1. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-2. [CALL_FLOW.md](CALL_FLOW.md)
+1. [INSTALLATION.md](INSTALLATION.md) (includes Quick Start)
+2. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
 3. [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md)
 4. [SECURITY_GUIDE.md](SECURITY_GUIDE.md) (Network Security section)
 5. [CODEC_IMPLEMENTATION_GUIDE.md](CODEC_IMPLEMENTATION_GUIDE.md)
@@ -197,7 +196,7 @@ Must read:
 2. [VOICEMAIL_EMAIL_GUIDE.md](VOICEMAIL_EMAIL_GUIDE.md)
 3. [VOICEMAIL_CUSTOM_GREETING_GUIDE.md](VOICEMAIL_CUSTOM_GREETING_GUIDE.md)
 4. [WEBRTC_GUIDE.md](WEBRTC_GUIDE.md) (for browser calling)
-5. [QUICK_START.md](QUICK_START.md) (Basic usage)
+5. [ADMIN_PANEL_GUIDE.md](ADMIN_PANEL_GUIDE.md) (user features)
 
 ### Developer
 
@@ -234,7 +233,7 @@ Must read:
 4. [QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md) (future improvements)
 5. [FEATURES.md](FEATURES.md)
 6. [SUMMARY.md](SUMMARY.md)
-7. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+7. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) (deployment readiness)
 
 ### Executive / Business Leader
 
@@ -242,7 +241,7 @@ Must read:
 1. [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) (complete business case)
 2. [QUICK_IMPROVEMENT_GUIDE.md](QUICK_IMPROVEMENT_GUIDE.md) (future roadmap and ROI)
 3. [README.md](README.md) (technical capabilities overview)
-4. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) (implementation readiness)
+4. [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) (implementation readiness)
 
 ## Support and Contributing
 
