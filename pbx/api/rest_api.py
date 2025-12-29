@@ -315,6 +315,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_qos_thresholds()
             elif path == "/api/auto-attendant/menu-options":
                 self._handle_add_auto_attendant_menu_option()
+            elif path == "/api/auto-attendant/menus":
+                self._handle_create_menu()
+            elif path.startswith("/api/auto-attendant/menus/") and path.endswith("/items"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}/items
+                menu_id = path.split("/")[-2]
+                self._handle_add_menu_item(menu_id)
             elif path.startswith("/api/voicemail-boxes/") and path.endswith("/export"):
                 self._handle_export_voicemail_box(path)
             elif path == "/api/ssl/generate-certificate":
@@ -604,6 +610,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_auto_attendant_config()
             elif path == "/api/auto-attendant/prompts":
                 self._handle_update_auto_attendant_prompts()
+            elif path.startswith("/api/auto-attendant/menus/") and "/items/" in path:
+                # Extract menu_id and digit from path like /api/auto-attendant/menus/{menu_id}/items/{digit}
+                parts = path.split("/")
+                if len(parts) >= 7 and parts[3] == "menus" and parts[5] == "items":
+                    menu_id = parts[4]
+                    digit = parts[6]
+                    self._handle_update_menu_item(menu_id, digit)
+                else:
+                    self._send_json({"error": "Invalid path format"}, 400)
+            elif path.startswith("/api/auto-attendant/menus/"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
+                parts = path.split("/")
+                if len(parts) >= 5 and parts[3] == "menus" and not parts[4].endswith("/items"):
+                    menu_id = parts[4]
+                    self._handle_update_menu(menu_id)
+                else:
+                    self._send_json({"error": "Method not allowed"}, 405)
             elif path.startswith("/api/auto-attendant/menu-options/"):
                 self._handle_update_auto_attendant_menu_option(path)
             elif path.startswith("/api/voicemail-boxes/") and path.endswith("/greeting"):
@@ -657,6 +680,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._handle_remove_skill_from_agent(agent_extension, skill_id)
                 else:
                     self._send_json({"error": "Invalid path"}, 400)
+            elif path.startswith("/api/auto-attendant/menus/") and "/items/" in path:
+                # Extract menu_id and digit from path like /api/auto-attendant/menus/{menu_id}/items/{digit}
+                parts = path.split("/")
+                menu_id = parts[4]
+                digit = parts[6]
+                self._handle_delete_menu_item(menu_id, digit)
+            elif path.startswith("/api/auto-attendant/menus/"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
+                menu_id = path.split("/")[-1]
+                self._handle_delete_menu(menu_id)
             elif path.startswith("/api/auto-attendant/menu-options/"):
                 # Extract digit from path
                 digit = path.split("/")[-1]
@@ -940,6 +973,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_voicemail(path)
             elif path == "/api/auto-attendant/config":
                 self._handle_get_auto_attendant_config()
+            elif path == "/api/auto-attendant/menu-tree":
+                self._handle_get_menu_tree()
+            elif path == "/api/auto-attendant/menus":
+                self._handle_get_menus()
+            elif path.startswith("/api/auto-attendant/menus/") and path.endswith("/items"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}/items
+                menu_id = path.split("/")[-2]
+                self._handle_get_menu_items(menu_id)
+            elif path.startswith("/api/auto-attendant/menus/"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
+                menu_id = path.split("/")[-1]
+                self._handle_get_menu(menu_id)
             elif path == "/api/auto-attendant/menu-options":
                 self._handle_get_auto_attendant_menu_options()
             elif path == "/api/auto-attendant/prompts":
@@ -5518,6 +5563,333 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self.logger.error(f"Error regenerating voice prompts: {e}")
             raise
+
+    # ========== Auto Attendant Submenu Management Handlers ==========
+
+    def _handle_get_menus(self):
+        """Get list of all menus."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            menus = aa.list_menus()
+            self._send_json({"menus": menus})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_menu(self, menu_id):
+        """Get details of a specific menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            menu = aa.get_menu(menu_id)
+
+            if not menu:
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            self._send_json({"menu": menu})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_create_menu(self):
+        """Create a new menu or submenu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            menu_id = data.get("menu_id")
+            parent_menu_id = data.get("parent_menu_id")
+            menu_name = data.get("menu_name")
+            prompt_text = data.get("prompt_text", "")
+
+            if not menu_id or not menu_name:
+                self._send_json({"error": "menu_id and menu_name are required"}, 400)
+                return
+
+            # Validate menu_id format (alphanumeric, dashes, underscores only)
+            import re
+
+            if not re.match(r"^[a-z0-9_-]+$", menu_id):
+                self._send_json(
+                    {
+                        "error": "menu_id must contain only lowercase letters, numbers, dashes, and underscores"
+                    },
+                    400,
+                )
+                return
+
+            aa = self.pbx_core.auto_attendant
+            success = aa.create_menu(menu_id, parent_menu_id, menu_name, prompt_text)
+
+            if not success:
+                self._send_json(
+                    {
+                        "error": "Failed to create menu (check depth limit, circular references, or duplicate ID)"
+                    },
+                    400,
+                )
+                return
+
+            # Generate voice prompt for the submenu if prompt_text provided
+            if prompt_text:
+                try:
+                    from pbx.features.auto_attendant import generate_submenu_prompt
+
+                    audio_path = aa.audio_path
+                    audio_file = generate_submenu_prompt(menu_id, prompt_text, audio_path)
+                    if audio_file:
+                        aa.update_menu(menu_id, audio_file=audio_file)
+                        self.logger.info(f"Generated voice prompt for menu '{menu_id}'")
+                except Exception as e:
+                    self.logger.warning(f"Failed to generate voice prompt: {e}")
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu '{menu_id}' created successfully",
+                    "menu_id": menu_id,
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_update_menu(self, menu_id):
+        """Update an existing menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            menu_name = data.get("menu_name")
+            prompt_text = data.get("prompt_text")
+
+            aa = self.pbx_core.auto_attendant
+
+            # Check if menu exists
+            if not aa.get_menu(menu_id):
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            # Update menu
+            success = aa.update_menu(menu_id, menu_name=menu_name, prompt_text=prompt_text)
+
+            if not success:
+                self._send_json({"error": "Failed to update menu"}, 500)
+                return
+
+            # Regenerate voice prompt if prompt_text changed
+            if prompt_text:
+                try:
+                    from pbx.features.auto_attendant import generate_submenu_prompt
+
+                    audio_path = aa.audio_path
+                    audio_file = generate_submenu_prompt(menu_id, prompt_text, audio_path)
+                    if audio_file:
+                        aa.update_menu(menu_id, audio_file=audio_file)
+                        self.logger.info(f"Regenerated voice prompt for menu '{menu_id}'")
+                except Exception as e:
+                    self.logger.warning(f"Failed to regenerate voice prompt: {e}")
+
+            self._send_json(
+                {"success": True, "message": f"Menu '{menu_id}' updated successfully"}
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_delete_menu(self, menu_id):
+        """Delete a menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            success = aa.delete_menu(menu_id)
+
+            if not success:
+                self._send_json(
+                    {
+                        "error": "Failed to delete menu (cannot delete main menu or menu is referenced by other items)"
+                    },
+                    400,
+                )
+                return
+
+            self._send_json(
+                {"success": True, "message": f"Menu '{menu_id}' deleted successfully"}
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_menu_items(self, menu_id):
+        """Get menu items for a specific menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+
+            # Check if menu exists
+            if not aa.get_menu(menu_id):
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            items = aa.get_menu_items(menu_id)
+            self._send_json({"menu_id": menu_id, "items": items})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_add_menu_item(self, menu_id):
+        """Add an item to a menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            digit = data.get("digit")
+            destination_type = data.get("destination_type")
+            destination_value = data.get("destination_value")
+            description = data.get("description", "")
+
+            if not digit or not destination_type or not destination_value:
+                self._send_json(
+                    {"error": "digit, destination_type, and destination_value are required"}, 400
+                )
+                return
+
+            aa = self.pbx_core.auto_attendant
+
+            # Check if menu exists
+            if not aa.get_menu(menu_id):
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            success = aa.add_menu_item(
+                menu_id, digit, destination_type, destination_value, description
+            )
+
+            if not success:
+                self._send_json(
+                    {"error": "Failed to add menu item (check destination_type validity)"}, 400
+                )
+                return
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu item {digit} added to menu '{menu_id}' successfully",
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_update_menu_item(self, menu_id, digit):
+        """Update a menu item."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            destination_type = data.get("destination_type")
+            destination_value = data.get("destination_value")
+            description = data.get("description")
+
+            if not destination_type and not destination_value and description is None:
+                self._send_json(
+                    {"error": "At least one field must be provided to update"}, 400
+                )
+                return
+
+            aa = self.pbx_core.auto_attendant
+
+            # Get current item to check if it exists
+            current_items = aa.get_menu_items(menu_id)
+            item_exists = any(item["digit"] == digit for item in current_items)
+
+            if not item_exists:
+                self._send_json(
+                    {"error": f"Menu item {digit} not found in menu '{menu_id}'"}, 404
+                )
+                return
+
+            # Get current values if not provided
+            current_item = next(item for item in current_items if item["digit"] == digit)
+            final_dest_type = destination_type or current_item["destination_type"]
+            final_dest_value = destination_value or current_item["destination_value"]
+            final_description = description if description is not None else current_item["description"]
+
+            # Update (add_menu_item handles both insert and update)
+            success = aa.add_menu_item(
+                menu_id, digit, final_dest_type, final_dest_value, final_description
+            )
+
+            if not success:
+                self._send_json({"error": "Failed to update menu item"}, 500)
+                return
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu item {digit} in menu '{menu_id}' updated successfully",
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_delete_menu_item(self, menu_id, digit):
+        """Delete a menu item."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            success = aa.remove_menu_item(menu_id, digit)
+
+            if not success:
+                self._send_json(
+                    {"error": f"Failed to delete menu item {digit} from menu '{menu_id}'"}, 500
+                )
+                return
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu item {digit} deleted from menu '{menu_id}' successfully",
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_menu_tree(self):
+        """Get complete menu hierarchy as a tree."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            tree = aa.get_menu_tree("main")
+
+            if not tree:
+                self._send_json({"error": "Failed to build menu tree"}, 500)
+                return
+
+            self._send_json({"menu_tree": tree})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
 
     # ========== Voicemail Box Management Handlers ==========
 
