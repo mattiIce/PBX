@@ -576,6 +576,114 @@ function showTab(tabName) {
         case 'license-management':
             initLicenseManagement();
             break;
+        case 'qos':
+            loadQoSMetrics();
+            break;
+        case 'emergency':
+            loadEmergencyContacts();
+            loadEmergencyHistory();
+            break;
+        case 'codecs':
+            loadCodecStatus();
+            loadDTMFConfig();
+            break;
+        case 'sip-trunks':
+            loadSIPTrunks();
+            loadTrunkHealth();
+            break;
+        case 'least-cost-routing':
+            loadLCRRates();
+            loadLCRStatistics();
+            break;
+        case 'find-me-follow-me':
+            loadFMFMExtensions();
+            break;
+        case 'time-routing':
+            loadTimeRoutingRules();
+            break;
+        case 'webhooks':
+            loadWebhooks();
+            break;
+        case 'hot-desking':
+            loadHotDeskSessions();
+            break;
+        case 'recording-retention':
+            loadRetentionPolicies();
+            break;
+        case 'jitsi-integration':
+            if (typeof loadJitsiConfig === 'function') {
+                loadJitsiConfig();
+            }
+            break;
+        case 'matrix-integration':
+            if (typeof loadMatrixConfig === 'function') {
+                loadMatrixConfig();
+            }
+            break;
+        case 'espocrm-integration':
+            if (typeof loadEspoCRMConfig === 'function') {
+                loadEspoCRMConfig();
+            }
+            break;
+        case 'click-to-dial':
+            if (typeof loadClickToDialTab === 'function') {
+                loadClickToDialTab();
+            }
+            break;
+        case 'fraud-detection':
+            // Load fraud detection data when function exists
+            if (typeof loadFraudDetectionData === 'function') {
+                loadFraudDetectionData();
+            }
+            break;
+        case 'nomadic-e911':
+            // Load E911 data when function exists
+            if (typeof loadNomadicE911Data === 'function') {
+                loadNomadicE911Data();
+            }
+            break;
+        case 'callback-queue':
+            // Load callback queue data when function exists
+            if (typeof loadCallbackQueue === 'function') {
+                loadCallbackQueue();
+            }
+            break;
+        case 'mobile-push':
+            // Load mobile push data when function exists
+            if (typeof loadMobilePushConfig === 'function') {
+                loadMobilePushConfig();
+            }
+            break;
+        case 'recording-announcements':
+            // Load recording announcements when function exists
+            if (typeof loadRecordingAnnouncements === 'function') {
+                loadRecordingAnnouncements();
+            }
+            break;
+        case 'speech-analytics':
+            // Load speech analytics data when function exists
+            if (typeof loadSpeechAnalyticsConfigs === 'function') {
+                loadSpeechAnalyticsConfigs();
+            }
+            break;
+        case 'compliance':
+            // Load compliance data when function exists
+            if (typeof loadComplianceData === 'function') {
+                loadComplianceData();
+            }
+            break;
+        case 'crm-integrations':
+            // Load CRM integrations when function exists
+            if (typeof loadCRMActivityLog === 'function') {
+                loadCRMActivityLog();
+            }
+            break;
+        case 'opensource-integrations':
+            // Load open source integrations overview when function exists
+            if (typeof loadOpenSourceIntegrations === 'function') {
+                loadOpenSourceIntegrations();
+            }
+            break;
     }
 }
 
