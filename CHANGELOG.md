@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Full ATA (Analog Telephone Adapter) Support** ✨ NEW
+  - Grandstream HT801 (1-port) provisioning template
+  - Grandstream HT802 (2-port) provisioning template
+  - Cisco SPA112 (2-port) provisioning template
+  - Cisco SPA122 (2-port with router) provisioning template
+  - T.38 fax over IP support enabled by default
+  - Echo cancellation optimized for analog lines
+  - G.711 codec priority for best analog/fax quality
+  - DTMF support (SIP INFO method) for IVR/voicemail
+  - Comprehensive ATA Support Guide documentation
+  - 17 unit tests for ATA provisioning (all passing)
+  - See [docs/ATA_SUPPORT_GUIDE.md](docs/ATA_SUPPORT_GUIDE.md) for complete setup instructions
 - Comprehensive consolidated documentation guides:
   - PRODUCTION_DEPLOYMENT_GUIDE.md - Complete production deployment reference
   - ADMIN_PANEL_GUIDE.md - Complete admin panel usage guide
