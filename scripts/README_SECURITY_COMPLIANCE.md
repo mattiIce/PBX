@@ -99,6 +99,44 @@ python scripts/check_fips_health.py --quiet
 */15 * * * * /opt/PBX/scripts/check_fips_health.py --quiet || /usr/bin/alert-admin
 ```
 
+### test_soc2_controls.py
+
+**Purpose**: Automated SOC 2 Type 2 control testing and validation
+
+**Usage**:
+```bash
+# Test all 16 SOC 2 controls
+python scripts/test_soc2_controls.py
+
+# Test a specific control
+python scripts/test_soc2_controls.py --control CC6.1
+
+# JSON output
+python scripts/test_soc2_controls.py --json
+
+# Quiet mode (exit code only)
+python scripts/test_soc2_controls.py --quiet
+```
+
+**What it tests**:
+- **Security Controls (10)**: CC1.1, CC1.2, CC2.1, CC3.1, CC5.1, CC6.1, CC6.2, CC6.6, CC7.1, CC7.2
+- **Availability Controls (2)**: A1.1, A1.2
+- **Processing Integrity Controls (2)**: PI1.1, PI1.2
+- **Confidentiality Controls (2)**: C1.1, C1.2
+
+**Features**:
+- Validates control implementation against configuration
+- Automatically updates test results in database
+- Records test timestamps for audit trail
+- Supports individual or batch testing
+- JSON output for automation
+
+**Exit codes**:
+- `0` - All tests passed
+- `1` - One or more tests failed
+- `2` - Error during testing
+- `130` - Cancelled by user
+
 ## Compliance Reports
 
 ### JSON Report Format
@@ -226,13 +264,30 @@ curl http://localhost:8080/api/framework/compliance/soc2/controls
 
 #### 3. Test Controls
 
-Document testing in the database:
+**Automated Testing** (Recommended):
+```bash
+# Test all controls automatically
+python scripts/test_soc2_controls.py
+
+# Test a specific control
+python scripts/test_soc2_controls.py --control CC6.1
+
+# JSON output
+python scripts/test_soc2_controls.py --json
+
+# Quiet mode (exit code only)
+python scripts/test_soc2_controls.py --quiet
+```
+
+The automated testing script (`test_soc2_controls.py`) performs comprehensive validation of all 16 SOC 2 controls and automatically updates the database with test results and timestamps.
+
+**Manual Testing** (Alternative):
 ```python
 from pbx.features.compliance_framework import SOC2ComplianceEngine
 
 engine = SOC2ComplianceEngine(db, config)
 
-# Update control test results
+# Update control test results manually
 engine.update_control_test(
     control_id="CC6.1",
     test_results="Passed - Quarterly audit on 2024-12-29"
@@ -302,7 +357,13 @@ engine = SOC2ComplianceEngine(db, config.config)
 
 **Solution**:
 ```bash
-# Review all controls
+# Automated testing (Recommended)
+python scripts/test_soc2_controls.py
+
+# Verify all controls tested
+python scripts/security_compliance_check.py --json | jq '.soc2.summary.tested'
+
+# Manual API approach (Alternative)
 curl http://localhost:8080/api/framework/compliance/soc2/controls
 
 # Update test results for each control
@@ -327,8 +388,9 @@ Before deploying to production, ensure:
 
 ### SOC 2 Requirements
 - [ ] All 16 default controls implemented
-- [ ] Controls tested within last 90 days
-- [ ] Test results documented
+- [ ] Controls tested (run `python scripts/test_soc2_controls.py`)
+- [ ] Testing status shows 16/16 controls tested
+- [ ] Test results documented in database
 - [ ] Compliance percentage = 100%
 
 ### Security Configuration
@@ -341,11 +403,18 @@ Before deploying to production, ensure:
 
 ### Verification
 ```bash
-# Run full compliance check
+# Step 1: Test all SOC 2 controls
+python scripts/test_soc2_controls.py
+
+# Should show:
+# ✓ All controls passed testing ✓
+
+# Step 2: Run full compliance check
 python scripts/security_compliance_check.py
 
 # Should output:
-# ✓ OVERALL STATUS: FULLY COMPLIANT
+# ✓ PASS - Testing Status: Tested: 16/16 implemented controls
+# ✓ OVERALL STATUS: FULLY COMPLIANT (or COMPLIANT with FIPS warnings in non-FIPS environments)
 ```
 
 ## Continuous Compliance Monitoring
@@ -354,6 +423,9 @@ python scripts/security_compliance_check.py
 
 Add to crontab for regular checks:
 ```bash
+# Test SOC 2 controls monthly
+0 0 1 * * cd /opt/PBX && python scripts/test_soc2_controls.py --quiet
+
 # Check compliance daily at 2 AM
 0 2 * * * cd /opt/PBX && python scripts/security_compliance_check.py --output /var/log/pbx/compliance_$(date +\%Y\%m\%d).json
 
