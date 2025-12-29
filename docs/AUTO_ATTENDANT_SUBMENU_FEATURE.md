@@ -423,9 +423,9 @@ function renderMenuBreadcrumb(currentMenuId)
 
 ## References
 
-- Current implementation: `/home/runner/work/PBX/PBX/pbx/features/auto_attendant.py`
-- API handlers: `/home/runner/work/PBX/PBX/pbx/api/rest_api.py`
-- Frontend code: `/home/runner/work/PBX/PBX/admin/js/auto_attendant.js`
+- Current implementation: `pbx/features/auto_attendant.py`
+- API handlers: `pbx/api/rest_api.py`
+- Frontend code: `admin/js/auto_attendant.js`
 - Database: SQLite schema in auto_attendant.py `_init_database()`
 
 ## Notes
