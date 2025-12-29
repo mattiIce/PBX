@@ -75,11 +75,13 @@ async function loadAutoAttendantMenuOptions() {
         
         // Only fall back to legacy API if endpoint doesn't exist (404)
         if (response.status === 404) {
+            console.warn(`Menu items endpoint returned 404 for menu '${currentMenuId}', trying legacy API...`);
             return await loadLegacyMenuOptions();
         }
         
         if (!response.ok) {
-            throw new Error(`Failed to load menu options: ${response.status}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Failed to load menu options: ${response.status} - ${errorData.error || response.statusText}`);
         }
 
         const data = await response.json();
@@ -551,10 +553,16 @@ async function loadAvailableMenus() {
         if (response.ok) {
             const data = await response.json();
             availableMenus = data.menus || [];
+            console.log(`Loaded ${availableMenus.length} menu(s) for submenu selection`);
             return availableMenus;
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error(`Failed to load menus: ${response.status} ${response.statusText}`, errorData);
+            showNotification(`Failed to load menus: ${errorData.error || response.statusText}. The server may need to be restarted.`, 'error');
         }
     } catch (error) {
         console.error('Error loading menus:', error);
+        showNotification(`Unable to connect to API: ${error.message}. Please check your connection.`, 'error');
     }
     return [];
 }
@@ -567,45 +575,74 @@ async function updateSubmenuDropdowns() {
     const newSubmenuSelect = document.getElementById('new-menu-submenu');
     if (newSubmenuSelect) {
         newSubmenuSelect.innerHTML = '<option value="">Select a submenu</option>';
-        menus.forEach(menu => {
-            if (menu.menu_id !== currentMenuId) {  // Don't include current menu
-                const option = document.createElement('option');
-                option.value = menu.menu_id;
-                option.textContent = `${menu.menu_name} (${menu.menu_id})`;
-                newSubmenuSelect.appendChild(option);
-            }
-        });
-        newSubmenuSelect.disabled = false;
+        if (menus.length === 0) {
+            const noMenusOption = document.createElement('option');
+            noMenusOption.value = '';
+            noMenusOption.textContent = 'No menus available - create one first';
+            noMenusOption.disabled = true;
+            newSubmenuSelect.appendChild(noMenusOption);
+            newSubmenuSelect.disabled = true;
+        } else {
+            menus.forEach(menu => {
+                if (menu.menu_id !== currentMenuId) {  // Don't include current menu
+                    const option = document.createElement('option');
+                    option.value = menu.menu_id;
+                    option.textContent = `${menu.menu_name} (${menu.menu_id})`;
+                    newSubmenuSelect.appendChild(option);
+                }
+            });
+            newSubmenuSelect.disabled = false;
+        }
     }
     
     // Update edit modal submenu dropdown
     const editSubmenuSelect = document.getElementById('edit-menu-submenu');
     if (editSubmenuSelect) {
         editSubmenuSelect.innerHTML = '<option value="">Select a submenu</option>';
-        menus.forEach(menu => {
-            if (menu.menu_id !== currentMenuId) {
-                const option = document.createElement('option');
-                option.value = menu.menu_id;
-                option.textContent = `${menu.menu_name} (${menu.menu_id})`;
-                editSubmenuSelect.appendChild(option);
-            }
-        });
-        editSubmenuSelect.disabled = false;
+        if (menus.length === 0) {
+            const noMenusOption = document.createElement('option');
+            noMenusOption.value = '';
+            noMenusOption.textContent = 'No menus available - create one first';
+            noMenusOption.disabled = true;
+            editSubmenuSelect.appendChild(noMenusOption);
+            editSubmenuSelect.disabled = true;
+        } else {
+            menus.forEach(menu => {
+                if (menu.menu_id !== currentMenuId) {
+                    const option = document.createElement('option');
+                    option.value = menu.menu_id;
+                    option.textContent = `${menu.menu_name} (${menu.menu_id})`;
+                    editSubmenuSelect.appendChild(option);
+                }
+            });
+            editSubmenuSelect.disabled = false;
+        }
     }
     
     // Update parent menu dropdown in create submenu modal
     const parentSelect = document.getElementById('submenu-parent');
     if (parentSelect) {
         parentSelect.innerHTML = '';
-        menus.forEach(menu => {
-            const option = document.createElement('option');
-            option.value = menu.menu_id;
-            option.textContent = `${menu.menu_name} (${menu.menu_id})`;
-            if (menu.menu_id === 'main') {
-                option.selected = true;
-            }
-            parentSelect.appendChild(option);
-        });
+        if (menus.length === 0) {
+            const noMenusOption = document.createElement('option');
+            noMenusOption.value = '';
+            noMenusOption.textContent = 'No parent menus available - API may be unavailable';
+            noMenusOption.disabled = true;
+            noMenusOption.selected = true;
+            parentSelect.appendChild(noMenusOption);
+            console.warn('No menus loaded - parent menu dropdown is empty. This usually means the API is not responding.');
+        } else {
+            menus.forEach(menu => {
+                const option = document.createElement('option');
+                option.value = menu.menu_id;
+                option.textContent = `${menu.menu_name} (${menu.menu_id})`;
+                if (menu.menu_id === 'main') {
+                    option.selected = true;
+                }
+                parentSelect.appendChild(option);
+            });
+            console.log(`Populated parent menu dropdown with ${menus.length} menu(s)`);
+        }
     }
 }
 
@@ -689,7 +726,17 @@ async function loadMenuTree() {
     try {
         const response = await fetch(`${API_BASE}/api/auto-attendant/menu-tree`);
         if (!response.ok) {
-            throw new Error('Failed to load menu tree');
+            const errorData = await response.json().catch(() => ({}));
+            console.error(`Failed to load menu tree: ${response.status} ${response.statusText}`, errorData);
+            
+            // Provide helpful error message based on status code
+            if (response.status === 404) {
+                throw new Error('Menu tree endpoint not found. The server may need to be restarted to load new API routes.');
+            } else if (response.status === 500) {
+                throw new Error(`Server error: ${errorData.error || 'Internal server error'}`);
+            } else {
+                throw new Error(`Failed to load menu tree: ${errorData.error || response.statusText}`);
+            }
         }
         
         const data = await response.json();
@@ -697,12 +744,22 @@ async function loadMenuTree() {
         
         if (data.menu_tree) {
             treeView.innerHTML = renderMenuTree(data.menu_tree, 0);
+            console.log('Menu tree loaded successfully');
         } else {
             treeView.innerHTML = '<p style="color: #666;">No menu structure available</p>';
+            console.warn('Menu tree data is empty');
         }
     } catch (error) {
         console.error('Error loading menu tree:', error);
-        showNotification('Failed to load menu tree', 'error');
+        showNotification(`Failed to load menu tree: ${error.message}`, 'error');
+        
+        const treeView = document.getElementById('menu-tree-view');
+        if (treeView) {
+            treeView.innerHTML = `<p style="color: #d32f2f; padding: 10px; background: #ffebee; border-radius: 4px;">
+                <strong>Error:</strong> ${error.message}<br>
+                <small>Check the browser console for more details.</small>
+            </p>`;
+        }
     }
 }
 
