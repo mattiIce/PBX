@@ -89,7 +89,7 @@
 - **SRTP** - Encrypted media streams
 - **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
 - **Password Security** - PBKDF2-HMAC-SHA256 hashing with 600,000 iterations (OWASP 2024 recommendation)
-- **E911 Protection** - Automatic blocking of emergency calls during testing to prevent accidental 911 calls (see [E911_PROTECTION_GUIDE.md](E911_PROTECTION_GUIDE.md))
+- **E911 Protection** - Automatic blocking of emergency calls during testing to prevent accidental 911 calls (see [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#e911-protection))
 
 ## 📋 Requirements
 
@@ -442,7 +442,7 @@ python tests/test_basic.py
 python tests/test_e911_protection.py
 ```
 
-**Important:** The E911 protection system automatically prevents emergency calls during testing. See [E911_PROTECTION_GUIDE.md](E911_PROTECTION_GUIDE.md) for details.
+**Important:** The E911 protection system automatically prevents emergency calls during testing. See [REGULATIONS_COMPLIANCE_GUIDE.md](REGULATIONS_COMPLIANCE_GUIDE.md#e911-protection) for details.
 
 ## 🔐 Security
 
@@ -454,7 +454,7 @@ python tests/test_e911_protection.py
 - **Rate Limiting** - Protection against brute force attacks
 - **IP Banning** - Automatic blocking after failed attempts
 
-For detailed security information, see [FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md), [SECURITY.md](SECURITY.md), and [SECURITY_BEST_PRACTICES.md](SECURITY_BEST_PRACTICES.md).
+For detailed security information, see [SECURITY_GUIDE.md](SECURITY_GUIDE.md) (comprehensive security reference) and [SECURITY.md](SECURITY.md) (security policy).
 
 ## 📊 Monitoring
 
