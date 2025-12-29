@@ -208,11 +208,10 @@ sudo bash scripts/deploy_production_pilot.sh --dry-run
 - ✓ Monitoring (Prometheus + Node Exporter)
 - ✓ Systemd service for automatic startup
 
-**After deployment completes, read:** [POST_DEPLOYMENT.md](POST_DEPLOYMENT.md)
+**After deployment completes, see:** [COMPLETE_GUIDE.md - Section 2.2](COMPLETE_GUIDE.md#22-post-deployment-steps)
 
-This guide contains:
+This section contains:
 - Critical first steps (database password, SSL setup)
-- Essential documentation to read (in order)
 - Voice prompt generation (REQUIRED)
 - Testing and verification steps
 - Troubleshooting help
@@ -227,9 +226,7 @@ sudo scripts/setup_reverse_proxy.sh
 ```
 
 **Documentation:**
-- **Quick Start:** [QUICK_START_ABPS_SETUP.md](QUICK_START_ABPS_SETUP.md) - Step-by-step guide
-- **Manual Setup:** [REVERSE_PROXY_SETUP.md](REVERSE_PROXY_SETUP.md) - Detailed nginx/Apache configuration
-- **Implementation:** [ABPS_IMPLEMENTATION_GUIDE.md](ABPS_IMPLEMENTATION_GUIDE.md) - Setup summary
+- **Setup Guide:** [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-recommended) - Reverse proxy configuration
 
 **Benefits:**
 - ✅ Access via friendly domain name (no port number needed)
@@ -598,7 +595,7 @@ For issues and questions, please open a GitHub issue.
 - **Issue**: After running server update scripts, the admin panel may not display correctly or buttons may not be clickable
 - **Cause**: Browser caching old CSS/JavaScript files
 - **Fix**: Press `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) to force refresh
-- **Details**: See [BROWSER_CACHE_FIX.md](BROWSER_CACHE_FIX.md) for comprehensive troubleshooting
+- **Details**: See [COMPLETE_GUIDE.md - Section 7.1](COMPLETE_GUIDE.md#71-admin-panel) for comprehensive troubleshooting
 - **Status Check**: Visit `/admin/status-check.html` to verify your installation
 
 ⚠️ **Audio Features**
@@ -652,11 +649,11 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 - **SBC:** Kamailio, OpenSIPS, RTPEngine
 
 **Documentation:**
-- [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview with free options
+- [docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview with free options
 - [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) - Implementation status and details
-- [BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md) - Business Intelligence integration
-- [CALL_TAGGING_GUIDE.md](CALL_TAGGING_GUIDE.md) - Call tagging and categorization
-- [MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md) - Mobile app framework
+- [COMPLETE_GUIDE.md - Section 5](COMPLETE_GUIDE.md#5-integration-guides) - Business Intelligence integration
+- [docs/reference/CALL_TAGGING_GUIDE.md](docs/reference/CALL_TAGGING_GUIDE.md) - Call tagging and categorization
+- [docs/reference/MOBILE_APPS_GUIDE.md](docs/reference/MOBILE_APPS_GUIDE.md) - Mobile app framework
 
 **Note:** Framework features have complete backend implementations, database schemas, and REST APIs. All features can be implemented using free and open-source technologies - detailed integration guides available for each feature.
 
