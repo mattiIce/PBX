@@ -1063,8 +1063,7 @@ h3 {
 }
 
 /* Enhanced form focus states */
-select:focus,
-textarea:focus {
+select:focus {
     outline: none;
     border-color: #3b9dd6;
     box-shadow: 0 0 0 3px rgba(59, 157, 214, 0.1);
