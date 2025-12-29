@@ -80,7 +80,7 @@ async function loadAutoAttendantMenuOptions() {
         }
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await parseErrorResponse(response);
             throw new Error(`Failed to load menu options: ${response.status} - ${errorData.error || response.statusText}`);
         }
 
@@ -546,6 +546,15 @@ function escapeHtml(text) {
 let currentMenuId = 'main';  // Track current menu being viewed
 let availableMenus = [];  // Cache of available menus
 
+// Helper function to safely parse error response JSON
+async function parseErrorResponse(response) {
+    try {
+        return await response.json();
+    } catch (e) {
+        return {};
+    }
+}
+
 // Load all menus for submenu selection
 async function loadAvailableMenus() {
     try {
@@ -556,7 +565,7 @@ async function loadAvailableMenus() {
             console.log(`Loaded ${availableMenus.length} menu(s) for submenu selection`);
             return availableMenus;
         } else {
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await parseErrorResponse(response);
             console.error(`Failed to load menus: ${response.status} ${response.statusText}`, errorData);
             showNotification(`Failed to load menus: ${errorData.error || response.statusText}. The server may need to be restarted.`, 'error');
         }
@@ -726,7 +735,7 @@ async function loadMenuTree() {
     try {
         const response = await fetch(`${API_BASE}/api/auto-attendant/menu-tree`);
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await parseErrorResponse(response);
             console.error(`Failed to load menu tree: ${response.status} ${response.statusText}`, errorData);
             
             // Provide helpful error message based on status code
