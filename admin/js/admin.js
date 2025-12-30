@@ -556,9 +556,19 @@ function setupAutoRefresh(tabName) {
         autoRefreshInterval = setInterval(() => {
             console.log(`Auto-refreshing tab: ${tabName}`);
             try {
-                autoRefreshTabs[tabName]();
+                const refreshFunction = autoRefreshTabs[tabName];
+                if (typeof refreshFunction === 'function') {
+                    refreshFunction();
+                } else {
+                    console.error(`Auto-refresh function for ${tabName} is not a function:`, refreshFunction);
+                }
             } catch (error) {
                 console.error(`Error during auto-refresh of ${tabName}:`, error);
+                // If error is auth-related, user will be redirected to login
+                // Otherwise, continue with auto-refresh on next interval
+                if (error.message && error.message.includes('401')) {
+                    console.warn('Authentication error during auto-refresh - user may need to re-login');
+                }
             }
         }, AUTO_REFRESH_INTERVAL_MS);
         console.log(`Auto-refresh interval ID: ${autoRefreshInterval}`);
@@ -583,14 +593,19 @@ function showTab(tabName) {
     // Show selected tab
     const tabElement = document.getElementById(tabName);
     if (!tabElement) {
-        console.error(`Tab element with id '${tabName}' not found`);
+        console.error(`⚠️ CRITICAL: Tab element with id '${tabName}' not found in DOM`);
+        console.error('This may indicate a UI template issue or incorrect tab name');
+        console.error(`Current tab name: "${tabName}"`);
         // Still update currentTab and setup auto-refresh even if element not found
         // This ensures auto-refresh works even if there are DOM issues
+        // But log this as a critical issue that should be investigated
     } else {
         tabElement.classList.add('active');
         const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
         if (tabButton) {
             tabButton.classList.add('active');
+        } else {
+            console.warn(`Tab button for '${tabName}' not found`);
         }
     }
 
