@@ -249,10 +249,14 @@ function getAuthHeaders() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('DOMContentLoaded event fired - starting initialization');
+    
     // Initialize user context first (async) - this will call showTab() when ready
     await initializeUserContext();
+    console.log('User context initialization awaited');
     
     // Then initialize other components
+    console.log('Initializing tabs, forms, and logout');
     initializeTabs();
     initializeForms();
     initializeLogout();
@@ -260,10 +264,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Auto-refresh every 10 seconds
     setInterval(checkConnection, 10000);
+    
+    console.log('Page initialization complete');
 });
 
 // User Context Management
 async function initializeUserContext() {
+    console.log('Initializing user context...');
+    
     // Check for authentication token first
     const token = localStorage.getItem('pbx_token');
 
@@ -326,11 +334,15 @@ async function initializeUserContext() {
 
     // Load initial content based on role
     if (currentUser.is_admin) {
+        console.log('Admin user - showing dashboard tab');
         showTab('dashboard');
     } else {
         // For regular users, show phone tab by default
+        console.log('Regular user - showing webrtc-phone tab');
         showTab('webrtc-phone');
     }
+    
+    console.log('User context initialization complete');
 }
 
 function showExtensionSelectionModal() {
@@ -507,11 +519,14 @@ function initializeLogout() {
 
 // Tab Management
 function initializeTabs() {
+    console.log('Initializing tab click handlers');
     const tabButtons = document.querySelectorAll('.tab-button');
+    console.log(`Found ${tabButtons.length} tab buttons`);
 
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tabName = this.getAttribute('data-tab');
+            console.log(`Tab button clicked: ${tabName}`);
             showTab(tabName);
         });
     });
@@ -521,6 +536,7 @@ function initializeTabs() {
 function setupAutoRefresh(tabName) {
     // Clear any existing auto-refresh interval
     if (autoRefreshInterval) {
+        console.log(`Clearing existing auto-refresh interval for tab: ${currentTab}`);
         clearInterval(autoRefreshInterval);
         autoRefreshInterval = null;
     }
@@ -536,13 +552,24 @@ function setupAutoRefresh(tabName) {
 
     // If the current tab supports auto-refresh, set it up
     if (autoRefreshTabs[tabName]) {
+        console.log(`Setting up auto-refresh for tab: ${tabName} (interval: ${AUTO_REFRESH_INTERVAL_MS}ms)`);
         autoRefreshInterval = setInterval(() => {
-            autoRefreshTabs[tabName]();
+            console.log(`Auto-refreshing tab: ${tabName}`);
+            try {
+                autoRefreshTabs[tabName]();
+            } catch (error) {
+                console.error(`Error during auto-refresh of ${tabName}:`, error);
+            }
         }, AUTO_REFRESH_INTERVAL_MS);
+        console.log(`Auto-refresh interval ID: ${autoRefreshInterval}`);
+    } else {
+        console.log(`Tab ${tabName} does not support auto-refresh`);
     }
 }
 
 function showTab(tabName) {
+    console.log(`showTab called with: ${tabName}`);
+    
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -557,16 +584,18 @@ function showTab(tabName) {
     const tabElement = document.getElementById(tabName);
     if (!tabElement) {
         console.error(`Tab element with id '${tabName}' not found`);
-        return;
-    }
-
-    tabElement.classList.add('active');
-    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
-    if (tabButton) {
-        tabButton.classList.add('active');
+        // Still update currentTab and setup auto-refresh even if element not found
+        // This ensures auto-refresh works even if there are DOM issues
+    } else {
+        tabElement.classList.add('active');
+        const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+        if (tabButton) {
+            tabButton.classList.add('active');
+        }
     }
 
     // Update current tab and setup auto-refresh
+    // This happens regardless of whether the tab element was found
     currentTab = tabName;
     setupAutoRefresh(tabName);
 
