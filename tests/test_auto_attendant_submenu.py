@@ -56,11 +56,15 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         cursor = conn.cursor()
 
         # Check that auto_attendant_menus table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menus'")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menus'"
+        )
         self.assertIsNotNone(cursor.fetchone())
 
         # Check that auto_attendant_menu_items table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menu_items'")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menu_items'"
+        )
         self.assertIsNotNone(cursor.fetchone())
 
         # Check that main menu was created

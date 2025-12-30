@@ -206,7 +206,9 @@ class AutoAttendant:
                 migrated_count = cursor.fetchone()[0]
 
                 if migrated_count == 0:
-                    self.logger.info(f"Migrating {legacy_count} legacy menu options to new structure")
+                    self.logger.info(
+                        f"Migrating {legacy_count} legacy menu options to new structure"
+                    )
                     cursor.execute(
                         """
                         INSERT INTO auto_attendant_menu_items (menu_id, digit, destination_type, destination_value, description)
@@ -587,9 +589,7 @@ class AutoAttendant:
             self.logger.error(f"Error listing menus: {e}")
             return []
 
-    def add_menu_item(
-        self, menu_id, digit, destination_type, destination_value, description=""
-    ):
+    def add_menu_item(self, menu_id, digit, destination_type, destination_value, description=""):
         """
         Add item to a menu
 
@@ -847,9 +847,7 @@ class AutoAttendant:
         elif current_state == AAState.INVALID:
             # After invalid input, any key returns to menu
             current_menu_id = session.get("current_menu_id", "main")
-            session["state"] = (
-                AAState.MAIN_MENU if current_menu_id == "main" else AAState.SUBMENU
-            )
+            session["state"] = AAState.MAIN_MENU if current_menu_id == "main" else AAState.SUBMENU
             menu_type = "main_menu" if current_menu_id == "main" else current_menu_id
             return {
                 "action": "play",
