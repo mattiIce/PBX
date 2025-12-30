@@ -248,8 +248,11 @@ function getAuthHeaders() {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    initializeUserContext();
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize user context first (async) - this will call showTab() when ready
+    await initializeUserContext();
+    
+    // Then initialize other components
     initializeTabs();
     initializeForms();
     initializeLogout();
