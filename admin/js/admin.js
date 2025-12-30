@@ -41,10 +41,13 @@ const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart m
 const EXTENSION_LOAD_TIMEOUT = 10000; // 10 seconds
 const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds for general requests
 const AD_SYNC_TIMEOUT = 60000; // 60 seconds for AD sync (can take longer with large directories)
+const AUTO_REFRESH_INTERVAL_MS = 10000; // 10 seconds - auto-refresh interval for data tabs
 
 // State
 let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
+let currentTab = null; // Track the currently active tab
+let autoRefreshInterval = null; // Interval for auto-refreshing tab data
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
@@ -320,7 +323,7 @@ async function initializeUserContext() {
 
     // Load initial content based on role
     if (currentUser.is_admin) {
-        loadDashboard();
+        showTab('dashboard');
     } else {
         // For regular users, show phone tab by default
         showTab('webrtc-phone');
@@ -511,6 +514,31 @@ function initializeTabs() {
     });
 }
 
+// Setup auto-refresh for tabs that need periodic data updates
+function setupAutoRefresh(tabName) {
+    // Clear any existing auto-refresh interval
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+
+    // Define which tabs should auto-refresh and their refresh functions
+    const autoRefreshTabs = {
+        'extensions': loadExtensions,
+        'phones': loadRegisteredPhones,
+        'dashboard': loadDashboard,
+        'calls': loadCalls,
+        'voicemail': loadVoicemailTab
+    };
+
+    // If the current tab supports auto-refresh, set it up
+    if (autoRefreshTabs[tabName]) {
+        autoRefreshInterval = setInterval(() => {
+            autoRefreshTabs[tabName]();
+        }, AUTO_REFRESH_INTERVAL_MS);
+    }
+}
+
 function showTab(tabName) {
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
@@ -534,6 +562,10 @@ function showTab(tabName) {
     if (tabButton) {
         tabButton.classList.add('active');
     }
+
+    // Update current tab and setup auto-refresh
+    currentTab = tabName;
+    setupAutoRefresh(tabName);
 
     // Load data for the tab
     switch(tabName) {
@@ -2393,7 +2425,7 @@ async function loadSupportedVendors() {
             try {
                 const errorData = await response.json();
                 if (errorData.error) {
-                    errorMsg = `Error loading vendors: ${errorData.error}`;
+                    errorMsg = `Error loading vendors: ${escapeHtml(errorData.error)}`;
                 }
             } catch (e) {
                 // Unable to parse error response, use generic message
@@ -2403,7 +2435,7 @@ async function loadSupportedVendors() {
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
-        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + error.message + '</p>';
+        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
     }
 }
 
