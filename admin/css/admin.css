@@ -1771,6 +1771,23 @@ input[type="range"]::-moz-range-thumb:hover {
     color: white;
 }
 
+/* Phone Provisioning Form Styles */
+.provisioning-form-container {
+    max-width: 900px;
+}
+
+.provisioning-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.provisioning-form-actions {
+    display: flex;
+    gap: 10px;
+}
+
 /* Print styles - hide sidebar when printing */
 @media print {
     .sidebar {
