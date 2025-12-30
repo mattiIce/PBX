@@ -4,6 +4,7 @@ Test ATA (Analog Telephone Adapter) Support
 This module tests the provisioning and configuration of ATAs including:
 - Grandstream HT801/HT802
 - Cisco SPA112/SPA122
+- Cisco ATA 191/192
 """
 
 import pytest
@@ -79,6 +80,20 @@ class TestATATemplates:
         assert template is not None
         assert template.vendor == "cisco"
         assert template.model == "spa122"
+
+    def test_cisco_ata191_template_exists(self, provisioning):
+        """Test that Cisco ATA 191 template is available"""
+        template = provisioning.get_template("cisco", "ata191")
+        assert template is not None
+        assert template.vendor == "cisco"
+        assert template.model == "ata191"
+
+    def test_cisco_ata192_template_exists(self, provisioning):
+        """Test that Cisco ATA 192 template is available"""
+        template = provisioning.get_template("cisco", "ata192")
+        assert template is not None
+        assert template.vendor == "cisco"
+        assert template.model == "ata192"
 
 
 class TestATAConfiguration:
@@ -179,6 +194,42 @@ class TestATAConfiguration:
         # Verify router-specific settings (unique to SPA122)
         assert "<Router_Enable>Yes</Router_Enable>" in config
         assert "<DHCP_Server_Enable>Yes</DHCP_Server_Enable>" in config
+
+    def test_ata191_configuration(self, provisioning):
+        """Test Cisco ATA 191 configuration generation (enterprise with PoE)"""
+        template = provisioning.get_template("cisco", "ata191")
+        assert template is not None
+
+        extension_config = {"number": "1005", "name": "Enterprise Phone", "password": "ent_pass_123"}
+
+        server_config = {"sip_host": "10.0.1.1", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+
+        config = template.generate_config(extension_config, server_config)
+
+        # Verify configuration
+        assert "<Display_Name_1_>Enterprise Phone</Display_Name_1_>" in config
+        assert "<User_ID_1_>1005</User_ID_1_>" in config
+
+        # Verify PoE support (unique to ATA 191)
+        assert "<PoE_Enable>Yes</PoE_Enable>" in config
+
+    def test_ata192_configuration(self, provisioning):
+        """Test Cisco ATA 192 configuration generation (multiplatform)"""
+        template = provisioning.get_template("cisco", "ata192")
+        assert template is not None
+
+        extension_config = {"number": "1006", "name": "Multiplatform ATA", "password": "multi_456"}
+
+        server_config = {"sip_host": "10.0.2.1", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+
+        config = template.generate_config(extension_config, server_config)
+
+        # Verify configuration
+        assert "<Display_Name_1_>Multiplatform ATA</Display_Name_1_>" in config
+        assert "<User_ID_1_>1006</User_ID_1_>" in config
+
+        # Verify multiplatform support (unique to ATA 192)
+        assert "<Multiplatform_Enable>Yes</Multiplatform_Enable>" in config
 
 
 class TestATADeviceRegistration:

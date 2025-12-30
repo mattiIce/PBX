@@ -47,7 +47,7 @@
 ### Modern VOIP Features
 - **Presence System** - Real-time user availability status
 - **SIP Trunk Support** - Connect to external SIP providers
-- **Phone Provisioning** - Auto-configuration for IP phones (Zultys, Yealink, Polycom, Cisco, Grandstream) and ATAs (Grandstream HT801/HT802, Cisco SPA112/SPA122) with customizable templates
+- **Phone Provisioning** - Auto-configuration for IP phones (Zultys, Yealink, Polycom, Cisco, Grandstream) and ATAs (Grandstream HT801/HT802, Cisco SPA112/SPA122/ATA191/ATA192) with customizable templates
 - **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
 - **SIP Send Line & Send MAC** - Caller ID headers (P-Asserted-Identity, Remote-Party-ID) and device MAC tracking for enhanced call identification (see [docs/reference/SIP_SEND_LINE_MAC_GUIDE.md](docs/reference/SIP_SEND_LINE_MAC_GUIDE.md))
 - **Phone Book System** - Centralized directory with AD sync, pushed to IP phones in multiple formats (Yealink, Cisco XML)
@@ -545,7 +545,7 @@ For issues and questions, please open a GitHub issue.
 ### Phone Provisioning
 - [x] **Auto-Configuration for IP Phones & ATAs** - ✅ COMPLETED
   - **IP Phones**: Zultys, Yealink, Polycom, Cisco, Grandstream
-  - **Analog Telephone Adapters (ATAs)**: Grandstream HT801/HT802, Cisco SPA112/SPA122 ✨ NEW
+  - **Analog Telephone Adapters (ATAs)**: Grandstream HT801/HT802, Cisco SPA112/SPA122/ATA191/ATA192 ✨ UPDATED
   - Connect traditional analog phones and fax machines to VoIP
   - T.38 fax over IP support
   - Echo cancellation for analog lines

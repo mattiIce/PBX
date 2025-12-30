@@ -8,7 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Full ATA (Analog Telephone Adapter) Support** ✨ NEW
+- **Cisco Enterprise ATA Support** ✨ NEW (December 30, 2025)
+  - Cisco ATA 191 (ATA191-3PW-K9) provisioning template with PoE support
+  - Cisco ATA 192 provisioning template with multiplatform firmware support
+  - Enterprise-grade analog telephone adapter support
+  - 4 additional unit tests for new ATA models (21 total tests, all passing)
+  - Updated documentation to include new models
+- **Full ATA (Analog Telephone Adapter) Support** ✨ (December 29, 2025)
   - Grandstream HT801 (1-port) provisioning template
   - Grandstream HT802 (2-port) provisioning template
   - Cisco SPA112 (2-port) provisioning template

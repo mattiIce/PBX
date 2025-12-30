@@ -12,6 +12,8 @@ ATA support allows you to connect traditional analog phones and fax machines to 
 | Grandstream | HT802 | 2 FXS | Dual analog lines |
 | Cisco | SPA112 | 2 FXS | Dual analog lines |
 | Cisco | SPA122 | 2 FXS + Router | Dual lines + integrated router |
+| Cisco | ATA 191 | 2 FXS | Enterprise with PoE support |
+| Cisco | ATA 192 | 2 FXS | Multiplatform enterprise |
 
 ## Quick Setup (5 Minutes)
 

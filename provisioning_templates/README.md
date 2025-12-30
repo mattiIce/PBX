@@ -84,7 +84,8 @@ Built-in templates are available for:
 
 ### Analog Telephone Adapters (ATAs)
 - **Grandstream**: ht801 (1-port), ht802 (2-port)
-- **Cisco**: spa112 (2-port), spa122 (2-port with router)
+- **Cisco Small Business**: spa112 (2-port), spa122 (2-port with router)
+- **Cisco Enterprise**: ata191 (2-port with PoE), ata192 (2-port multiplatform)
 
 You can add templates for additional models by creating new `.template` files.
 

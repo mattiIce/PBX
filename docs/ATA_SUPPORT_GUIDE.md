@@ -28,7 +28,7 @@ The PBX includes auto-provisioning templates for popular ATAs:
    - Independent line configuration
    - T.38 fax support
 
-### Cisco/Linksys ATAs
+### Cisco Small Business ATAs
 3. **SPA112** - Dual-port (2 FXS ports)
    - Two analog lines
    - Advanced codec support
@@ -38,6 +38,19 @@ The PBX includes auto-provisioning templates for popular ATAs:
    - Two analog lines plus integrated router
    - Perfect for remote offices
    - Built-in DHCP server
+
+### Cisco Enterprise ATAs
+5. **ATA 191** (ATA191-3PW-K9) - Enterprise dual-port with PoE
+   - Two FXS ports for analog devices
+   - Power over Ethernet (PoE) support
+   - Enterprise-grade reliability
+   - T.38 fax support
+
+6. **ATA 192** - Multiplatform dual-port
+   - Two FXS ports for analog devices
+   - Multiplatform firmware support
+   - Enterprise features
+   - T.38 fax support
 
 ## Key Features
 

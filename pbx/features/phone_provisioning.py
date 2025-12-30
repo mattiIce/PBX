@@ -910,6 +910,108 @@ P2351 = 1
 """
         self.add_template("cisco", "spa122", cisco_spa122_template)
 
+        # Cisco ATA 191 (2-Port Enterprise ATA) template
+        cisco_ata191_template = """<flat-profile>
+<Provision_Enable>No</Provision_Enable>
+<Time_Zone>GMT-08:00</Time_Zone>
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+
+<!-- Line 1 Configuration -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codecs -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+
+<!-- Fax - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+
+<!-- Echo Cancellation -->
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+
+<!-- Line 2 Disabled by Default -->
+<Line_Enable_2_>No</Line_Enable_2_>
+
+<!-- Network -->
+<Internet_Connection_Type>DHCP</Internet_Connection_Type>
+
+<!-- PoE Support -->
+<PoE_Enable>Yes</PoE_Enable>
+
+<!-- SIP -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+
+<!-- Regional Settings -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+</flat-profile>
+"""
+        self.add_template("cisco", "ata191", cisco_ata191_template)
+
+        # Cisco ATA 192 (2-Port Enterprise ATA) template
+        cisco_ata192_template = """<flat-profile>
+<Provision_Enable>No</Provision_Enable>
+<Time_Zone>GMT-08:00</Time_Zone>
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+
+<!-- Line 1 Configuration -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codecs -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+
+<!-- Fax - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+
+<!-- Echo Cancellation -->
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+
+<!-- Line 2 Disabled by Default -->
+<Line_Enable_2_>No</Line_Enable_2_>
+
+<!-- Network -->
+<Internet_Connection_Type>DHCP</Internet_Connection_Type>
+
+<!-- SIP -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+
+<!-- Regional Settings -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+
+<!-- Multiplatform -->
+<Multiplatform_Enable>Yes</Multiplatform_Enable>
+</flat-profile>
+"""
+        self.add_template("cisco", "ata192", cisco_ata192_template)
+
         self.logger.info(f"Loaded {len(self.templates)} built-in phone templates (including ATAs)")
 
     def _load_custom_templates(self):
