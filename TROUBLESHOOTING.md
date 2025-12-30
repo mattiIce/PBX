@@ -470,6 +470,71 @@ ls -la certs/
 python scripts/generate_ssl_cert.py --hostname YOUR_IP
 ```
 
+### Apache "Not Found" Error for Admin Pages
+
+**Symptoms:**
+- Accessing admin pages returns: "Not Found - The requested URL was not found on this server."
+- Error message shows "Apache/2.4.58 (Ubuntu)" or similar
+- Direct access to PBX port works (e.g., http://localhost:8080/admin/)
+
+**Root Cause:**
+Apache is serving requests directly without proxying to the PBX application. The admin files need to be accessed through a reverse proxy configuration.
+
+**Quick Fix:**
+
+**Option 1: Automated Setup (Recommended)**
+```bash
+cd /path/to/PBX
+sudo scripts/setup_apache_reverse_proxy.sh
+```
+
+**Option 2: Manual Configuration**
+```bash
+# Enable required modules
+sudo a2enmod proxy proxy_http proxy_wstunnel headers rewrite ssl
+
+# Create virtual host configuration
+sudo nano /etc/apache2/sites-available/pbx.conf
+```
+
+Add minimal configuration:
+```apache
+<VirtualHost *:80>
+    ServerName your-domain.com
+    
+    ProxyPreserveHost On
+    ProxyRequests Off
+    
+    <Location />
+        ProxyPass http://localhost:8080/
+        ProxyPassReverse http://localhost:8080/
+    </Location>
+    
+    ErrorLog ${APACHE_LOG_DIR}/pbx-error.log
+    CustomLog ${APACHE_LOG_DIR}/pbx-access.log combined
+</VirtualHost>
+```
+
+Enable site and restart:
+```bash
+sudo a2ensite pbx.conf
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+```
+
+**Detailed Documentation:**
+- Quick fix guide: `docs/APACHE_404_FIX.md`
+- Complete setup: `docs/APACHE_REVERSE_PROXY_SETUP.md`
+- Configuration example: `apache-pbx.conf.example`
+
+**Verification:**
+```bash
+# Test that pages now load
+curl http://your-domain.com/admin/status-check.html
+
+# Should return HTML content, not 404 error
+```
+
 ---
 
 ## Integration Problems
