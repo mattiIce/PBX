@@ -322,7 +322,7 @@ async function initializeUserContext() {
 
     // Load initial content based on role
     if (currentUser.is_admin) {
-        loadDashboard();
+        showTab('dashboard');
     } else {
         // For regular users, show phone tab by default
         showTab('webrtc-phone');
