@@ -603,7 +603,7 @@ When a call goes to voicemail:
   - Grandstream: GXP2170
 - **Analog Telephone Adapter (ATA) Support** ✨ NEW
   - Grandstream: HT801 (1-port), HT802 (2-port)
-  - Cisco: SPA112 (2-port), SPA122 (2-port with router)
+  - Cisco: SPA112 (2-port), SPA122 (2-port with router), ATA 191, ATA 192
   - Connect traditional analog phones and fax machines
   - T.38 fax over IP support
   - Echo cancellation for analog lines

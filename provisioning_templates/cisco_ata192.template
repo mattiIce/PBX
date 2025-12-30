@@ -110,8 +110,10 @@
 <Enable_QOS>Yes</Enable_QOS>
 
 <!-- Security -->
-<SIP_TLS_Enable>No</SIP_TLS_Enable>
-<SRTP_Enable>No</SRTP_Enable>
+<!-- Enable TLS for encrypted SIP signaling (set to No only if PBX does not support TLS) -->
+<SIP_TLS_Enable>Yes</SIP_TLS_Enable>
+<!-- Enable SRTP for encrypted media (set to No only if PBX does not support SRTP) -->
+<SRTP_Enable>Yes</SRTP_Enable>
 
 <!-- Multiplatform Features (ATA 192 specific) -->
 <Multiplatform_Enable>Yes</Multiplatform_Enable>
