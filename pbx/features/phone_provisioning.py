@@ -744,9 +744,10 @@ P79 = 2
 P184 = 0
 P78 = {{DTMF_PAYLOAD_TYPE}}
 
-# Analog-Specific Settings
-P2301 = 1
-P2302 = 1
+# Analog-Specific / Caller ID Settings
+P3 = 1      # Caller ID Scheme
+P4 = 1      # Enable Caller ID display
+P2311 = 2   # Offhook Auto-Dial
 P240 = 2
 
 # Echo Cancellation
@@ -793,8 +794,9 @@ P184 = 0
 P78 = {{DTMF_PAYLOAD_TYPE}}
 
 # Port 1 Analog Settings
-P2301 = 1
-P2302 = 1
+P3 = 1
+P4 = 1
+P2311 = 2   # Offhook Auto-Dial
 P240 = 2
 
 # Echo Cancellation

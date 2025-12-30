@@ -98,7 +98,7 @@ The PBX includes auto-provisioning templates for popular ATAs:
    - **MAC Address**: `000b82123456` (no separators)
    - **Extension**: `1001` (or any available extension)
    - **Vendor**: Select `Grandstream` or `Cisco`
-   - **Model**: Select `ht801`, `ht802`, `spa112`, or `spa122`
+   - **Model**: Select `ht801`, `ht802`, `spa112`, `spa122`, `ata191`, or `ata192`
 5. Click **Register**
 6. The ATA will auto-provision within 5 minutes
 
@@ -235,7 +235,7 @@ You can customize ATA templates:
 Templates are configured for North America (FCC). To change:
 
 **Grandstream:**
-- `P24 = 0` - Impedance (0=600 ohm, 1=900 ohm)
+- `P25 = 0` - Impedance (0=600 ohm, 1=900 ohm)
 - `P104 = 2000` - Ring frequency (Hz)
 - `P1361 = 2` - Ring cadence
 

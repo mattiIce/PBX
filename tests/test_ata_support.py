@@ -8,7 +8,7 @@ This module tests the provisioning and configuration of ATAs including:
 """
 
 import pytest
-from pbx.features.phone_provisioning import PhoneProvisioning, ProvisioningDevice
+from pbx.features.phone_provisioning import PhoneProvisioning
 
 
 class MockConfig:

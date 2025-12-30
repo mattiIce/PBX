@@ -105,6 +105,8 @@ All templates are in `provisioning_templates/`:
 - `grandstream_ht802.template` - Dual port ATA
 - `cisco_spa112.template` - Cisco dual port
 - `cisco_spa122.template` - Cisco with router
+- `cisco_ata191.template` - Cisco ATA 191 enterprise
+- `cisco_ata192.template` - Cisco ATA 192 enterprise
 
 ## Documentation
 
