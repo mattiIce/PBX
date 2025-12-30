@@ -1572,6 +1572,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_devices(self):
         """Get all provisioned devices."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
             devices = self.pbx_core.phone_provisioning.get_all_devices()
             data = [d.to_dict() for d in devices]
@@ -1581,6 +1587,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_vendors(self):
         """Get supported vendors and models."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
             vendors = self.pbx_core.phone_provisioning.get_supported_vendors()
             models = self.pbx_core.phone_provisioning.get_supported_models()
@@ -1591,6 +1603,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_diagnostics(self):
         """Get provisioning system diagnostics."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -1648,6 +1666,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_requests(self):
         """Get provisioning request history."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -1668,6 +1692,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_templates(self):
         """Get list of all provisioning templates."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -1677,6 +1707,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_template_content(self, vendor, model):
         """Get content of a specific template."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
