@@ -399,10 +399,25 @@ sudo tail -f /var/log/nginx/error.log
 - Browser shows "This site can't provide a secure connection"
 - ERR_SSL_PROTOCOL_ERROR message
 - "sent an invalid response" error
+- "Proxy Error: Error reading from remote server"
 - Occurs after enabling SSL on admin UI with Apache/Nginx
 
 **Root Cause:**
 Backend API configured with SSL enabled (`api.ssl.enabled: true`) when it should be HTTP-only behind a reverse proxy. Apache/Nginx expects to proxy HTTPS → HTTP, but finds HTTPS → HTTPS causing SSL protocol mismatch.
+
+**Architecture Overview:**
+
+✅ **Correct Setup:**
+```
+Browser ──HTTPS──> Apache (port 443) ──HTTP──> PBX Backend (port 9000)
+         SSL/TLS    ↑ SSL Termination      ↑ Plain HTTP (internal)
+```
+
+❌ **Incorrect Setup (Causes Error):**
+```
+Browser ──HTTPS──> Apache (port 443) ──HTTPS──> PBX Backend (port 9000)
+         SSL/TLS                         SSL/TLS (conflict!)
+```
 
 **Quick Fix:**
 ```bash
@@ -422,20 +437,58 @@ curl http://localhost:9000/api/health  # Should work
 curl https://localhost:9000/api/health  # Should fail
 ```
 
-**Detailed Guide:**
-See [REVERSE_PROXY_SSL_TROUBLESHOOTING.md](REVERSE_PROXY_SSL_TROUBLESHOOTING.md) for comprehensive troubleshooting steps.
+**Detailed Verification Steps:**
 
-**Correct Architecture:**
-```
-Browser ──HTTPS──> Apache (port 443) ──HTTP──> PBX Backend (port 9000)
-         SSL/TLS    ↑ SSL Termination      ↑ Plain HTTP
+**1. Check Current Configuration:**
+```bash
+cd /path/to/PBX
+grep -A 5 "api:" config.yml | grep -A 2 "ssl:"
 ```
 
-**Verification:**
-- [ ] `config.yml` has `api.ssl.enabled: false`
-- [ ] Backend responds to HTTP only
-- [ ] Apache/Nginx handles SSL termination
-- [ ] Browser can access `https://domain.com/admin/`
+Expected output for reverse proxy:
+```yaml
+ssl:
+  enabled: false  # ← Should be FALSE
+```
+
+**2. Verify Backend HTTP Only:**
+```bash
+# Should return JSON health status
+curl http://localhost:9000/api/health
+
+# Should fail (connection refused or certificate error)
+curl https://localhost:9000/api/health
+```
+
+**3. Test Apache/Nginx Proxy:**
+```bash
+# Should return JSON status through proxy
+curl https://yourdomain.com/api/health
+```
+
+**4. Check Listening Ports:**
+```bash
+# PBX should listen on 9000 (HTTP, not SSL)
+sudo netstat -tlnp | grep 9000
+
+# Apache should listen on 443 (SSL)
+sudo netstat -tlnp | grep 443
+```
+
+**Common Mistakes:**
+- Enabling `api.ssl.enabled: true` when using reverse proxy
+- Apache/Nginx proxy pointing to `https://localhost:9000` instead of `http://localhost:9000`
+- Firewall blocking internal HTTP communication
+- Wrong port in Apache/Nginx config
+
+**When to Use Direct SSL:**
+Only enable `api.ssl.enabled: true` when:
+- NOT using Apache/Nginx reverse proxy
+- Accessing PBX directly (e.g., `https://192.168.1.14:9000/admin/`)
+- Development/testing environment
+- Self-signed certificates are acceptable
+
+**Note:** For production, always use reverse proxy with SSL termination.
 
 ### Admin Panel Display Issues (Broken UI)
 
