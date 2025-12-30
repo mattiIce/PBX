@@ -10,6 +10,17 @@ import re
 from pathlib import Path
 
 
+def create_anchor_id(text):
+    """Create URL-safe anchor ID from header text."""
+    # Remove HTML tags and special characters
+    text = re.sub(r'<[^>]+>', '', text)
+    # Convert to lowercase and replace spaces with hyphens
+    anchor = text.lower().strip()
+    anchor = re.sub(r'[^\w\s-]', '', anchor)
+    anchor = re.sub(r'[-\s]+', '-', anchor)
+    return anchor
+
+
 def markdown_to_html(markdown_content):
     """
     Convert markdown content to HTML with proper formatting.
@@ -22,11 +33,31 @@ def markdown_to_html(markdown_content):
     """
     html = markdown_content
     
-    # Convert headers
-    html = re.sub(r'^# (.+)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
-    html = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
-    html = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
-    html = re.sub(r'^#### (.+)$', r'<h4>\1</h4>', html, flags=re.MULTILINE)
+    # Convert headers with anchor IDs
+    def replace_h1(match):
+        text = match.group(1)
+        anchor_id = create_anchor_id(text)
+        return f'<h1 id="{anchor_id}">{text}</h1>'
+    
+    def replace_h2(match):
+        text = match.group(1)
+        anchor_id = create_anchor_id(text)
+        return f'<h2 id="{anchor_id}">{text}</h2>'
+    
+    def replace_h3(match):
+        text = match.group(1)
+        anchor_id = create_anchor_id(text)
+        return f'<h3 id="{anchor_id}">{text}</h3>'
+    
+    def replace_h4(match):
+        text = match.group(1)
+        anchor_id = create_anchor_id(text)
+        return f'<h4 id="{anchor_id}">{text}</h4>'
+    
+    html = re.sub(r'^# (.+)$', replace_h1, html, flags=re.MULTILINE)
+    html = re.sub(r'^## (.+)$', replace_h2, html, flags=re.MULTILINE)
+    html = re.sub(r'^### (.+)$', replace_h3, html, flags=re.MULTILINE)
+    html = re.sub(r'^#### (.+)$', replace_h4, html, flags=re.MULTILINE)
     
     # Convert bold text
     html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)

@@ -225,7 +225,7 @@
 </head>
 <body>
     <div class="container">
-<h1>PBX System - Comprehensive Troubleshooting Guide</h1>
+<h1 id="pbx-system-comprehensive-troubleshooting-guide">PBX System - Comprehensive Troubleshooting Guide</h1>
 
 <strong>Version:</strong> 1.0.0  
 <strong>Last Updated:</strong> 2025-12-29  
@@ -235,7 +235,7 @@
 
 <hr>
 
-<h2>Table of Contents</h2>
+<h2 id="table-of-contents">Table of Contents</h2>
 
 <ol>
 <li><a href="#quick-reference">Quick Reference</a></li>
@@ -254,7 +254,7 @@
 
 <hr>
 
-<h2>Quick Reference</h2>
+<h2 id="quick-reference">Quick Reference</h2>
 
 <table class="info-table">
 <thead><tr>
@@ -313,9 +313,9 @@
 
 <hr>
 
-<h2>Audio Issues</h2>
+<h2 id="audio-issues">Audio Issues</h2>
 
-<h3>No Audio in Phone Calls</h3>
+<h3 id="no-audio-in-phone-calls">No Audio in Phone Calls</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -336,54 +336,54 @@
 
 <strong>1. Check RTP Firewall Rules:</strong>
 <p>``<code>bash</p>
-<h1>Open RTP port range</h1>
+<h1 id="open-rtp-port-range">Open RTP port range</h1>
 <p>sudo ufw allow 10000:20000/udp</p>
 
-<h1>Verify firewall status</h1>
+<h1 id="verify-firewall-status">Verify firewall status</h1>
 <p>sudo ufw status numbered</p>
 
-<h1>Should see:</h1>
-<h1>10000:20000/udp ALLOW IN  Anywhere</h1>
+<h1 id="should-see">Should see:</h1>
+<h1 id="1000020000udp-allow-in-anywhere">10000:20000/udp ALLOW IN  Anywhere</h1>
 </code>`<code>
 
 <strong>2. Verify Codec Compatibility:</strong>
 </code>`<code>bash
-<h1>Check config.yml</h1>
+<h1 id="check-configyml">Check config.yml</h1>
 <p>grep -A 10 "codecs:" config.yml</p>
 
-<h1>Ensure phones support enabled codecs</h1>
-<h1>Common codecs: PCMU, PCMA, G722, Opus</h1>
+<h1 id="ensure-phones-support-enabled-codecs">Ensure phones support enabled codecs</h1>
+<h1 id="common-codecs-pcmu-pcma-g722-opus">Common codecs: PCMU, PCMA, G722, Opus</h1>
 </code>`<code>
 
 <strong>3. Check RTP Relay Logs:</strong>
 </code>`<code>bash
 <p>tail -f logs/pbx.log | grep RTP</p>
 
-<h1>Should see:</h1>
-<h1>"RTP relay allocated on port XXXXX"</h1>
-<h1>"Relayed XXX bytes: A->B"</h1>
-<h1>"Relayed XXX bytes: B->A"</h1>
+<h1 id="should-see">Should see:</h1>
+<h1 id="rtp-relay-allocated-on-port-xxxxx">"RTP relay allocated on port XXXXX"</h1>
+<h1 id="relayed-xxx-bytes-a-b">"Relayed XXX bytes: A->B"</h1>
+<h1 id="relayed-xxx-bytes-b-a">"Relayed XXX bytes: B->A"</h1>
 </code>`<code>
 
 <strong>4. Test Audio Path:</strong>
 </code>`<code>bash
-<h1>Make test call between extensions</h1>
-<h1>Check both directions</h1>
+<h1 id="make-test-call-between-extensions">Make test call between extensions</h1>
+<h1 id="check-both-directions">Check both directions</h1>
 
-<h1>View SIP/RTP debug</h1>
+<h1 id="view-siprtp-debug">View SIP/RTP debug</h1>
 <p>tail -f logs/pbx.log | grep -E "(SIP|RTP)"</p>
 </code>`<code>
 
 <strong>5. Network/NAT Issues:</strong>
 </code>`<code>bash
-<h1>If behind NAT, configure external IP in config.yml</h1>
+<h1 id="if-behind-nat-configure-external-ip-in-configyml">If behind NAT, configure external IP in config.yml</h1>
 <p>external_ip: "YOUR_PUBLIC_IP"</p>
 
-<h1>Verify RTP can traverse NAT</h1>
-<h1>May need STUN/TURN configuration</h1>
+<h1 id="verify-rtp-can-traverse-nat">Verify RTP can traverse NAT</h1>
+<h1 id="may-need-stunturn-configuration">May need STUN/TURN configuration</h1>
 </code>`<code>
 
-<h3>Distorted or Garbled Audio</h3>
+<h3 id="distorted-or-garbled-audio">Distorted or Garbled Audio</h3>
 
 <strong>Status:</strong> ✅ <strong>FIXED</strong> (December 19, 2025)
 
@@ -403,30 +403,30 @@
 
 <strong>If Issues Persist:</strong>
 </code>`<code>bash
-<h1>Regenerate audio prompts at correct sample rate</h1>
+<h1 id="regenerate-audio-prompts-at-correct-sample-rate">Regenerate audio prompts at correct sample rate</h1>
 <p>python scripts/generate_voice_prompts.py</p>
 
-<h1>Verify generated files</h1>
+<h1 id="verify-generated-files">Verify generated files</h1>
 <p>file voicemail_prompts/*.wav</p>
-<h1>Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"</h1>
+<h1 id="should-show-riff-little-endian-data-wave-audio-microsoft-pcm-8-bit-mono-8000-hz">Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"</h1>
 
-<h1>Check auto-attendant prompts</h1>
+<h1 id="check-auto-attendant-prompts">Check auto-attendant prompts</h1>
 <p>file auto_attendant/prompts/*.wav</p>
 </code>`<code>
 
 <strong>Additional Verification:</strong>
 </code>`<code>bash
-<h1>Test specific prompt</h1>
+<h1 id="test-specific-prompt">Test specific prompt</h1>
 <p>play voicemail_prompts/beep.wav</p>
 
-<h1>If distorted, regenerate:</h1>
+<h1 id="if-distorted-regenerate">If distorted, regenerate:</h1>
 <p>python scripts/generate_tts_prompts.py --sample-rate 8000</p>
 
-<h1>Clear cache and restart</h1>
+<h1 id="clear-cache-and-restart">Clear cache and restart</h1>
 <p>sudo systemctl restart pbx</p>
 </code>`<code>
 
-<h3>No Audio for Voicemail/Auto-Attendant Prompts</h3>
+<h3 id="no-audio-for-voicemailauto-attendant-prompts">No Audio for Voicemail/Auto-Attendant Prompts</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -439,21 +439,21 @@
 
 <strong>1. Missing Voice Prompt Files:</strong>
 </code>`<code>bash
-<h1>Check if prompts exist</h1>
+<h1 id="check-if-prompts-exist">Check if prompts exist</h1>
 <p>ls -lh voicemail_prompts/</p>
 <p>ls -lh auto_attendant/prompts/</p>
 
-<h1>Generate if missing</h1>
+<h1 id="generate-if-missing">Generate if missing</h1>
 <p>python scripts/generate_voice_prompts.py</p>
 
-<h1>Verify files were created</h1>
+<h1 id="verify-files-were-created">Verify files were created</h1>
 <p>ls -lh voicemail_prompts/*.wav</p>
 <p>ls -lh auto_attendant/prompts/*.wav</p>
 </code>`<code>
 
 <strong>2. Incorrect File Permissions:</strong>
 </code>`<code>bash
-<h1>Fix permissions</h1>
+<h1 id="fix-permissions">Fix permissions</h1>
 <p>sudo chown -R pbx:pbx voicemail_prompts/</p>
 <p>sudo chown -R pbx:pbx auto_attendant/prompts/</p>
 <p>sudo chmod 644 voicemail_prompts/*.wav</p>
@@ -462,20 +462,20 @@
 
 <strong>3. Codec Encoding Issues:</strong>
 </code>`<code>bash
-<h1>Verify file encoding matches expected codec</h1>
-<h1>For PCMU (G.711): 8kHz, 16-bit, mono</h1>
+<h1 id="verify-file-encoding-matches-expected-codec">Verify file encoding matches expected codec</h1>
+<h1 id="for-pcmu-g711-8khz-16-bit-mono">For PCMU (G.711): 8kHz, 16-bit, mono</h1>
 <p>file voicemail_prompts/beep.wav</p>
 
-<h1>If wrong format, regenerate with correct parameters</h1>
+<h1 id="if-wrong-format-regenerate-with-correct-parameters">If wrong format, regenerate with correct parameters</h1>
 </code>`<code>
 
 <strong>4. Check Logs for Errors:</strong>
 </code>`<code>bash
-<h1>Look for file not found or playback errors</h1>
+<h1 id="look-for-file-not-found-or-playback-errors">Look for file not found or playback errors</h1>
 <p>tail -f logs/pbx.log | grep -i "prompt\|wav\|audio"</p>
 </code>`<code>
 
-<h3>One-Way Audio (Can Hear But Not Be Heard)</h3>
+<h3 id="one-way-audio-can-hear-but-not-be-heard">One-Way Audio (Can Hear But Not Be Heard)</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -487,19 +487,19 @@
 
 <strong>1. NAT/Firewall Configuration:</strong>
 </code>`<code>bash
-<h1>Ensure symmetric RTP ports</h1>
-<h1>Check NAT traversal settings</h1>
+<h1 id="ensure-symmetric-rtp-ports">Ensure symmetric RTP ports</h1>
+<h1 id="check-nat-traversal-settings">Check NAT traversal settings</h1>
 
-<h1>Verify both directions in firewall</h1>
+<h1 id="verify-both-directions-in-firewall">Verify both directions in firewall</h1>
 <p>sudo ufw status | grep 10000:20000</p>
 </code>`<code>
 
 <strong>2. Check Codec Negotiation:</strong>
 </code>`<code>bash
-<h1>View SIP session details</h1>
+<h1 id="view-sip-session-details">View SIP session details</h1>
 <p>tail -f logs/pbx.log | grep -A 20 "200 OK"</p>
 
-<h1>Verify both endpoints agreed on same codec</h1>
+<h1 id="verify-both-endpoints-agreed-on-same-codec">Verify both endpoints agreed on same codec</h1>
 </code>`<code>
 
 <strong>3. Phone Configuration:</strong>
@@ -511,9 +511,9 @@
 
 <hr>
 
-<h2>Registration & Connectivity</h2>
+<h2 id="registration-connectivity">Registration & Connectivity</h2>
 
-<h3>Extensions Won't Register</h3>
+<h3 id="extensions-wont-register">Extensions Won't Register</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -526,20 +526,20 @@
 
 <strong>1. Check SIP Port:</strong>
 </code>`<code>bash
-<h1>Ensure SIP port is open</h1>
+<h1 id="ensure-sip-port-is-open">Ensure SIP port is open</h1>
 <p>sudo ufw allow 5060/udp</p>
 <p>sudo ufw status | grep 5060</p>
 
-<h1>Verify PBX is listening</h1>
+<h1 id="verify-pbx-is-listening">Verify PBX is listening</h1>
 <p>sudo netstat -ulnp | grep 5060</p>
 </code>`<code>
 
 <strong>2. Verify Credentials:</strong>
 </code>`<code>bash
-<h1>Check config.yml</h1>
+<h1 id="check-configyml">Check config.yml</h1>
 <p>grep -A 5 "extensions:" config.yml</p>
 
-<h1>Verify extension number and password match phone settings</h1>
+<h1 id="verify-extension-number-and-password-match-phone-settings">Verify extension number and password match phone settings</h1>
 </code>`<code>
 
 <strong>3. Check Phone SIP Server Settings:</strong>
@@ -553,31 +553,31 @@
 
 <strong>4. View Registration Logs:</strong>
 </code>`<code>bash
-<h1>Monitor SIP registration attempts</h1>
+<h1 id="monitor-sip-registration-attempts">Monitor SIP registration attempts</h1>
 <p>tail -f logs/pbx.log | grep REGISTER</p>
 
-<h1>Should see successful 200 OK responses</h1>
+<h1 id="should-see-successful-200-ok-responses">Should see successful 200 OK responses</h1>
 </code>`<code>
 
 <strong>5. Test Connectivity:</strong>
 </code>`<code>bash
-<h1>From phone network, test SIP port</h1>
+<h1 id="from-phone-network-test-sip-port">From phone network, test SIP port</h1>
 <p>nc -u -v PBX_IP 5060</p>
 
-<h1>Check if PBX is reachable</h1>
+<h1 id="check-if-pbx-is-reachable">Check if PBX is reachable</h1>
 <p>ping PBX_IP</p>
 </code>`<code>
 
 <strong>6. Check for Registration Conflicts:</strong>
 </code>`<code>bash
-<h1>Verify no duplicate extensions</h1>
+<h1 id="verify-no-duplicate-extensions">Verify no duplicate extensions</h1>
 <p>grep "number:" config.yml | sort | uniq -d</p>
 
-<h1>Clear any stale registrations</h1>
+<h1 id="clear-any-stale-registrations">Clear any stale registrations</h1>
 <p>curl -k https://localhost:8080/api/extensions</p>
 </code>`<code>
 
-<h3>Intermittent Registration Drops</h3>
+<h3 id="intermittent-registration-drops">Intermittent Registration Drops</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -589,7 +589,7 @@
 
 <strong>1. Check Registration Timeout:</strong>
 </code>`<code>yaml
-<h1>config.yml</h1>
+<h1 id="configyml">config.yml</h1>
 <p>sip:</p>
 <p>  registration_timeout: 3600  # Increase if too low</p>
 </code>`<code>
@@ -602,23 +602,23 @@
 
 <strong>3. Check Network Stability:</strong>
 </code>`<code>bash
-<h1>Monitor for network drops</h1>
+<h1 id="monitor-for-network-drops">Monitor for network drops</h1>
 <p>ping -c 100 PHONE_IP</p>
 
-<h1>Check for packet loss</h1>
+<h1 id="check-for-packet-loss">Check for packet loss</h1>
 </code>`<code>
 
 <strong>4. Review Firewall Timeout Settings:</strong>
 </code>`<code>bash
-<h1>Ensure firewall doesn't drop long-lived UDP connections</h1>
-<h1>May need to adjust connection tracking timeout</h1>
+<h1 id="ensure-firewall-doesnt-drop-long-lived-udp-connections">Ensure firewall doesn't drop long-lived UDP connections</h1>
+<h1 id="may-need-to-adjust-connection-tracking-timeout">May need to adjust connection tracking timeout</h1>
 </code>`<code>
 
 <hr>
 
-<h2>Admin Panel Issues</h2>
+<h2 id="admin-panel-issues">Admin Panel Issues</h2>
 
-<h3>Login Connection Errors</h3>
+<h3 id="login-connection-errors">Login Connection Errors</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -633,19 +633,19 @@
 </code>`<code>bash
 <p>sudo systemctl status pbx</p>
 
-<h1>If not running:</h1>
+<h1 id="if-not-running">If not running:</h1>
 <p>sudo systemctl start pbx</p>
 
-<h1>Check for errors:</h1>
+<h1 id="check-for-errors">Check for errors:</h1>
 <p>sudo journalctl -u pbx -n 50</p>
 </code>`<code>
 
 <strong>2. Verify API Accessibility:</strong>
 </code>`<code>bash
-<h1>Test API endpoint</h1>
+<h1 id="test-api-endpoint">Test API endpoint</h1>
 <p>curl -k https://localhost:8080/api/status</p>
 
-<h1>Should return JSON with status information</h1>
+<h1 id="should-return-json-with-status-information">Should return JSON with status information</h1>
 </code>`<code>
 
 <strong>3. Check Browser Console:</strong>
@@ -660,16 +660,16 @@
 </code>`<code>bash
 <p>sudo ufw status | grep 8080</p>
 
-<h1>If not allowed:</h1>
+<h1 id="if-not-allowed">If not allowed:</h1>
 <p>sudo ufw allow 8080/tcp</p>
 </code>`<code>
 
 <strong>5. Check Port Binding:</strong>
 </code>`<code>bash
-<h1>Verify PBX is listening on correct port</h1>
+<h1 id="verify-pbx-is-listening-on-correct-port">Verify PBX is listening on correct port</h1>
 <p>sudo netstat -tlnp | grep 8080</p>
 
-<h1>Should show python/pbx process</h1>
+<h1 id="should-show-pythonpbx-process">Should show python/pbx process</h1>
 </code>`<code>
 
 <strong>6. Test from Different Network:</strong>
@@ -681,15 +681,15 @@
 
 <strong>7. Check Reverse Proxy (if used):</strong>
 </code>`<code>bash
-<h1>If using nginx</h1>
+<h1 id="if-using-nginx">If using nginx</h1>
 <p>sudo systemctl status nginx</p>
 <p>sudo nginx -t</p>
 
-<h1>Check nginx logs</h1>
+<h1 id="check-nginx-logs">Check nginx logs</h1>
 <p>sudo tail -f /var/log/nginx/error.log</p>
 </code>`<code>
 
-<h3>ERR_SSL_PROTOCOL_ERROR with Reverse Proxy</h3>
+<h3 id="err_ssl_protocol_error-with-reverse-proxy">ERR_SSL_PROTOCOL_ERROR with Reverse Proxy</h3>
 
 <strong>Status:</strong> ✅ <strong>DOCUMENTED</strong> (December 30, 2025)
 
@@ -721,18 +721,18 @@
 
 <strong>Quick Fix:</strong>
 </code>`<code>bash
-<h1>1. Edit configuration</h1>
+<h1 id="1-edit-configuration">1. Edit configuration</h1>
 <p>nano config.yml</p>
 
-<h1>2. Find api.ssl section and set:</h1>
+<h1 id="2-find-apissl-section-and-set">2. Find api.ssl section and set:</h1>
 <p>api:</p>
 <p>  ssl:</p>
 <p>    enabled: false  # ← Must be false for reverse proxy</p>
 
-<h1>3. Restart service</h1>
+<h1 id="3-restart-service">3. Restart service</h1>
 <p>sudo systemctl restart pbx</p>
 
-<h1>4. Verify backend is HTTP</h1>
+<h1 id="4-verify-backend-is-http">4. Verify backend is HTTP</h1>
 <p>curl http://localhost:9000/api/health  # Should work</p>
 <p>curl https://localhost:9000/api/health  # Should fail</p>
 </code>`<code>
@@ -753,25 +753,25 @@
 
 <strong>2. Verify Backend HTTP Only:</strong>
 </code>`<code>bash
-<h1>Should return JSON health status</h1>
+<h1 id="should-return-json-health-status">Should return JSON health status</h1>
 <p>curl http://localhost:9000/api/health</p>
 
-<h1>Should fail (connection refused or certificate error)</h1>
+<h1 id="should-fail-connection-refused-or-certificate-error">Should fail (connection refused or certificate error)</h1>
 <p>curl https://localhost:9000/api/health</p>
 </code>`<code>
 
 <strong>3. Test Apache/Nginx Proxy:</strong>
 </code>`<code>bash
-<h1>Should return JSON status through proxy</h1>
+<h1 id="should-return-json-status-through-proxy">Should return JSON status through proxy</h1>
 <p>curl https://yourdomain.com/api/health</p>
 </code>`<code>
 
 <strong>4. Check Listening Ports:</strong>
 </code>`<code>bash
-<h1>PBX should listen on 9000 (HTTP, not SSL)</h1>
+<h1 id="pbx-should-listen-on-9000-http-not-ssl">PBX should listen on 9000 (HTTP, not SSL)</h1>
 <p>sudo netstat -tlnp | grep 9000</p>
 
-<h1>Apache should listen on 443 (SSL)</h1>
+<h1 id="apache-should-listen-on-443-ssl">Apache should listen on 443 (SSL)</h1>
 <p>sudo netstat -tlnp | grep 443</p>
 </code>`<code>
 
@@ -794,7 +794,7 @@
 
 <strong>Note:</strong> For production, always use reverse proxy with SSL termination.
 
-<h3>Admin Panel Display Issues (Broken UI)</h3>
+<h3 id="admin-panel-display-issues-broken-ui">Admin Panel Display Issues (Broken UI)</h3>
 
 <strong>Status:</strong> ✅ <strong>FIXED</strong> (December 23, 2025)
 
@@ -843,7 +843,7 @@
 </ol>
 </code>`<code>
 
-<h3>Cannot Access Admin Panel After Installation</h3>
+<h3 id="cannot-access-admin-panel-after-installation">Cannot Access Admin Panel After Installation</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -855,10 +855,10 @@
 
 <strong>1. Verify Installation Completed:</strong>
 </code>`<code>bash
-<h1>Check if all files are present</h1>
+<h1 id="check-if-all-files-are-present">Check if all files are present</h1>
 <p>ls -la admin/</p>
 
-<h1>Should contain: index.html, login.html, css/, js/</h1>
+<h1 id="should-contain-indexhtml-loginhtml-css-js">Should contain: index.html, login.html, css/, js/</h1>
 </code>`<code>
 
 <strong>2. Check Service Started:</strong>
@@ -870,21 +870,21 @@
 
 <strong>3. Wait for Initialization:</strong>
 </code>`<code>bash
-<h1>PBX may take 30-60 seconds to fully start</h1>
-<h1>Watch logs:</h1>
+<h1 id="pbx-may-take-30-60-seconds-to-fully-start">PBX may take 30-60 seconds to fully start</h1>
+<h1 id="watch-logs">Watch logs:</h1>
 <p>sudo journalctl -u pbx -f</p>
 </code>`<code>
 
 <strong>4. Verify SSL Certificate:</strong>
 </code>`<code>bash
-<h1>Check certificate exists</h1>
+<h1 id="check-certificate-exists">Check certificate exists</h1>
 <p>ls -la certs/</p>
 
-<h1>Regenerate if needed</h1>
+<h1 id="regenerate-if-needed">Regenerate if needed</h1>
 <p>python scripts/generate_ssl_cert.py --hostname YOUR_IP</p>
 </code>`<code>
 
-<h3>Apache "Not Found" Error for Admin Pages</h3>
+<h3 id="apache-not-found-error-for-admin-pages">Apache "Not Found" Error for Admin Pages</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -906,10 +906,10 @@
 
 <strong>Option 2: Manual Configuration</strong>
 </code>`<code>bash
-<h1>Enable required modules</h1>
+<h1 id="enable-required-modules">Enable required modules</h1>
 <p>sudo a2enmod proxy proxy_http proxy_wstunnel headers rewrite ssl</p>
 
-<h1>Create virtual host configuration</h1>
+<h1 id="create-virtual-host-configuration">Create virtual host configuration</h1>
 <p>sudo nano /etc/apache2/sites-available/pbx.conf</p>
 </code>`<code>
 
@@ -947,17 +947,17 @@
 
 <strong>Verification:</strong>
 </code>`<code>bash
-<h1>Test that pages now load</h1>
+<h1 id="test-that-pages-now-load">Test that pages now load</h1>
 <p>curl http://your-domain.com/admin/status-check.html</p>
 
-<h1>Should return HTML content, not 404 error</h1>
+<h1 id="should-return-html-content-not-404-error">Should return HTML content, not 404 error</h1>
 </code>`<code>
 
 <hr>
 
-<h2>Integration Problems</h2>
+<h2 id="integration-problems">Integration Problems</h2>
 
-<h3>Email Notifications Not Sending</h3>
+<h3 id="email-notifications-not-sending">Email Notifications Not Sending</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -970,27 +970,27 @@
 
 <strong>1. Test SMTP Configuration:</strong>
 </code>`<code>bash
-<h1>Run email test script</h1>
+<h1 id="run-email-test-script">Run email test script</h1>
 <p>python scripts/test_email.py</p>
 
-<h1>Should show SMTP connection and send test</h1>
+<h1 id="should-show-smtp-connection-and-send-test">Should show SMTP connection and send test</h1>
 </code>`<code>
 
 <strong>2. Verify SMTP Credentials:</strong>
 </code>`<code>bash
-<h1>Check .env file</h1>
+<h1 id="check-env-file">Check .env file</h1>
 <p>cat .env | grep SMTP</p>
 
-<h1>Required:</h1>
-<h1>SMTP_HOST</h1>
-<h1>SMTP_PORT</h1>
-<h1>SMTP_USERNAME</h1>
-<h1>SMTP_PASSWORD</h1>
+<h1 id="required">Required:</h1>
+<h1 id="smtp_host">SMTP_HOST</h1>
+<h1 id="smtp_port">SMTP_PORT</h1>
+<h1 id="smtp_username">SMTP_USERNAME</h1>
+<h1 id="smtp_password">SMTP_PASSWORD</h1>
 </code>`<code>
 
 <strong>3. Check Email Configuration:</strong>
 </code>`<code>yaml
-<h1>config.yml</h1>
+<h1 id="configyml">config.yml</h1>
 <p>voicemail:</p>
 <p>  email_notifications: true</p>
 <p>  smtp:</p>
@@ -1003,10 +1003,10 @@
 
 <strong>4. Gmail-Specific Issues:</strong>
 </code>`<code>bash
-<h1>For Gmail, use App Password (not regular password)</h1>
-<h1>Enable 2FA on Google account</h1>
-<h1>Generate app password: https://myaccount.google.com/apppasswords</h1>
-<h1>Use app password in .env</h1>
+<h1 id="for-gmail-use-app-password-not-regular-password">For Gmail, use App Password (not regular password)</h1>
+<h1 id="enable-2fa-on-google-account">Enable 2FA on Google account</h1>
+<h1 id="generate-app-password-httpsmyaccountgooglecomapppasswords">Generate app password: https://myaccount.google.com/apppasswords</h1>
+<h1 id="use-app-password-in-env">Use app password in .env</h1>
 </code>`<code>
 
 <strong>5. Office 365 Issues:</strong>
@@ -1021,15 +1021,15 @@
 </code>`<code>bash
 <p>tail -f logs/pbx.log | grep -i email</p>
 
-<h1>Look for SMTP connection errors</h1>
+<h1 id="look-for-smtp-connection-errors">Look for SMTP connection errors</h1>
 </code>`<code>
 
 <strong>7. Test Email Server Connectivity:</strong>
 </code>`<code>bash
-<h1>Test SMTP server reachable</h1>
+<h1 id="test-smtp-server-reachable">Test SMTP server reachable</h1>
 <p>telnet smtp.gmail.com 587</p>
 
-<h1>Should connect successfully</h1>
+<h1 id="should-connect-successfully">Should connect successfully</h1>
 </code>`<code>
 
 <strong>8. Verify Email in Extension Config:</strong>
@@ -1041,7 +1041,7 @@
 <p>    email: "user@company.com"  # Must be set</p>
 </code>`<code>
 
-<h3>Active Directory Integration Not Working</h3>
+<h3 id="active-directory-integration-not-working">Active Directory Integration Not Working</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1054,7 +1054,7 @@
 
 <strong>1. Test AD Connectivity:</strong>
 </code>`<code>bash
-<h1>Test LDAP connection</h1>
+<h1 id="test-ldap-connection">Test LDAP connection</h1>
 <p>ldapsearch -x -H ldap://ad.company.com -D "CN=pbx-service,DC=company,DC=com" -W -b "DC=company,DC=com"</p>
 </code>`<code>
 
@@ -1072,10 +1072,10 @@
 
 <strong>3. Check AD Credentials:</strong>
 </code>`<code>bash
-<h1>Verify .env has AD password</h1>
+<h1 id="verify-env-has-ad-password">Verify .env has AD password</h1>
 <p>cat .env | grep AD_PASSWORD</p>
 
-<h1>Test credentials directly</h1>
+<h1 id="test-credentials-directly">Test credentials directly</h1>
 </code>`<code>
 
 <strong>4. Enable LDAPS (if using SSL):</strong>
@@ -1088,10 +1088,10 @@
 
 <strong>5. Check Firewall:</strong>
 </code>`<code>bash
-<h1>LDAP port</h1>
+<h1 id="ldap-port">LDAP port</h1>
 <p>sudo ufw allow 389/tcp</p>
 
-<h1>LDAPS port (if SSL)</h1>
+<h1 id="ldaps-port-if-ssl">LDAPS port (if SSL)</h1>
 <p>sudo ufw allow 636/tcp</p>
 </code>`<code>
 
@@ -1100,7 +1100,7 @@
 <p>tail -f logs/pbx.log | grep -i "AD\|LDAP"</p>
 </code>`<code>
 
-<h3>Webhook Delivery Failures</h3>
+<h3 id="webhook-delivery-failures">Webhook Delivery Failures</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1125,7 +1125,7 @@
 
 <strong>2. Test Webhook Endpoint:</strong>
 </code>`<code>bash
-<h1>Test destination is reachable</h1>
+<h1 id="test-destination-is-reachable">Test destination is reachable</h1>
 <p>curl -v https://crm.company.com/api/pbx/events</p>
 </code>`<code>
 
@@ -1133,7 +1133,7 @@
 </code>`<code>bash
 <p>tail -f logs/pbx.log | grep -i webhook</p>
 
-<h1>Look for delivery attempts and errors</h1>
+<h1 id="look-for-delivery-attempts-and-errors">Look for delivery attempts and errors</h1>
 </code>`<code>
 
 <strong>4. Verify HMAC Signature:</strong>
@@ -1152,9 +1152,9 @@
 
 <hr>
 
-<h2>Phone Provisioning</h2>
+<h2 id="phone-provisioning">Phone Provisioning</h2>
 
-<h3>Phones Won't Auto-Provision</h3>
+<h3 id="phones-wont-auto-provision">Phones Won't Auto-Provision</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1167,17 +1167,17 @@
 
 <strong>1. Verify Provisioning Server Running:</strong>
 </code>`<code>bash
-<h1>Check provisioning port</h1>
+<h1 id="check-provisioning-port">Check provisioning port</h1>
 <p>sudo netstat -tlnp | grep 8888</p>
 
-<h1>Should show python/pbx listening on 8888</h1>
+<h1 id="should-show-pythonpbx-listening-on-8888">Should show python/pbx listening on 8888</h1>
 </code>`<code>
 
 <strong>2. Check DHCP Option 66:</strong>
 </code>`<code>bash
-<h1>Option 66 should point to: http://PBX_IP:8888</h1>
+<h1 id="option-66-should-point-to-httppbx_ip8888">Option 66 should point to: http://PBX_IP:8888</h1>
 
-<h1>Test from phone network:</h1>
+<h1 id="test-from-phone-network">Test from phone network:</h1>
 <p>curl http://PBX_IP:8888/</p>
 </code>`<code>
 
@@ -1191,18 +1191,18 @@
 
 <strong>4. Verify Template Exists:</strong>
 </code>`<code>bash
-<h1>Check templates directory</h1>
+<h1 id="check-templates-directory">Check templates directory</h1>
 <p>ls -la provisioning_templates/</p>
 
-<h1>Should have templates for your phone brand</h1>
+<h1 id="should-have-templates-for-your-phone-brand">Should have templates for your phone brand</h1>
 </code>`<code>
 
 <strong>5. Check Phone MAC Address:</strong>
 </code>`<code>bash
-<h1>Template filename often uses MAC address</h1>
-<h1>e.g., 00-15-65-12-34-56.cfg</h1>
+<h1 id="template-filename-often-uses-mac-address">Template filename often uses MAC address</h1>
+<h1 id="eg-00-15-65-12-34-56cfg">e.g., 00-15-65-12-34-56.cfg</h1>
 
-<h1>Verify MAC matches phone's actual MAC</h1>
+<h1 id="verify-mac-matches-phones-actual-mac">Verify MAC matches phone's actual MAC</h1>
 </code>`<code>
 
 <strong>6. Check File Permissions:</strong>
@@ -1215,18 +1215,18 @@
 </code>`<code>bash
 <p>tail -f logs/pbx.log | grep -i provision</p>
 
-<h1>Should show HTTP requests from phones</h1>
+<h1 id="should-show-http-requests-from-phones">Should show HTTP requests from phones</h1>
 </code>`<code>
 
 <strong>8. Test Template Generation:</strong>
 </code>`<code>bash
-<h1>View generated config for extension</h1>
+<h1 id="view-generated-config-for-extension">View generated config for extension</h1>
 <p>curl http://localhost:8888/provision/1001</p>
 
-<h1>Should return phone configuration</h1>
+<h1 id="should-return-phone-configuration">Should return phone configuration</h1>
 </code>`<code>
 
-<h3>Wrong Configuration Downloaded</h3>
+<h3 id="wrong-configuration-downloaded">Wrong Configuration Downloaded</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1239,16 +1239,16 @@
 
 <strong>1. Check Template Variables:</strong>
 </code>`<code>bash
-<h1>View template</h1>
+<h1 id="view-template">View template</h1>
 <p>cat provisioning_templates/yealink/t46s.cfg</p>
 
-<h1>Verify variables are correct:</h1>
-<h1>{EXTENSION}, {PASSWORD}, {SIP_SERVER}, etc.</h1>
+<h1 id="verify-variables-are-correct">Verify variables are correct:</h1>
+<h1 id="extension-password-sip_server-etc">{EXTENSION}, {PASSWORD}, {SIP_SERVER}, etc.</h1>
 </code>`<code>
 
 <strong>2. Verify Extension Exists:</strong>
 </code>`<code>bash
-<h1>Check extension in config</h1>
+<h1 id="check-extension-in-config">Check extension in config</h1>
 <p>grep -A 5 "number: \"1001\"" config.yml</p>
 </code>`<code>
 
@@ -1260,43 +1260,43 @@
 
 <strong>4. Manual Template Test:</strong>
 </code>`<code>bash
-<h1>Test template rendering</h1>
+<h1 id="test-template-rendering">Test template rendering</h1>
 <p>curl http://localhost:8888/provision/1001?debug=true</p>
 
-<h1>Should show populated template</h1>
+<h1 id="should-show-populated-template">Should show populated template</h1>
 </code>`<code>
 
-<h3>Phone-Specific Provisioning Issues</h3>
+<h3 id="phone-specific-provisioning-issues">Phone-Specific Provisioning Issues</h3>
 
 <strong>Yealink:</strong>
 </code>`<code>bash
-<h1>Ensure MAC address format: 001565-AABBCC.cfg</h1>
-<h1>Server URL: http://PBX_IP:8888/$mac.cfg</h1>
+<h1 id="ensure-mac-address-format-001565-aabbcccfg">Ensure MAC address format: 001565-AABBCC.cfg</h1>
+<h1 id="server-url-httppbx_ip8888maccfg">Server URL: http://PBX_IP:8888/$mac.cfg</h1>
 </code>`<code>
 
 <strong>Polycom:</strong>
 </code>`<code>bash
-<h1>Boot file: 000000000000.cfg (MAC address)</h1>
-<h1>Needs both application and configuration files</h1>
+<h1 id="boot-file-000000000000cfg-mac-address">Boot file: 000000000000.cfg (MAC address)</h1>
+<h1 id="needs-both-application-and-configuration-files">Needs both application and configuration files</h1>
 </code>`<code>
 
 <strong>Cisco:</strong>
 </code>`<code>bash
-<h1>XML-based configuration</h1>
-<h1>Separate file per line: SEPXXXXXXXXXXXXX.cnf.xml</h1>
+<h1 id="xml-based-configuration">XML-based configuration</h1>
+<h1 id="separate-file-per-line-sepxxxxxxxxxxxxxcnfxml">Separate file per line: SEPXXXXXXXXXXXXX.cnf.xml</h1>
 </code>`<code>
 
 <strong>Grandstream:</strong>
 </code>`<code>bash
-<h1>cfg + cfgMAC format</h1>
-<h1>HTTP provisioning on port 8888</h1>
+<h1 id="cfg-cfgmac-format">cfg + cfgMAC format</h1>
+<h1 id="http-provisioning-on-port-8888">HTTP provisioning on port 8888</h1>
 </code>`<code>
 
 <hr>
 
-<h2>Database Issues</h2>
+<h2 id="database-issues">Database Issues</h2>
 
-<h3>Database Connection Errors</h3>
+<h3 id="database-connection-errors">Database Connection Errors</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1309,11 +1309,11 @@
 
 <strong>1. Verify Database Running:</strong>
 </code>`<code>bash
-<h1>PostgreSQL</h1>
+<h1 id="postgresql">PostgreSQL</h1>
 <p>sudo systemctl status postgresql</p>
 <p>sudo systemctl start postgresql</p>
 
-<h1>Check connection</h1>
+<h1 id="check-connection">Check connection</h1>
 <p>psql -U pbx_user -d pbx_system -h localhost</p>
 </code>`<code>
 
@@ -1321,27 +1321,27 @@
 </code>`<code>bash
 <p>python scripts/verify_database.py</p>
 
-<h1>Should show successful connection</h1>
+<h1 id="should-show-successful-connection">Should show successful connection</h1>
 </code>`<code>
 
 <strong>3. Check Database Credentials:</strong>
 </code>`<code>bash
-<h1>Verify .env</h1>
+<h1 id="verify-env">Verify .env</h1>
 <p>cat .env | grep DB_</p>
 
-<h1>Required:</h1>
-<h1>DB_HOST=localhost</h1>
-<h1>DB_PORT=5432</h1>
-<h1>DB_NAME=pbx_system</h1>
-<h1>DB_USER=pbx_user</h1>
-<h1>DB_PASSWORD=your_password</h1>
+<h1 id="required">Required:</h1>
+<h1 id="db_hostlocalhost">DB_HOST=localhost</h1>
+<h1 id="db_port5432">DB_PORT=5432</h1>
+<h1 id="db_namepbx_system">DB_NAME=pbx_system</h1>
+<h1 id="db_userpbx_user">DB_USER=pbx_user</h1>
+<h1 id="db_passwordyour_password">DB_PASSWORD=your_password</h1>
 </code>`<code>
 
 <strong>4. Verify Database Exists:</strong>
 </code>`<code>bash
 <p>sudo -u postgres psql -l | grep pbx_system</p>
 
-<h1>If not exists, create:</h1>
+<h1 id="if-not-exists-create">If not exists, create:</h1>
 <p>sudo -u postgres createdb pbx_system</p>
 </code>`<code>
 
@@ -1352,20 +1352,20 @@
 
 <strong>6. Initialize Database:</strong>
 </code>`<code>bash
-<h1>Run initialization script</h1>
+<h1 id="run-initialization-script">Run initialization script</h1>
 <p>python scripts/init_voicemail_db.py</p>
 
-<h1>Should create tables</h1>
+<h1 id="should-create-tables">Should create tables</h1>
 </code>`<code>
 
 <strong>7. Check Logs:</strong>
 </code>`<code>bash
 <p>tail -f logs/pbx.log | grep -i database</p>
 
-<h1>Look for connection errors</h1>
+<h1 id="look-for-connection-errors">Look for connection errors</h1>
 </code>`<code>
 
-<h3>Database Migration Errors</h3>
+<h3 id="database-migration-errors">Database Migration Errors</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1385,7 +1385,7 @@
 </code>`<code>bash
 <p>python scripts/migrate_database.py</p>
 
-<h1>Follow prompts</h1>
+<h1 id="follow-prompts">Follow prompts</h1>
 </code>`<code>
 
 <strong>3. Check Schema Version:</strong>
@@ -1395,11 +1395,11 @@
 
 <strong>4. Manual Table Creation:</strong>
 </code>`<code>bash
-<h1>If specific table missing</h1>
+<h1 id="if-specific-table-missing">If specific table missing</h1>
 <p>sudo -u postgres psql pbx_system < schema/create_table.sql</p>
 </code>`<code>
 
-<h3>Voicemail Database Issues</h3>
+<h3 id="voicemail-database-issues">Voicemail Database Issues</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1414,37 +1414,37 @@
 </code>`<code>bash
 <p>python scripts/init_voicemail_db.py</p>
 
-<h1>Creates voicemail_messages table</h1>
+<h1 id="creates-voicemail_messages-table">Creates voicemail_messages table</h1>
 </code>`<code>
 
 <strong>2. Verify Tables Exist:</strong>
 </code>`<code>bash
 <p>sudo -u postgres psql pbx_system -c "\dt"</p>
 
-<h1>Should show voicemail_messages table</h1>
+<h1 id="should-show-voicemail_messages-table">Should show voicemail_messages table</h1>
 </code>`<code>
 
 <strong>3. Check File Storage:</strong>
 </code>`<code>bash
-<h1>Verify voicemail directory exists</h1>
+<h1 id="verify-voicemail-directory-exists">Verify voicemail directory exists</h1>
 <p>ls -la voicemail/</p>
 
-<h1>Create if missing</h1>
+<h1 id="create-if-missing">Create if missing</h1>
 <p>mkdir -p voicemail/1001</p>
 <p>sudo chown -R pbx:pbx voicemail/</p>
 </code>`<code>
 
 <strong>4. Test Voicemail Save:</strong>
 </code>`<code>bash
-<h1>Make test call to voicemail</h1>
-<h1>Check if file created in voicemail/EXTENSION/</h1>
+<h1 id="make-test-call-to-voicemail">Make test call to voicemail</h1>
+<h1 id="check-if-file-created-in-voicemailextension">Check if file created in voicemail/EXTENSION/</h1>
 </code>`<code>
 
 <hr>
 
-<h2>Service Management</h2>
+<h2 id="service-management">Service Management</h2>
 
-<h3>PBX Service Won't Start</h3>
+<h3 id="pbx-service-wont-start">PBX Service Won't Start</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1459,22 +1459,22 @@
 </code>`<code>bash
 <p>sudo systemctl status pbx</p>
 
-<h1>Look for exit code and error message</h1>
+<h1 id="look-for-exit-code-and-error-message">Look for exit code and error message</h1>
 </code>`<code>
 
 <strong>2. View Detailed Logs:</strong>
 </code>`<code>bash
 <p>sudo journalctl -u pbx -n 100 --no-pager</p>
 
-<h1>Look for Python errors or traceback</h1>
+<h1 id="look-for-python-errors-or-traceback">Look for Python errors or traceback</h1>
 </code>`<code>
 
 <strong>3. Check Configuration File:</strong>
 </code>`<code>bash
-<h1>Validate YAML syntax</h1>
+<h1 id="validate-yaml-syntax">Validate YAML syntax</h1>
 <p>python -c "import yaml; yaml.safe_load(open('config.yml'))"</p>
 
-<h1>Should complete without errors</h1>
+<h1 id="should-complete-without-errors">Should complete without errors</h1>
 </code>`<code>
 
 <strong>4. Verify Python Dependencies:</strong>
@@ -1482,7 +1482,7 @@
 <p>pip list | grep -i twisted</p>
 <p>pip list | grep -i yaml</p>
 
-<h1>Reinstall if missing</h1>
+<h1 id="reinstall-if-missing">Reinstall if missing</h1>
 <p>pip install -r requirements.txt</p>
 </code>`<code>
 
@@ -1494,22 +1494,22 @@
 
 <strong>6. Test Manual Start:</strong>
 </code>`<code>bash
-<h1>Run manually to see errors</h1>
+<h1 id="run-manually-to-see-errors">Run manually to see errors</h1>
 <p>cd /opt/pbx</p>
 <p>python main.py</p>
 
-<h1>Should show startup messages or errors</h1>
+<h1 id="should-show-startup-messages-or-errors">Should show startup messages or errors</h1>
 </code>`<code>
 
 <strong>7. Check Port Conflicts:</strong>
 </code>`<code>bash
-<h1>Verify ports not in use</h1>
+<h1 id="verify-ports-not-in-use">Verify ports not in use</h1>
 <p>sudo netstat -tlnp | grep -E "(5060|8080)"</p>
 
-<h1>If in use, kill conflicting process or change PBX ports</h1>
+<h1 id="if-in-use-kill-conflicting-process-or-change-pbx-ports">If in use, kill conflicting process or change PBX ports</h1>
 </code>`<code>
 
-<h3>Service Crashes or Restarts Frequently</h3>
+<h3 id="service-crashes-or-restarts-frequently">Service Crashes or Restarts Frequently</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1524,14 +1524,14 @@
 </code>`<code>bash
 <p>sudo journalctl -u pbx -f</p>
 
-<h1>Watch for crash patterns</h1>
+<h1 id="watch-for-crash-patterns">Watch for crash patterns</h1>
 </code>`<code>
 
 <strong>2. Review Application Logs:</strong>
 </code>`<code>bash
 <p>tail -f logs/pbx.log</p>
 
-<h1>Look for exceptions or errors before crash</h1>
+<h1 id="look-for-exceptions-or-errors-before-crash">Look for exceptions or errors before crash</h1>
 </code>`<code>
 
 <strong>3. Check Memory Usage:</strong>
@@ -1539,46 +1539,46 @@
 <p>free -h</p>
 <p>top -p $(pgrep -f "python.*main.py")</p>
 
-<h1>Verify sufficient memory available</h1>
+<h1 id="verify-sufficient-memory-available">Verify sufficient memory available</h1>
 </code>`<code>
 
 <strong>4. Check Disk Space:</strong>
 </code>`<code>bash
 <p>df -h</p>
 
-<h1>Ensure /var/log and application directories have space</h1>
+<h1 id="ensure-varlog-and-application-directories-have-space">Ensure /var/log and application directories have space</h1>
 </code>`<code>
 
 <strong>5. Review Core Dumps:</strong>
 </code>`<code>bash
-<h1>Check for core dumps</h1>
+<h1 id="check-for-core-dumps">Check for core dumps</h1>
 <p>ls -la /var/crash/</p>
 <p>ls -la core.*</p>
 
-<h1>Analyze if present</h1>
+<h1 id="analyze-if-present">Analyze if present</h1>
 </code>`<code>
 
 <strong>6. Enable Debug Logging:</strong>
 </code>`<code>yaml
-<h1>config.yml</h1>
+<h1 id="configyml">config.yml</h1>
 <p>logging:</p>
 <p>  level: "DEBUG"</p>
 </code>`<code>
 
 <strong>7. Check SystemD Service Settings:</strong>
 </code>`<code>bash
-<h1>View service file</h1>
+<h1 id="view-service-file">View service file</h1>
 <p>cat /etc/systemd/system/pbx.service</p>
 
-<h1>Check Restart= settings</h1>
-<h1>May need to adjust restart policy</h1>
+<h1 id="check-restart-settings">Check Restart= settings</h1>
+<h1 id="may-need-to-adjust-restart-policy">May need to adjust restart policy</h1>
 </code>`<code>
 
 <hr>
 
-<h2>Network & Firewall</h2>
+<h2 id="network-firewall">Network & Firewall</h2>
 
-<h3>Firewall Blocking Traffic</h3>
+<h3 id="firewall-blocking-traffic">Firewall Blocking Traffic</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1593,25 +1593,25 @@
 </code>`<code>bash
 <p>sudo ufw status verbose</p>
 
-<h1>Should show:</h1>
-<h1>5060/udp ALLOW IN</h1>
-<h1>8080/tcp ALLOW IN</h1>
-<h1>10000:20000/udp ALLOW IN</h1>
+<h1 id="should-show">Should show:</h1>
+<h1 id="5060udp-allow-in">5060/udp ALLOW IN</h1>
+<h1 id="8080tcp-allow-in">8080/tcp ALLOW IN</h1>
+<h1 id="1000020000udp-allow-in">10000:20000/udp ALLOW IN</h1>
 </code>`<code>
 
 <strong>2. Open Required Ports:</strong>
 </code>`<code>bash
-<h1>SIP signaling</h1>
+<h1 id="sip-signaling">SIP signaling</h1>
 <p>sudo ufw allow 5060/udp</p>
 
-<h1>Admin/API</h1>
+<h1 id="adminapi">Admin/API</h1>
 <p>sudo ufw allow 8080/tcp</p>
 <p>sudo ufw allow 443/tcp</p>
 
-<h1>RTP media</h1>
+<h1 id="rtp-media">RTP media</h1>
 <p>sudo ufw allow 10000:20000/udp</p>
 
-<h1>Reload firewall</h1>
+<h1 id="reload-firewall">Reload firewall</h1>
 <p>sudo ufw reload</p>
 </code>`<code>
 
@@ -1622,22 +1622,22 @@
 
 <strong>4. Test Connectivity:</strong>
 </code>`<code>bash
-<h1>From external host</h1>
+<h1 id="from-external-host">From external host</h1>
 <p>nc -u -v PBX_IP 5060  # SIP</p>
 <p>nc -v PBX_IP 8080     # HTTPS</p>
 
-<h1>Should connect</h1>
+<h1 id="should-connect">Should connect</h1>
 </code>`<code>
 
 <strong>5. Disable Firewall Temporarily (Testing Only):</strong>
 </code>`<code>bash
 <p>sudo ufw disable</p>
 
-<h1>Test if issue resolves</h1>
-<h1>Re-enable: sudo ufw enable</h1>
+<h1 id="test-if-issue-resolves">Test if issue resolves</h1>
+<h1 id="re-enable-sudo-ufw-enable">Re-enable: sudo ufw enable</h1>
 </code>`<code>
 
-<h3>NAT/Routing Issues</h3>
+<h3 id="natrouting-issues">NAT/Routing Issues</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1650,7 +1650,7 @@
 
 <strong>1. Configure External IP:</strong>
 </code>`<code>yaml
-<h1>config.yml</h1>
+<h1 id="configyml">config.yml</h1>
 <p>server:</p>
 <p>  external_ip: "YOUR_PUBLIC_IP"</p>
 </code>`<code>
@@ -1664,16 +1664,16 @@
 
 <strong>3. Port Forwarding:</strong>
 </code>`<code>bash
-<h1>On router, forward these ports to PBX:</h1>
-<h1>UDP 5060 (SIP)</h1>
-<h1>UDP 10000-20000 (RTP)</h1>
-<h1>TCP 8080 or 443 (HTTPS)</h1>
+<h1 id="on-router-forward-these-ports-to-pbx">On router, forward these ports to PBX:</h1>
+<h1 id="udp-5060-sip">UDP 5060 (SIP)</h1>
+<h1 id="udp-10000-20000-rtp">UDP 10000-20000 (RTP)</h1>
+<h1 id="tcp-8080-or-443-https">TCP 8080 or 443 (HTTPS)</h1>
 </code>`<code>
 
 <strong>4. Check NAT Type:</strong>
 </code>`<code>bash
-<h1>Test NAT behavior</h1>
-<h1>Symmetric NAT can cause issues</h1>
+<h1 id="test-nat-behavior">Test NAT behavior</h1>
+<h1 id="symmetric-nat-can-cause-issues">Symmetric NAT can cause issues</h1>
 </code>`<code>
 
 <strong>5. Configure SIP NAT Keepalive:</strong>
@@ -1685,9 +1685,9 @@
 
 <hr>
 
-<h2>Configuration Issues</h2>
+<h2 id="configuration-issues">Configuration Issues</h2>
 
-<h3>Invalid Configuration File</h3>
+<h3 id="invalid-configuration-file">Invalid Configuration File</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1702,7 +1702,7 @@
 </code>`<code>bash
 <p>python -c "import yaml; yaml.safe_load(open('config.yml'))"</p>
 
-<h1>Will show line number of syntax error</h1>
+<h1 id="will-show-line-number-of-syntax-error">Will show line number of syntax error</h1>
 </code>`<code>
 
 <strong>2. Common YAML Mistakes:</strong>
@@ -1718,22 +1718,22 @@
 <p>grep -n "<<<<<<" config.yml</p>
 <p>grep -n ">>>>>>" config.yml</p>
 
-<h1>If found, resolve conflicts manually</h1>
+<h1 id="if-found-resolve-conflicts-manually">If found, resolve conflicts manually</h1>
 </code>`<code>
 
 <strong>4. Use Example as Template:</strong>
 </code>`<code>bash
-<h1>Compare with working example</h1>
+<h1 id="compare-with-working-example">Compare with working example</h1>
 <p>diff config.yml config.example.yml</p>
 </code>`<code>
 
 <strong>5. Test Minimal Config:</strong>
 </code>`<code>bash
-<h1>Start with minimal config.yml</h1>
-<h1>Add sections incrementally to find problem</h1>
+<h1 id="start-with-minimal-configyml">Start with minimal config.yml</h1>
+<h1 id="add-sections-incrementally-to-find-problem">Add sections incrementally to find problem</h1>
 </code>`<code>
 
-<h3>Environment Variables Not Loading</h3>
+<h3 id="environment-variables-not-loading">Environment Variables Not Loading</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1748,17 +1748,17 @@
 </code>`<code>bash
 <p>cat .env</p>
 
-<h1>Should not have quotes around values:</h1>
-<h1>DB_PASSWORD=mypassword  ✓</h1>
-<h1>DB_PASSWORD="mypassword"  ✗ (quotes will be included)</h1>
+<h1 id="should-not-have-quotes-around-values">Should not have quotes around values:</h1>
+<h1 id="db_passwordmypassword-">DB_PASSWORD=mypassword  ✓</h1>
+<h1 id="db_passwordmypassword-quotes-will-be-included">DB_PASSWORD="mypassword"  ✗ (quotes will be included)</h1>
 </code>`<code>
 
 <strong>2. Check File Location:</strong>
 </code>`<code>bash
-<h1>.env must be in same directory as main.py</h1>
+<h1 id="env-must-be-in-same-directory-as-mainpy">.env must be in same directory as main.py</h1>
 <p>ls -la .env</p>
 
-<h1>Or set ENV_FILE path</h1>
+<h1 id="or-set-env_file-path">Or set ENV_FILE path</h1>
 <p>export ENV_FILE=/opt/pbx/.env</p>
 </code>`<code>
 
@@ -1766,7 +1766,7 @@
 </code>`<code>bash
 <p>python -c "from dotenv import load_dotenv; import os; load_dotenv(); print(os.getenv('DB_PASSWORD'))"</p>
 
-<h1>Should print password value</h1>
+<h1 id="should-print-password-value">Should print password value</h1>
 </code>`<code>
 
 <strong>4. Check Permissions:</strong>
@@ -1777,9 +1777,9 @@
 
 <hr>
 
-<h2>Performance & Monitoring</h2>
+<h2 id="performance-monitoring">Performance & Monitoring</h2>
 
-<h3>High CPU Usage</h3>
+<h3 id="high-cpu-usage">High CPU Usage</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1794,40 +1794,40 @@
 </code>`<code>bash
 <p>curl -k https://localhost:8080/api/calls | jq '.'</p>
 
-<h1>High call volume may be normal</h1>
+<h1 id="high-call-volume-may-be-normal">High call volume may be normal</h1>
 </code>`<code>
 
 <strong>2. Review Process Stats:</strong>
 </code>`<code>bash
 <p>top -p $(pgrep -f "python.*main.py")</p>
 
-<h1>Check CPU percentage</h1>
+<h1 id="check-cpu-percentage">Check CPU percentage</h1>
 </code>`<code>
 
 <strong>3. Check for Loops:</strong>
 </code>`<code>bash
-<h1>Look for error loops in logs</h1>
+<h1 id="look-for-error-loops-in-logs">Look for error loops in logs</h1>
 <p>tail -f logs/pbx.log | grep -i error</p>
 
-<h1>May indicate infinite retry loop</h1>
+<h1 id="may-indicate-infinite-retry-loop">May indicate infinite retry loop</h1>
 </code>`<code>
 
 <strong>4. Check Database Performance:</strong>
 </code>`<code>bash
-<h1>Slow queries can cause CPU spikes</h1>
+<h1 id="slow-queries-can-cause-cpu-spikes">Slow queries can cause CPU spikes</h1>
 <p>sudo -u postgres psql pbx_system -c "SELECT * FROM pg_stat_activity;"</p>
 </code>`<code>
 
 <strong>5. Optimize Configuration:</strong>
 </code>`<code>yaml
-<h1>Reduce logging level</h1>
+<h1 id="reduce-logging-level">Reduce logging level</h1>
 <p>logging:</p>
 <p>  level: "WARNING"</p>
 
-<h1>Disable unnecessary features</h1>
+<h1 id="disable-unnecessary-features">Disable unnecessary features</h1>
 </code>`<code>
 
-<h3>Memory Leaks</h3>
+<h3 id="memory-leaks">Memory Leaks</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1840,33 +1840,33 @@
 
 <strong>1. Monitor Memory:</strong>
 </code>`<code>bash
-<h1>Watch memory usage</h1>
+<h1 id="watch-memory-usage">Watch memory usage</h1>
 <p>watch -n 5 'ps aux | grep python | grep main.py'</p>
 </code>`<code>
 
 <strong>2. Check Call Cleanup:</strong>
 </code>`<code>bash
-<h1>Verify calls are properly ended</h1>
+<h1 id="verify-calls-are-properly-ended">Verify calls are properly ended</h1>
 <p>curl -k https://localhost:8080/api/calls</p>
 
-<h1>Stale calls indicate cleanup issue</h1>
+<h1 id="stale-calls-indicate-cleanup-issue">Stale calls indicate cleanup issue</h1>
 </code>`<code>
 
 <strong>3. Restart Service Periodically:</strong>
 </code>`<code>bash
-<h1>Temporary workaround</h1>
-<h1>Add cron job for nightly restart</h1>
+<h1 id="temporary-workaround">Temporary workaround</h1>
+<h1 id="add-cron-job-for-nightly-restart">Add cron job for nightly restart</h1>
 <p>0 3 <em> </em> * systemctl restart pbx</p>
 </code>`<code>
 
 <strong>4. Enable Memory Profiling:</strong>
 </code>`<code>python
-<h1>Add to main.py temporarily</h1>
+<h1 id="add-to-mainpy-temporarily">Add to main.py temporarily</h1>
 <p>import tracemalloc</p>
 <p>tracemalloc.start()</p>
 </code>`<code>
 
-<h3>Slow Performance</h3>
+<h3 id="slow-performance">Slow Performance</h3>
 
 <strong>Symptoms:</strong>
 <ul>
@@ -1879,22 +1879,22 @@
 
 <strong>1. Check System Resources:</strong>
 </code>`<code>bash
-<h1>CPU</h1>
+<h1 id="cpu">CPU</h1>
 <p>top</p>
 
-<h1>Memory</h1>
+<h1 id="memory">Memory</h1>
 <p>free -h</p>
 
-<h1>Disk I/O</h1>
+<h1 id="disk-io">Disk I/O</h1>
 <p>iostat</p>
 </code>`<code>
 
 <strong>2. Check Database Performance:</strong>
 </code>`<code>bash
-<h1>Add indexes if needed</h1>
+<h1 id="add-indexes-if-needed">Add indexes if needed</h1>
 <p>sudo -u postgres psql pbx_system</p>
 
-<h1>Analyze slow queries</h1>
+<h1 id="analyze-slow-queries">Analyze slow queries</h1>
 <p>EXPLAIN ANALYZE SELECT * FROM voicemail_messages;</p>
 </code>`<code>
 
@@ -1908,16 +1908,16 @@
 </code>`<code>bash
 <p>ping -c 100 REMOTE_ENDPOINT</p>
 
-<h1>High latency affects performance</h1>
+<h1 id="high-latency-affects-performance">High latency affects performance</h1>
 </code>`<code>
 
 <hr>
 
-<h2>Historical Fixes Reference</h2>
+<h2 id="historical-fixes-reference">Historical Fixes Reference</h2>
 
 <p>This section documents significant bugs that have been fixed. Included for reference if similar issues appear.</p>
 
-<h3>Admin Panel Display Issues (Browser Cache)</h3>
+<h3 id="admin-panel-display-issues-browser-cache">Admin Panel Display Issues (Browser Cache)</h3>
 
 <strong>Date Fixed:</strong> December 23, 2025  
 <strong>Status:</strong> ✅ RESOLVED
@@ -1940,7 +1940,7 @@
 <li>admin/status-check.html</li>
 </ul>
 
-<h3>API Connection Timeout (Reverse Proxy)</h3>
+<h3 id="api-connection-timeout-reverse-proxy">API Connection Timeout (Reverse Proxy)</h3>
 
 <strong>Date Fixed:</strong> December 23, 2025  
 <strong>Status:</strong> ✅ RESOLVED
@@ -1956,7 +1956,7 @@
 <p>proxy_read_timeout 60s;</p>
 </code>`<code>
 
-<h3>Audio Sample Rate Mismatch</h3>
+<h3 id="audio-sample-rate-mismatch">Audio Sample Rate Mismatch</h3>
 
 <strong>Date Fixed:</strong> December 19, 2025  
 <strong>Status:</strong> ✅ RESOLVED
@@ -1973,10 +1973,10 @@
 <strong>Verification:</strong>
 </code>`<code>bash
 <p>file voicemail_prompts/*.wav</p>
-<h1>Should show: 8000 Hz</h1>
+<h1 id="should-show-8000-hz">Should show: 8000 Hz</h1>
 </code>`<code>
 
-<h3>RTP One-Way Audio</h3>
+<h3 id="rtp-one-way-audio">RTP One-Way Audio</h3>
 
 <strong>Date Fixed:</strong> December 2025  
 <strong>Status:</strong> ✅ RESOLVED
@@ -1995,7 +1995,7 @@
 <li>Forward packets as soon as first endpoint known</li>
 </ul>
 
-<h3>G.722 Codec Quantization</h3>
+<h3 id="g722-codec-quantization">G.722 Codec Quantization</h3>
 
 <strong>Date Fixed:</strong> December 2025  
 <strong>Status:</strong> ✅ RESOLVED
@@ -2008,28 +2008,28 @@
 
 <strong>Solution:</strong>
 </code>`<code>python
-<h1>pbx/features/g722_codec.py</h1>
+<h1 id="pbxfeaturesg722_codecpy">pbx/features/g722_codec.py</h1>
 <p>MAX_QUANTIZATION_RANGE = 32768  # Corrected</p>
 </code>`<code>
 
 <hr>
 
-<h2>Additional Resources</h2>
+<h2 id="additional-resources">Additional Resources</h2>
 
-<h3>Documentation</h3>
+<h3 id="documentation">Documentation</h3>
 <ul>
 <li><a href="COMPLETE_GUIDE.md">COMPLETE_GUIDE.md</a> - Comprehensive PBX guide</li>
 <li><a href="README.md">README.md</a> - Project overview</li>
 <li><a href="docs/archive/API_DOCUMENTATION.md">API_DOCUMENTATION.md</a> - REST API reference (if available)</li>
 </ul>
 
-<h3>Support</h3>
+<h3 id="support">Support</h3>
 <ul>
 <li>GitHub Issues: https://github.com/mattiIce/PBX/issues</li>
 <li>Community Forum: (if available)</li>
 </ul>
 
-<h3>External Resources</h3>
+<h3 id="external-resources">External Resources</h3>
 <ul>
 <li>SIP Protocol: RFC 3261</li>
 <li>RTP Protocol: RFC 3550</li>
@@ -2044,24 +2044,24 @@
 
 <hr>
 
-<h2>Quick Diagnostic Commands</h2>
+<h2 id="quick-diagnostic-commands">Quick Diagnostic Commands</h2>
 
 </code>`<code>bash
-<h1>Full system check</h1>
+<h1 id="full-system-check">Full system check</h1>
 <p>sudo systemctl status pbx</p>
 <p>curl -k https://localhost:8080/api/status</p>
 <p>sudo ufw status</p>
 <p>sudo netstat -tlnp | grep -E "(5060|8080)"</p>
 <p>python scripts/verify_database.py</p>
 
-<h1>Check logs for errors</h1>
+<h1 id="check-logs-for-errors">Check logs for errors</h1>
 <p>tail -f logs/pbx.log | grep -i error</p>
 
-<h1>Test basic functionality</h1>
+<h1 id="test-basic-functionality">Test basic functionality</h1>
 <p>curl -k https://localhost:8080/api/extensions</p>
 <p>curl -k https://localhost:8080/api/calls</p>
 
-<h1>Monitor real-time activity</h1>
+<h1 id="monitor-real-time-activity">Monitor real-time activity</h1>
 <p>tail -f logs/pbx.log</p>
 </code>``
 
