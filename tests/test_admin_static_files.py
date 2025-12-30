@@ -3,6 +3,7 @@
 Test Admin Static File Serving
 Tests that the admin UI static files can be served correctly
 """
+import socket
 import sys
 import time
 from http.client import HTTPConnection
@@ -25,17 +26,26 @@ class MockPBXCore:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
+def get_free_port():
+    """Find a free port to use for testing."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        s.listen(1)
+        port = s.getsockname()[1]
+    return port
+
+
 def test_admin_static_files():
     """Test that admin static files can be served"""
     print("=" * 60)
     print("Test: Admin Static File Serving")
     print("=" * 60)
 
-    config = Config("/home/runner/work/PBX/PBX/test_config.yml")
+    config = Config("test_config.yml")
     mock_pbx = MockPBXCore(config)
 
-    # Create API server on a test port
-    test_port = 8084
+    # Create API server on a dynamically allocated test port
+    test_port = get_free_port()
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
 
     # Start the server
