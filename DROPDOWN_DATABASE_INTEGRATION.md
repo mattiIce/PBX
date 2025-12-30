@@ -185,12 +185,14 @@ async function loadSupportedVendors() {
 **HTML Element**: `<select id="device-vendor">`  
 **Data Source**: Built-in templates ✅
 
-**Supported Vendors** (from pbx/features/phone_provisioning.py):
+**Supported Vendors** (as of latest code in `pbx/features/phone_provisioning.py` lines 259-1017):
 - yealink
 - polycom
 - grandstream
 - cisco
 - zultys
+
+**Note**: This list is defined by the built-in phone templates loaded in `_load_builtin_templates()` method and may be extended over time.
 
 **Total Models**: 13 built-in phone templates
 
