@@ -1,0 +1,94 @@
+# Grandstream HT802 (2-Port ATA) Configuration
+# Two FXS ports for connecting two analog phones or fax machines
+
+# Basic Settings
+P2 = admin                    # Admin Password (change in production!)
+P196 = {{EXTENSION_NAME}}     # Product Name/Label
+
+# Network Settings  
+P8 = 0                        # DHCP enabled
+P64 = pool.ntp.org            # NTP Server
+P30 = 13                      # GMT-8 (adjust for your timezone)
+
+# ============================================================================
+# SIP Account 1 (FXS Port 1)
+# ============================================================================
+P271 = {{EXTENSION_NAME}}     # Account Name
+P270 = {{EXTENSION_NUMBER}}   # SIP User ID
+P35 = {{EXTENSION_NUMBER}}    # Authenticate ID
+P34 = {{EXTENSION_PASSWORD}}  # Authenticate Password
+P47 = {{SIP_SERVER}}          # SIP Server
+P48 = {{SIP_PORT}}            # SIP Port (default: 5060)
+P2312 = 3600                  # Registration Expiration (seconds)
+
+# Port 1 Codecs - Optimized for analog and fax
+P57 = 0                       # Preferred Vocoder 1: PCMU/G.711μ (payload 0)
+P58 = 8                       # Preferred Vocoder 2: PCMA/G.711a (payload 8)
+P46 = 18                      # Preferred Vocoder 3: G.729A/B (payload 18)
+P67 = 9                       # Preferred Vocoder 4: G.722 (payload 9)
+
+# Port 1 DTMF Settings
+P79 = 2                       # DTMF Type: 0=In-audio, 1=RFC2833, 2=SIP INFO (recommended)
+P184 = 0                      # DTMF Info Type: 0=DTMF, 1=DTMF-Relay  
+P78 = {{DTMF_PAYLOAD_TYPE}}   # DTMF Payload Type (typically 101 for RFC2833)
+
+# Port 1 Analog Settings
+P3 = 1                        # Caller ID Scheme: 1=Bellcore/Telcordia (North America)
+P4 = 1                        # Enable Caller ID display
+P240 = 2                      # Stage Method (1=Dial Tone First, 2=Dial Immediately)
+
+# ============================================================================
+# SIP Account 2 (FXS Port 2) - Second line configuration
+# NOTE: Configure second extension by registering device again with different extension
+# ============================================================================
+# For HT802, you can configure a second extension by:
+# 1. Register the device once for port 1 (above configuration)
+# 2. Manually configure port 2 in the web UI, or
+# 3. Use multi-extension provisioning (contact administrator)
+#
+# Port 2 uses parameters with +700 offset (e.g., P747 instead of P47 for SIP Server)
+# Example Port 2 settings (uncomment and modify if needed):
+# P971 = Extension2Name       # Port 2 Account Name
+# P970 = 1002                 # Port 2 SIP User ID (different extension)
+# P735 = 1002                 # Port 2 Authenticate ID
+# P734 = password2            # Port 2 Authenticate Password  
+# P747 = {{SIP_SERVER}}       # Port 2 SIP Server (same as port 1)
+# P748 = {{SIP_PORT}}         # Port 2 SIP Port
+
+# ============================================================================
+# Shared Settings (Both Ports)
+# ============================================================================
+
+# Echo Cancellation - Important for analog phones
+P191 = 1                      # Enable Echo Cancellation
+P192 = 0                      # Echo Cancellation Tail Length (0=auto)
+
+# Voice Processing
+P23 = 0                       # Silence Suppression: 0=No, 1=Yes
+P24 = 0                       # Voice Activity Detection: 0=No, 1=Yes
+
+# Fax Support - T.38 Fax over IP
+P245 = 1                      # T.38 Fax Mode: 0=Disable, 1=Enable
+P338 = 1                      # Disable audio processing during fax: 1=Yes (recommended)
+
+# Gain Control - Adjust volume levels
+P89 = 0                       # Speaker Volume (dB): -12 to +12, 0=default
+P90 = 0                       # Mic Volume (dB): -12 to +12, 0=default
+
+# Regional Settings (North America / FCC)
+P25 = 0                       # Impedance: 0=600 ohm, 1=900 ohm (North America uses 600)
+
+# Ring Settings
+P104 = 2000                   # Ring Frequency (Hz): 2000 for North America
+P1361 = 2                     # Ring Cadence: 2=North America (2s on, 4s off)
+
+# Disconnect Tone
+P195 = 1                      # Disconnect Tone: 1=Enabled
+
+# Auto-Provision Settings
+P212 = 0                      # Config Server Path (0=disable auto-provision after initial setup)
+P237 = 0                      # Automatic Upgrade: 0=No, 1=Yes (TFTP), 2=Yes (HTTP), 3=Yes (HTTPS)
+
+# SIP Send Line and MAC Address Support
+P2350 = 1                     # Send P-Asserted-Identity header
+P2351 = 1                     # Send Remote-Party-ID header
