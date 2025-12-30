@@ -10728,6 +10728,69 @@ class PBXAPIServer:
 
             traceback.print_exc()
 
+    def _check_reverse_proxy_misconfiguration(self):
+        """Check for common reverse proxy SSL misconfiguration.
+        
+        Detects if SSL is enabled on the backend when it should be disabled
+        for reverse proxy setups (Apache/Nginx handling SSL).
+        """
+        ssl_config = self.pbx_core.config.get("api.ssl", {})
+        ssl_enabled = ssl_config.get("enabled", False)
+        
+        if not ssl_enabled:
+            # Configuration is correct for reverse proxy
+            return
+        
+        # SSL is enabled - check if this might be a reverse proxy setup
+        # Common indicators:
+        # 1. Port is typical backend port (8000-9999)
+        # 2. Host is 0.0.0.0 or localhost (internal only)
+        # 3. Standard proxy ports like 9000, 8080, 8443
+        
+        port = self.port
+        host = self.host
+        
+        is_backend_port = 8000 <= port <= 9999
+        is_internal_host = host in ("0.0.0.0", "127.0.0.1", "localhost")
+        is_common_proxy_port = port in (8080, 8443, 9000)
+        
+        if is_backend_port and (is_internal_host or is_common_proxy_port):
+            # This looks like a reverse proxy setup with SSL incorrectly enabled
+            self.logger.warning("=" * 80)
+            self.logger.warning("⚠️  POTENTIAL REVERSE PROXY MISCONFIGURATION DETECTED")
+            self.logger.warning("=" * 80)
+            self.logger.warning("")
+            self.logger.warning("Your configuration suggests a reverse proxy setup:")
+            self.logger.warning(f"  - Backend port: {port} (typical for reverse proxy)")
+            self.logger.warning(f"  - Host binding: {host}")
+            self.logger.warning(f"  - SSL enabled: {ssl_enabled}")
+            self.logger.warning("")
+            self.logger.warning("⚠️  COMMON PROBLEM: ERR_SSL_PROTOCOL_ERROR")
+            self.logger.warning("")
+            self.logger.warning("If you're using Apache/Nginx as a reverse proxy:")
+            self.logger.warning("")
+            self.logger.warning("  The backend API should use HTTP (not HTTPS)")
+            self.logger.warning("  Apache/Nginx handles SSL termination at the proxy")
+            self.logger.warning("")
+            self.logger.warning("Correct Architecture:")
+            self.logger.warning("  Browser --HTTPS--> Apache (port 443) --HTTP--> Backend (port 9000)")
+            self.logger.warning("")
+            self.logger.warning("Incorrect Architecture (causes ERR_SSL_PROTOCOL_ERROR):")
+            self.logger.warning("  Browser --HTTPS--> Apache (port 443) --HTTPS--> Backend (port 9000)")
+            self.logger.warning("")
+            self.logger.warning("To fix if using Apache/Nginx reverse proxy:")
+            self.logger.warning("")
+            self.logger.warning("  1. Edit config.yml")
+            self.logger.warning("  2. Set: api.ssl.enabled: false")
+            self.logger.warning("  3. Restart PBX: sudo systemctl restart pbx")
+            self.logger.warning("")
+            self.logger.warning("If NOT using a reverse proxy and want direct HTTPS:")
+            self.logger.warning("  - Current setup is correct")
+            self.logger.warning("  - Access at: https://{host}:{port}/admin/")
+            self.logger.warning("  - Note: Direct SSL not recommended for production")
+            self.logger.warning("")
+            self.logger.warning("=" * 80)
+
     def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
         """Request certificate from in-house CA.
 
@@ -10938,6 +11001,8 @@ class PBXAPIServer:
                         self.logger.info(
                             f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/"
                         )
+                        # Check for potential reverse proxy misconfiguration
+                        self._check_reverse_proxy_misconfiguration()
 
                 # Start in separate thread
                 self.server_thread = threading.Thread(target=self._run)

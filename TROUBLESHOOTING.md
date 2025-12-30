@@ -32,6 +32,7 @@ This comprehensive guide covers all known issues, solutions, and troubleshooting
 | No audio in calls | `sudo ufw allow 10000:20000/udp` | [Audio Issues](#audio-issues) |
 | Phones won't register | `sudo ufw allow 5060/udp` | [Registration](#registration--connectivity) |
 | Admin panel login fails | `Ctrl+Shift+R` then check `systemctl status pbx` | [Admin Panel](#admin-panel-issues) |
+| ERR_SSL_PROTOCOL_ERROR | Set `api.ssl.enabled: false` in config.yml | [Admin Panel](#err_ssl_protocol_error-with-reverse-proxy) |
 | Email not sending | `python scripts/test_email.py` | [Integration Problems](#integration-problems) |
 | Database errors | `python scripts/verify_database.py` | [Database Issues](#database-issues) |
 | Voice prompts missing | `python scripts/generate_voice_prompts.py` | [Audio Issues](#audio-issues) |
@@ -389,6 +390,105 @@ sudo nginx -t
 # Check nginx logs
 sudo tail -f /var/log/nginx/error.log
 ```
+
+### ERR_SSL_PROTOCOL_ERROR with Reverse Proxy
+
+**Status:** ✅ **DOCUMENTED** (December 30, 2025)
+
+**Symptoms:**
+- Browser shows "This site can't provide a secure connection"
+- ERR_SSL_PROTOCOL_ERROR message
+- "sent an invalid response" error
+- "Proxy Error: Error reading from remote server"
+- Occurs after enabling SSL on admin UI with Apache/Nginx
+
+**Root Cause:**
+Backend API configured with SSL enabled (`api.ssl.enabled: true`) when it should be HTTP-only behind a reverse proxy. Apache/Nginx expects to proxy HTTPS → HTTP, but finds HTTPS → HTTPS causing SSL protocol mismatch.
+
+**Architecture Overview:**
+
+✅ **Correct Setup:**
+```
+Browser ──HTTPS──> Apache (port 443) ──HTTP──> PBX Backend (port 9000)
+         SSL/TLS    ↑ SSL Termination      ↑ Plain HTTP (internal)
+```
+
+❌ **Incorrect Setup (Causes Error):**
+```
+Browser ──HTTPS──> Apache (port 443) ──HTTPS──> PBX Backend (port 9000)
+         SSL/TLS                         SSL/TLS (conflict!)
+```
+
+**Quick Fix:**
+```bash
+# 1. Edit configuration
+nano config.yml
+
+# 2. Find api.ssl section and set:
+api:
+  ssl:
+    enabled: false  # ← Must be false for reverse proxy
+
+# 3. Restart service
+sudo systemctl restart pbx
+
+# 4. Verify backend is HTTP
+curl http://localhost:9000/api/health  # Should work
+curl https://localhost:9000/api/health  # Should fail
+```
+
+**Detailed Verification Steps:**
+
+**1. Check Current Configuration:**
+```bash
+cd /path/to/PBX
+grep -A 5 "api:" config.yml | grep -A 2 "ssl:"
+```
+
+Expected output for reverse proxy:
+```yaml
+ssl:
+  enabled: false  # ← Should be FALSE
+```
+
+**2. Verify Backend HTTP Only:**
+```bash
+# Should return JSON health status
+curl http://localhost:9000/api/health
+
+# Should fail (connection refused or certificate error)
+curl https://localhost:9000/api/health
+```
+
+**3. Test Apache/Nginx Proxy:**
+```bash
+# Should return JSON status through proxy
+curl https://yourdomain.com/api/health
+```
+
+**4. Check Listening Ports:**
+```bash
+# PBX should listen on 9000 (HTTP, not SSL)
+sudo netstat -tlnp | grep 9000
+
+# Apache should listen on 443 (SSL)
+sudo netstat -tlnp | grep 443
+```
+
+**Common Mistakes:**
+- Enabling `api.ssl.enabled: true` when using reverse proxy
+- Apache/Nginx proxy pointing to `https://localhost:9000` instead of `http://localhost:9000`
+- Firewall blocking internal HTTP communication
+- Wrong port in Apache/Nginx config
+
+**When to Use Direct SSL:**
+Only enable `api.ssl.enabled: true` when:
+- NOT using Apache/Nginx reverse proxy
+- Accessing PBX directly (e.g., `https://192.168.1.14:9000/admin/`)
+- Development/testing environment
+- Self-signed certificates are acceptable
+
+**Note:** For production, always use reverse proxy with SSL termination.
 
 ### Admin Panel Display Issues (Broken UI)
 
