@@ -32,6 +32,7 @@ This comprehensive guide covers all known issues, solutions, and troubleshooting
 | No audio in calls | `sudo ufw allow 10000:20000/udp` | [Audio Issues](#audio-issues) |
 | Phones won't register | `sudo ufw allow 5060/udp` | [Registration](#registration--connectivity) |
 | Admin panel login fails | `Ctrl+Shift+R` then check `systemctl status pbx` | [Admin Panel](#admin-panel-issues) |
+| ERR_SSL_PROTOCOL_ERROR | Set `api.ssl.enabled: false` in config.yml | [Admin Panel](#err_ssl_protocol_error-with-reverse-proxy) |
 | Email not sending | `python scripts/test_email.py` | [Integration Problems](#integration-problems) |
 | Database errors | `python scripts/verify_database.py` | [Database Issues](#database-issues) |
 | Voice prompts missing | `python scripts/generate_voice_prompts.py` | [Audio Issues](#audio-issues) |
@@ -389,6 +390,52 @@ sudo nginx -t
 # Check nginx logs
 sudo tail -f /var/log/nginx/error.log
 ```
+
+### ERR_SSL_PROTOCOL_ERROR with Reverse Proxy
+
+**Status:** ✅ **DOCUMENTED** (December 30, 2025)
+
+**Symptoms:**
+- Browser shows "This site can't provide a secure connection"
+- ERR_SSL_PROTOCOL_ERROR message
+- "sent an invalid response" error
+- Occurs after enabling SSL on admin UI with Apache/Nginx
+
+**Root Cause:**
+Backend API configured with SSL enabled (`api.ssl.enabled: true`) when it should be HTTP-only behind a reverse proxy. Apache/Nginx expects to proxy HTTPS → HTTP, but finds HTTPS → HTTPS causing SSL protocol mismatch.
+
+**Quick Fix:**
+```bash
+# 1. Edit configuration
+nano config.yml
+
+# 2. Find api.ssl section and set:
+api:
+  ssl:
+    enabled: false  # ← Must be false for reverse proxy
+
+# 3. Restart service
+sudo systemctl restart pbx
+
+# 4. Verify backend is HTTP
+curl http://localhost:9000/api/health  # Should work
+curl https://localhost:9000/api/health  # Should fail
+```
+
+**Detailed Guide:**
+See [REVERSE_PROXY_SSL_TROUBLESHOOTING.md](REVERSE_PROXY_SSL_TROUBLESHOOTING.md) for comprehensive troubleshooting steps.
+
+**Correct Architecture:**
+```
+Browser ──HTTPS──> Apache (port 443) ──HTTP──> PBX Backend (port 9000)
+         SSL/TLS    ↑ SSL Termination      ↑ Plain HTTP
+```
+
+**Verification:**
+- [ ] `config.yml` has `api.ssl.enabled: false`
+- [ ] Backend responds to HTTP only
+- [ ] Apache/Nginx handles SSL termination
+- [ ] Browser can access `https://domain.com/admin/`
 
 ### Admin Panel Display Issues (Broken UI)
 
