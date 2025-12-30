@@ -3749,7 +3749,7 @@ class PBXCore:
             caller_codecs = caller_sdp.get("formats", ["0", "8"])
         else:
             caller_codecs = ["0", "8"]
-        
+
         rtp_port = rtp_ports[0] if rtp_ports else 10000
         response_sdp = SDPBuilder.build_audio_sdp(
             local_ip=server_ip,
