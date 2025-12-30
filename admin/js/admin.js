@@ -2178,6 +2178,28 @@ async function populateProvisioningFormDropdowns() {
             vendorSelect.appendChild(option);
         });
     }
+
+    // Reset the model dropdown to its default state
+    const modelSelect = document.getElementById('device-model');
+    if (modelSelect) {
+        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+    }
+}
+
+function resetAddDeviceForm() {
+    const form = document.getElementById('add-device-form');
+    if (!form) {
+        return;
+    }
+
+    // Reset all form fields to their initial values
+    form.reset();
+
+    // Reset the model dropdown to its initial state
+    const modelSelect = document.getElementById('device-model');
+    if (modelSelect) {
+        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+    }
 }
 
 async function loadPhonebookSettings() {

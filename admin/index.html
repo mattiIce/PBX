@@ -1069,8 +1069,8 @@
                 <div class="section-header">
                     <h3>Add New Phone Device</h3>
                 </div>
-                <form id="add-device-form" style="max-width: 900px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <form id="add-device-form" class="provisioning-form-container">
+                    <div class="provisioning-form-grid">
                         <div class="form-group">
                             <label>MAC Address:</label>
                             <input type="text" id="device-mac" required placeholder="00:15:65:12:34:56" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
@@ -1096,9 +1096,9 @@
                             </select>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="provisioning-form-actions">
                         <button type="submit" class="btn btn-success">➕ Add Device</button>
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-device-form').reset();">Clear Form</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetAddDeviceForm();">Clear Form</button>
                     </div>
                 </form>
             </div>
