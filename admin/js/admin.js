@@ -2363,6 +2363,7 @@ async function savePhonebookSettings() {
 }
 
 async function loadSupportedVendors() {
+    const vendorsList = document.getElementById('supported-vendors-list');
     try {
         const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
             headers: getAuthHeaders()
@@ -2373,7 +2374,6 @@ async function loadSupportedVendors() {
             supportedModels = data.models || {};
 
             // Display supported vendors
-            const vendorsList = document.getElementById('supported-vendors-list');
             if (supportedVendors.length > 0) {
                 let html = '<ul>';
                 for (const vendor of supportedVendors) {
@@ -2387,11 +2387,23 @@ async function loadSupportedVendors() {
             } else {
                 vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
             }
+        } else {
+            // Handle non-ok response (e.g., 401, 403, 500)
+            let errorMsg = `Error loading vendors: HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMsg = `Error loading vendors: ${errorData.error}`;
+                }
+            } catch (e) {
+                // Unable to parse error response, use generic message
+            }
+            vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+            console.error('Error loading supported vendors:', errorMsg);
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
-        document.getElementById('supported-vendors-list').innerHTML =
-            '<p class="error">Error loading vendors: ' + error.message + '</p>';
+        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + error.message + '</p>';
     }
 }
 
