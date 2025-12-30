@@ -771,7 +771,9 @@ async function checkConnection() {
     }
     
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {}, 5000);
+        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {
+            headers: getAuthHeaders()
+        }, 5000);
 
         if (response.ok) {
             statusBadge.textContent = '✓ Connected';
@@ -792,7 +794,9 @@ async function checkConnection() {
 async function loadDashboard() {
     try {
         console.log('Loading dashboard data from API...');
-        const response = await fetchWithTimeout(`${API_BASE}/api/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {
+            headers: getAuthHeaders()
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -843,7 +847,9 @@ function refreshDashboard() {
 // AD Integration Functions
 async function loadADStatus() {
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`, {
+            headers: getAuthHeaders()
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -1103,7 +1109,9 @@ async function loadCalls() {
     callsList.innerHTML = '<div class="loading">Loading calls...</div>';
 
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/calls`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/calls`, {
+            headers: getAuthHeaders()
+        });
         const calls = await response.json();
 
         if (calls.length === 0) {
@@ -2122,7 +2130,9 @@ async function loadRegisteredPhones() {
     tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading registered phones...</td></tr>';
 
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/registered-phones`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/registered-phones`, {
+            headers: getAuthHeaders()
+        });
 
         if (!response.ok) {
             // Try to parse error response from API
