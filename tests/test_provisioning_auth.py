@@ -34,8 +34,9 @@ def test_provisioning_endpoints_require_auth():
     """Test that provisioning endpoints require authentication"""
     print("Testing provisioning endpoints authentication...")
 
-    # Load test config
-    config = Config("test_config.yml")
+    # Load test config using relative path from test file
+    config_path = str(Path(__file__).parent.parent / "test_config.yml")
+    config = Config(config_path)
 
     # Create mock PBX core
     pbx = MockPBXCore(config)
@@ -89,8 +90,9 @@ def test_provisioning_endpoints_with_auth():
     """Test that provisioning endpoints work with valid authentication"""
     print("Testing provisioning endpoints with authentication...")
 
-    # Load test config
-    config = Config("test_config.yml")
+    # Load test config using relative path from test file
+    config_path = str(Path(__file__).parent.parent / "test_config.yml")
+    config = Config(config_path)
 
     # Create mock PBX core
     pbx = MockPBXCore(config)
@@ -197,5 +199,3 @@ if __name__ == "__main__":
         print("Some tests failed!")
         sys.exit(1)
     print("=" * 60)
-
-
