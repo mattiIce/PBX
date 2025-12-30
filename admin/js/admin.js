@@ -45,6 +45,8 @@ const AD_SYNC_TIMEOUT = 60000; // 60 seconds for AD sync (can take longer with l
 // State
 let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
+let currentTab = null; // Track the currently active tab
+let autoRefreshInterval = null; // Interval for auto-refreshing tab data
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
@@ -511,6 +513,37 @@ function initializeTabs() {
     });
 }
 
+// Setup auto-refresh for tabs that need periodic data updates
+function setupAutoRefresh(tabName) {
+    // Clear any existing auto-refresh interval
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+
+    // Define which tabs should auto-refresh and their refresh functions
+    const autoRefreshTabs = {
+        'extensions': loadExtensions,
+        'phones': loadRegisteredPhones,
+        'dashboard': loadDashboard,
+        'calls': loadCalls,
+        'voicemail': loadVoicemailTab
+    };
+
+    // If the current tab supports auto-refresh, set it up
+    if (autoRefreshTabs[tabName]) {
+        // Refresh every 10 seconds
+        autoRefreshInterval = setInterval(() => {
+            // Only refresh if we're still on the same tab
+            if (currentTab === tabName) {
+                console.log(`Auto-refreshing ${tabName} tab`);
+                autoRefreshTabs[tabName]();
+            }
+        }, 10000); // 10 seconds
+        console.log(`Auto-refresh enabled for ${tabName} tab`);
+    }
+}
+
 function showTab(tabName) {
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
@@ -534,6 +567,10 @@ function showTab(tabName) {
     if (tabButton) {
         tabButton.classList.add('active');
     }
+
+    // Update current tab and setup auto-refresh
+    currentTab = tabName;
+    setupAutoRefresh(tabName);
 
     // Load data for the tab
     switch(tabName) {
