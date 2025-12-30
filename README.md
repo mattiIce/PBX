@@ -205,7 +205,7 @@ sudo bash scripts/deploy_production_pilot.sh --dry-run
 **The script automatically configures:**
 - ✓ PostgreSQL database with secure password
 - ✓ Python virtual environment
-- ✓ Nginx reverse proxy
+- ✓ Nginx reverse proxy (default; Apache also supported via separate script)
 - ✓ Firewall (UFW) with required ports
 - ✓ Daily backup system (2 AM)
 - ✓ Monitoring (Prometheus + Node Exporter)
@@ -224,12 +224,21 @@ This section contains:
 For production deployments, you **should** access the admin panel via a friendly URL (e.g., `https://abps.albl.com`) instead of `IP:8080`:
 
 **Quick Setup (Automated - 5-10 minutes):**
+
+Choose your preferred web server:
+
 ```bash
+# For Nginx (recommended for new deployments)
 sudo scripts/setup_reverse_proxy.sh
+
+# For Apache (if you prefer Apache or have existing Apache infrastructure)
+sudo scripts/setup_apache_reverse_proxy.sh
 ```
 
 **Documentation:**
-- **Setup Guide:** [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-recommended) - Reverse proxy configuration
+- **Nginx Setup:** [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-recommended) - Nginx reverse proxy configuration
+- **Apache Setup:** [docs/APACHE_REVERSE_PROXY_SETUP.md](docs/APACHE_REVERSE_PROXY_SETUP.md) - Apache reverse proxy configuration
+- **Configuration Example:** [apache-pbx.conf.example](apache-pbx.conf.example) - Apache virtual host template
 
 **Benefits:**
 - ✅ Access via friendly domain name (no port number needed)
