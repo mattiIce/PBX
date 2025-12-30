@@ -1,6 +1,9 @@
 #!/bin/bash
 # Setup Apache Reverse Proxy for PBX System
 # This script automates the configuration of Apache for accessing PBX via a domain name
+#
+# System Requirements: Debian/Ubuntu (uses apt package manager)
+# Note: RHEL/CentOS support is partial - manual installation may be required
 
 set -e
 
@@ -308,10 +311,17 @@ a2ensite pbx.conf
 
 # Test Apache configuration
 echo "Testing Apache configuration..."
-$APACHE_SERVICE -t 2>&1 | tee /tmp/apache_test.log
+# Use appropriate config test command based on Apache variant
+if [ "$APACHE_SERVICE" = "apache2" ]; then
+    apache2ctl configtest 2>&1 | tee /tmp/apache_test.log
+    TEST_RESULT=${PIPESTATUS[0]}
+else
+    httpd -t 2>&1 | tee /tmp/apache_test.log
+    TEST_RESULT=${PIPESTATUS[0]}
+fi
 
 # Note: PIPESTATUS is bash-specific (script uses #!/bin/bash)
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
+if [ $TEST_RESULT -ne 0 ]; then
     echo -e "${RED}Apache configuration test failed!${NC}"
     cat /tmp/apache_test.log
     exit 1

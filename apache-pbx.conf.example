@@ -84,6 +84,9 @@
     Header always set Permissions-Policy "geolocation=(), microphone=(self), camera=()"
     
     # Content Security Policy
+    # Note: The wildcard *:9000 is necessary to support both direct and proxied API access
+    # 'unsafe-inline' is required for the admin panel's inline scripts and styles
+    # This matches the CSP configured in the PBX application itself
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
 
     # Enable HSTS (HTTP Strict Transport Security)
