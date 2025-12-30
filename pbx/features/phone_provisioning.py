@@ -719,7 +719,7 @@ P30 = 13   # GMT-8
 P2 = admin
 P196 = {{EXTENSION_NAME}}
 
-# Network Settings  
+# Network Settings
 P8 = 0
 P64 = pool.ntp.org
 P30 = 13
@@ -768,7 +768,7 @@ P338 = 1
 P2 = admin
 P196 = {{EXTENSION_NAME}}
 
-# Network Settings  
+# Network Settings
 P8 = 0
 P64 = pool.ntp.org
 P30 = 13

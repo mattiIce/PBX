@@ -390,12 +390,12 @@ class AutoAttendant:
                 parent_depth = self._get_menu_depth(parent_menu_id)
                 new_depth = parent_depth + 1
                 if new_depth >= 5:  # Max 5 levels (main=0, level1=1, level2=2, level3=3, level4=4)
-                    self.logger.error(f"Cannot create menu: maximum depth (5) exceeded")
+                    self.logger.error("Cannot create menu: maximum depth (5) exceeded")
                     return False
 
             # Check for circular references
             if parent_menu_id and self._would_create_circular_reference(menu_id, parent_menu_id):
-                self.logger.error(f"Cannot create menu: would create circular reference")
+                self.logger.error("Cannot create menu: would create circular reference")
                 return False
 
             conn = sqlite3.connect(self.db_path)
@@ -403,7 +403,7 @@ class AutoAttendant:
 
             cursor.execute(
                 """
-                INSERT INTO auto_attendant_menus 
+                INSERT INTO auto_attendant_menus
                 (menu_id, parent_menu_id, menu_name, prompt_text, audio_file)
                 VALUES (?, ?, ?, ?, ?)
             """,
@@ -490,7 +490,7 @@ class AutoAttendant:
             # Check if any menu items reference this as a submenu destination
             cursor.execute(
                 """
-                SELECT COUNT(*) FROM auto_attendant_menu_items 
+                SELECT COUNT(*) FROM auto_attendant_menu_items
                 WHERE destination_type = 'submenu' AND destination_value = ?
             """,
                 (menu_id,),
@@ -530,7 +530,7 @@ class AutoAttendant:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT menu_id, parent_menu_id, menu_name, prompt_text, audio_file, 
+                SELECT menu_id, parent_menu_id, menu_name, prompt_text, audio_file,
                        timeout, max_retries, created_at, updated_at
                 FROM auto_attendant_menus WHERE menu_id = ?
             """,
@@ -621,7 +621,7 @@ class AutoAttendant:
 
             cursor.execute(
                 """
-                INSERT OR REPLACE INTO auto_attendant_menu_items 
+                INSERT OR REPLACE INTO auto_attendant_menu_items
                 (menu_id, digit, destination_type, destination_value, description, updated_at)
                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """,
@@ -911,7 +911,6 @@ class AutoAttendant:
             if item["digit"] == digit:
                 dest_type = item["destination_type"]
                 dest_value = item["destination_value"]
-                description = item["description"]
 
                 self.logger.info(
                     f"Auto attendant: Menu '{current_menu_id}' digit {digit} -> {dest_type}: {dest_value}"
@@ -1191,8 +1190,9 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
     try:
         # Try to use gTTS for voice generation
         try:
-            from gtts import gTTS
             import tempfile
+
+            from gtts import gTTS
 
             logger = get_logger()
 

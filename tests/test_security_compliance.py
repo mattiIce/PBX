@@ -139,9 +139,9 @@ def test_fips_algorithm_checks():
     assert "aes_256_gcm" in checks, "Should check AES-256-GCM"
 
     # These should pass since we have cryptography library
-    assert checks["pbkdf2_sha256"] == True, "PBKDF2-HMAC-SHA256 should work"
-    assert checks["sha256"] == True, "SHA-256 should work"
-    assert checks["aes_256_gcm"] == True, "AES-256-GCM should work"
+    assert checks["pbkdf2_sha256"] is True, "PBKDF2-HMAC-SHA256 should work"
+    assert checks["sha256"] is True, "SHA-256 should work"
+    assert checks["aes_256_gcm"] is True, "AES-256-GCM should work"
 
     print("✓ FIPS algorithm checks are working")
     print("  PBKDF2-HMAC-SHA256: ✓")
