@@ -9176,9 +9176,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 name,
                 mode_enum,
             )
-            # Set optional campaign parameters
-            campaign.max_attempts = body.get("max_attempts", 3)
-            campaign.retry_interval = body.get("retry_interval", 3600)
+            
+            # Note: max_attempts and retry_interval are set as defaults in Campaign.__init__
+            # If client provides custom values, they are not currently persisted to database
+            if body.get("max_attempts") is not None or body.get("retry_interval") is not None:
+                self.logger.warning(
+                    f"Received max_attempts/retry_interval for campaign {campaign_id}, "
+                    "but these parameters are not currently persisted by the "
+                    "predictive dialing backend; using default settings (max_attempts=3, retry_interval=3600)."
+                )
 
             self._send_json(
                 {"success": True, "campaign_id": campaign.campaign_id, "name": campaign.name}

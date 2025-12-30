@@ -706,7 +706,16 @@ _trunk_manager = None
 
 
 def get_trunk_manager(config=None) -> SIPTrunkSystem:
-    """Get or create SIP trunk manager instance"""
+    """
+    Get or create SIP trunk manager instance.
+    
+    Args:
+        config: Configuration dict. Required for first initialization.
+    
+    Returns:
+        SIPTrunkSystem instance or None if not yet initialized.
+        Callers must check for None before using.
+    """
     global _trunk_manager
     if _trunk_manager is None and config is not None:
         _trunk_manager = SIPTrunkSystem(config)

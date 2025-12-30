@@ -1899,7 +1899,16 @@ _database = None
 
 
 def get_database(config=None) -> DatabaseBackend:
-    """Get or create database backend instance"""
+    """
+    Get or create database backend instance.
+    
+    Args:
+        config: Configuration dict. Required for first initialization.
+    
+    Returns:
+        DatabaseBackend instance or None if not yet initialized.
+        Callers must check for None before using.
+    """
     global _database
     if _database is None and config is not None:
         _database = DatabaseBackend(config)
