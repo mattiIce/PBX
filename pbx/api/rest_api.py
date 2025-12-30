@@ -109,7 +109,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         # Security headers
         # X-Content-Type-Options: Prevent MIME type sniffing
-        self.send_header("X-Content-Type-Options", "nosnif")
+        self.send_header("X-Content-Type-Options", "nosniff")
 
         # X-Frame-Options: Prevent clickjacking
         self.send_header("X-Frame-Options", "DENY")
@@ -2304,7 +2304,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             )
 
             if config_content:
-                self._set_headers(content_type=content_type)
+                self._set_headers(200, content_type)
                 self.wfile.write(config_content.encode())
                 logger.info(
                     f"✓ Provisioning config delivered: {
@@ -2405,7 +2405,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             with open(full_path, "rb") as f:
                 content = f.read()
 
-            self._set_headers(content_type=content_type)
+            self._set_headers(200, content_type)
             self.wfile.write(content)
         except Exception as e:
             self._send_json({"error": str(e)}, 500)
@@ -3336,7 +3336,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 else:
                     # Default: Serve audio file for playback in admin panel
                     if os.path.exists(message["file_path"]):
-                        self._set_headers(content_type="audio/wav")
+                        self._set_headers(200, "audio/wav")
                         with open(message["file_path"], "rb") as f:
                             self.wfile.write(f.read())
                     else:
@@ -3572,7 +3572,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Fallback: Generate from extension registry
                 xml_content = self._generate_xml_from_extensions()
 
-            self._set_headers(content_type="application/xml")
+            self._set_headers(200, "application/xml")
             self.wfile.write(xml_content.encode())
         except Exception as e:
             self.logger.error(f"Error exporting phone book XML: {e}")
@@ -3614,7 +3614,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Fallback: Generate from extension registry
                 xml_content = self._generate_cisco_xml_from_extensions()
 
-            self._set_headers(content_type="application/xml")
+            self._set_headers(200, "application/xml")
             self.wfile.write(xml_content.encode())
         except Exception as e:
             self.logger.error(f"Error exporting Cisco phone book XML: {e}")
@@ -3654,7 +3654,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         try:
             json_content = self.pbx_core.phone_book.export_json()
-            self._set_headers(content_type="application/json")
+            self._set_headers(200, "application/json")
             self.wfile.write(json_content.encode())
         except Exception as e:
             self._send_json({"error": str(e)}, 500)
