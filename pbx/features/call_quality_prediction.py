@@ -166,6 +166,10 @@ class CallQualityPrediction:
         metrics = self.metrics_history[call_id]
         recent = metrics[-10:]  # Last 10 samples
 
+        # Get current metrics
+        current_mos = recent[-1].mos_score
+        current_packet_loss = recent[-1].packet_loss
+
         # Calculate trends
         latency_trend = self._calculate_trend([m.latency for m in recent])
         jitter_trend = self._calculate_trend([m.jitter for m in recent])
@@ -212,8 +216,6 @@ class CallQualityPrediction:
 
         # Fallback to weighted moving average if ML not available
         if predicted_mos is None:
-            current_mos = recent[-1].mos_score
-
             # Apply exponential weighted moving average for smoothing
             weights = [2**i for i in range(len(recent))]
             weighted_mos = sum(m.mos_score * w for m, w in zip(recent, weights)) / sum(weights)
@@ -226,7 +228,6 @@ class CallQualityPrediction:
             predicted_mos = max(1.0, min(5.0, predicted_mos))
 
         # Predict future packet loss using similar approach
-        current_packet_loss = recent[-1].packet_loss
         weights_pl = [2**i for i in range(len(recent))]
         weighted_pl = sum(m.packet_loss * w for m, w in zip(recent, weights_pl)) / sum(weights_pl)
         predicted_packet_loss = weighted_pl + (packet_loss_trend * prediction_intervals)
