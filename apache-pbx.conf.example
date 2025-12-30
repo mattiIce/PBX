@@ -147,4 +147,45 @@
     # LogLevel proxy:trace6
 </VirtualHost>
 
+# =============================================================================
+# TROUBLESHOOTING REVERSE PROXY + SSL
+# =============================================================================
+#
+# Common Issue: ERR_SSL_PROTOCOL_ERROR
+# -------------------------------------
+# Symptom: Browser shows "This site can't provide a secure connection"
+#          "ERR_SSL_PROTOCOL_ERROR" or "sent an invalid response"
+#
+# Root Cause: Backend API has SSL enabled when it should be HTTP-only
+#
+# Solution:
+# 1. Edit config.yml on the PBX server
+# 2. Find the "api:" section
+# 3. Ensure: ssl.enabled: false
+# 4. Restart PBX: sudo systemctl restart pbx
+#
+# Architecture (Correct Setup):
+#   Browser --HTTPS--> Apache (port 443) --HTTP--> PBX Backend (port 9000)
+#   ✓ Apache handles SSL/TLS encryption
+#   ✓ Backend runs plain HTTP (internal only)
+#   ✓ Apache proxies securely
+#
+# Architecture (Incorrect - Causes Error):
+#   Browser --HTTPS--> Apache (port 443) --HTTPS--> PBX Backend (port 9000)
+#   ✗ Apache expects HTTP backend but gets HTTPS
+#   ✗ SSL protocol mismatch error
+#
+# Verification:
+# - Check Apache error log: tail -f /var/log/apache2/pbx-ssl-error.log
+# - Check PBX is on HTTP: curl http://localhost:9000/api/health
+# - Should get JSON response (not SSL error)
+#
+# Additional Checks:
+# 1. Ensure backend port matches: grep "port:" /path/to/config.yml
+# 2. Verify Apache proxy points to correct port (should match BACKEND_PORT above)
+# 3. Check firewall allows internal HTTP: sudo ufw status
+# 4. Ensure PBX backend is running: sudo systemctl status pbx
+#
+# =============================================================================
+
 # vim: syntax=apache ts=4 sw=4 sts=4 sr noet

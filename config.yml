@@ -70,11 +70,37 @@ api:
   port: 9000
   enable_cors: true
   require_authentication: true  # Enable API authentication for security
+  
+  # =============================================================================
   # HTTPS/SSL Configuration
+  # =============================================================================
+  # ⚠️  IMPORTANT: Choose ONE of these SSL setup methods:
+  #
+  # METHOD 1: REVERSE PROXY (RECOMMENDED - Production)
+  # ----------------------------------------------------
+  # Use Apache/Nginx as reverse proxy for SSL termination
+  # - Apache handles HTTPS on port 443 (public)
+  # - Backend runs HTTP on port 9000 (internal only)
+  # - Set: ssl.enabled: false (backend uses HTTP)
+  # - Configure Apache with SSL certificate (see apache-pbx.conf.example)
+  # - Apache proxies: https://domain.com:443 -> http://localhost:9000
+  #
+  # METHOD 2: DIRECT SSL (Development/Testing only)
+  # ------------------------------------------------
+  # Backend serves HTTPS directly (no reverse proxy)
+  # - Backend runs HTTPS on port 9000
+  # - Set: ssl.enabled: true
+  # - Generate certificate: python scripts/generate_ssl_cert.py
+  # - Access: https://server-ip:9000/admin/
+  # - NOTE: Not recommended for production (use reverse proxy instead)
+  #
+  # ⚠️  DO NOT enable ssl.enabled: true when using Apache reverse proxy!
+  #     This causes ERR_SSL_PROTOCOL_ERROR as Apache expects HTTP backend.
+  # =============================================================================
   ssl:
-    enabled: false                          # HTTPS disabled - using HTTP for compatibility with phone provisioning
-    cert_file: certs/server.crt            # Path to SSL certificate file
-    key_file: certs/server.key             # Path to SSL private key file
+    enabled: false                          # Set to false when using reverse proxy (Apache/Nginx)
+    cert_file: certs/server.crt            # Path to SSL certificate file (for direct SSL only)
+    key_file: certs/server.key             # Path to SSL private key file (for direct SSL only)
     # In-house CA configuration (optional - for auto certificate request)
     ca:
       enabled: false                        # Enable auto-request from in-house CA
