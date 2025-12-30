@@ -1067,8 +1067,46 @@
 
             <div class="config-section">
                 <div class="section-header">
+                    <h3>Add New Phone Device</h3>
+                </div>
+                <form id="add-device-form" style="max-width: 900px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>MAC Address:</label>
+                            <input type="text" id="device-mac" required placeholder="00:15:65:12:34:56" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
+                            <small>Format: 00:15:65:12:34:56 (found on phone label or network settings)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Extension Number:</label>
+                            <select id="device-extension" required>
+                                <option value="">Select Extension</option>
+                            </select>
+                            <small>Extension this phone will be assigned to</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Vendor:</label>
+                            <select id="device-vendor" required onchange="updateModelOptions()">
+                                <option value="">Select Vendor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Model:</label>
+                            <select id="device-model" required>
+                                <option value="">Select Vendor First</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-success">➕ Add Device</button>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-device-form').reset();">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="config-section">
+                <div class="section-header">
                     <h3>Provisioned Devices</h3>
-                    <button class="btn btn-success" onclick="showAddDeviceModal()">➕ Add Device</button>
+                    <button class="btn btn-primary" onclick="loadProvisioningDevices()">🔄 Refresh List</button>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
@@ -4577,46 +4615,6 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditExtensionModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Extension</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Add Device Modal -->
-    <div id="add-device-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Phone Device</h3>
-                <span class="close" onclick="closeAddDeviceModal()">&times;</span>
-            </div>
-            <form id="add-device-form">
-                <div class="form-group">
-                    <label>MAC Address:</label>
-                    <input type="text" id="device-mac" required placeholder="00:15:65:12:34:56" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
-                    <small>Format: 00:15:65:12:34:56 (found on phone label or network settings)</small>
-                </div>
-                <div class="form-group">
-                    <label>Extension Number:</label>
-                    <select id="device-extension" required>
-                        <option value="">Select Extension</option>
-                    </select>
-                    <small>Extension this phone will be assigned to</small>
-                </div>
-                <div class="form-group">
-                    <label>Phone Vendor:</label>
-                    <select id="device-vendor" required onchange="updateModelOptions()">
-                        <option value="">Select Vendor</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Phone Model:</label>
-                    <select id="device-model" required>
-                        <option value="">Select Vendor First</option>
-                    </select>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddDeviceModal()">Cancel</button>
-                    <button type="submit" class="btn btn-success">Add Device</button>
                 </div>
             </form>
         </div>

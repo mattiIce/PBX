@@ -1549,8 +1549,11 @@ function initializeForms() {
                     const data = await response.json();
                     const msg = 'Device registered successfully! Config URL: ' + data.device.config_url;
                     showNotification(msg, 'success');
-                    closeAddDeviceModal();
+                    // Reset form and reload devices list
+                    addDeviceForm.reset();
                     loadProvisioningDevices();
+                    // Re-populate the dropdowns after reset
+                    await populateProvisioningFormDropdowns();
                 } else {
                     const data = await response.json();
                     showNotification(data.error || 'Failed to register device', 'error');
@@ -2132,6 +2135,49 @@ async function loadProvisioning() {
     await loadPhonebookSettings();
     await loadSupportedVendors();
     await loadProvisioningDevices();
+    await populateProvisioningFormDropdowns();
+}
+
+async function populateProvisioningFormDropdowns() {
+    // Populate extension dropdown
+    const extensionSelect = document.getElementById('device-extension');
+    if (extensionSelect) {
+        extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
+        
+        try {
+            const response = await fetch(`${API_BASE}/api/extensions`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const extensions = await response.json();
+                extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+                
+                extensions.forEach(ext => {
+                    const option = document.createElement('option');
+                    option.value = ext.number;
+                    option.textContent = `${ext.number} - ${ext.name}`;
+                    extensionSelect.appendChild(option);
+                });
+            } else {
+                extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+            }
+        } catch (error) {
+            console.error('Error loading extensions:', error);
+            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+        }
+    }
+
+    // Populate vendor dropdown
+    const vendorSelect = document.getElementById('device-vendor');
+    if (vendorSelect && supportedVendors.length > 0) {
+        vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
+        supportedVendors.forEach(vendor => {
+            const option = document.createElement('option');
+            option.value = vendor;
+            option.textContent = vendor.toUpperCase();
+            vendorSelect.appendChild(option);
+        });
+    }
 }
 
 async function loadPhonebookSettings() {
@@ -2334,7 +2380,7 @@ async function loadProvisioningDevices() {
             const devices = await response.json();
 
             if (devices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Click "Add Device" to register phones.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Fill out the form above to register phones.</td></tr>';
             } else {
                 tbody.innerHTML = devices.map(device => {
                     const createdDate = device.created_at ? new Date(device.created_at).toLocaleString() : '-';
@@ -2363,57 +2409,6 @@ async function loadProvisioningDevices() {
         document.getElementById('provisioning-devices-table-body').innerHTML =
             '<tr><td colspan="7" class="error">Error: ' + error.message + '</td></tr>';
     }
-}
-
-async function showAddDeviceModal() {
-    // Populate extension dropdown
-    const extensionSelect = document.getElementById('device-extension');
-    extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
-
-    // Fetch extensions if not already loaded
-    try {
-        const response = await fetch(`${API_BASE}/api/extensions`, {
-            headers: getAuthHeaders()
-        });
-        if (response.ok) {
-            const extensions = await response.json();
-            extensionSelect.innerHTML = '<option value="">Select Extension</option>';
-
-            extensions.forEach(ext => {
-                const option = document.createElement('option');
-                option.value = ext.number;
-                option.textContent = `${ext.number} - ${ext.name}`;
-                extensionSelect.appendChild(option);
-            });
-        } else {
-            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
-        }
-    } catch (error) {
-        console.error('Error loading extensions:', error);
-        extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
-    }
-
-    // Populate vendor dropdown
-    const vendorSelect = document.getElementById('device-vendor');
-    vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-
-    supportedVendors.forEach(vendor => {
-        const option = document.createElement('option');
-        option.value = vendor;
-        option.textContent = vendor.toUpperCase();
-        vendorSelect.appendChild(option);
-    });
-
-    // Reset model dropdown
-    document.getElementById('device-model').innerHTML = '<option value="">Select Vendor First</option>';
-
-    // Show modal
-    document.getElementById('add-device-modal').style.display = 'block';
-}
-
-function closeAddDeviceModal() {
-    document.getElementById('add-device-modal').style.display = 'none';
-    document.getElementById('add-device-form').reset();
 }
 
 function updateModelOptions() {
