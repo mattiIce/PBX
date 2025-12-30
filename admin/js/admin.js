@@ -41,6 +41,7 @@ const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart m
 const EXTENSION_LOAD_TIMEOUT = 10000; // 10 seconds
 const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds for general requests
 const AD_SYNC_TIMEOUT = 60000; // 60 seconds for AD sync (can take longer with large directories)
+const AUTO_REFRESH_INTERVAL_MS = 10000; // 10 seconds - auto-refresh interval for data tabs
 
 // State
 let currentExtensions = [];
@@ -532,15 +533,9 @@ function setupAutoRefresh(tabName) {
 
     // If the current tab supports auto-refresh, set it up
     if (autoRefreshTabs[tabName]) {
-        // Refresh every 10 seconds
         autoRefreshInterval = setInterval(() => {
-            // Only refresh if we're still on the same tab
-            if (currentTab === tabName) {
-                console.log(`Auto-refreshing ${tabName} tab`);
-                autoRefreshTabs[tabName]();
-            }
-        }, 10000); // 10 seconds
-        console.log(`Auto-refresh enabled for ${tabName} tab`);
+            autoRefreshTabs[tabName]();
+        }, AUTO_REFRESH_INTERVAL_MS);
     }
 }
 
