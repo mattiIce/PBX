@@ -2389,11 +2389,11 @@ async function loadSupportedVendors() {
             }
         } else {
             // Handle non-ok response (e.g., 401, 403, 500)
-            let errorMsg = `Error loading vendors: HTTP ${response.status}`;
+            let errorMsg = `Error loading vendors: HTTP ${escapeHtml(String(response.status))}`;
             try {
                 const errorData = await response.json();
                 if (errorData.error) {
-                    errorMsg = `Error loading vendors: ${errorData.error}`;
+                    errorMsg = `Error loading vendors: ${escapeHtml(errorData.error)}`;
                 }
             } catch (e) {
                 // Unable to parse error response, use generic message
@@ -2403,7 +2403,7 @@ async function loadSupportedVendors() {
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
-        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + error.message + '</p>';
+        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
     }
 }
 
