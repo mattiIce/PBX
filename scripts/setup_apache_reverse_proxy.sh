@@ -310,6 +310,7 @@ a2ensite pbx.conf
 echo "Testing Apache configuration..."
 $APACHE_SERVICE -t 2>&1 | tee /tmp/apache_test.log
 
+# Note: PIPESTATUS is bash-specific (script uses #!/bin/bash)
 if [ ${PIPESTATUS[0]} -ne 0 ]; then
     echo -e "${RED}Apache configuration test failed!${NC}"
     cat /tmp/apache_test.log
@@ -339,6 +340,7 @@ echo "This may take a minute..."
 CERTBOT_SUCCESS=false
 certbot --apache -d $DOMAIN_NAME --non-interactive --agree-tos --email $EMAIL --redirect 2>&1 | tee /tmp/certbot_output.log
 
+# Note: PIPESTATUS is bash-specific (script uses #!/bin/bash)
 if [ ${PIPESTATUS[0]} -eq 0 ]; then
     CERTBOT_SUCCESS=true
     echo -e "${GREEN}Successfully obtained SSL certificate!${NC}"

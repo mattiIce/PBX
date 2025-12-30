@@ -3,14 +3,21 @@
 # This configuration sets up Apache as a reverse proxy to the PBX application
 # Place this file in /etc/apache2/sites-available/ and enable it
 #
+# ⚠️  IMPORTANT: This is a TEMPLATE file with PLACEHOLDERS that must be replaced!
+#
 # Instructions:
 #   1. Copy this file to Apache sites-available:
 #      sudo cp apache-pbx.conf.example /etc/apache2/sites-available/pbx.conf
 #
 #   2. Edit the file and replace the following placeholders:
-#      - YOUR_DOMAIN_NAME: Your domain name (e.g., abps.albl.com)
-#      - YOUR_EMAIL: Your email address for SSL certificate notifications
-#      - BACKEND_PORT: PBX backend port (default: 8080 or 9000)
+#      ⚠️  YOUR_DOMAIN_NAME  → Your actual domain (e.g., abps.albl.com)
+#      ⚠️  YOUR_EMAIL        → Your email for SSL notifications
+#      ⚠️  BACKEND_PORT      → PBX backend port (usually 8080 or 9000)
+#
+#      Find and replace all occurrences:
+#      sed -i 's/YOUR_DOMAIN_NAME/abps.albl.com/g' /etc/apache2/sites-available/pbx.conf
+#      sed -i 's/YOUR_EMAIL/admin@example.com/g' /etc/apache2/sites-available/pbx.conf
+#      sed -i 's/BACKEND_PORT/8080/g' /etc/apache2/sites-available/pbx.conf
 #
 #   3. Enable required Apache modules:
 #      sudo a2enmod proxy proxy_http proxy_wstunnel headers rewrite ssl
@@ -24,6 +31,9 @@
 #
 #   6. Reload Apache:
 #      sudo systemctl reload apache2
+#
+# OR: Use the automated setup script instead:
+#      sudo scripts/setup_apache_reverse_proxy.sh
 
 # HTTP Virtual Host - Redirects to HTTPS
 <VirtualHost *:80>
