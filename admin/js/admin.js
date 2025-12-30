@@ -2363,6 +2363,7 @@ async function savePhonebookSettings() {
 }
 
 async function loadSupportedVendors() {
+    const vendorsList = document.getElementById('supported-vendors-list');
     try {
         const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
             headers: getAuthHeaders()
@@ -2373,7 +2374,6 @@ async function loadSupportedVendors() {
             supportedModels = data.models || {};
 
             // Display supported vendors
-            const vendorsList = document.getElementById('supported-vendors-list');
             if (supportedVendors.length > 0) {
                 let html = '<ul>';
                 for (const vendor of supportedVendors) {
@@ -2389,7 +2389,6 @@ async function loadSupportedVendors() {
             }
         } else {
             // Handle non-ok response (e.g., 401, 403, 500)
-            const vendorsList = document.getElementById('supported-vendors-list');
             let errorMsg = `Error loading vendors: HTTP ${response.status}`;
             try {
                 const errorData = await response.json();
@@ -2404,8 +2403,7 @@ async function loadSupportedVendors() {
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
-        document.getElementById('supported-vendors-list').innerHTML =
-            '<p class="error">Error loading vendors: ' + error.message + '</p>';
+        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + error.message + '</p>';
     }
 }
 
