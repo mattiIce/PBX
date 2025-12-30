@@ -2387,6 +2387,20 @@ async function loadSupportedVendors() {
             } else {
                 vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
             }
+        } else {
+            // Handle non-ok response (e.g., 401, 403, 500)
+            const vendorsList = document.getElementById('supported-vendors-list');
+            let errorMsg = `Error loading vendors: HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMsg = `Error loading vendors: ${errorData.error}`;
+                }
+            } catch (e) {
+                // Unable to parse error response, use generic message
+            }
+            vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+            console.error('Error loading supported vendors:', errorMsg);
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
