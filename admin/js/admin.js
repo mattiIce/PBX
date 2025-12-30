@@ -2364,7 +2364,9 @@ async function savePhonebookSettings() {
 
 async function loadSupportedVendors() {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/vendors`);
+        const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             supportedVendors = data.vendors || [];
@@ -2395,7 +2397,9 @@ async function loadSupportedVendors() {
 
 async function loadProvisioningDevices() {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/devices`);
+        const response = await fetch(`${API_BASE}/api/provisioning/devices`, {
+            headers: getAuthHeaders()
+        });
         const tbody = document.getElementById('provisioning-devices-table-body');
 
         if (response.ok) {
@@ -2479,7 +2483,9 @@ async function deleteDevice(mac) {
 // Template management functions
 async function loadProvisioningTemplates() {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/templates`);
+        const response = await fetch(`${API_BASE}/api/provisioning/templates`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             displayTemplatesList(data.templates || []);
@@ -2564,7 +2570,9 @@ function displayTemplatesList(templates) {
 
 async function viewTemplate(vendor, model) {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             showTemplateViewModal(vendor, model, data.content, data.placeholders, false);
@@ -2598,7 +2606,9 @@ async function exportTemplate(vendor, model) {
 
 async function editTemplate(vendor, model) {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             showTemplateViewModal(vendor, model, data.content, data.placeholders, true);

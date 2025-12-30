@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.api.rest_api import PBXAPIServer
-from pbx.features.extensions import ExtensionRegistry
+from pbx.features.extensions import Extension, ExtensionRegistry
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
@@ -98,8 +98,6 @@ def test_provisioning_endpoints_with_auth():
     pbx = MockPBXCore(config)
 
     # Add a test extension for authentication (manually create Extension object)
-    from pbx.features.extensions import Extension
-    
     ext_config = {
         "number": "1001",
         "name": "Test Admin",

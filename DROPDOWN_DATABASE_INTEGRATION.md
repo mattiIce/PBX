@@ -163,7 +163,9 @@ def _handle_get_provisioning_vendors(self):
 ```javascript
 async function loadSupportedVendors() {
     // Lines 2365-2394
-    const response = await fetch(`${API_BASE}/api/provisioning/vendors`);
+    const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
+        headers: getAuthHeaders()  // Authentication required
+    });
     const data = await response.json();
     
     supportedVendors = data.vendors || [];
