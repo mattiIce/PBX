@@ -1572,10 +1572,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_devices(self):
         """Get all provisioned devices."""
-        # SECURITY: Require authentication
+        # SECURITY: Require admin authentication
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
             self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
             return
 
         if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
@@ -1603,10 +1608,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_diagnostics(self):
         """Get provisioning system diagnostics."""
-        # SECURITY: Require authentication
+        # SECURITY: Require admin privileges
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
             self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
             return
 
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
@@ -1666,10 +1676,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_requests(self):
         """Get provisioning request history."""
-        # SECURITY: Require authentication
+        # SECURITY: Require admin privileges
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
             self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
             return
 
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
@@ -1707,10 +1722,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_template_content(self, vendor, model):
         """Get content of a specific template."""
-        # SECURITY: Require authentication
+        # SECURITY: Require admin access
         is_authenticated, payload = self._verify_authentication()
         if not is_authenticated:
             self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
             return
 
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):

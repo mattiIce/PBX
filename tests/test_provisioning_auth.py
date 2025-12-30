@@ -3,7 +3,6 @@
 Tests for provisioning API authentication
 """
 import json
-import os
 import sys
 import time
 from http.client import HTTPConnection
