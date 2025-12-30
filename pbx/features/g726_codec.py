@@ -419,7 +419,7 @@ class G726CodecManager:
         codec = G726Codec(self.default_bitrate)
         capabilities = [f"a={codec.get_sdp_description()}"]
 
-        fmtp = codec.get_fmtp_params()
+        fmtp = codec.get_fmtp_params()  # pylint: disable=assignment-from-none
         if fmtp:
             capabilities.append(f"a={fmtp}")
 

@@ -81,6 +81,7 @@ class MobileAppFramework:
         self.active_devices = 0
         self.ios_devices = 0
         self.android_devices = 0
+        self.total_push_sent = 0
 
         self.logger.info("Mobile app framework initialized")
         self.logger.info(f"  iOS support: {self.ios_enabled}")

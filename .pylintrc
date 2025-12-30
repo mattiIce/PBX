@@ -11,7 +11,6 @@ disable=
     C0103,  # Invalid name (too strict for variable names)
     C0111,  # Missing docstring (too strict for small functions)
     C0301,  # Line too long (handled by black)
-    C0330,  # Wrong hanging indentation (handled by black)
     R0801,  # Similar lines in 2 files (common in tests)
     R0902,  # Too many instance attributes
     R0903,  # Too few public methods

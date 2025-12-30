@@ -19,16 +19,6 @@ Proprietary Integrations (Optional, require licenses):
 - Lansweeper: IT asset management
 """
 
-# Export all integration classes
-__all__ = [
-    # Open Source Integrations (Free)
-    "JitsiIntegration",
-    "EspoCRMIntegration",
-    "MatrixIntegration",
-    # Proprietary Integrations (Optional)
-    "ZoomIntegration",
-    "TeamsIntegration",
-    "OutlookIntegration",
-    "ActiveDirectoryIntegration",
-    "LansweeperIntegration",
-]
+# Note: Integration classes are not imported here to avoid circular imports
+# and to allow for optional dependencies. Import them directly from their modules.
+__all__ = []

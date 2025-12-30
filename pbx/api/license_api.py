@@ -353,8 +353,6 @@ def toggle_licensing():
             f.writelines(env_lines)
 
         # Also update runtime environment for immediate effect
-        import os
-
         os.environ["PBX_LICENSING_ENABLED"] = "true" if enabled else "false"
 
         # Reinitialize license manager

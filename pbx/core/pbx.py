@@ -473,8 +473,8 @@ class PBXCore:
 
             # Get Outlook integration if available
             outlook = None
-            if hasattr(self, "integrations") and "outlook" in self.integrations:
-                outlook = self.integrations["outlook"]
+            if hasattr(self, "integrations") and "outlook" in self.integrations:  # pylint: disable=no-member
+                outlook = self.integrations["outlook"]  # pylint: disable=no-member
 
             self.dnd_scheduler = get_dnd_scheduler(
                 presence_system=self.presence_system if hasattr(self, "presence_system") else None,
@@ -1255,9 +1255,9 @@ class PBXCore:
                 mac_address = None
                 if self.registered_phones_db:
                     try:
-                        phone_info = self.registered_phones_db.get_phone_by_extension(from_ext)
-                        if phone_info and phone_info.get("mac_address"):
-                            mac_address = phone_info["mac_address"]
+                        phones = self.registered_phones_db.get_by_extension(from_ext)
+                        if phones and len(phones) > 0 and phones[0].get("mac_address"):
+                            mac_address = phones[0]["mac_address"]
                     except Exception as e:
                         self.logger.debug(f"Could not retrieve MAC for extension {from_ext}: {e}")
 
@@ -3745,33 +3745,24 @@ class PBXCore:
         server_ip = self._get_server_ip()
 
         # Build SDP for response
-        sdp_builder = SDPBuilder()
         if caller_sdp:
-            caller_codecs = caller_sdp.get("formats", None)
-            sdp_builder.set_media(
-                "audio",
-                rtp_ports[0] if rtp_ports else 10000,
-                "RTP/AVP",
-                caller_codecs if caller_codecs else ["0", "8"],
-            )
+            caller_codecs = caller_sdp.get("formats", ["0", "8"])
         else:
-            sdp_builder.set_media(
-                "audio", rtp_ports[0] if rtp_ports else 10000, "RTP/AVP", ["0", "8"]
-            )
+            caller_codecs = ["0", "8"]
 
-        sdp_builder.set_connection(server_ip)
-        response_sdp = sdp_builder.build()
+        rtp_port = rtp_ports[0] if rtp_ports else 10000
+        response_sdp = SDPBuilder.build_audio_sdp(
+            local_ip=server_ip,
+            local_port=rtp_port,
+            session_id=call_id,
+            codecs=caller_codecs,
+        )
 
         # Send 200 OK
         ok_response = SIPMessageBuilder.build_response(
-            code=200,
-            reason="OK",
-            to_addr=message.get_header("From"),
-            from_addr=message.get_header("To"),
-            call_id=call_id,
-            cseq=message.get_header("CSeq"),
-            via=message.get_header("Via"),
-            contact=f"sip:{from_ext}@{server_ip}:{self.sip_server.port}",
+            status_code=200,
+            status_text="OK",
+            request_msg=message,
             body=response_sdp,
         )
 
