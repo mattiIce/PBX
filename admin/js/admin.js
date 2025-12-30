@@ -2421,7 +2421,7 @@ async function loadSupportedVendors() {
             }
         } else {
             // Handle non-ok response (e.g., 401, 403, 500)
-            let errorMsg = `Error loading vendors: HTTP ${escapeHtml(String(response.status))}`;
+            let errorMsg = `Error loading vendors: HTTP ${response.status}`;
             try {
                 const errorData = await response.json();
                 if (errorData.error) {
