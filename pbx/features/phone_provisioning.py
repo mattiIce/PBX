@@ -796,7 +796,7 @@ P78 = {{DTMF_PAYLOAD_TYPE}}
 # Port 1 Analog Settings
 P3 = 1
 P4 = 1
-P2311 = 2
+P2311 = 2   # Offhook Auto-Dial
 P240 = 2
 
 # Echo Cancellation
