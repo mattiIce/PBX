@@ -276,16 +276,16 @@ class DatabaseBackend:
                 # Remove comments and split by semicolon
                 statements = []
                 current = []
-                for line in script.split('\n'):
+                for line in script.split("\n"):
                     stripped = line.strip()
                     # Skip comments
-                    if stripped.startswith('--') or not stripped:
+                    if stripped.startswith("--") or not stripped:
                         continue
                     current.append(line)
-                    if ';' in line:
-                        statements.append('\n'.join(current))
+                    if ";" in line:
+                        statements.append("\n".join(current))
                         current = []
-                
+
                 # Execute each statement
                 cursor = self.connection.cursor()
                 for stmt in statements:
@@ -295,7 +295,7 @@ class DatabaseBackend:
                 cursor.close()
                 if not self.connection.autocommit:
                     self.connection.commit()
-            
+
             return True
         except Exception as e:
             self.logger.error(f"Error during script execution: {e}")

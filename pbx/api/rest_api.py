@@ -5699,9 +5699,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 except Exception as e:
                     self.logger.warning(f"Failed to regenerate voice prompt: {e}")
 
-            self._send_json(
-                {"success": True, "message": f"Menu '{menu_id}' updated successfully"}
-            )
+            self._send_json({"success": True, "message": f"Menu '{menu_id}' updated successfully"})
         except Exception as e:
             self._send_json({"error": str(e)}, 500)
 
@@ -5724,9 +5722,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 )
                 return
 
-            self._send_json(
-                {"success": True, "message": f"Menu '{menu_id}' deleted successfully"}
-            )
+            self._send_json({"success": True, "message": f"Menu '{menu_id}' deleted successfully"})
         except Exception as e:
             self._send_json({"error": str(e)}, 500)
 
@@ -5807,9 +5803,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             description = data.get("description")
 
             if not destination_type and not destination_value and description is None:
-                self._send_json(
-                    {"error": "At least one field must be provided to update"}, 400
-                )
+                self._send_json({"error": "At least one field must be provided to update"}, 400)
                 return
 
             aa = self.pbx_core.auto_attendant
@@ -5819,16 +5813,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             item_exists = any(item["digit"] == digit for item in current_items)
 
             if not item_exists:
-                self._send_json(
-                    {"error": f"Menu item {digit} not found in menu '{menu_id}'"}, 404
-                )
+                self._send_json({"error": f"Menu item {digit} not found in menu '{menu_id}'"}, 404)
                 return
 
             # Get current values if not provided
             current_item = next(item for item in current_items if item["digit"] == digit)
             final_dest_type = destination_type or current_item["destination_type"]
             final_dest_value = destination_value or current_item["destination_value"]
-            final_description = description if description is not None else current_item["description"]
+            final_description = (
+                description if description is not None else current_item["description"]
+            )
 
             # Update (add_menu_item handles both insert and update)
             success = aa.add_menu_item(

@@ -8,6 +8,7 @@ This module tests the provisioning and configuration of ATAs including:
 """
 
 import pytest
+
 from pbx.features.phone_provisioning import PhoneProvisioning
 
 
@@ -138,7 +139,11 @@ class TestATAConfiguration:
 
         extension_config = {"number": "1002", "name": "Fax Machine", "password": "fax_pass_456"}
 
-        server_config = {"sip_host": "10.0.0.5", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+        server_config = {
+            "sip_host": "10.0.0.5",
+            "sip_port": "5060",
+            "dtmf": {"payload_type": "101"},
+        }
 
         config = template.generate_config(extension_config, server_config)
 
@@ -158,7 +163,11 @@ class TestATAConfiguration:
 
         extension_config = {"number": "1003", "name": "Analog Phone", "password": "analog_789"}
 
-        server_config = {"sip_host": "172.16.0.1", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+        server_config = {
+            "sip_host": "172.16.0.1",
+            "sip_port": "5060",
+            "dtmf": {"payload_type": "101"},
+        }
 
         config = template.generate_config(extension_config, server_config)
 
@@ -183,7 +192,11 @@ class TestATAConfiguration:
 
         extension_config = {"number": "1004", "name": "Remote Office", "password": "remote_abc"}
 
-        server_config = {"sip_host": "192.168.100.1", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+        server_config = {
+            "sip_host": "192.168.100.1",
+            "sip_port": "5060",
+            "dtmf": {"payload_type": "101"},
+        }
 
         config = template.generate_config(extension_config, server_config)
 
@@ -200,9 +213,17 @@ class TestATAConfiguration:
         template = provisioning.get_template("cisco", "ata191")
         assert template is not None
 
-        extension_config = {"number": "1005", "name": "Enterprise Phone", "password": "ent_pass_123"}
+        extension_config = {
+            "number": "1005",
+            "name": "Enterprise Phone",
+            "password": "ent_pass_123",
+        }
 
-        server_config = {"sip_host": "10.0.1.1", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+        server_config = {
+            "sip_host": "10.0.1.1",
+            "sip_port": "5060",
+            "dtmf": {"payload_type": "101"},
+        }
 
         config = template.generate_config(extension_config, server_config)
 
@@ -220,7 +241,11 @@ class TestATAConfiguration:
 
         extension_config = {"number": "1006", "name": "Multiplatform ATA", "password": "multi_456"}
 
-        server_config = {"sip_host": "10.0.2.1", "sip_port": "5060", "dtmf": {"payload_type": "101"}}
+        server_config = {
+            "sip_host": "10.0.2.1",
+            "sip_port": "5060",
+            "dtmf": {"payload_type": "101"},
+        }
 
         config = template.generate_config(extension_config, server_config)
 
@@ -238,7 +263,10 @@ class TestATADeviceRegistration:
     def test_register_ht801(self, provisioning):
         """Test registering a Grandstream HT801"""
         device = provisioning.register_device(
-            mac_address="00:0B:82:11:22:33", extension_number="1001", vendor="grandstream", model="ht801"
+            mac_address="00:0B:82:11:22:33",
+            extension_number="1001",
+            vendor="grandstream",
+            model="ht801",
         )
 
         assert device is not None
@@ -263,7 +291,10 @@ class TestATADeviceRegistration:
         """Test retrieving ATA device by MAC address"""
         # Register device
         provisioning.register_device(
-            mac_address="00:0B:82:AA:BB:CC", extension_number="1010", vendor="grandstream", model="ht802"
+            mac_address="00:0B:82:AA:BB:CC",
+            extension_number="1010",
+            vendor="grandstream",
+            model="ht802",
         )
 
         # Retrieve device
