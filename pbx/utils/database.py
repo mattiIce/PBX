@@ -1892,3 +1892,15 @@ class ProvisionedDevicesDB:
         """
         )
         return self.db.execute(query, (static_ip, datetime.now(), mac_address))
+
+
+# Global instance
+_database = None
+
+
+def get_database(config=None) -> DatabaseBackend:
+    """Get or create database backend instance"""
+    global _database
+    if _database is None and config is not None:
+        _database = DatabaseBackend(config)
+    return _database

@@ -699,3 +699,15 @@ class SIPTrunkSystem:
             summary["overall_success_rate"] = 0.0
 
         return summary
+
+
+# Global instance
+_trunk_manager = None
+
+
+def get_trunk_manager(config=None) -> SIPTrunkSystem:
+    """Get or create SIP trunk manager instance"""
+    global _trunk_manager
+    if _trunk_manager is None and config is not None:
+        _trunk_manager = SIPTrunkSystem(config)
+    return _trunk_manager

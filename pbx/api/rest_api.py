@@ -9909,9 +9909,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_sbc_statistics(self):
         """GET /api/framework/sbc/statistics - Get SBC statistics."""
         try:
-            from pbx.features.session_border_controller import get_session_border_controller
+            from pbx.features.session_border_controller import get_sbc
 
-            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            sbc = get_sbc(self.pbx_core.config if self.pbx_core else None)
             stats = sbc.get_statistics()
             self._send_json(stats)
         except Exception as e:
@@ -9921,9 +9921,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_sbc_relays(self):
         """GET /api/framework/sbc/relays - Get active RTP relays."""
         try:
-            from pbx.features.session_border_controller import get_session_border_controller
+            from pbx.features.session_border_controller import get_sbc
 
-            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            sbc = get_sbc(self.pbx_core.config if self.pbx_core else None)
             relays = {call_id: relay for call_id, relay in sbc.active_relays.items()}
             self._send_json({"relays": relays})
         except Exception as e:
@@ -9941,9 +9941,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "call_id required"}, 400)
                 return
 
-            from pbx.features.session_border_controller import get_session_border_controller
+            from pbx.features.session_border_controller import get_sbc
 
-            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            sbc = get_sbc(self.pbx_core.config if self.pbx_core else None)
             result = sbc.allocate_relay(call_id, codec)
 
             self._send_json(result)
