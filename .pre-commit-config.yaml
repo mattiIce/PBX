@@ -33,7 +33,7 @@ repos:
     rev: 25.12.0
     hooks:
       - id: black
-        language_version: python3
+        language_version: python3.12
         args: ['--line-length=100']
 
   # Import sorting with isort
@@ -41,6 +41,7 @@ repos:
     rev: 7.0.0
     hooks:
       - id: isort
+        language_version: python3.12
         args: ['--profile=black', '--line-length=100']
 
   # Linting with flake8
@@ -48,6 +49,7 @@ repos:
     rev: 7.3.0
     hooks:
       - id: flake8
+        language_version: python3.12
         args: ['--config=.flake8']
         additional_dependencies:
           - flake8-docstrings
@@ -58,6 +60,7 @@ repos:
     rev: v1.19.1
     hooks:
       - id: mypy
+        language_version: python3.12
         args: ['--config-file=mypy.ini']
         additional_dependencies:
           - types-PyYAML
@@ -69,6 +72,7 @@ repos:
     rev: 1.9.2
     hooks:
       - id: bandit
+        language_version: python3.12
         args: ['-c', '.bandit', '-r', '.']
         exclude: 'tests/'
 
