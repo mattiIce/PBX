@@ -59,12 +59,12 @@ opuslib==3.0.1
 vosk==0.3.45
 spacy==3.8.3
 nltk==3.9.1
-numpy==2.2.1
-scikit-learn==1.6.0
-scipy==1.15.0
+numpy==2.3.5
+scikit-learn==1.8.0
+scipy==1.16.3
 pyAudioAnalysis==0.3.14
-librosa==0.10.2
-soundfile==0.12.1
+librosa==0.11.0
+soundfile==0.13.1
 
 # Video Codec Support
 imageio-ffmpeg==0.5.1
