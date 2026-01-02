@@ -6,17 +6,23 @@ Provides comprehensive metrics for monitoring call quality, system health,
 and performance in production environments.
 """
 
-import time
-from typing import Dict, Any, List
-from prometheus_client import (
-    Counter,
-    Gauge,
-    Histogram,
-    Summary,
-    Info,
-    CollectorRegistry,
-    generate_latest,
-)
+from typing import Any
+
+try:
+    from prometheus_client import (
+        Counter,
+        Gauge,
+        Histogram,
+        Info,
+        CollectorRegistry,
+        generate_latest,
+    )
+except ImportError as exc:
+    raise ImportError(
+        "The 'prometheus-client' package is required to use PBXMetricsExporter. "
+        "Install it with 'pip install prometheus-client' or disable Prometheus "
+        "metrics if they are not needed."
+    ) from exc
 
 
 class PBXMetricsExporter:

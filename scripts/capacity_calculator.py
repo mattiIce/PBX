@@ -9,7 +9,6 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass
-from typing import Dict, Any
 
 
 @dataclass
@@ -54,11 +53,14 @@ class CapacityCalculator:
     DATABASE_PER_EXTENSION_MB = 1  # Additional per extension
     LOGS_PER_DAY_MB = 100  # Log file growth
 
-    # Cost estimates (AWS-like pricing)
-    COST_PER_CPU_CORE = 20  # $20/month per vCPU
-    COST_PER_GB_RAM = 5  # $5/month per GB RAM
-    COST_PER_GB_DISK = 0.10  # $0.10/month per GB storage
-    COST_PER_MBPS = 10  # $10/month per Mbps
+    # Cost estimates (example AWS-like pricing; for planning only)
+    # NOTE: These values are illustrative and may not reflect current or accurate
+    # cloud provider pricing. Review and adjust them before using this tool for
+    # production or billing-related decisions.
+    COST_PER_CPU_CORE = 20  # $20/month per vCPU (example estimate)
+    COST_PER_GB_RAM = 5  # $5/month per GB RAM (example estimate)
+    COST_PER_GB_DISK = 0.10  # $0.10/month per GB storage (example estimate)
+    COST_PER_MBPS = 10  # $10/month per Mbps (example estimate)
 
     def calculate(
         self,

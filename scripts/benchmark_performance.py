@@ -12,8 +12,7 @@ import sys
 import time
 from dataclasses import dataclass, asdict
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 import subprocess
 
 
@@ -129,7 +128,6 @@ class PerformanceBenchmark:
 
             # Run 10 requests
             for _ in range(10):
-                start = time.time()
                 try:
                     # Simple HTTP request (would use urllib in production)
                     result = subprocess.run(
@@ -141,8 +139,9 @@ class PerformanceBenchmark:
                     if result.returncode == 0:
                         duration = float(result.stdout.strip())
                         times.append(duration)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    # Ignore individual request failures but log for diagnostic purposes
+                    print(f"Warning: API benchmark request to {url} failed: {exc}", file=sys.stderr)
 
             if times:
                 avg_time = sum(times) / len(times)
@@ -163,6 +162,12 @@ class PerformanceBenchmark:
         # connect to the database and run queries
         try:
             # Simple connection test
+            db_password = os.getenv("DB_PASSWORD")
+            if not db_password:
+                metrics["connection_time_ms"] = -1
+                metrics["error"] = "DB_PASSWORD environment variable not set"
+                return metrics
+                
             start = time.time()
             result = subprocess.run(
                 [
@@ -179,7 +184,7 @@ class PerformanceBenchmark:
                 capture_output=True,
                 text=True,
                 timeout=5,
-                env={"PGPASSWORD": os.getenv("DB_PASSWORD", "")},
+                env={"PGPASSWORD": db_password},
             )
             duration = time.time() - start
 
@@ -269,7 +274,7 @@ class PerformanceBenchmark:
 
         # Disk I/O
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["iostat", "-x", "1", "2"],
                 capture_output=True,
                 text=True,

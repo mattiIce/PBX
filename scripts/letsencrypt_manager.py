@@ -6,14 +6,12 @@ Handles automatic certificate issuance and renewal for production deployments.
 """
 
 import argparse
-import json
 import logging
-import os
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 # Set up logging
 logging.basicConfig(
@@ -166,6 +164,9 @@ class CertificateManager:
         Returns:
             True if certificate is valid
         """
+        if not isinstance(min_days, int) or min_days < 0:
+            raise ValueError("min_days must be a positive integer")
+            
         expiry = self.get_certificate_expiry()
         if not expiry:
             return False
@@ -238,7 +239,7 @@ class CertificateManager:
         logger.info("Renewing certificate...")
 
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["sudo", "certbot", "renew", "--quiet"],
                 capture_output=True,
                 text=True,
@@ -289,11 +290,11 @@ class CertificateManager:
             )
 
             # Set proper permissions
-            subprocess.run(
-                ["sudo", "chown", "pbx:pbx", str(self.cert_dir / "*")],
-                check=True,
-                shell=True,
-            )
+            for path in self.cert_dir.iterdir():
+                subprocess.run(
+                    ["sudo", "chown", "pbx:pbx", str(path)],
+                    check=True,
+                )
             subprocess.run(
                 ["sudo", "chmod", "644", str(self.cert_path)],
                 check=True,
@@ -379,11 +380,12 @@ class CertificateManager:
             hook_dir = Path("/etc/letsencrypt/renewal-hooks/deploy")
             hook_dir.mkdir(parents=True, exist_ok=True)
 
+            script_path = Path(__file__).resolve()
             hook_script = hook_dir / "reload-pbx.sh"
             with open(hook_script, "w") as f:
                 f.write("#!/bin/bash\n")
                 f.write("# Reload PBX service after certificate renewal\n")
-                f.write(f"python3 {__file__} --reload-only\n")
+                f.write(f"python3 {script_path} --reload-only\n")
 
             subprocess.run(["sudo", "chmod", "+x", str(hook_script)], check=True)
 
@@ -422,6 +424,41 @@ def main():
     parser = argparse.ArgumentParser(
         description="Manage SSL/TLS certificates with Let's Encrypt"
     )
+    parser.add_argument(
+        "--reload-only", action="store_true", help="Only reload PBX service"
+    )
+    
+    # Parse args first to check reload-only mode
+    args, remaining = parser.parse_known_args()
+    
+    # Handle reload-only mode early (doesn't need domain/email)
+    if args.reload_only:
+        # Minimal parsing for reload-only
+        parser.add_argument(
+            "--domain", default="localhost", help="Domain name (not used in reload-only)"
+        )
+        parser.add_argument(
+            "--email", default="admin@localhost", help="Email (not used in reload-only)"
+        )
+        parser.add_argument(
+            "--cert-dir", default="/opt/pbx/ssl", help="Certificate directory"
+        )
+        parser.add_argument(
+            "--webroot", default="/var/www/html", help="Webroot directory"
+        )
+        args = parser.parse_args()
+        
+        manager = CertificateManager(
+            domain=args.domain,
+            email=args.email,
+            cert_dir=args.cert_dir,
+            webroot=args.webroot,
+        )
+        manager.copy_certificates()
+        manager.reload_pbx_service()
+        return 0
+    
+    # Normal mode requires domain and email
     parser.add_argument("--domain", required=True, help="Domain name")
     parser.add_argument(
         "--email", required=True, help="Email for Let's Encrypt notifications"
@@ -450,9 +487,6 @@ def main():
         "--setup-auto-renewal", action="store_true", help="Setup automatic renewal"
     )
     parser.add_argument(
-        "--reload-only", action="store_true", help="Only reload PBX service"
-    )
-    parser.add_argument(
         "--staging",
         action="store_true",
         help="Use Let's Encrypt staging server (for testing)",
@@ -467,12 +501,6 @@ def main():
         cert_dir=args.cert_dir,
         webroot=args.webroot,
     )
-
-    # Handle reload-only mode (called by renewal hook)
-    if args.reload_only:
-        manager.copy_certificates()
-        manager.reload_pbx_service()
-        return 0
 
     # Check if certbot is installed
     if not manager.check_certbot_installed():

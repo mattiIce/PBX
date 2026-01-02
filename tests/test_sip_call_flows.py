@@ -9,24 +9,24 @@ call setup, RTP media exchange, and teardown.
 import asyncio
 import pytest
 import time
-from typing import Optional, Tuple
-from unittest.mock import Mock, patch
+from typing import Optional
 
 
-class SIPCallFlowTest:
+@pytest.fixture
+def pbx_config():
+    """Mock PBX configuration."""
+    return {
+        "sip_port": 5060,
+        "rtp_port_range": (10000, 20000),
+        "extensions": {
+            "1001": {"password": "test123", "name": "Test User 1"},
+            "1002": {"password": "test456", "name": "Test User 2"},
+        },
+    }
+
+
+class TestSIPCallFlow:
     """Integration tests for SIP call flows."""
-
-    @pytest.fixture
-    def pbx_config(self):
-        """Mock PBX configuration."""
-        return {
-            "sip_port": 5060,
-            "rtp_port_range": (10000, 20000),
-            "extensions": {
-                "1001": {"password": "test123", "name": "Test User 1"},
-                "1002": {"password": "test456", "name": "Test User 2"},
-            },
-        }
 
     @pytest.mark.integration
     @pytest.mark.asyncio
