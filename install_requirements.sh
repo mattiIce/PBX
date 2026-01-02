@@ -10,7 +10,7 @@ if ! command -v pip3 &> /dev/null; then
     exit 1
 fi
 
-# Check Python version (requires 3.12.3+)
+# Check Python version (requires 3.12+)
 python_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 min_version="3.12"
 if [ "$(printf '%s\n' "$min_version" "$python_version" | sort -V | head -n1)" != "$min_version" ]; then

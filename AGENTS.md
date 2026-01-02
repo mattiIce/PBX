@@ -6,7 +6,7 @@ This file provides instructions for GitHub Copilot Coding Agent when working wit
 
 Warden VoIP is a comprehensive, feature-rich Private Branch Exchange (PBX) and VoIP system built in Python. It provides full SIP protocol support, RTP media handling, advanced call features, and modern VoIP capabilities.
 
-**Language**: Python 3.12+
+**Language**: Python 3.12
 **Type**: VoIP/Telephony System
 **Architecture**: Event-driven SIP/RTP server with REST API and web admin interface
 

@@ -35,7 +35,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ### Prerequisites
 
-- Python 3.12 or higher (Python 3.12 recommended)
+- Python 3.12
 - PostgreSQL (optional, but recommended for full functionality)
 - System dependencies (espeak, ffmpeg, libopus-dev, portaudio19-dev)
 
@@ -269,7 +269,7 @@ A clear description of what you expected to happen.
 
 **Environment:**
 - OS: [e.g., Ubuntu 22.04]
-- Python version: [e.g., 3.12 or 3.13]
+- Python version: [e.g., 3.12]
 - PBX System version: [e.g., 1.0.0]
 
 **Logs**
