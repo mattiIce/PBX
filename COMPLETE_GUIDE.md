@@ -1,7 +1,7 @@
 # Warden VoIP PBX - Complete Documentation
 
-**Version:** 1.0.0  
-**Last Updated:** 2025-12-29  
+**Version:** 1.1.0  
+**Last Updated:** 2026-01-02  
 **Project:** https://github.com/mattiIce/PBX
 
 ---
@@ -15,8 +15,9 @@
 5. [Integration Guides](#5-integration-guides)
 6. [Security & Compliance](#6-security--compliance)
 7. [Operations & Troubleshooting](#7-operations--troubleshooting)
-8. [Developer Guide](#8-developer-guide)
-9. [Appendices](#9-appendices)
+8. [Update & Maintenance Guide](#8-update--maintenance-guide)
+9. [Developer Guide](#9-developer-guide)
+10. [Appendices](#10-appendices)
 
 ---
 
@@ -1438,9 +1439,793 @@ sudo systemctl start pbx
 
 ---
 
-## 8. Developer Guide
+## 8. Update & Maintenance Guide
 
-### 8.1 Architecture Overview
+### 8.1 Overview
+
+This section covers how to safely update your PBX system, including:
+- Python package and dependency updates
+- System package updates
+- Code updates from the repository
+- Database migrations
+- Safe update procedures
+- Rollback strategies
+- Post-update testing
+
+**Update Types:**
+- **Security Updates**: Critical patches for vulnerabilities (immediate)
+- **Feature Updates**: New features and enhancements (scheduled)
+- **Dependency Updates**: Updated Python packages or system libraries (periodic)
+- **Hotfixes**: Emergency fixes for production issues (as needed)
+
+### 8.2 Pre-Update Checklist
+
+**Before any update, always:**
+
+1. **Create a full backup:**
+   ```bash
+   # Automated backup script
+   sudo /opt/pbx/scripts/backup_full.sh
+   
+   # Manual backup
+   BACKUP_DIR="/var/backups/pbx/manual-$(date +%Y%m%d-%H%M%S)"
+   sudo mkdir -p "$BACKUP_DIR"
+   
+   # Backup database
+   sudo -u postgres pg_dump pbx_system > "$BACKUP_DIR/database.sql"
+   
+   # Backup configuration
+   sudo cp /opt/pbx/config.yml "$BACKUP_DIR/"
+   sudo cp /opt/pbx/.env "$BACKUP_DIR/"
+   
+   # Backup voicemail and recordings
+   sudo tar -czf "$BACKUP_DIR/voicemail.tar.gz" /opt/pbx/voicemail/
+   sudo tar -czf "$BACKUP_DIR/recordings.tar.gz" /opt/pbx/recordings/
+   ```
+
+2. **Schedule during maintenance window:**
+   - Notify users of planned downtime
+   - Choose low-traffic period (typically 2-4 AM)
+   - Plan for 15-30 minutes of downtime
+
+3. **Document current version:**
+   ```bash
+   # Record current versions
+   cd /opt/pbx
+   git log -1 --oneline > /tmp/pre-update-version.txt
+   pip freeze > /tmp/pre-update-packages.txt
+   ```
+
+4. **Verify system health:**
+   ```bash
+   # Check service status
+   sudo systemctl status pbx
+   
+   # Check disk space (need at least 1GB free)
+   df -h /opt/pbx
+   
+   # Check database connectivity
+   python scripts/verify_database.py
+   
+   # Check active calls (should be 0 during maintenance)
+   curl -k https://localhost:8080/api/calls
+   ```
+
+### 8.3 Updating Python Packages
+
+#### When to Update Python Packages
+
+Update Python packages when:
+- Security vulnerabilities are announced
+- New features require updated dependencies
+- You see deprecation warnings in logs
+- Following a major release update
+
+#### Safe Package Update Procedure
+
+**Option 1: Update All Packages (Recommended for Development)**
+
+```bash
+# Navigate to PBX directory
+cd /opt/pbx
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Stop PBX service
+sudo systemctl stop pbx
+
+# Update pip itself first
+pip install --upgrade pip
+
+# Update all packages to latest compatible versions
+pip install --upgrade -r requirements.txt
+
+# Verify installation
+pip check
+
+# Test the update
+python -c "import pbx; print('✓ Import successful')"
+
+# Restart service
+sudo systemctl start pbx
+
+# Monitor logs for errors
+sudo journalctl -u pbx -f
+```
+
+**Option 2: Update Specific Package (Recommended for Production)**
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Stop service
+sudo systemctl stop pbx
+
+# Update specific package
+pip install --upgrade package_name==version
+
+# Example: Update cryptography for security patch
+pip install --upgrade cryptography==46.0.3
+
+# Verify the update
+pip show package_name
+
+# Test import
+python -c "import package_name; print('✓ Updated successfully')"
+
+# Restart service
+sudo systemctl start pbx
+
+# Verify functionality
+curl -k https://localhost:8080/api/status
+```
+
+**Option 3: Conservative Update (Safest for Production)**
+
+```bash
+# Create a test environment first
+python3 -m venv /tmp/pbx-test-env
+source /tmp/pbx-test-env/bin/activate
+
+# Install current requirements
+pip install -r requirements.txt
+
+# Test updates in isolation
+pip install --upgrade package-name
+
+# Run tests
+pytest tests/
+
+# If tests pass, apply to production
+deactivate
+source /opt/pbx/venv/bin/activate
+sudo systemctl stop pbx
+pip install --upgrade package-name
+sudo systemctl start pbx
+```
+
+#### Handling Dependency Conflicts
+
+```bash
+# Check for conflicts
+pip check
+
+# If conflicts exist, use pip-tools to resolve
+pip install pip-tools
+
+# Compile requirements with pinned versions
+pip-compile requirements.txt
+
+# Review the output for conflicts
+# Manually adjust requirements.txt if needed
+
+# Install resolved dependencies
+pip install -r requirements.txt
+```
+
+### 8.4 Updating System Packages
+
+#### System Dependencies
+
+The PBX requires these system packages:
+- `espeak` - Text-to-speech engine
+- `ffmpeg` - Audio/video processing
+- `libopus-dev` - Opus codec library
+- `portaudio19-dev` - Audio I/O library
+- `libspeex-dev` - Speex codec library
+- `postgresql` - Database server
+
+#### Safe System Update Procedure
+
+```bash
+# Update package lists
+sudo apt-get update
+
+# Check what will be updated
+sudo apt-get --dry-run upgrade
+
+# Update specific packages
+sudo apt-get install --only-upgrade espeak ffmpeg
+
+# Or update all system packages
+sudo apt-get upgrade -y
+
+# If PostgreSQL is updated, restart it
+sudo systemctl restart postgresql
+
+# Verify PBX still works
+sudo systemctl restart pbx
+sudo systemctl status pbx
+```
+
+#### After System Package Updates
+
+```bash
+# Regenerate voice prompts (if espeak was updated)
+cd /opt/pbx
+source venv/bin/activate
+python scripts/generate_voice_prompts.py
+
+# Test audio functionality
+python scripts/test_audio_comprehensive.py
+
+# Verify codecs still work
+curl -k https://localhost:8080/api/codecs
+```
+
+### 8.5 Updating PBX Code from Repository
+
+#### Method 1: Automated Update Script (Recommended)
+
+```bash
+# Interactive update with prompts
+cd /opt/pbx
+sudo bash scripts/update_server_from_repo.sh
+
+# The script will:
+# 1. Check for local modifications
+# 2. Create backup of changed files
+# 3. Fetch latest changes
+# 4. Show what will be updated
+# 5. Apply updates (your choice: merge or hard reset)
+# 6. Verify Python syntax
+# 7. Offer to restart service
+```
+
+**Script Options:**
+- **Merge**: Preserves local changes, merges with remote (safer)
+- **Hard Reset**: Discards all local changes, matches repository exactly (cleanest)
+
+#### Method 2: Force Update (No Prompts)
+
+```bash
+# For automated updates or when you want to overwrite everything
+cd /opt/pbx
+sudo bash scripts/force_update_server.sh
+
+# This will:
+# 1. Create backup
+# 2. Hard reset to repository
+# 3. Verify syntax
+# 4. Restart service automatically
+```
+
+#### Method 3: Manual Update (Full Control)
+
+```bash
+# Navigate to PBX directory
+cd /opt/pbx
+
+# Check current status
+git status
+
+# Fetch latest changes
+git fetch origin
+
+# Review changes before applying
+git log HEAD..origin/main --oneline
+
+# See detailed changes
+git diff HEAD..origin/main
+
+# Backup local modifications (if any)
+git stash save "Backup before update $(date)"
+
+# Pull latest changes
+git pull origin main
+
+# Or hard reset to match repository exactly
+git reset --hard origin/main
+git clean -fd
+
+# Verify Python files
+find . -name "*.py" -type f ! -path "./.git/*" ! -path "./venv/*" -exec python3 -m py_compile {} \;
+
+# Restart service
+sudo systemctl restart pbx
+
+# Monitor logs
+sudo journalctl -u pbx -f
+```
+
+#### Updating Specific Files Only
+
+```bash
+# Update only specific files from repository
+cd /opt/pbx
+
+# Check what changed in a specific file
+git diff origin/main -- path/to/file.py
+
+# Update just that file
+git checkout origin/main -- path/to/file.py
+
+# Or update entire directory
+git checkout origin/main -- pbx/core/
+
+# Restart service
+sudo systemctl restart pbx
+```
+
+### 8.6 Database Migrations
+
+#### Checking for Database Changes
+
+```bash
+# Check if update includes database changes
+cd /opt/pbx
+git log HEAD..origin/main -- scripts/init_database.py scripts/*migrate*.py
+
+# Review migration scripts
+ls -la scripts/*migrate*.py
+```
+
+#### Running Database Migrations
+
+```bash
+# Backup database first (CRITICAL!)
+sudo -u postgres pg_dump pbx_system > /var/backups/pbx/pre-migration-$(date +%Y%m%d).sql
+
+# Stop PBX service
+sudo systemctl stop pbx
+
+# Run migration script (if provided)
+source venv/bin/activate
+python scripts/migrate_database.py
+
+# Verify migration
+python scripts/verify_database.py
+
+# Check for errors
+psql -U pbx_user -d pbx_system -c "SELECT * FROM schema_version;"
+
+# Start service
+sudo systemctl start pbx
+
+# Test functionality
+curl -k https://localhost:8080/api/status
+```
+
+#### Manual Database Updates
+
+```bash
+# Connect to database
+sudo -u postgres psql pbx_system
+
+# Run manual migration queries
+ALTER TABLE extensions ADD COLUMN new_field VARCHAR(255);
+UPDATE extensions SET new_field = 'default_value';
+
+# Verify changes
+\d extensions
+
+# Exit
+\q
+```
+
+### 8.7 Handling Update Failures
+
+#### Service Won't Start After Update
+
+```bash
+# Check service status
+sudo systemctl status pbx
+
+# View recent logs
+sudo journalctl -u pbx -n 100 --no-pager
+
+# Check for Python errors
+cd /opt/pbx
+source venv/bin/activate
+python main.py
+
+# Common issues:
+# 1. Syntax errors - Check logs for file and line number
+# 2. Import errors - Missing dependencies: pip install -r requirements.txt
+# 3. Configuration errors - Verify config.yml syntax: python -c "import yaml; yaml.safe_load(open('config.yml'))"
+# 4. Database errors - Check connection: python scripts/verify_database.py
+```
+
+#### Dependency Conflicts
+
+```bash
+# Reinstall all dependencies from scratch
+cd /opt/pbx
+source venv/bin/activate
+
+# Uninstall all packages
+pip freeze | xargs pip uninstall -y
+
+# Reinstall from requirements
+pip install -r requirements.txt
+
+# Verify
+pip check
+```
+
+#### Configuration Issues
+
+```bash
+# Validate config.yml syntax
+python -c "import yaml; yaml.safe_load(open('config.yml'))"
+
+# Compare with example config
+diff config.yml config.yml.example
+
+# Reset to default (backup first!)
+cp config.yml config.yml.backup
+cp config.yml.example config.yml
+# Then manually restore your settings
+```
+
+### 8.8 Rollback Procedures
+
+#### Quick Rollback - Service Issues
+
+```bash
+# Stop failing service
+sudo systemctl stop pbx
+
+# Rollback to previous code version
+cd /opt/pbx
+git log --oneline -10  # Find previous commit
+git reset --hard COMMIT_HASH  # Replace with actual commit hash
+
+# Restore dependencies
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Restart service
+sudo systemctl start pbx
+sudo systemctl status pbx
+```
+
+#### Full Rollback - Complete Restore
+
+```bash
+# Stop service
+sudo systemctl stop pbx
+
+# Restore database
+BACKUP_FILE="/var/backups/pbx/pbx_20250115.sql"
+sudo -u postgres dropdb pbx_system
+sudo -u postgres createdb pbx_system
+sudo -u postgres psql pbx_system < "$BACKUP_FILE"
+
+# Restore code
+cd /opt/pbx
+git reset --hard PREVIOUS_COMMIT_HASH
+
+# Restore configuration
+sudo cp /var/backups/pbx/manual-20250115/config.yml .
+sudo cp /var/backups/pbx/manual-20250115/.env .
+
+# Restore dependencies
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Restore voicemail (if needed)
+sudo tar -xzf /var/backups/pbx/manual-20250115/voicemail.tar.gz -C /
+
+# Start service
+sudo systemctl start pbx
+
+# Verify
+curl -k https://localhost:8080/api/status
+```
+
+#### Rollback to Specific Version
+
+```bash
+# View version history
+cd /opt/pbx
+git log --oneline --graph --all
+
+# Rollback to specific tag/release
+git checkout v1.0.0
+
+# Or rollback by date
+git checkout $(git rev-list -n 1 --before="2025-01-01" main)
+
+# Reinstall dependencies
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Restart
+sudo systemctl restart pbx
+```
+
+### 8.9 Post-Update Testing
+
+#### Essential Tests After Any Update
+
+```bash
+# 1. Service Health
+sudo systemctl status pbx
+curl -k https://localhost:8080/api/status
+
+# 2. Database Connectivity
+python scripts/verify_database.py
+
+# 3. Extension Registration
+# Register a test phone and verify it shows in:
+curl -k https://localhost:8080/api/extensions
+
+# 4. Test Call
+# Make a test call between two extensions
+# Verify audio works in both directions
+
+# 5. Voicemail
+# Call extension, let it go to voicemail
+# Leave message and verify it's recorded
+# Check email notification received
+
+# 6. Admin Panel
+# Access https://your-server:8080/admin/
+# Verify login works
+# Check dashboard loads
+# Clear browser cache first: Ctrl+Shift+R
+
+# 7. Check Logs for Errors
+sudo journalctl -u pbx -n 100 | grep -i error
+```
+
+#### Comprehensive Test Suite
+
+```bash
+# Run automated tests
+cd /opt/pbx
+source venv/bin/activate
+
+# Basic smoke tests
+python scripts/smoke_tests.py
+
+# Audio tests
+python scripts/test_audio_comprehensive.py
+
+# Full test suite (if in development)
+pytest tests/
+
+# Integration tests
+python scripts/test_ad_integration.py  # If using AD
+python scripts/test_menu_endpoints.py   # API tests
+```
+
+### 8.10 Update Best Practices
+
+#### Update Schedule Recommendations
+
+**Development Environment:**
+- Update weekly or as needed
+- Test new features immediately
+- Keep dependencies up to date
+
+**Staging Environment:**
+- Update 1 week before production
+- Run full test suite
+- Verify all integrations work
+
+**Production Environment:**
+- Update monthly for features
+- Update immediately for security patches
+- Always test in staging first
+- Schedule during maintenance windows
+
+#### Security Update Priority
+
+**Critical (Apply within 24 hours):**
+- Remote code execution vulnerabilities
+- Authentication bypass issues
+- Database security patches
+
+**High (Apply within 1 week):**
+- Privilege escalation vulnerabilities
+- SQL injection fixes
+- XSS vulnerabilities
+
+**Medium (Apply within 1 month):**
+- DoS vulnerabilities
+- Information disclosure
+- Non-critical dependency updates
+
+**Low (Apply during next maintenance window):**
+- Minor bug fixes
+- Performance improvements
+- Feature enhancements
+
+#### Update Documentation
+
+```bash
+# After each update, document:
+# 1. What was updated
+echo "$(date): Updated to version X.Y.Z" >> /opt/pbx/UPDATE_LOG.txt
+
+# 2. Why (security, features, bug fixes)
+echo "Reason: Security patch for CVE-XXXX-YYYY" >> /opt/pbx/UPDATE_LOG.txt
+
+# 3. Any issues encountered
+echo "Issues: None" >> /opt/pbx/UPDATE_LOG.txt
+
+# 4. Post-update test results
+echo "Tests: All passed" >> /opt/pbx/UPDATE_LOG.txt
+echo "---" >> /opt/pbx/UPDATE_LOG.txt
+```
+
+### 8.11 Monitoring After Updates
+
+#### First 24 Hours
+
+```bash
+# Monitor logs continuously
+sudo journalctl -u pbx -f
+
+# Watch for errors
+sudo journalctl -u pbx -f | grep -i "error\|warning\|critical"
+
+# Monitor resource usage
+htop
+
+# Check active calls
+watch -n 5 'curl -sk https://localhost:8080/api/calls | jq'
+
+# Database connections
+watch -n 10 "sudo -u postgres psql -c 'SELECT count(*) FROM pg_stat_activity WHERE datname=''pbx_system'';'"
+```
+
+#### First Week
+
+```bash
+# Daily health check
+cat > /opt/pbx/daily_health_check.sh << 'EOF'
+#!/bin/bash
+echo "=== Daily Health Check $(date) ===" >> /var/log/pbx_health.log
+
+# Service status
+systemctl is-active pbx >> /var/log/pbx_health.log 2>&1
+
+# Error count in last 24h
+journalctl -u pbx --since "24 hours ago" | grep -i error | wc -l >> /var/log/pbx_health.log
+
+# Active calls
+curl -sk https://localhost:8080/api/statistics >> /var/log/pbx_health.log 2>&1
+
+echo "---" >> /var/log/pbx_health.log
+EOF
+
+chmod +x /opt/pbx/daily_health_check.sh
+
+# Add to root's cron (append without overwriting existing entries)
+(sudo crontab -l 2>/dev/null; echo "0 6 * * * /opt/pbx/daily_health_check.sh") | sudo crontab -
+```
+
+#### Performance Monitoring
+
+```bash
+# Compare before/after update
+# CPU usage
+top -b -n 1 | grep python
+
+# Memory usage
+ps aux | grep python | awk '{sum+=$6} END {print sum/1024 " MB"}'
+
+# Call quality metrics
+curl -k https://localhost:8080/api/statistics
+
+# Response time
+time curl -k https://localhost:8080/api/status
+```
+
+### 8.12 Common Update Scenarios
+
+#### Scenario 1: Security Patch for Python Package
+
+```bash
+# Example: Cryptography library has a CVE
+
+# 1. Check current version
+pip show cryptography
+
+# 2. Stop service
+sudo systemctl stop pbx
+
+# 3. Update package
+pip install --upgrade cryptography==46.0.3
+
+# 4. Test import
+python -c "from cryptography.fernet import Fernet; print('✓ OK')"
+
+# 5. Restart and verify
+sudo systemctl start pbx
+curl -k https://localhost:8080/api/status
+
+# 6. Monitor logs
+sudo journalctl -u pbx -f
+```
+
+#### Scenario 2: New Feature Release
+
+```bash
+# 1. Review release notes
+cd /opt/pbx
+git fetch origin
+git log HEAD..origin/main
+
+# 2. Create backup
+sudo /opt/pbx/scripts/backup_full.sh
+
+# 3. Apply update during maintenance window
+sudo systemctl stop pbx
+git pull origin main
+
+# 4. Update dependencies (if requirements.txt changed)
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 5. Run migrations (if any)
+python scripts/migrate_database.py
+
+# 6. Update configuration (review CHANGELOG)
+# Add new config options if required
+nano config.yml
+
+# 7. Restart and test
+sudo systemctl start pbx
+python scripts/smoke_tests.py
+
+# 8. Monitor
+sudo journalctl -u pbx -f
+```
+
+#### Scenario 3: Emergency Hotfix
+
+```bash
+# 1. Minimal downtime approach
+cd /opt/pbx
+
+# 2. Fetch hotfix
+git fetch origin
+git checkout hotfix/critical-fix
+
+# 3. Quick test
+python -m py_compile path/to/fixed/file.py
+
+# 4. Apply
+sudo systemctl restart pbx
+
+# 5. Verify fix
+# Test the specific issue that was fixed
+
+# 6. Monitor
+sudo journalctl -u pbx -f
+```
+
+---
+
+## 9. Developer Guide
+
+### 9.1 Architecture Overview
 
 **Component Structure:**
 ```
@@ -1461,7 +2246,7 @@ PBX System
 4. Features layer adds capabilities (transfer, hold, etc.)
 5. CDR logs call details
 
-### 8.2 REST API Reference
+### 9.2 REST API Reference
 
 **Authentication:**
 Currently API is open. For production, implement authentication:
@@ -1550,7 +2335,7 @@ PUT /api/config
 }
 ```
 
-### 8.3 Development Setup
+### 9.3 Development Setup
 
 **Prerequisites:**
 ```bash
@@ -1591,7 +2376,7 @@ pytest tests/test_basic.py
 make test-cov
 ```
 
-### 8.4 Contributing
+### 9.4 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Code style guidelines
@@ -1611,7 +2396,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ---
 
-## 9. Appendices
+## 10. Appendices
 
 ### Appendix A: Configuration Reference
 
@@ -1726,7 +2511,7 @@ integrations:
 
 ---
 
-**Document Version:** 1.0.0  
-**Last Updated:** 2025-12-29  
+**Document Version:** 1.1.0  
+**Last Updated:** 2026-01-02  
 **Copyright:** Warden VoIP PBX Project
 

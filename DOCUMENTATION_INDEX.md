@@ -12,7 +12,7 @@ This index helps you navigate the PBX documentation system.
 **Start here for most needs:**
 
 - **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - 📘 **Complete comprehensive documentation (RECOMMENDED)**
-  - All-in-one guide with 9 major sections
+  - All-in-one guide with 10 major sections
   - Quick Start & Installation
   - Production Deployment
   - Core Features & Configuration
@@ -20,6 +20,7 @@ This index helps you navigate the PBX documentation system.
   - Integration Guides
   - Security & Compliance
   - Operations & Troubleshooting
+  - Update & Maintenance Guide
   - Developer Guide & API Reference
   - Quick reference appendices
 
@@ -83,6 +84,7 @@ Located in [docs/reference/](docs/reference/):
 2. [COMPLETE_GUIDE.md - Section 2: Production Deployment](COMPLETE_GUIDE.md#2-production-deployment)
 3. [COMPLETE_GUIDE.md - Section 6: Security & Compliance](COMPLETE_GUIDE.md#6-security--compliance)
 4. [COMPLETE_GUIDE.md - Section 7: Operations & Troubleshooting](COMPLETE_GUIDE.md#7-operations--troubleshooting)
+5. [COMPLETE_GUIDE.md - Section 8: Update & Maintenance Guide](COMPLETE_GUIDE.md#8-update--maintenance-guide)
 
 ### 🌐 Network Administrator
 
@@ -102,8 +104,8 @@ Located in [docs/reference/](docs/reference/):
 ### 👨‍💻 Developer
 
 **Must read:**
-1. [COMPLETE_GUIDE.md - Section 8: Developer Guide](COMPLETE_GUIDE.md#8-developer-guide)
-2. [COMPLETE_GUIDE.md - Section 8.2: REST API Reference](COMPLETE_GUIDE.md#82-rest-api-reference)
+1. [COMPLETE_GUIDE.md - Section 9: Developer Guide](COMPLETE_GUIDE.md#9-developer-guide)
+2. [COMPLETE_GUIDE.md - Section 9.2: REST API Reference](COMPLETE_GUIDE.md#92-rest-api-reference)
 3. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
 4. [CONTRIBUTING.md](CONTRIBUTING.md)
 5. [TODO.md](TODO.md)
