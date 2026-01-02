@@ -137,7 +137,7 @@ The Aluminum Blanking PBX System is a **comprehensive, enterprise-grade Private 
 ```
 
 ### Technology Stack
-- **Language**: Python 3.12+ (Python 3.13+ recommended)
+- **Language**: Python 3.12 (Python 3.13+ recommended)
 - **Protocols**: SIP (RFC 3261), RTP (RFC 3550), HTTP/REST
 - **Communication**: VoIP (Voice over IP) and VoSIP (Voice over Secure IP)
 - **Database**: PostgreSQL (production), SQLite (development)

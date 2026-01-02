@@ -41,7 +41,7 @@ Warden VoIP PBX is a comprehensive VoIP system built in Python. Choose your inst
 ### 1.2 Quick Development Setup
 
 #### Prerequisites
-- Python 3.12+
+- Python 3.12
 - Ubuntu/Debian Linux (recommended)
 - 2GB+ RAM, 10GB+ disk space
 
@@ -2339,7 +2339,7 @@ PUT /api/config
 
 **Prerequisites:**
 ```bash
-# Python 3.12+
+# Python 3.12
 python3 --version
 
 # Install dev dependencies
