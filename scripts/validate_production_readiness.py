@@ -23,13 +23,11 @@ Options:
 
 import argparse
 import json
-import os
 import platform
 import socket
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 # Color codes for terminal output
 GREEN = "\033[92m"
@@ -210,8 +208,18 @@ class ProductionValidator:
                                 self.log("Database connectivity: Successful", "pass")
                             else:
                                 self.log("Database password not set in config", "warn")
+                        except psycopg2.OperationalError as e:
+                            self.log(
+                                f"Database connectivity: Failed (operational error: {e})", "fail"
+                            )
+                        except psycopg2.Error as e:
+                            self.log(
+                                f"Database connectivity: Failed (database error: {e})", "fail"
+                            )
                         except Exception as e:
-                            self.log(f"Database connectivity: Failed ({e})", "fail")
+                            self.log(
+                                f"Database connectivity: Failed (unexpected error: {e})", "fail"
+                            )
                     except ImportError:
                         self.log("psycopg2 library: Not installed", "fail")
 

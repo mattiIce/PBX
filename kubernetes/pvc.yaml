@@ -5,11 +5,15 @@ metadata:
   namespace: pbx-system
 spec:
   accessModes:
-    - ReadWriteMany  # Multiple pods can read/write
+    - ReadWriteMany  # Multiple pods can read/write - requires NFS or similar storage class
   resources:
     requests:
       storage: 10Gi
-  storageClassName: standard  # Adjust based on your storage class
+  # NOTE: The 'standard' storage class typically only supports ReadWriteOnce.
+  # For ReadWriteMany, use a storage class that supports it (e.g., NFS, CephFS, GlusterFS).
+  # Example: storageClassName: nfs-client
+  # Or change accessModes to ReadWriteOnce if only one pod will mount the volume.
+  storageClassName: standard
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -18,10 +22,11 @@ metadata:
   namespace: pbx-system
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteMany  # Requires NFS or similar storage class
   resources:
     requests:
       storage: 50Gi
+  # NOTE: Change to a ReadWriteMany-compatible storage class (e.g., nfs-client) or use ReadWriteOnce
   storageClassName: standard
 ---
 apiVersion: v1
@@ -31,10 +36,11 @@ metadata:
   namespace: pbx-system
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteMany  # Requires NFS or similar storage class
   resources:
     requests:
       storage: 5Gi
+  # NOTE: Change to a ReadWriteMany-compatible storage class (e.g., nfs-client) or use ReadWriteOnce
   storageClassName: standard
 ---
 apiVersion: v1
