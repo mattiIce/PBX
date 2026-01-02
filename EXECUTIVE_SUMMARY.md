@@ -1413,7 +1413,7 @@ docker run -d -p 5060:5060/udp -p 8080:8080 pbx-system
 - RAM: 2 GB
 - Disk: 10 GB
 - OS: Ubuntu 20.04+ / Any Linux
-- Python: 3.12+ (Python 3.13+ recommended)
+- Python: 3.12
 
 #### Recommended (Production)
 - CPU: 4+ cores

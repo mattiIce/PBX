@@ -269,7 +269,7 @@ A clear description of what you expected to happen.
 
 **Environment:**
 - OS: [e.g., Ubuntu 22.04]
-- Python version: [e.g., 3.12 or 3.13]
+- Python version: [e.g., 3.12]
 - PBX System version: [e.g., 1.0.0]
 
 **Logs**
