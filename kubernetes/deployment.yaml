@@ -1,0 +1,138 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pbx-server
+  namespace: pbx-system
+  labels:
+    app: pbx-server
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: pbx-server
+  template:
+    metadata:
+      labels:
+        app: pbx-server
+        version: v1
+    spec:
+      # Run as non-root user for security
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      # Anti-affinity to spread pods across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - pbx-server
+              topologyKey: kubernetes.io/hostname
+      
+      containers:
+      - name: pbx
+        image: pbx-system:latest  # Replace with your image
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: https-api
+          containerPort: 8080
+          protocol: TCP
+        - name: sip
+          containerPort: 5060
+          protocol: UDP
+        
+        env:
+        - name: DATABASE_HOST
+          value: "pbx-postgresql"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_NAME
+          value: "pbx_system"
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: pbx-secrets
+              key: database-user
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pbx-secrets
+              key: database-password
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTPS
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        
+        # Volume mounts
+        volumeMounts:
+        - name: config
+          mountPath: /app/config.yml
+          subPath: config.yml
+          readOnly: true
+        - name: voicemail
+          mountPath: /app/voicemail
+        - name: recordings
+          mountPath: /app/recordings
+        - name: logs
+          mountPath: /app/logs
+        - name: ssl-cert
+          mountPath: /app/ssl
+          readOnly: true
+      
+      volumes:
+      - name: config
+        configMap:
+          name: pbx-config
+      - name: voicemail
+        persistentVolumeClaim:
+          claimName: pbx-voicemail-pvc
+      - name: recordings
+        persistentVolumeClaim:
+          claimName: pbx-recordings-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: pbx-logs-pvc
+      - name: ssl-cert
+        secret:
+          secretName: pbx-ssl-cert

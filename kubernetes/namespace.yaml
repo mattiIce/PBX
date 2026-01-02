@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pbx-system
+  labels:
+    name: pbx-system
+    environment: production
