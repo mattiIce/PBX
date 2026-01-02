@@ -7,7 +7,7 @@ name = "warden-voip"
 version = "1.0.0"
 description = "Warden Voip - A comprehensive, feature-rich Private Branch Exchange (PBX) and VOIP system built in Python"
 readme = "README.md"
-requires-python = ">=3.12.3"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "Warden Voip Contributors"}
