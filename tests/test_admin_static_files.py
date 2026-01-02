@@ -29,7 +29,7 @@ class MockPBXCore:
 def get_free_port():
     """Find a free port to use for testing."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('127.0.0.1', 0))
+        s.bind(("127.0.0.1", 0))
         s.listen(1)
         port = s.getsockname()[1]
     return port
@@ -90,7 +90,7 @@ def test_admin_static_files():
 
         if response.status == 200:
             print(f"  ✓ Got success status: {response.status}")
-            
+
             # Check Content-Type header
             content_type = response.getheader("Content-Type")
             if content_type and "text/html" in content_type:
@@ -99,9 +99,9 @@ def test_admin_static_files():
                 print(f"  ✗ Unexpected Content-Type: {content_type} (expected text/html)")
                 conn.close()
                 return False
-            
+
             # Read some content to verify it's actually HTML
-            content = response.read(100).decode('utf-8', errors='ignore')
+            content = response.read(100).decode("utf-8", errors="ignore")
             if "<!DOCTYPE" in content or "<html" in content:
                 print("  ✓ Response contains HTML content")
             else:
@@ -141,6 +141,7 @@ def test_admin_static_files():
     except Exception as e:
         print(f"\n  ✗ Error during test: {e}")
         import traceback
+
         traceback.print_exc()
         result = False
     finally:

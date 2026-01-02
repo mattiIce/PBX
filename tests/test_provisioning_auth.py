@@ -72,9 +72,9 @@ def test_provisioning_endpoints_require_auth():
             response = conn.getresponse()
             response.read()  # Read the response to clear the buffer
 
-            assert response.status == 401, (
-                f"{endpoint} should require authentication but returned {response.status}"
-            )
+            assert (
+                response.status == 401
+            ), f"{endpoint} should require authentication but returned {response.status}"
             print(f"  ✓ {endpoint} requires authentication (401)")
 
         print("✓ All provisioning endpoints require authentication")
@@ -127,9 +127,7 @@ def test_provisioning_endpoints_with_auth():
         login_data = {"extension": "1001", "password": "test123"}
         headers = {"Content-Type": "application/json"}
 
-        conn.request(
-            "POST", "/api/auth/login", body=json.dumps(login_data), headers=headers
-        )
+        conn.request("POST", "/api/auth/login", body=json.dumps(login_data), headers=headers)
         response = conn.getresponse()
         login_result = json.loads(response.read().decode())
 
@@ -150,9 +148,7 @@ def test_provisioning_endpoints_with_auth():
         response = conn.getresponse()
         vendors_data = json.loads(response.read().decode())
 
-        assert response.status == 200, (
-            f"Should return 200 with auth but got {response.status}"
-        )
+        assert response.status == 200, f"Should return 200 with auth but got {response.status}"
         assert "vendors" in vendors_data, "Response should contain vendors"
         assert "models" in vendors_data, "Response should contain models"
         print("  ✓ /api/provisioning/vendors works with authentication")
@@ -163,9 +159,7 @@ def test_provisioning_endpoints_with_auth():
         response = conn.getresponse()
         devices_data = json.loads(response.read().decode())
 
-        assert response.status == 200, (
-            f"Should return 200 with auth but got {response.status}"
-        )
+        assert response.status == 200, f"Should return 200 with auth but got {response.status}"
         assert isinstance(devices_data, list), "Response should be a list"
         print("  ✓ /api/provisioning/devices works with authentication")
         print(f"    Found {len(devices_data)} devices")
