@@ -1,8 +1,118 @@
 # License Management Admin Interface
 
+**Last Updated**: December 29, 2025  
+**Purpose**: Complete guide for license management including quick reference and detailed procedures
+
+## Table of Contents
+- [Quick Reference](#quick-reference)
+- [Admin Interface Access](#admin-interface-access)
+- [Command-Line Tool](#command-line-tool)
+- [License Types](#license-types)
+- [Troubleshooting](#troubleshooting)
+- [Security Notes](#security-notes)
+
+---
+
+## Quick Reference
+
+### Admin Credentials (Encrypted)
+```
+Extension: 9322
+Username:  ICE
+PIN:       26697647
+```
+⚠️ This account has exclusive access to license management and uses triple-layer encryption.
+
+### Quick Start Commands
+
+**Generate a License**:
+```bash
+python scripts/license_manager.py generate \
+  --type professional \
+  --org "Customer Name" \
+  --days 365 \
+  --output license.json
+```
+
+**Batch Generate**:
+```bash
+python scripts/license_manager.py batch-generate examples/batch_licenses.json
+```
+
+**Install License**:
+```bash
+python scripts/license_manager.py install license.json
+```
+
+**Check Status**:
+```bash
+python scripts/license_manager.py status
+```
+
+### Common Tasks
+
+**Enable Licensing:**
+```bash
+python scripts/license_manager.py enable
+```
+
+**Disable Licensing (Open-Source Mode):**
+```bash
+python scripts/license_manager.py disable
+```
+
+**Install with Enforcement (Commercial):**
+```bash
+python scripts/license_manager.py install license.json --enforce
+```
+
+**Remove License Lock:**
+```bash
+python scripts/license_manager.py remove-lock
+```
+
+### API Endpoints
+
+**Public (All Users):**
+- `GET /api/license/status` - View license status
+- `GET /api/license/features` - List available features
+
+**Admin Only (Extension 9322):**
+- `POST /api/license/admin_login` - Authenticate
+- `POST /api/license/generate` - Create new license
+- `POST /api/license/install` - Install license
+- `POST /api/license/revoke` - Remove license
+- `POST /api/license/toggle` - Enable/disable licensing
+
+### Batch Config Example
+
+**JSON** (`config.json`):
+```json
+{
+  "licenses": [
+    {
+      "type": "professional",
+      "issued_to": "Customer Name",
+      "expiration_days": 365,
+      "max_extensions": 100,
+      "max_concurrent_calls": 50
+    }
+  ]
+}
+```
+
+**Generate**:
+```bash
+python scripts/license_manager.py batch-generate config.json --output-dir ./licenses
+```
+
+---
+
 ## Overview
 
 The PBX system includes a comprehensive license management system with both a web-based admin interface and a command-line tool. License management functionality is **restricted to a special administrator account** for security purposes.
+
+---
 
 ## Admin Interface Access
 
@@ -338,23 +448,20 @@ deploy:
     - systemctl restart pbx
 ```
 
-## Support
-
-For issues or questions:
-- Review `LICENSING_GUIDE.md` for detailed licensing information
-- Check logs in `logs/pbx.log` for authentication errors
-- Ensure all dependencies are installed: `pip install -r requirements.txt`
-
-## Security Notes
-
-**IMPORTANT**: 
-- The license admin credentials (Extension 9322, PIN 26697647) should be kept confidential
-- Change the `license_secret_key` in `config.yml` for production deployments
-- The PIN is heavily encrypted, but the account cannot be locked out
-- All authentication attempts are logged - monitor for suspicious activity
-- In production, consider adding rate limiting to login endpoints
-
 ## License Types
+
+Quick comparison:
+
+| Type | Duration | Extensions | Calls | Key Features |
+|------|----------|-----------|-------|--------------|
+| Trial | 30 days | 10 | 5 | Basic features |
+| Basic | Variable | 50 | 25 | Small business |
+| Professional | Variable | 200 | 100 | WebRTC, CRM |
+| Enterprise | Variable | ∞ | ∞ | AI, HA, Multi-site |
+| Perpetual | Forever | ∞ | ∞ | One-time purchase |
+| Custom | Variable | Custom | Custom | Tailored features |
+
+**Detailed Descriptions:**
 
 - **Trial**: 30 days, 10 extensions, 5 concurrent calls
 - **Basic**: Suitable for small businesses, 50 extensions, 25 concurrent calls
@@ -364,3 +471,93 @@ For issues or questions:
 - **Custom**: Tailored feature sets for special requirements
 
 See `LICENSING_GUIDE.md` for complete feature lists and pricing.
+
+---
+
+## Troubleshooting
+
+**Can't see License Management tab?**
+- Verify you're logged in as Extension 9322
+- Clear browser cache (Ctrl+Shift+R)
+
+**CLI command not found?**
+```bash
+cd /path/to/PBX
+python scripts/license_manager.py --help
+```
+
+**Authentication fails?**
+- Check Extension: 9322
+- Check Username: ICE (case insensitive)
+- Check PIN: 26697647
+- Review logs: `tail -f logs/pbx.log`
+
+**License generation fails?**
+- Ensure all required parameters are provided
+- Check file permissions in output directory
+- Verify license secret key is configured in config.yml
+
+**License installation fails?**
+- Verify JSON file format is valid
+- Check license has not expired
+- Ensure licensing is enabled in config.yml
+- Review logs for specific error messages
+
+---
+
+## Security Notes
+
+**Triple-Layer Encryption:**
+✅ SHA256 hashing  
+✅ PBKDF2 with 100,000 iterations  
+✅ HMAC verification  
+✅ Constant-time comparison (timing attack prevention)  
+✅ Protected system account (cannot be edited/deleted)  
+✅ All authentication attempts logged  
+✅ Session-based API protection  
+
+**IMPORTANT**: 
+- The license admin credentials (Extension 9322, PIN 26697647) should be kept confidential
+- Change the `license_secret_key` in `config.yml` for production deployments
+- The PIN is heavily encrypted, but the account cannot be locked out
+- All authentication attempts are logged - monitor for suspicious activity
+- In production, consider adding rate limiting to login endpoints
+
+---
+
+## Migration Guide
+
+### Upgrading Existing Installation
+
+If you have an existing PBX installation:
+
+1. Pull the latest code with license management features
+2. The license admin account (Extension 9322) is automatically available
+3. Access the admin panel and navigate to License Management
+4. Generate or install your license
+
+### Adding to CI/CD Pipeline
+
+```yaml
+# Example GitLab CI/CD
+deploy:
+  script:
+    - python scripts/license_manager.py generate --type enterprise --org "$CUSTOMER_NAME" --days 365 --output license.json
+    - python scripts/license_manager.py install license.json --enforce
+    - systemctl restart pbx
+```
+
+---
+
+## Support and Documentation
+
+For issues or questions:
+- Review **[LICENSING_GUIDE.md](LICENSING_GUIDE.md)** for detailed licensing information
+- Check logs in `logs/pbx.log` for authentication errors
+- Ensure all dependencies are installed: `pip install -r requirements.txt`
+- See **[ADMIN_PANEL_GUIDE.md](ADMIN_PANEL_GUIDE.md)** for general admin panel usage
+
+---
+
+**Last Updated**: December 29, 2025  
+**Status**: Production Ready

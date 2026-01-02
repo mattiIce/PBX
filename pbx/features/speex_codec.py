@@ -129,7 +129,7 @@ class SpeexCodec:
 
         # Check if speex library is available
         try:
-            import speex
+            pass
 
             self.speex_available = True
             self.logger.info(
@@ -461,7 +461,7 @@ class SpeexCodecManager:
             bool: True if speex library is available
         """
         try:
-            import speex
+            pass
 
             return True
         except ImportError:

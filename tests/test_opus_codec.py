@@ -417,7 +417,7 @@ class TestOpusCodecWithLibrary(unittest.TestCase):
         # Encode first to get valid opus data
         self.codec.create_encoder()
         encoded = self.codec.encode(pcm_data)
-        decoded1 = self.codec.decode(encoded)
+        self.codec.decode(encoded)
 
         # Now test PLC for lost packet
         plc_audio = self.codec.handle_packet_loss()

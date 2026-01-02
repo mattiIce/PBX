@@ -49,8 +49,6 @@ def test_moh_system():
         print("   ✗ ERROR: No MOH files found in default class!")
         return False
 
-    expected_files = ["ambient.wav", "arpeggio.wav", "chimes.wav", "melody.wav", "pad.wav"]
-
     for filepath in files:
         filename = os.path.basename(filepath)
         size_kb = os.path.getsize(filepath) / 1024
@@ -58,14 +56,14 @@ def test_moh_system():
 
         # Check if file exists
         if not os.path.exists(filepath):
-            print(f"       ✗ ERROR: File does not exist!")
+            print("       ✗ ERROR: File does not exist!")
             return False
 
         # Check if it's a WAV file
         with open(filepath, "rb") as f:
             header = f.read(12)
             if not (header[0:4] == b"RIFF" and header[8:12] == b"WAVE"):
-                print(f"       ✗ ERROR: Not a valid WAV file!")
+                print("       ✗ ERROR: Not a valid WAV file!")
                 return False
 
     print(f"   ✓ All {len(files)} MOH files are valid WAV files")

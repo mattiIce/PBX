@@ -1,0 +1,191 @@
+# Apache Virtual Host Configuration for Warden VoIP PBX System
+# 
+# This configuration sets up Apache as a reverse proxy to the PBX application
+# Place this file in /etc/apache2/sites-available/ and enable it
+#
+# ⚠️  IMPORTANT: This is a TEMPLATE file with PLACEHOLDERS that must be replaced!
+#
+# Instructions:
+#   1. Copy this file to Apache sites-available:
+#      sudo cp apache-pbx.conf.example /etc/apache2/sites-available/pbx.conf
+#
+#   2. Edit the file and replace the following placeholders:
+#      ⚠️  YOUR_DOMAIN_NAME  → Your actual domain (e.g., abps.albl.com)
+#      ⚠️  YOUR_EMAIL        → Your email for SSL notifications
+#      ⚠️  BACKEND_PORT      → PBX backend port (usually 8080 or 9000)
+#
+#      Find and replace all occurrences:
+#      sed -i 's/YOUR_DOMAIN_NAME/abps.albl.com/g' /etc/apache2/sites-available/pbx.conf
+#      sed -i 's/YOUR_EMAIL/admin@example.com/g' /etc/apache2/sites-available/pbx.conf
+#      sed -i 's/BACKEND_PORT/8080/g' /etc/apache2/sites-available/pbx.conf
+#
+#   3. Enable required Apache modules:
+#      sudo a2enmod proxy proxy_http proxy_wstunnel headers rewrite ssl
+#
+#   4. Enable the site:
+#      sudo a2ensite pbx
+#
+#   5. Obtain SSL certificate (recommended):
+#      sudo apt install certbot python3-certbot-apache
+#      sudo certbot --apache -d YOUR_DOMAIN_NAME
+#
+#   6. Reload Apache:
+#      sudo systemctl reload apache2
+#
+# OR: Use the automated setup script instead:
+#      sudo scripts/setup_apache_reverse_proxy.sh
+
+# HTTP Virtual Host - Redirects to HTTPS
+<VirtualHost *:80>
+    ServerName YOUR_DOMAIN_NAME
+    ServerAdmin YOUR_EMAIL
+
+    # Redirect all HTTP traffic to HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+
+    # Allow Let's Encrypt certificate validation
+    Alias /.well-known/acme-challenge/ /var/www/html/.well-known/acme-challenge/
+    <Directory "/var/www/html/.well-known/acme-challenge/">
+        Options None
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    # Logging
+    ErrorLog ${APACHE_LOG_DIR}/pbx-error.log
+    CustomLog ${APACHE_LOG_DIR}/pbx-access.log combined
+</VirtualHost>
+
+# HTTPS Virtual Host - Main PBX Proxy Configuration
+<VirtualHost *:443>
+    ServerName YOUR_DOMAIN_NAME
+    ServerAdmin YOUR_EMAIL
+
+    # SSL Configuration (will be auto-configured by certbot)
+    # If using manual certificates, uncomment and configure:
+    # SSLEngine on
+    # SSLCertificateFile /etc/ssl/certs/YOUR_DOMAIN_NAME.crt
+    # SSLCertificateKeyFile /etc/ssl/private/YOUR_DOMAIN_NAME.key
+    # SSLCertificateChainFile /etc/ssl/certs/chain.pem
+
+    # Modern SSL/TLS settings
+    SSLEngine on
+    SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+    SSLCipherSuite HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4
+    SSLHonorCipherOrder on
+
+    # Security Headers
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(self), camera=()"
+    
+    # Content Security Policy
+    # Note: The wildcard *:9000 is necessary to support both direct and proxied API access
+    # 'unsafe-inline' is required for the admin panel's inline scripts and styles
+    # This matches the CSP configured in the PBX application itself
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
+
+    # Enable HSTS (HTTP Strict Transport Security)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Proxy settings for PBX backend
+    ProxyPreserveHost On
+    ProxyRequests Off
+    
+    # Set proxy timeout for long-running connections
+    ProxyTimeout 300
+
+    # WebSocket support (for WebRTC phone functionality)
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/(.*)$ ws://localhost:BACKEND_PORT/$1 [P,L]
+    RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+    RewriteRule ^/(.*)$ http://localhost:BACKEND_PORT/$1 [P,L]
+
+    # Main proxy configuration
+    <Location />
+        ProxyPass http://localhost:BACKEND_PORT/
+        ProxyPassReverse http://localhost:BACKEND_PORT/
+        
+        # Forward client information to backend
+        RequestHeader set X-Forwarded-Proto "https"
+        RequestHeader set X-Forwarded-Port "443"
+        RequestHeader set X-Real-IP %{REMOTE_ADDR}s
+    </Location>
+
+    # API endpoint with rate limiting (requires mod_ratelimit or mod_qos)
+    # If mod_qos is available, uncomment to enable rate limiting:
+    # <Location /api/>
+    #     # Limit to 10 requests per second per IP
+    #     QS_SrvMaxConnPerIP 10
+    #     QS_LocRequestLimit /api/ 100 60
+    # </Location>
+
+    # Admin interface (already proxied by main location, but explicitly defined for clarity)
+    <Location /admin/>
+        ProxyPass http://localhost:BACKEND_PORT/admin/
+        ProxyPassReverse http://localhost:BACKEND_PORT/admin/
+    </Location>
+
+    # Provisioning endpoint for phones
+    <Location /provision/>
+        ProxyPass http://localhost:BACKEND_PORT/provision/
+        ProxyPassReverse http://localhost:BACKEND_PORT/provision/
+    </Location>
+
+    # Logging
+    ErrorLog ${APACHE_LOG_DIR}/pbx-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/pbx-ssl-access.log combined
+
+    # Additional logging for troubleshooting
+    LogLevel warn
+    # For debugging, you can temporarily increase log level:
+    # LogLevel proxy:trace6
+</VirtualHost>
+
+# =============================================================================
+# TROUBLESHOOTING REVERSE PROXY + SSL
+# =============================================================================
+#
+# Common Issue: ERR_SSL_PROTOCOL_ERROR
+# -------------------------------------
+# Symptom: Browser shows "This site can't provide a secure connection"
+#          "ERR_SSL_PROTOCOL_ERROR" or "sent an invalid response"
+#
+# Root Cause: Backend API has SSL enabled when it should be HTTP-only
+#
+# Solution:
+# 1. Edit config.yml on the PBX server
+# 2. Find the "api:" section
+# 3. Ensure: ssl.enabled: false
+# 4. Restart PBX: sudo systemctl restart pbx
+#
+# Architecture (Correct Setup):
+#   Browser --HTTPS--> Apache (port 443) --HTTP--> PBX Backend (port 9000)
+#   ✓ Apache handles SSL/TLS encryption
+#   ✓ Backend runs plain HTTP (internal only)
+#   ✓ Apache proxies securely
+#
+# Architecture (Incorrect - Causes Error):
+#   Browser --HTTPS--> Apache (port 443) --HTTPS--> PBX Backend (port 9000)
+#   ✗ Apache expects HTTP backend but gets HTTPS
+#   ✗ SSL protocol mismatch error
+#
+# Verification:
+# - Check Apache error log: tail -f /var/log/apache2/pbx-ssl-error.log
+# - Check PBX is on HTTP: curl http://localhost:9000/api/health
+# - Should get JSON response (not SSL error)
+#
+# Additional Checks:
+# 1. Ensure backend port matches: grep "port:" /path/to/config.yml
+# 2. Verify Apache proxy points to correct port (should match BACKEND_PORT above)
+# 3. Check firewall allows internal HTTP: sudo ufw status
+# 4. Ensure PBX backend is running: sudo systemctl status pbx
+#
+# =============================================================================
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

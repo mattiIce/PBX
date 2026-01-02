@@ -63,7 +63,7 @@ def test_voicemail_access_contact_header_code_review():
         "to_ext}" not in contact_line and "to_ext @" not in contact_line
     ), f"Contact header should NOT use to_ext (with asterisk), found: {contact_line}"
 
-    print(f"  ✓ Contact header code is correct: uses target_ext")
+    print("  ✓ Contact header code is correct: uses target_ext")
     print(f"  ✓ Found: {contact_line}")
     print("✓ Voicemail access Contact header code review passed!")
 

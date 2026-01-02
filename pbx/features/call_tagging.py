@@ -5,7 +5,7 @@ AI-powered call classification and tagging
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -395,6 +395,72 @@ class CallTagging:
 
         return tags_added
 
+    def _classify_with_spacy(self, transcript: str) -> List[tuple]:
+        """Classify using spaCy NLP model"""
+        results = []
+
+        try:
+            # Extract entities for context
+            entities = self.extract_entities_with_spacy(transcript)
+
+            # Analyze sentiment
+            sentiment = self.analyze_sentiment_with_spacy(transcript)
+
+            # Add sentiment-based tag if strong signal
+            if sentiment["confidence"] > 0.7:
+                if sentiment["sentiment"] == "negative":
+                    results.append(("complaint", sentiment["confidence"] * 0.9))
+                elif sentiment["sentiment"] == "positive":
+                    results.append(("satisfied", sentiment["confidence"] * 0.8))
+
+            # Add tags based on detected entities
+            if "ORG" in entities and len(entities["ORG"]) > 0:
+                # Mentions of organizations might indicate partnership/sales
+                results.append(("sales", 0.6))
+
+            if "MONEY" in entities:
+                # Money mentions suggest billing or sales
+                results.append(("billing", 0.7))
+
+            self.logger.debug(f"spaCy classification added {len(results)} tags")
+
+        except Exception as e:
+            self.logger.warning(f"spaCy classification failed: {e}")
+
+        return results
+
+    def _classify_with_ml(self, transcript: str) -> List[tuple]:
+        """Classify using ML classifier"""
+        results = []
+
+        try:
+            # Transform transcript using TF-IDF
+            X = self.tfidf_vectorizer.transform([transcript])
+
+            # Get probability predictions for all classes
+            probabilities = self.ml_classifier.predict_proba(X)[0]
+
+            # Get class labels
+            classes = self.label_encoder.classes_
+
+            # Create results with confidence scores
+            for i, prob in enumerate(probabilities):
+                if (
+                    prob > self.MIN_CLASSIFICATION_PROBABILITY
+                ):  # Only include if probability > threshold
+                    category = classes[i]
+                    results.append((category, float(prob)))
+
+            # Sort by confidence
+            results.sort(key=lambda x: x[1], reverse=True)
+
+            self.logger.debug(f"ML classification: {results[:3]}")
+            return results[:5]  # Return top 5
+
+        except Exception as e:
+            self.logger.warning(f"ML classification failed: {e}, falling back to rule-based")
+            return []
+
     def _classify_with_ai(self, transcript: str) -> List[tuple]:
         """
         Classify call using AI/ML with scikit-learn and spaCy
@@ -409,33 +475,7 @@ class CallTagging:
 
         # Use spaCy for enhanced classification if available
         if self.nlp_model is not None:
-            try:
-                # Extract entities for context
-                entities = self.extract_entities_with_spacy(transcript)
-
-                # Analyze sentiment
-                sentiment = self.analyze_sentiment_with_spacy(transcript)
-
-                # Add sentiment-based tag if strong signal
-                if sentiment["confidence"] > 0.7:
-                    if sentiment["sentiment"] == "negative":
-                        results.append(("complaint", sentiment["confidence"] * 0.9))
-                    elif sentiment["sentiment"] == "positive":
-                        results.append(("satisfied", sentiment["confidence"] * 0.8))
-
-                # Add tags based on detected entities
-                if "ORG" in entities and len(entities["ORG"]) > 0:
-                    # Mentions of organizations might indicate partnership/sales
-                    results.append(("sales", 0.6))
-
-                if "MONEY" in entities:
-                    # Money mentions suggest billing or sales
-                    results.append(("billing", 0.7))
-
-                self.logger.debug(f"spaCy classification added {len(results)} tags")
-
-            except Exception as e:
-                self.logger.warning(f"spaCy classification failed: {e}")
+            results.extend(self._classify_with_spacy(transcript))
 
         # Use ML classifier if available (85-92% accuracy)
         if (
@@ -443,32 +483,9 @@ class CallTagging:
             and self.ml_classifier is not None
             and self.tfidf_vectorizer is not None
         ):
-            try:
-                # Transform transcript using TF-IDF
-                X = self.tfidf_vectorizer.transform([transcript])
-
-                # Get probability predictions for all classes
-                probabilities = self.ml_classifier.predict_proba(X)[0]
-
-                # Get class labels
-                classes = self.label_encoder.classes_
-
-                # Create results with confidence scores
-                for i, prob in enumerate(probabilities):
-                    if (
-                        prob > self.MIN_CLASSIFICATION_PROBABILITY
-                    ):  # Only include if probability > threshold
-                        category = classes[i]
-                        results.append((category, float(prob)))
-
-                # Sort by confidence
-                results.sort(key=lambda x: x[1], reverse=True)
-
-                self.logger.debug(f"ML classification: {results[:3]}")
-                return results[:5]  # Return top 5
-
-            except Exception as e:
-                self.logger.warning(f"ML classification failed: {e}, falling back to rule-based")
+            ml_results = self._classify_with_ml(transcript)
+            if ml_results:
+                return ml_results
 
         # Fallback to keyword-based TF-IDF approach
         transcript_lower = transcript.lower()
@@ -667,7 +684,7 @@ class CallTagging:
             category: Call category (optional)
         """
         if not self.enabled:
-            self.logger.error(f"Cannot add tagging rule: Call tagging feature is not enabled")
+            self.logger.error("Cannot add tagging rule: Call tagging feature is not enabled")
             return False
 
         rule = {"name": name, "keywords": keywords, "tag": tag, "category": category}
@@ -724,7 +741,7 @@ class CallTagging:
         """Get all tagging rules"""
         return self.tagging_rules.copy()
 
-    def create_tag(self, name: str, description: str = "", color: str = "#007bff") -> str:
+    def create_tag(self, name: str, description: str = "", color: str = "#007bf") -> str:
         """
         Create a new custom tag
 

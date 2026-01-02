@@ -68,7 +68,7 @@ def test_api_serves_audio_by_default():
         wav_data = wav_header + fmt_chunk + fmt_extension + data_chunk + audio_data
 
         # Save voicemail
-        message_id = mailbox.save_message("1002", wav_data, duration=1)
+        mailbox.save_message("1002", wav_data, duration=1)
 
         # Verify message was saved with audio file
         messages = mailbox.get_messages()

@@ -57,7 +57,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
     def test_initial_config_saved_to_db(self):
         """Test that initial configuration is saved to database"""
         # Create auto attendant
-        aa = AutoAttendant(config=self.config)
+        AutoAttendant(config=self.config)
 
         # Verify configuration was saved to database
         conn = sqlite3.connect(self.db_path)
@@ -77,7 +77,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
     def test_initial_menu_options_saved_to_db(self):
         """Test that initial menu options are saved to database"""
         # Create auto attendant
-        aa = AutoAttendant(config=self.config)
+        AutoAttendant(config=self.config)
 
         # Verify menu options were saved to database
         conn = sqlite3.connect(self.db_path)
@@ -158,7 +158,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
     def test_database_tables_created(self):
         """Test that database tables are created"""
         # Create auto attendant
-        aa = AutoAttendant(config=self.config)
+        AutoAttendant(config=self.config)
 
         # Verify tables exist
         conn = sqlite3.connect(self.db_path)

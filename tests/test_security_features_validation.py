@@ -5,7 +5,6 @@ Verifies all security features are functional and properly enforced
 """
 import os
 import sys
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -15,13 +14,9 @@ from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 from pbx.utils.security import (
     PasswordPolicy,
     RateLimiter,
-    SecurePasswordManager,
     SecurityAuditor,
     ThreatDetector,
     get_password_manager,
-    get_rate_limiter,
-    get_security_auditor,
-    get_threat_detector,
 )
 
 
@@ -32,7 +27,7 @@ def test_fips_encryption_active():
     config = Config("config.yml")
     fips_mode = config.get("security.fips_mode", False)
 
-    assert fips_mode == True, "FIPS mode should be enabled in config"
+    assert fips_mode is True, "FIPS mode should be enabled in config"
     print(f"  ✓ FIPS mode enabled in config: {fips_mode}")
 
     if CRYPTO_AVAILABLE:
@@ -43,7 +38,7 @@ def test_fips_encryption_active():
         hash_val, salt = enc.hash_password(password)
         verified = enc.verify_password(password, hash_val, salt)
 
-        assert verified == True, "Password verification should work"
+        assert verified is True, "Password verification should work"
         print("  ✓ FIPS password hashing functional")
 
         # Test encryption
@@ -68,7 +63,7 @@ def test_password_policy_enforcement():
     # Test strong password (should pass)
     strong_password = "StrongP@ssw0rd123"
     is_valid, error = policy.validate(strong_password)
-    assert is_valid == True, f"Strong password should be valid: {error}"
+    assert is_valid is True, f"Strong password should be valid: {error}"
     print("  ✓ Strong password accepted")
 
     # Test weak passwords (should fail)
@@ -88,7 +83,7 @@ def test_password_policy_enforcement():
 
     for weak_pw, expected_error_part in weak_passwords:
         is_valid, error = policy.validate(weak_pw)
-        assert is_valid == False, f"Weak password '{weak_pw}' should be rejected"
+        assert is_valid is False, f"Weak password '{weak_pw}' should be rejected"
         assert expected_error_part in error, f"Error message should contain '{expected_error_part}'"
 
     print(f"  ✓ All {len(weak_passwords)} weak passwords rejected")
@@ -96,7 +91,7 @@ def test_password_policy_enforcement():
     # Test password generation
     generated = policy.generate_strong_password()
     is_valid, error = policy.validate(generated)
-    assert is_valid == True, f"Generated password should be valid: {error}"
+    assert is_valid is True, f"Generated password should be valid: {error}"
     print("  ✓ Strong password generation works")
 
 
@@ -111,7 +106,7 @@ def test_rate_limiting_enforcement():
 
     # Check initial state (should not be limited)
     is_limited, remaining = limiter.is_rate_limited(test_user)
-    assert is_limited == False, "User should not be initially limited"
+    assert is_limited is False, "User should not be initially limited"
     print("  ✓ Initial state: not limited")
 
     # Record failed attempts up to limit
@@ -121,7 +116,7 @@ def test_rate_limiting_enforcement():
 
     # Check if now limited
     is_limited, remaining = limiter.is_rate_limited(test_user)
-    assert is_limited == True, "User should be limited after max attempts"
+    assert is_limited is True, "User should be limited after max attempts"
     assert remaining > 0, "Should have lockout time remaining"
     print(f"  ✓ Rate limit enforced after {max_attempts} failed attempts")
     print(f"    Lockout duration: {remaining}s")
@@ -129,7 +124,7 @@ def test_rate_limiting_enforcement():
     # Test successful login clears attempts
     limiter.clear_attempts(test_user)
     is_limited, remaining = limiter.is_rate_limited(test_user)
-    assert is_limited == False, "User should not be limited after clearing"
+    assert is_limited is False, "User should not be limited after clearing"
     print("  ✓ Successful login clears rate limit")
 
 
@@ -140,7 +135,7 @@ def test_audit_logging_functional():
     config = Config("config.yml")
     audit_enabled = config.get("security.audit.enabled", False)
 
-    assert audit_enabled == True, "Audit logging should be enabled"
+    assert audit_enabled is True, "Audit logging should be enabled"
     print("  ✓ Audit logging enabled in config")
 
     auditor = SecurityAuditor(database=None, config=config)
@@ -184,7 +179,7 @@ def test_threat_detection_functional():
 
     # Check initial state
     is_blocked, reason = detector.is_ip_blocked(test_ip)
-    assert is_blocked == False, "IP should not be initially blocked"
+    assert is_blocked is False, "IP should not be initially blocked"
     print("  ✓ Initial state: IP not blocked")
 
     # Block IP
@@ -192,19 +187,19 @@ def test_threat_detection_functional():
 
     # Check if blocked
     is_blocked, reason = detector.is_ip_blocked(test_ip)
-    assert is_blocked == True, "IP should be blocked"
+    assert is_blocked is True, "IP should be blocked"
     assert "Test blocking" in reason, "Block reason should match"
     print("  ✓ IP blocking functional")
 
     # Unblock IP
     detector.unblock_ip(test_ip)
     is_blocked, reason = detector.is_ip_blocked(test_ip)
-    assert is_blocked == False, "IP should be unblocked"
+    assert is_blocked is False, "IP should be unblocked"
     print("  ✓ IP unblocking functional")
 
     # Test failed attempt recording
     for i in range(3):
-        detector.record_failed_attempt(test_ip, f"Failed attempt {i+1}")
+        detector.record_failed_attempt(test_ip, f"Failed attempt {i + 1}")
     print("  ✓ Failed attempt recording functional")
 
     # Test suspicious pattern detection
@@ -237,22 +232,22 @@ def test_password_manager_integration():
 
     # Test password verification
     is_valid = manager.verify_password(password, hash_val, salt)
-    assert is_valid == True, "Password verification should succeed"
+    assert is_valid is True, "Password verification should succeed"
 
     wrong_password = "WrongP@ssw0rd123"
     is_invalid = manager.verify_password(wrong_password, hash_val, salt)
-    assert is_invalid == False, "Wrong password should fail verification"
+    assert is_invalid is False, "Wrong password should fail verification"
     print("  ✓ Password verification works")
 
     # Test password validation
     is_valid, error = manager.validate_new_password(password)
-    assert is_valid == True, f"Valid password should pass: {error}"
+    assert is_valid is True, f"Valid password should pass: {error}"
     print("  ✓ Password validation works")
 
     # Test password generation
     generated = manager.generate_password(16)
     is_valid, error = manager.validate_new_password(generated)
-    assert is_valid == True, f"Generated password should be valid: {error}"
+    assert is_valid is True, f"Generated password should be valid: {error}"
     print("  ✓ Password generation works")
 
 
@@ -265,8 +260,8 @@ def test_all_security_defaults():
     # Check FIPS defaults
     fips_mode = config.get("security.fips_mode", False)
     enforce_fips = config.get("security.enforce_fips", False)
-    assert fips_mode == True, "FIPS mode should be enabled by default"
-    assert enforce_fips == True, "FIPS enforcement should be enabled by default"
+    assert fips_mode is True, "FIPS mode should be enabled by default"
+    assert enforce_fips is True, "FIPS enforcement should be enabled by default"
     print("  ✓ FIPS enabled and enforced by default")
 
     # Check password policy defaults
@@ -277,10 +272,10 @@ def test_all_security_defaults():
     require_special = config.get("security.password.require_special", False)
 
     assert min_length >= 12, f"Min password length should be >= 12, got {min_length}"
-    assert require_uppercase == True, "Uppercase requirement should be enabled"
-    assert require_lowercase == True, "Lowercase requirement should be enabled"
-    assert require_digit == True, "Digit requirement should be enabled"
-    assert require_special == True, "Special char requirement should be enabled"
+    assert require_uppercase is True, "Uppercase requirement should be enabled"
+    assert require_lowercase is True, "Lowercase requirement should be enabled"
+    assert require_digit is True, "Digit requirement should be enabled"
+    assert require_special is True, "Special char requirement should be enabled"
     print("  ✓ Strong password policy enabled by default")
 
     # Check rate limiting defaults
@@ -299,8 +294,8 @@ def test_all_security_defaults():
     audit_enabled = config.get("security.audit.enabled", False)
     log_to_database = config.get("security.audit.log_to_database", False)
 
-    assert audit_enabled == True, "Audit logging should be enabled"
-    assert log_to_database == True, "Database logging should be enabled"
+    assert audit_enabled is True, "Audit logging should be enabled"
+    assert log_to_database is True, "Database logging should be enabled"
     print("  ✓ Audit logging enabled by default")
 
     # Check threat detection defaults
@@ -316,7 +311,7 @@ def test_security_features_cannot_be_bypassed():
 
     # Test 1: FIPS mode cannot be disabled without explicit config change
     fips_mode = config.get("security.fips_mode", False)
-    assert fips_mode == True, "FIPS should be enabled (cannot bypass)"
+    assert fips_mode is True, "FIPS should be enabled (cannot bypass)"
     print("  ✓ FIPS mode enforced (config-based)")
 
     # Test 2: Password policy cannot accept weak passwords
@@ -324,7 +319,7 @@ def test_security_features_cannot_be_bypassed():
     weak_passwords = ["weak", "123456", "password"]
     for weak_pw in weak_passwords:
         is_valid, _ = policy.validate(weak_pw)
-        assert is_valid == False, f"Weak password '{weak_pw}' should be rejected"
+        assert is_valid is False, f"Weak password '{weak_pw}' should be rejected"
     print("  ✓ Password policy cannot be bypassed")
 
     # Test 3: Rate limiting cannot be bypassed
@@ -337,12 +332,12 @@ def test_security_features_cannot_be_bypassed():
         limiter.record_attempt(test_user, successful=False)
 
     is_limited, _ = limiter.is_rate_limited(test_user)
-    assert is_limited == True, "Rate limit should be enforced"
+    assert is_limited is True, "Rate limit should be enforced"
     print("  ✓ Rate limiting cannot be bypassed")
 
     # Test 4: Security auditor always logs when enabled
     auditor = SecurityAuditor(database=None, config=config)
-    assert auditor.enabled == True, "Auditor should be enabled"
+    assert auditor.enabled is True, "Auditor should be enabled"
     print("  ✓ Security auditing enforced")
 
 

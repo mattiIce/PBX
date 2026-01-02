@@ -115,7 +115,7 @@ class PredictiveDialer:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Predictive dialer initialized")
-        self.logger.info(f"  Max abandon rate: {self.max_abandon_rate*100}%")
+        self.logger.info(f"  Max abandon rate: {self.max_abandon_rate * 100}%")
         self.logger.info(f"  Lines per agent: {self.lines_per_agent}")
         self.logger.info(f"  Enabled: {self.enabled}")
 

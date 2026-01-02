@@ -74,13 +74,22 @@ When a phone requests configuration:
 ## Supported Vendors and Models
 
 Built-in templates are available for:
+
+### IP Phones
 - **Zultys**: zip33g, zip37g
 - **Yealink**: t28g, t46s
 - **Polycom**: vvx450
 - **Cisco**: spa504g
 - **Grandstream**: gxp2170
 
+### Analog Telephone Adapters (ATAs)
+- **Grandstream**: ht801 (1-port), ht802 (2-port)
+- **Cisco Small Business**: spa112 (2-port), spa122 (2-port with router)
+- **Cisco Enterprise**: ata191 (2-port with PoE), ata192 (2-port multiplatform)
+
 You can add templates for additional models by creating new `.template` files.
+
+For detailed ATA setup and configuration, see [ATA Support Guide](../docs/ATA_SUPPORT_GUIDE.md).
 
 ## DTMF Configuration
 

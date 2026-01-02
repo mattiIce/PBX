@@ -118,6 +118,11 @@ See [README_VOICE_GENERATION.md](README_VOICE_GENERATION.md) for voice and TTS p
 - `request_ca_cert.py` - Request certificate from internal CA
 - `enable_fips_ubuntu.sh` - Enable FIPS mode on Ubuntu
 - `check_fips_health.py` - Check FIPS compliance status
+- `security_compliance_check.py` - Comprehensive FIPS 140-2 and SOC 2 Type 2 compliance check
+- `test_soc2_controls.py` - Automated SOC 2 Type 2 control testing
+- `verify_fips.py` - Detailed FIPS 140-2 compliance verification
+
+See [README_SECURITY_COMPLIANCE.md](README_SECURITY_COMPLIANCE.md) for security and compliance documentation.
 
 ### Phone Provisioning
 

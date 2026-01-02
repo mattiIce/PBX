@@ -4,14 +4,12 @@ Integration test for phone registration tracking
 Tests the full flow from SIP REGISTER to database storage
 """
 import os
-import re
 import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.pbx import PBXCore
-from pbx.sip.message import SIPMessage
 
 
 def test_mac_extraction():
@@ -177,7 +175,7 @@ def test_ip_based_tracking():
     assert phone["mac_address"] is None, "MAC should be None"
 
     print(f"  ✓ Phone tracked by IP: {phone['ip_address']}")
-    print(f"  ✓ MAC correctly stored as None")
+    print("  ✓ MAC correctly stored as None")
 
     print("✓ IP-based tracking works")
 

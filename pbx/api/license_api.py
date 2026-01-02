@@ -152,11 +152,7 @@ def generate_license():
         JSON with generated license data
     """
     try:
-        # TODO: SECURITY - Add admin authentication check before production deployment
-        # Example: check for admin session, API key, or JWT token
-        # if not is_admin_authenticated(request):
-        #     return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-
+        # Authentication handled by @require_license_admin decorator
         data = request.get_json()
 
         # Validate required fields
@@ -357,8 +353,6 @@ def toggle_licensing():
             f.writelines(env_lines)
 
         # Also update runtime environment for immediate effect
-        import os
-
         os.environ["PBX_LICENSING_ENABLED"] = "true" if enabled else "false"
 
         # Reinitialize license manager

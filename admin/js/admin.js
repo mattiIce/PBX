@@ -41,10 +41,13 @@ const CONFIG_SAVE_SUCCESS_MESSAGE = 'Configuration saved successfully. Restart m
 const EXTENSION_LOAD_TIMEOUT = 10000; // 10 seconds
 const DEFAULT_FETCH_TIMEOUT = 30000; // 30 seconds for general requests
 const AD_SYNC_TIMEOUT = 60000; // 60 seconds for AD sync (can take longer with large directories)
+const AUTO_REFRESH_INTERVAL_MS = 10000; // 10 seconds - auto-refresh interval for data tabs
 
 // State
 let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
+let currentTab = null; // Track the currently active tab
+let autoRefreshInterval = null; // Interval for auto-refreshing tab data
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
@@ -245,8 +248,15 @@ function getAuthHeaders() {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    initializeUserContext();
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('DOMContentLoaded event fired - starting initialization');
+    
+    // Initialize user context first (async) - this will call showTab() when ready
+    await initializeUserContext();
+    console.log('User context initialization awaited');
+    
+    // Then initialize other components
+    console.log('Initializing tabs, forms, and logout');
     initializeTabs();
     initializeForms();
     initializeLogout();
@@ -254,10 +264,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Auto-refresh every 10 seconds
     setInterval(checkConnection, 10000);
+    
+    console.log('Page initialization complete');
 });
 
 // User Context Management
 async function initializeUserContext() {
+    console.log('Initializing user context...');
+    
     // Check for authentication token first
     const token = localStorage.getItem('pbx_token');
 
@@ -320,11 +334,15 @@ async function initializeUserContext() {
 
     // Load initial content based on role
     if (currentUser.is_admin) {
-        loadDashboard();
+        console.log('Admin user - showing dashboard tab');
+        showTab('dashboard');
     } else {
         // For regular users, show phone tab by default
+        console.log('Regular user - showing webrtc-phone tab');
         showTab('webrtc-phone');
     }
+    
+    console.log('User context initialization complete');
 }
 
 function showExtensionSelectionModal() {
@@ -501,17 +519,67 @@ function initializeLogout() {
 
 // Tab Management
 function initializeTabs() {
+    console.log('Initializing tab click handlers');
     const tabButtons = document.querySelectorAll('.tab-button');
+    console.log(`Found ${tabButtons.length} tab buttons`);
 
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tabName = this.getAttribute('data-tab');
+            console.log(`Tab button clicked: ${tabName}`);
             showTab(tabName);
         });
     });
 }
 
+// Setup auto-refresh for tabs that need periodic data updates
+function setupAutoRefresh(tabName) {
+    // Clear any existing auto-refresh interval
+    if (autoRefreshInterval) {
+        console.log(`Clearing existing auto-refresh interval for tab: ${currentTab}`);
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+
+    // Define which tabs should auto-refresh and their refresh functions
+    const autoRefreshTabs = {
+        'extensions': loadExtensions,
+        'phones': loadRegisteredPhones,
+        'dashboard': loadDashboard,
+        'calls': loadCalls,
+        'voicemail': loadVoicemailTab
+    };
+
+    // If the current tab supports auto-refresh, set it up
+    if (autoRefreshTabs[tabName]) {
+        console.log(`Setting up auto-refresh for tab: ${tabName} (interval: ${AUTO_REFRESH_INTERVAL_MS}ms)`);
+        autoRefreshInterval = setInterval(() => {
+            console.log(`Auto-refreshing tab: ${tabName}`);
+            try {
+                const refreshFunction = autoRefreshTabs[tabName];
+                if (typeof refreshFunction === 'function') {
+                    refreshFunction();
+                } else {
+                    console.error(`Auto-refresh function for ${tabName} is not a function:`, refreshFunction);
+                }
+            } catch (error) {
+                console.error(`Error during auto-refresh of ${tabName}:`, error);
+                // If error is auth-related, user will be redirected to login
+                // Otherwise, continue with auto-refresh on next interval
+                if (error.message && error.message.includes('401')) {
+                    console.warn('Authentication error during auto-refresh - user may need to re-login');
+                }
+            }
+        }, AUTO_REFRESH_INTERVAL_MS);
+        console.log(`Auto-refresh interval ID: ${autoRefreshInterval}`);
+    } else {
+        console.log(`Tab ${tabName} does not support auto-refresh`);
+    }
+}
+
 function showTab(tabName) {
+    console.log(`showTab called with: ${tabName}`);
+    
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -525,15 +593,26 @@ function showTab(tabName) {
     // Show selected tab
     const tabElement = document.getElementById(tabName);
     if (!tabElement) {
-        console.error(`Tab element with id '${tabName}' not found`);
-        return;
+        console.error(`⚠️ CRITICAL: Tab element with id '${tabName}' not found in DOM`);
+        console.error('This may indicate a UI template issue or incorrect tab name');
+        console.error(`Current tab name: "${tabName}"`);
+        // Still update currentTab and setup auto-refresh even if element not found
+        // This ensures auto-refresh works even if there are DOM issues
+        // But log this as a critical issue that should be investigated
+    } else {
+        tabElement.classList.add('active');
+        const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+        if (tabButton) {
+            tabButton.classList.add('active');
+        } else {
+            console.warn(`Tab button for '${tabName}' not found`);
+        }
     }
 
-    tabElement.classList.add('active');
-    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
-    if (tabButton) {
-        tabButton.classList.add('active');
-    }
+    // Update current tab and setup auto-refresh
+    // This happens regardless of whether the tab element was found
+    currentTab = tabName;
+    setupAutoRefresh(tabName);
 
     // Load data for the tab
     switch(tabName) {
@@ -576,6 +655,105 @@ function showTab(tabName) {
         case 'license-management':
             initLicenseManagement();
             break;
+        case 'qos':
+            loadQoSMetrics();
+            break;
+        case 'emergency':
+            loadEmergencyContacts();
+            loadEmergencyHistory();
+            break;
+        case 'codecs':
+            loadCodecStatus();
+            loadDTMFConfig();
+            break;
+        case 'sip-trunks':
+            loadSIPTrunks();
+            loadTrunkHealth();
+            break;
+        case 'least-cost-routing':
+            loadLCRRates();
+            loadLCRStatistics();
+            break;
+        case 'find-me-follow-me':
+            loadFMFMExtensions();
+            break;
+        case 'time-routing':
+            loadTimeRoutingRules();
+            break;
+        case 'webhooks':
+            loadWebhooks();
+            break;
+        case 'hot-desking':
+            loadHotDeskSessions();
+            break;
+        case 'recording-retention':
+            loadRetentionPolicies();
+            break;
+        case 'jitsi-integration':
+            if (typeof loadJitsiConfig === 'function') {
+                loadJitsiConfig();
+            }
+            break;
+        case 'matrix-integration':
+            if (typeof loadMatrixConfig === 'function') {
+                loadMatrixConfig();
+            }
+            break;
+        case 'espocrm-integration':
+            if (typeof loadEspoCRMConfig === 'function') {
+                loadEspoCRMConfig();
+            }
+            break;
+        case 'click-to-dial':
+            if (typeof loadClickToDialTab === 'function') {
+                loadClickToDialTab();
+            }
+            break;
+        case 'fraud-detection':
+            if (typeof loadFraudDetectionData === 'function') {
+                loadFraudDetectionData();
+            }
+            break;
+        case 'nomadic-e911':
+            if (typeof loadNomadicE911Data === 'function') {
+                loadNomadicE911Data();
+            }
+            break;
+        case 'callback-queue':
+            if (typeof loadCallbackQueue === 'function') {
+                loadCallbackQueue();
+            }
+            break;
+        case 'mobile-push':
+            if (typeof loadMobilePushConfig === 'function') {
+                loadMobilePushConfig();
+            }
+            break;
+        case 'recording-announcements':
+            if (typeof loadRecordingAnnouncements === 'function') {
+                loadRecordingAnnouncements();
+            }
+            break;
+        case 'speech-analytics':
+            if (typeof loadSpeechAnalyticsConfigs === 'function') {
+                loadSpeechAnalyticsConfigs();
+            }
+            break;
+        case 'compliance':
+            if (typeof loadComplianceData === 'function') {
+                loadComplianceData();
+            }
+            break;
+        case 'crm-integrations':
+            if (typeof loadCRMActivityLog === 'function') {
+                loadCRMActivityLog();
+            }
+            break;
+        case 'opensource-integrations':
+            if (typeof loadOpenSourceIntegrations === 'function') {
+                loadOpenSourceIntegrations();
+            }
+            break;
     }
 }
 
@@ -593,7 +771,9 @@ async function checkConnection() {
     }
     
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {}, 5000);
+        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {
+            headers: getAuthHeaders()
+        }, 5000);
 
         if (response.ok) {
             statusBadge.textContent = '✓ Connected';
@@ -614,7 +794,9 @@ async function checkConnection() {
 async function loadDashboard() {
     try {
         console.log('Loading dashboard data from API...');
-        const response = await fetchWithTimeout(`${API_BASE}/api/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/status`, {
+            headers: getAuthHeaders()
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -665,7 +847,9 @@ function refreshDashboard() {
 // AD Integration Functions
 async function loadADStatus() {
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/status`, {
+            headers: getAuthHeaders()
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -925,7 +1109,9 @@ async function loadCalls() {
     callsList.innerHTML = '<div class="loading">Loading calls...</div>';
 
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/calls`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/calls`, {
+            headers: getAuthHeaders()
+        });
         const calls = await response.json();
 
         if (calls.length === 0) {
@@ -1450,8 +1636,11 @@ function initializeForms() {
                     const data = await response.json();
                     const msg = 'Device registered successfully! Config URL: ' + data.device.config_url;
                     showNotification(msg, 'success');
-                    closeAddDeviceModal();
+                    // Reset form and reload devices list
+                    addDeviceForm.reset();
                     loadProvisioningDevices();
+                    // Re-populate the dropdowns after reset
+                    await populateProvisioningFormDropdowns();
                 } else {
                     const data = await response.json();
                     showNotification(data.error || 'Failed to register device', 'error');
@@ -1532,6 +1721,11 @@ async function loadVoicemailTab() {
         const response = await fetch(`${API_BASE}/api/extensions`, {
             headers: getAuthHeaders()
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const extensions = await response.json();
 
         const select = document.getElementById('vm-extension-select');
@@ -1567,7 +1761,14 @@ window.loadVoicemailForExtension = async function() {
 
     try {
         // Load voicemail messages
-        const response = await fetch(`${API_BASE}/api/voicemail/${extension}`);
+        const response = await fetch(`${API_BASE}/api/voicemail/${extension}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         // Update both views
@@ -1929,7 +2130,9 @@ async function loadRegisteredPhones() {
     tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading registered phones...</td></tr>';
 
     try {
-        const response = await fetchWithTimeout(`${API_BASE}/api/registered-phones`);
+        const response = await fetchWithTimeout(`${API_BASE}/api/registered-phones`, {
+            headers: getAuthHeaders()
+        });
 
         if (!response.ok) {
             // Try to parse error response from API
@@ -2021,6 +2224,71 @@ async function loadProvisioning() {
     await loadPhonebookSettings();
     await loadSupportedVendors();
     await loadProvisioningDevices();
+    await populateProvisioningFormDropdowns();
+}
+
+async function populateProvisioningFormDropdowns() {
+    // Populate extension dropdown
+    const extensionSelect = document.getElementById('device-extension');
+    if (extensionSelect) {
+        extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
+        
+        try {
+            const response = await fetch(`${API_BASE}/api/extensions`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const extensions = await response.json();
+                extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+                
+                extensions.forEach(ext => {
+                    const option = document.createElement('option');
+                    option.value = ext.number;
+                    option.textContent = `${ext.number} - ${ext.name}`;
+                    extensionSelect.appendChild(option);
+                });
+            } else {
+                extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+            }
+        } catch (error) {
+            console.error('Error loading extensions:', error);
+            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+        }
+    }
+
+    // Populate vendor dropdown
+    const vendorSelect = document.getElementById('device-vendor');
+    if (vendorSelect && supportedVendors.length > 0) {
+        vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
+        supportedVendors.forEach(vendor => {
+            const option = document.createElement('option');
+            option.value = vendor;
+            option.textContent = vendor.toUpperCase();
+            vendorSelect.appendChild(option);
+        });
+    }
+
+    // Reset the model dropdown to its default state
+    const modelSelect = document.getElementById('device-model');
+    if (modelSelect) {
+        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+    }
+}
+
+function resetAddDeviceForm() {
+    const form = document.getElementById('add-device-form');
+    if (!form) {
+        return;
+    }
+
+    // Reset all form fields to their initial values
+    form.reset();
+
+    // Reset the model dropdown to its initial state
+    const modelSelect = document.getElementById('device-model');
+    if (modelSelect) {
+        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+    }
 }
 
 async function loadPhonebookSettings() {
@@ -2184,15 +2452,17 @@ async function savePhonebookSettings() {
 }
 
 async function loadSupportedVendors() {
+    const vendorsList = document.getElementById('supported-vendors-list');
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/vendors`);
+        const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             supportedVendors = data.vendors || [];
             supportedModels = data.models || {};
 
             // Display supported vendors
-            const vendorsList = document.getElementById('supported-vendors-list');
             if (supportedVendors.length > 0) {
                 let html = '<ul>';
                 for (const vendor of supportedVendors) {
@@ -2206,24 +2476,38 @@ async function loadSupportedVendors() {
             } else {
                 vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
             }
+        } else {
+            // Handle non-ok response (e.g., 401, 403, 500)
+            let errorMsg = `Error loading vendors: HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMsg = `Error loading vendors: ${escapeHtml(errorData.error)}`;
+                }
+            } catch (e) {
+                // Unable to parse error response, use generic message
+            }
+            vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+            console.error('Error loading supported vendors:', errorMsg);
         }
     } catch (error) {
         console.error('Error loading supported vendors:', error);
-        document.getElementById('supported-vendors-list').innerHTML =
-            '<p class="error">Error loading vendors: ' + error.message + '</p>';
+        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
     }
 }
 
 async function loadProvisioningDevices() {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/devices`);
+        const response = await fetch(`${API_BASE}/api/provisioning/devices`, {
+            headers: getAuthHeaders()
+        });
         const tbody = document.getElementById('provisioning-devices-table-body');
 
         if (response.ok) {
             const devices = await response.json();
 
             if (devices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Click "Add Device" to register phones.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Fill out the form above to register phones.</td></tr>';
             } else {
                 tbody.innerHTML = devices.map(device => {
                     const createdDate = device.created_at ? new Date(device.created_at).toLocaleString() : '-';
@@ -2252,57 +2536,6 @@ async function loadProvisioningDevices() {
         document.getElementById('provisioning-devices-table-body').innerHTML =
             '<tr><td colspan="7" class="error">Error: ' + error.message + '</td></tr>';
     }
-}
-
-async function showAddDeviceModal() {
-    // Populate extension dropdown
-    const extensionSelect = document.getElementById('device-extension');
-    extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
-
-    // Fetch extensions if not already loaded
-    try {
-        const response = await fetch(`${API_BASE}/api/extensions`, {
-            headers: getAuthHeaders()
-        });
-        if (response.ok) {
-            const extensions = await response.json();
-            extensionSelect.innerHTML = '<option value="">Select Extension</option>';
-
-            extensions.forEach(ext => {
-                const option = document.createElement('option');
-                option.value = ext.number;
-                option.textContent = `${ext.number} - ${ext.name}`;
-                extensionSelect.appendChild(option);
-            });
-        } else {
-            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
-        }
-    } catch (error) {
-        console.error('Error loading extensions:', error);
-        extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
-    }
-
-    // Populate vendor dropdown
-    const vendorSelect = document.getElementById('device-vendor');
-    vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-
-    supportedVendors.forEach(vendor => {
-        const option = document.createElement('option');
-        option.value = vendor;
-        option.textContent = vendor.toUpperCase();
-        vendorSelect.appendChild(option);
-    });
-
-    // Reset model dropdown
-    document.getElementById('device-model').innerHTML = '<option value="">Select Vendor First</option>';
-
-    // Show modal
-    document.getElementById('add-device-modal').style.display = 'block';
-}
-
-function closeAddDeviceModal() {
-    document.getElementById('add-device-modal').style.display = 'none';
-    document.getElementById('add-device-form').reset();
 }
 
 function updateModelOptions() {
@@ -2351,7 +2584,9 @@ async function deleteDevice(mac) {
 // Template management functions
 async function loadProvisioningTemplates() {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/templates`);
+        const response = await fetch(`${API_BASE}/api/provisioning/templates`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             displayTemplatesList(data.templates || []);
@@ -2436,7 +2671,9 @@ function displayTemplatesList(templates) {
 
 async function viewTemplate(vendor, model) {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             showTemplateViewModal(vendor, model, data.content, data.placeholders, false);
@@ -2470,7 +2707,9 @@ async function exportTemplate(vendor, model) {
 
 async function editTemplate(vendor, model) {
     try {
-        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`);
+        const response = await fetch(`${API_BASE}/api/provisioning/templates/${vendor}/${model}`, {
+            headers: getAuthHeaders()
+        });
         if (response.ok) {
             const data = await response.json();
             showTemplateViewModal(vendor, model, data.content, data.placeholders, true);

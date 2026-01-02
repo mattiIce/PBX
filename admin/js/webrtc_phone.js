@@ -140,6 +140,20 @@ class WebRTCPhone {
     }
 
     /**
+     * Check if browser supports WebRTC getUserMedia
+     * @returns {boolean} True if WebRTC is supported, false otherwise
+     */
+    _checkWebRTCSupport() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            const errorMsg = 'WebRTC not supported in this browser or context. Try using HTTPS or a modern browser.';
+            this.updateStatus(errorMsg, 'error');
+            console.error('[WebRTC Phone]', errorMsg);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Request microphone access automatically on page load
      * @description Provides a better user experience by prompting for permissions upfront.
      *              Matches Zultys ZIP33G behavior where the phone is always ready to use.
@@ -148,6 +162,11 @@ class WebRTCPhone {
     async requestMicrophoneAccess() {
         try {
             this.updateStatus('Requesting microphone access...', 'info');
+
+            // Check if browser supports getUserMedia
+            if (!this._checkWebRTCSupport()) {
+                return false;
+            }
 
             // Request microphone access with ZIP33G-compatible audio settings
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -327,6 +346,12 @@ class WebRTCPhone {
 
             this.updateUIState('connecting');
             this.updateStatus('Requesting microphone access...', 'info');
+
+            // Check if browser supports getUserMedia
+            if (!this._checkWebRTCSupport()) {
+                this.updateUIState('idle');
+                return;
+            }
 
             // Get user media (microphone)
             try {

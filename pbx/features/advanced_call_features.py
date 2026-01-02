@@ -4,7 +4,7 @@ Call whisper, barge-in, and supervisor monitoring
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 

@@ -53,7 +53,7 @@ def test_start_greeting_recording():
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox
-    mailbox = vm_system.get_mailbox("1001")
+    vm_system.get_mailbox("1001")
 
     # Create IVR instance in options menu
     ivr = VoicemailIVR(vm_system, "1001")
@@ -79,7 +79,7 @@ def test_finish_greeting_recording():
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox
-    mailbox = vm_system.get_mailbox("1001")
+    vm_system.get_mailbox("1001")
 
     # Create IVR instance in recording state
     ivr = VoicemailIVR(vm_system, "1001")
@@ -103,7 +103,7 @@ def test_greeting_review_playback():
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox
-    mailbox = vm_system.get_mailbox("1001")
+    vm_system.get_mailbox("1001")
 
     # Create IVR instance in review state with recorded greeting
     ivr = VoicemailIVR(vm_system, "1001")
@@ -127,7 +127,7 @@ def test_greeting_review_rerecord():
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Set up mailbox
-    mailbox = vm_system.get_mailbox("1001")
+    vm_system.get_mailbox("1001")
 
     # Create IVR instance in review state
     ivr = VoicemailIVR(vm_system, "1001")

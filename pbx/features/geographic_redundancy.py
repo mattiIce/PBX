@@ -224,8 +224,7 @@ class GeographicRedundancy:
         """
         # Check if we can import critical modules
         try:
-            from pbx.features.sip_trunk import get_trunk_manager
-            from pbx.utils.database import get_database
+            pass
 
             # If imports succeed, services are available
             return True

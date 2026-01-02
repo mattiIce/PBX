@@ -35,7 +35,7 @@ def check_psycopg2():
     try:
         import psycopg2
 
-        print(f"✓ psycopg2 is installed")
+        print("✓ psycopg2 is installed")
         print(f"  Version: {psycopg2.__version__}")
         return True
     except ImportError:
@@ -58,7 +58,7 @@ def check_config():
             "user": config.get("database.user"),
         }
 
-        print(f"✓ Configuration loaded successfully")
+        print("✓ Configuration loaded successfully")
         print(f"  Database Type: {db_config['type']}")
         print(f"  Host: {db_config['host']}")
         print(f"  Port: {db_config['port']}")
@@ -78,7 +78,7 @@ def check_connection(config):
         db = DatabaseBackend(config)
 
         if db.db_type == "postgresql":
-            print(f"  Attempting to connect to PostgreSQL...")
+            print("  Attempting to connect to PostgreSQL...")
         else:
             print(f"  Connecting to {db.db_type}...")
 
@@ -110,7 +110,7 @@ def check_connection(config):
                 # Check specifically for voicemail_messages table
                 table_names = [t.get("table_name") or t.get("name") for t in tables]
                 if "voicemail_messages" in table_names:
-                    print(f"\n✓ voicemail_messages table exists")
+                    print("\n✓ voicemail_messages table exists")
 
                     # Check voicemail count
                     count_result = db.fetch_one("SELECT COUNT(*) as count FROM voicemail_messages")
@@ -118,16 +118,16 @@ def check_connection(config):
                         count = count_result["count"]
                         print(f"  Total voicemail records in database: {count}")
                 else:
-                    print(f"\n⚠ voicemail_messages table does NOT exist")
-                    print(f"  Tables will be created automatically when PBX starts")
+                    print("\n⚠ voicemail_messages table does NOT exist")
+                    print("  Tables will be created automatically when PBX starts")
             else:
-                print(f"⚠ No tables found in database")
-                print(f"  Tables may need to be created")
+                print("⚠ No tables found in database")
+                print("  Tables may need to be created")
 
             db.disconnect()
             return True
         else:
-            print(f"✗ Failed to connect to database")
+            print("✗ Failed to connect to database")
             print(f"  Database enabled: {db.enabled}")
             return False
 
@@ -212,10 +212,10 @@ def main():
     print(f"  Database connection: {'✓' if connection_ok else '✗'}")
 
     if all_ok:
-        print(f"\n  Status: READY ✓")
+        print("\n  Status: READY ✓")
         sys.exit(0)
     else:
-        print(f"\n  Status: NEEDS ATTENTION ✗")
+        print("\n  Status: NEEDS ATTENTION ✗")
         sys.exit(1)
 
 

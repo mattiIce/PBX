@@ -550,7 +550,7 @@ class IntegrationInstaller:
 
             self.log("EspoCRM installed successfully", "SUCCESS")
             self.log("Complete setup at: http://localhost/espocrm", "INFO")
-            self.log(f"Database: espocrm, User: espocrm_user", "INFO")
+            self.log("Database: espocrm, User: espocrm_user", "INFO")
             self.log(f"Password stored in: {password_file}", "INFO")
             self.log(
                 "⚠️  SECURITY: Keep this password file secure and delete after setup", "WARNING"

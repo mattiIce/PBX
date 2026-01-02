@@ -105,7 +105,7 @@ def migrate_passwords(config_file="config.yml", dry_run=False):
         print(f"Processing extension {number} ({name})...")
 
         if not password:
-            print(f"  ⚠ No password found, skipping")
+            print("  ⚠ No password found, skipping")
             skipped += 1
             continue
 
@@ -119,23 +119,23 @@ def migrate_passwords(config_file="config.yml", dry_run=False):
             existing = db.fetch_one(check_query, (number,))
 
             if existing and existing.get("password_salt"):
-                print(f"  ℹ Already migrated (has salt), skipping")
+                print("  ℹ Already migrated (has salt), skipping")
                 skipped += 1
                 continue
 
             # Hash password
             password_hash, password_salt = password_mgr.hash_password(password)
-            print(f"  ✓ Password hashed successfully")
+            print("  ✓ Password hashed successfully")
 
             # Hash voicemail PIN if provided
             vm_pin_hash = None
             vm_pin_salt = None
             if voicemail_pin:
                 vm_pin_hash, vm_pin_salt = password_mgr.hash_password(voicemail_pin)
-                print(f"  ✓ Voicemail PIN hashed successfully")
+                print("  ✓ Voicemail PIN hashed successfully")
 
             if dry_run:
-                print(f"  [DRY RUN] Would store hashed credentials in database")
+                print("  [DRY RUN] Would store hashed credentials in database")
                 migrated += 1
                 continue
 
@@ -198,10 +198,10 @@ def migrate_passwords(config_file="config.yml", dry_run=False):
                 )
 
             if db.execute(insert_query if not existing else update_query, params):
-                print(f"  ✓ Migrated successfully")
+                print("  ✓ Migrated successfully")
                 migrated += 1
             else:
-                print(f"  ✗ Failed to store in database")
+                print("  ✗ Failed to store in database")
                 errors += 1
 
         except Exception as e:

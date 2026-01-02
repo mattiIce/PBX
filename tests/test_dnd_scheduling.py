@@ -4,8 +4,7 @@ Tests for Do Not Disturb (DND) Scheduling
 """
 import os
 import sys
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

@@ -5,7 +5,6 @@ This test verifies the fix for the bug where play_beep was sending
 raw PCM data with PCMU payload type, causing incorrect audio playback.
 """
 import os
-import struct
 import sys
 
 # Add parent directory to path
@@ -147,7 +146,7 @@ def test_bug_scenario():
     # Right way (after fix)
     right_packets = (len(ulaw_data) + samples_per_packet - 1) // samples_per_packet
 
-    print(f"\nPacket count comparison:")
+    print("\nPacket count comparison:")
     print(f"  Before fix: {wrong_packets} packets (WRONG)")
     print(f"  After fix:  {right_packets} packets (CORRECT)")
 

@@ -6,7 +6,7 @@ Intelligent routing using free machine learning (scikit-learn)
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 

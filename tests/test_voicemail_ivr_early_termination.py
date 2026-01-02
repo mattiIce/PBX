@@ -11,13 +11,12 @@ import sys
 import threading
 import time
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
-from pbx.utils.config import Config
 
 
 class TestVoicemailIVREarlyTermination(unittest.TestCase):
@@ -81,7 +80,6 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
             call.voicemail_extension = "1537"
 
             # Track if IVR loop started
-            ivr_loop_started = [False]
 
             # Patch the logger to capture log messages
             with patch.object(pbx_core, "logger") as mock_logger:
@@ -189,9 +187,8 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
                 )
 
                 # Should NOT see "IVR session ended" if IVR never started
-                session_ended = any(
-                    "Voicemail IVR session ended" in str(call) for call in log_calls
-                )
+                # (session_ended might still appear in finally block)
+                any("Voicemail IVR session ended" in str(call) for call in log_calls)
 
                 self.assertTrue(ended_before_start, "Should detect call ended before IVR started")
                 # Note: session_ended might still appear in finally block,

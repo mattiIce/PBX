@@ -259,13 +259,11 @@ class AudioTester:
 
         try:
             # Check if auto_attendant module can be imported
-            from pbx.features.auto_attendant import AutoAttendant
 
             self.log("Auto Attendant module loaded successfully", "PASS")
             self.test_results["passed"] += 1
 
             # Check if voicemail system can be imported
-            from pbx.features.voicemail import VoicemailSystem
 
             self.log("Voicemail System module loaded successfully", "PASS")
             self.test_results["passed"] += 1

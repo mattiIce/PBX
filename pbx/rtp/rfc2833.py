@@ -221,12 +221,12 @@ class RFC2833Receiver:
         # Parse RTP header
         try:
             header = struct.unpack("!BBHII", data[:12])
-            version = (header[0] >> 6) & 0x03
+            (header[0] >> 6) & 0x03
             payload_type = header[1] & 0x7F
-            marker = bool(header[1] & 0x80)
+            bool(header[1] & 0x80)
             seq_num = header[2]
-            timestamp = header[3]
-            ssrc = header[4]
+            header[3]
+            header[4]
 
             # Only process configured payload type for telephone-event
             if payload_type != self.payload_type:

@@ -2,7 +2,6 @@
 """
 Tests for stub feature implementations
 """
-import json
 import os
 import sys
 import tempfile
@@ -347,7 +346,7 @@ def test_new_integration_implementations():
 
     # Test Active Directory - sync_users implementation
     sync_result = ad.sync_users()
-    assert sync_result == 0, "Should return 0 when integration is disabled or auto_provision is off"
+    assert sync_result == 0, "Should return 0 when integration is disabled or auto_provision is of"
 
     print("✓ New integration implementations work correctly")
 

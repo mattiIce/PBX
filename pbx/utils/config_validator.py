@@ -70,7 +70,7 @@ class ConfigValidator:
         if rtp_end - rtp_start < 100:
             self.warnings.append(
                 f"RTP port range is small ({rtp_end - rtp_start} ports). "
-                f"Recommend at least 100 ports for production."
+                "Recommend at least 100 ports for production."
             )
 
         # Check external IP
@@ -163,7 +163,7 @@ class ConfigValidator:
         if max_failed_attempts > 10:
             self.warnings.append(
                 f"max_failed_attempts is high ({max_failed_attempts}). "
-                f"Lower values provide better security."
+                "Lower values provide better security."
             )
 
     def _validate_extensions_config(self):

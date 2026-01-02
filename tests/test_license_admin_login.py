@@ -20,8 +20,6 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.utils.license_admin import (
-    LICENSE_ADMIN_EXTENSION,
-    LICENSE_ADMIN_USERNAME,
     is_license_admin_extension,
     verify_license_admin_credentials,
 )

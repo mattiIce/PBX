@@ -201,7 +201,7 @@ class TestILBCCodec(unittest.TestCase):
         """Test encoder reset"""
         codec = ILBCCodec({"mode": 30})
         codec.encoder = Mock()
-        original_encoder = codec.encoder
+        codec.encoder
 
         codec.reset_encoder()
 
@@ -212,7 +212,7 @@ class TestILBCCodec(unittest.TestCase):
         """Test decoder reset"""
         codec = ILBCCodec({"mode": 30})
         codec.decoder = Mock()
-        original_decoder = codec.decoder
+        codec.decoder
 
         codec.reset_decoder()
 
@@ -320,8 +320,8 @@ class TestILBCCodecManager(unittest.TestCase):
 
         manager = ILBCCodecManager(pbx)
         codec1 = manager.create_codec("call-1")
-        codec2 = manager.create_codec("call-2")
-        codec3 = manager.create_codec("call-3")
+        manager.create_codec("call-2")
+        manager.create_codec("call-3")
 
         all_codecs = manager.get_all_codecs()
 

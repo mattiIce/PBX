@@ -5,7 +5,7 @@ Note: GDPR and PCI DSS engines are commented out as they are not required for US
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -412,7 +412,7 @@ class SOC2ComplianceEngine:
         """
         try:
             # Check if control exists
-            result = self.db.execute(
+            result = self.db.fetch_one(
                 (
                     "SELECT id FROM soc2_controls WHERE control_id = ?"
                     if self.db.db_type == "sqlite"
@@ -421,7 +421,7 @@ class SOC2ComplianceEngine:
                 (control_data["control_id"],),
             )
 
-            if result and result[0]:
+            if result:
                 # Update
                 self.db.execute(
                     (
@@ -510,18 +510,18 @@ class SOC2ComplianceEngine:
             List of control dictionaries
         """
         try:
-            result = self.db.execute("SELECT * FROM soc2_controls ORDER BY control_id")
+            result = self.db.fetch_all("SELECT * FROM soc2_controls ORDER BY control_id")
 
             controls = []
             for row in result or []:
                 controls.append(
                     {
-                        "control_id": row[1],
-                        "control_category": row[2],
-                        "description": row[3],
-                        "implementation_status": row[4],
-                        "last_tested": row[5],
-                        "test_results": row[6],
+                        "control_id": row.get("control_id"),
+                        "control_category": row.get("control_category"),
+                        "description": row.get("description"),
+                        "implementation_status": row.get("implementation_status"),
+                        "last_tested": row.get("last_tested"),
+                        "test_results": row.get("test_results"),
                     }
                 )
 
@@ -542,7 +542,7 @@ class SOC2ComplianceEngine:
             List of control dictionaries
         """
         try:
-            result = self.db.execute(
+            result = self.db.fetch_all(
                 (
                     """SELECT * FROM soc2_controls
                    WHERE control_category = ?
@@ -559,12 +559,12 @@ class SOC2ComplianceEngine:
             for row in result or []:
                 controls.append(
                     {
-                        "control_id": row[1],
-                        "control_category": row[2],
-                        "description": row[3],
-                        "implementation_status": row[4],
-                        "last_tested": row[5],
-                        "test_results": row[6],
+                        "control_id": row.get("control_id"),
+                        "control_category": row.get("control_category"),
+                        "description": row.get("description"),
+                        "implementation_status": row.get("implementation_status"),
+                        "last_tested": row.get("last_tested"),
+                        "test_results": row.get("test_results"),
                     }
                 )
 

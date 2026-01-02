@@ -81,7 +81,7 @@ def test_pcm_wav_to_g722_with_rtp():
         # The conversion should succeed
         assert result is True, "Playing PCM WAV file should succeed after conversion to G.722"
 
-        print(f"✓ Successfully played PCM WAV file with automatic conversion to G.722")
+        print("✓ Successfully played PCM WAV file with automatic conversion to G.722")
 
     finally:
         # Clean up temporary file
@@ -147,7 +147,7 @@ def test_ulaw_wav_still_works():
         # Should succeed without conversion
         assert result is True, "Playing μ-law WAV file should succeed without conversion"
 
-        print(f"✓ Successfully played μ-law WAV file (no conversion needed)")
+        print("✓ Successfully played μ-law WAV file (no conversion needed)")
 
     finally:
         # Clean up temporary file

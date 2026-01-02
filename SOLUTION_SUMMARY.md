@@ -1,161 +1,155 @@
-# Authentication Issue - Complete Solution Summary
+# Apache 404 Error - Solution Summary
 
-## Problem Identified
-
-Your PBX server is experiencing login failures with "authentication failed" errors. The root cause is a **SyntaxError** in the file `/root/PBX/pbx/utils/license_admin.py`:
-
+## Problem
+When accessing `http://abps.albl.com/admin/status-check.html`, you received:
 ```
-SyntaxError: unterminated triple-quoted string literal (detected at line 281)
-File "/root/PBX/pbx/utils/license_admin.py", line 268
+Not Found
+The requested URL was not found on this server.
+Apache/2.4.58 (Ubuntu) Server at abps.albl.com Port 80
 ```
 
-## Key Finding
+## Root Cause
+Apache was configured to serve the domain but was **not** configured to proxy requests to the PBX backend application running on port 8080/9000. Apache looked for the file in its own document root and returned a 404 error.
 
-✅ **All 274 Python files in the repository are syntactically correct**
+## Solution Provided
+This PR adds complete Apache reverse proxy support to the PBX repository, including:
 
-This means the error exists **only on your server**, not in the repository. The server files need to be synchronized with the repository to fix the issue.
+### 1. Automated Setup Script ⚡
+**File**: `scripts/setup_apache_reverse_proxy.sh`
 
-## Solution Delivered
+Run this to automatically configure everything:
+```bash
+cd /path/to/PBX
+sudo scripts/setup_apache_reverse_proxy.sh
+```
 
-### 1. Automated Update Scripts ✅
+The script will:
+- ✅ Install Apache and certbot if needed
+- ✅ Check and resolve port 80 conflicts
+- ✅ Create virtual host configuration for your domain
+- ✅ Obtain free SSL certificate from Let's Encrypt
+- ✅ Configure automatic HTTPS redirect
+- ✅ Set up firewall rules
+- ✅ Enable WebSocket support for WebRTC phones
 
-Created two scripts to update your server from the repository:
+When prompted, enter:
+- **Domain**: `abps.albl.com`
+- **Email**: Your email for SSL notifications
+- **Backend Port**: `8080` (or check your `config.yml` for the actual port)
 
-- **`scripts/force_update_server.sh`** - Quick automated update
-- **`scripts/update_server_from_repo.sh`** - Interactive update with confirmations
+### 2. Configuration Template 📄
+**File**: `apache-pbx.conf.example`
 
-Both scripts:
-- Create automatic backups before making changes
-- Verify Python syntax after updating
-- Restart the PBX service
-- Provide clear status messages
+If you prefer manual setup, this template provides:
+- Complete virtual host configuration
+- SSL/TLS best practices
+- Security headers
+- WebSocket support
+- Proxy configuration for all endpoints
 
-### 2. Comprehensive Documentation ✅
+### 3. Documentation 📚
 
-Created three detailed guides:
+**Quick Fix**: `docs/APACHE_404_FIX.md`
+- Fast solution for the 404 error
+- Both automated and manual options
+- Common troubleshooting
 
-- **`FIX_INSTRUCTIONS.md`** - Complete fix instructions with multiple options
-- **`QUICK_FIX_LOGIN.md`** - Immediate fix for the login issue
-- **`SERVER_UPDATE_GUIDE.md`** - Ongoing server maintenance procedures
+**Complete Setup Guide**: `docs/APACHE_REVERSE_PROXY_SETUP.md`
+- Prerequisites
+- Step-by-step instructions
+- Troubleshooting
+- Security best practices
+- Maintenance procedures
+- Apache vs Nginx comparison
 
-### 3. Quality Assurance ✅
+**Troubleshooting**: `TROUBLESHOOTING.md`
+- Added new section "Apache 'Not Found' Error for Admin Pages"
+- Symptoms, causes, and solutions
 
-- Added GitHub Actions workflow (`syntax-check.yml`) to prevent future syntax errors
-- Validated all 274 Python files in the repository
-- Tested update scripts for correctness
-- Fixed all shellcheck warnings
+### 4. Updated README
+The main README now documents both Nginx and Apache options.
 
 ## How to Fix Your Server
 
-### Option A: Quick Fix (5 minutes)
-
-Run on your server as root:
-
+### Option 1: Automated Setup (Recommended) ⚡
 ```bash
-cd /root/PBX
-git fetch --all
-git reset --hard origin/copilot/fix-authentication-issue
-systemctl restart pbx
-systemctl status pbx
+cd /path/to/PBX
+sudo scripts/setup_apache_reverse_proxy.sh
 ```
 
-### Option B: Use Automated Script (Recommended)
+### Option 2: Manual Setup 🔧
+Follow the steps in `docs/APACHE_404_FIX.md`
 
-```bash
-cd /root/PBX
-git fetch --all
-git checkout origin/copilot/fix-authentication-issue -- scripts/
-bash scripts/force_update_server.sh
-```
+### Option 3: Detailed Manual Setup 📖
+Follow the comprehensive guide in `docs/APACHE_REVERSE_PROXY_SETUP.md`
 
-### Option C: Interactive Update
+## After Setup
+Once configured, you'll be able to access:
+- ✅ `https://abps.albl.com` - Main admin interface
+- ✅ `https://abps.albl.com/admin/status-check.html` - Status check page
+- ✅ `https://abps.albl.com/admin/login.html` - Login page
+- ✅ All other admin pages
 
-```bash
-cd /root/PBX
-bash scripts/update_server_from_repo.sh
-```
+## Features You Get
 
-## What Happens Next
+### Security 🔒
+- Free SSL certificate from Let's Encrypt
+- Automatic HTTPS redirect
+- Modern security headers
+- Auto-renewal of SSL certificate every 90 days
 
-After running any of the above commands:
+### Performance ⚡
+- Proper proxy configuration
+- WebSocket support for WebRTC
+- Optimized for PBX traffic
 
-1. ✅ All server files will match the repository
-2. ✅ Syntax errors will be eliminated  
-3. ✅ PBX service will restart cleanly
-4. ✅ Login will work normally
+### Maintenance 🔧
+- Automatic log rotation
+- Certificate auto-renewal
+- Production-ready configuration
 
-## Verification Steps
+## Troubleshooting
 
-After the update, verify:
+### If you still get 404 after setup:
+1. Verify PBX is running: `sudo systemctl status pbx`
+2. Check Apache is running: `sudo systemctl status apache2`
+3. Test direct access: `curl http://localhost:8080/admin/status-check.html`
+4. Check Apache logs: `sudo tail -f /var/log/apache2/pbx-error.log`
 
-```bash
-# 1. Service is running
-systemctl status pbx
-# Should show: Active: active (running)
+### If SSL certificate fails:
+1. Verify DNS points to your server: `nslookup abps.albl.com`
+2. Check firewall allows port 80: `sudo ufw status`
+3. Retry: `sudo certbot --apache -d abps.albl.com`
 
-# 2. No syntax errors in logs
-journalctl -u pbx -n 50 | grep -i syntax
-# Should show no results
+## Files Added in This PR
 
-# 3. Test login
-# Open browser → Navigate to PBX → Login with credentials
-# Should login successfully
-```
+1. **apache-pbx.conf.example** - Configuration template
+2. **scripts/setup_apache_reverse_proxy.sh** - Automated setup script
+3. **docs/APACHE_REVERSE_PROXY_SETUP.md** - Complete setup guide
+4. **docs/APACHE_404_FIX.md** - Quick fix guide
+5. **TROUBLESHOOTING.md** - Updated with Apache section
+6. **README.md** - Updated with Apache instructions
 
-## Files Changed/Added
+## Additional Notes
 
-### New Files
-- `.github/workflows/syntax-check.yml` - CI/CD syntax validation
-- `FIX_INSTRUCTIONS.md` - Fix instructions
-- `QUICK_FIX_LOGIN.md` - Quick fix guide
-- `SERVER_UPDATE_GUIDE.md` - Maintenance guide
-- `scripts/force_update_server.sh` - Automated update script
-- `scripts/update_server_from_repo.sh` - Interactive update script
-
-### Modified Files
-None - all existing files remain syntactically correct
-
-## Testing Performed
-
-✅ Verified all 274 Python files compile successfully with:
-   - `py_compile` module
-   - `ast.parse()` validation
-   - Manual syntax inspection
-
-✅ Tested update scripts:
-   - Bash syntax validation
-   - Shellcheck static analysis
-   - Simulated update scenarios
-
-✅ Validated GitHub Actions workflow:
-   - YAML syntax correct
-   - Comprehensive syntax checking
-   - AST parsing validation
-
-## Prevention Measures
-
-To prevent this issue in the future:
-
-1. **Use update scripts** instead of manual file editing
-2. **Monitor the GitHub Actions** - they'll catch syntax errors before deployment
-3. **Set up automated updates** (optional - see SERVER_UPDATE_GUIDE.md)
-4. **Keep backups** - update scripts automatically create them
+- This solution is production-ready
+- Works alongside the existing Nginx setup
+- Follows the same security standards
+- Includes comprehensive documentation
+- Tested script syntax (bash validation passed)
+- Addressed all code review feedback
 
 ## Support
 
-If you encounter any issues:
-
-1. Check the detailed guides in the repository
-2. Review service logs: `journalctl -u pbx -f`
-3. Share the error output for troubleshooting
-
-## Next Steps for User
-
-1. ⏳ **Run the update on your server** using one of the methods above
-2. ⏳ **Verify the service starts** without errors
-3. ⏳ **Test login functionality** with your credentials
-4. ✅ **Close this issue** once login works
+If you have questions or need help:
+1. Check the documentation files listed above
+2. Review the troubleshooting sections
+3. Check PBX and Apache logs
+4. Open an issue with error messages if problems persist
 
 ---
 
-**All repository changes are complete and tested. The fix is ready to deploy.**
+**Created**: 2025-12-30  
+**Issue**: Apache 404 error for admin panel  
+**Solution**: Apache reverse proxy configuration  
+**Status**: ✅ Complete - Ready to deploy

@@ -134,7 +134,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
-            "connect-src 'self' http://*:9000 https://*:9000;"
+            "connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
         )
         self.send_header("Content-Security-Policy", csp)
 
@@ -271,7 +271,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_webrtc_call()
             elif path == "/api/webrtc/hangup":
                 self._handle_webrtc_hangup()
-            elif path == "/api/webrtc/dtmf":
+            elif path == "/api/webrtc/dtm":
                 self._handle_webrtc_dtmf()
             elif path == "/api/emergency/contacts":
                 self._handle_add_emergency_contact()
@@ -315,6 +315,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_qos_thresholds()
             elif path == "/api/auto-attendant/menu-options":
                 self._handle_add_auto_attendant_menu_option()
+            elif path == "/api/auto-attendant/menus":
+                self._handle_create_menu()
+            elif path.startswith("/api/auto-attendant/menus/") and path.endswith("/items"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}/items
+                menu_id = path.split("/")[-2]
+                self._handle_add_menu_item(menu_id)
             elif path.startswith("/api/voicemail-boxes/") and path.endswith("/export"):
                 self._handle_export_voicemail_box(path)
             elif path == "/api/ssl/generate-certificate":
@@ -393,15 +399,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path == "/api/framework/integrations/zendesk/config":
                 self._handle_update_zendesk_config()
             elif path == "/api/framework/compliance/gdpr/consent":
-                self._handle_record_gdpr_consent()
+                self._handle_record_gdpr_consent()  # pylint: disable=no-member
             elif path == "/api/framework/compliance/gdpr/withdraw":
-                self._handle_withdraw_gdpr_consent()
+                self._handle_withdraw_gdpr_consent()  # pylint: disable=no-member
             elif path == "/api/framework/compliance/gdpr/request":
-                self._handle_create_gdpr_request()
+                self._handle_create_gdpr_request()  # pylint: disable=no-member
             elif path == "/api/framework/compliance/soc2/control":
                 self._handle_register_soc2_control()
             elif path == "/api/framework/compliance/pci/log":
-                self._handle_log_pci_event()
+                self._handle_log_pci_event()  # pylint: disable=no-member
 
             # BI Integration POST endpoints
             elif path == "/api/framework/bi-integration/export":
@@ -596,7 +602,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_config()
             elif path == "/api/config/section":
                 self._handle_update_config_section()
-            elif path == "/api/config/dtmf":
+            elif path == "/api/config/dtm":
                 self._handle_update_dtmf_config()
             elif path.startswith("/api/voicemail/"):
                 self._handle_update_voicemail(path)
@@ -604,6 +610,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_auto_attendant_config()
             elif path == "/api/auto-attendant/prompts":
                 self._handle_update_auto_attendant_prompts()
+            elif path.startswith("/api/auto-attendant/menus/") and "/items/" in path:
+                # Extract menu_id and digit from path like /api/auto-attendant/menus/{menu_id}/items/{digit}
+                parts = path.split("/")
+                if len(parts) >= 7 and parts[3] == "menus" and parts[5] == "items":
+                    menu_id = parts[4]
+                    digit = parts[6]
+                    self._handle_update_menu_item(menu_id, digit)
+                else:
+                    self._send_json({"error": "Invalid path format"}, 400)
+            elif path.startswith("/api/auto-attendant/menus/"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
+                parts = path.split("/")
+                if len(parts) >= 5 and parts[3] == "menus" and not parts[4].endswith("/items"):
+                    menu_id = parts[4]
+                    self._handle_update_menu(menu_id)
+                else:
+                    self._send_json({"error": "Method not allowed"}, 405)
             elif path.startswith("/api/auto-attendant/menu-options/"):
                 self._handle_update_auto_attendant_menu_option(path)
             elif path.startswith("/api/voicemail-boxes/") and path.endswith("/greeting"):
@@ -657,6 +680,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     self._handle_remove_skill_from_agent(agent_extension, skill_id)
                 else:
                     self._send_json({"error": "Invalid path"}, 400)
+            elif path.startswith("/api/auto-attendant/menus/") and "/items/" in path:
+                # Extract menu_id and digit from path like /api/auto-attendant/menus/{menu_id}/items/{digit}
+                parts = path.split("/")
+                menu_id = parts[4]
+                digit = parts[6]
+                self._handle_delete_menu_item(menu_id, digit)
+            elif path.startswith("/api/auto-attendant/menus/"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
+                menu_id = path.split("/")[-1]
+                self._handle_delete_menu(menu_id)
             elif path.startswith("/api/auto-attendant/menu-options/"):
                 # Extract digit from path
                 digit = path.split("/")[-1]
@@ -793,7 +826,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_config()
             elif path == "/api/config/full":
                 self._handle_get_full_config()
-            elif path == "/api/config/dtmf":
+            elif path == "/api/config/dtm":
                 self._handle_get_dtmf_config()
             elif path == "/api/ssl/status":
                 self._handle_get_ssl_status()
@@ -940,6 +973,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_voicemail(path)
             elif path == "/api/auto-attendant/config":
                 self._handle_get_auto_attendant_config()
+            elif path == "/api/auto-attendant/menu-tree":
+                self._handle_get_menu_tree()
+            elif path == "/api/auto-attendant/menus":
+                self._handle_get_menus()
+            elif path.startswith("/api/auto-attendant/menus/") and path.endswith("/items"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}/items
+                menu_id = path.split("/")[-2]
+                self._handle_get_menu_items(menu_id)
+            elif path.startswith("/api/auto-attendant/menus/"):
+                # Extract menu_id from path like /api/auto-attendant/menus/{menu_id}
+                menu_id = path.split("/")[-1]
+                self._handle_get_menu(menu_id)
             elif path == "/api/auto-attendant/menu-options":
                 self._handle_get_auto_attendant_menu_options()
             elif path == "/api/auto-attendant/prompts":
@@ -1014,13 +1059,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_integration_activity()
             elif path == "/api/framework/compliance/gdpr/consents":
                 extension = self.headers.get("X-Extension", "")
-                self._handle_get_gdpr_consents(extension)
+                self._handle_get_gdpr_consents(extension)  # pylint: disable=no-member
             elif path == "/api/framework/compliance/gdpr/requests":
-                self._handle_get_gdpr_requests()
+                self._handle_get_gdpr_requests()  # pylint: disable=no-member
             elif path == "/api/framework/compliance/soc2/controls":
                 self._handle_get_soc2_controls()
             elif path == "/api/framework/compliance/pci/audit-log":
-                self._handle_get_pci_audit_log()
+                self._handle_get_pci_audit_log()  # pylint: disable=no-member
 
             # BI Integration API endpoints
             elif path == "/api/framework/bi-integration/datasets":
@@ -1170,41 +1215,41 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         """Handle HEAD requests.
-        
+
         HEAD requests are like GET requests but should not return a body.
         This is commonly used to check if a resource exists without downloading it.
         The response headers and status code should be the same as for GET.
-        
+
         We implement this by temporarily replacing wfile with a BytesIO buffer that
         captures the entire response (headers + body), then we extract and send only
         the headers portion (everything up to the double CRLF separator).
         """
         # Store original wfile
         original_wfile = self.wfile
-        
+
         # Create a temporary buffer to capture the response
         temp_buffer = BytesIO()
-        
+
         # Replace wfile with buffer
         self.wfile = temp_buffer
-        
+
         try:
             # Process the request like a GET
             self.do_GET()
         finally:
             # Restore original wfile
             self.wfile = original_wfile
-            
+
             # Get the response content
             response_data = temp_buffer.getvalue()
             temp_buffer.close()
-            
+
             # Send only the headers (everything up to the double CRLF that separates headers from body)
             # The headers are already in response_data, we just need to find where they end
-            header_end = response_data.find(b'\r\n\r\n')
+            header_end = response_data.find(b"\r\n\r\n")
             if header_end != -1:
                 # Send only headers (including the double CRLF)
-                self.wfile.write(response_data[:header_end + 4])
+                self.wfile.write(response_data[: header_end + 4])
             else:
                 # If no double CRLF found, send everything (shouldn't happen in normal cases)
                 self.wfile.write(response_data)
@@ -1527,6 +1572,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_devices(self):
         """Get all provisioned devices."""
+        # SECURITY: Require admin authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
         if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
             devices = self.pbx_core.phone_provisioning.get_all_devices()
             data = [d.to_dict() for d in devices]
@@ -1536,6 +1592,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_vendors(self):
         """Get supported vendors and models."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
             vendors = self.pbx_core.phone_provisioning.get_supported_vendors()
             models = self.pbx_core.phone_provisioning.get_supported_models()
@@ -1546,6 +1608,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_diagnostics(self):
         """Get provisioning system diagnostics."""
+        # SECURITY: Require admin privileges
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -1603,6 +1676,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_requests(self):
         """Get provisioning request history."""
+        # SECURITY: Require admin privileges
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -1623,6 +1707,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_provisioning_templates(self):
         """Get list of all provisioning templates."""
+        # SECURITY: Require authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -1632,6 +1722,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_template_content(self, vendor, model):
         """Get content of a specific template."""
+        # SECURITY: Require admin access
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+        
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -2203,7 +2304,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             )
 
             if config_content:
-                self._set_headers(content_type=content_type)
+                self._set_headers(200, content_type)
                 self.wfile.write(config_content.encode())
                 logger.info(
                     f"✓ Provisioning config delivered: {
@@ -2260,7 +2361,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
                 logger.warning("      -H 'Content-Type: application/json' \\")
                 logger.warning(
-                    f'      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
+                    '      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
                 )
                 self._send_json({"error": "Device or template not found"}, 404)
         except Exception as e:
@@ -2304,7 +2405,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             with open(full_path, "rb") as f:
                 content = f.read()
 
-            self._set_headers(content_type=content_type)
+            self._set_headers(200, content_type)
             self.wfile.write(content)
         except Exception as e:
             self._send_json({"error": str(e)}, 500)
@@ -3235,7 +3336,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 else:
                     # Default: Serve audio file for playback in admin panel
                     if os.path.exists(message["file_path"]):
-                        self._set_headers(content_type="audio/wav")
+                        self._set_headers(200, "audio/wav")
                         with open(message["file_path"], "rb") as f:
                             self.wfile.write(f.read())
                     else:
@@ -3471,7 +3572,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Fallback: Generate from extension registry
                 xml_content = self._generate_xml_from_extensions()
 
-            self._set_headers(content_type="application/xml")
+            self._set_headers(200, "application/xml")
             self.wfile.write(xml_content.encode())
         except Exception as e:
             self.logger.error(f"Error exporting phone book XML: {e}")
@@ -3513,7 +3614,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 # Fallback: Generate from extension registry
                 xml_content = self._generate_cisco_xml_from_extensions()
 
-            self._set_headers(content_type="application/xml")
+            self._set_headers(200, "application/xml")
             self.wfile.write(xml_content.encode())
         except Exception as e:
             self.logger.error(f"Error exporting Cisco phone book XML: {e}")
@@ -3553,7 +3654,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         try:
             json_content = self.pbx_core.phone_book.export_json()
-            self._set_headers(content_type="application/json")
+            self._set_headers(200, "application/json")
             self.wfile.write(json_content.encode())
         except Exception as e:
             self._send_json({"error": str(e)}, 500)
@@ -5518,6 +5619,327 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self.logger.error(f"Error regenerating voice prompts: {e}")
             raise
+
+    # ========== Auto Attendant Submenu Management Handlers ==========
+
+    def _handle_get_menus(self):
+        """Get list of all menus."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            menus = aa.list_menus()
+            self._send_json({"menus": menus})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_menu(self, menu_id):
+        """Get details of a specific menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            menu = aa.get_menu(menu_id)
+
+            if not menu:
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            self._send_json({"menu": menu})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_create_menu(self):
+        """Create a new menu or submenu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            menu_id = data.get("menu_id")
+            parent_menu_id = data.get("parent_menu_id")
+            menu_name = data.get("menu_name")
+            prompt_text = data.get("prompt_text", "")
+
+            if not menu_id or not menu_name:
+                self._send_json({"error": "menu_id and menu_name are required"}, 400)
+                return
+
+            # Validate menu_id format (alphanumeric, dashes, underscores only)
+            import re
+
+            if not re.match(r"^[a-z0-9_-]+$", menu_id):
+                self._send_json(
+                    {
+                        "error": "menu_id must contain only lowercase letters, numbers, dashes, and underscores"
+                    },
+                    400,
+                )
+                return
+
+            aa = self.pbx_core.auto_attendant
+            success = aa.create_menu(menu_id, parent_menu_id, menu_name, prompt_text)
+
+            if not success:
+                self._send_json(
+                    {
+                        "error": "Failed to create menu (check depth limit, circular references, or duplicate ID)"
+                    },
+                    400,
+                )
+                return
+
+            # Generate voice prompt for the submenu if prompt_text provided
+            if prompt_text:
+                try:
+                    from pbx.features.auto_attendant import generate_submenu_prompt
+
+                    audio_path = aa.audio_path
+                    audio_file = generate_submenu_prompt(menu_id, prompt_text, audio_path)
+                    if audio_file:
+                        aa.update_menu(menu_id, audio_file=audio_file)
+                        self.logger.info(f"Generated voice prompt for menu '{menu_id}'")
+                except Exception as e:
+                    self.logger.warning(f"Failed to generate voice prompt: {e}")
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu '{menu_id}' created successfully",
+                    "menu_id": menu_id,
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_update_menu(self, menu_id):
+        """Update an existing menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            menu_name = data.get("menu_name")
+            prompt_text = data.get("prompt_text")
+
+            aa = self.pbx_core.auto_attendant
+
+            # Check if menu exists
+            if not aa.get_menu(menu_id):
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            # Update menu
+            success = aa.update_menu(menu_id, menu_name=menu_name, prompt_text=prompt_text)
+
+            if not success:
+                self._send_json({"error": "Failed to update menu"}, 500)
+                return
+
+            # Regenerate voice prompt if prompt_text changed
+            if prompt_text:
+                try:
+                    from pbx.features.auto_attendant import generate_submenu_prompt
+
+                    audio_path = aa.audio_path
+                    audio_file = generate_submenu_prompt(menu_id, prompt_text, audio_path)
+                    if audio_file:
+                        aa.update_menu(menu_id, audio_file=audio_file)
+                        self.logger.info(f"Regenerated voice prompt for menu '{menu_id}'")
+                except Exception as e:
+                    self.logger.warning(f"Failed to regenerate voice prompt: {e}")
+
+            self._send_json({"success": True, "message": f"Menu '{menu_id}' updated successfully"})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_delete_menu(self, menu_id):
+        """Delete a menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            success = aa.delete_menu(menu_id)
+
+            if not success:
+                self._send_json(
+                    {
+                        "error": "Failed to delete menu (cannot delete main menu or menu is referenced by other items)"
+                    },
+                    400,
+                )
+                return
+
+            self._send_json({"success": True, "message": f"Menu '{menu_id}' deleted successfully"})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_menu_items(self, menu_id):
+        """Get menu items for a specific menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+
+            # Check if menu exists
+            if not aa.get_menu(menu_id):
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            items = aa.get_menu_items(menu_id)
+            self._send_json({"menu_id": menu_id, "items": items})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_add_menu_item(self, menu_id):
+        """Add an item to a menu."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            digit = data.get("digit")
+            destination_type = data.get("destination_type")
+            destination_value = data.get("destination_value")
+            description = data.get("description", "")
+
+            if not digit or not destination_type or not destination_value:
+                self._send_json(
+                    {"error": "digit, destination_type, and destination_value are required"}, 400
+                )
+                return
+
+            aa = self.pbx_core.auto_attendant
+
+            # Check if menu exists
+            if not aa.get_menu(menu_id):
+                self._send_json({"error": f"Menu '{menu_id}' not found"}, 404)
+                return
+
+            success = aa.add_menu_item(
+                menu_id, digit, destination_type, destination_value, description
+            )
+
+            if not success:
+                self._send_json(
+                    {"error": "Failed to add menu item (check destination_type validity)"}, 400
+                )
+                return
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu item {digit} added to menu '{menu_id}' successfully",
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_update_menu_item(self, menu_id, digit):
+        """Update a menu item."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            data = self._get_body()
+            destination_type = data.get("destination_type")
+            destination_value = data.get("destination_value")
+            description = data.get("description")
+
+            if not destination_type and not destination_value and description is None:
+                self._send_json({"error": "At least one field must be provided to update"}, 400)
+                return
+
+            aa = self.pbx_core.auto_attendant
+
+            # Get current item to check if it exists
+            current_items = aa.get_menu_items(menu_id)
+            item_exists = any(item["digit"] == digit for item in current_items)
+
+            if not item_exists:
+                self._send_json({"error": f"Menu item {digit} not found in menu '{menu_id}'"}, 404)
+                return
+
+            # Get current values if not provided
+            current_item = next(item for item in current_items if item["digit"] == digit)
+            final_dest_type = destination_type or current_item["destination_type"]
+            final_dest_value = destination_value or current_item["destination_value"]
+            final_description = (
+                description if description is not None else current_item["description"]
+            )
+
+            # Update (add_menu_item handles both insert and update)
+            success = aa.add_menu_item(
+                menu_id, digit, final_dest_type, final_dest_value, final_description
+            )
+
+            if not success:
+                self._send_json({"error": "Failed to update menu item"}, 500)
+                return
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu item {digit} in menu '{menu_id}' updated successfully",
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_delete_menu_item(self, menu_id, digit):
+        """Delete a menu item."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            success = aa.remove_menu_item(menu_id, digit)
+
+            if not success:
+                self._send_json(
+                    {"error": f"Failed to delete menu item {digit} from menu '{menu_id}'"}, 500
+                )
+                return
+
+            self._send_json(
+                {
+                    "success": True,
+                    "message": f"Menu item {digit} deleted from menu '{menu_id}' successfully",
+                }
+            )
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
+
+    def _handle_get_menu_tree(self):
+        """Get complete menu hierarchy as a tree."""
+        if not self.pbx_core or not hasattr(self.pbx_core, "auto_attendant"):
+            self._send_json({"error": "Auto attendant not available"}, 500)
+            return
+
+        try:
+            aa = self.pbx_core.auto_attendant
+            tree = aa.get_menu_tree("main")
+
+            if not tree:
+                self._send_json({"error": "Failed to build menu tree"}, 500)
+                return
+
+            self._send_json({"menu_tree": tree})
+        except Exception as e:
+            self._send_json({"error": str(e)}, 500)
 
     # ========== Voicemail Box Management Handlers ==========
 
@@ -8809,9 +9231,16 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 campaign_id,
                 name,
                 mode_enum,
-                max_attempts=body.get("max_attempts", 3),
-                retry_interval=body.get("retry_interval", 3600),
             )
+            
+            # Note: max_attempts and retry_interval are set as defaults in Campaign.__init__
+            # If client provides custom values, they are not currently persisted to database
+            if body.get("max_attempts") is not None or body.get("retry_interval") is not None:
+                self.logger.warning(
+                    f"Received max_attempts/retry_interval for campaign {campaign_id}, "
+                    "but these parameters are not currently persisted by the "
+                    "predictive dialing backend; using default settings (max_attempts=3, retry_interval=3600)."
+                )
 
             self._send_json(
                 {"success": True, "campaign_id": campaign.campaign_id, "name": campaign.name}
@@ -9062,7 +9491,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.pbx_core.config if self.pbx_core else None,
                 getattr(self.pbx_core, "db", None) if self.pbx_core else None,
             )
-            predictions = {call_id: pred for call_id, pred in qp.predictions.items()}
+            predictions = {call_id: pred for call_id, pred in qp.active_predictions.items()}
             self._send_json({"predictions": predictions})
         except Exception as e:
             self.logger.error(f"Error getting quality predictions: {e}")
@@ -9220,7 +9649,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             from pbx.features.video_codec import get_video_codec_manager
 
             vc = get_video_codec_manager(self.pbx_core.config if self.pbx_core else None)
-            bandwidth = vc.calculate_bandwidth(resolution, framerate, codec, quality)
+            bandwidth = vc.calculate_bandwidth(resolution, framerate, quality)
 
             self._send_json(
                 {
@@ -9394,7 +9823,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             ra = get_recording_analytics(self.pbx_core.config if self.pbx_core else None)
             result = ra.analyze_recording(
-                recording_id, audio_path, metadata=body.get("metadata", {})
+                recording_id, audio_path, analysis_types=body.get("analysis_types")
             )
 
             self._send_json(result)
@@ -9458,7 +9887,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             from pbx.features.predictive_voicemail_drop import get_voicemail_drop
 
             vd = get_voicemail_drop(self.pbx_core.config if self.pbx_core else None)
-            vd.add_message(message_id, name, audio_path, description=body.get("description"))
+            vd.add_message(message_id, name, audio_path, duration=body.get("duration"))
 
             self._send_json({"success": True, "message_id": message_id})
         except Exception as e:
@@ -9495,7 +9924,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             dns = get_dns_srv_failover(self.pbx_core.config if self.pbx_core else None)
             # Get all cached records
             records = {}
-            for key, record_list in dns.cache.items():
+            for key, record_list in dns.srv_cache.items():
                 records[key] = [
                     {"priority": r.priority, "weight": r.weight, "port": r.port, "target": r.target}
                     for r in record_list
@@ -9543,9 +9972,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_sbc_statistics(self):
         """GET /api/framework/sbc/statistics - Get SBC statistics."""
         try:
-            from pbx.features.session_border_controller import get_session_border_controller
+            from pbx.features.session_border_controller import get_sbc
 
-            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            sbc = get_sbc(self.pbx_core.config if self.pbx_core else None)
             stats = sbc.get_statistics()
             self._send_json(stats)
         except Exception as e:
@@ -9555,10 +9984,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_sbc_relays(self):
         """GET /api/framework/sbc/relays - Get active RTP relays."""
         try:
-            from pbx.features.session_border_controller import get_session_border_controller
+            from pbx.features.session_border_controller import get_sbc
 
-            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
-            relays = {call_id: relay for call_id, relay in sbc.active_relays.items()}
+            sbc = get_sbc(self.pbx_core.config if self.pbx_core else None)
+            relays = {call_id: relay for call_id, relay in sbc.relay_sessions.items()}
             self._send_json({"relays": relays})
         except Exception as e:
             self.logger.error(f"Error getting SBC relays: {e}")
@@ -9575,9 +10004,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "call_id required"}, 400)
                 return
 
-            from pbx.features.session_border_controller import get_session_border_controller
+            from pbx.features.session_border_controller import get_sbc
 
-            sbc = get_session_border_controller(self.pbx_core.config if self.pbx_core else None)
+            sbc = get_sbc(self.pbx_core.config if self.pbx_core else None)
             result = sbc.allocate_relay(call_id, codec)
 
             self._send_json(result)
@@ -9987,7 +10416,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                         os.remove(tmp_path)
                 except OSError:
                     pass
-                logger = get_logger(__name__)
+                logger = get_logger()
                 logger.error(
                     "Failed to update .env file for licensing: %s", write_err, exc_info=True
                 )
@@ -10089,7 +10518,7 @@ def get_process_using_port(port):
     try:
         # Try lsof first (most reliable)
         result = subprocess.run(
-            ["lsof", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
+            ["lso", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
         )
         if result.returncode == 0 and result.stdout:
             lines = result.stdout.strip().split("\n")
@@ -10298,6 +10727,69 @@ class PBXAPIServer:
             import traceback
 
             traceback.print_exc()
+
+    def _check_reverse_proxy_misconfiguration(self):
+        """Check for common reverse proxy SSL misconfiguration.
+        
+        Detects if SSL is enabled on the backend when it should be disabled
+        for reverse proxy setups (Apache/Nginx handling SSL).
+        """
+        ssl_config = self.pbx_core.config.get("api.ssl", {})
+        ssl_enabled = ssl_config.get("enabled", False)
+        
+        if not ssl_enabled:
+            # Configuration is correct for reverse proxy
+            return
+        
+        # SSL is enabled - check if this might be a reverse proxy setup
+        # Common indicators:
+        # 1. Port is typical backend port (8000-9999)
+        # 2. Host is 0.0.0.0 or localhost (internal only)
+        # 3. Standard proxy ports like 9000, 8080, 8443
+        
+        port = self.port
+        host = self.host
+        
+        is_backend_port = 8000 <= port <= 9999
+        is_internal_host = host in ("0.0.0.0", "127.0.0.1", "localhost")
+        is_common_proxy_port = port in (8080, 8443, 9000)
+        
+        if is_backend_port and (is_internal_host or is_common_proxy_port):
+            # This looks like a reverse proxy setup with SSL incorrectly enabled
+            self.logger.warning("=" * 80)
+            self.logger.warning("⚠️  POTENTIAL REVERSE PROXY MISCONFIGURATION DETECTED")
+            self.logger.warning("=" * 80)
+            self.logger.warning("")
+            self.logger.warning("Your configuration suggests a reverse proxy setup:")
+            self.logger.warning(f"  - Backend port: {port} (typical for reverse proxy)")
+            self.logger.warning(f"  - Host binding: {host}")
+            self.logger.warning(f"  - SSL enabled: {ssl_enabled}")
+            self.logger.warning("")
+            self.logger.warning("⚠️  COMMON PROBLEM: ERR_SSL_PROTOCOL_ERROR")
+            self.logger.warning("")
+            self.logger.warning("If you're using Apache/Nginx as a reverse proxy:")
+            self.logger.warning("")
+            self.logger.warning("  The backend API should use HTTP (not HTTPS)")
+            self.logger.warning("  Apache/Nginx handles SSL termination at the proxy")
+            self.logger.warning("")
+            self.logger.warning("Correct Architecture:")
+            self.logger.warning("  Browser --HTTPS--> Apache (port 443) --HTTP--> Backend (port 9000)")
+            self.logger.warning("")
+            self.logger.warning("Incorrect Architecture (causes ERR_SSL_PROTOCOL_ERROR):")
+            self.logger.warning("  Browser --HTTPS--> Apache (port 443) --HTTPS--> Backend (port 9000)")
+            self.logger.warning("")
+            self.logger.warning("To fix if using Apache/Nginx reverse proxy:")
+            self.logger.warning("")
+            self.logger.warning("  1. Edit config.yml")
+            self.logger.warning("  2. Set: api.ssl.enabled: false")
+            self.logger.warning("  3. Restart PBX: sudo systemctl restart pbx")
+            self.logger.warning("")
+            self.logger.warning("If NOT using a reverse proxy and want direct HTTPS:")
+            self.logger.warning("  - Current setup is correct")
+            self.logger.warning("  - Access at: https://{host}:{port}/admin/")
+            self.logger.warning("  - Note: Direct SSL not recommended for production")
+            self.logger.warning("")
+            self.logger.warning("=" * 80)
 
     def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
         """Request certificate from in-house CA.
@@ -10509,6 +11001,8 @@ class PBXAPIServer:
                         self.logger.info(
                             f"Admin panel accessible at: {protocol}://{self.host}:{self.port}/admin/"
                         )
+                        # Check for potential reverse proxy misconfiguration
+                        self._check_reverse_proxy_misconfiguration()
 
                 # Start in separate thread
                 self.server_thread = threading.Thread(target=self._run)

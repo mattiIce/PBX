@@ -15,6 +15,7 @@ try:
     from pydub import AudioSegment
 
     GTTS_AVAILABLE = True
+    GTTS_IMPORT_ERROR = None
 except ImportError as e:
     GTTS_AVAILABLE = False
     GTTS_IMPORT_ERROR = str(e)

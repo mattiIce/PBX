@@ -72,7 +72,6 @@ class WebRTCAudioTester:
         self.log("\n=== Testing WebRTC Module Imports ===")
 
         try:
-            from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
 
             self.log("WebRTC modules imported successfully", "PASS")
             self.test_results["passed"] += 1

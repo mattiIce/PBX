@@ -404,7 +404,7 @@ class LeastCostRouting:
             billing_increment: Billing increment
         """
         if not self.enabled:
-            self.logger.error(f"Cannot add rate: Least cost routing feature is not enabled")
+            self.logger.error("Cannot add rate: Least cost routing feature is not enabled")
             return False
 
         dial_pattern = DialPattern(pattern, description)
@@ -456,7 +456,7 @@ class LeastCostRouting:
         """
         if not self.enabled:
             self.logger.error(
-                f"Cannot add time-based rate: Least cost routing feature is not enabled"
+                "Cannot add time-based rate: Least cost routing feature is not enabled"
             )
             return False
 

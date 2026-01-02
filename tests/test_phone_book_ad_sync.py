@@ -147,7 +147,7 @@ def test_phone_book_sync_disabled():
     phone_book = PhoneBook(config, database)
 
     # Verify auto_sync_from_ad is disabled
-    assert phone_book.auto_sync_from_ad == False, "Auto sync should be disabled"
+    assert phone_book.auto_sync_from_ad is False, "Auto sync should be disabled"
 
     # Try to sync - should return 0
     ad_integration = MockADIntegration()

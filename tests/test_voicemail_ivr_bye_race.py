@@ -8,8 +8,6 @@ call termination without continuing to play audio.
 """
 import os
 import sys
-import threading
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -176,7 +174,7 @@ def test_pin_entry_clears_after_processing():
     assert ivr.entered_pin == "1234", "PIN should be collected"
 
     # Press # to complete PIN entry
-    result = ivr.handle_dtmf("#")
+    ivr.handle_dtmf("#")
 
     # Verify PIN was cleared after verification (security)
     assert ivr.entered_pin == "", "PIN should be cleared after verification"

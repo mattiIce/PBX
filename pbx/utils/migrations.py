@@ -3,7 +3,6 @@ Database migration system for PBX features
 Manages schema versioning and migrations
 """
 
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
@@ -141,8 +140,8 @@ class MigrationManager:
             for migration in pending:
                 self.logger.info(f"Applying migration {migration['version']}: {migration['name']}")
 
-                # Execute migration SQL
-                self.db.execute(migration["sql"])
+                # Execute migration SQL using execute_script for multi-statement support
+                self.db.execute_script(migration["sql"])
 
                 # Record migration
                 self.db.execute(
@@ -171,7 +170,7 @@ class MigrationManager:
             List of migration status dictionaries
         """
         try:
-            current_version = self.get_current_version()
+            self.get_current_version()
 
             # Get applied migrations
             applied = self.db.fetch_all(

@@ -44,7 +44,7 @@ def test_connection():
         cur = conn.cursor()
         cur.execute("SELECT version();")
         version = cur.fetchone()
-        print(f"✓ Connected to PostgreSQL")
+        print("✓ Connected to PostgreSQL")
         print(f"  Version: {version[0]}")
         cur.close()
         conn.close()

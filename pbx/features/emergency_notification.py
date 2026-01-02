@@ -8,7 +8,7 @@ import threading
 import time
 from datetime import datetime
 from email.utils import formatdate
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -237,9 +237,8 @@ class EmergencyNotificationSystem:
             existing = self.database.fetch_one(check_query, (contact.id,))
 
             if existing:
-                # Update existing contact - use placeholder list for clarity
-                placeholders = ", ".join([placeholder] * 6)  # 6 fields to update
-                query = f"""
+                # Update existing contact with individual placeholders
+                query = """
                     UPDATE emergency_contacts
                     SET name = {placeholder}, extension = {placeholder}, phone = {placeholder},
                         email = {placeholder}, priority = {placeholder}, notification_methods = {placeholder},
@@ -256,9 +255,8 @@ class EmergencyNotificationSystem:
                     contact.id,
                 )
             else:
-                # Insert new contact - use placeholder list for clarity
-                placeholders = ", ".join([placeholder] * 7)  # 7 fields
-                query = f"""
+                # Insert new contact with individual placeholders
+                query = """
                     INSERT INTO emergency_contacts
                     (id, name, extension, phone, email, priority, notification_methods, active)
                     VALUES ({placeholders}, true)
@@ -484,7 +482,7 @@ class EmergencyNotificationSystem:
                 subject = f"🚨 EMERGENCY ALERT: {trigger_type}"
 
                 # Build email body
-                body = f"""EMERGENCY NOTIFICATION
+                body = """EMERGENCY NOTIFICATION
 
 Type: {trigger_type}
 Time: {details.get('timestamp', datetime.now())}
@@ -663,9 +661,8 @@ PBX Emergency Notification System
     def _save_notification_to_db(self, notification_record: Dict):
         """Save notification record to database"""
         try:
-            placeholder = self._get_db_placeholder()
-            placeholders = ", ".join([placeholder] * 6)  # 6 fields
-            query = f"""
+            # Insert notification record with individual placeholders
+            query = """
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
                 VALUES ({placeholders})

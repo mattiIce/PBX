@@ -3,14 +3,13 @@ Session Border Controller (SBC)
 Enhanced security and NAT traversal
 """
 
-import random
 import re
 import socket
 import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -232,7 +231,7 @@ class SessionBorderController:
             "cseq": "cseq",
             "c-seq": "cseq",
             "from": "from",
-            "f": "from",
+            "": "from",
             "to": "to",
             "t": "to",
         }
@@ -309,11 +308,11 @@ class SessionBorderController:
 
                 # Default to port-restricted for most home/office NATs
                 return NATType.PORT_RESTRICTED
-            except (OSError, socket.error) as e:
+            except (OSError, socket.error):
                 sock.close()
                 # Symmetric NAT is most restrictive
                 return NATType.SYMMETRIC
-        except (OSError, socket.error) as e:
+        except (OSError, socket.error):
             # If we can't determine, assume port-restricted (most common)
             return NATType.PORT_RESTRICTED
 
@@ -412,7 +411,7 @@ class SessionBorderController:
             self.logger.warning(f"No relay session for call {call_id}")
             return False
 
-        session = self.relay_sessions[call_id]
+        self.relay_sessions[call_id]
 
         # In production, this would:
         # 1. Parse RTP header
@@ -426,7 +425,7 @@ class SessionBorderController:
         self.relayed_media_bytes += packet_size
 
         # Update bandwidth tracking (rough estimate in kbps)
-        bandwidth_kbps = (packet_size * 8 * self.PACKETS_PER_SECOND) / 1000
+        (packet_size * 8 * self.PACKETS_PER_SECOND) / 1000
 
         self.logger.debug(f"Relayed RTP packet for {call_id}: {packet_size} bytes")
 
@@ -522,7 +521,7 @@ class SessionBorderController:
         """Add IP to blacklist"""
         if not self.enabled:
             self.logger.error(
-                f"Cannot add to blacklist: Session border controller feature is not enabled"
+                "Cannot add to blacklist: Session border controller feature is not enabled"
             )
             return False
 
@@ -534,7 +533,7 @@ class SessionBorderController:
         """Add IP to whitelist"""
         if not self.enabled:
             self.logger.error(
-                f"Cannot add to whitelist: Session border controller feature is not enabled"
+                "Cannot add to whitelist: Session border controller feature is not enabled"
             )
             return False
 

@@ -82,45 +82,6 @@ class CallBlending:
         self.logger.info(f"  Blend ratio: {self.blend_ratio:.0%} inbound")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def register_agent(self, agent_id: str, extension: str, mode: str = "blended") -> Dict:
-        """
-        Register agent for blended calling
-
-        Args:
-            agent_id: Agent identifier
-            extension: Agent extension
-            mode: Operating mode
-
-        Returns:
-            Dict: Registration result
-        """
-        agent = Agent(agent_id, extension)
-        agent.mode = AgentMode(mode)
-        self.agents[agent_id] = agent
-
-        self.logger.info(f"Registered agent {agent_id} in {mode} mode")
-
-        return {"success": True, "agent_id": agent_id, "mode": mode}
-
-    def set_agent_mode(self, agent_id: str, mode: str) -> bool:
-        """
-        Set agent operating mode
-
-        Args:
-            agent_id: Agent identifier
-            mode: New mode
-
-        Returns:
-            bool: Success
-        """
-        if agent_id not in self.agents:
-            return False
-
-        self.agents[agent_id].mode = AgentMode(mode)
-        self.logger.info(f"Set agent {agent_id} to {mode} mode")
-
-        return True
-
     def get_next_call_for_agent(self, agent_id: str) -> Optional[Dict]:
         """
         Get next call for agent based on blending rules
@@ -255,9 +216,7 @@ class CallBlending:
     def set_agent_available(self, agent_id: str, available: bool):
         """Set agent availability"""
         if not self.enabled:
-            self.logger.error(
-                f"Cannot set agent availability: Call blending feature is not enabled"
-            )
+            self.logger.error("Cannot set agent availability: Call blending feature is not enabled")
             return False
 
         if agent_id in self.agents:

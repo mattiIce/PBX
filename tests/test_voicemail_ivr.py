@@ -9,12 +9,11 @@ import logging
 import os
 import sys
 import tempfile
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pbx.features.voicemail import VoicemailBox, VoicemailIVR, VoicemailSystem
+from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
@@ -236,8 +235,8 @@ def test_voicemail_ivr_delete_message():
 
     # Create voicemail messages
     mailbox = vm_system.get_mailbox("1001")
-    msg1_id = mailbox.save_message("1002", b"test audio 1", duration=5)
-    msg2_id = mailbox.save_message("1003", b"test audio 2", duration=5)
+    mailbox.save_message("1002", b"test audio 1", duration=5)
+    mailbox.save_message("1003", b"test audio 2", duration=5)
 
     initial_count = len(mailbox.get_messages())
 
@@ -249,7 +248,7 @@ def test_voicemail_ivr_delete_message():
     ivr.state = VoicemailIVR.STATE_MESSAGE_MENU
 
     # Press 3 to delete message
-    result = ivr.handle_dtmf("3")
+    ivr.handle_dtmf("3")
 
     # Should delete and move to next or main menu
     final_count = len(mailbox.get_messages())
@@ -266,7 +265,7 @@ def test_voicemail_ivr_no_messages():
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
 
     # Empty mailbox
-    mailbox = vm_system.get_mailbox("1005")
+    vm_system.get_mailbox("1005")
 
     ivr = VoicemailIVR(vm_system, "1005")
     ivr.state = VoicemailIVR.STATE_MAIN_MENU
@@ -319,7 +318,7 @@ def test_voicemail_ivr_pin_entry_from_welcome():
 
     # Enter PIN starting from welcome state: 1234#
     # First digit '1' should trigger transition AND be collected
-    result1 = ivr.handle_dtmf("1")
+    ivr.handle_dtmf("1")
     assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
     assert ivr.entered_pin == "1", f"Expected entered_pin='1', got '{ivr.entered_pin}'"
 

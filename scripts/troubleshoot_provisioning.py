@@ -7,7 +7,6 @@ This script helps diagnose and troubleshoot phone auto-provisioning issues.
 import json
 import os
 import sys
-from datetime import datetime
 
 import requests
 
@@ -90,7 +89,7 @@ def check_api_connectivity(host="localhost", port=8080):
         response = requests.get(url, timeout=5)
         if response.status_code == 200:
             status = response.json()
-            print(f"✓ API server is accessible")
+            print("✓ API server is accessible")
             print(f"  Status: {json.dumps(status, indent=2)}")
             return True
         else:
@@ -118,11 +117,11 @@ def get_diagnostics(host="localhost", port=8080):
         if response.status_code == 200:
             diagnostics = response.json()
 
-            print(f"\n✓ Configuration:")
+            print("\n✓ Configuration:")
             for key, value in diagnostics["configuration"].items():
                 print(f"  {key}: {value}")
 
-            print(f"\n✓ Statistics:")
+            print("\n✓ Statistics:")
             for key, value in diagnostics["statistics"].items():
                 print(f"  {key}: {value}")
 
@@ -134,7 +133,7 @@ def get_diagnostics(host="localhost", port=8080):
                 )
 
             if diagnostics["warnings"]:
-                print(f"\n⚠ Warnings:")
+                print("\n⚠ Warnings:")
                 for warning in diagnostics["warnings"]:
                     print(f"  - {warning}")
 
@@ -215,7 +214,7 @@ def test_mac_lookup(mac_address, host="localhost", port=8080):
             for device in devices:
                 if device["mac_address"] == normalized:
                     found = True
-                    print(f"\n✓ Device IS registered:")
+                    print("\n✓ Device IS registered:")
                     print(f"  Extension: {device['extension_number']}")
                     print(f"  Vendor: {device['vendor']}")
                     print(f"  Model: {device['model']}")
@@ -225,10 +224,10 @@ def test_mac_lookup(mac_address, host="localhost", port=8080):
                     break
 
             if not found:
-                print(f"\n✗ Device NOT registered")
-                print(f"  Register it using:")
+                print("\n✗ Device NOT registered")
+                print("  Register it using:")
                 print(f"    curl -X POST https://{host}:{port}/api/provisioning/devices \\")
-                print(f"      -H 'Content-Type: application/json' \\")
+                print("      -H 'Content-Type: application/json' \\")
                 print(
                     f'      -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
                 )
@@ -256,10 +255,10 @@ def test_config_download(mac_address, host="localhost", port=8080):
         response = requests.get(url, timeout=5)
 
         if response.status_code == 200:
-            print(f"✓ Config downloaded successfully")
+            print("✓ Config downloaded successfully")
             print(f"  Content-Type: {response.headers.get('Content-Type')}")
             print(f"  Size: {len(response.content)} bytes")
-            print(f"\n  First 500 characters of config:")
+            print("\n  First 500 characters of config:")
             print("  " + "-" * 60)
             print("  " + response.text[:500].replace("\n", "\n  "))
             if len(response.text) > 500:
@@ -400,9 +399,7 @@ Examples:
     api_ok = check_api_connectivity(host, port)
 
     if api_ok:
-        diagnostics = get_diagnostics(host, port)
-        requests_list = get_recent_requests(host, port, limit=10)
-
+        _ = get_diagnostics(host, port)  # Get diagnostics for logging
         if mac_address:
             test_mac_lookup(mac_address, host, port)
             test_config_download(mac_address, host, port)

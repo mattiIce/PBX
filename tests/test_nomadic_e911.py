@@ -5,7 +5,6 @@ Tests for Nomadic E911 Framework
 import os
 import sys
 import unittest
-from datetime import datetime
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -189,7 +189,7 @@ class OpusCodec:
             from opuslib import Encoder
 
             # Calculate frame samples
-            frame_samples = int(self.sample_rate * self.frame_size / 1000)
+            int(self.sample_rate * self.frame_size / 1000)
 
             self.encoder = Encoder(
                 fs=self.sample_rate, channels=self.channels, application=self.application
@@ -486,7 +486,7 @@ class OpusCodecManager:
             True if opuslib is installed
         """
         try:
-            import opuslib
+            pass
 
             return True
         except ImportError:

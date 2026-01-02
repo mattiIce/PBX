@@ -5,10 +5,8 @@ Tests the newly implemented features in Zoom, Teams, Outlook, and Active Directo
 """
 import os
 import sys
-import tempfile
-import time
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -17,7 +15,6 @@ from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.integrations.outlook import OutlookIntegration
 from pbx.integrations.teams import TeamsIntegration
 from pbx.integrations.zoom import ZoomIntegration
-from pbx.utils.config import Config
 
 
 class MockConfig:

@@ -137,7 +137,7 @@ The Aluminum Blanking PBX System is a **comprehensive, enterprise-grade Private 
 ```
 
 ### Technology Stack
-- **Language**: Python 3.7+
+- **Language**: Python 3.12+ (Python 3.13+ recommended)
 - **Protocols**: SIP (RFC 3261), RTP (RFC 3550), HTTP/REST
 - **Communication**: VoIP (Voice over IP) and VoSIP (Voice over Secure IP)
 - **Database**: PostgreSQL (production), SQLite (development)
@@ -1413,7 +1413,7 @@ docker run -d -p 5060:5060/udp -p 8080:8080 pbx-system
 - RAM: 2 GB
 - Disk: 10 GB
 - OS: Ubuntu 20.04+ / Any Linux
-- Python: 3.7+
+- Python: 3.12+ (Python 3.13+ recommended)
 
 #### Recommended (Production)
 - CPU: 4+ cores

@@ -93,12 +93,12 @@ class ILBCCodec:
 
         # Check if ilbc library is available
         try:
-            import pyilbc
+            pass
 
             self.ilbc_available = True
             self.logger.info(
                 f"iLBC codec initialized (mode: {self.mode}ms, "
-                f"bitrate: {self.bitrate/1000:.2f} kbps)"
+                f"bitrate: {self.bitrate / 1000:.2f} kbps)"
             )
         except ImportError:
             self.ilbc_available = False
@@ -398,7 +398,7 @@ class ILBCCodecManager:
             bool: True if pyilbc library is available
         """
         try:
-            import pyilbc
+            pass
 
             return True
         except ImportError:

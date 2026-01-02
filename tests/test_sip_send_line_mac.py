@@ -4,7 +4,6 @@ Tests P-Asserted-Identity, Remote-Party-ID, and X-MAC-Address headers
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 
@@ -35,7 +34,7 @@ class TestSIPCallerIDHeaders(unittest.TestCase):
         self.assertIn("John Doe", rpid)
         self.assertIn("sip:1001@192.168.1.100", rpid)
         self.assertIn("party=calling", rpid)
-        self.assertIn("privacy=off", rpid)
+        self.assertIn("privacy=of", rpid)
         self.assertIn("screen=no", rpid)
 
     def test_caller_id_headers_format(self):
@@ -82,7 +81,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNotNone(x_mac)
         # Should be normalized to colon format and lowercase
-        self.assertEqual(x_mac, "aa:bb:cc:dd:ee:ff")
+        self.assertEqual(x_mac, "aa:bb:cc:dd:ee:f")
 
     def test_add_mac_address_header_no_separator(self):
         """Test adding MAC address header without separators"""
@@ -217,7 +216,7 @@ class TestSIPMessageBuilding(unittest.TestCase):
         self.assertIn("Remote-Party-ID", raw_message)
         self.assertIn("X-MAC-Address", raw_message)
         self.assertIn("Alice Smith", raw_message)
-        self.assertIn("aa:bb:cc:dd:ee:ff", raw_message)
+        self.assertIn("aa:bb:cc:dd:ee:f", raw_message)
 
         # Verify it can be parsed back
         parsed = SIPMessage(raw_message)

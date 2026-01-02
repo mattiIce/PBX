@@ -711,7 +711,310 @@ P30 = 13   # GMT-8
 """
         self.add_template("grandstream", "gxp2170", grandstream_gxp2170_template)
 
-        self.logger.info(f"Loaded {len(self.templates)} built-in phone templates")
+        # Grandstream HT801 (1-Port ATA) template
+        grandstream_ht801_template = """# Grandstream HT801 (1-Port ATA) Configuration
+# Single FXS port for connecting one analog phone or fax machine
+
+# Basic Settings
+P2 = admin
+P196 = {{EXTENSION_NAME}}
+
+# Network Settings
+P8 = 0
+P64 = pool.ntp.org
+P30 = 13
+
+# SIP Account 1 (FXS Port 1)
+P271 = {{EXTENSION_NAME}}
+P270 = {{EXTENSION_NUMBER}}
+P35 = {{EXTENSION_NUMBER}}
+P34 = {{EXTENSION_PASSWORD}}
+P47 = {{SIP_SERVER}}
+P48 = {{SIP_PORT}}
+P2312 = 3600
+
+# Codecs - Optimized for analog and fax
+P57 = 0    # PCMU
+P58 = 8    # PCMA
+P46 = 18   # G729
+P67 = 9    # G722
+
+# DTMF Settings
+P79 = 2
+P184 = 0
+P78 = {{DTMF_PAYLOAD_TYPE}}
+
+# Analog-Specific / Caller ID Settings
+P3 = 1      # Caller ID Scheme
+P4 = 1      # Enable Caller ID display
+P2311 = 2   # Offhook Auto-Dial
+P240 = 2
+
+# Echo Cancellation
+P191 = 1
+P192 = 0
+
+# Fax Support - T.38
+P245 = 1
+P338 = 1
+"""
+        self.add_template("grandstream", "ht801", grandstream_ht801_template)
+
+        # Grandstream HT802 (2-Port ATA) template
+        grandstream_ht802_template = """# Grandstream HT802 (2-Port ATA) Configuration
+# Two FXS ports for connecting two analog phones or fax machines
+
+# Basic Settings
+P2 = admin
+P196 = {{EXTENSION_NAME}}
+
+# Network Settings
+P8 = 0
+P64 = pool.ntp.org
+P30 = 13
+
+# SIP Account 1 (FXS Port 1)
+P271 = {{EXTENSION_NAME}}
+P270 = {{EXTENSION_NUMBER}}
+P35 = {{EXTENSION_NUMBER}}
+P34 = {{EXTENSION_PASSWORD}}
+P47 = {{SIP_SERVER}}
+P48 = {{SIP_PORT}}
+P2312 = 3600
+
+# Port 1 Codecs
+P57 = 0    # PCMU
+P58 = 8    # PCMA
+P46 = 18   # G729
+P67 = 9    # G722
+
+# Port 1 DTMF Settings
+P79 = 2
+P184 = 0
+P78 = {{DTMF_PAYLOAD_TYPE}}
+
+# Port 1 Analog Settings
+P3 = 1
+P4 = 1
+P2311 = 2   # Offhook Auto-Dial
+P240 = 2
+
+# Echo Cancellation
+P191 = 1
+P192 = 0
+
+# Fax Support - T.38
+P245 = 1
+P338 = 1
+
+# SIP Send Line and MAC Address Support
+P2350 = 1
+P2351 = 1
+"""
+        self.add_template("grandstream", "ht802", grandstream_ht802_template)
+
+        # Cisco SPA112 (2-Port ATA) template
+        cisco_spa112_template = """<flat-profile>
+<Provision_Enable>No</Provision_Enable>
+<Time_Zone>GMT-08:00</Time_Zone>
+<NTP_Server>pool.ntp.org</NTP_Server>
+
+<!-- Line 1 Configuration -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codecs -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+
+<!-- Fax - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+
+<!-- Echo Cancellation -->
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+
+<!-- Line 2 Disabled by Default -->
+<Line_Enable_2_>No</Line_Enable_2_>
+
+<!-- Network -->
+<Internet_Connection_Type>DHCP</Internet_Connection_Type>
+
+<!-- SIP -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+
+<!-- Regional Settings -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+</flat-profile>
+"""
+        self.add_template("cisco", "spa112", cisco_spa112_template)
+
+        # Cisco SPA122 (2-Port ATA with Router) template
+        cisco_spa122_template = """<flat-profile>
+<Provision_Enable>No</Provision_Enable>
+<Time_Zone>GMT-08:00</Time_Zone>
+<NTP_Server>pool.ntp.org</NTP_Server>
+
+<!-- Line 1 Configuration -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codecs -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+
+<!-- Fax - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+
+<!-- Echo Cancellation -->
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+
+<!-- Line 2 Disabled by Default -->
+<Line_Enable_2_>No</Line_Enable_2_>
+
+<!-- Router Settings -->
+<WAN_Connection_Type>DHCP</WAN_Connection_Type>
+<Router_Enable>Yes</Router_Enable>
+<LAN_IP_Address>192.168.0.1</LAN_IP_Address>
+<DHCP_Server_Enable>Yes</DHCP_Server_Enable>
+
+<!-- SIP -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+
+<!-- Regional Settings -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+</flat-profile>
+"""
+        self.add_template("cisco", "spa122", cisco_spa122_template)
+
+        # Cisco ATA 191 (2-Port Enterprise ATA) template
+        cisco_ata191_template = """<flat-profile>
+<Provision_Enable>No</Provision_Enable>
+<Time_Zone>GMT-08:00</Time_Zone>
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+
+<!-- Line 1 Configuration -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codecs -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+
+<!-- Fax - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+
+<!-- Echo Cancellation -->
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+
+<!-- Line 2 Disabled by Default -->
+<Line_Enable_2_>No</Line_Enable_2_>
+
+<!-- Network -->
+<Internet_Connection_Type>DHCP</Internet_Connection_Type>
+
+<!-- PoE Support -->
+<PoE_Enable>Yes</PoE_Enable>
+
+<!-- SIP -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+
+<!-- Regional Settings -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+</flat-profile>
+"""
+        self.add_template("cisco", "ata191", cisco_ata191_template)
+
+        # Cisco ATA 192 (2-Port Enterprise ATA) template
+        cisco_ata192_template = """<flat-profile>
+<Provision_Enable>No</Provision_Enable>
+<Time_Zone>GMT-08:00</Time_Zone>
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+
+<!-- Line 1 Configuration -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+
+<!-- Codecs -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+
+<!-- DTMF -->
+<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+
+<!-- Fax - T.38 -->
+<FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+
+<!-- Echo Cancellation -->
+<Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+
+<!-- Line 2 Disabled by Default -->
+<Line_Enable_2_>No</Line_Enable_2_>
+
+<!-- Network -->
+<Internet_Connection_Type>DHCP</Internet_Connection_Type>
+
+<!-- SIP -->
+<SIP_Port>{{SIP_PORT}}</SIP_Port>
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+
+<!-- Regional Settings -->
+<FXS_Port_Impedance>600</FXS_Port_Impedance>
+
+<!-- Multiplatform -->
+<Multiplatform_Enable>Yes</Multiplatform_Enable>
+</flat-profile>
+"""
+        self.add_template("cisco", "ata192", cisco_ata192_template)
+
+        self.logger.info(f"Loaded {len(self.templates)} built-in phone templates (including ATAs)")
 
     def _load_custom_templates(self):
         """Load custom templates from configuration"""
@@ -1061,18 +1364,18 @@ P30 = 13   # GMT-8
             api_port = self.config.get("api.port", 8080)
             server_ip = self.config.get("server.external_ip", "192.168.1.14")
 
-            self.logger.warning(f"  → Device needs to be registered first")
-            self.logger.warning(f"  → Register via API: POST /api/provisioning/devices")
-            self.logger.warning(f"  → Example:")
+            self.logger.warning("  → Device needs to be registered first")
+            self.logger.warning("  → Register via API: POST /api/provisioning/devices")
+            self.logger.warning("  → Example:")
             self.logger.warning(
                 f"     curl -X POST {api_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\"
             )
-            self.logger.warning(f"       -H 'Content-Type: application/json' \\")
+            self.logger.warning("       -H 'Content-Type: application/json' \\")
             self.logger.warning(
-                f'       -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
+                '       -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
             )
             self.logger.warning(
-                f"  → Available vendors: yealink, polycom, cisco, grandstream, zultys"
+                "  → Available vendors: yealink, polycom, cisco, grandstream, zultys"
             )
 
             # Check if there are similar MACs (might be a format issue)
@@ -1080,7 +1383,7 @@ P30 = 13   # GMT-8
             similar_macs = [m for m in self.devices.keys() if m.startswith(mac_prefix)]
             if similar_macs:
                 self.logger.warning(f"  → Similar MACs found (same vendor): {similar_macs}")
-                self.logger.warning(f"     This might be a typo in the MAC address")
+                self.logger.warning("     This might be a typo in the MAC address")
 
             request_log["error"] = error_msg
             self._add_request_log(request_log)
@@ -1476,7 +1779,7 @@ P30 = 13   # GMT-8
             self.add_template(vendor, model, content)
 
             self.logger.info(f"Updated template: {vendor} {model}")
-            return True, f"Template updated successfully"
+            return True, "Template updated successfully"
         except Exception as e:
             self.logger.error(f"Failed to update template: {e}")
             return False, f"Failed to update template: {e}"
