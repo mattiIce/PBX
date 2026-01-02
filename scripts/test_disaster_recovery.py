@@ -259,8 +259,12 @@ class DisasterRecoveryTester:
             latest_backup = str(backup_files[-1])
             self.logger.info(f"Restoring from: {latest_backup}")
 
-            # Create test database
+            # Create test database (validate name to prevent injection)
             test_db_name = f"{self.config.db_name}_dr_test"
+            # Validate database name - only allow alphanumeric and underscore
+            if not all(c.isalnum() or c == '_' for c in test_db_name):
+                self.results['errors'].append("Invalid database name for DR test")
+                return False
 
             # Drop test database if exists
             cmd_drop = [

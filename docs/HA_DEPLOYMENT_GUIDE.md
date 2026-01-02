@@ -380,7 +380,7 @@ vrrp_instance VI_1 {
     advert_int 1
     authentication {
         auth_type PASS
-        auth_pass secret123
+        auth_pass $(openssl rand -base64 16)  # Generate a strong password
     }
     virtual_ipaddress {
         192.168.1.100/24 dev eth0
@@ -398,7 +398,7 @@ vrrp_instance VI_1 {
     advert_int 1
     authentication {
         auth_type PASS
-        auth_pass secret123
+        auth_pass $(openssl rand -base64 16)  # Use same password as MASTER
     }
     virtual_ipaddress {
         192.168.1.100/24 dev eth0

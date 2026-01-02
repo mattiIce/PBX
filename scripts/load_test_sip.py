@@ -39,6 +39,7 @@ class LoadTestConfig:
     test_duration: int = 60  # seconds
     ramp_up_time: int = 10  # seconds
     test_type: str = "calls"  # calls, registrations, mixed
+    socket_timeout: int = 5  # seconds - configurable timeout
 
 
 @dataclass
@@ -100,7 +101,7 @@ class SIPLoadTester:
 
             # Send UDP packet
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.settimeout(5)
+            sock.settimeout(self.config.socket_timeout)
             sock.sendto(sip_message.encode(), (self.config.pbx_host, self.config.pbx_sip_port))
 
             # Wait for response
@@ -148,7 +149,7 @@ class SIPLoadTester:
             )
 
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.settimeout(5)
+            sock.settimeout(self.config.socket_timeout)
             sock.sendto(invite_msg.encode(), (self.config.pbx_host, self.config.pbx_sip_port))
 
             # Wait for response
