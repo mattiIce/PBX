@@ -473,7 +473,9 @@ class PBXCore:
 
             # Get Outlook integration if available
             outlook = None
-            if hasattr(self, "integrations") and "outlook" in self.integrations:  # pylint: disable=no-member
+            if (
+                hasattr(self, "integrations") and "outlook" in self.integrations
+            ):  # pylint: disable=no-member
                 outlook = self.integrations["outlook"]  # pylint: disable=no-member
 
             self.dnd_scheduler = get_dnd_scheduler(
