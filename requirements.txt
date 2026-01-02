@@ -1,16 +1,16 @@
 # Core dependencies for PBX system
-PyYAML>=6.0.2  # Updated from 5.4 for Python 3.14 support
+PyYAML>=6.0.3  # Updated to latest stable version
 
 # FIPS-compliant encryption (Required for FIPS mode)
-cryptography>=44.0.0  # Updated from 42.0.4 for latest security fixes
+cryptography>=46.0.3  # Updated to latest stable version with security fixes
 
 # Production SIP/RTP support (FREE, open source)
-aiortc>=1.10.0  # WebRTC support (browser-based calling)
-twisted>=24.11.0  # Async networking (SIP protocol handling)
+aiortc>=1.14.0  # WebRTC support (browser-based calling)
+twisted>=25.5.0  # Async networking (SIP protocol handling)
 
 # Enhanced audio processing (FREE, open source)
 pydub>=0.25.1  # Audio manipulation
-sounddevice>=0.5.1  # Audio I/O
+sounddevice>=0.5.3  # Audio I/O
 
 # Voice prompt generation (FREE, open source)
 # System packages: sudo apt-get install espeak ffmpeg
@@ -18,17 +18,17 @@ gTTS>=2.5.4  # Google Text-to-Speech (FREE, requires internet)
 pyttsx3>=2.99  # Offline TTS (uses espeak)
 
 # Database backend (FREE, open source)
-sqlalchemy>=2.0.36  # ORM
-psycopg2-binary>=2.9.10  # PostgreSQL adapter for Python
+sqlalchemy>=2.0.45  # ORM
+psycopg2-binary>=2.9.11  # PostgreSQL adapter for Python
 
 # For enterprise integrations (Teams, Outlook, Zoom):
-# Note: requests pinned to 2.31.0 for docker-compose v1 compatibility
+# Note: requests version compatible with current docker-compose
 # See: https://github.com/docker/docker-py/issues/3256
-requests==2.32.4
-msal>=1.31.1  # Microsoft Authentication Library
+requests>=2.32.5
+msal>=1.34.0  # Microsoft Authentication Library
 
 # For FIDO2/WebAuthn authentication
-fido2>=1.1.3  # FIDO2/WebAuthn library for hardware security keys
+fido2>=2.0.0  # FIDO2/WebAuthn library for hardware security keys
 
 # Audio Codec Support
 # Opus codec - Modern, high-quality, low-latency audio codec
@@ -55,33 +55,32 @@ opuslib>=3.0.1  # Python bindings for Opus codec (requires libopus system librar
 vosk>=0.3.45  # Offline speech-to-text for voicemail transcription
 
 # Natural Language Processing (FREE, open source)
-spacy>=3.8.3  # Industrial-strength NLP for entity extraction, sentiment analysis
+spacy>=3.8.11  # Industrial-strength NLP for entity extraction, sentiment analysis
 # Download model: python -m spacy download en_core_web_sm
-nltk>=3.9.1  # Updated from 3.9.0 for latest features
-# Natural language toolkit for tokenization, lemmatization, intent detection
+nltk>=3.9.2  # Natural language toolkit for tokenization, lemmatization, intent detection
 # NLTK will auto-download required corpora on first use
 
 # Machine Learning (FREE, open source)
-numpy>=2.2.1  # Array operations and numerical computing
-scikit-learn>=1.6.0  # ML algorithms (classification, regression, clustering)
-scipy>=1.15.0  # Scientific computing and optimization
+numpy>=2.4.0  # Array operations and numerical computing
+scikit-learn>=1.8.0  # ML algorithms (classification, regression, clustering)
+scipy>=1.16.3  # Scientific computing and optimization
 
 # Audio Analysis (FREE, open source) - for voice biometrics
 pyAudioAnalysis>=0.3.14  # Audio feature extraction, speaker recognition, AMD
 # Requires: sudo apt-get install python3-tk portaudio19-dev
-librosa>=0.10.2  # Audio analysis and feature extraction
-soundfile>=0.12.1  # Audio file I/O
+librosa>=0.11.0  # Audio analysis and feature extraction
+soundfile>=0.13.1  # Audio file I/O
 
 # Video Codec Support (FREE, open source) - requires FFmpeg
 # System package: sudo apt-get install ffmpeg
-imageio-ffmpeg>=0.5.1  # FFmpeg wrapper for Python
-av>=14.0.1  # PyAV - Pythonic binding for FFmpeg
+imageio-ffmpeg>=0.6.0  # FFmpeg wrapper for Python
+av>=16.0.1  # PyAV - Pythonic binding for FFmpeg
 
 # Web interface (FREE, open source)
-flask>=3.1.0  # Web framework
-websockets>=14.1  # Real-time updates (already installed by vosk)
+flask>=3.1.2  # Web framework
+websockets>=15.0.1  # Real-time updates (already installed by vosk)
 
 # Monitoring (FREE, open source)
-prometheus-client>=0.21.1  # Metrics collection
-redis>=5.2.1  # Caching/queues
-psutil>=6.1.1  # System and process monitoring
+prometheus-client>=0.23.1  # Metrics collection
+redis>=7.1.0  # Caching/queues
+psutil>=7.2.1  # System and process monitoring
