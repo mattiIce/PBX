@@ -1,0 +1,321 @@
+name: Production Deployment
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '18'
+
+jobs:
+  validate:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run linters
+        run: |
+          pylint pbx/
+          flake8 pbx/
+          mypy pbx/
+
+      - name: Run tests
+        run: |
+          pytest --cov=pbx --cov-report=xml --cov-report=term
+
+      - name: Run security scan
+        run: |
+          bandit -r pbx/ -ll
+          pip-audit
+
+      - name: Run production readiness check
+        run: |
+          python scripts/validate_production_readiness.py --ci
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  build-docker:
+    name: Build Docker Image
+    needs: validate
+    runs-on: ubuntu-24.04
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/warden-voip-pbx
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/warden-voip-pbx:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/warden-voip-pbx:buildcache,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build-docker
+    if: github.event.inputs.environment == 'staging' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    environment:
+      name: staging
+      url: https://staging-pbx.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add deployment commands here (e.g., kubectl, ssh, etc.)
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Run smoke tests
+        run: |
+          python scripts/smoke_tests.py --api-url https://staging-pbx.example.com
+
+      - name: Run health check
+        run: |
+          python scripts/health_monitor.py --api-url https://staging-pbx.example.com
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [build-docker, deploy-staging]
+    if: github.event.inputs.environment == 'production' || github.event_name == 'release'
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://pbx.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment backup
+        run: |
+          echo "Creating pre-deployment backup..."
+          # Add backup commands here
+
+      - name: Deploy to Production (Blue)
+        run: |
+          echo "Deploying to production blue environment..."
+          # Add deployment commands here
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Run smoke tests (Blue)
+        run: |
+          python scripts/smoke_tests.py --api-url https://blue-pbx.example.com
+
+      - name: Run performance benchmark
+        run: |
+          python scripts/benchmark_performance.py --api-url https://blue-pbx.example.com
+
+      - name: Switch traffic to Blue
+        run: |
+          echo "Switching traffic to blue environment..."
+          # Add traffic switching commands here
+
+      - name: Monitor for 5 minutes
+        run: |
+          echo "Monitoring production for 5 minutes..."
+          sleep 300
+
+      - name: Verify production health
+        run: |
+          python scripts/health_monitor.py --api-url https://pbx.example.com
+
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "✅ Production deployment successful",
+              attachments: [{
+                color: 'good',
+                text: `Version: ${{ github.ref_name }}\nEnvironment: Production\nDeployed by: ${{ github.actor }}`
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback:
+    name: Rollback Production
+    needs: deploy-production
+    if: failure()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rollback deployment
+        run: |
+          echo "Rolling back production deployment..."
+          # Add rollback commands here
+
+      - name: Verify rollback
+        run: |
+          python scripts/smoke_tests.py --api-url https://pbx.example.com
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "⚠️ Production deployment failed - rolled back",
+              attachments: [{
+                color: 'danger',
+                text: `Version: ${{ github.ref_name }}\nEnvironment: Production\nAttempted by: ${{ github.actor }}`
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  performance-test:
+    name: Performance Testing
+    needs: build-docker
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run performance benchmarks
+        run: |
+          python scripts/benchmark_performance.py --save benchmark-results.json
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+
+      - name: Compare with baseline
+        run: |
+          echo "Comparing performance with baseline..."
+          # Add comparison logic here
+
+  security-scan:
+    name: Security Scanning
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+
+  compliance-check:
+    name: Compliance Validation
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run FIPS compliance check
+        run: |
+          python scripts/verify_fips.py
+
+      - name: Run security compliance check
+        run: |
+          python scripts/security_compliance_check.py
+
+      - name: Generate compliance report
+        run: |
+          echo "Generating compliance report..."
+          # Add report generation here
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.json
