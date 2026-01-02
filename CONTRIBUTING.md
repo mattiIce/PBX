@@ -35,7 +35,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ### Prerequisites
 
-- Python 3.12 or higher (Python 3.12 recommended)
+- Python 3.12
 - PostgreSQL (optional, but recommended for full functionality)
 - System dependencies (espeak, ffmpeg, libopus-dev, portaudio19-dev)
 
