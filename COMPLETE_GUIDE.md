@@ -1564,13 +1564,13 @@ source venv/bin/activate
 sudo systemctl stop pbx
 
 # Update specific package
-pip install --upgrade package-name==version
+pip install --upgrade package_name==version
 
 # Example: Update cryptography for security patch
 pip install --upgrade cryptography==46.0.3
 
 # Verify the update
-pip show package-name
+pip show package_name
 
 # Test import
 python -c "import package_name; print('✓ Updated successfully')"
@@ -1947,7 +1947,7 @@ git log --oneline --graph --all
 git checkout v1.0.0
 
 # Or rollback by date
-git checkout `git rev-list -n 1 --before="2025-01-01" main`
+git checkout $(git rev-list -n 1 --before="2025-01-01" main)
 
 # Reinstall dependencies
 source venv/bin/activate
@@ -2091,7 +2091,7 @@ htop
 watch -n 5 'curl -sk https://localhost:8080/api/calls | jq'
 
 # Database connections
-watch -n 10 'sudo -u postgres psql -c "SELECT count(*) FROM pg_stat_activity WHERE datname='\''pbx_system'\'';"'
+watch -n 10 "sudo -u postgres psql -c 'SELECT count(*) FROM pg_stat_activity WHERE datname=''pbx_system'';'"
 ```
 
 #### First Week
@@ -2116,8 +2116,8 @@ EOF
 
 chmod +x /opt/pbx/daily_health_check.sh
 
-# Add to cron
-echo "0 6 * * * /opt/pbx/daily_health_check.sh" | sudo crontab -
+# Add to root's cron (append without overwriting existing entries)
+(sudo crontab -l 2>/dev/null; echo "0 6 * * * /opt/pbx/daily_health_check.sh") | sudo crontab -
 ```
 
 #### Performance Monitoring
