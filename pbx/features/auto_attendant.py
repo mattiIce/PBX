@@ -457,7 +457,7 @@ class AutoAttendant:
             updates.append("updated_at = CURRENT_TIMESTAMP")
             params.append(menu_id)
 
-            # updates list contains only hardcoded field names with parameterized placeholders
+            # Field names are hardcoded constants; all values use parameterized placeholders in params list
             cursor.execute(
                 f"UPDATE auto_attendant_menus SET {', '.join(updates)} WHERE menu_id = ?",  # nosec B608
                 params
