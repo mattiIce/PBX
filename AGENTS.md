@@ -13,7 +13,7 @@ Warden VoIP is a comprehensive, feature-rich Private Branch Exchange (PBX) and V
 ## Development Setup
 
 ### Prerequisites
-- Python 3.12 or higher
+- Python 3.12.3
 - PostgreSQL (recommended for production)
 - System dependencies: espeak, ffmpeg, libopus-dev, portaudio19-dev, libspeex-dev
 
