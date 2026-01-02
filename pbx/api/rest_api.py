@@ -10751,7 +10751,7 @@ class PBXAPIServer:
         host = self.host
 
         is_backend_port = 8000 <= port <= 9999
-        is_internal_host = host in ("0.0.0.0", "127.0.0.1", "localhost")
+        is_internal_host = host in ("0.0.0.0", "127.0.0.1", "localhost")  # nosec B104 - checking config, not binding
         is_common_proxy_port = port in (8080, 8443, 9000)
 
         if is_backend_port and (is_internal_host or is_common_proxy_port):
