@@ -26,6 +26,13 @@ BACKUP_DIR="${BACKUP_DIR:-/var/backups/pbx}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
 S3_BUCKET="${S3_BUCKET:-}"  # Optional: S3 bucket for off-site backups
 
+# Validate RETENTION_DAYS to prevent command injection
+# RETENTION_DAYS must be a positive integer
+if ! [[ "$RETENTION_DAYS" =~ ^[0-9]+$ ]] || [ "$RETENTION_DAYS" -lt 1 ]; then
+    echo "ERROR: RETENTION_DAYS must be a positive integer (got: '$RETENTION_DAYS')" >&2
+    exit 1
+fi
+
 # Database configuration
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
@@ -155,9 +162,11 @@ log "Backing up call recordings..."
 if [ -d "$PBX_DIR/recordings" ]; then
     # Only backup recent recordings (last 30 days) for incremental
     if [ "$BACKUP_TYPE" = "incremental" ]; then
+        # The '|| warning' pattern allows tar to complete with warnings without exiting (despite set -e)
         find "$PBX_DIR/recordings" -type f -mtime -30 -print0 | \
             tar -czf "${BACKUP_PATH}/recordings/recordings_incremental.tar.gz" --null -T - 2>/dev/null || warning "Incremental recordings backup had warnings"
     else
+        # The '|| warning' pattern allows tar to complete with warnings without exiting (despite set -e)
         tar -czf "${BACKUP_PATH}/recordings/recordings.tar.gz" -C "$PBX_DIR" recordings/ 2>/dev/null || warning "Full recordings backup had warnings"
     fi
     log "✓ Call recordings backup completed"
@@ -228,6 +237,7 @@ find "$BACKUP_DIR" -maxdepth 1 -type f -name "pbx_backup_*.tar.gz" -mtime +$RETE
 
 if [ -n "$S3_BUCKET" ] && command_exists aws; then
     # Cleanup old S3 backups
+    # NOTE: This uses GNU date syntax. On BSD/macOS, install GNU coreutils or adjust the date command.
     CUTOFF_DATE=$(date -d "$RETENTION_DAYS days ago" +%Y%m%d)
     aws s3 ls "s3://${S3_BUCKET}/pbx-backups/" | while read -r line; do
         BACKUP_FILE=$(echo "$line" | awk '{print $4}')

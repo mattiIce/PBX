@@ -18,7 +18,13 @@ spec:
     port: 5060
     targetPort: 5060
     protocol: UDP
-  # RTP port range - adjust based on config.yml
+  # RTP port range (10000-20000) - Kubernetes Services cannot expose port ranges
+  # This Service only exposes individual ports as a workaround.
+  # For production use with full RTP range support, consider one of these approaches:
+  #   1. Use hostNetwork: true in the deployment (pod uses host networking)
+  #   2. Use hostPort configuration for the RTP range
+  #   3. Use a DaemonSet with host networking
+  #   4. Use a specialized load balancer that supports UDP port ranges
   - name: rtp-start
     port: 10000
     targetPort: 10000
@@ -32,6 +38,12 @@ spec:
     clientIP:
       timeoutSeconds: 10800  # 3 hours
 ---
+# PostgreSQL Service (Headless)
+# NOTE: This service requires a corresponding PostgreSQL StatefulSet or Deployment
+# which is not included in these manifests. You must either:
+#   1. Deploy PostgreSQL separately (e.g., using a Helm chart)
+#   2. Create a postgresql.yaml manifest with a StatefulSet
+#   3. Use an external managed database service
 apiVersion: v1
 kind: Service
 metadata:

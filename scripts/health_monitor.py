@@ -27,12 +27,10 @@ import argparse
 import datetime
 import json
 import os
-import platform
 import socket
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
 
 try:
     import psutil
@@ -137,6 +135,7 @@ class HealthMonitor:
                             checks["process"]["cpu_percent"] = cpu
                             checks["process"]["memory_mb"] = mem.rss / (1024 * 1024)
                         except Exception:
+                            # Resource usage metrics are optional; ignore errors collecting them
                             pass
                         break
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -180,44 +179,56 @@ class HealthMonitor:
         try:
             import psycopg2
 
-            # Try to connect to database
-            try:
-                conn = psycopg2.connect(
-                    host=os.getenv("DB_HOST", "localhost"),
-                    port=int(os.getenv("DB_PORT", "5432")),
-                    database=os.getenv("DB_NAME", "pbx_system"),
-                    user=os.getenv("DB_USER", "pbx_user"),
-                    password=os.getenv("DB_PASSWORD", ""),
-                    connect_timeout=5,
-                )
-
-                # Test query
-                cursor = conn.cursor()
-                cursor.execute("SELECT version();")
-                version = cursor.fetchone()[0]
-
-                # Get database size
-                cursor.execute(
-                    "SELECT pg_size_pretty(pg_database_size(%s));",
-                    (os.getenv("DB_NAME", "pbx_system"),),
-                )
-                db_size = cursor.fetchone()[0]
-
-                cursor.close()
-                conn.close()
-
+            db_password = os.getenv("DB_PASSWORD")
+            if db_password is None or db_password == "":
                 checks["connectivity"] = {
-                    "status": "healthy",
-                    "message": "Database connection successful",
-                    "version": version,
-                    "size": db_size,
+                    "status": "warning",
+                    "message": "Database password is not set; skipping connectivity check",
                 }
-            except Exception as e:
-                checks["connectivity"] = {
-                    "status": "critical",
-                    "message": f"Database connection failed: {e}",
-                }
-                self.health_data["alerts"].append(f"CRITICAL: Database connection failed: {e}")
+                self.health_data["alerts"].append(
+                    "WARNING: Database password is not configured; database connectivity check skipped"
+                )
+            else:
+                # Try to connect to database
+                try:
+                    conn = psycopg2.connect(
+                        host=os.getenv("DB_HOST", "localhost"),
+                        port=int(os.getenv("DB_PORT", "5432")),
+                        database=os.getenv("DB_NAME", "pbx_system"),
+                        user=os.getenv("DB_USER", "pbx_user"),
+                        password=db_password,
+                        connect_timeout=5,
+                    )
+
+                    # Test query
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT version();")
+                    version = cursor.fetchone()[0]
+
+                    # Get database size
+                    cursor.execute(
+                        "SELECT pg_size_pretty(pg_database_size(%s));",
+                        (os.getenv("DB_NAME", "pbx_system"),),
+                    )
+                    db_size = cursor.fetchone()[0]
+
+                    cursor.close()
+                    conn.close()
+
+                    checks["connectivity"] = {
+                        "status": "healthy",
+                        "message": "Database connection successful",
+                        "version": version,
+                        "size": db_size,
+                    }
+                except Exception as e:
+                    checks["connectivity"] = {
+                        "status": "critical",
+                        "message": f"Database connection failed: {e}",
+                    }
+                    self.health_data["alerts"].append(
+                        f"CRITICAL: Database connection failed: {e}"
+                    )
 
         except ImportError:
             checks["connectivity"] = {

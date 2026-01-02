@@ -45,7 +45,7 @@ spec:
       containers:
       - name: pbx
         image: pbx-system:latest  # Replace with your image
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always  # Use 'Always' with 'latest' tag to ensure consistent deployments
         
         ports:
         - name: https-api
@@ -136,3 +136,53 @@ spec:
       - name: ssl-cert
         secret:
           secretName: pbx-ssl-cert
+
+---
+# ConfigMap for PBX configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pbx-config
+  namespace: pbx-system
+data:
+  config.yml: |-
+    # PBX Configuration
+    # TODO: Replace with your actual configuration
+    server:
+      listen: 0.0.0.0
+      port: 8080
+      # Add your full config.yml content here
+
+---
+# Secret for SSL certificates
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pbx-ssl-cert
+  namespace: pbx-system
+type: kubernetes.io/tls
+stringData:
+  tls.crt: |-
+    # PEM-encoded TLS certificate
+    # Replace with your actual certificate
+    # -----BEGIN CERTIFICATE-----
+    # ...
+    # -----END CERTIFICATE-----
+  tls.key: |-
+    # PEM-encoded TLS private key
+    # Replace with your actual private key
+    # -----BEGIN PRIVATE KEY-----
+    # ...
+    # -----END PRIVATE KEY-----
+
+---
+# Secret for database credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pbx-secrets
+  namespace: pbx-system
+type: Opaque
+stringData:
+  database-user: pbx_user  # Replace with your database username
+  database-password: changeme  # Replace with your actual database password
