@@ -2566,6 +2566,12 @@ async function savePhonebookSettings() {
     alert(configMsg);
 }
 
+// Helper function to reset provisioning state
+function resetProvisioningState() {
+    supportedVendors = [];
+    supportedModels = {};
+}
+
 async function loadSupportedVendors() {
     const vendorsList = document.getElementById('supported-vendors-list');
     
@@ -2587,9 +2593,9 @@ async function loadSupportedVendors() {
             if (supportedVendors.length > 0) {
                 let html = '<ul>';
                 for (const vendor of supportedVendors) {
-                    html += `<li><strong>${vendor.toUpperCase()}</strong>: `;
+                    html += `<li><strong>${escapeHtml(vendor.toUpperCase())}</strong>: `;
                     const models = supportedModels[vendor] || [];
-                    html += models.map(m => m.toUpperCase()).join(', ');
+                    html += models.map(m => escapeHtml(m.toUpperCase())).join(', ');
                     html += '</li>';
                 }
                 html += '</ul>';
@@ -2605,12 +2611,10 @@ async function loadSupportedVendors() {
             }
         } else {
             // Handle non-ok response (e.g., 401, 403, 500)
-            // Reset to empty arrays on error
-            supportedVendors = [];
-            supportedModels = {};
+            resetProvisioningState();
             
             let errorMsg = `Error loading vendors: HTTP ${response.status}`;
-            let helpText = '';
+            let solutionText = '';
             
             try {
                 const errorData = await response.json();
@@ -2619,9 +2623,9 @@ async function loadSupportedVendors() {
                     
                     // Provide helpful guidance based on error type
                     if (errorData.error.includes('not enabled') || errorData.error.includes('Phone provisioning')) {
-                        helpText = '<br><br><strong>Solution:</strong> Ensure <code>provisioning.enabled: true</code> in config.yml and restart the PBX server.';
+                        solutionText = 'Ensure provisioning.enabled: true in config.yml and restart the PBX server.';
                     } else if (response.status === 401) {
-                        helpText = '<br><br><strong>Solution:</strong> Please log out and log back in.';
+                        solutionText = 'Please log out and log back in.';
                     }
                 }
             } catch (e) {
@@ -2629,20 +2633,49 @@ async function loadSupportedVendors() {
             }
             
             if (vendorsList) {
-                vendorsList.innerHTML = `<p class="error">${errorMsg}${helpText}</p>`;
+                // Use DOM manipulation for safer content injection
+                const errorPara = document.createElement('p');
+                errorPara.className = 'error';
+                errorPara.textContent = errorMsg;
+                
+                if (solutionText) {
+                    const solutionPara = document.createElement('p');
+                    const solutionStrong = document.createElement('strong');
+                    solutionStrong.textContent = 'Solution: ';
+                    solutionPara.appendChild(solutionStrong);
+                    solutionPara.appendChild(document.createTextNode(solutionText));
+                    solutionPara.style.marginTop = '10px';
+                    
+                    vendorsList.innerHTML = '';
+                    vendorsList.appendChild(errorPara);
+                    vendorsList.appendChild(solutionPara);
+                } else {
+                    vendorsList.innerHTML = '';
+                    vendorsList.appendChild(errorPara);
+                }
             }
             console.error('Error loading supported vendors:', errorMsg);
         }
     } catch (error) {
         // Reset to empty arrays on error
-        supportedVendors = [];
-        supportedModels = {};
+        resetProvisioningState();
         
         console.error('Error loading supported vendors:', error);
         if (vendorsList) {
-            const errorMsg = 'Error connecting to server: ' + escapeHtml(error.message);
-            const helpText = '<br><br><strong>Solution:</strong> Ensure the PBX server is running and accessible.';
-            vendorsList.innerHTML = `<p class="error">${errorMsg}${helpText}</p>`;
+            const errorPara = document.createElement('p');
+            errorPara.className = 'error';
+            errorPara.textContent = 'Error connecting to server: ' + error.message;
+            
+            const solutionPara = document.createElement('p');
+            const solutionStrong = document.createElement('strong');
+            solutionStrong.textContent = 'Solution: ';
+            solutionPara.appendChild(solutionStrong);
+            solutionPara.appendChild(document.createTextNode('Ensure the PBX server is running and accessible.'));
+            solutionPara.style.marginTop = '10px';
+            
+            vendorsList.innerHTML = '';
+            vendorsList.appendChild(errorPara);
+            vendorsList.appendChild(solutionPara);
         }
     }
 }
