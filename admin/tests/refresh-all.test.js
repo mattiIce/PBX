@@ -49,8 +49,6 @@ global.loadExtensions = jest.fn(() => Promise.resolve());
  * of the actual production code instead of duplicating functions here.
  */
 
-let currentTab = null;
-
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
     if (!refreshBtn) return;
@@ -61,47 +59,30 @@ async function refreshAllData() {
 
     try {
         // Update button to show loading state
-        refreshBtn.textContent = '⏳ Refreshing...';
+        refreshBtn.textContent = '⏳ Refreshing All Tabs...';
         refreshBtn.disabled = true;
 
-        console.log(`Refreshing all data for current tab: ${currentTab}`);
+        console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh the current tab based on what's active
-        // If currentTab is not set, try to detect it from the DOM
-        let tabToRefresh = currentTab;
-        if (!tabToRefresh) {
-            // Find the active tab element in the DOM
-            const activeTabElement = document.querySelector('.tab-content.active');
-            if (activeTabElement) {
-                tabToRefresh = activeTabElement.id;
-                // Update currentTab to keep it in sync
-                currentTab = tabToRefresh;
-                console.log(`Detected active tab from DOM: ${tabToRefresh}`);
-            } else {
-                showNotification('No active tab to refresh', 'warning');
-                return;
-            }
+        // Refresh ALL tabs in parallel using Promise.allSettled
+        const refreshPromises = [
+            loadDashboard(),
+            loadADStatus(),
+            loadAnalytics(),
+            loadExtensions(),
+        ];
+
+        // Wait for all refresh operations to complete (success or failure)
+        const results = await Promise.allSettled(refreshPromises);
+        
+        // Check for any failures
+        const failures = results.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+            console.warn(`${failures.length} refresh operation(s) failed:`, failures);
+            showNotification(`✅ All tabs refreshed (${failures.length} warning(s) - check console)`, 'success');
+        } else {
+            showNotification('✅ All tabs refreshed successfully', 'success');
         }
-
-        // Execute all load functions for the current tab
-        switch(tabToRefresh) {
-            case 'dashboard':
-                await loadDashboard();
-                await loadADStatus();
-                break;
-            case 'analytics':
-                await loadAnalytics();
-                break;
-            case 'extensions':
-                await loadExtensions();
-                break;
-            default:
-                console.log(`No specific refresh handler for tab: ${tabToRefresh}`);
-                showNotification(`No data to refresh for ${tabToRefresh}`, 'info');
-                return;
-        }
-
-        showNotification('✅ All data refreshed successfully', 'success');
     } catch (error) {
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
@@ -117,9 +98,6 @@ describe('Refresh All Data', () => {
     // Reset mocks
     jest.clearAllMocks();
     
-    // Reset currentTab
-    currentTab = null;
-    
     // Reset button state
     const refreshBtn = document.getElementById('refresh-all-button');
     refreshBtn.textContent = 'Refresh All';
@@ -132,70 +110,74 @@ describe('Refresh All Data', () => {
     document.getElementById('dashboard').classList.add('active');
   });
 
-  it('should detect active tab from DOM when currentTab is null', async () => {
-    // currentTab is null (not set during initialization)
-    expect(currentTab).toBeNull();
-    
-    // Call refreshAllData
-    await refreshAllData();
-    
-    // Should detect 'dashboard' as active tab
-    expect(currentTab).toBe('dashboard');
-    
-    // Should call dashboard load functions
-    expect(loadDashboard).toHaveBeenCalled();
-    expect(loadADStatus).toHaveBeenCalled();
-    
-    // Should show success notification
-    expect(showNotification).toHaveBeenCalledWith('✅ All data refreshed successfully', 'success');
-  });
-
-  it('should use currentTab when it is already set', async () => {
-    // Set currentTab to analytics
-    currentTab = 'analytics';
-    
-    // Dashboard is active in DOM (from beforeEach), but currentTab should take precedence
-    // Verify dashboard has active class
+  it('should refresh all tabs regardless of which tab is active and not query DOM for active tab', async () => {
+    // Dashboard is active in DOM
     expect(document.getElementById('dashboard').classList.contains('active')).toBe(true);
     
+    // Spy on querySelector to verify it's not called to check active tab
+    const querySelectorSpy = jest.spyOn(document, 'querySelector');
+    
     // Call refreshAllData
     await refreshAllData();
     
-    // Should use currentTab value (analytics) not the DOM active tab (dashboard)
-    expect(currentTab).toBe('analytics');
+    // Should NOT query for active tab element
+    expect(querySelectorSpy).not.toHaveBeenCalledWith('.tab-content.active');
     
-    // Should call analytics load function
+    // Should call ALL tab load functions, not just dashboard
+    expect(loadDashboard).toHaveBeenCalled();
+    expect(loadADStatus).toHaveBeenCalled();
     expect(loadAnalytics).toHaveBeenCalled();
+    expect(loadExtensions).toHaveBeenCalled();
     
-    // Should NOT call dashboard functions
-    expect(loadDashboard).not.toHaveBeenCalled();
-    expect(loadADStatus).not.toHaveBeenCalled();
+    // Should show success notification
+    expect(showNotification).toHaveBeenCalledWith('✅ All tabs refreshed successfully', 'success');
+    
+    // Cleanup spy
+    querySelectorSpy.mockRestore();
   });
 
-  it('should show warning when no active tab found in DOM', async () => {
+  it('should refresh all tabs even when different tab is active', async () => {
+    // Change active tab to analytics
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    document.getElementById('analytics').classList.add('active');
+    
+    expect(document.getElementById('analytics').classList.contains('active')).toBe(true);
+    
+    // Call refreshAllData
+    await refreshAllData();
+    
+    // Should still call ALL tab load functions
+    expect(loadDashboard).toHaveBeenCalled();
+    expect(loadADStatus).toHaveBeenCalled();
+    expect(loadAnalytics).toHaveBeenCalled();
+    expect(loadExtensions).toHaveBeenCalled();
+    
+    // Should show success notification
+    expect(showNotification).toHaveBeenCalledWith('✅ All tabs refreshed successfully', 'success');
+  });
+
+  it('should refresh all tabs even when no tab is active', async () => {
     // Remove all active classes
     document.querySelectorAll('.tab-content').forEach(tab => {
       tab.classList.remove('active');
     });
     
-    // currentTab is null
-    currentTab = null;
-    
     // Call refreshAllData
     await refreshAllData();
     
-    // Should show warning notification
-    expect(showNotification).toHaveBeenCalledWith('No active tab to refresh', 'warning');
+    // Should still call ALL tab load functions
+    expect(loadDashboard).toHaveBeenCalled();
+    expect(loadADStatus).toHaveBeenCalled();
+    expect(loadAnalytics).toHaveBeenCalled();
+    expect(loadExtensions).toHaveBeenCalled();
     
-    // Should NOT call any load functions
-    expect(loadDashboard).not.toHaveBeenCalled();
-    expect(loadAnalytics).not.toHaveBeenCalled();
-    expect(loadExtensions).not.toHaveBeenCalled();
+    // Should show success notification (not warning)
+    expect(showNotification).toHaveBeenCalledWith('✅ All tabs refreshed successfully', 'success');
   });
 
   it('should update button state during refresh', async () => {
-    currentTab = 'dashboard';
-    
     const refreshBtn = document.getElementById('refresh-all-button');
     expect(refreshBtn.textContent).toBe('Refresh All');
     expect(refreshBtn.disabled).toBe(false);
@@ -209,8 +191,6 @@ describe('Refresh All Data', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    currentTab = 'dashboard';
-    
     // Make loadDashboard throw an error
     loadDashboard.mockRejectedValueOnce(new Error('Network error'));
     

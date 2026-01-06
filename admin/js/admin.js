@@ -896,7 +896,7 @@ function refreshDashboard() {
     showNotification('Dashboard refreshed', 'success');
 }
 
-// Global Refresh Function - refreshes all data on the current tab
+// Global Refresh Function - refreshes all data for ALL tabs
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
     if (!refreshBtn) return;
@@ -905,212 +905,109 @@ async function refreshAllData() {
     const originalText = refreshBtn.textContent;
     const originalDisabled = refreshBtn.disabled;
 
+    // Helper function to add optional functions to the promise array
+    const addIfExists = (funcName, promises) => {
+        if (typeof funcName === 'function') {
+            promises.push(Promise.resolve(funcName()));
+        }
+    };
+
     try {
         // Update button to show loading state
-        refreshBtn.textContent = '⏳ Refreshing...';
+        refreshBtn.textContent = '⏳ Refreshing All Tabs...';
         refreshBtn.disabled = true;
 
-        console.log(`Refreshing all data for current tab: ${currentTab}`);
+        console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh the current tab based on what's active
-        // If currentTab is not set, try to detect it from the DOM
-        let tabToRefresh = currentTab;
-        if (!tabToRefresh) {
-            // Find the active tab element in the DOM
-            const activeTabElement = document.querySelector('.tab-content.active');
-            if (activeTabElement) {
-                tabToRefresh = activeTabElement.id;
-                // Update currentTab to keep it in sync
-                currentTab = tabToRefresh;
-                console.log(`Detected active tab from DOM: ${tabToRefresh}`);
-            } else {
-                showNotification('No active tab to refresh', 'warning');
-                return;
-            }
+        // Refresh ALL tabs in parallel using Promise.allSettled for better performance
+        // This ensures all data loads simultaneously and completes even if some fail
+        const refreshPromises = [
+            // Dashboard & Analytics
+            loadDashboard(),
+            loadADStatus(),
+            loadAnalytics(),
+            
+            // Extensions & Devices
+            loadExtensions(),
+            loadRegisteredPhones(),
+            loadRegisteredATAs(),
+            
+            // Communication
+            loadCalls(),
+            loadQoSMetrics(),
+            loadEmergencyContacts(),
+            loadEmergencyHistory(),
+            
+            // Provisioning
+            loadProvisioning(),
+            loadProvisioningSettings(),
+            loadPhonebookSettings(),
+            loadSupportedVendors(),
+            loadProvisioningDevices(),
+            
+            // System Configuration
+            loadConfig(),
+            loadSSLStatus(),
+            loadFeaturesStatus(),
+            loadCodecStatus(),
+            loadDTMFConfig(),
+            
+            // Voicemail
+            loadVoicemailTab(),
+        ];
+
+        // Add conditional async functions that may or may not exist
+        addIfExists(loadAutoAttendantConfig, refreshPromises);
+        addIfExists(loadPagingData, refreshPromises);
+        addIfExists(loadWebRTCPhoneConfig, refreshPromises);
+        
+        // SIP & Routing
+        addIfExists(loadSIPTrunks, refreshPromises);
+        addIfExists(loadTrunkHealth, refreshPromises);
+        addIfExists(loadLCRRates, refreshPromises);
+        addIfExists(loadLCRStatistics, refreshPromises);
+        addIfExists(loadFMFMExtensions, refreshPromises);
+        addIfExists(loadTimeRoutingRules, refreshPromises);
+        
+        // Advanced Features
+        addIfExists(loadWebhooks, refreshPromises);
+        addIfExists(loadHotDeskSessions, refreshPromises);
+        addIfExists(loadRetentionPolicies, refreshPromises);
+        
+        // Integrations
+        addIfExists(loadJitsiConfig, refreshPromises);
+        addIfExists(loadMatrixConfig, refreshPromises);
+        addIfExists(loadEspoCRMConfig, refreshPromises);
+        addIfExists(loadClickToDialTab, refreshPromises);
+        addIfExists(loadCRMActivityLog, refreshPromises);
+        addIfExists(loadOpenSourceIntegrations, refreshPromises);
+        
+        // Security & Monitoring
+        addIfExists(loadFraudDetectionData, refreshPromises);
+        addIfExists(loadNomadicE911Data, refreshPromises);
+        addIfExists(loadCallbackQueue, refreshPromises);
+        addIfExists(loadMobilePushConfig, refreshPromises);
+        addIfExists(loadRecordingAnnouncements, refreshPromises);
+        addIfExists(loadSpeechAnalyticsConfigs, refreshPromises);
+        addIfExists(loadComplianceData, refreshPromises);
+
+        // Wait for all refresh operations to complete (success or failure)
+        const results = await Promise.allSettled(refreshPromises);
+        
+        // License Management - synchronous initialization function
+        // Run after async operations to ensure license data is available for display
+        if (typeof initLicenseManagement === 'function') {
+            initLicenseManagement();
         }
-
-        // Execute all load functions for the current tab
-        switch(tabToRefresh) {
-            case 'dashboard':
-                await loadDashboard();
-                await loadADStatus();
-                break;
-            case 'analytics':
-                await loadAnalytics();
-                break;
-            case 'extensions':
-                await loadExtensions();
-                break;
-            case 'phones':
-                await loadRegisteredPhones();
-                break;
-            case 'atas':
-                await loadRegisteredATAs();
-                break;
-            case 'provisioning':
-                await loadProvisioning();
-                await loadProvisioningSettings();
-                await loadPhonebookSettings();
-                await loadSupportedVendors();
-                await loadProvisioningDevices();
-                break;
-            case 'auto-attendant':
-                if (typeof loadAutoAttendantConfig === 'function') {
-                    await loadAutoAttendantConfig();
-                }
-                break;
-            case 'voicemail':
-                await loadVoicemailTab();
-                break;
-            case 'paging':
-                if (typeof loadPagingData === 'function') {
-                    await loadPagingData();
-                }
-                break;
-            case 'calls':
-                await loadCalls();
-                break;
-            case 'config':
-                await loadConfig();
-                await loadSSLStatus();
-                break;
-            case 'features-status':
-                await loadFeaturesStatus();
-                break;
-            case 'webrtc-phone':
-                if (typeof loadWebRTCPhoneConfig === 'function') {
-                    await loadWebRTCPhoneConfig();
-                }
-                break;
-            case 'license-management':
-                if (typeof initLicenseManagement === 'function') {
-                    initLicenseManagement();
-                }
-                break;
-            case 'qos':
-                await loadQoSMetrics();
-                break;
-            case 'emergency':
-                await loadEmergencyContacts();
-                await loadEmergencyHistory();
-                break;
-            case 'codecs':
-                await loadCodecStatus();
-                await loadDTMFConfig();
-                break;
-            case 'sip-trunks':
-                if (typeof loadSIPTrunks === 'function') {
-                    loadSIPTrunks();
-                }
-                if (typeof loadTrunkHealth === 'function') {
-                    loadTrunkHealth();
-                }
-                break;
-            case 'least-cost-routing':
-                if (typeof loadLCRRates === 'function') {
-                    loadLCRRates();
-                }
-                if (typeof loadLCRStatistics === 'function') {
-                    loadLCRStatistics();
-                }
-                break;
-            case 'find-me-follow-me':
-                if (typeof loadFMFMExtensions === 'function') {
-                    loadFMFMExtensions();
-                }
-                break;
-            case 'time-routing':
-                if (typeof loadTimeRoutingRules === 'function') {
-                    loadTimeRoutingRules();
-                }
-                break;
-            case 'webhooks':
-                if (typeof loadWebhooks === 'function') {
-                    loadWebhooks();
-                }
-                break;
-            case 'hot-desking':
-                if (typeof loadHotDeskSessions === 'function') {
-                    loadHotDeskSessions();
-                }
-                break;
-            case 'recording-retention':
-                if (typeof loadRetentionPolicies === 'function') {
-                    loadRetentionPolicies();
-                }
-                break;
-            case 'jitsi-integration':
-                if (typeof loadJitsiConfig === 'function') {
-                    loadJitsiConfig();
-                }
-                break;
-            case 'matrix-integration':
-                if (typeof loadMatrixConfig === 'function') {
-                    loadMatrixConfig();
-                }
-                break;
-            case 'espocrm-integration':
-                if (typeof loadEspoCRMConfig === 'function') {
-                    loadEspoCRMConfig();
-                }
-                break;
-            case 'click-to-dial':
-                if (typeof loadClickToDialTab === 'function') {
-                    loadClickToDialTab();
-                }
-                break;
-            case 'fraud-detection':
-                if (typeof loadFraudDetectionData === 'function') {
-                    loadFraudDetectionData();
-                }
-                break;
-            case 'nomadic-e911':
-                if (typeof loadNomadicE911Data === 'function') {
-                    loadNomadicE911Data();
-                }
-                break;
-            case 'callback-queue':
-                if (typeof loadCallbackQueue === 'function') {
-                    loadCallbackQueue();
-                }
-                break;
-            case 'mobile-push':
-                if (typeof loadMobilePushConfig === 'function') {
-                    loadMobilePushConfig();
-                }
-                break;
-            case 'recording-announcements':
-                if (typeof loadRecordingAnnouncements === 'function') {
-                    loadRecordingAnnouncements();
-                }
-                break;
-            case 'speech-analytics':
-                if (typeof loadSpeechAnalyticsConfigs === 'function') {
-                    loadSpeechAnalyticsConfigs();
-                }
-                break;
-            case 'compliance':
-                if (typeof loadComplianceData === 'function') {
-                    loadComplianceData();
-                }
-                break;
-            case 'crm-integrations':
-                if (typeof loadCRMActivityLog === 'function') {
-                    loadCRMActivityLog();
-                }
-                break;
-            case 'opensource-integrations':
-                if (typeof loadOpenSourceIntegrations === 'function') {
-                    loadOpenSourceIntegrations();
-                }
-                break;
-            default:
-                console.log(`No specific refresh handler for tab: ${tabToRefresh}`);
-                showNotification(`No data to refresh for ${tabToRefresh}`, 'info');
-                return;
+        
+        // Check for any failures
+        const failures = results.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+            console.warn(`${failures.length} refresh operation(s) failed:`, failures);
+            showNotification(`✅ All tabs refreshed (${failures.length} warning(s) - check console)`, 'success');
+        } else {
+            showNotification('✅ All tabs refreshed successfully', 'success');
         }
-
-        showNotification('✅ All data refreshed successfully', 'success');
     } catch (error) {
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
