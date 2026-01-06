@@ -118,7 +118,9 @@ def normalize_mac_address(mac):
 class ProvisioningDevice:
     """Represents a provisioned phone device"""
 
-    def __init__(self, mac_address, extension_number, vendor, model, device_type=None, config_url=None):
+    def __init__(
+        self, mac_address, extension_number, vendor, model, device_type=None, config_url=None
+    ):
         """
         Initialize provisioning device
 
@@ -158,7 +160,7 @@ class ProvisioningDevice:
 
     def is_ata(self) -> bool:
         """Check if device is an ATA"""
-        return self.device_type == 'ata'
+        return self.device_type == "ata"
 
     def mark_provisioned(self):
         """Mark device as provisioned"""

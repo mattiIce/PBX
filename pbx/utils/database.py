@@ -765,7 +765,7 @@ class DatabaseBackend:
 
         # Migration: Add device_type column to provisioned_devices table
         device_type_column = ("device_type", "VARCHAR(20) DEFAULT 'phone'")
-        
+
         # Check if column exists
         check_query = (
             """
@@ -778,24 +778,30 @@ class DatabaseBackend:
         SELECT name FROM pragma_table_info('provisioned_devices') WHERE name=?
         """
         )
-        
+
         try:
             cursor = self.connection.cursor()
             cursor.execute(check_query, (device_type_column[0],))
             exists = cursor.fetchone() is not None
             cursor.close()
-            
+
             if not exists:
                 # Add column
                 alter_query = f"ALTER TABLE provisioned_devices ADD COLUMN {device_type_column[0]} {device_type_column[1]}"
                 self.logger.info(f"Adding column to provisioned_devices: {device_type_column[0]}")
                 self._execute_with_context(
-                    alter_query, f"add column {device_type_column[0]} to provisioned_devices", critical=False
+                    alter_query,
+                    f"add column {device_type_column[0]} to provisioned_devices",
+                    critical=False,
                 )
             else:
-                self.logger.debug(f"Column {device_type_column[0]} already exists in provisioned_devices")
+                self.logger.debug(
+                    f"Column {device_type_column[0]} already exists in provisioned_devices"
+                )
         except Exception as e:
-            self.logger.debug(f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}")
+            self.logger.debug(
+                f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
+            )
             if self.connection and not self.connection.autocommit:
                 self.connection.rollback()
 
@@ -1737,7 +1743,7 @@ class ProvisionedDevicesDB:
         # Auto-detect device type if not provided
         if device_type is None:
             device_type = self._detect_device_type(vendor, model)
-        
+
         # Check if device already exists
         existing = self.get_device(mac_address)
 
@@ -1786,7 +1792,17 @@ class ProvisionedDevicesDB:
             """
             )
             now = datetime.now()
-            params = (mac_address, extension_number, vendor, model, device_type, static_ip, config_url, now, now)
+            params = (
+                mac_address,
+                extension_number,
+                vendor,
+                model,
+                device_type,
+                static_ip,
+                config_url,
+                now,
+                now,
+            )
 
         return self.db.execute(query, params)
 
@@ -1898,7 +1914,7 @@ class ProvisionedDevicesDB:
         Returns:
             list: List of all provisioned ATA devices
         """
-        return self.list_by_type('ata')
+        return self.list_by_type("ata")
 
     def list_phones(self) -> List[Dict]:
         """
@@ -1907,7 +1923,7 @@ class ProvisionedDevicesDB:
         Returns:
             list: List of all provisioned phone devices
         """
-        return self.list_by_type('phone')
+        return self.list_by_type("phone")
 
     def _detect_device_type(self, vendor: str, model: str) -> str:
         """
