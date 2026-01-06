@@ -541,13 +541,42 @@ function setupAutoRefresh(tabName) {
         autoRefreshInterval = null;
     }
 
+    // Wrapper function for emergency tab to refresh both contacts and history
+    const refreshEmergencyTab = () => {
+        loadEmergencyContacts();
+        loadEmergencyHistory();
+    };
+
+    // Wrapper function for fraud detection - handle both possible function names
+    const refreshFraudDetectionTab = () => {
+        if (typeof loadFraudDetectionData === 'function') {
+            loadFraudDetectionData();
+        } else if (typeof loadFraudAlerts === 'function') {
+            loadFraudAlerts();
+        }
+    };
+
+    // Wrapper function for callback queue - only call if function exists
+    const refreshCallbackQueueTab = () => {
+        if (typeof loadCallbackQueue === 'function') {
+            loadCallbackQueue();
+        }
+    };
+
     // Define which tabs should auto-refresh and their refresh functions
     const autoRefreshTabs = {
+        'dashboard': loadDashboard,
+        'analytics': loadAnalytics,
         'extensions': loadExtensions,
         'phones': loadRegisteredPhones,
-        'dashboard': loadDashboard,
+        'atas': loadRegisteredATAs,
         'calls': loadCalls,
-        'voicemail': loadVoicemailTab
+        'qos': loadQoSMetrics,
+        'emergency': refreshEmergencyTab,
+        'voicemail': loadVoicemailTab,
+        'hot-desking': loadHotDeskSessions,
+        'callback-queue': refreshCallbackQueueTab,
+        'fraud-detection': refreshFraudDetectionTab
     };
 
     // If the current tab supports auto-refresh, set it up
