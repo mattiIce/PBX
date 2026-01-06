@@ -1638,6 +1638,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_registered_atas(self):
         """Get all registered ATA devices from database."""
+        # SECURITY: Require authentication and admin privileges
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
+        # Check for admin role
+        if not payload or payload.get("role") != "admin":
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
         logger = get_logger()
         if (
             self.pbx_core

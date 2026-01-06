@@ -256,8 +256,8 @@ def _detect_device_type(vendor: str, model: str) -> str:
     if vendor in ata_models and model in ata_models[vendor]:
         return 'ata'
     
-    # Check for ATA keywords in model name
-    ata_keywords = ['ata', 'ht8', 'spa112', 'spa122', 'obi']
+    # Check for ATA keywords in model name (generic patterns only)
+    ata_keywords = ['ata', 'obi']
     if any(keyword in model for keyword in ata_keywords):
         return 'ata'
     

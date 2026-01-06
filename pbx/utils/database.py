@@ -9,6 +9,7 @@ import traceback
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
 
 try:
@@ -1919,30 +1920,7 @@ class ProvisionedDevicesDB:
         Returns:
             str: 'ata' or 'phone'
         """
-        # Convert to lowercase for comparison
-        vendor_lower = vendor.lower()
-        model_lower = model.lower()
-        
-        # Known ATA models
-        ata_models = {
-            'cisco': ['ata191', 'ata192', 'spa112', 'spa122'],
-            'grandstream': ['ht801', 'ht802', 'ht812', 'ht814', 'ht818'],
-            'obihai': ['obi200', 'obi202', 'obi300', 'obi302', 'obi504', 'obi508'],
-        }
-        
-        # Check if model is an ATA
-        if vendor_lower in ata_models:
-            if model_lower in ata_models[vendor_lower]:
-                return 'ata'
-        
-        # Check for common ATA keywords in model name (for unknown/new models)
-        ata_keywords = ['ata', 'ht8', 'obi']
-        for keyword in ata_keywords:
-            if keyword in model_lower:
-                return 'ata'
-        
-        # Default to phone
-        return 'phone'
+        return detect_device_type(vendor, model)
 
     def remove_device(self, mac_address: str) -> bool:
         """
