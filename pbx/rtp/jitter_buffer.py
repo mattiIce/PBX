@@ -18,11 +18,11 @@ class JitterBufferPacket:
     """Represents a packet in the jitter buffer"""
 
     def __init__(self, data: bytes, sequence: int, timestamp: int, arrival_time: float):
-        self.data = data
-        self.sequence = sequence
-        self.timestamp = timestamp
-        self.arrival_time = arrival_time
-        self.size = len(data)
+        self.data: bytes = data
+        self.sequence: int = sequence
+        self.timestamp: int = timestamp
+        self.arrival_time: float = arrival_time
+        self.size: int = len(data)
 
 
 class JitterBuffer:
@@ -72,12 +72,12 @@ class JitterBuffer:
         self.packets_lost = 0
 
         # Timing
-        self.start_time = None
+        self.start_time: Optional[float] = None
         self.current_length_ms = self.initial_length_ms
 
         # Statistics for adaptive behavior
         self.jitter_estimate = 0.0
-        self.last_arrival_time = None
+        self.last_arrival_time: Optional[float] = None
         self.transit_time_variance = 0.0
 
         self.logger.info(

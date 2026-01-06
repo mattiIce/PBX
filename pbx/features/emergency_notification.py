@@ -259,7 +259,7 @@ class EmergencyNotificationSystem:
                 query = """
                     INSERT INTO emergency_contacts
                     (id, name, extension, phone, email, priority, notification_methods, active)
-                    VALUES ({placeholders}, true)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
                 params = (
                     contact.id,
@@ -269,6 +269,7 @@ class EmergencyNotificationSystem:
                     contact.email,
                     contact.priority,
                     json.dumps(contact.notification_methods),
+                    True,  # active
                 )
 
             self.database.execute(query, params)
@@ -665,7 +666,7 @@ PBX Emergency Notification System
             query = """
                 INSERT INTO emergency_notifications
                 (id, timestamp, trigger_type, details, contacts_notified, methods_used)
-                VALUES ({placeholders})
+                VALUES (?, ?, ?, ?, ?, ?)
             """  # nosec B608 - placeholders are safely parameterized
 
             self.database.execute(
