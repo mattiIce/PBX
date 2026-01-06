@@ -64,16 +64,25 @@ async function refreshAllData() {
 
         console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh ALL tabs, not just the current one
-        // Dashboard & Analytics
-        await loadDashboard();
-        await loadADStatus();
-        await loadAnalytics();
-        
-        // Extensions
-        await loadExtensions();
+        // Refresh ALL tabs in parallel using Promise.allSettled
+        const refreshPromises = [
+            loadDashboard(),
+            loadADStatus(),
+            loadAnalytics(),
+            loadExtensions(),
+        ];
 
-        showNotification('✅ All tabs refreshed successfully', 'success');
+        // Wait for all refresh operations to complete (success or failure)
+        const results = await Promise.allSettled(refreshPromises);
+        
+        // Check for any failures
+        const failures = results.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+            console.warn(`${failures.length} refresh operation(s) failed:`, failures);
+            showNotification(`✅ All tabs refreshed (${failures.length} warning(s) - check console)`, 'success');
+        } else {
+            showNotification('✅ All tabs refreshed successfully', 'success');
+        }
     } catch (error) {
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
@@ -101,12 +110,18 @@ describe('Refresh All Data', () => {
     document.getElementById('dashboard').classList.add('active');
   });
 
-  it('should refresh all tabs regardless of which tab is active', async () => {
+  it('should refresh all tabs regardless of which tab is active and not query DOM for active tab', async () => {
     // Dashboard is active in DOM
     expect(document.getElementById('dashboard').classList.contains('active')).toBe(true);
     
+    // Spy on querySelector to verify it's not called to check active tab
+    const querySelectorSpy = jest.spyOn(document, 'querySelector');
+    
     // Call refreshAllData
     await refreshAllData();
+    
+    // Should NOT query for active tab element
+    expect(querySelectorSpy).not.toHaveBeenCalledWith('.tab-content.active');
     
     // Should call ALL tab load functions, not just dashboard
     expect(loadDashboard).toHaveBeenCalled();
@@ -116,6 +131,9 @@ describe('Refresh All Data', () => {
     
     // Should show success notification
     expect(showNotification).toHaveBeenCalledWith('✅ All tabs refreshed successfully', 'success');
+    
+    // Cleanup spy
+    querySelectorSpy.mockRestore();
   });
 
   it('should refresh all tabs even when different tab is active', async () => {

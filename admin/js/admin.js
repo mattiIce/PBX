@@ -912,133 +912,144 @@ async function refreshAllData() {
 
         console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh ALL tabs, not just the current one
-        // This ensures all data is fresh across the entire admin panel
-        
-        // Dashboard & Analytics
-        await loadDashboard();
-        await loadADStatus();
-        await loadAnalytics();
-        
-        // Extensions & Devices
-        await loadExtensions();
-        await loadRegisteredPhones();
-        await loadRegisteredATAs();
-        
-        // Communication
-        await loadCalls();
-        await loadQoSMetrics();
-        await loadEmergencyContacts();
-        await loadEmergencyHistory();
-        
-        // Provisioning
-        await loadProvisioning();
-        await loadProvisioningSettings();
-        await loadPhonebookSettings();
-        await loadSupportedVendors();
-        await loadProvisioningDevices();
-        
-        // Features
+        // Refresh ALL tabs in parallel using Promise.allSettled for better performance
+        // This ensures all data loads simultaneously and completes even if some fail
+        const refreshPromises = [
+            // Dashboard & Analytics
+            loadDashboard(),
+            loadADStatus(),
+            loadAnalytics(),
+            
+            // Extensions & Devices
+            loadExtensions(),
+            loadRegisteredPhones(),
+            loadRegisteredATAs(),
+            
+            // Communication
+            loadCalls(),
+            loadQoSMetrics(),
+            loadEmergencyContacts(),
+            loadEmergencyHistory(),
+            
+            // Provisioning
+            loadProvisioning(),
+            loadProvisioningSettings(),
+            loadPhonebookSettings(),
+            loadSupportedVendors(),
+            loadProvisioningDevices(),
+            
+            // System Configuration
+            loadConfig(),
+            loadSSLStatus(),
+            loadFeaturesStatus(),
+            loadCodecStatus(),
+            loadDTMFConfig(),
+            
+            // Voicemail
+            loadVoicemailTab(),
+        ];
+
+        // Add conditional async functions that may or may not exist
         if (typeof loadAutoAttendantConfig === 'function') {
-            await loadAutoAttendantConfig();
+            refreshPromises.push(Promise.resolve(loadAutoAttendantConfig()));
         }
-        await loadVoicemailTab();
         if (typeof loadPagingData === 'function') {
-            await loadPagingData();
+            refreshPromises.push(Promise.resolve(loadPagingData()));
+        }
+        if (typeof loadWebRTCPhoneConfig === 'function') {
+            refreshPromises.push(Promise.resolve(loadWebRTCPhoneConfig()));
         }
         
-        // System Configuration
-        await loadConfig();
-        await loadSSLStatus();
-        await loadFeaturesStatus();
-        await loadCodecStatus();
-        await loadDTMFConfig();
-        
-        // SIP & Routing
+        // SIP & Routing - wrapped in Promise.resolve to ensure they're awaited
         if (typeof loadSIPTrunks === 'function') {
-            loadSIPTrunks();
+            refreshPromises.push(Promise.resolve(loadSIPTrunks()));
         }
         if (typeof loadTrunkHealth === 'function') {
-            loadTrunkHealth();
+            refreshPromises.push(Promise.resolve(loadTrunkHealth()));
         }
         if (typeof loadLCRRates === 'function') {
-            loadLCRRates();
+            refreshPromises.push(Promise.resolve(loadLCRRates()));
         }
         if (typeof loadLCRStatistics === 'function') {
-            loadLCRStatistics();
+            refreshPromises.push(Promise.resolve(loadLCRStatistics()));
         }
         if (typeof loadFMFMExtensions === 'function') {
-            loadFMFMExtensions();
+            refreshPromises.push(Promise.resolve(loadFMFMExtensions()));
         }
         if (typeof loadTimeRoutingRules === 'function') {
-            loadTimeRoutingRules();
+            refreshPromises.push(Promise.resolve(loadTimeRoutingRules()));
         }
         
         // Advanced Features
         if (typeof loadWebhooks === 'function') {
-            loadWebhooks();
+            refreshPromises.push(Promise.resolve(loadWebhooks()));
         }
         if (typeof loadHotDeskSessions === 'function') {
-            loadHotDeskSessions();
+            refreshPromises.push(Promise.resolve(loadHotDeskSessions()));
         }
         if (typeof loadRetentionPolicies === 'function') {
-            loadRetentionPolicies();
-        }
-        
-        // WebRTC & Phone
-        if (typeof loadWebRTCPhoneConfig === 'function') {
-            await loadWebRTCPhoneConfig();
-        }
-        
-        // License Management
-        if (typeof initLicenseManagement === 'function') {
-            initLicenseManagement();
+            refreshPromises.push(Promise.resolve(loadRetentionPolicies()));
         }
         
         // Integrations
         if (typeof loadJitsiConfig === 'function') {
-            loadJitsiConfig();
+            refreshPromises.push(Promise.resolve(loadJitsiConfig()));
         }
         if (typeof loadMatrixConfig === 'function') {
-            loadMatrixConfig();
+            refreshPromises.push(Promise.resolve(loadMatrixConfig()));
         }
         if (typeof loadEspoCRMConfig === 'function') {
-            loadEspoCRMConfig();
+            refreshPromises.push(Promise.resolve(loadEspoCRMConfig()));
         }
         if (typeof loadClickToDialTab === 'function') {
-            loadClickToDialTab();
+            refreshPromises.push(Promise.resolve(loadClickToDialTab()));
         }
         if (typeof loadCRMActivityLog === 'function') {
-            loadCRMActivityLog();
+            refreshPromises.push(Promise.resolve(loadCRMActivityLog()));
         }
         if (typeof loadOpenSourceIntegrations === 'function') {
-            loadOpenSourceIntegrations();
+            refreshPromises.push(Promise.resolve(loadOpenSourceIntegrations()));
         }
         
         // Security & Monitoring
         if (typeof loadFraudDetectionData === 'function') {
-            loadFraudDetectionData();
+            refreshPromises.push(Promise.resolve(loadFraudDetectionData()));
         }
         if (typeof loadNomadicE911Data === 'function') {
-            loadNomadicE911Data();
+            refreshPromises.push(Promise.resolve(loadNomadicE911Data()));
         }
         if (typeof loadCallbackQueue === 'function') {
-            loadCallbackQueue();
+            refreshPromises.push(Promise.resolve(loadCallbackQueue()));
         }
         if (typeof loadMobilePushConfig === 'function') {
-            loadMobilePushConfig();
+            refreshPromises.push(Promise.resolve(loadMobilePushConfig()));
         }
         if (typeof loadRecordingAnnouncements === 'function') {
-            loadRecordingAnnouncements();
+            refreshPromises.push(Promise.resolve(loadRecordingAnnouncements()));
         }
         if (typeof loadSpeechAnalyticsConfigs === 'function') {
-            loadSpeechAnalyticsConfigs();
+            refreshPromises.push(Promise.resolve(loadSpeechAnalyticsConfigs()));
         }
         if (typeof loadComplianceData === 'function') {
-            loadComplianceData();
+            refreshPromises.push(Promise.resolve(loadComplianceData()));
+        }
+        
+        // License Management - synchronous function, run separately
+        if (typeof initLicenseManagement === 'function') {
+            initLicenseManagement();
         }
 
-        showNotification('✅ All tabs refreshed successfully', 'success');
+        // Wait for all refresh operations to complete (success or failure)
+        const results = await Promise.allSettled(refreshPromises);
+        
+        // Check for any failures
+        const failures = results.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+            console.warn(`${failures.length} refresh operation(s) failed:`, failures);
+            showNotification(`✅ All tabs refreshed (${failures.length} warning(s) - check console)`, 'success');
+        } else {
+            showNotification('✅ All tabs refreshed successfully', 'success');
+        }
     } catch (error) {
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
