@@ -532,6 +532,29 @@ function initializeTabs() {
     });
 }
 
+// Auto-refresh wrapper functions - defined once to avoid recreation on tab switch
+// Wrapper function for emergency tab to refresh both contacts and history
+function refreshEmergencyTab() {
+    loadEmergencyContacts();
+    loadEmergencyHistory();
+}
+
+// Wrapper function for fraud detection - handle both possible function names
+function refreshFraudDetectionTab() {
+    if (typeof loadFraudDetectionData === 'function') {
+        loadFraudDetectionData();
+    } else if (typeof loadFraudAlerts === 'function') {
+        loadFraudAlerts();
+    }
+}
+
+// Wrapper function for callback queue - only call if function exists
+function refreshCallbackQueueTab() {
+    if (typeof loadCallbackQueue === 'function') {
+        loadCallbackQueue();
+    }
+}
+
 // Setup auto-refresh for tabs that need periodic data updates
 function setupAutoRefresh(tabName) {
     // Clear any existing auto-refresh interval
@@ -542,12 +565,29 @@ function setupAutoRefresh(tabName) {
     }
 
     // Define which tabs should auto-refresh and their refresh functions
+    // Grouped by category for better maintainability
     const autoRefreshTabs = {
+        // System Overview
+        'dashboard': loadDashboard,
+        'analytics': loadAnalytics,
+        
+        // Communication & Calls
+        'calls': loadCalls,
+        'qos': loadQoSMetrics,
+        'emergency': refreshEmergencyTab,
+        'callback-queue': refreshCallbackQueueTab,
+        
+        // Extensions & Devices
         'extensions': loadExtensions,
         'phones': loadRegisteredPhones,
-        'dashboard': loadDashboard,
-        'calls': loadCalls,
-        'voicemail': loadVoicemailTab
+        'atas': loadRegisteredATAs,
+        'hot-desking': loadHotDeskSessions,
+        
+        // User Features
+        'voicemail': loadVoicemailTab,
+        
+        // Security
+        'fraud-detection': refreshFraudDetectionTab
     };
 
     // If the current tab supports auto-refresh, set it up
