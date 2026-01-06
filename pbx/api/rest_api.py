@@ -832,6 +832,12 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_ssl_status()
             elif path == "/api/provisioning/devices":
                 self._handle_get_provisioning_devices()
+            elif path == "/api/provisioning/atas":
+                self._handle_get_provisioning_atas()
+            elif path == "/api/provisioning/phones":
+                self._handle_get_provisioning_phones()
+            elif path == "/api/registered-atas":
+                self._handle_get_registered_atas()
             elif path == "/api/provisioning/vendors":
                 self._handle_get_provisioning_vendors()
             elif path == "/api/provisioning/templates":
@@ -1589,6 +1595,83 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json(data)
         else:
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
+
+    def _handle_get_provisioning_atas(self):
+        """Get all provisioned ATA devices."""
+        # SECURITY: Require admin authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
+        if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
+            atas = self.pbx_core.phone_provisioning.get_atas()
+            data = [d.to_dict() for d in atas]
+            self._send_json(data)
+        else:
+            self._send_json({"error": "Phone provisioning not enabled"}, 500)
+
+    def _handle_get_provisioning_phones(self):
+        """Get all provisioned phone devices (excluding ATAs)."""
+        # SECURITY: Require admin authentication
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
+        is_admin = payload.get("is_admin", False)
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
+        if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
+            phones = self.pbx_core.phone_provisioning.get_phones()
+            data = [d.to_dict() for d in phones]
+            self._send_json(data)
+        else:
+            self._send_json({"error": "Phone provisioning not enabled"}, 500)
+
+    def _handle_get_registered_atas(self):
+        """Get all registered ATA devices from database."""
+        logger = get_logger()
+        if (
+            self.pbx_core
+            and hasattr(self.pbx_core, "registered_phones_db")
+            and self.pbx_core.registered_phones_db
+        ):
+            try:
+                # Get all registered phones
+                all_phones = self.pbx_core.registered_phones_db.list_all()
+                
+                # Filter to only ATAs by checking provisioning data
+                atas = []
+                if hasattr(self.pbx_core, "phone_provisioning"):
+                    provisioned_atas = {d.extension_number: d for d in self.pbx_core.phone_provisioning.get_atas()}
+                    
+                    for phone in all_phones:
+                        ext = phone.get("extension_number")
+                        if ext and ext in provisioned_atas:
+                            # This phone is provisioned as an ATA
+                            enhanced = dict(phone)
+                            enhanced["device_type"] = "ata"
+                            enhanced["vendor"] = provisioned_atas[ext].vendor
+                            enhanced["model"] = provisioned_atas[ext].model
+                            atas.append(enhanced)
+                
+                self._send_json(atas)
+            except Exception as e:
+                logger.error(f"Error loading registered ATAs from database: {e}")
+                self._send_json(
+                    {"error": str(e), "details": "Check server logs for full error details"}, 500
+                )
+        else:
+            logger.warning("Database not available or not configured")
+            self._send_json([])
 
     def _handle_get_provisioning_vendors(self):
         """Get supported vendors and models."""

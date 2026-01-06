@@ -117,7 +117,7 @@ def normalize_mac_address(mac):
 class ProvisioningDevice:
     """Represents a provisioned phone device"""
 
-    def __init__(self, mac_address, extension_number, vendor, model, config_url=None):
+    def __init__(self, mac_address, extension_number, vendor, model, device_type=None, config_url=None):
         """
         Initialize provisioning device
 
@@ -126,15 +126,61 @@ class ProvisioningDevice:
             extension_number: Associated extension number
             vendor: Phone vendor
             model: Phone model
+            device_type: Device type ('phone' or 'ata', auto-detected if None)
             config_url: URL where config can be fetched
         """
         self.mac_address = normalize_mac_address(mac_address)
         self.extension_number = extension_number
         self.vendor = vendor.lower()
         self.model = model.lower()
+        # Auto-detect device type if not provided
+        if device_type is None:
+            self.device_type = self._detect_device_type(vendor, model)
+        else:
+            self.device_type = device_type
         self.config_url = config_url
         self.created_at = datetime.now()
         self.last_provisioned = None
+
+    def _detect_device_type(self, vendor: str, model: str) -> str:
+        """
+        Detect device type based on vendor and model
+
+        Args:
+            vendor: Device vendor
+            model: Device model
+
+        Returns:
+            str: 'ata' or 'phone'
+        """
+        # Convert to lowercase for comparison
+        vendor_lower = vendor.lower()
+        model_lower = model.lower()
+        
+        # Known ATA models
+        ata_models = {
+            'cisco': ['ata191', 'ata192', 'spa112', 'spa122'],
+            'grandstream': ['ht801', 'ht802', 'ht812', 'ht814', 'ht818'],
+            'obihai': ['obi200', 'obi202', 'obi300', 'obi302', 'obi504', 'obi508'],
+        }
+        
+        # Check if model is an ATA
+        if vendor_lower in ata_models:
+            if model_lower in ata_models[vendor_lower]:
+                return 'ata'
+        
+        # Check for common ATA keywords in model name
+        ata_keywords = ['ata', 'ht8', 'ht801', 'ht802', 'spa112', 'spa122', 'obi']
+        for keyword in ata_keywords:
+            if keyword in model_lower:
+                return 'ata'
+        
+        # Default to phone
+        return 'phone'
+
+    def is_ata(self) -> bool:
+        """Check if device is an ATA"""
+        return self.device_type == 'ata'
 
     def mark_provisioned(self):
         """Mark device as provisioned"""
@@ -147,6 +193,7 @@ class ProvisioningDevice:
             "extension_number": self.extension_number,
             "vendor": self.vendor,
             "model": self.model,
+            "device_type": self.device_type,
             "config_url": self.config_url,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "last_provisioned": (
@@ -239,6 +286,7 @@ class PhoneProvisioning:
                     extension_number=db_device["extension_number"],
                     vendor=db_device["vendor"],
                     model=db_device["model"],
+                    device_type=db_device.get("device_type"),  # Load device_type from DB
                     config_url=db_device.get("config_url"),
                 )
                 # Restore timestamps if available
@@ -1117,10 +1165,12 @@ P2351 = 1
                     extension_number=extension_number,
                     vendor=vendor,
                     model=model,
+                    device_type=device.device_type,
                     config_url=config_url,
                 )
+                device_type_label = "ATA" if device.is_ata() else "phone"
                 self.logger.info(
-                    f"Registered device {mac_address} for extension {extension_number} (saved to database)"
+                    f"Registered {device_type_label} {mac_address} for extension {extension_number} (saved to database)"
                 )
             except Exception as e:
                 self.logger.error(f"Failed to save device to database: {e}")
@@ -1187,6 +1237,24 @@ P2351 = 1
             List of ProvisioningDevice objects
         """
         return list(self.devices.values())
+
+    def get_atas(self):
+        """
+        Get all registered ATA devices
+
+        Returns:
+            List of ProvisioningDevice objects (ATAs only)
+        """
+        return [device for device in self.devices.values() if device.is_ata()]
+
+    def get_phones(self):
+        """
+        Get all registered phone devices (excluding ATAs)
+
+        Returns:
+            List of ProvisioningDevice objects (phones only)
+        """
+        return [device for device in self.devices.values() if not device.is_ata()]
 
     def _build_ldap_phonebook_config(self):
         """

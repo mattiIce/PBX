@@ -508,6 +508,7 @@ class DatabaseBackend:
             extension_number VARCHAR(20) NOT NULL,
             vendor VARCHAR(50) NOT NULL,
             model VARCHAR(50) NOT NULL,
+            device_type VARCHAR(20) DEFAULT 'phone',
             static_ip VARCHAR(50),
             config_url VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -760,6 +761,42 @@ class DatabaseBackend:
                 self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
                 if self.connection and not self.connection.autocommit:
                     self.connection.rollback()
+
+        # Migration: Add device_type column to provisioned_devices table
+        device_type_column = ("device_type", "VARCHAR(20) DEFAULT 'phone'")
+        
+        # Check if column exists
+        check_query = (
+            """
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='provisioned_devices' AND column_name=%s
+        """
+            if self.db_type == "postgresql"
+            else """
+        SELECT name FROM pragma_table_info('provisioned_devices') WHERE name=?
+        """
+        )
+        
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(check_query, (device_type_column[0],))
+            exists = cursor.fetchone() is not None
+            cursor.close()
+            
+            if not exists:
+                # Add column
+                alter_query = f"ALTER TABLE provisioned_devices ADD COLUMN {device_type_column[0]} {device_type_column[1]}"
+                self.logger.info(f"Adding column to provisioned_devices: {device_type_column[0]}")
+                self._execute_with_context(
+                    alter_query, f"add column {device_type_column[0]} to provisioned_devices", critical=False
+                )
+            else:
+                self.logger.debug(f"Column {device_type_column[0]} already exists in provisioned_devices")
+        except Exception as e:
+            self.logger.debug(f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}")
+            if self.connection and not self.connection.autocommit:
+                self.connection.rollback()
 
         # Apply framework feature migrations
         self._apply_framework_migrations()
@@ -1677,6 +1714,7 @@ class ProvisionedDevicesDB:
         extension_number: str,
         vendor: str,
         model: str,
+        device_type: str = None,
         static_ip: str = None,
         config_url: str = None,
     ) -> bool:
@@ -1688,12 +1726,17 @@ class ProvisionedDevicesDB:
             extension_number: Extension number
             vendor: Phone vendor
             model: Phone model
+            device_type: Device type ('phone' or 'ata', auto-detected if None)
             static_ip: Static IP address (optional)
             config_url: Configuration URL (optional)
 
         Returns:
             bool: True if successful
         """
+        # Auto-detect device type if not provided
+        if device_type is None:
+            device_type = self._detect_device_type(vendor, model)
+        
         # Check if device already exists
         existing = self.get_device(mac_address)
 
@@ -1702,15 +1745,15 @@ class ProvisionedDevicesDB:
             query = (
                 """
             UPDATE provisioned_devices
-            SET extension_number = %s, vendor = %s, model = %s, static_ip = %s,
-                config_url = %s, updated_at = %s
+            SET extension_number = %s, vendor = %s, model = %s, device_type = %s,
+                static_ip = %s, config_url = %s, updated_at = %s
             WHERE mac_address = %s
             """
                 if self.db.db_type == "postgresql"
                 else """
             UPDATE provisioned_devices
-            SET extension_number = ?, vendor = ?, model = ?, static_ip = ?,
-                config_url = ?, updated_at = ?
+            SET extension_number = ?, vendor = ?, model = ?, device_type = ?,
+                static_ip = ?, config_url = ?, updated_at = ?
             WHERE mac_address = ?
             """
             )
@@ -1718,6 +1761,7 @@ class ProvisionedDevicesDB:
                 extension_number,
                 vendor,
                 model,
+                device_type,
                 static_ip,
                 config_url,
                 datetime.now(),
@@ -1728,20 +1772,20 @@ class ProvisionedDevicesDB:
             query = (
                 """
             INSERT INTO provisioned_devices
-            (mac_address, extension_number, vendor, model, static_ip, config_url,
-             created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            (mac_address, extension_number, vendor, model, device_type, static_ip,
+             config_url, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
                 if self.db.db_type == "postgresql"
                 else """
             INSERT INTO provisioned_devices
-            (mac_address, extension_number, vendor, model, static_ip, config_url,
-             created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (mac_address, extension_number, vendor, model, device_type, static_ip,
+             config_url, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             )
             now = datetime.now()
-            params = (mac_address, extension_number, vendor, model, static_ip, config_url, now, now)
+            params = (mac_address, extension_number, vendor, model, device_type, static_ip, config_url, now, now)
 
         return self.db.execute(query, params)
 
@@ -1820,6 +1864,85 @@ class ProvisionedDevicesDB:
         ORDER BY extension_number
         """
         return self.db.fetch_all(query)
+
+    def list_by_type(self, device_type: str) -> List[Dict]:
+        """
+        List provisioned devices by type
+
+        Args:
+            device_type: Device type ('phone' or 'ata')
+
+        Returns:
+            list: List of provisioned devices of specified type
+        """
+        query = (
+            """
+        SELECT * FROM provisioned_devices
+        WHERE device_type = %s
+        ORDER BY extension_number
+        """
+            if self.db.db_type == "postgresql"
+            else """
+        SELECT * FROM provisioned_devices
+        WHERE device_type = ?
+        ORDER BY extension_number
+        """
+        )
+        return self.db.fetch_all(query, (device_type,))
+
+    def list_atas(self) -> List[Dict]:
+        """
+        List all provisioned ATAs
+
+        Returns:
+            list: List of all provisioned ATA devices
+        """
+        return self.list_by_type('ata')
+
+    def list_phones(self) -> List[Dict]:
+        """
+        List all provisioned phones (excluding ATAs)
+
+        Returns:
+            list: List of all provisioned phone devices
+        """
+        return self.list_by_type('phone')
+
+    def _detect_device_type(self, vendor: str, model: str) -> str:
+        """
+        Detect device type based on vendor and model
+
+        Args:
+            vendor: Device vendor
+            model: Device model
+
+        Returns:
+            str: 'ata' or 'phone'
+        """
+        # Convert to lowercase for comparison
+        vendor_lower = vendor.lower()
+        model_lower = model.lower()
+        
+        # Known ATA models
+        ata_models = {
+            'cisco': ['ata191', 'ata192', 'spa112', 'spa122'],
+            'grandstream': ['ht801', 'ht802', 'ht812', 'ht814', 'ht818'],
+            'obihai': ['obi200', 'obi202', 'obi300', 'obi302', 'obi504', 'obi508'],
+        }
+        
+        # Check if model is an ATA
+        if vendor_lower in ata_models:
+            if model_lower in ata_models[vendor_lower]:
+                return 'ata'
+        
+        # Check for common ATA keywords in model name
+        ata_keywords = ['ata', 'ht8', 'ht801', 'ht802', 'spa112', 'spa122', 'obi']
+        for keyword in ata_keywords:
+            if keyword in model_lower:
+                return 'ata'
+        
+        # Default to phone
+        return 'phone'
 
     def remove_device(self, mac_address: str) -> bool:
         """
