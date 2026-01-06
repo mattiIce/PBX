@@ -2328,3 +2328,15 @@ window.frameworkFeatures = {
     showEnrollUserDialog,
     deleteVoiceProfile
 };
+
+// Export framework feature load functions to global scope for compatibility with admin.js
+// This is needed because admin.js expects these functions to be globally available for:
+// 1. Tab switching (switchTab function checks typeof loadXXX === 'function')
+// 2. Refresh all functionality (refreshAllData function calls loadXXX functions)
+// We filter to only export 'load*' functions to avoid polluting global namespace with
+// helper functions like dialog creators, delete handlers, etc.
+Object.keys(window.frameworkFeatures).forEach(funcName => {
+    if (funcName.startsWith('load') && typeof window.frameworkFeatures[funcName] === 'function') {
+        window[funcName] = window.frameworkFeatures[funcName];
+    }
+});
