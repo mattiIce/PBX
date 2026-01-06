@@ -154,13 +154,14 @@ describe('Refresh All Data', () => {
     // Set currentTab to analytics
     currentTab = 'analytics';
     
-    // Change active tab in DOM to dashboard (but currentTab should take precedence)
-    document.getElementById('dashboard').classList.add('active');
+    // Dashboard is active in DOM (from beforeEach), but currentTab should take precedence
+    // Verify dashboard has active class
+    expect(document.getElementById('dashboard').classList.contains('active')).toBe(true);
     
     // Call refreshAllData
     await refreshAllData();
     
-    // Should use currentTab value
+    // Should use currentTab value (analytics) not the DOM active tab (dashboard)
     expect(currentTab).toBe('analytics');
     
     // Should call analytics load function
