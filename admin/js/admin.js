@@ -2351,17 +2351,17 @@ async function populateProvisioningFormDropdowns() {
                     });
                     console.log(`Loaded ${extensions.length} extensions for dropdown`);
                 } else {
-                    extensionSelect.innerHTML = '<option value="">No extensions available</option>';
+                    extensionSelect.innerHTML = '<option value="">No extensions available - Add extensions first</option>';
                     console.warn('No extensions returned from API');
                 }
             } else {
-                const errorText = response.status === 401 ? 'Authentication required' : 'Error loading extensions';
+                const errorText = response.status === 401 ? 'Authentication required - Please re-login' : 'Error loading extensions';
                 extensionSelect.innerHTML = `<option value="">${errorText}</option>`;
                 console.error('Failed to load extensions:', response.status);
             }
         } catch (error) {
             console.error('Error loading extensions:', error);
-            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+            extensionSelect.innerHTML = '<option value="">Error connecting to server</option>';
         }
     }
 
@@ -2378,7 +2378,7 @@ async function populateProvisioningFormDropdowns() {
             });
             console.log(`Populated vendor dropdown with ${supportedVendors.length} vendors:`, supportedVendors);
         } else {
-            vendorSelect.innerHTML = '<option value="">No vendors available</option>';
+            vendorSelect.innerHTML = '<option value="">No vendors available - Check config</option>';
             console.warn('No supported vendors available for dropdown. supportedVendors:', supportedVendors);
         }
     }
@@ -2599,7 +2599,7 @@ async function loadSupportedVendors() {
                 console.log(`Loaded ${supportedVendors.length} vendors with models:`, supportedModels);
             } else {
                 if (vendorsList) {
-                    vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
+                    vendorsList.innerHTML = '<p class="error">No phone vendors available. This may indicate phone provisioning is not properly configured.</p>';
                 }
                 console.warn('No vendors loaded from API');
             }
@@ -2610,16 +2610,26 @@ async function loadSupportedVendors() {
             supportedModels = {};
             
             let errorMsg = `Error loading vendors: HTTP ${response.status}`;
+            let helpText = '';
+            
             try {
                 const errorData = await response.json();
                 if (errorData.error) {
-                    errorMsg = `Error loading vendors: ${escapeHtml(errorData.error)}`;
+                    errorMsg = escapeHtml(errorData.error);
+                    
+                    // Provide helpful guidance based on error type
+                    if (errorData.error.includes('not enabled') || errorData.error.includes('Phone provisioning')) {
+                        helpText = '<br><br><strong>Solution:</strong> Ensure <code>provisioning.enabled: true</code> in config.yml and restart the PBX server.';
+                    } else if (response.status === 401) {
+                        helpText = '<br><br><strong>Solution:</strong> Please log out and log back in.';
+                    }
                 }
             } catch (e) {
                 // Unable to parse error response, use generic message
             }
+            
             if (vendorsList) {
-                vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+                vendorsList.innerHTML = `<p class="error">${errorMsg}${helpText}</p>`;
             }
             console.error('Error loading supported vendors:', errorMsg);
         }
@@ -2630,7 +2640,9 @@ async function loadSupportedVendors() {
         
         console.error('Error loading supported vendors:', error);
         if (vendorsList) {
-            vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
+            const errorMsg = 'Error connecting to server: ' + escapeHtml(error.message);
+            const helpText = '<br><br><strong>Solution:</strong> Ensure the PBX server is running and accessible.';
+            vendorsList.innerHTML = `<p class="error">${errorMsg}${helpText}</p>`;
         }
     }
 }
