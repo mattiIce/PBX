@@ -2351,17 +2351,29 @@ async function populateProvisioningFormDropdowns() {
                     });
                     console.log(`Loaded ${extensions.length} extensions for dropdown`);
                 } else {
-                    extensionSelect.innerHTML = '<option value="">No extensions available - Add extensions first</option>';
+                    extensionSelect.innerHTML = '';
+                    const noExtensionsOption = document.createElement('option');
+                    noExtensionsOption.value = '';
+                    noExtensionsOption.textContent = 'No extensions available - Add extensions first';
+                    extensionSelect.appendChild(noExtensionsOption);
                     console.warn('No extensions returned from API');
                 }
             } else {
                 const errorText = response.status === 401 ? 'Authentication required - Please re-login' : 'Error loading extensions';
-                extensionSelect.innerHTML = `<option value="">${errorText}</option>`;
+                extensionSelect.innerHTML = '';
+                const errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.textContent = errorText;
+                extensionSelect.appendChild(errorOption);
                 console.error('Failed to load extensions:', response.status);
             }
         } catch (error) {
             console.error('Error loading extensions:', error);
-            extensionSelect.innerHTML = '<option value="">Error connecting to server</option>';
+            extensionSelect.innerHTML = '';
+            const errorOption = document.createElement('option');
+            errorOption.value = '';
+            errorOption.textContent = 'Error connecting to server';
+            extensionSelect.appendChild(errorOption);
         }
     }
 
@@ -2378,7 +2390,11 @@ async function populateProvisioningFormDropdowns() {
             });
             console.log(`Populated vendor dropdown with ${supportedVendors.length} vendors:`, supportedVendors);
         } else {
-            vendorSelect.innerHTML = '<option value="">No vendors available - Check config</option>';
+            vendorSelect.innerHTML = '';
+            const noVendorsOption = document.createElement('option');
+            noVendorsOption.value = '';
+            noVendorsOption.textContent = 'No vendors available - Check config';
+            vendorSelect.appendChild(noVendorsOption);
             console.warn('No supported vendors available for dropdown. supportedVendors:', supportedVendors);
         }
     }
@@ -2577,7 +2593,10 @@ async function loadSupportedVendors() {
     
     // Show loading state
     if (vendorsList) {
-        vendorsList.innerHTML = '<p>Loading supported vendors...</p>';
+        vendorsList.innerHTML = '';
+        const loadingPara = document.createElement('p');
+        loadingPara.textContent = 'Loading supported vendors...';
+        vendorsList.appendChild(loadingPara);
     }
     
     try {
@@ -2649,9 +2668,11 @@ async function loadSupportedVendors() {
             
             if (vendorsList) {
                 // Use DOM manipulation for safer content injection
+                vendorsList.innerHTML = '';
                 const errorPara = document.createElement('p');
                 errorPara.className = 'error';
                 errorPara.textContent = errorMsg;
+                vendorsList.appendChild(errorPara);
                 
                 if (solutionText) {
                     const solutionPara = document.createElement('p');
@@ -2660,13 +2681,7 @@ async function loadSupportedVendors() {
                     solutionPara.appendChild(solutionStrong);
                     solutionPara.appendChild(document.createTextNode(solutionText));
                     solutionPara.style.marginTop = '10px';
-                    
-                    vendorsList.innerHTML = '';
-                    vendorsList.appendChild(errorPara);
                     vendorsList.appendChild(solutionPara);
-                } else {
-                    vendorsList.innerHTML = '';
-                    vendorsList.appendChild(errorPara);
                 }
             }
             console.error('Error loading supported vendors:', errorMsg);
