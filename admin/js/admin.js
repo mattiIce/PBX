@@ -2332,7 +2332,11 @@ async function populateProvisioningFormDropdowns() {
     // Populate extension dropdown
     const extensionSelect = document.getElementById('device-extension');
     if (extensionSelect) {
-        extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
+        extensionSelect.innerHTML = '';
+        const loadingOption = document.createElement('option');
+        loadingOption.value = '';
+        loadingOption.textContent = 'Loading extensions...';
+        extensionSelect.appendChild(loadingOption);
         
         try {
             const response = await fetch(`${API_BASE}/api/extensions`, {
@@ -2340,39 +2344,81 @@ async function populateProvisioningFormDropdowns() {
             });
             if (response.ok) {
                 const extensions = await response.json();
-                extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+                extensionSelect.innerHTML = '';
+                const selectOption = document.createElement('option');
+                selectOption.value = '';
+                selectOption.textContent = 'Select Extension';
+                extensionSelect.appendChild(selectOption);
                 
-                extensions.forEach(ext => {
-                    const option = document.createElement('option');
-                    option.value = ext.number;
-                    option.textContent = `${ext.number} - ${ext.name}`;
-                    extensionSelect.appendChild(option);
-                });
+                if (extensions && extensions.length > 0) {
+                    extensions.forEach(ext => {
+                        const option = document.createElement('option');
+                        option.value = ext.number;
+                        option.textContent = `${ext.number} - ${ext.name}`;
+                        extensionSelect.appendChild(option);
+                    });
+                    console.log(`Loaded ${extensions.length} extensions for dropdown`);
+                } else {
+                    extensionSelect.innerHTML = '';
+                    const noExtensionsOption = document.createElement('option');
+                    noExtensionsOption.value = '';
+                    noExtensionsOption.textContent = 'No extensions available - Add extensions first';
+                    extensionSelect.appendChild(noExtensionsOption);
+                    console.warn('No extensions returned from API');
+                }
             } else {
-                extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+                const errorText = response.status === 401 ? 'Authentication required - Please re-login' : 'Error loading extensions';
+                extensionSelect.innerHTML = '';
+                const errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.textContent = errorText;
+                extensionSelect.appendChild(errorOption);
+                console.error('Failed to load extensions:', response.status);
             }
         } catch (error) {
             console.error('Error loading extensions:', error);
-            extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+            extensionSelect.innerHTML = '';
+            const errorOption = document.createElement('option');
+            errorOption.value = '';
+            errorOption.textContent = 'Error connecting to server';
+            extensionSelect.appendChild(errorOption);
         }
     }
 
     // Populate vendor dropdown
     const vendorSelect = document.getElementById('device-vendor');
-    if (vendorSelect && supportedVendors.length > 0) {
-        vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-        supportedVendors.forEach(vendor => {
-            const option = document.createElement('option');
-            option.value = vendor;
-            option.textContent = vendor.toUpperCase();
-            vendorSelect.appendChild(option);
-        });
+    if (vendorSelect) {
+        if (supportedVendors && supportedVendors.length > 0) {
+            vendorSelect.innerHTML = '';
+            const selectOption = document.createElement('option');
+            selectOption.value = '';
+            selectOption.textContent = 'Select Vendor';
+            vendorSelect.appendChild(selectOption);
+            supportedVendors.forEach(vendor => {
+                const option = document.createElement('option');
+                option.value = vendor;
+                option.textContent = vendor.toUpperCase();
+                vendorSelect.appendChild(option);
+            });
+            console.log(`Populated vendor dropdown with ${supportedVendors.length} vendors:`, supportedVendors);
+        } else {
+            vendorSelect.innerHTML = '';
+            const noVendorsOption = document.createElement('option');
+            noVendorsOption.value = '';
+            noVendorsOption.textContent = 'No vendors available - Check config';
+            vendorSelect.appendChild(noVendorsOption);
+            console.warn('No supported vendors available for dropdown. supportedVendors:', supportedVendors);
+        }
     }
 
     // Reset the model dropdown to its default state
     const modelSelect = document.getElementById('device-model');
     if (modelSelect) {
-        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+        modelSelect.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select Vendor First';
+        modelSelect.appendChild(defaultOption);
     }
 }
 
@@ -2552,8 +2598,23 @@ async function savePhonebookSettings() {
     alert(configMsg);
 }
 
+// Helper function to reset provisioning state
+function resetProvisioningState() {
+    supportedVendors = [];
+    supportedModels = {};
+}
+
 async function loadSupportedVendors() {
     const vendorsList = document.getElementById('supported-vendors-list');
+    
+    // Show loading state
+    if (vendorsList) {
+        vendorsList.innerHTML = '';
+        const loadingPara = document.createElement('p');
+        loadingPara.textContent = 'Loading supported vendors...';
+        vendorsList.appendChild(loadingPara);
+    }
+    
     try {
         const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
             headers: getAuthHeaders()
@@ -2563,37 +2624,105 @@ async function loadSupportedVendors() {
             supportedVendors = data.vendors || [];
             supportedModels = data.models || {};
 
-            // Display supported vendors
+            // Display supported vendors using safe DOM manipulation
             if (supportedVendors.length > 0) {
-                let html = '<ul>';
-                for (const vendor of supportedVendors) {
-                    html += `<li><strong>${vendor.toUpperCase()}</strong>: `;
-                    const models = supportedModels[vendor] || [];
-                    html += models.map(m => m.toUpperCase()).join(', ');
-                    html += '</li>';
+                if (vendorsList) {
+                    // Clear existing content
+                    vendorsList.innerHTML = '';
+                    
+                    // Create list element
+                    const ul = document.createElement('ul');
+                    
+                    for (const vendor of supportedVendors) {
+                        const li = document.createElement('li');
+                        const strong = document.createElement('strong');
+                        strong.textContent = vendor.toUpperCase() + ': ';
+                        li.appendChild(strong);
+                        
+                        const models = supportedModels[vendor] || [];
+                        const modelsText = document.createTextNode(models.map(m => m.toUpperCase()).join(', '));
+                        li.appendChild(modelsText);
+                        
+                        ul.appendChild(li);
+                    }
+                    
+                    vendorsList.appendChild(ul);
                 }
-                html += '</ul>';
-                vendorsList.innerHTML = html;
+                console.log(`Loaded ${supportedVendors.length} vendors with models:`, supportedModels);
             } else {
-                vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
+                if (vendorsList) {
+                    vendorsList.innerHTML = '';
+                    const errorPara = document.createElement('p');
+                    errorPara.className = 'error';
+                    errorPara.textContent = 'No phone vendors available. This may indicate phone provisioning is not properly configured.';
+                    vendorsList.appendChild(errorPara);
+                }
+                console.warn('No vendors loaded from API');
             }
         } else {
             // Handle non-ok response (e.g., 401, 403, 500)
+            resetProvisioningState();
+            
             let errorMsg = `Error loading vendors: HTTP ${response.status}`;
+            let solutionText = '';
+            
             try {
                 const errorData = await response.json();
                 if (errorData.error) {
-                    errorMsg = `Error loading vendors: ${escapeHtml(errorData.error)}`;
+                    errorMsg = escapeHtml(errorData.error);
+                    
+                    // Provide helpful guidance based on error type
+                    if (errorData.error.includes('not enabled') || errorData.error.includes('Phone provisioning')) {
+                        solutionText = 'Ensure provisioning.enabled: true in config.yml and restart the PBX server.';
+                    } else if (response.status === 401) {
+                        solutionText = 'Please log out and log back in.';
+                    }
                 }
             } catch (e) {
                 // Unable to parse error response, use generic message
             }
-            vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+            
+            if (vendorsList) {
+                // Use DOM manipulation for safer content injection
+                vendorsList.innerHTML = '';
+                const errorPara = document.createElement('p');
+                errorPara.className = 'error';
+                errorPara.textContent = errorMsg;
+                vendorsList.appendChild(errorPara);
+                
+                if (solutionText) {
+                    const solutionPara = document.createElement('p');
+                    const solutionStrong = document.createElement('strong');
+                    solutionStrong.textContent = 'Solution: ';
+                    solutionPara.appendChild(solutionStrong);
+                    solutionPara.appendChild(document.createTextNode(solutionText));
+                    solutionPara.style.marginTop = '10px';
+                    vendorsList.appendChild(solutionPara);
+                }
+            }
             console.error('Error loading supported vendors:', errorMsg);
         }
     } catch (error) {
+        // Reset to empty arrays on error
+        resetProvisioningState();
+        
         console.error('Error loading supported vendors:', error);
-        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
+        if (vendorsList) {
+            const errorPara = document.createElement('p');
+            errorPara.className = 'error';
+            errorPara.textContent = 'Error connecting to server: ' + error.message;
+            
+            const solutionPara = document.createElement('p');
+            const solutionStrong = document.createElement('strong');
+            solutionStrong.textContent = 'Solution: ';
+            solutionPara.appendChild(solutionStrong);
+            solutionPara.appendChild(document.createTextNode('Ensure the PBX server is running and accessible.'));
+            solutionPara.style.marginTop = '10px';
+            
+            vendorsList.innerHTML = '';
+            vendorsList.appendChild(errorPara);
+            vendorsList.appendChild(solutionPara);
+        }
     }
 }
 
