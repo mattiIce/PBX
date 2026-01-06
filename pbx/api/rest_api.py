@@ -1638,6 +1638,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_registered_atas(self):
         """Get all registered ATA devices from database."""
+        # SECURITY: Require authentication and admin privileges
+        is_authenticated, payload = self._verify_authentication()
+        if not is_authenticated:
+            self._send_json({"error": "Authentication required"}, 401)
+            return
+
+        # Check for admin privileges using is_admin flag in JWT payload
+        is_admin = payload.get("is_admin", False) if payload else False
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
         logger = get_logger()
         if (
             self.pbx_core
@@ -1647,12 +1659,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             try:
                 # Get all registered phones
                 all_phones = self.pbx_core.registered_phones_db.list_all()
-                
+
                 # Filter to only ATAs by checking provisioning data
                 atas = []
                 if hasattr(self.pbx_core, "phone_provisioning"):
-                    provisioned_atas = {d.extension_number: d for d in self.pbx_core.phone_provisioning.get_atas()}
-                    
+                    provisioned_atas = {
+                        d.extension_number: d for d in self.pbx_core.phone_provisioning.get_atas()
+                    }
+
                     for phone in all_phones:
                         ext = phone.get("extension_number")
                         if ext and ext in provisioned_atas:
@@ -1662,7 +1676,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                             enhanced["vendor"] = provisioned_atas[ext].vendor
                             enhanced["model"] = provisioned_atas[ext].model
                             atas.append(enhanced)
-                
+
                 self._send_json(atas)
             except Exception as e:
                 logger.error(f"Error loading registered ATAs from database: {e}")
@@ -10834,7 +10848,11 @@ class PBXAPIServer:
         host = self.host
 
         is_backend_port = 8000 <= port <= 9999
-        is_internal_host = host in ("0.0.0.0", "127.0.0.1", "localhost")  # nosec B104 - checking config, not binding
+        is_internal_host = host in (
+            "0.0.0.0",
+            "127.0.0.1",
+            "localhost",
+        )  # nosec B104 - checking config, not binding
         is_common_proxy_port = port in (8080, 8443, 9000)
 
         if is_backend_port and (is_internal_host or is_common_proxy_port):

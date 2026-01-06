@@ -355,7 +355,10 @@ class TestATADeviceRegistration:
         """Test filtering ATAs from all devices"""
         # Register mixed devices
         provisioning.register_device(
-            mac_address="00:0B:82:11:11:11", extension_number="3001", vendor="grandstream", model="ht801"
+            mac_address="00:0B:82:11:11:11",
+            extension_number="3001",
+            vendor="grandstream",
+            model="ht801",
         )
         provisioning.register_device(
             mac_address="00:15:65:22:22:22", extension_number="3002", vendor="yealink", model="t46s"
@@ -366,15 +369,15 @@ class TestATADeviceRegistration:
 
         # Get all ATAs
         atas = provisioning.get_atas()
-        
+
         # Verify we got ATAs
         assert len(atas) >= 2
-        
+
         # Verify all returned devices are ATAs and check specific models
         ata_models = [ata.model for ata in atas]
-        assert 'ht801' in ata_models
-        assert 'ata191' in ata_models
-        
+        assert "ht801" in ata_models
+        assert "ata191" in ata_models
+
         # Verify all are actually ATAs
         for ata in atas:
             assert ata.is_ata() is True
@@ -383,26 +386,32 @@ class TestATADeviceRegistration:
         """Test filtering phones (excluding ATAs) from all devices"""
         # Register mixed devices
         provisioning.register_device(
-            mac_address="00:0B:82:44:44:44", extension_number="4001", vendor="grandstream", model="ht802"
+            mac_address="00:0B:82:44:44:44",
+            extension_number="4001",
+            vendor="grandstream",
+            model="ht802",
         )
         provisioning.register_device(
             mac_address="00:15:65:55:55:55", extension_number="4002", vendor="yealink", model="t28g"
         )
         provisioning.register_device(
-            mac_address="00:15:65:66:66:66", extension_number="4003", vendor="polycom", model="vvx450"
+            mac_address="00:15:65:66:66:66",
+            extension_number="4003",
+            vendor="polycom",
+            model="vvx450",
         )
 
         # Get all phones
         phones = provisioning.get_phones()
-        
+
         # Verify we got phones
         assert len(phones) >= 2
-        
+
         # Verify all returned devices are phones and check specific models
         phone_models = [phone.model for phone in phones]
-        assert 't28g' in phone_models
-        assert 'vvx450' in phone_models
-        
+        assert "t28g" in phone_models
+        assert "vvx450" in phone_models
+
         # Verify all are actually phones (not ATAs)
         for phone in phones:
             assert phone.is_ata() is False
@@ -486,6 +495,195 @@ class TestATADTMFConfiguration:
 
         # Auto detection
         assert "<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>" in config
+
+
+class TestDeviceTypeUtility:
+    """Test the shared device type detection utility"""
+
+    def test_detect_device_type_cisco_ata191(self):
+        """Test detection of Cisco ATA 191"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("cisco", "ata191")
+        assert result == "ata"
+
+    def test_detect_device_type_cisco_ata192(self):
+        """Test detection of Cisco ATA 192"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("cisco", "ata192")
+        assert result == "ata"
+
+    def test_detect_device_type_cisco_spa112(self):
+        """Test detection of Cisco SPA112"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("cisco", "spa112")
+        assert result == "ata"
+
+    def test_detect_device_type_grandstream_ht801(self):
+        """Test detection of Grandstream HT801"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("grandstream", "ht801")
+        assert result == "ata"
+
+    def test_detect_device_type_obihai_obi200(self):
+        """Test detection of Obihai OBi200"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("obihai", "obi200")
+        assert result == "ata"
+
+    def test_detect_device_type_regular_phone(self):
+        """Test detection of regular IP phone"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("yealink", "t46s")
+        assert result == "phone"
+
+    def test_detect_device_type_keyword_match(self):
+        """Test keyword-based ATA detection"""
+        from pbx.utils.device_types import detect_device_type
+
+        # Should match via 'ata' keyword
+        result = detect_device_type("unknown", "newata500")
+        assert result == "ata"
+
+    def test_detect_device_type_obi_keyword(self):
+        """Test obi keyword detection"""
+        from pbx.utils.device_types import detect_device_type
+
+        # Should match via 'obi' keyword
+        result = detect_device_type("obihai", "obi999")
+        assert result == "ata"
+
+    def test_detect_device_type_case_insensitive(self):
+        """Test that detection is case-insensitive"""
+        from pbx.utils.device_types import detect_device_type
+
+        result = detect_device_type("CISCO", "ATA191")
+        assert result == "ata"
+
+
+class TestDatabaseLayerMethods:
+    """Test database layer methods for device filtering"""
+
+    def test_list_atas_method_exists(self):
+        """Test that list_atas method exists in ProvisionedDevicesDB"""
+        from pbx.utils.database import ProvisionedDevicesDB
+
+        assert hasattr(
+            ProvisionedDevicesDB, "list_atas"
+        ), "ProvisionedDevicesDB should have list_atas method"
+
+    def test_list_phones_method_exists(self):
+        """Test that list_phones method exists in ProvisionedDevicesDB"""
+        from pbx.utils.database import ProvisionedDevicesDB
+
+        assert hasattr(
+            ProvisionedDevicesDB, "list_phones"
+        ), "ProvisionedDevicesDB should have list_phones method"
+
+    def test_list_by_type_method_exists(self):
+        """Test that list_by_type method exists in ProvisionedDevicesDB"""
+        from pbx.utils.database import ProvisionedDevicesDB
+
+        assert hasattr(
+            ProvisionedDevicesDB, "list_by_type"
+        ), "ProvisionedDevicesDB should have list_by_type method"
+
+    def test_detect_device_type_method_uses_utility(self):
+        """Test that _detect_device_type method uses shared utility"""
+        import inspect
+
+        from pbx.utils.database import ProvisionedDevicesDB
+
+        source = inspect.getsource(ProvisionedDevicesDB._detect_device_type)
+        assert (
+            "detect_device_type" in source
+        ), "_detect_device_type should call shared utility function"
+
+
+class TestAPIEndpoints:
+    """Test API endpoint structure and security"""
+
+    def test_get_provisioning_atas_endpoint_exists(self):
+        """Test that /api/provisioning/atas endpoint handler exists"""
+        from pbx.api.rest_api import PBXAPIHandler
+
+        assert hasattr(
+            PBXAPIHandler, "_handle_get_provisioning_atas"
+        ), "API should have _handle_get_provisioning_atas method"
+
+    def test_get_provisioning_phones_endpoint_exists(self):
+        """Test that /api/provisioning/phones endpoint handler exists"""
+        from pbx.api.rest_api import PBXAPIHandler
+
+        assert hasattr(
+            PBXAPIHandler, "_handle_get_provisioning_phones"
+        ), "API should have _handle_get_provisioning_phones method"
+
+    def test_get_registered_atas_endpoint_exists(self):
+        """Test that /api/registered-atas endpoint handler exists"""
+        from pbx.api.rest_api import PBXAPIHandler
+
+        assert hasattr(
+            PBXAPIHandler, "_handle_get_registered_atas"
+        ), "API should have _handle_get_registered_atas method"
+
+    def test_get_provisioning_atas_requires_auth(self):
+        """Test that /api/provisioning/atas requires authentication"""
+        import inspect
+
+        from pbx.api.rest_api import PBXAPIHandler
+
+        source = inspect.getsource(PBXAPIHandler._handle_get_provisioning_atas)
+        assert (
+            "_verify_authentication" in source
+        ), "_handle_get_provisioning_atas should verify authentication"
+        assert (
+            "401" in source or "Authentication required" in source
+        ), "Should return 401 for unauthenticated requests"
+
+    def test_get_provisioning_phones_requires_auth(self):
+        """Test that /api/provisioning/phones requires authentication"""
+        import inspect
+
+        from pbx.api.rest_api import PBXAPIHandler
+
+        source = inspect.getsource(PBXAPIHandler._handle_get_provisioning_phones)
+        assert (
+            "_verify_authentication" in source
+        ), "_handle_get_provisioning_phones should verify authentication"
+        assert (
+            "401" in source or "Authentication required" in source
+        ), "Should return 401 for unauthenticated requests"
+
+    def test_get_registered_atas_requires_auth(self):
+        """Test that /api/registered-atas requires authentication"""
+        import inspect
+
+        from pbx.api.rest_api import PBXAPIHandler
+
+        source = inspect.getsource(PBXAPIHandler._handle_get_registered_atas)
+        assert (
+            "_verify_authentication" in source
+        ), "_handle_get_registered_atas should verify authentication"
+        assert (
+            "401" in source or "Authentication required" in source
+        ), "Should return 401 for unauthenticated requests"
+
+    def test_get_registered_atas_requires_admin(self):
+        """Test that /api/registered-atas requires admin privileges"""
+        import inspect
+
+        from pbx.api.rest_api import PBXAPIHandler
+
+        source = inspect.getsource(PBXAPIHandler._handle_get_registered_atas)
+        assert (
+            "admin" in source.lower() and "403" in source
+        ), "_handle_get_registered_atas should require admin privileges"
 
 
 if __name__ == "__main__":
