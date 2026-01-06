@@ -2328,3 +2328,25 @@ window.frameworkFeatures = {
     showEnrollUserDialog,
     deleteVoiceProfile
 };
+
+// Also export key functions to global scope for compatibility with admin.js
+window.loadFrameworkOverview = loadFrameworkOverview;
+window.loadClickToDialTab = loadClickToDialTab;
+window.loadVideoConferencingTab = loadVideoConferencingTab;
+window.loadConversationalAITab = loadConversationalAITab;
+window.loadPredictiveDialingTab = loadPredictiveDialingTab;
+window.loadVoiceBiometricsTab = loadVoiceBiometricsTab;
+window.loadCallQualityPredictionTab = loadCallQualityPredictionTab;
+window.loadVideoCodecTab = loadVideoCodecTab;
+window.loadBIIntegrationTab = loadBIIntegrationTab;
+window.loadCallTaggingTab = loadCallTaggingTab;
+window.loadMobileAppsTab = loadMobileAppsTab;
+window.loadMobileNumberPortabilityTab = loadMobileNumberPortabilityTab;
+window.loadRecordingAnalyticsTab = loadRecordingAnalyticsTab;
+window.loadCallBlendingTab = loadCallBlendingTab;
+window.loadVoicemailDropTab = loadVoicemailDropTab;
+window.loadGeographicRedundancyTab = loadGeographicRedundancyTab;
+window.loadDNSSRVFailoverTab = loadDNSSRVFailoverTab;
+window.loadSessionBorderControllerTab = loadSessionBorderControllerTab;
+window.loadDataResidencyTab = loadDataResidencyTab;
+window.loadTeamMessagingTab = loadTeamMessagingTab;
