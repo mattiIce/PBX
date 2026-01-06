@@ -145,7 +145,7 @@ logging:
 
         # Verify MAC can be extracted
         mac = message.get_header("X-MAC-Address")
-        self.assertEqual(mac, "aa:bb:cc:dd:ee:f")
+        self.assertEqual(mac, "aa:bb:cc:dd:ee:ff")
 
     def test_complete_invite_with_all_headers(self):
         """Test building a complete INVITE with all SIP send line/MAC headers"""

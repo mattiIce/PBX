@@ -100,7 +100,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertIn("Signal=5", message.body)
 
     def test_sip_info_message_parsing_dtmf(self):
-        """Test parsing of SIP INFO message with application/dtm"""
+        """Test parsing of SIP INFO message with application/dtmf"""
         sip_info_message = (
             "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
             "Via: SIP/2.0/UDP 192.168.1.101:5060;branch=z9hG4bK776asdhds\r\n"
@@ -119,7 +119,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         # Verify message parsing
         self.assertEqual(message.method, "INFO")
         self.assertEqual(message.get_header("Call-ID"), "test-call-456")
-        self.assertEqual(message.get_header("Content-Type"), "application/dtm")
+        self.assertEqual(message.get_header("Content-Type"), "application/dtmf")
         self.assertIn("Signal=3", message.body)
 
     def test_handle_info_dtmf_extraction(self):

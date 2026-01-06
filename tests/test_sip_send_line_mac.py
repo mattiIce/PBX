@@ -81,7 +81,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNotNone(x_mac)
         # Should be normalized to colon format and lowercase
-        self.assertEqual(x_mac, "aa:bb:cc:dd:ee:f")
+        self.assertEqual(x_mac, "aa:bb:cc:dd:ee:ff")
 
     def test_add_mac_address_header_no_separator(self):
         """Test adding MAC address header without separators"""
