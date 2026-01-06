@@ -913,13 +913,24 @@ async function refreshAllData() {
         console.log(`Refreshing all data for current tab: ${currentTab}`);
 
         // Refresh the current tab based on what's active
-        if (!currentTab) {
-            showNotification('No active tab to refresh', 'warning');
-            return;
+        // If currentTab is not set, try to detect it from the DOM
+        let tabToRefresh = currentTab;
+        if (!tabToRefresh) {
+            // Find the active tab element in the DOM
+            const activeTabElement = document.querySelector('.tab-content.active');
+            if (activeTabElement) {
+                tabToRefresh = activeTabElement.id;
+                // Update currentTab to keep it in sync
+                currentTab = tabToRefresh;
+                console.log(`Detected active tab from DOM: ${tabToRefresh}`);
+            } else {
+                showNotification('No active tab to refresh', 'warning');
+                return;
+            }
         }
 
         // Execute all load functions for the current tab
-        switch(currentTab) {
+        switch(tabToRefresh) {
             case 'dashboard':
                 await loadDashboard();
                 await loadADStatus();
@@ -1094,8 +1105,8 @@ async function refreshAllData() {
                 }
                 break;
             default:
-                console.log(`No specific refresh handler for tab: ${currentTab}`);
-                showNotification(`No data to refresh for ${currentTab}`, 'info');
+                console.log(`No specific refresh handler for tab: ${tabToRefresh}`);
+                showNotification(`No data to refresh for ${tabToRefresh}`, 'info');
                 return;
         }
 
