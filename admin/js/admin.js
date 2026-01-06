@@ -564,18 +564,28 @@ function setupAutoRefresh(tabName) {
     };
 
     // Define which tabs should auto-refresh and their refresh functions
+    // Grouped by category for better maintainability
     const autoRefreshTabs = {
+        // System Overview
         'dashboard': loadDashboard,
         'analytics': loadAnalytics,
-        'extensions': loadExtensions,
-        'phones': loadRegisteredPhones,
-        'atas': loadRegisteredATAs,
+        
+        // Communication & Calls
         'calls': loadCalls,
         'qos': loadQoSMetrics,
         'emergency': refreshEmergencyTab,
-        'voicemail': loadVoicemailTab,
-        'hot-desking': loadHotDeskSessions,
         'callback-queue': refreshCallbackQueueTab,
+        
+        // Extensions & Devices
+        'extensions': loadExtensions,
+        'phones': loadRegisteredPhones,
+        'atas': loadRegisteredATAs,
+        'hot-desking': loadHotDeskSessions,
+        
+        // User Features
+        'voicemail': loadVoicemailTab,
+        
+        // Security
         'fraud-detection': refreshFraudDetectionTab
     };
 
