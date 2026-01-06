@@ -1644,8 +1644,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Authentication required"}, 401)
             return
 
-        # Check for admin role
-        if not payload or payload.get("role") != "admin":
+        # Check for admin privileges using is_admin flag in JWT payload
+        is_admin = payload.get("is_admin", False) if payload else False
+        if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
 
