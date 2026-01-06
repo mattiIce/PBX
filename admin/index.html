@@ -139,6 +139,10 @@
                         <span class="tab-icon">☎️</span>
                         <span class="tab-text">Registered Phones</span>
                     </button>
+                    <button class="tab-button" data-tab="atas">
+                        <span class="tab-icon">📠</span>
+                        <span class="tab-text">Registered ATAs</span>
+                    </button>
                     <button class="tab-button" data-tab="provisioning">
                         <span class="tab-icon">⚙️</span>
                         <span class="tab-text">Phone Provisioning</span>
@@ -903,6 +907,39 @@
             </div>
         </div>
 
+        <!-- Registered ATAs Tab -->
+        <div id="atas" class="tab-content">
+            <div class="section-header">
+                <h2>Registered ATAs (Analog Telephone Adapters)</h2>
+                <button class="btn btn-primary" onclick="loadRegisteredATAs()">🔄 Refresh</button>
+            </div>
+            
+            <div class="info-box">
+                <p><strong>📠 About ATAs:</strong> Analog Telephone Adapters (ATAs) allow you to connect traditional analog phones, fax machines, and other analog devices to your VoIP system.</p>
+                <p><strong>Supported ATAs:</strong> Cisco ATA 191/192, Cisco SPA112/122, Grandstream HT801/HT802</p>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Extension</th>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>Vendor/Model</th>
+                            <th>User Agent</th>
+                            <th>Last Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registered-atas-table-body">
+                        <tr>
+                            <td colspan="6" class="loading">Loading registered ATAs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Phone Provisioning Tab -->
         <div id="provisioning" class="tab-content">
             <div class="section-header">
@@ -1114,6 +1151,7 @@
                             <tr>
                                 <th>MAC Address</th>
                                 <th>Extension</th>
+                                <th>Type</th>
                                 <th>Vendor</th>
                                 <th>Model</th>
                                 <th>Created</th>
@@ -1123,7 +1161,7 @@
                         </thead>
                         <tbody id="provisioning-devices-table-body">
                             <tr>
-                                <td colspan="7" class="loading">Loading provisioned devices...</td>
+                                <td colspan="8" class="loading">Loading provisioned devices...</td>
                             </tr>
                         </tbody>
                     </table>

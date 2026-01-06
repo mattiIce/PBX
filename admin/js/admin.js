@@ -628,6 +628,9 @@ function showTab(tabName) {
         case 'phones':
             loadRegisteredPhones();
             break;
+        case 'atas':
+            loadRegisteredATAs();
+            break;
         case 'provisioning':
             loadProvisioning();
             break;
@@ -2213,6 +2216,104 @@ async function loadRegisteredPhones() {
     }
 }
 
+// Registered ATAs Functions
+async function loadRegisteredATAs() {
+    const tbody = document.getElementById('registered-atas-table-body');
+    tbody.innerHTML = '<tr><td colspan="6" class="loading">Loading registered ATAs...</td></tr>';
+
+    try {
+        const response = await fetchWithTimeout(`${API_BASE}/api/registered-atas`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            // Try to parse error response from API
+            let errorMessage = `HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMessage = errorData.error;
+                    if (errorData.details) {
+                        errorMessage += ` - ${errorData.details}`;
+                    }
+                }
+            } catch (parseError) {
+                // If parsing fails, keep the HTTP status message
+            }
+            throw new Error(errorMessage);
+        }
+
+        const atas = await response.json();
+
+        if (!atas || atas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="loading">No registered ATAs found</td></tr>';
+            return;
+        }
+
+        // Clear table body
+        tbody.innerHTML = '';
+
+        // Create rows safely using DOM methods to prevent XSS
+        atas.forEach(ata => {
+            const row = document.createElement('tr');
+
+            // Extension number
+            const extCell = document.createElement('td');
+            const extStrong = document.createElement('strong');
+            extStrong.textContent = ata.extension_number || 'Unknown';
+            extCell.appendChild(extStrong);
+            row.appendChild(extCell);
+
+            // IP Address
+            const ipCell = document.createElement('td');
+            ipCell.textContent = ata.ip_address || 'Unknown';
+            row.appendChild(ipCell);
+
+            // MAC Address
+            const macCell = document.createElement('td');
+            macCell.textContent = ata.mac_address || 'Unknown';
+            row.appendChild(macCell);
+
+            // Vendor/Model
+            const modelCell = document.createElement('td');
+            if (ata.vendor && ata.model) {
+                modelCell.textContent = `${ata.vendor} ${ata.model}`;
+            } else {
+                modelCell.textContent = 'Unknown';
+            }
+            row.appendChild(modelCell);
+
+            // User Agent
+            const uaCell = document.createElement('td');
+            uaCell.textContent = ata.user_agent || 'Unknown';
+            row.appendChild(uaCell);
+
+            // Last Registration
+            const regCell = document.createElement('td');
+            regCell.textContent = ata.last_registered ? new Date(ata.last_registered).toLocaleString() : 'Never';
+            row.appendChild(regCell);
+
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error loading registered ATAs:', error);
+
+        // Display error message in table
+        const errorCell = document.createElement('td');
+        errorCell.colSpan = 6;
+        errorCell.className = 'error-message';
+        errorCell.textContent = `Error: ${error.message}`;
+
+        const errorRow = document.createElement('tr');
+        errorRow.appendChild(errorCell);
+
+        tbody.innerHTML = '';
+        tbody.appendChild(errorRow);
+
+        showNotification(`Failed to load registered ATAs: ${error.message}`, 'error');
+    }
+}
+
 // ============================================================================
 // Phone Provisioning Functions
 // ============================================================================
@@ -2507,16 +2608,23 @@ async function loadProvisioningDevices() {
             const devices = await response.json();
 
             if (devices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No devices provisioned yet. Fill out the form above to register phones.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No devices provisioned yet. Fill out the form above to register phones or ATAs.</td></tr>';
             } else {
                 tbody.innerHTML = devices.map(device => {
                     const createdDate = device.created_at ? new Date(device.created_at).toLocaleString() : '-';
                     const provisionedDate = device.last_provisioned ? new Date(device.last_provisioned).toLocaleString() : 'Never';
+                    
+                    // Device type badge
+                    const deviceType = device.device_type || 'phone';
+                    const typeIcon = deviceType === 'ata' ? '📠' : '☎️';
+                    const typeLabel = deviceType === 'ata' ? 'ATA' : 'Phone';
+                    const typeClass = deviceType === 'ata' ? 'badge-ata' : 'badge-phone';
 
                     return `
                         <tr>
                             <td><code>${device.mac_address}</code></td>
                             <td>${device.extension_number}</td>
+                            <td><span class="badge ${typeClass}">${typeIcon} ${typeLabel}</span></td>
                             <td>${device.vendor.toUpperCase()}</td>
                             <td>${device.model.toUpperCase()}</td>
                             <td>${createdDate}</td>
@@ -2529,12 +2637,12 @@ async function loadProvisioningDevices() {
                 }).join('');
             }
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" class="error">Error loading devices</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="error">Error loading devices</td></tr>';
         }
     } catch (error) {
         console.error('Error loading provisioning devices:', error);
         document.getElementById('provisioning-devices-table-body').innerHTML =
-            '<tr><td colspan="7" class="error">Error: ' + error.message + '</td></tr>';
+            '<tr><td colspan="8" class="error">Error: ' + error.message + '</td></tr>';
     }
 }
 
