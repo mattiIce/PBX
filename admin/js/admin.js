@@ -532,6 +532,29 @@ function initializeTabs() {
     });
 }
 
+// Auto-refresh wrapper functions - defined once to avoid recreation on tab switch
+// Wrapper function for emergency tab to refresh both contacts and history
+function refreshEmergencyTab() {
+    loadEmergencyContacts();
+    loadEmergencyHistory();
+}
+
+// Wrapper function for fraud detection - handle both possible function names
+function refreshFraudDetectionTab() {
+    if (typeof loadFraudDetectionData === 'function') {
+        loadFraudDetectionData();
+    } else if (typeof loadFraudAlerts === 'function') {
+        loadFraudAlerts();
+    }
+}
+
+// Wrapper function for callback queue - only call if function exists
+function refreshCallbackQueueTab() {
+    if (typeof loadCallbackQueue === 'function') {
+        loadCallbackQueue();
+    }
+}
+
 // Setup auto-refresh for tabs that need periodic data updates
 function setupAutoRefresh(tabName) {
     // Clear any existing auto-refresh interval
@@ -540,28 +563,6 @@ function setupAutoRefresh(tabName) {
         clearInterval(autoRefreshInterval);
         autoRefreshInterval = null;
     }
-
-    // Wrapper function for emergency tab to refresh both contacts and history
-    const refreshEmergencyTab = () => {
-        loadEmergencyContacts();
-        loadEmergencyHistory();
-    };
-
-    // Wrapper function for fraud detection - handle both possible function names
-    const refreshFraudDetectionTab = () => {
-        if (typeof loadFraudDetectionData === 'function') {
-            loadFraudDetectionData();
-        } else if (typeof loadFraudAlerts === 'function') {
-            loadFraudAlerts();
-        }
-    };
-
-    // Wrapper function for callback queue - only call if function exists
-    const refreshCallbackQueueTab = () => {
-        if (typeof loadCallbackQueue === 'function') {
-            loadCallbackQueue();
-        }
-    };
 
     // Define which tabs should auto-refresh and their refresh functions
     // Grouped by category for better maintainability

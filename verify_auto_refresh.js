@@ -32,7 +32,7 @@ if (!match) {
 console.log('✓ Found autoRefreshTabs object');
 
 // Extract tab names from the autoRefreshTabs object
-const tabEntries = match[1].match(/'([^']+)':\s*\w+/g);
+const tabEntries = match[1].match(/'([^']+)':\s*[\w]+/g);
 if (!tabEntries) {
     console.error('✗ Could not parse tab entries');
     process.exit(1);
@@ -88,8 +88,10 @@ const wrapperFunctions = [
 ];
 
 for (const funcName of wrapperFunctions) {
-    const funcRegex = new RegExp(`const\\s+${funcName}\\s*=\\s*\\(\\)\\s*=>`, 's');
-    if (funcRegex.test(fileContent)) {
+    // Check for both arrow function and function declaration syntax
+    const arrowFuncRegex = new RegExp(`const\\s+${funcName}\\s*=\\s*\\(\\)\\s*=>`, 's');
+    const funcDeclRegex = new RegExp(`function\\s+${funcName}\\s*\\(\\)`, 's');
+    if (arrowFuncRegex.test(fileContent) || funcDeclRegex.test(fileContent)) {
         console.log(`  ✓ ${funcName}`);
     } else {
         console.log(`  ✗ ${funcName} - MISSING!`);
