@@ -956,33 +956,33 @@ async function refreshAllData() {
         
         // SIP & Routing
         if (typeof loadSIPTrunks === 'function') {
-            loadSIPTrunks();
+            await loadSIPTrunks();
         }
         if (typeof loadTrunkHealth === 'function') {
-            loadTrunkHealth();
+            await loadTrunkHealth();
         }
         if (typeof loadLCRRates === 'function') {
-            loadLCRRates();
+            await loadLCRRates();
         }
         if (typeof loadLCRStatistics === 'function') {
-            loadLCRStatistics();
+            await loadLCRStatistics();
         }
         if (typeof loadFMFMExtensions === 'function') {
-            loadFMFMExtensions();
+            await loadFMFMExtensions();
         }
         if (typeof loadTimeRoutingRules === 'function') {
-            loadTimeRoutingRules();
+            await loadTimeRoutingRules();
         }
         
         // Advanced Features
         if (typeof loadWebhooks === 'function') {
-            loadWebhooks();
+            await loadWebhooks();
         }
         if (typeof loadHotDeskSessions === 'function') {
-            loadHotDeskSessions();
+            await loadHotDeskSessions();
         }
         if (typeof loadRetentionPolicies === 'function') {
-            loadRetentionPolicies();
+            await loadRetentionPolicies();
         }
         
         // WebRTC & Phone
@@ -992,50 +992,50 @@ async function refreshAllData() {
         
         // License Management
         if (typeof initLicenseManagement === 'function') {
-            initLicenseManagement();
+            await initLicenseManagement();
         }
         
         // Integrations
         if (typeof loadJitsiConfig === 'function') {
-            loadJitsiConfig();
+            await loadJitsiConfig();
         }
         if (typeof loadMatrixConfig === 'function') {
-            loadMatrixConfig();
+            await loadMatrixConfig();
         }
         if (typeof loadEspoCRMConfig === 'function') {
-            loadEspoCRMConfig();
+            await loadEspoCRMConfig();
         }
         if (typeof loadClickToDialTab === 'function') {
-            loadClickToDialTab();
+            await loadClickToDialTab();
         }
         if (typeof loadCRMActivityLog === 'function') {
-            loadCRMActivityLog();
+            await loadCRMActivityLog();
         }
         if (typeof loadOpenSourceIntegrations === 'function') {
-            loadOpenSourceIntegrations();
+            await loadOpenSourceIntegrations();
         }
         
         // Security & Monitoring
         if (typeof loadFraudDetectionData === 'function') {
-            loadFraudDetectionData();
+            await loadFraudDetectionData();
         }
         if (typeof loadNomadicE911Data === 'function') {
-            loadNomadicE911Data();
+            await loadNomadicE911Data();
         }
         if (typeof loadCallbackQueue === 'function') {
-            loadCallbackQueue();
+            await loadCallbackQueue();
         }
         if (typeof loadMobilePushConfig === 'function') {
-            loadMobilePushConfig();
+            await loadMobilePushConfig();
         }
         if (typeof loadRecordingAnnouncements === 'function') {
-            loadRecordingAnnouncements();
+            await loadRecordingAnnouncements();
         }
         if (typeof loadSpeechAnalyticsConfigs === 'function') {
-            loadSpeechAnalyticsConfigs();
+            await loadSpeechAnalyticsConfigs();
         }
         if (typeof loadComplianceData === 'function') {
-            loadComplianceData();
+            await loadComplianceData();
         }
 
         showNotification('✅ All tabs refreshed successfully', 'success');
