@@ -956,33 +956,33 @@ async function refreshAllData() {
         
         // SIP & Routing
         if (typeof loadSIPTrunks === 'function') {
-            await loadSIPTrunks();
+            loadSIPTrunks();
         }
         if (typeof loadTrunkHealth === 'function') {
-            await loadTrunkHealth();
+            loadTrunkHealth();
         }
         if (typeof loadLCRRates === 'function') {
-            await loadLCRRates();
+            loadLCRRates();
         }
         if (typeof loadLCRStatistics === 'function') {
-            await loadLCRStatistics();
+            loadLCRStatistics();
         }
         if (typeof loadFMFMExtensions === 'function') {
-            await loadFMFMExtensions();
+            loadFMFMExtensions();
         }
         if (typeof loadTimeRoutingRules === 'function') {
-            await loadTimeRoutingRules();
+            loadTimeRoutingRules();
         }
         
         // Advanced Features
         if (typeof loadWebhooks === 'function') {
-            await loadWebhooks();
+            loadWebhooks();
         }
         if (typeof loadHotDeskSessions === 'function') {
-            await loadHotDeskSessions();
+            loadHotDeskSessions();
         }
         if (typeof loadRetentionPolicies === 'function') {
-            await loadRetentionPolicies();
+            loadRetentionPolicies();
         }
         
         // WebRTC & Phone
@@ -997,45 +997,45 @@ async function refreshAllData() {
         
         // Integrations
         if (typeof loadJitsiConfig === 'function') {
-            await loadJitsiConfig();
+            loadJitsiConfig();
         }
         if (typeof loadMatrixConfig === 'function') {
-            await loadMatrixConfig();
+            loadMatrixConfig();
         }
         if (typeof loadEspoCRMConfig === 'function') {
-            await loadEspoCRMConfig();
+            loadEspoCRMConfig();
         }
         if (typeof loadClickToDialTab === 'function') {
-            await loadClickToDialTab();
+            loadClickToDialTab();
         }
         if (typeof loadCRMActivityLog === 'function') {
-            await loadCRMActivityLog();
+            loadCRMActivityLog();
         }
         if (typeof loadOpenSourceIntegrations === 'function') {
-            await loadOpenSourceIntegrations();
+            loadOpenSourceIntegrations();
         }
         
         // Security & Monitoring
         if (typeof loadFraudDetectionData === 'function') {
-            await loadFraudDetectionData();
+            loadFraudDetectionData();
         }
         if (typeof loadNomadicE911Data === 'function') {
-            await loadNomadicE911Data();
+            loadNomadicE911Data();
         }
         if (typeof loadCallbackQueue === 'function') {
-            await loadCallbackQueue();
+            loadCallbackQueue();
         }
         if (typeof loadMobilePushConfig === 'function') {
-            await loadMobilePushConfig();
+            loadMobilePushConfig();
         }
         if (typeof loadRecordingAnnouncements === 'function') {
-            await loadRecordingAnnouncements();
+            loadRecordingAnnouncements();
         }
         if (typeof loadSpeechAnalyticsConfigs === 'function') {
-            await loadSpeechAnalyticsConfigs();
+            loadSpeechAnalyticsConfigs();
         }
         if (typeof loadComplianceData === 'function') {
-            await loadComplianceData();
+            loadComplianceData();
         }
 
         showNotification('✅ All tabs refreshed successfully', 'success');
