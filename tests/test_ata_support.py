@@ -274,6 +274,8 @@ class TestATADeviceRegistration:
         assert device.extension_number == "1001"
         assert device.vendor == "grandstream"
         assert device.model == "ht801"
+        assert device.device_type == "ata"  # Should be detected as ATA
+        assert device.is_ata() is True
 
     def test_register_spa112(self, provisioning):
         """Test registering a Cisco SPA112"""
@@ -286,6 +288,51 @@ class TestATADeviceRegistration:
         assert device.extension_number == "1005"
         assert device.vendor == "cisco"
         assert device.model == "spa112"
+        assert device.device_type == "ata"  # Should be detected as ATA
+        assert device.is_ata() is True
+
+    def test_register_cisco_ata191(self, provisioning):
+        """Test registering a Cisco ATA 191"""
+        device = provisioning.register_device(
+            mac_address="00-1D-7E-AA-BB-CC",
+            extension_number="1006",
+            vendor="cisco",
+            model="ata191",
+        )
+
+        assert device is not None
+        assert device.mac_address == "001d7eaabbcc"
+        assert device.extension_number == "1006"
+        assert device.vendor == "cisco"
+        assert device.model == "ata191"
+        assert device.device_type == "ata"
+        assert device.is_ata() is True
+
+    def test_register_cisco_ata192(self, provisioning):
+        """Test registering a Cisco ATA 192"""
+        device = provisioning.register_device(
+            mac_address="00-1D-7E-CC-DD-EE",
+            extension_number="1007",
+            vendor="cisco",
+            model="ata192",
+        )
+
+        assert device is not None
+        assert device.device_type == "ata"
+        assert device.is_ata() is True
+
+    def test_register_regular_phone(self, provisioning):
+        """Test registering a regular phone (not ATA)"""
+        device = provisioning.register_device(
+            mac_address="00-15-65-12-34-56",
+            extension_number="2001",
+            vendor="yealink",
+            model="t46s",
+        )
+
+        assert device is not None
+        assert device.device_type == "phone"  # Should be detected as phone
+        assert device.is_ata() is False
 
     def test_get_ata_device_by_mac(self, provisioning):
         """Test retrieving ATA device by MAC address"""
@@ -302,6 +349,49 @@ class TestATADeviceRegistration:
         assert device is not None
         assert device.extension_number == "1010"
         assert device.model == "ht802"
+        assert device.device_type == "ata"
+
+    def test_get_atas_filter(self, provisioning):
+        """Test filtering ATAs from all devices"""
+        # Register mixed devices
+        provisioning.register_device(
+            mac_address="00:0B:82:11:11:11", extension_number="3001", vendor="grandstream", model="ht801"
+        )
+        provisioning.register_device(
+            mac_address="00:15:65:22:22:22", extension_number="3002", vendor="yealink", model="t46s"
+        )
+        provisioning.register_device(
+            mac_address="00:1D:7E:33:33:33", extension_number="3003", vendor="cisco", model="ata191"
+        )
+
+        # Get all ATAs
+        atas = provisioning.get_atas()
+        assert len(atas) == 2  # Only HT801 and ATA191
+        
+        # Verify all returned devices are ATAs
+        for ata in atas:
+            assert ata.is_ata() is True
+
+    def test_get_phones_filter(self, provisioning):
+        """Test filtering phones (excluding ATAs) from all devices"""
+        # Register mixed devices
+        provisioning.register_device(
+            mac_address="00:0B:82:44:44:44", extension_number="4001", vendor="grandstream", model="ht802"
+        )
+        provisioning.register_device(
+            mac_address="00:15:65:55:55:55", extension_number="4002", vendor="yealink", model="t28g"
+        )
+        provisioning.register_device(
+            mac_address="00:15:65:66:66:66", extension_number="4003", vendor="polycom", model="vvx450"
+        )
+
+        # Get all phones
+        phones = provisioning.get_phones()
+        assert len(phones) == 2  # Only Yealink and Polycom
+        
+        # Verify all returned devices are phones
+        for phone in phones:
+            assert phone.is_ata() is False
 
 
 class TestATACodecConfiguration:
