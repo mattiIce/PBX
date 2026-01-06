@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Verification script for admin UI auto-refresh changes
- * Checks JavaScript syntax and validates the auto-refresh configuration
+ * Validates the auto-refresh configuration using pattern matching
  */
 
 const fs = require('fs');
@@ -21,18 +21,50 @@ try {
     process.exit(1);
 }
 
-// Check 1: Verify autoRefreshTabs object exists
-const autoRefreshTabsRegex = /const\s+autoRefreshTabs\s*=\s*\{([^}]+)\}/s;
-const match = fileContent.match(autoRefreshTabsRegex);
+// Check 1: Verify autoRefreshTabs object exists and extract it
+const autoRefreshDeclarationRegex = /const\s+autoRefreshTabs\s*=\s*\{/;
+const declarationMatch = fileContent.match(autoRefreshDeclarationRegex);
 
-if (!match) {
+if (!declarationMatch || typeof declarationMatch.index !== 'number') {
     console.error('✗ Could not find autoRefreshTabs object');
     process.exit(1);
 }
+
+// Find the opening brace position
+const openingBraceIndex = fileContent.indexOf('{', declarationMatch.index);
+if (openingBraceIndex === -1) {
+    console.error('✗ Could not locate opening brace for autoRefreshTabs object');
+    process.exit(1);
+}
+
+// Find the matching closing brace by counting brace depth
+let depth = 0;
+let closingBraceIndex = -1;
+
+for (let i = openingBraceIndex; i < fileContent.length; i++) {
+    const char = fileContent[i];
+    
+    if (char === '{') {
+        depth++;
+    } else if (char === '}') {
+        depth--;
+        if (depth === 0) {
+            closingBraceIndex = i;
+            break;
+        }
+    }
+}
+
+if (closingBraceIndex === -1) {
+    console.error('✗ Could not locate closing brace for autoRefreshTabs object');
+    process.exit(1);
+}
+
 console.log('✓ Found autoRefreshTabs object');
 
 // Extract tab names from the autoRefreshTabs object
-const tabEntries = match[1].match(/'([^']+)':\s*[\w]+/g);
+const autoRefreshObjectContent = fileContent.slice(openingBraceIndex + 1, closingBraceIndex);
+const tabEntries = autoRefreshObjectContent.match(/'([^']+)':\s*[\w]+/g);
 if (!tabEntries) {
     console.error('✗ Could not parse tab entries');
     process.exit(1);

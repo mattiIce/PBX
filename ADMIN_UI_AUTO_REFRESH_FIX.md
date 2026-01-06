@@ -36,22 +36,22 @@ Extended the auto-refresh functionality to include 7 additional tabs that displa
 1. **Added Wrapper Functions** for tabs requiring multiple data loads:
    ```javascript
    // Emergency tab loads both contacts and history
-   const refreshEmergencyTab = () => {
+   function refreshEmergencyTab() {
        loadEmergencyContacts();
        loadEmergencyHistory();
-   };
+   }
    ```
 
 2. **Added Defensive Checks** for optional functions:
    ```javascript
    // Fraud detection handles different function names
-   const refreshFraudDetectionTab = () => {
+   function refreshFraudDetectionTab() {
        if (typeof loadFraudDetectionData === 'function') {
            loadFraudDetectionData();
        } else if (typeof loadFraudAlerts === 'function') {
            loadFraudAlerts();
        }
-   };
+   }
    ```
 
 3. **Expanded autoRefreshTabs Object**:

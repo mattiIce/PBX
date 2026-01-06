@@ -46,7 +46,7 @@ This fix addresses the issue where the admin UI was not automatically pulling/pu
 
 4. **verify_auto_refresh.js**
    - Automated verification script
-   - Validates JavaScript syntax
+   - Verifies auto-refresh configuration
    - Checks for all expected tabs
    - Verifies wrapper functions exist
    - Confirms configuration constants
@@ -103,7 +103,7 @@ Tabs are grouped by category in the configuration:
 ✓ All 3 wrapper functions verified
 ✓ AUTO_REFRESH_INTERVAL_MS = 10000ms
 ✓ setupAutoRefresh function exists
-✓ JavaScript syntax validated
+✓ Expected JavaScript structures verified
 
 ✅ All verification checks passed!
 ```
