@@ -2330,33 +2330,10 @@ window.frameworkFeatures = {
 };
 
 // Also export key functions to global scope for compatibility with admin.js
-// Export load* functions that are used by admin.js tab switching and refresh
-const globalExports = [
-    'loadFrameworkOverview',
-    'loadClickToDialTab',
-    'loadVideoConferencingTab',
-    'loadConversationalAITab',
-    'loadPredictiveDialingTab',
-    'loadVoiceBiometricsTab',
-    'loadCallQualityPredictionTab',
-    'loadVideoCodecTab',
-    'loadBIIntegrationTab',
-    'loadCallTaggingTab',
-    'loadMobileAppsTab',
-    'loadMobileNumberPortabilityTab',
-    'loadRecordingAnalyticsTab',
-    'loadCallBlendingTab',
-    'loadVoicemailDropTab',
-    'loadGeographicRedundancyTab',
-    'loadDNSSRVFailoverTab',
-    'loadSessionBorderControllerTab',
-    'loadDataResidencyTab',
-    'loadTeamMessagingTab'
-];
-
-// Export all functions to global scope
-globalExports.forEach(funcName => {
-    if (typeof window.frameworkFeatures[funcName] === 'function') {
+// Export only the load* functions that are used by admin.js tab switching and refresh
+// Filter to only include functions starting with 'load' for security and clarity
+Object.keys(window.frameworkFeatures).forEach(funcName => {
+    if (funcName.startsWith('load') && typeof window.frameworkFeatures[funcName] === 'function') {
         window[funcName] = window.frameworkFeatures[funcName];
     }
 });
