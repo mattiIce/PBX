@@ -2342,14 +2342,22 @@ async function populateProvisioningFormDropdowns() {
                 const extensions = await response.json();
                 extensionSelect.innerHTML = '<option value="">Select Extension</option>';
                 
-                extensions.forEach(ext => {
-                    const option = document.createElement('option');
-                    option.value = ext.number;
-                    option.textContent = `${ext.number} - ${ext.name}`;
-                    extensionSelect.appendChild(option);
-                });
+                if (extensions && extensions.length > 0) {
+                    extensions.forEach(ext => {
+                        const option = document.createElement('option');
+                        option.value = ext.number;
+                        option.textContent = `${ext.number} - ${ext.name}`;
+                        extensionSelect.appendChild(option);
+                    });
+                    console.log(`Loaded ${extensions.length} extensions for dropdown`);
+                } else {
+                    extensionSelect.innerHTML = '<option value="">No extensions available</option>';
+                    console.warn('No extensions returned from API');
+                }
             } else {
-                extensionSelect.innerHTML = '<option value="">Error loading extensions</option>';
+                const errorText = response.status === 401 ? 'Authentication required' : 'Error loading extensions';
+                extensionSelect.innerHTML = `<option value="">${errorText}</option>`;
+                console.error('Failed to load extensions:', response.status);
             }
         } catch (error) {
             console.error('Error loading extensions:', error);
@@ -2359,14 +2367,20 @@ async function populateProvisioningFormDropdowns() {
 
     // Populate vendor dropdown
     const vendorSelect = document.getElementById('device-vendor');
-    if (vendorSelect && supportedVendors.length > 0) {
-        vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-        supportedVendors.forEach(vendor => {
-            const option = document.createElement('option');
-            option.value = vendor;
-            option.textContent = vendor.toUpperCase();
-            vendorSelect.appendChild(option);
-        });
+    if (vendorSelect) {
+        if (supportedVendors && supportedVendors.length > 0) {
+            vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
+            supportedVendors.forEach(vendor => {
+                const option = document.createElement('option');
+                option.value = vendor;
+                option.textContent = vendor.toUpperCase();
+                vendorSelect.appendChild(option);
+            });
+            console.log(`Populated vendor dropdown with ${supportedVendors.length} vendors:`, supportedVendors);
+        } else {
+            vendorSelect.innerHTML = '<option value="">No vendors available</option>';
+            console.warn('No supported vendors available for dropdown. supportedVendors:', supportedVendors);
+        }
     }
 
     // Reset the model dropdown to its default state
@@ -2554,6 +2568,12 @@ async function savePhonebookSettings() {
 
 async function loadSupportedVendors() {
     const vendorsList = document.getElementById('supported-vendors-list');
+    
+    // Show loading state
+    if (vendorsList) {
+        vendorsList.innerHTML = '<p>Loading supported vendors...</p>';
+    }
+    
     try {
         const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
             headers: getAuthHeaders()
@@ -2573,12 +2593,22 @@ async function loadSupportedVendors() {
                     html += '</li>';
                 }
                 html += '</ul>';
-                vendorsList.innerHTML = html;
+                if (vendorsList) {
+                    vendorsList.innerHTML = html;
+                }
+                console.log(`Loaded ${supportedVendors.length} vendors with models:`, supportedModels);
             } else {
-                vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
+                if (vendorsList) {
+                    vendorsList.innerHTML = '<p>No vendors available. Check PBX configuration.</p>';
+                }
+                console.warn('No vendors loaded from API');
             }
         } else {
             // Handle non-ok response (e.g., 401, 403, 500)
+            // Reset to empty arrays on error
+            supportedVendors = [];
+            supportedModels = {};
+            
             let errorMsg = `Error loading vendors: HTTP ${response.status}`;
             try {
                 const errorData = await response.json();
@@ -2588,12 +2618,20 @@ async function loadSupportedVendors() {
             } catch (e) {
                 // Unable to parse error response, use generic message
             }
-            vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+            if (vendorsList) {
+                vendorsList.innerHTML = `<p class="error">${errorMsg}</p>`;
+            }
             console.error('Error loading supported vendors:', errorMsg);
         }
     } catch (error) {
+        // Reset to empty arrays on error
+        supportedVendors = [];
+        supportedModels = {};
+        
         console.error('Error loading supported vendors:', error);
-        vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
+        if (vendorsList) {
+            vendorsList.innerHTML = '<p class="error">Error loading vendors: ' + escapeHtml(error.message) + '</p>';
+        }
     }
 }
 
