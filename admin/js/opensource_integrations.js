@@ -119,6 +119,16 @@ function initializeOpenSourceIntegrations() {
     updateQuickSetupStatus();
 }
 
+// Load all open source integration data (used by refreshAllData)
+async function loadOpenSourceIntegrations() {
+    return Promise.all([
+        Promise.resolve(loadJitsiConfig()),
+        Promise.resolve(loadMatrixConfig()),
+        Promise.resolve(loadEspoCRMConfig()),
+        updateQuickSetupStatus()
+    ]);
+}
+
 // =============================================================================
 // Quick Setup Functions
 // =============================================================================
