@@ -2589,23 +2589,38 @@ async function loadSupportedVendors() {
             supportedVendors = data.vendors || [];
             supportedModels = data.models || {};
 
-            // Display supported vendors
+            // Display supported vendors using safe DOM manipulation
             if (supportedVendors.length > 0) {
-                let html = '<ul>';
-                for (const vendor of supportedVendors) {
-                    html += `<li><strong>${escapeHtml(vendor.toUpperCase())}</strong>: `;
-                    const models = supportedModels[vendor] || [];
-                    html += models.map(m => escapeHtml(m.toUpperCase())).join(', ');
-                    html += '</li>';
-                }
-                html += '</ul>';
                 if (vendorsList) {
-                    vendorsList.innerHTML = html;
+                    // Clear existing content
+                    vendorsList.innerHTML = '';
+                    
+                    // Create list element
+                    const ul = document.createElement('ul');
+                    
+                    for (const vendor of supportedVendors) {
+                        const li = document.createElement('li');
+                        const strong = document.createElement('strong');
+                        strong.textContent = vendor.toUpperCase() + ': ';
+                        li.appendChild(strong);
+                        
+                        const models = supportedModels[vendor] || [];
+                        const modelsText = document.createTextNode(models.map(m => m.toUpperCase()).join(', '));
+                        li.appendChild(modelsText);
+                        
+                        ul.appendChild(li);
+                    }
+                    
+                    vendorsList.appendChild(ul);
                 }
                 console.log(`Loaded ${supportedVendors.length} vendors with models:`, supportedModels);
             } else {
                 if (vendorsList) {
-                    vendorsList.innerHTML = '<p class="error">No phone vendors available. This may indicate phone provisioning is not properly configured.</p>';
+                    vendorsList.innerHTML = '';
+                    const errorPara = document.createElement('p');
+                    errorPara.className = 'error';
+                    errorPara.textContent = 'No phone vendors available. This may indicate phone provisioning is not properly configured.';
+                    vendorsList.appendChild(errorPara);
                 }
                 console.warn('No vendors loaded from API');
             }
