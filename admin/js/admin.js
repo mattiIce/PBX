@@ -992,7 +992,7 @@ async function refreshAllData() {
         
         // License Management
         if (typeof initLicenseManagement === 'function') {
-            await initLicenseManagement();
+            initLicenseManagement();
         }
         
         // Integrations
