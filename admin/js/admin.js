@@ -2332,7 +2332,11 @@ async function populateProvisioningFormDropdowns() {
     // Populate extension dropdown
     const extensionSelect = document.getElementById('device-extension');
     if (extensionSelect) {
-        extensionSelect.innerHTML = '<option value="">Loading extensions...</option>';
+        extensionSelect.innerHTML = '';
+        const loadingOption = document.createElement('option');
+        loadingOption.value = '';
+        loadingOption.textContent = 'Loading extensions...';
+        extensionSelect.appendChild(loadingOption);
         
         try {
             const response = await fetch(`${API_BASE}/api/extensions`, {
@@ -2340,7 +2344,11 @@ async function populateProvisioningFormDropdowns() {
             });
             if (response.ok) {
                 const extensions = await response.json();
-                extensionSelect.innerHTML = '<option value="">Select Extension</option>';
+                extensionSelect.innerHTML = '';
+                const selectOption = document.createElement('option');
+                selectOption.value = '';
+                selectOption.textContent = 'Select Extension';
+                extensionSelect.appendChild(selectOption);
                 
                 if (extensions && extensions.length > 0) {
                     extensions.forEach(ext => {
@@ -2381,7 +2389,11 @@ async function populateProvisioningFormDropdowns() {
     const vendorSelect = document.getElementById('device-vendor');
     if (vendorSelect) {
         if (supportedVendors && supportedVendors.length > 0) {
-            vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
+            vendorSelect.innerHTML = '';
+            const selectOption = document.createElement('option');
+            selectOption.value = '';
+            selectOption.textContent = 'Select Vendor';
+            vendorSelect.appendChild(selectOption);
             supportedVendors.forEach(vendor => {
                 const option = document.createElement('option');
                 option.value = vendor;
@@ -2402,7 +2414,11 @@ async function populateProvisioningFormDropdowns() {
     // Reset the model dropdown to its default state
     const modelSelect = document.getElementById('device-model');
     if (modelSelect) {
-        modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
+        modelSelect.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select Vendor First';
+        modelSelect.appendChild(defaultOption);
     }
 }
 
