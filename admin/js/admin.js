@@ -968,7 +968,7 @@ async function refreshAllData() {
                 break;
             case 'webrtc-phone':
                 if (typeof loadWebRTCPhoneConfig === 'function') {
-                    loadWebRTCPhoneConfig();
+                    await loadWebRTCPhoneConfig();
                 }
                 break;
             case 'license-management':
