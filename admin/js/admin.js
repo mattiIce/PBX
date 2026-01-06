@@ -905,6 +905,13 @@ async function refreshAllData() {
     const originalText = refreshBtn.textContent;
     const originalDisabled = refreshBtn.disabled;
 
+    // Helper function to add optional functions to the promise array
+    const addIfExists = (funcName, promises) => {
+        if (typeof funcName === 'function') {
+            promises.push(Promise.resolve(funcName()));
+        }
+    };
+
     try {
         // Update button to show loading state
         refreshBtn.textContent = '⏳ Refreshing All Tabs...';
@@ -950,97 +957,48 @@ async function refreshAllData() {
         ];
 
         // Add conditional async functions that may or may not exist
-        if (typeof loadAutoAttendantConfig === 'function') {
-            refreshPromises.push(Promise.resolve(loadAutoAttendantConfig()));
-        }
-        if (typeof loadPagingData === 'function') {
-            refreshPromises.push(Promise.resolve(loadPagingData()));
-        }
-        if (typeof loadWebRTCPhoneConfig === 'function') {
-            refreshPromises.push(Promise.resolve(loadWebRTCPhoneConfig()));
-        }
+        addIfExists(loadAutoAttendantConfig, refreshPromises);
+        addIfExists(loadPagingData, refreshPromises);
+        addIfExists(loadWebRTCPhoneConfig, refreshPromises);
         
-        // SIP & Routing - wrapped in Promise.resolve to ensure they're awaited
-        if (typeof loadSIPTrunks === 'function') {
-            refreshPromises.push(Promise.resolve(loadSIPTrunks()));
-        }
-        if (typeof loadTrunkHealth === 'function') {
-            refreshPromises.push(Promise.resolve(loadTrunkHealth()));
-        }
-        if (typeof loadLCRRates === 'function') {
-            refreshPromises.push(Promise.resolve(loadLCRRates()));
-        }
-        if (typeof loadLCRStatistics === 'function') {
-            refreshPromises.push(Promise.resolve(loadLCRStatistics()));
-        }
-        if (typeof loadFMFMExtensions === 'function') {
-            refreshPromises.push(Promise.resolve(loadFMFMExtensions()));
-        }
-        if (typeof loadTimeRoutingRules === 'function') {
-            refreshPromises.push(Promise.resolve(loadTimeRoutingRules()));
-        }
+        // SIP & Routing
+        addIfExists(loadSIPTrunks, refreshPromises);
+        addIfExists(loadTrunkHealth, refreshPromises);
+        addIfExists(loadLCRRates, refreshPromises);
+        addIfExists(loadLCRStatistics, refreshPromises);
+        addIfExists(loadFMFMExtensions, refreshPromises);
+        addIfExists(loadTimeRoutingRules, refreshPromises);
         
         // Advanced Features
-        if (typeof loadWebhooks === 'function') {
-            refreshPromises.push(Promise.resolve(loadWebhooks()));
-        }
-        if (typeof loadHotDeskSessions === 'function') {
-            refreshPromises.push(Promise.resolve(loadHotDeskSessions()));
-        }
-        if (typeof loadRetentionPolicies === 'function') {
-            refreshPromises.push(Promise.resolve(loadRetentionPolicies()));
-        }
+        addIfExists(loadWebhooks, refreshPromises);
+        addIfExists(loadHotDeskSessions, refreshPromises);
+        addIfExists(loadRetentionPolicies, refreshPromises);
         
         // Integrations
-        if (typeof loadJitsiConfig === 'function') {
-            refreshPromises.push(Promise.resolve(loadJitsiConfig()));
-        }
-        if (typeof loadMatrixConfig === 'function') {
-            refreshPromises.push(Promise.resolve(loadMatrixConfig()));
-        }
-        if (typeof loadEspoCRMConfig === 'function') {
-            refreshPromises.push(Promise.resolve(loadEspoCRMConfig()));
-        }
-        if (typeof loadClickToDialTab === 'function') {
-            refreshPromises.push(Promise.resolve(loadClickToDialTab()));
-        }
-        if (typeof loadCRMActivityLog === 'function') {
-            refreshPromises.push(Promise.resolve(loadCRMActivityLog()));
-        }
-        if (typeof loadOpenSourceIntegrations === 'function') {
-            refreshPromises.push(Promise.resolve(loadOpenSourceIntegrations()));
-        }
+        addIfExists(loadJitsiConfig, refreshPromises);
+        addIfExists(loadMatrixConfig, refreshPromises);
+        addIfExists(loadEspoCRMConfig, refreshPromises);
+        addIfExists(loadClickToDialTab, refreshPromises);
+        addIfExists(loadCRMActivityLog, refreshPromises);
+        addIfExists(loadOpenSourceIntegrations, refreshPromises);
         
         // Security & Monitoring
-        if (typeof loadFraudDetectionData === 'function') {
-            refreshPromises.push(Promise.resolve(loadFraudDetectionData()));
-        }
-        if (typeof loadNomadicE911Data === 'function') {
-            refreshPromises.push(Promise.resolve(loadNomadicE911Data()));
-        }
-        if (typeof loadCallbackQueue === 'function') {
-            refreshPromises.push(Promise.resolve(loadCallbackQueue()));
-        }
-        if (typeof loadMobilePushConfig === 'function') {
-            refreshPromises.push(Promise.resolve(loadMobilePushConfig()));
-        }
-        if (typeof loadRecordingAnnouncements === 'function') {
-            refreshPromises.push(Promise.resolve(loadRecordingAnnouncements()));
-        }
-        if (typeof loadSpeechAnalyticsConfigs === 'function') {
-            refreshPromises.push(Promise.resolve(loadSpeechAnalyticsConfigs()));
-        }
-        if (typeof loadComplianceData === 'function') {
-            refreshPromises.push(Promise.resolve(loadComplianceData()));
-        }
-        
-        // License Management - synchronous function, run separately
-        if (typeof initLicenseManagement === 'function') {
-            initLicenseManagement();
-        }
+        addIfExists(loadFraudDetectionData, refreshPromises);
+        addIfExists(loadNomadicE911Data, refreshPromises);
+        addIfExists(loadCallbackQueue, refreshPromises);
+        addIfExists(loadMobilePushConfig, refreshPromises);
+        addIfExists(loadRecordingAnnouncements, refreshPromises);
+        addIfExists(loadSpeechAnalyticsConfigs, refreshPromises);
+        addIfExists(loadComplianceData, refreshPromises);
 
         // Wait for all refresh operations to complete (success or failure)
         const results = await Promise.allSettled(refreshPromises);
+        
+        // License Management - synchronous initialization function
+        // Run after async operations to ensure license data is available for display
+        if (typeof initLicenseManagement === 'function') {
+            initLicenseManagement();
+        }
         
         // Check for any failures
         const failures = results.filter(r => r.status === 'rejected');
