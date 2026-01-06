@@ -322,8 +322,11 @@ function loadClickToDialTab() {
                 displayClickToDialConfigs(data.configs || []);
             })
             .catch(err => {
-                document.getElementById('click-to-dial-configs-list').innerHTML =
-                    `<div class="error-box">Error loading configurations: ${err.message}</div>`;
+                const errorContainer = document.getElementById('click-to-dial-configs-list');
+                if (errorContainer) {
+                    errorContainer.innerHTML =
+                        `<div class="error-box">Error loading configurations: ${err.message}</div>`;
+                }
             });
     }, 100);
 
@@ -332,6 +335,12 @@ function loadClickToDialTab() {
 
 function displayClickToDialConfigs(configs) {
     const container = document.getElementById('click-to-dial-configs-list');
+    
+    // Exit early if container doesn't exist
+    if (!container) {
+        console.warn('Click-to-dial configs container not found');
+        return;
+    }
 
     if (configs.length === 0) {
         container.innerHTML = '<p>No configurations found. Configurations are created automatically when extensions use click-to-dial.</p>';
