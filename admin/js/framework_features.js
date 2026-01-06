@@ -2330,23 +2330,33 @@ window.frameworkFeatures = {
 };
 
 // Also export key functions to global scope for compatibility with admin.js
-window.loadFrameworkOverview = loadFrameworkOverview;
-window.loadClickToDialTab = loadClickToDialTab;
-window.loadVideoConferencingTab = loadVideoConferencingTab;
-window.loadConversationalAITab = loadConversationalAITab;
-window.loadPredictiveDialingTab = loadPredictiveDialingTab;
-window.loadVoiceBiometricsTab = loadVoiceBiometricsTab;
-window.loadCallQualityPredictionTab = loadCallQualityPredictionTab;
-window.loadVideoCodecTab = loadVideoCodecTab;
-window.loadBIIntegrationTab = loadBIIntegrationTab;
-window.loadCallTaggingTab = loadCallTaggingTab;
-window.loadMobileAppsTab = loadMobileAppsTab;
-window.loadMobileNumberPortabilityTab = loadMobileNumberPortabilityTab;
-window.loadRecordingAnalyticsTab = loadRecordingAnalyticsTab;
-window.loadCallBlendingTab = loadCallBlendingTab;
-window.loadVoicemailDropTab = loadVoicemailDropTab;
-window.loadGeographicRedundancyTab = loadGeographicRedundancyTab;
-window.loadDNSSRVFailoverTab = loadDNSSRVFailoverTab;
-window.loadSessionBorderControllerTab = loadSessionBorderControllerTab;
-window.loadDataResidencyTab = loadDataResidencyTab;
-window.loadTeamMessagingTab = loadTeamMessagingTab;
+// Export load* functions that are used by admin.js tab switching and refresh
+const globalExports = [
+    'loadFrameworkOverview',
+    'loadClickToDialTab',
+    'loadVideoConferencingTab',
+    'loadConversationalAITab',
+    'loadPredictiveDialingTab',
+    'loadVoiceBiometricsTab',
+    'loadCallQualityPredictionTab',
+    'loadVideoCodecTab',
+    'loadBIIntegrationTab',
+    'loadCallTaggingTab',
+    'loadMobileAppsTab',
+    'loadMobileNumberPortabilityTab',
+    'loadRecordingAnalyticsTab',
+    'loadCallBlendingTab',
+    'loadVoicemailDropTab',
+    'loadGeographicRedundancyTab',
+    'loadDNSSRVFailoverTab',
+    'loadSessionBorderControllerTab',
+    'loadDataResidencyTab',
+    'loadTeamMessagingTab'
+];
+
+// Export all functions to global scope
+globalExports.forEach(funcName => {
+    if (typeof window.frameworkFeatures[funcName] === 'function') {
+        window[funcName] = window.frameworkFeatures[funcName];
+    }
+});
