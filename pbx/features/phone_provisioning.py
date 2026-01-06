@@ -169,8 +169,8 @@ class ProvisioningDevice:
             if model_lower in ata_models[vendor_lower]:
                 return 'ata'
         
-        # Check for common ATA keywords in model name
-        ata_keywords = ['ata', 'ht8', 'ht801', 'ht802', 'spa112', 'spa122', 'obi']
+        # Check for common ATA keywords in model name (for unknown/new models)
+        ata_keywords = ['ata', 'ht8', 'obi']
         for keyword in ata_keywords:
             if keyword in model_lower:
                 return 'ata'

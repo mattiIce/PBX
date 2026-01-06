@@ -2608,7 +2608,7 @@ async function loadProvisioningDevices() {
             const devices = await response.json();
 
             if (devices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No devices provisioned yet. Fill out the form above to register phones.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No devices provisioned yet. Fill out the form above to register phones or ATAs.</td></tr>';
             } else {
                 tbody.innerHTML = devices.map(device => {
                     const createdDate = device.created_at ? new Date(device.created_at).toLocaleString() : '-';

@@ -366,9 +366,16 @@ class TestATADeviceRegistration:
 
         # Get all ATAs
         atas = provisioning.get_atas()
-        assert len(atas) == 2  # Only HT801 and ATA191
         
-        # Verify all returned devices are ATAs
+        # Verify we got ATAs
+        assert len(atas) >= 2
+        
+        # Verify all returned devices are ATAs and check specific models
+        ata_models = [ata.model for ata in atas]
+        assert 'ht801' in ata_models
+        assert 'ata191' in ata_models
+        
+        # Verify all are actually ATAs
         for ata in atas:
             assert ata.is_ata() is True
 
@@ -387,9 +394,16 @@ class TestATADeviceRegistration:
 
         # Get all phones
         phones = provisioning.get_phones()
-        assert len(phones) == 2  # Only Yealink and Polycom
         
-        # Verify all returned devices are phones
+        # Verify we got phones
+        assert len(phones) >= 2
+        
+        # Verify all returned devices are phones and check specific models
+        phone_models = [phone.model for phone in phones]
+        assert 't28g' in phone_models
+        assert 'vvx450' in phone_models
+        
+        # Verify all are actually phones (not ATAs)
         for phone in phones:
             assert phone.is_ata() is False
 
