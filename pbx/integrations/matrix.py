@@ -7,7 +7,7 @@ import os
 import re
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -275,7 +275,7 @@ class MatrixIntegration:
             return None
 
         try:
-            data = {"name": name, "preset": "private_chat", "visibility": "private"}
+            data: Dict[str, Any] = {"name": name, "preset": "private_chat", "visibility": "private"}
 
             if topic:
                 data["topic"] = topic

@@ -3172,7 +3172,7 @@ class PBXCore:
                 # DTMF debouncing: track last detected digit and time to
                 # prevent duplicates
                 last_detected_digit = None
-                last_detection_time = 0
+                last_detection_time = 0.0
                 DTMF_DEBOUNCE_SECONDS = 0.5  # Ignore same digit within 500ms
 
                 # Constants for DTMF detection

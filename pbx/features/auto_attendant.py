@@ -835,15 +835,27 @@ class AutoAttendant:
         # Update input time
         session["last_input_time"] = time.time()
 
-        # Special digits for navigation
-        if digit == "*" or digit == "9":
-            # Go back to previous menu
-            return self._handle_go_back(session)
-        elif digit == "#":
-            # Repeat current menu
-            return self._handle_repeat_menu(session)
-
+        # Special digits for navigation (only if not configured as menu options)
         if current_state == AAState.MAIN_MENU or current_state == AAState.SUBMENU:
+            # Check if digit is a configured menu option first
+            current_menu_id = session.get("current_menu_id", "main")
+            menu_items = self.get_menu_items(current_menu_id)
+            is_menu_option = any(item["digit"] == digit for item in menu_items)
+
+            # Also check legacy menu_options
+            if not is_menu_option and digit in self.menu_options:
+                is_menu_option = True
+
+            # If not a menu option, check for special navigation keys
+            if not is_menu_option:
+                if digit == "*" or digit == "9":
+                    # Go back to previous menu
+                    return self._handle_go_back(session)
+                elif digit == "#":
+                    # Repeat current menu
+                    return self._handle_repeat_menu(session)
+
+            # Handle menu input
             return self._handle_menu_input(session, digit)
 
         elif current_state == AAState.INVALID:
@@ -992,20 +1004,14 @@ class AutoAttendant:
             session: Current session
 
         Returns:
-            dict: Action to play previous menu
+            dict: Action to play previous menu or invalid if already at main menu
         """
         menu_stack = session.get("menu_stack", [])
 
         if not menu_stack:
-            # Already at main menu, can't go back
-            self.logger.debug("Already at main menu, cannot go back")
-            current_menu_id = session.get("current_menu_id", "main")
-            menu_type = "main_menu" if current_menu_id == "main" else current_menu_id
-            return {
-                "action": "play",
-                "file": self._get_audio_file(menu_type),
-                "session": session,
-            }
+            # Already at main menu, can't go back - treat as invalid input
+            self.logger.debug("Already at main menu, cannot go back - treating as invalid")
+            return self._handle_invalid_input(session)
 
         # Pop previous menu from stack
         previous_menu_id = menu_stack.pop()

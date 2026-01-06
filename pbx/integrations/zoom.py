@@ -37,8 +37,8 @@ class ZoomIntegration:
         self.client_secret = config.get("integrations.zoom.client_secret")
         self.phone_enabled = config.get("integrations.zoom.phone_enabled", False)
         self.api_base_url = config.get("integrations.zoom.api_base_url", "https://api.zoom.us/v2")
-        self.access_token = None
-        self.token_expiry = None
+        self.access_token: Optional[str] = None
+        self.token_expiry: Optional[datetime] = None
 
         if self.enabled:
             if not REQUESTS_AVAILABLE:

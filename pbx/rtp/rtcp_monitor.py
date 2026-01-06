@@ -92,8 +92,8 @@ class RTCPMonitor:
         )
 
         # Internal tracking
-        self.transit_time = None
-        self.last_arrival_time = None
+        self.transit_time: Optional[float] = None
+        self.last_arrival_time: Optional[float] = None
 
         self.logger.info(f"RTCP monitor initialized for call {call_id}")
 
@@ -252,7 +252,7 @@ class RTCPMonitor:
         # Packet loss impairment (Ie-eff)
         # Simplified calculation
         loss_percent = self.stats.packet_loss_percent
-        ie_eff = 0
+        ie_eff = 0.0
 
         if loss_percent > 0:
             # G.711 has Ie value of 0, but packet loss affects it

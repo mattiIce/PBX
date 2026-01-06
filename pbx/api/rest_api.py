@@ -2027,8 +2027,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # Normalize the identifier to detect if it's a MAC or IP
         import re
 
-        from pbx.features.phone_provisioning import normalize_mac_address
-
         # Check if it looks like a MAC address using regex
         # Matches formats: XX:XX:XX:XX:XX:XX, XX-XX-XX-XX-XX-XX, XXXXXXXXXXXX
         mac_pattern = re.compile(r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$")
@@ -2189,7 +2187,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_register_device(self):
         """Register a device for provisioning."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -2672,8 +2670,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
         except Exception as e:
             self.logger.error(f"Login error: {e}")
-            import traceback
-
             self.logger.error(traceback.format_exc())
             self._send_json({"error": "Authentication failed"}, 500)
 
@@ -2686,7 +2682,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_config(self):
         """Get current configuration."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -2712,7 +2708,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_add_extension(self):
         """Add a new extension."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -2805,7 +2801,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_update_extension(self, number):
         """Update an existing extension."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -2883,7 +2879,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_delete_extension(self, number):
         """Delete an extension."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -3129,7 +3125,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_dtmf_config(self):
         """Get DTMF configuration."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -3150,7 +3146,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_update_dtmf_config(self):
         """Update DTMF configuration."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
@@ -6491,7 +6487,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_add_emergency_contact(self):
         """Add emergency contact."""
         # SECURITY: Require admin authentication
-        is_admin, payload = self._require_admin()
+        is_admin, _ = self._require_admin()
         if not is_admin:
             self._send_json({"error": "Admin privileges required"}, 403)
             return
