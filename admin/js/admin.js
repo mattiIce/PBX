@@ -564,6 +564,63 @@ function refreshCallbackQueueTab() {
     }
 }
 
+// ============================================================================
+// Stub/Wrapper Functions for Optional Features
+// These functions provide compatibility for features that may not be fully
+// implemented yet or are optional based on configuration
+// ============================================================================
+
+/**
+ * Load fraud detection data - delegates to loadFraudAlerts if available
+ */
+function loadFraudDetectionData() {
+    if (typeof loadFraudAlerts === 'function') {
+        loadFraudAlerts();
+    } else {
+        console.debug('loadFraudAlerts function not available');
+    }
+}
+
+/**
+ * Load nomadic E911 data - delegates to E911 loading functions if available
+ */
+function loadNomadicE911Data() {
+    if (typeof loadE911Sites === 'function') {
+        loadE911Sites();
+    } else {
+        console.debug('loadE911Sites function not available');
+    }
+}
+
+/**
+ * Load mobile push configuration - delegates to loadMobilePushDevices if available
+ */
+function loadMobilePushConfig() {
+    if (typeof loadMobilePushDevices === 'function') {
+        loadMobilePushDevices();
+    } else {
+        console.debug('loadMobilePushDevices function not available');
+    }
+}
+
+/**
+ * Load recording announcements - delegates to loadRecordingAnnouncementsStats if available
+ */
+function loadRecordingAnnouncements() {
+    if (typeof loadRecordingAnnouncementsStats === 'function') {
+        loadRecordingAnnouncementsStats();
+    } else {
+        console.debug('loadRecordingAnnouncementsStats function not available');
+    }
+}
+
+/**
+ * Load compliance data - placeholder for future implementation
+ */
+function loadComplianceData() {
+    console.debug('Compliance data loading not yet implemented');
+}
+
 // Setup auto-refresh for tabs that need periodic data updates
 function setupAutoRefresh(tabName) {
     // Clear any existing auto-refresh interval
