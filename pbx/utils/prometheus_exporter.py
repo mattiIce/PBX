@@ -6,8 +6,6 @@ Provides comprehensive metrics for monitoring call quality, system health,
 and performance in production environments.
 """
 
-from typing import Any
-
 try:
     from prometheus_client import (
         Counter,
