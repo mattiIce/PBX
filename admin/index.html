@@ -670,22 +670,22 @@
                 <h3>⚙️ Alert Threshold Configuration</h3>
                 <form id="qos-thresholds-form" onsubmit="saveQoSThresholds(event)">
                     <div class="form-group">
-                        <label>Minimum MOS Score (alert below):</label>
+                        <label for="qos-threshold-mos">Minimum MOS Score (alert below):</label>
                         <input type="number" id="qos-threshold-mos" step="0.1" min="1.0" max="5.0" value="3.5">
                         <small>Alert when MOS score drops below this value (1.0 - 5.0)</small>
                     </div>
                     <div class="form-group">
-                        <label>Maximum Packet Loss % (alert above):</label>
+                        <label for="qos-threshold-loss">Maximum Packet Loss % (alert above):</label>
                         <input type="number" id="qos-threshold-loss" step="0.1" min="0" max="100" value="2.0">
                         <small>Alert when packet loss exceeds this percentage</small>
                     </div>
                     <div class="form-group">
-                        <label>Maximum Jitter ms (alert above):</label>
+                        <label for="qos-threshold-jitter">Maximum Jitter ms (alert above):</label>
                         <input type="number" id="qos-threshold-jitter" step="1" min="0" max="500" value="50">
                         <small>Alert when jitter exceeds this value in milliseconds</small>
                     </div>
                     <div class="form-group">
-                        <label>Maximum Latency ms (alert above):</label>
+                        <label for="qos-threshold-latency">Maximum Latency ms (alert above):</label>
                         <input type="number" id="qos-threshold-latency" step="1" min="0" max="1000" value="300">
                         <small>Alert when latency exceeds this value in milliseconds</small>
                     </div>
@@ -960,21 +960,21 @@
                 </div>
                 <div id="provisioning-settings" style="display: none;">
                     <div class="form-group">
-                        <label>Server IP Address:</label>
+                        <label for="provisioning-server-ip">Server IP Address:</label>
                         <input type="text" id="provisioning-server-ip" placeholder="192.168.1.14">
                         <small>IP address that phones will use to download configuration</small>
                     </div>
                     <div class="form-group">
-                        <label>API Port:</label>
+                        <label for="provisioning-port">API Port:</label>
                         <input type="number" id="provisioning-port" value="8080">
                     </div>
                     <div class="form-group">
-                        <label>Provisioning URL Format:</label>
+                        <label for="provisioning-url-format">Provisioning URL Format:</label>
                         <input type="text" id="provisioning-url-format" readonly>
                         <small>Phones will download from: SERVER:PORT/provision/{mac}.cfg (protocol auto-detected)</small>
                     </div>
                     <div class="form-group">
-                        <label>Custom Templates Directory (optional):</label>
+                        <label for="provisioning-custom-dir">Custom Templates Directory (optional):</label>
                         <input type="text" id="provisioning-custom-dir" placeholder="custom_templates">
                     </div>
                     <button class="btn btn-success" onclick="saveProvisioningSettings()">💾 Save Settings</button>
@@ -1003,27 +1003,27 @@
 
                 <div id="ldap-phonebook-settings" style="display: none; margin-left: 20px; border-left: 3px solid #007bff; padding-left: 15px;">
                     <div class="form-group">
-                        <label>LDAP Server:</label>
+                        <label for="ldap-phonebook-server">LDAP Server:</label>
                         <input type="text" id="ldap-phonebook-server" placeholder="ldaps://192.168.1.22">
                         <small>Use ldaps:// for secure connection (recommended)</small>
                     </div>
                     <div class="form-group">
-                        <label>LDAP Port:</label>
+                        <label for="ldap-phonebook-port">LDAP Port:</label>
                         <input type="number" id="ldap-phonebook-port" placeholder="636">
                         <small>636 for LDAPS (SSL), 389 for plain LDAP</small>
                     </div>
                     <div class="form-group">
-                        <label>Base DN:</label>
+                        <label for="ldap-phonebook-base">Base DN:</label>
                         <input type="text" id="ldap-phonebook-base" placeholder="DC=company,DC=com">
                         <small>Base distinguished name for directory searches</small>
                     </div>
                     <div class="form-group">
-                        <label>Bind User (DN):</label>
+                        <label for="ldap-phonebook-user">Bind User (DN):</label>
                         <input type="text" id="ldap-phonebook-user" placeholder="CN=phonebook,CN=Users,DC=company,DC=com">
                         <small>User account for phone authentication (use read-only account)</small>
                     </div>
                     <div class="form-group">
-                        <label>Bind Password:</label>
+                        <label for="ldap-phonebook-password">Bind Password:</label>
                         <input type="password" id="ldap-phonebook-password" placeholder="Enter password">
                         <small>⚠️ Store securely in .env file as LDAP_PHONEBOOK_PASSWORD</small>
                     </div>
@@ -1034,7 +1034,7 @@
                         </label>
                     </div>
                     <div class="form-group">
-                        <label>Display Name:</label>
+                        <label for="ldap-phonebook-display-name">Display Name:</label>
                         <input type="text" id="ldap-phonebook-display-name" placeholder="Company Directory">
                         <small>Name shown on phone display</small>
                     </div>
@@ -1051,12 +1051,12 @@
 
                 <div id="remote-phonebook-settings" style="display: none; margin-left: 20px; border-left: 3px solid #28a745; padding-left: 15px;">
                     <div class="form-group">
-                        <label>Phone Book URL:</label>
+                        <label for="remote-phonebook-url">Phone Book URL:</label>
                         <input type="text" id="remote-phonebook-url" readonly>
                         <small>Automatically configured based on server settings</small>
                     </div>
                     <div class="form-group">
-                        <label>Refresh Interval (minutes):</label>
+                        <label for="remote-phonebook-refresh">Refresh Interval (minutes):</label>
                         <input type="number" id="remote-phonebook-refresh" placeholder="60" min="1" max="1440">
                         <small>How often phones should refresh the directory (1-1440 minutes)</small>
                     </div>
@@ -1112,25 +1112,25 @@
                 <form id="add-device-form" class="provisioning-form-container">
                     <div class="provisioning-form-grid">
                         <div class="form-group">
-                            <label>MAC Address:</label>
+                            <label for="device-mac">MAC Address:</label>
                             <input type="text" id="device-mac" required placeholder="00:15:65:12:34:56" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
                             <small>Format: 00:15:65:12:34:56 (found on phone label or network settings)</small>
                         </div>
                         <div class="form-group">
-                            <label>Extension Number:</label>
+                            <label for="device-extension">Extension Number:</label>
                             <select id="device-extension" required>
                                 <option value="">Select Extension</option>
                             </select>
                             <small>Extension this phone will be assigned to</small>
                         </div>
                         <div class="form-group">
-                            <label>Phone Vendor:</label>
+                            <label for="device-vendor">Phone Vendor:</label>
                             <select id="device-vendor" required onchange="updateModelOptions()">
                                 <option value="">Select Vendor</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Phone Model:</label>
+                            <label for="device-model">Phone Model:</label>
                             <select id="device-model" required>
                                 <option value="">Select Vendor First</option>
                             </select>
@@ -1202,17 +1202,17 @@
                         </label>
                     </div>
                     <div class="form-group">
-                        <label>Extension Number:</label>
+                        <label for="aa-extension">Extension Number:</label>
                         <input type="text" id="aa-extension" placeholder="0" pattern="[0-9]+" maxlength="4">
                         <small>Extension number for auto attendant (e.g., 0 for main line)</small>
                     </div>
                     <div class="form-group">
-                        <label>Timeout (seconds):</label>
+                        <label for="aa-timeout">Timeout (seconds):</label>
                         <input type="number" id="aa-timeout" min="5" max="60" value="10">
                         <small>How long to wait for DTMF input before repeating menu</small>
                     </div>
                     <div class="form-group">
-                        <label>Max Retries:</label>
+                        <label for="aa-max-retries">Max Retries:</label>
                         <input type="number" id="aa-max-retries" min="1" max="10" value="3">
                         <small>Maximum number of invalid attempts before transferring to operator</small>
                     </div>
@@ -1278,30 +1278,30 @@
                 </div>
                 <form id="auto-attendant-prompts-form">
                     <div class="form-group">
-                        <label>Company Name:</label>
+                        <label for="aa-company-name">Company Name:</label>
                         <input type="text" id="aa-company-name" placeholder="Your Company" maxlength="100">
                         <small>Used in the welcome greeting</small>
                     </div>
                     <div class="form-group">
-                        <label>Welcome Greeting Text:</label>
+                        <label for="aa-prompt-welcome">Welcome Greeting Text:</label>
                         <textarea id="aa-prompt-welcome" rows="4" placeholder="Thank you for calling {company_name}."></textarea>
                         <small>Use {company_name} placeholder for company name</small>
                     </div>
                     <div class="form-group">
-                        <label>Main Menu Text:</label>
+                        <label for="aa-prompt-main-menu">Main Menu Text:</label>
                         <textarea id="aa-prompt-main-menu" rows="5" placeholder="For Sales, press 1. For Support, press 2. For Accounting, press 3. Or press 0 to speak with an operator."></textarea>
                         <small>Describe your menu options to callers</small>
                     </div>
                     <div class="form-group">
-                        <label>Invalid Option Text:</label>
+                        <label for="aa-prompt-invalid">Invalid Option Text:</label>
                         <textarea id="aa-prompt-invalid" rows="4" placeholder="That is not a valid option. Please try again."></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Timeout Text:</label>
+                        <label for="aa-prompt-timeout">Timeout Text:</label>
                         <textarea id="aa-prompt-timeout" rows="4" placeholder="We did not receive your selection. Please try again."></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Transferring Text:</label>
+                        <label for="aa-prompt-transferring">Transferring Text:</label>
                         <textarea id="aa-prompt-transferring" rows="4" placeholder="Please hold while we transfer your call."></textarea>
                     </div>
                     <button type="submit" class="btn btn-success">💾 Save & Regenerate Voices</button>
@@ -1356,7 +1356,7 @@
                         <label>Current Extension: <span id="vm-current-extension"></span></label>
                     </div>
                     <div class="form-group">
-                        <label>New PIN (4 digits):</label>
+                        <label for="vm-pin">New PIN (4 digits):</label>
                         <input type="text" id="vm-pin" pattern="[0-9]{4}" maxlength="4" placeholder="1234" required>
                     </div>
                     <button type="submit" class="btn btn-primary">💾 Update PIN</button>
@@ -1523,11 +1523,11 @@
                 <form id="test-paging-form">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>From Extension:</label>
+                            <label for="test-page-from">From Extension:</label>
                             <input type="text" id="test-page-from" placeholder="1001" required>
                         </div>
                         <div class="form-group">
-                            <label>Zone Extension:</label>
+                            <label for="test-page-zone">Zone Extension:</label>
                             <select id="test-page-zone" required>
                                 <option value="">Select Zone</option>
                             </select>
@@ -1576,13 +1576,13 @@
                 <h3>📞 Quick Dial</h3>
                 <div style="max-width: 600px;">
                     <div class="form-group">
-                        <label>Extension to Use:</label>
+                        <label for="ctd-extension-select">Extension to Use:</label>
                         <select id="ctd-extension-select" onchange="loadClickToDialConfig()">
                             <option value="">Select Extension</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Phone Number to Call:</label>
+                        <label for="ctd-phone-number">Phone Number to Call:</label>
                         <input type="tel" id="ctd-phone-number" placeholder="+1-555-0100" pattern="[0-9+\-() ]+">
                         <small>Enter the phone number you want to call</small>
                     </div>
@@ -1607,7 +1607,7 @@
                             </label>
                         </div>
                         <div class="form-group">
-                            <label>Default Caller ID (Optional):</label>
+                            <label for="ctd-caller-id">Default Caller ID (Optional):</label>
                             <input type="text" id="ctd-caller-id" placeholder="+1-555-0100">
                             <small>Override default caller ID for outbound calls</small>
                         </div>
@@ -1661,7 +1661,7 @@
             <div class="config-section">
                 <h3>📜 Click-to-Dial History</h3>
                 <div class="form-group" style="max-width: 400px;">
-                    <label>Filter by Extension:</label>
+                    <label for="ctd-history-extension">Filter by Extension:</label>
                     <select id="ctd-history-extension" onchange="loadClickToDialHistory()">
                         <option value="">All Extensions</option>
                     </select>
@@ -2338,7 +2338,7 @@ Content-Type: application/json
                         <small>Wideband audio codec for higher quality calls</small>
                     </div>
                     <div class="form-group">
-                        <label>G.722 Default Bitrate:</label>
+                        <label for="codec-g722-bitrate">G.722 Default Bitrate:</label>
                         <select id="codec-g722-bitrate">
                             <option value="48000">48 kbps</option>
                             <option value="56000">56 kbps</option>
@@ -2360,7 +2360,7 @@ Content-Type: application/json
                         <small>Low bandwidth codec for limited bandwidth scenarios</small>
                     </div>
                     <div class="form-group">
-                        <label>G.729 Variant:</label>
+                        <label for="codec-g729-variant">G.729 Variant:</label>
                         <select id="codec-g729-variant">
                             <option value="G729">G.729 (Basic)</option>
                             <option value="G729A">G.729 Annex A</option>
@@ -2377,7 +2377,7 @@ Content-Type: application/json
                         <small>ADPCM codec family for legacy compatibility</small>
                     </div>
                     <div class="form-group">
-                        <label>G.726 Default Bitrate:</label>
+                        <label for="codec-g726-bitrate">G.726 Default Bitrate:</label>
                         <select id="codec-g726-bitrate">
                             <option value="16000">16 kbps (Very Low)</option>
                             <option value="24000">24 kbps (Low)</option>
@@ -2387,7 +2387,7 @@ Content-Type: application/json
                         <small>32 kbps has built-in support, others are framework ready</small>
                     </div>
                     <div class="form-group">
-                        <label>Codec Preference Order:</label>
+                        <label for="codec-preference-order">Codec Preference Order:</label>
                         <textarea id="codec-preference-order" rows="6" placeholder="Opus&#10;G.722&#10;G.711 (PCMU/PCMA)&#10;G.729&#10;G.726-32">Opus
 G.722
 G.711 (PCMU/PCMA)
@@ -2415,7 +2415,7 @@ G.726-32</textarea>
                 <form id="dtmf-config-form" onsubmit="saveDTMFConfig(event)">
                     <h4>Primary DTMF Method</h4>
                     <div class="form-group">
-                        <label>DTMF Mode:</label>
+                        <label for="dtmf-mode">DTMF Mode:</label>
                         <select id="dtmf-mode">
                             <option value="RFC2833" selected>RFC 2833 (Recommended)</option>
                             <option value="SIP_INFO">SIP INFO</option>
@@ -2427,7 +2427,7 @@ G.726-32</textarea>
 
                     <h4>RFC 2833 Settings</h4>
                     <div class="form-group">
-                        <label>RTP Payload Type:</label>
+                        <label for="dtmf-payload-type">RTP Payload Type:</label>
                         <select id="dtmf-payload-type">
                             <option value="96">96 - Generic fallback</option>
                             <option value="100">100 - Cisco/common alternative</option>
@@ -2439,7 +2439,7 @@ G.726-32</textarea>
                     </div>
 
                     <div class="form-group">
-                        <label>DTMF Duration (milliseconds):</label>
+                        <label for="dtmf-duration">DTMF Duration (milliseconds):</label>
                         <input type="number" id="dtmf-duration" min="80" max="500" value="160" step="10">
                         <small>Duration of each DTMF tone (80-500ms). Standard is 160ms.</small>
                     </div>
@@ -2463,7 +2463,7 @@ G.726-32</textarea>
 
                     <h4>Advanced Settings</h4>
                     <div class="form-group">
-                        <label>In-Band Detection Threshold:</label>
+                        <label for="dtmf-detection-threshold">In-Band Detection Threshold:</label>
                         <input type="range" id="dtmf-detection-threshold" min="0.1" max="0.9" value="0.3" step="0.05">
                         <span id="dtmf-threshold-value">0.3</span>
                         <small>Sensitivity for in-band audio detection (0.1=very sensitive, 0.9=very strict). Default: 0.3</small>
@@ -3061,17 +3061,17 @@ G.726-32</textarea>
                 <h3>📧 Voicemail Settings</h3>
                 <form id="voicemail-config-form">
                     <div class="form-group">
-                        <label>Max Message Duration (seconds):</label>
+                        <label for="voicemail-max-duration">Max Message Duration (seconds):</label>
                         <input type="number" id="voicemail-max-duration" min="30" max="600" value="180">
                         <small>Maximum length of voicemail messages (30-600 seconds)</small>
                     </div>
                     <div class="form-group">
-                        <label>Max Greeting Duration (seconds):</label>
+                        <label for="voicemail-max-greeting">Max Greeting Duration (seconds):</label>
                         <input type="number" id="voicemail-max-greeting" min="10" max="60" value="30">
                         <small>Maximum length of custom greetings (10-60 seconds)</small>
                     </div>
                     <div class="form-group">
-                        <label>No Answer Timeout (seconds):</label>
+                        <label for="voicemail-no-answer-timeout">No Answer Timeout (seconds):</label>
                         <input type="number" id="voicemail-no-answer-timeout" min="10" max="60" value="30">
                         <small>How long to ring before sending to voicemail (10-60 seconds)</small>
                     </div>
@@ -3097,11 +3097,11 @@ G.726-32</textarea>
                 <p class="config-note">Configure SMTP server for email notifications</p>
                 <form id="email-config-form">
                     <div class="form-group">
-                        <label>SMTP Host:</label>
+                        <label for="smtp-host">SMTP Host:</label>
                         <input type="text" id="smtp-host" placeholder="smtp.example.com">
                     </div>
                     <div class="form-group">
-                        <label>SMTP Port:</label>
+                        <label for="smtp-port">SMTP Port:</label>
                         <input type="number" id="smtp-port" placeholder="587">
                     </div>
                     <div class="form-group">
@@ -3111,19 +3111,19 @@ G.726-32</textarea>
                         </label>
                     </div>
                     <div class="form-group">
-                        <label>Username:</label>
+                        <label for="smtp-username">Username:</label>
                         <input type="text" id="smtp-username" placeholder="username">
                     </div>
                     <div class="form-group">
-                        <label>Password:</label>
+                        <label for="smtp-password">Password:</label>
                         <input type="password" id="smtp-password" placeholder="password">
                     </div>
                     <div class="form-group">
-                        <label>From Address:</label>
+                        <label for="email-from">From Address:</label>
                         <input type="email" id="email-from" placeholder="voicemail@company.com">
                     </div>
                     <div class="form-group">
-                        <label>From Name:</label>
+                        <label for="email-from-name">From Name:</label>
                         <input type="text" id="email-from-name" placeholder="PBX Voicemail">
                     </div>
                     <button type="submit" class="btn btn-success">💾 Save Email Settings</button>
@@ -3141,14 +3141,14 @@ G.726-32</textarea>
                         </label>
                     </div>
                     <div class="form-group">
-                        <label>Recording Format:</label>
+                        <label for="recording-format">Recording Format:</label>
                         <select id="recording-format">
                             <option value="wav">WAV (Uncompressed)</option>
                             <option value="mp3">MP3 (Compressed)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Storage Path:</label>
+                        <label for="recording-storage-path">Storage Path:</label>
                         <input type="text" id="recording-storage-path" value="recordings">
                         <small>Directory for storing recordings</small>
                     </div>
@@ -3161,7 +3161,7 @@ G.726-32</textarea>
                 <h3>🔒 Security Settings</h3>
                 <form id="security-config-form">
                     <div class="form-group">
-                        <label>Minimum Password Length:</label>
+                        <label for="security-min-password">Minimum Password Length:</label>
                         <input type="number" id="security-min-password" min="8" max="32" value="12">
                     </div>
                     <div class="form-group">
@@ -3189,12 +3189,12 @@ G.726-32</textarea>
                         </label>
                     </div>
                     <div class="form-group">
-                        <label>Max Login Attempts:</label>
+                        <label for="security-max-attempts">Max Login Attempts:</label>
                         <input type="number" id="security-max-attempts" min="3" max="10" value="5">
                         <small>Failed attempts before temporary lockout</small>
                     </div>
                     <div class="form-group">
-                        <label>Lockout Duration (seconds):</label>
+                        <label for="security-lockout-duration">Lockout Duration (seconds):</label>
                         <input type="number" id="security-lockout-duration" min="300" max="3600" value="900">
                         <small>How long accounts are locked after too many failed attempts (300-3600 seconds)</small>
                     </div>
@@ -3272,7 +3272,7 @@ G.726-32</textarea>
                 <h3>👥 Conference Settings</h3>
                 <form id="conference-config-form">
                     <div class="form-group">
-                        <label>Max Participants:</label>
+                        <label for="conference-max-participants">Max Participants:</label>
                         <input type="number" id="conference-max-participants" min="3" max="100" value="50">
                         <small>Maximum participants per conference (3-100)</small>
                     </div>
@@ -3311,13 +3311,13 @@ G.726-32</textarea>
                         <h4>Certificate Configuration</h4>
 
                         <div class="form-group">
-                            <label>Certificate File Path:</label>
+                            <label for="ssl-cert-file">Certificate File Path:</label>
                             <input type="text" id="ssl-cert-file" placeholder="certs/server.crt" readonly>
                             <small>Location of the SSL certificate file</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Private Key File Path:</label>
+                            <label for="ssl-key-file">Private Key File Path:</label>
                             <input type="text" id="ssl-key-file" placeholder="certs/server.key" readonly>
                             <small>Location of the SSL private key file</small>
                         </div>
@@ -3325,23 +3325,23 @@ G.726-32</textarea>
                         <div id="cert-details-section" style="display: none; margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
                             <h4 style="margin-top: 0;">Certificate Details</h4>
                             <div class="form-group">
-                                <label>Subject:</label>
+                                <label for="cert-subject">Subject:</label>
                                 <input type="text" id="cert-subject" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Issuer:</label>
+                                <label for="cert-issuer">Issuer:</label>
                                 <input type="text" id="cert-issuer" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Valid From:</label>
+                                <label for="cert-valid-from">Valid From:</label>
                                 <input type="text" id="cert-valid-from" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Valid Until:</label>
+                                <label for="cert-valid-until">Valid Until:</label>
                                 <input type="text" id="cert-valid-until" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Days Until Expiry:</label>
+                                <label for="cert-days-expiry">Days Until Expiry:</label>
                                 <input type="text" id="cert-days-expiry" readonly>
                             </div>
                         </div>
@@ -3350,13 +3350,13 @@ G.726-32</textarea>
                         <p class="config-note">Generate a self-signed certificate for development/testing. For production, use a certificate from a trusted CA (Let's Encrypt, DigiCert, etc.).</p>
 
                         <div class="form-group">
-                            <label>Hostname/IP Address:</label>
+                            <label for="ssl-hostname">Hostname/IP Address:</label>
                             <input type="text" id="ssl-hostname" placeholder="192.168.1.14">
                             <small>The hostname or IP address that will be used to access the server</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Certificate Validity (days):</label>
+                            <label for="ssl-days-valid">Certificate Validity (days):</label>
                             <input type="number" id="ssl-days-valid" value="365" min="1" max="3650">
                             <small>How many days the certificate will be valid (1-3650)</small>
                         </div>
@@ -3386,19 +3386,19 @@ G.726-32</textarea>
                 <h3>ℹ️ Server Information</h3>
                 <p class="config-note">Read-only server information (edit in config.yml to change)</p>
                 <div class="form-group">
-                    <label>SIP Port:</label>
+                    <label for="config-sip-port">SIP Port:</label>
                     <input type="number" id="config-sip-port" value="5060" disabled>
                 </div>
                 <div class="form-group">
-                    <label>API Port:</label>
+                    <label for="config-api-port">API Port:</label>
                     <input type="number" id="config-api-port" value="8080" disabled>
                 </div>
                 <div class="form-group">
-                    <label>External IP:</label>
+                    <label for="config-external-ip">External IP:</label>
                     <input type="text" id="config-external-ip" disabled>
                 </div>
                 <div class="form-group">
-                    <label>Server Name:</label>
+                    <label for="config-server-name">Server Name:</label>
                     <input type="text" id="config-server-name" disabled>
                 </div>
             </div>
@@ -3517,8 +3517,8 @@ G.726-32</textarea>
                     <form id="generate-license-form" onsubmit="generateLicense(event); return false;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
-                                <select name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label for="license-type" style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
+                                <select id="license-type" name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="trial">Trial (30 days)</option>
                                     <option value="basic">Basic</option>
                                     <option value="professional">Professional</option>
@@ -3528,20 +3528,20 @@ G.726-32</textarea>
                                 </select>
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Organization/Person *</label>
-                                <input type="text" name="issued_to" required placeholder="Example Corporation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label for="issued-to" style="display: block; margin-bottom: 5px; font-weight: bold;">Organization/Person *</label>
+                                <input id="issued-to" type="text" name="issued_to" required placeholder="Example Corporation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Expiration Days</label>
-                                <input type="number" name="expiration_days" placeholder="365 (leave empty for perpetual)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label for="expiration-days" style="display: block; margin-bottom: 5px; font-weight: bold;">Expiration Days</label>
+                                <input id="expiration-days" type="number" name="expiration_days" placeholder="365 (leave empty for perpetual)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Max Extensions</label>
-                                <input type="number" name="max_extensions" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label for="max-extensions" style="display: block; margin-bottom: 5px; font-weight: bold;">Max Extensions</label>
+                                <input id="max-extensions" type="number" name="max_extensions" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Max Concurrent Calls</label>
-                                <input type="number" name="max_concurrent_calls" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label for="max-concurrent-calls" style="display: block; margin-bottom: 5px; font-weight: bold;">Max Concurrent Calls</label>
+                                <input id="max-concurrent-calls" type="number" name="max_concurrent_calls" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                         </div>
                         <div class="action-buttons">
@@ -3557,12 +3557,12 @@ G.726-32</textarea>
                     <p style="color: #666; margin-bottom: 10px;">Upload and install a license file (JSON format).</p>
                     <form id="install-license-form" onsubmit="installLicense(event); return false;">
                         <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">License Data (JSON)</label>
-                            <textarea name="license_data" rows="8" required placeholder='{"key": "XXXX-XXXX-XXXX-XXXX", "type": "professional", ...}' style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
+                            <label for="license-data" style="display: block; margin-bottom: 5px; font-weight: bold;">License Data (JSON)</label>
+                            <textarea id="license-data" name="license_data" rows="8" required placeholder='{"key": "XXXX-XXXX-XXXX-XXXX", "type": "professional", ...}' style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: flex; align-items: center;">
-                                <input type="checkbox" name="enforce_licensing" style="margin-right: 8px;">
+                                <input id="enforce-licensing" type="checkbox" name="enforce_licensing" style="margin-right: 8px;">
                                 <span><strong>Enforce Licensing</strong> (Create lock file - prevents disabling licensing)</span>
                             </label>
                             <p style="color: #666; margin: 5px 0 0 24px; font-size: 13px;">Enable this for commercial deployments to prevent users from disabling licensing.</p>
@@ -3864,7 +3864,7 @@ G.726-32</textarea>
 
                     <div id="jitsi-settings" style="display: none;">
                         <div class="form-group">
-                            <label>Server URL:</label>
+                            <label for="jitsi-server-url">Server URL:</label>
                             <input type="text" id="jitsi-server-url" placeholder="https://meet.jit.si" value="https://meet.jit.si">
                             <small>Use public server (meet.jit.si) or your self-hosted instance</small>
                         </div>
@@ -3881,11 +3881,11 @@ G.726-32</textarea>
                             <h4 style="margin-top: 0;">Advanced: JWT Authentication (Optional)</h4>
                             <p style="font-size: 14px; color: #666;">For self-hosted Jitsi with secure rooms</p>
 
-                            <label>App ID:</label>
+                            <label for="jitsi-app-id">App ID:</label>
                             <input type="text" id="jitsi-app-id" placeholder="your-app-id">
                             <small>JWT application ID from Jitsi configuration</small>
 
-                            <label style="margin-top: 10px;">App Secret:</label>
+                            <label for="jitsi-app-secret" style="margin-top: 10px;">App Secret:</label>
                             <input type="password" id="jitsi-app-secret" placeholder="your-app-secret">
                             <small>JWT secret key for token generation</small>
                         </div>
@@ -3909,7 +3909,7 @@ G.726-32</textarea>
                         <h4>Instant Meeting</h4>
                         <p style="font-size: 14px; color: #666;">Create a meeting room immediately</p>
                         <div class="form-group">
-                            <label>Room Name (optional):</label>
+                            <label for="jitsi-instant-room">Room Name (optional):</label>
                             <input type="text" id="jitsi-instant-room" placeholder="team-standup">
                             <small>Leave blank for auto-generated name</small>
                         </div>
@@ -3922,11 +3922,11 @@ G.726-32</textarea>
                         <h4>Schedule Meeting</h4>
                         <p style="font-size: 14px; color: #666;">Plan a meeting for the future</p>
                         <div class="form-group">
-                            <label>Meeting Subject:</label>
+                            <label for="jitsi-schedule-subject">Meeting Subject:</label>
                             <input type="text" id="jitsi-schedule-subject" placeholder="Weekly Team Meeting" required>
                         </div>
                         <div class="form-group">
-                            <label>Duration (minutes):</label>
+                            <label for="jitsi-schedule-duration">Duration (minutes):</label>
                             <input type="number" id="jitsi-schedule-duration" value="60" min="15" max="480">
                         </div>
                         <button class="btn btn-primary" onclick="scheduleJitsiMeeting()" style="width: 100%;">
@@ -3982,31 +3982,31 @@ sudo apt-get install jitsi-meet</pre>
 
                     <div id="matrix-settings" style="display: none;">
                         <div class="form-group">
-                            <label>Homeserver URL:</label>
+                            <label for="matrix-homeserver-url">Homeserver URL:</label>
                             <input type="text" id="matrix-homeserver-url" placeholder="https://matrix.org">
                             <small>Public homeserver (matrix.org) or your self-hosted Synapse server</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Bot Username:</label>
+                            <label for="matrix-bot-username">Bot Username:</label>
                             <input type="text" id="matrix-bot-username" placeholder="@pbxbot:matrix.org">
                             <small>Matrix user ID for PBX bot (@username:server.com)</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Bot Password:</label>
+                            <label for="matrix-bot-password">Bot Password:</label>
                             <input type="password" id="matrix-bot-password" placeholder="bot-password">
                             <small>Password for bot account</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Notification Room ID:</label>
+                            <label for="matrix-notification-room">Notification Room ID:</label>
                             <input type="text" id="matrix-notification-room" placeholder="!roomid:matrix.org">
                             <small>Room ID for general notifications (starts with !)</small>
                         </div>
 
                         <div class="form-group">
-                            <label>Voicemail Room ID (optional):</label>
+                            <label for="matrix-voicemail-room">Voicemail Room ID (optional):</label>
                             <input type="text" id="matrix-voicemail-room" placeholder="!roomid:matrix.org">
                             <small>Separate room for voicemail notifications</small>
                         </div>
@@ -4035,7 +4035,7 @@ sudo apt-get install jitsi-meet</pre>
 
                 <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
                     <div class="form-group">
-                        <label>Select Room:</label>
+                        <label for="matrix-room-select">Select Room:</label>
                         <select id="matrix-room-select">
                             <option value="">Use Default Notification Room</option>
                             <option value="notification">Notification Room</option>
@@ -4045,13 +4045,13 @@ sudo apt-get install jitsi-meet</pre>
                     </div>
 
                     <div class="form-group" id="matrix-custom-room" style="display: none;">
-                        <label>Custom Room ID:</label>
+                        <label for="matrix-custom-room-id">Custom Room ID:</label>
                         <input type="text" id="matrix-custom-room-id" placeholder="!roomid:matrix.org">
                         <small>Enter the full Matrix room ID (starts with !)</small>
                     </div>
 
                     <div class="form-group">
-                        <label>Message:</label>
+                        <label for="matrix-message-text">Message:</label>
                         <textarea id="matrix-message-text" rows="4" placeholder="Hello from PBX! 👋"></textarea>
                     </div>
 
@@ -4077,11 +4077,11 @@ sudo apt-get install jitsi-meet</pre>
                 <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
                     <h4>Create New Room</h4>
                     <div class="form-group">
-                        <label>Room Name:</label>
+                        <label for="matrix-new-room-name">Room Name:</label>
                         <input type="text" id="matrix-new-room-name" placeholder="PBX Notifications">
                     </div>
                     <div class="form-group">
-                        <label>Room Topic (optional):</label>
+                        <label for="matrix-new-room-topic">Room Topic (optional):</label>
                         <input type="text" id="matrix-new-room-topic" placeholder="Automated notifications from PBX">
                     </div>
                     <button class="btn btn-success" onclick="createMatrixRoom()">
@@ -4138,13 +4138,13 @@ python3 -m synapse.app.homeserver \
 
                     <div id="espocrm-settings" style="display: none;">
                         <div class="form-group">
-                            <label>API URL:</label>
+                            <label for="espocrm-api-url">API URL:</label>
                             <input type="text" id="espocrm-api-url" placeholder="https://crm.yourcompany.com/api/v1">
                             <small>Your EspoCRM server API endpoint</small>
                         </div>
 
                         <div class="form-group">
-                            <label>API Key:</label>
+                            <label for="espocrm-api-key">API Key:</label>
                             <input type="password" id="espocrm-api-key" placeholder="your-api-key">
                             <small>API key from EspoCRM Administration > API Users</small>
                         </div>
@@ -4189,7 +4189,7 @@ python3 -m synapse.app.homeserver \
 
                 <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
                     <div class="form-group">
-                        <label>Search By:</label>
+                        <label for="espocrm-search-type">Search By:</label>
                         <select id="espocrm-search-type">
                             <option value="phone">Phone Number</option>
                             <option value="email">Email Address</option>
@@ -4198,7 +4198,7 @@ python3 -m synapse.app.homeserver \
                     </div>
 
                     <div class="form-group">
-                        <label>Search Term:</label>
+                        <label for="espocrm-search-term">Search Term:</label>
                         <input type="text" id="espocrm-search-term" placeholder="Enter phone, email, or name">
                     </div>
 
@@ -4218,32 +4218,32 @@ python3 -m synapse.app.homeserver \
                 <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
-                            <label>First Name:</label>
+                            <label for="espocrm-new-firstname">First Name:</label>
                             <input type="text" id="espocrm-new-firstname" placeholder="John">
                         </div>
                         <div class="form-group">
-                            <label>Last Name:</label>
+                            <label for="espocrm-new-lastname">Last Name:</label>
                             <input type="text" id="espocrm-new-lastname" placeholder="Doe">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Phone Number:</label>
+                        <label for="espocrm-new-phone">Phone Number:</label>
                         <input type="tel" id="espocrm-new-phone" placeholder="+1-555-0100">
                     </div>
 
                     <div class="form-group">
-                        <label>Email:</label>
+                        <label for="espocrm-new-email">Email:</label>
                         <input type="email" id="espocrm-new-email" placeholder="john.doe@example.com">
                     </div>
 
                     <div class="form-group">
-                        <label>Company (optional):</label>
+                        <label for="espocrm-new-company">Company (optional):</label>
                         <input type="text" id="espocrm-new-company" placeholder="Acme Corp">
                     </div>
 
                     <div class="form-group">
-                        <label>Title (optional):</label>
+                        <label for="espocrm-new-title">Title (optional):</label>
                         <input type="text" id="espocrm-new-title" placeholder="Sales Manager">
                     </div>
 
@@ -4298,12 +4298,12 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </div>
                     <div id="hubspot-settings" style="display: none;">
                         <div class="form-group">
-                            <label>API Key (Bearer Token):</label>
+                            <label for="hubspot-api-key">API Key (Bearer Token):</label>
                             <input type="password" id="hubspot-api-key" placeholder="pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
                             <small>Your HubSpot API private app token</small>
                         </div>
                         <div class="form-group">
-                            <label>Portal ID:</label>
+                            <label for="hubspot-portal-id">Portal ID:</label>
                             <input type="text" id="hubspot-portal-id" placeholder="12345678">
                             <small>Your HubSpot portal/account ID</small>
                         </div>
@@ -4357,17 +4357,17 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </div>
                     <div id="zendesk-settings" style="display: none;">
                         <div class="form-group">
-                            <label>Zendesk Subdomain:</label>
+                            <label for="zendesk-subdomain">Zendesk Subdomain:</label>
                             <input type="text" id="zendesk-subdomain" placeholder="yourcompany">
                             <small>Your Zendesk subdomain (yourcompany.zendesk.com)</small>
                         </div>
                         <div class="form-group">
-                            <label>API Email:</label>
+                            <label for="zendesk-email">API Email:</label>
                             <input type="email" id="zendesk-email" placeholder="admin@company.com">
                             <small>Email associated with Zendesk API token</small>
                         </div>
                         <div class="form-group">
-                            <label>API Token:</label>
+                            <label for="zendesk-api-token">API Token:</label>
                             <input type="password" id="zendesk-api-token" placeholder="API token">
                             <small>Your Zendesk API token (Settings > API > Add API token)</small>
                         </div>
@@ -4386,7 +4386,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                             <small>Add call notes to existing customer tickets</small>
                         </div>
                         <div class="form-group">
-                            <label>Default Priority:</label>
+                            <label for="zendesk-default-priority">Default Priority:</label>
                             <select id="zendesk-default-priority">
                                 <option value="low">Low</option>
                                 <option value="normal" selected>Normal</option>
@@ -4478,7 +4478,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                         <small>Enable real-time transcription and analysis for calls</small>
                     </div>
                     <div class="form-group">
-                        <label>Transcription Engine:</label>
+                        <label for="speech-engine">Transcription Engine:</label>
                         <select id="speech-engine">
                             <option value="vosk" selected>Vosk (Offline - Default)</option>
                             <option value="google">Google Speech-to-Text (Requires API Key)</option>
@@ -4572,24 +4572,24 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-extension-form">
                 <div class="form-group">
-                    <label>Extension Number:</label>
+                    <label for="new-ext-number">Extension Number:</label>
                     <input type="text" id="new-ext-number" required pattern="[0-9]{4}" placeholder="1001">
                     <small>4-digit number</small>
                 </div>
                 <div class="form-group">
-                    <label>Name:</label>
+                    <label for="new-ext-name">Name:</label>
                     <input type="text" id="new-ext-name" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
-                    <label>Email:</label>
+                    <label for="new-ext-email">Email:</label>
                     <input type="email" id="new-ext-email" required placeholder="john@company.com">
                 </div>
                 <div class="form-group">
-                    <label>Password:</label>
+                    <label for="new-ext-password">Password:</label>
                     <input type="password" id="new-ext-password" required minlength="8" placeholder="Min 8 characters">
                 </div>
                 <div class="form-group">
-                    <label>Voicemail PIN:</label>
+                    <label for="new-ext-voicemail-pin">Voicemail PIN:</label>
                     <input type="text" id="new-ext-voicemail-pin" required pattern="[0-9]{4,6}" maxlength="6" placeholder="4-6 digits (e.g., 1234)">
                     <small>Required for voicemail security</small>
                 </div>
@@ -4624,19 +4624,19 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             <form id="edit-extension-form">
                 <input type="hidden" id="edit-ext-number">
                 <div class="form-group">
-                    <label>Name:</label>
+                    <label for="edit-ext-name">Name:</label>
                     <input type="text" id="edit-ext-name" required>
                 </div>
                 <div class="form-group">
-                    <label>Email:</label>
+                    <label for="edit-ext-email">Email:</label>
                     <input type="email" id="edit-ext-email" required>
                 </div>
                 <div class="form-group">
-                    <label>New Password (leave blank to keep current):</label>
+                    <label for="edit-ext-password">New Password (leave blank to keep current):</label>
                     <input type="password" id="edit-ext-password" minlength="8">
                 </div>
                 <div class="form-group">
-                    <label>Voicemail PIN:</label>
+                    <label for="edit-ext-voicemail-pin">Voicemail PIN:</label>
                     <input type="text" id="edit-ext-voicemail-pin" pattern="[0-9]{4,6}" maxlength="6" placeholder="4-6 digits (e.g., 1234)">
                     <small>Leave blank to keep current PIN</small>
                 </div>
@@ -4673,7 +4673,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <!-- Placeholder information will be inserted here -->
                 </div>
                 <div class="form-group">
-                    <label>Template Content:</label>
+                    <label for="template-content">Template Content:</label>
                     <textarea id="template-content" rows="20" style="font-family: monospace; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
                 </div>
                 <div class="modal-actions">
@@ -4693,12 +4693,12 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-menu-option-form">
                 <div class="form-group">
-                    <label>Digit (0-9, *, #):</label>
+                    <label for="new-menu-digit">Digit (0-9, *, #):</label>
                     <input type="text" id="new-menu-digit" required pattern="[0-9*#]" maxlength="1" placeholder="1">
                     <small>Which digit callers will press</small>
                 </div>
                 <div class="form-group">
-                    <label>Destination Type:</label>
+                    <label for="new-menu-dest-type">Destination Type:</label>
                     <select id="new-menu-dest-type" onchange="updateDestinationFieldVisibility('new')" required>
                         <option value="extension">Extension</option>
                         <option value="submenu">Submenu</option>
@@ -4714,14 +4714,14 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small id="new-dest-help">Extension, queue, or feature code to transfer to</small>
                 </div>
                 <div class="form-group" id="new-dest-submenu-group" style="display: none;">
-                    <label>Select Submenu:</label>
+                    <label for="new-menu-submenu">Select Submenu:</label>
                     <select id="new-menu-submenu" required disabled>
                         <option value="">Loading submenus...</option>
                     </select>
                     <small>Choose which submenu to navigate to</small>
                 </div>
                 <div class="form-group">
-                    <label>Description:</label>
+                    <label for="new-menu-description">Description:</label>
                     <input type="text" id="new-menu-description" required placeholder="Sales Department">
                     <small>Human-readable description of this menu option</small>
                 </div>
@@ -4746,7 +4746,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <label>Digit: <span id="edit-menu-digit-display"></span></label>
                 </div>
                 <div class="form-group">
-                    <label>Destination Type:</label>
+                    <label for="edit-menu-dest-type">Destination Type:</label>
                     <select id="edit-menu-dest-type" onchange="updateDestinationFieldVisibility('edit')" required>
                         <option value="extension">Extension</option>
                         <option value="submenu">Submenu</option>
@@ -4760,13 +4760,13 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <input type="text" id="edit-menu-destination" required placeholder="1001">
                 </div>
                 <div class="form-group" id="edit-dest-submenu-group" style="display: none;">
-                    <label>Select Submenu:</label>
+                    <label for="edit-menu-submenu">Select Submenu:</label>
                     <select id="edit-menu-submenu" required disabled>
                         <option value="">Loading submenus...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Description:</label>
+                    <label for="edit-menu-description">Description:</label>
                     <input type="text" id="edit-menu-description" required placeholder="Sales Department">
                 </div>
                 <div class="modal-actions">
@@ -4786,24 +4786,24 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="create-submenu-form">
                 <div class="form-group">
-                    <label>Menu ID:</label>
+                    <label for="submenu-id">Menu ID:</label>
                     <input type="text" id="submenu-id" required pattern="[a-z0-9_-]+" placeholder="shipping-submenu">
                     <small>Unique identifier (lowercase, no spaces, e.g., shipping-submenu)</small>
                 </div>
                 <div class="form-group">
-                    <label>Parent Menu:</label>
+                    <label for="submenu-parent">Parent Menu:</label>
                     <select id="submenu-parent" required>
                         <option value="main">Main Menu</option>
                     </select>
                     <small>Which menu this submenu belongs to</small>
                 </div>
                 <div class="form-group">
-                    <label>Menu Name:</label>
+                    <label for="submenu-name">Menu Name:</label>
                     <input type="text" id="submenu-name" required placeholder="Shipping and Receiving">
                     <small>Display name for this menu</small>
                 </div>
                 <div class="form-group">
-                    <label>Voice Prompt Text:</label>
+                    <label for="submenu-prompt">Voice Prompt Text:</label>
                     <textarea id="submenu-prompt" rows="4" placeholder="For directions, press 1. For shipping and receiving, press 2." required></textarea>
                     <small>This text will be converted to speech using gTTS</small>
                 </div>
@@ -4824,25 +4824,25 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-emergency-contact-form" onsubmit="addEmergencyContact(event)">
                 <div class="form-group">
-                    <label>Name:</label>
+                    <label for="emergency-contact-name">Name:</label>
                     <input type="text" id="emergency-contact-name" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
-                    <label>Extension:</label>
+                    <label for="emergency-contact-extension">Extension:</label>
                     <input type="text" id="emergency-contact-extension" pattern="[0-9]+" placeholder="1001">
                     <small>Internal extension number</small>
                 </div>
                 <div class="form-group">
-                    <label>External Phone:</label>
+                    <label for="emergency-contact-phone">External Phone:</label>
                     <input type="tel" id="emergency-contact-phone" placeholder="+1-555-0100">
                     <small>External phone number for calls/SMS</small>
                 </div>
                 <div class="form-group">
-                    <label>Email:</label>
+                    <label for="emergency-contact-email">Email:</label>
                     <input type="email" id="emergency-contact-email" placeholder="john@company.com">
                 </div>
                 <div class="form-group">
-                    <label>Priority Level:</label>
+                    <label for="emergency-contact-priority">Priority Level:</label>
                     <select id="emergency-contact-priority" required>
                         <option value="1">1 - Highest (First Responders)</option>
                         <option value="2">2 - High (Management)</option>
@@ -4893,7 +4893,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <p>Only use this for actual emergencies or coordinated testing.</p>
                 </div>
                 <div class="form-group">
-                    <label>Trigger Type:</label>
+                    <label for="trigger-type">Trigger Type:</label>
                     <select id="trigger-type" required>
                         <option value="manual">Manual Trigger</option>
                         <option value="test">Test (Clearly marked as test)</option>
@@ -4902,11 +4902,11 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Location/Details:</label>
+                    <label for="trigger-details">Location/Details:</label>
                     <textarea id="trigger-details" rows="3" placeholder="Building A, Floor 3, Room 301"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Additional Information:</label>
+                    <label for="trigger-info">Additional Information:</label>
                     <textarea id="trigger-info" rows="3" placeholder="Describe the situation..."></textarea>
                 </div>
                 <div class="modal-actions">
@@ -4926,42 +4926,42 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-trunk-form" onsubmit="addSIPTrunk(event)">
                 <div class="form-group">
-                    <label>Trunk ID:</label>
+                    <label for="trunk-id">Trunk ID:</label>
                     <input type="text" id="trunk-id" required pattern="[a-zA-Z0-9_-]+" placeholder="trunk_primary">
                     <small>Unique identifier (letters, numbers, underscore, dash)</small>
                 </div>
                 <div class="form-group">
-                    <label>Trunk Name:</label>
+                    <label for="trunk-name">Trunk Name:</label>
                     <input type="text" id="trunk-name" required placeholder="Primary SIP Provider">
                     <small>Descriptive name for this trunk</small>
                 </div>
                 <div class="form-group">
-                    <label>Host/Server:</label>
+                    <label for="trunk-host">Host/Server:</label>
                     <input type="text" id="trunk-host" required placeholder="sip.provider.com">
                     <small>SIP provider's server address</small>
                 </div>
                 <div class="form-group">
-                    <label>Port:</label>
+                    <label for="trunk-port">Port:</label>
                     <input type="number" id="trunk-port" value="5060" min="1" max="65535">
                     <small>SIP port (default: 5060)</small>
                 </div>
                 <div class="form-group">
-                    <label>Username:</label>
+                    <label for="trunk-username">Username:</label>
                     <input type="text" id="trunk-username" required placeholder="account123">
                     <small>SIP authentication username</small>
                 </div>
                 <div class="form-group">
-                    <label>Password:</label>
+                    <label for="trunk-password">Password:</label>
                     <input type="password" id="trunk-password" required placeholder="********">
                     <small>SIP authentication password</small>
                 </div>
                 <div class="form-group">
-                    <label>Priority:</label>
+                    <label for="trunk-priority">Priority:</label>
                     <input type="number" id="trunk-priority" value="100" min="1" max="999">
                     <small>Lower number = higher priority (for failover)</small>
                 </div>
                 <div class="form-group">
-                    <label>Max Channels:</label>
+                    <label for="trunk-channels">Max Channels:</label>
                     <input type="number" id="trunk-channels" value="10" min="1" max="999">
                     <small>Maximum concurrent calls</small>
                 </div>
@@ -4999,12 +4999,12 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-fmfm-form" onsubmit="saveFMFMConfig(event)">
                 <div class="form-group">
-                    <label>Extension:</label>
+                    <label for="fmfm-extension">Extension:</label>
                     <input type="text" id="fmfm-extension" required pattern="[0-9]+" placeholder="1001">
                     <small>Extension number to configure FMFM for</small>
                 </div>
                 <div class="form-group">
-                    <label>Mode:</label>
+                    <label for="fmfm-mode">Mode:</label>
                     <select id="fmfm-mode" required>
                         <option value="sequential">Sequential - Ring one at a time</option>
                         <option value="simultaneous">Simultaneous - Ring all at once</option>
@@ -5024,7 +5024,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>No Answer Destination (Optional):</label>
+                    <label for="fmfm-no-answer">No Answer Destination (Optional):</label>
                     <input type="text" id="fmfm-no-answer" pattern="[0-9]+" placeholder="Extension or voicemail">
                     <small>Where to send the call if no one answers</small>
                 </div>
@@ -5046,17 +5046,17 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-time-rule-form" onsubmit="saveTimeRoutingRule(event)">
                 <div class="form-group">
-                    <label>Rule Name:</label>
+                    <label for="time-rule-name">Rule Name:</label>
                     <input type="text" id="time-rule-name" required placeholder="Business Hours to Sales">
                     <small>Descriptive name for this rule</small>
                 </div>
                 <div class="form-group">
-                    <label>Original Destination:</label>
+                    <label for="time-rule-destination">Original Destination:</label>
                     <input type="text" id="time-rule-destination" required pattern="[0-9]+" placeholder="1000">
                     <small>Extension or queue to apply time-based routing to</small>
                 </div>
                 <div class="form-group">
-                    <label>Route To:</label>
+                    <label for="time-rule-route-to">Route To:</label>
                     <input type="text" id="time-rule-route-to" required pattern="[0-9]+" placeholder="1001">
                     <small>Where to route calls (extension, voicemail, queue)</small>
                 </div>
@@ -5079,18 +5079,18 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
-                            <label>Start Time:</label>
+                            <label for="time-rule-start">Start Time:</label>
                             <input type="time" id="time-rule-start" value="09:00" required>
                         </div>
                         <div class="form-group">
-                            <label>End Time:</label>
+                            <label for="time-rule-end">End Time:</label>
                             <input type="time" id="time-rule-end" value="17:00" required>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Priority:</label>
+                    <label for="time-rule-priority">Priority:</label>
                     <input type="number" id="time-rule-priority" value="100" min="1" max="999">
                     <small>Lower number = higher priority</small>
                 </div>
@@ -5118,7 +5118,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-webhook-form" onsubmit="addWebhook(event)">
                 <div class="form-group">
-                    <label>Webhook URL:</label>
+                    <label for="webhook-url">Webhook URL:</label>
                     <input type="url" id="webhook-url" required placeholder="https://example.com/webhook">
                     <small>The URL to send webhook notifications to</small>
                 </div>
@@ -5139,7 +5139,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Secret (Optional):</label>
+                    <label for="webhook-secret">Secret (Optional):</label>
                     <input type="text" id="webhook-secret" placeholder="your-secret-key">
                     <small>Used for HMAC signature verification (recommended for security)</small>
                 </div>
@@ -5167,19 +5167,19 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-retention-policy-form" onsubmit="addRetentionPolicy(event)">
                 <div class="form-group">
-                    <label>Policy Name:</label>
+                    <label for="retention-policy-name">Policy Name:</label>
                     <input type="text" id="retention-policy-name" required pattern="[a-zA-Z0-9_\s-]+" maxlength="50" placeholder="Standard Policy">
                     <small>Alphanumeric, underscore, hyphen, and spaces only</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Retention Period (Days):</label>
+                    <label for="retention-days">Retention Period (Days):</label>
                     <input type="number" id="retention-days" required min="1" max="3650" value="90" placeholder="90">
                     <small>Number of days to retain recordings (1-3650 days, max 10 years)</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Tags (Optional):</label>
+                    <label for="retention-tags">Tags (Optional):</label>
                     <input type="text" id="retention-tags" placeholder="critical, compliance, training">
                     <small>Comma-separated tags for special handling</small>
                 </div>
@@ -5201,13 +5201,13 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             </div>
             <form id="add-blocked-pattern-form" onsubmit="addBlockedPattern(event)">
                 <div class="form-group">
-                    <label>Number Pattern (Regex):</label>
+                    <label for="blocked-pattern">Number Pattern (Regex):</label>
                     <input type="text" id="blocked-pattern" required maxlength="100" placeholder="^900.*">
                     <small>Regular expression to match numbers to block (e.g., ^900.* for 900 numbers)</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Reason:</label>
+                    <label for="blocked-reason">Reason:</label>
                     <input type="text" id="blocked-reason" required maxlength="200" placeholder="Premium rate numbers">
                     <small>Explanation for blocking this pattern</small>
                 </div>
