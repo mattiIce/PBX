@@ -107,9 +107,29 @@
 
 ## 🚀 Quick Start
 
+### Ubuntu Interactive Setup Wizard (Easiest!)
+
+For Ubuntu users, the easiest way to install is using the interactive setup wizard:
+
+```bash
+git clone https://github.com/mattiIce/PBX.git
+cd PBX
+sudo python3 setup_ubuntu.py
+```
+
+The wizard will automatically:
+- Install system dependencies (espeak, ffmpeg, PostgreSQL, etc.)
+- Set up Python virtual environment
+- Configure PostgreSQL database
+- Generate SSL certificates
+- Create voice prompts
+- Initialize the database
+
+See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed instructions.
+
 > **📌 Production Deployment?** If you're deploying to Ubuntu 24.04 LTS for production use, see the [Production Deployment](#-production-deployment-ubuntu-2404-lts) section below for automated setup.
 
-### Installation
+### Manual Installation
 
 1. Clone the repository:
 ```bash
