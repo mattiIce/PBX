@@ -973,9 +973,16 @@ async function refreshAllData() {
     const originalDisabled = refreshBtn.disabled;
 
     // Helper function to add optional functions to the promise array
+    // Accepts either a function reference or a string name to safely handle undefined functions
     const addIfExists = (funcName, promises) => {
         if (typeof funcName === 'function') {
             promises.push(Promise.resolve(funcName()));
+        } else if (typeof funcName === 'string') {
+            // String-based lookup for functions that might not be defined yet
+            const func = window[funcName];
+            if (typeof func === 'function') {
+                promises.push(Promise.resolve(func()));
+            }
         }
     };
 
@@ -1028,7 +1035,8 @@ async function refreshAllData() {
         ];
 
         // Add conditional async functions that may or may not exist
-        addIfExists(loadAutoAttendantConfig, refreshPromises);
+        // Use string names for functions defined in files loaded after admin.js
+        addIfExists('loadAutoAttendantConfig', refreshPromises);  // from auto_attendant.js
         addIfExists(loadPagingData, refreshPromises);
         addIfExists(loadWebRTCPhoneConfig, refreshPromises);
         
@@ -1045,13 +1053,13 @@ async function refreshAllData() {
         addIfExists(loadHotDeskSessions, refreshPromises);
         addIfExists(loadRetentionPolicies, refreshPromises);
         
-        // Integrations
-        addIfExists(loadJitsiConfig, refreshPromises);
-        addIfExists(loadMatrixConfig, refreshPromises);
-        addIfExists(loadEspoCRMConfig, refreshPromises);
-        addIfExists(loadClickToDialTab, refreshPromises);
+        // Integrations (use string names for functions that may not be defined yet)
+        addIfExists('loadJitsiConfig', refreshPromises);              // from opensource_integrations.js
+        addIfExists('loadMatrixConfig', refreshPromises);             // from opensource_integrations.js
+        addIfExists('loadEspoCRMConfig', refreshPromises);            // from opensource_integrations.js
+        addIfExists('loadClickToDialTab', refreshPromises);           // from framework_features.js
         addIfExists(loadCRMActivityLog, refreshPromises);
-        addIfExists(loadOpenSourceIntegrations, refreshPromises);
+        addIfExists('loadOpenSourceIntegrations', refreshPromises);   // from opensource_integrations.js
         
         // Security & Monitoring
         addIfExists(loadFraudDetectionData, refreshPromises);
