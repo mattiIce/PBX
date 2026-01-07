@@ -493,7 +493,7 @@
             <h2>Call Analytics & Statistics</h2>
 
             <div class="action-buttons" style="margin-bottom: 20px;">
-                <label for="analytics-period">Time Period:
+                <label>Time Period:
                     <select id="analytics-period" onchange="loadAnalytics()">
                         <option value="1">Last 24 Hours</option>
                         <option value="7" selected>Last 7 Days</option>
@@ -3517,8 +3517,8 @@ G.726-32</textarea>
                     <form id="generate-license-form" onsubmit="generateLicense(event); return false;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div>
-                                <label for="type" style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
-                                <select id="type" name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label for="license-type" style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
+                                <select id="license-type" name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="trial">Trial (30 days)</option>
                                     <option value="basic">Basic</option>
                                     <option value="professional">Professional</option>
@@ -3561,7 +3561,7 @@ G.726-32</textarea>
                             <textarea id="license-data" name="license_data" rows="8" required placeholder='{"key": "XXXX-XXXX-XXXX-XXXX", "type": "professional", ...}' style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
                         </div>
                         <div style="margin-bottom: 15px;">
-                            <label for="enforce-licensing" style="display: flex; align-items: center;">
+                            <label style="display: flex; align-items: center;">
                                 <input id="enforce-licensing" type="checkbox" name="enforce_licensing" style="margin-right: 8px;">
                                 <span><strong>Enforce Licensing</strong> (Create lock file - prevents disabling licensing)</span>
                             </label>
@@ -3671,7 +3671,7 @@ G.726-32</textarea>
                 <p>Track location changes and updates over time.</p>
                 <div class="action-buttons" style="margin-bottom: 15px;">
                     <button class="btn btn-primary" onclick="loadLocationHistory()">🔄 Refresh History</button>
-                    <label for="location-history-extension" style="margin-left: 15px;">
+                    <label style="margin-left: 15px;">
                         Extension:
                         <select id="location-history-extension" onchange="loadLocationHistory()">
                             <option value="">All Extensions</option>
