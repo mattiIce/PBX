@@ -26,12 +26,13 @@ class TestAPIEndpointURLs(unittest.TestCase):
 
     def test_dtmf_config_endpoints(self):
         """Verify DTMF config endpoints use correct URL path"""
-        # Check that the correct endpoint paths exist
-        self.assertIn(
-            'path == "/api/config/dtmf"', self.rest_api_content, "GET endpoint for DTMF config"
-        )
-        self.assertIn(
-            'path == "/api/config/dtmf"', self.rest_api_content, "PUT/POST endpoint for DTMF config"
+        # Check that the correct endpoint paths exist for both GET and PUT/POST
+        dtmf_path = 'path == "/api/config/dtmf"'
+        dtmf_path_count = self.rest_api_content.count(dtmf_path)
+        self.assertGreaterEqual(
+            dtmf_path_count,
+            2,
+            "DTMF config path should be defined for both GET and PUT/POST endpoints",
         )
 
         # Check that the old incorrect path does NOT exist

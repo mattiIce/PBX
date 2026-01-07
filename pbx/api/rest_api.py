@@ -8445,20 +8445,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             try:
                 # Delete entries older than 30 days
                 cutoff_date = datetime.now() - timedelta(days=30)
-                result = self.pbx_core.database.execute(
+                delete_query = (
                     """DELETE FROM integration_activity_log
-                       WHERE created_at < ?""",
+                       WHERE created_at < ?"""
+                    if self.pbx_core.database.db_type == "sqlite"
+                    else """DELETE FROM integration_activity_log
+                       WHERE created_at < %s"""
+                )
+                self.pbx_core.database.execute(
+                    delete_query,
                     (cutoff_date.isoformat(),),
                 )
-
-                # Get the number of rows affected (if supported by database)
-                rows_deleted = result if isinstance(result, int) else 0
 
                 self._send_json(
                     {
                         "success": True,
                         "message": "Old activity log entries cleared successfully",
-                        "rows_deleted": rows_deleted,
                     }
                 )
             except Exception as e:
