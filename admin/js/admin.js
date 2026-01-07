@@ -973,9 +973,16 @@ async function refreshAllData() {
     const originalDisabled = refreshBtn.disabled;
 
     // Helper function to add optional functions to the promise array
+    // Accepts either a function reference or a string name to safely handle undefined functions
     const addIfExists = (funcName, promises) => {
         if (typeof funcName === 'function') {
             promises.push(Promise.resolve(funcName()));
+        } else if (typeof funcName === 'string') {
+            // String-based lookup for functions that might not be defined yet
+            const func = window[funcName];
+            if (typeof func === 'function') {
+                promises.push(Promise.resolve(func()));
+            }
         }
     };
 
@@ -1045,10 +1052,10 @@ async function refreshAllData() {
         addIfExists(loadHotDeskSessions, refreshPromises);
         addIfExists(loadRetentionPolicies, refreshPromises);
         
-        // Integrations
-        addIfExists(loadJitsiConfig, refreshPromises);
-        addIfExists(loadMatrixConfig, refreshPromises);
-        addIfExists(loadEspoCRMConfig, refreshPromises);
+        // Integrations (use string names for functions that may not be defined yet)
+        addIfExists('loadJitsiConfig', refreshPromises);
+        addIfExists('loadMatrixConfig', refreshPromises);
+        addIfExists('loadEspoCRMConfig', refreshPromises);
         addIfExists(loadClickToDialTab, refreshPromises);
         addIfExists(loadCRMActivityLog, refreshPromises);
         addIfExists(loadOpenSourceIntegrations, refreshPromises);
