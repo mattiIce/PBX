@@ -3517,8 +3517,8 @@ G.726-32</textarea>
                     <form id="generate-license-form" onsubmit="generateLicense(event); return false;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div>
-                                <label for="type" style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
-                                <select id="type" name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">License Type *</label>
+                                <select name="type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                     <option value="trial">Trial (30 days)</option>
                                     <option value="basic">Basic</option>
                                     <option value="professional">Professional</option>
@@ -3528,20 +3528,20 @@ G.726-32</textarea>
                                 </select>
                             </div>
                             <div>
-                                <label for="issued-to" style="display: block; margin-bottom: 5px; font-weight: bold;">Organization/Person *</label>
-                                <input id="issued-to" type="text" name="issued_to" required placeholder="Example Corporation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Organization/Person *</label>
+                                <input type="text" name="issued_to" required placeholder="Example Corporation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label for="expiration-days" style="display: block; margin-bottom: 5px; font-weight: bold;">Expiration Days</label>
-                                <input id="expiration-days" type="number" name="expiration_days" placeholder="365 (leave empty for perpetual)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Expiration Days</label>
+                                <input type="number" name="expiration_days" placeholder="365 (leave empty for perpetual)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label for="max-extensions" style="display: block; margin-bottom: 5px; font-weight: bold;">Max Extensions</label>
-                                <input id="max-extensions" type="number" name="max_extensions" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Max Extensions</label>
+                                <input type="number" name="max_extensions" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label for="max-concurrent-calls" style="display: block; margin-bottom: 5px; font-weight: bold;">Max Concurrent Calls</label>
-                                <input id="max-concurrent-calls" type="number" name="max_concurrent_calls" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Max Concurrent Calls</label>
+                                <input type="number" name="max_concurrent_calls" placeholder="Leave empty for unlimited" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                         </div>
                         <div class="action-buttons">
@@ -3557,12 +3557,12 @@ G.726-32</textarea>
                     <p style="color: #666; margin-bottom: 10px;">Upload and install a license file (JSON format).</p>
                     <form id="install-license-form" onsubmit="installLicense(event); return false;">
                         <div style="margin-bottom: 15px;">
-                            <label for="license-data" style="display: block; margin-bottom: 5px; font-weight: bold;">License Data (JSON)</label>
-                            <textarea id="license-data" name="license_data" rows="8" required placeholder='{"key": "XXXX-XXXX-XXXX-XXXX", "type": "professional", ...}' style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">License Data (JSON)</label>
+                            <textarea name="license_data" rows="8" required placeholder='{"key": "XXXX-XXXX-XXXX-XXXX", "type": "professional", ...}' style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
                         </div>
                         <div style="margin-bottom: 15px;">
-                            <label for="enforce-licensing" style="display: flex; align-items: center;">
-                                <input id="enforce-licensing" type="checkbox" name="enforce_licensing" style="margin-right: 8px;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" name="enforce_licensing" style="margin-right: 8px;">
                                 <span><strong>Enforce Licensing</strong> (Create lock file - prevents disabling licensing)</span>
                             </label>
                             <p style="color: #666; margin: 5px 0 0 24px; font-size: 13px;">Enable this for commercial deployments to prevent users from disabling licensing.</p>
@@ -4968,17 +4968,17 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <div class="form-group">
                     <label>Codec Preferences:</label>
                     <div style="margin-top: 8px;">
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
                         </label>
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="G.722"> G.722 HD Audio
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.722"> G.722 HD Audio
                         </label>
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="Opus"> Opus
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="Opus"> Opus
                         </label>
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="G.729"> G.729
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.729"> G.729
                         </label>
                     </div>
                 </div>
@@ -5070,9 +5070,9 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                             <label><input type="checkbox" name="time-rule-days" value="0" checked> Monday</label>
                             <label><input type="checkbox" name="time-rule-days" value="1" checked> Tuesday</label>
                             <label><input type="checkbox" name="time-rule-days" value="2" checked> Wednesday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="3" checked> Thursday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="4" checked> Friday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="5"> Saturday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="3" checked> Thursday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="4" checked> Friday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="5"> Saturday</label>
                             <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="6"> Sunday</label>
                         </div>
                     </div>
@@ -5130,10 +5130,10 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                         <label><input type="checkbox" name="webhook-events" value="call_ended"> Call Ended</label>
                         <label><input type="checkbox" name="webhook-events" value="call_answered"> Call Answered</label>
                         <label><input type="checkbox" name="webhook-events" value="extension_registered"> Extension Registered</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="extension_unregistered"> Extension Unregistered</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="voicemail_new"> New Voicemail</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="voicemail_deleted"> Voicemail Deleted</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="*"> All Events</label>
+                        <label><input type="checkbox" name="webhook-events" value="extension_unregistered"> Extension Unregistered</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_new"> New Voicemail</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_deleted"> Voicemail Deleted</label>
+                        <label><input type="checkbox" name="webhook-events" value="*"> All Events</label>
                     </div>
                     <small>Select which events should trigger this webhook</small>
                 </div>
