@@ -33,6 +33,14 @@ from pbx.utils.tts import get_tts_requirements, is_tts_available, text_to_wav_te
 # Constants
 DEFAULT_WEBRTC_EXTENSION = "webrtc-admin"  # Default extension for WebRTC browser phone
 
+# Default DTMF configuration to use when config is not available
+DEFAULT_DTMF_CONFIG = {
+    "mode": "rfc2833",
+    "payload_type": 101,
+    "duration": 100,
+    "volume": -10
+}
+
 # Optional imports for SSL certificate generation
 try:
     from cryptography import x509
@@ -3146,21 +3154,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(dtmf_config)
             else:
                 # Return default DTMF configuration instead of error
-                self._send_json({
-                    "mode": "rfc2833",
-                    "payload_type": 101,
-                    "duration": 100,
-                    "volume": -10
-                })
+                self._send_json(DEFAULT_DTMF_CONFIG)
         except Exception as e:
             self.logger.error(f"Error getting DTMF config: {e}")
             # Return default configuration on error
-            self._send_json({
-                "mode": "rfc2833",
-                "payload_type": 101,
-                "duration": 100,
-                "volume": -10
-            })
+            self._send_json(DEFAULT_DTMF_CONFIG)
 
     def _handle_update_dtmf_config(self):
         """Update DTMF configuration."""
