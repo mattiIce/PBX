@@ -548,11 +548,9 @@ function refreshEmergencyTab() {
     loadEmergencyHistory();
 }
 
-// Wrapper function for fraud detection - handle both possible function names
+// Wrapper function for fraud detection - calls loadFraudAlerts directly
 function refreshFraudDetectionTab() {
-    if (typeof loadFraudDetectionData === 'function') {
-        loadFraudDetectionData();
-    } else if (typeof loadFraudAlerts === 'function') {
+    if (typeof loadFraudAlerts === 'function') {
         loadFraudAlerts();
     }
 }
@@ -575,9 +573,10 @@ function refreshCallbackQueueTab() {
  */
 function loadFraudDetectionData() {
     if (typeof loadFraudAlerts === 'function') {
-        loadFraudAlerts();
+        return loadFraudAlerts();
     } else {
         console.debug('loadFraudAlerts function not available');
+        return undefined;
     }
 }
 
@@ -586,9 +585,10 @@ function loadFraudDetectionData() {
  */
 function loadNomadicE911Data() {
     if (typeof loadE911Sites === 'function') {
-        loadE911Sites();
+        return loadE911Sites();
     } else {
         console.debug('loadE911Sites function not available');
+        return undefined;
     }
 }
 
@@ -597,9 +597,10 @@ function loadNomadicE911Data() {
  */
 function loadMobilePushConfig() {
     if (typeof loadMobilePushDevices === 'function') {
-        loadMobilePushDevices();
+        return loadMobilePushDevices();
     } else {
         console.debug('loadMobilePushDevices function not available');
+        return undefined;
     }
 }
 
@@ -608,9 +609,10 @@ function loadMobilePushConfig() {
  */
 function loadRecordingAnnouncements() {
     if (typeof loadRecordingAnnouncementsStats === 'function') {
-        loadRecordingAnnouncementsStats();
+        return loadRecordingAnnouncementsStats();
     } else {
         console.debug('loadRecordingAnnouncementsStats function not available');
+        return undefined;
     }
 }
 
