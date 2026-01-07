@@ -184,6 +184,43 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["payload_type"], 101)
         self.assertEqual(self.response_status, 200)
 
+    def test_dtmf_config_returns_defaults_when_unauthenticated(self):
+        """Test that /api/config/dtmf returns defaults for unauthenticated users"""
+        # Bind the real method to our mock handler
+        from pbx.api.rest_api import PBXAPIHandler
+        self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
+        self.handler._require_admin = lambda: (False, None)  # Not authenticated
+        
+        # Call the method
+        PBXAPIHandler._handle_get_dtmf_config(self.handler)
+
+        # Should return default configuration, not 403 error
+        self.assertIsNotNone(self.response_data)
+        self.assertIn("mode", self.response_data)
+        self.assertIn("payload_type", self.response_data)
+        self.assertEqual(self.response_data["mode"], "rfc2833")
+        self.assertEqual(self.response_data["payload_type"], 101)
+        self.assertEqual(self.response_status, 200)
+
+    def test_config_returns_empty_when_unauthenticated(self):
+        """Test that /api/config returns empty config for unauthenticated users"""
+        # Bind the real method to our mock handler
+        from pbx.api.rest_api import PBXAPIHandler
+        self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
+        self.handler._require_admin = lambda: (False, None)  # Not authenticated
+        
+        # Call the method
+        PBXAPIHandler._handle_get_config(self.handler)
+
+        # Should return empty config structure, not 403 error
+        self.assertIsNotNone(self.response_data)
+        self.assertIn("smtp", self.response_data)
+        self.assertIn("email", self.response_data)
+        self.assertIn("integrations", self.response_data)
+        self.assertEqual(self.response_data["smtp"]["host"], "")
+        self.assertEqual(self.response_data["integrations"], {})
+        self.assertEqual(self.response_status, 200)
+
 
 if __name__ == "__main__":
     unittest.main()
