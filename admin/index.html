@@ -1353,7 +1353,7 @@
                 <h3>Voicemail PIN Management</h3>
                 <form id="voicemail-pin-form">
                     <div class="form-group">
-                        <label>Current Extension: <span id="vm-current-extension"></span></label>
+                        <div><strong>Current Extension:</strong> <span id="vm-current-extension"></span></div>
                     </div>
                     <div class="form-group">
                         <label for="vm-pin">New PIN (4 digits):</label>
@@ -1598,7 +1598,7 @@
                 <div id="ctd-config-section" style="display: none;">
                     <form id="ctd-config-form" onsubmit="saveClickToDialConfig(event)">
                         <div class="form-group">
-                            <label>Extension: <span id="ctd-current-extension"></span></label>
+                            <div><strong>Extension:</strong> <span id="ctd-current-extension"></span></div>
                         </div>
                         <div class="form-group">
                             <label>
@@ -4709,7 +4709,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Type of destination for this menu option</small>
                 </div>
                 <div class="form-group" id="new-dest-extension-group">
-                    <label>Destination <span id="new-dest-label">Extension</span>:</label>
+                    <label for="new-menu-destination">Destination <span id="new-dest-label">Extension</span>:</label>
                     <input type="text" id="new-menu-destination" required placeholder="1001">
                     <small id="new-dest-help">Extension, queue, or feature code to transfer to</small>
                 </div>
@@ -4743,7 +4743,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             <form id="edit-menu-option-form">
                 <input type="hidden" id="edit-menu-digit">
                 <div class="form-group">
-                    <label>Digit: <span id="edit-menu-digit-display"></span></label>
+                    <div><strong>Digit:</strong> <span id="edit-menu-digit-display"></span></div>
                 </div>
                 <div class="form-group">
                     <label for="edit-menu-dest-type">Destination Type:</label>
@@ -4756,7 +4756,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group" id="edit-dest-extension-group">
-                    <label>Destination <span id="edit-dest-label">Extension</span>:</label>
+                    <label for="edit-menu-destination">Destination <span id="edit-dest-label">Extension</span>:</label>
                     <input type="text" id="edit-menu-destination" required placeholder="1001">
                 </div>
                 <div class="form-group" id="edit-dest-submenu-group" style="display: none;">
