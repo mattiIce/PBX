@@ -325,6 +325,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_export_voicemail_box(path)
             elif path == "/api/ssl/generate-certificate":
                 self._handle_generate_ssl_certificate()
+            elif path == "/api/config/dtmf":
+                # Admin UI uses POST for DTMF config updates
+                self._handle_update_dtmf_config()
             elif path == "/api/sip-trunks":
                 self._handle_add_sip_trunk()
             elif path == "/api/sip-trunks/test":
@@ -398,6 +401,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_hubspot_config()
             elif path == "/api/framework/integrations/zendesk/config":
                 self._handle_update_zendesk_config()
+            elif path == "/api/framework/integrations/activity-log/clear":
+                self._handle_clear_integration_activity()
             elif path == "/api/framework/compliance/gdpr/consent":
                 self._handle_record_gdpr_consent()  # pylint: disable=no-member
             elif path == "/api/framework/compliance/gdpr/withdraw":
@@ -602,7 +607,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_update_config()
             elif path == "/api/config/section":
                 self._handle_update_config_section()
-            elif path == "/api/config/dtm":
+            elif path == "/api/config/dtmf":
+                # Also available via POST (see do_POST) for admin UI compatibility
                 self._handle_update_dtmf_config()
             elif path.startswith("/api/voicemail/"):
                 self._handle_update_voicemail(path)
@@ -826,7 +832,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_config()
             elif path == "/api/config/full":
                 self._handle_get_full_config()
-            elif path == "/api/config/dtm":
+            elif path == "/api/config/dtmf":
                 self._handle_get_dtmf_config()
             elif path == "/api/ssl/status":
                 self._handle_get_ssl_status()
@@ -1061,7 +1067,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_hubspot_config()
             elif path == "/api/framework/integrations/zendesk":
                 self._handle_get_zendesk_config()
-            elif path == "/api/framework/integrations/activity":
+            elif path == "/api/framework/integrations/activity-log":
                 self._handle_get_integration_activity()
             elif path == "/api/framework/compliance/gdpr/consents":
                 extension = self.headers.get("X-Extension", "")
@@ -8423,6 +8429,42 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"activities": activities})
             except Exception as e:
                 self.logger.error(f"Error getting integration activity: {e}")
+                self._send_json({"error": str(e)}, 500)
+        else:
+            self._send_json({"error": "Database not available"}, 500)
+
+    def _handle_clear_integration_activity(self):
+        """Clear old integration activity log entries."""
+        # SECURITY: Require admin authentication
+        is_admin, _ = self._require_admin()
+        if not is_admin:
+            self._send_json({"error": "Admin privileges required"}, 403)
+            return
+
+        if self.pbx_core and self.pbx_core.database.enabled:
+            try:
+                # Delete entries older than 30 days
+                cutoff_date = datetime.now() - timedelta(days=30)
+                delete_query = (
+                    """DELETE FROM integration_activity_log
+                       WHERE created_at < ?"""
+                    if self.pbx_core.database.db_type == "sqlite"
+                    else """DELETE FROM integration_activity_log
+                       WHERE created_at < %s"""
+                )
+                self.pbx_core.database.execute(
+                    delete_query,
+                    (cutoff_date.isoformat(),),
+                )
+
+                self._send_json(
+                    {
+                        "success": True,
+                        "message": "Old activity log entries cleared successfully",
+                    }
+                )
+            except Exception as e:
+                self.logger.error(f"Error clearing integration activity: {e}")
                 self._send_json({"error": str(e)}, 500)
         else:
             self._send_json({"error": "Database not available"}, 500)
