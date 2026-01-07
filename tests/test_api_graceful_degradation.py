@@ -51,7 +51,9 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         """Helper to set up handler with authentication state"""
         from pbx.api.rest_api import PBXAPIHandler
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        self.handler._require_admin = lambda: (is_admin, {} if is_admin else None)
+        # Return consistent dict type for payload, with is_admin flag set accordingly
+        payload = {"is_admin": is_admin} if is_admin else {}
+        self.handler._require_admin = lambda: (is_admin, payload)
         return PBXAPIHandler
 
     def test_paging_zones_when_disabled(self):

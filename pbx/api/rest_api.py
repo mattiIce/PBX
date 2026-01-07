@@ -2702,7 +2702,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         self._send_json({"success": True, "message": "Logged out successfully"})
 
     def _handle_get_config(self):
-        """Get current configuration."""
+        """Get current configuration.
+        
+        Returns configuration including integrations field required by frontend.
+        """
         # SECURITY: Check admin authentication but allow graceful degradation
         # Return empty config if not authenticated to prevent UI errors
         is_admin, _ = self._require_admin()
@@ -2725,6 +2728,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 "email_notifications": self.pbx_core.config.get(
                     "voicemail.email_notifications", False
                 ),
+                # Frontend integration loaders (Jitsi, Matrix, EspoCRM) require this field
                 "integrations": self.pbx_core.config.get("integrations", {})
             }
             self._send_json(config_data)
