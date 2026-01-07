@@ -4723,7 +4723,7 @@ function loadSIPTrunks() {
 
                 document.getElementById('trunk-healthy').textContent = healthyCount;
                 document.getElementById('trunk-registered').textContent = registeredCount;
-                document.getElementById('trunk-channels').textContent = totalChannels;
+                document.getElementById('trunk-total-channels').textContent = totalChannels;
 
                 // Update table
                 const tbody = document.getElementById('trunks-list');
@@ -5278,7 +5278,7 @@ function loadFMFMExtensions() {
 
                 document.getElementById('fmfm-sequential').textContent = sequentialCount;
                 document.getElementById('fmfm-simultaneous').textContent = simultaneousCount;
-                document.getElementById('fmfm-enabled').textContent = enabledCount;
+                document.getElementById('fmfm-active-count').textContent = enabledCount;
 
                 // Update table
                 const tbody = document.getElementById('fmfm-list');

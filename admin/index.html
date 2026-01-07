@@ -1353,7 +1353,7 @@
                 <h3>Voicemail PIN Management</h3>
                 <form id="voicemail-pin-form">
                     <div class="form-group">
-                        <label>Current Extension: <span id="vm-current-extension"></span></label>
+                        <div><strong>Current Extension:</strong> <span id="vm-current-extension"></span></div>
                     </div>
                     <div class="form-group">
                         <label for="vm-pin">New PIN (4 digits):</label>
@@ -1598,7 +1598,7 @@
                 <div id="ctd-config-section" style="display: none;">
                     <form id="ctd-config-form" onsubmit="saveClickToDialConfig(event)">
                         <div class="form-group">
-                            <label>Extension: <span id="ctd-current-extension"></span></label>
+                            <div><strong>Extension:</strong> <span id="ctd-current-extension"></span></div>
                         </div>
                         <div class="form-group">
                             <label>
@@ -1820,7 +1820,7 @@ Content-Type: application/json
                     <div class="stat-label">Simultaneous Mode</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="fmfm-enabled">-</div>
+                    <div class="stat-value" id="fmfm-active-count">-</div>
                     <div class="stat-label">Active Configurations</div>
                 </div>
             </div>
@@ -1954,7 +1954,7 @@ Content-Type: application/json
                     <div class="stat-label">Registered</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="trunk-channels">-</div>
+                    <div class="stat-value" id="trunk-total-channels">-</div>
                     <div class="stat-label">Available Channels</div>
                 </div>
             </div>
@@ -4709,7 +4709,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Type of destination for this menu option</small>
                 </div>
                 <div class="form-group" id="new-dest-extension-group">
-                    <label>Destination <span id="new-dest-label">Extension</span>:</label>
+                    <label for="new-menu-destination">Destination <span id="new-dest-label">Extension</span>:</label>
                     <input type="text" id="new-menu-destination" required placeholder="1001">
                     <small id="new-dest-help">Extension, queue, or feature code to transfer to</small>
                 </div>
@@ -4743,7 +4743,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             <form id="edit-menu-option-form">
                 <input type="hidden" id="edit-menu-digit">
                 <div class="form-group">
-                    <label>Digit: <span id="edit-menu-digit-display"></span></label>
+                    <div><strong>Digit:</strong> <span id="edit-menu-digit-display"></span></div>
                 </div>
                 <div class="form-group">
                     <label for="edit-menu-dest-type">Destination Type:</label>
@@ -4756,7 +4756,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group" id="edit-dest-extension-group">
-                    <label>Destination <span id="edit-dest-label">Extension</span>:</label>
+                    <label for="edit-menu-destination">Destination <span id="edit-dest-label">Extension</span>:</label>
                     <input type="text" id="edit-menu-destination" required placeholder="1001">
                 </div>
                 <div class="form-group" id="edit-dest-submenu-group" style="display: none;">
@@ -4852,7 +4852,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Notification Methods:</label>
+                    <div><strong>Notification Methods:</strong></div>
                     <div style="margin-top: 10px;">
                         <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" id="method-call" value="call" checked>
@@ -4966,7 +4966,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Maximum concurrent calls</small>
                 </div>
                 <div class="form-group">
-                    <label>Codec Preferences:</label>
+                    <div><strong>Codec Preferences:</strong></div>
                     <div style="margin-top: 8px;">
                         <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
@@ -5012,7 +5012,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>How destinations should ring</small>
                 </div>
                 <div class="form-group">
-                    <label>Enabled:</label>
+                    <label for="fmfm-enabled">Enabled:</label>
                     <input type="checkbox" id="fmfm-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable FMFM for this extension</small>
                 </div>
@@ -5065,7 +5065,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <h4>Time Conditions</h4>
 
                     <div class="form-group">
-                        <label>Days of Week:</label>
+                        <div><strong>Days of Week:</strong></div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 5px; margin-top: 8px;">
                             <label><input type="checkbox" name="time-rule-days" value="0" checked> Monday</label>
                             <label><input type="checkbox" name="time-rule-days" value="1" checked> Tuesday</label>
@@ -5096,7 +5096,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Enabled:</label>
+                    <label for="time-rule-enabled">Enabled:</label>
                     <input type="checkbox" id="time-rule-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable this rule immediately</small>
                 </div>
@@ -5124,7 +5124,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Event Types:</label>
+                    <div><strong>Event Types:</strong></div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 8px;">
                         <label><input type="checkbox" name="webhook-events" value="call_started"> Call Started</label>
                         <label><input type="checkbox" name="webhook-events" value="call_ended"> Call Ended</label>
@@ -5145,7 +5145,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Enabled:</label>
+                    <label for="webhook-enabled">Enabled:</label>
                     <input type="checkbox" id="webhook-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable this webhook immediately</small>
                 </div>
