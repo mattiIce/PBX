@@ -4852,7 +4852,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Notification Methods:</label>
+                    <div><strong>Notification Methods:</strong></div>
                     <div style="margin-top: 10px;">
                         <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" id="method-call" value="call" checked>
@@ -4966,7 +4966,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Maximum concurrent calls</small>
                 </div>
                 <div class="form-group">
-                    <label>Codec Preferences:</label>
+                    <div><strong>Codec Preferences:</strong></div>
                     <div style="margin-top: 8px;">
                         <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
@@ -5012,7 +5012,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>How destinations should ring</small>
                 </div>
                 <div class="form-group">
-                    <label>Enabled:</label>
+                    <label for="fmfm-enabled">Enabled:</label>
                     <input type="checkbox" id="fmfm-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable FMFM for this extension</small>
                 </div>
@@ -5065,7 +5065,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <h4>Time Conditions</h4>
 
                     <div class="form-group">
-                        <label>Days of Week:</label>
+                        <div><strong>Days of Week:</strong></div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 5px; margin-top: 8px;">
                             <label><input type="checkbox" name="time-rule-days" value="0" checked> Monday</label>
                             <label><input type="checkbox" name="time-rule-days" value="1" checked> Tuesday</label>
@@ -5096,7 +5096,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Enabled:</label>
+                    <label for="time-rule-enabled">Enabled:</label>
                     <input type="checkbox" id="time-rule-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable this rule immediately</small>
                 </div>
@@ -5124,7 +5124,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Event Types:</label>
+                    <div><strong>Event Types:</strong></div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 8px;">
                         <label><input type="checkbox" name="webhook-events" value="call_started"> Call Started</label>
                         <label><input type="checkbox" name="webhook-events" value="call_ended"> Call Ended</label>
@@ -5145,7 +5145,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label>Enabled:</label>
+                    <label for="webhook-enabled">Enabled:</label>
                     <input type="checkbox" id="webhook-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable this webhook immediately</small>
                 </div>
