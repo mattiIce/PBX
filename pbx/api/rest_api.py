@@ -326,6 +326,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path == "/api/ssl/generate-certificate":
                 self._handle_generate_ssl_certificate()
             elif path == "/api/config/dtmf":
+                # Admin UI uses POST for DTMF config updates
                 self._handle_update_dtmf_config()
             elif path == "/api/sip-trunks":
                 self._handle_add_sip_trunk()
@@ -607,6 +608,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             elif path == "/api/config/section":
                 self._handle_update_config_section()
             elif path == "/api/config/dtmf":
+                # Also available via POST (see do_POST) for admin UI compatibility
                 self._handle_update_dtmf_config()
             elif path.startswith("/api/voicemail/"):
                 self._handle_update_voicemail(path)
