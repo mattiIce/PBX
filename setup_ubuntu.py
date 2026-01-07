@@ -25,6 +25,7 @@ Requirements:
 """
 
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -282,10 +283,18 @@ class SetupWizard:
             self.print_error("Database password is required")
             return False
 
+        # Validate inputs to prevent SQL injection
+        if not re.match(r"^[a-zA-Z0-9_]+$", db_user):
+            self.print_error("Database user must contain only letters, numbers, and underscores")
+            return False
+        if not re.match(r"^[a-zA-Z0-9_]+$", db_name):
+            self.print_error("Database name must contain only letters, numbers, and underscores")
+            return False
+
         # Create database user
-        create_user_cmd = (
-            f"sudo -u postgres psql -c \"CREATE USER {db_user} WITH PASSWORD '{db_password}';\""
-        )
+        # Escape single quotes in password by doubling them (SQL standard)
+        escaped_password = db_password.replace("'", "''")
+        create_user_cmd = f"sudo -u postgres psql -c \"CREATE USER {db_user} WITH PASSWORD '{escaped_password}';\""
         ret, _, stderr = self.run_command(
             create_user_cmd, f"Creating database user '{db_user}'", check=False
         )
@@ -293,10 +302,10 @@ class SetupWizard:
         if ret != 0 and "already exists" not in stderr:
             self.print_error(f"Failed to create database user: {stderr}")
             return False
-        elif "already exists" in stderr:
+        if "already exists" in stderr:
             self.print_warning(f"User '{db_user}' already exists")
 
-        # Create database
+        # Create database (safe - inputs validated above)
         create_db_cmd = f'sudo -u postgres psql -c "CREATE DATABASE {db_name} OWNER {db_user};"'
         ret, _, stderr = self.run_command(
             create_db_cmd, f"Creating database '{db_name}'", check=False
@@ -305,10 +314,10 @@ class SetupWizard:
         if ret != 0 and "already exists" not in stderr:
             self.print_error(f"Failed to create database: {stderr}")
             return False
-        elif "already exists" in stderr:
+        if "already exists" in stderr:
             self.print_warning(f"Database '{db_name}' already exists")
 
-        # Grant privileges
+        # Grant privileges (safe - inputs validated above)
         grant_cmd = (
             f'sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE {db_name} TO {db_user};"'
         )
@@ -410,12 +419,21 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
             input(f"  Hostname or IP address [{default_hostname}]: ").strip() or default_hostname
         )
 
+        # Validate hostname to prevent command injection
+        # Allow alphanumeric, dots, hyphens, and colons (for IPv6)
+        if not re.match(r"^[a-zA-Z0-9.\-:]+$", hostname):
+            self.print_error(
+                "Invalid hostname format. Use only letters, numbers, dots, hyphens, and colons."
+            )
+            return False
+
         ssl_script = self.project_root / "scripts" / "generate_ssl_cert.py"
         if not ssl_script.exists():
             self.print_warning("SSL certificate generation script not found, skipping...")
             return True
 
         python_path = self.venv_path / "bin" / "python"
+        # Using shlex.quote would be better, but hostname is validated above
         ret, _, stderr = self.run_command(
             f"{python_path} {ssl_script} --hostname {hostname}",
             "Generating SSL certificate",

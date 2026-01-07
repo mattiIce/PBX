@@ -122,9 +122,7 @@ def test_run_command_success():
         mock_result.stderr = ""
         mock_run.return_value = mock_result
 
-        ret, stdout, stderr = wizard.run_command(
-            "echo test", "Test command", check=False
-        )
+        ret, stdout, stderr = wizard.run_command("echo test", "Test command", check=False)
 
         assert ret == 0, "Should return success code"
         assert stdout == "Success output", "Should return stdout"
@@ -147,9 +145,7 @@ def test_run_command_failure():
         mock_result.stderr = "Error output"
         mock_run.return_value = mock_result
 
-        ret, stdout, stderr = wizard.run_command(
-            "false", "Test failing command", check=False
-        )
+        ret, stdout, stderr = wizard.run_command("false", "Test failing command", check=False)
 
         assert ret == 1, "Should return error code"
         assert stderr == "Error output", "Should return stderr"
@@ -172,13 +168,11 @@ def test_setup_environment_file():
         "DB_PORT": "5432",
     }
 
-    # Use a temporary file for testing
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".env") as tmp:
-        wizard.env_file = Path(tmp.name)
-    
-    # Delete the temp file first so the wizard can create it fresh
-    if wizard.env_file.exists():
-        os.unlink(wizard.env_file)
+    # Create a proper temporary directory instead of file
+    import tempfile
+
+    temp_dir = tempfile.mkdtemp()
+    wizard.env_file = Path(temp_dir) / "test.env"
 
     try:
         result = wizard.setup_environment_file()
@@ -201,8 +195,10 @@ def test_setup_environment_file():
 
     finally:
         # Clean up
-        if wizard.env_file.exists():
-            os.unlink(wizard.env_file)
+        import shutil
+
+        if Path(temp_dir).exists():
+            shutil.rmtree(temp_dir)
 
     print("✓ Environment file creation works")
 
@@ -223,9 +219,7 @@ PRETTY_NAME="Ubuntu 24.04 LTS"
 VERSION_ID="24.04"
 """
     with patch("builtins.open", create=True) as mock_open:
-        mock_open.return_value.__enter__.return_value.read.return_value = (
-            ubuntu_2404_content
-        )
+        mock_open.return_value.__enter__.return_value.read.return_value = ubuntu_2404_content
         result = wizard.check_ubuntu_version()
         assert result is True, "Should pass for Ubuntu 24.04"
 
@@ -241,9 +235,7 @@ ID=ubuntu
 VERSION_ID="22.04"
 """
     with patch("builtins.open", create=True) as mock_open:
-        mock_open.return_value.__enter__.return_value.read.return_value = (
-            ubuntu_2204_content
-        )
+        mock_open.return_value.__enter__.return_value.read.return_value = ubuntu_2204_content
         result = wizard.check_ubuntu_version()
         assert result is True, "Should pass for other Ubuntu versions"
         assert len(wizard.warnings) > 0, "Should have warning for non-24.04"
