@@ -88,7 +88,12 @@ class SetupWizard:
         print(f"{Colors.OKBLUE}ℹ {text}{Colors.ENDC}")
 
     def run_command(
-        self, cmd: str, description: str, check: bool = True, shell: bool = True
+        self,
+        cmd: str,
+        description: str,
+        check: bool = True,
+        shell: bool = True,
+        timeout: int = 300,
     ) -> Tuple[int, str, str]:
         """
         Run a shell command and return the result
@@ -98,6 +103,7 @@ class SetupWizard:
             description: Description of what the command does
             check: Whether to check for errors
             shell: Whether to use shell execution
+            timeout: Command timeout in seconds (default: 300)
 
         Returns:
             Tuple of (return_code, stdout, stderr)
@@ -110,7 +116,7 @@ class SetupWizard:
                 check=check,
                 capture_output=True,
                 text=True,
-                timeout=300,  # 5 minute timeout
+                timeout=timeout,
             )
             return result.returncode, result.stdout, result.stderr
         except subprocess.CalledProcessError as e:
@@ -183,12 +189,13 @@ class SetupWizard:
             "git",  # Version control
         ]
 
-        # Install packages
+        # Install packages (longer timeout for slow networks)
         packages_str = " ".join(packages)
         ret, _, stderr = self.run_command(
             f"DEBIAN_FRONTEND=noninteractive apt-get install -y {packages_str}",
             "Installing system packages",
             check=False,
+            timeout=600,  # 10 minute timeout for package installation
         )
 
         if ret != 0:
@@ -232,7 +239,7 @@ class SetupWizard:
         if ret != 0:
             self.print_warning("Failed to upgrade pip (continuing anyway)")
 
-        # Install requirements
+        # Install requirements (longer timeout for slow networks)
         requirements_file = self.project_root / "requirements.txt"
         if requirements_file.exists():
             self.print_info("Installing Python dependencies (this may take several minutes)...")
@@ -240,6 +247,7 @@ class SetupWizard:
                 f"{pip_path} install -r {requirements_file}",
                 "Installing Python packages",
                 check=False,
+                timeout=900,  # 15 minute timeout for Python package installation
             )
             if ret != 0:
                 self.print_error(f"Failed to install Python dependencies: {stderr}")
