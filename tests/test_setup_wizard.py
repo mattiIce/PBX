@@ -6,6 +6,7 @@ These tests validate the basic functionality of the setup_ubuntu.py script
 without actually running system commands or making system changes.
 """
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -193,8 +194,6 @@ def test_setup_environment_file():
 
     finally:
         # Clean up
-        import shutil
-
         if Path(temp_dir).exists():
             shutil.rmtree(temp_dir)
 

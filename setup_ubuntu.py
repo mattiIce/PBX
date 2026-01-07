@@ -26,6 +26,7 @@ Requirements:
 
 import os
 import re
+import shlex
 import socket
 import subprocess
 import sys
@@ -438,9 +439,10 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
             return True
 
         python_path = self.venv_path / "bin" / "python"
-        # Using shlex.quote would be better, but hostname is validated above
+        # Use shlex.quote for defense in depth (hostname is already validated)
+        safe_hostname = shlex.quote(hostname)
         ret, _, stderr = self.run_command(
-            f"{python_path} {ssl_script} --hostname {hostname}",
+            f"{python_path} {ssl_script} --hostname {safe_hostname}",
             "Generating SSL certificate",
             check=False,
         )
