@@ -47,6 +47,13 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.response_data = data
         self.response_status = status
 
+    def _setup_handler_with_auth(self, is_admin=True):
+        """Helper to set up handler with authentication state"""
+        from pbx.api.rest_api import PBXAPIHandler
+        self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
+        self.handler._require_admin = lambda: (is_admin, {} if is_admin else None)
+        return PBXAPIHandler
+
     def test_paging_zones_when_disabled(self):
         """Test that /api/paging/zones returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
@@ -168,10 +175,8 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         # Configure pbx_core with config that returns None
         self.pbx_core.config.get_dtmf_config.return_value = None
 
-        # Bind the real method to our mock handler
-        from pbx.api.rest_api import PBXAPIHandler
-        self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        self.handler._require_admin = lambda: (True, {})
+        # Set up handler with admin authentication
+        PBXAPIHandler = self._setup_handler_with_auth(is_admin=True)
         
         # Call the method
         PBXAPIHandler._handle_get_dtmf_config(self.handler)
@@ -186,10 +191,8 @@ class TestAPIGracefulDegradation(unittest.TestCase):
 
     def test_dtmf_config_returns_defaults_when_unauthenticated(self):
         """Test that /api/config/dtmf returns defaults for unauthenticated users"""
-        # Bind the real method to our mock handler
-        from pbx.api.rest_api import PBXAPIHandler
-        self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        self.handler._require_admin = lambda: (False, None)  # Not authenticated
+        # Set up handler without authentication
+        PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
         
         # Call the method
         PBXAPIHandler._handle_get_dtmf_config(self.handler)
@@ -204,10 +207,8 @@ class TestAPIGracefulDegradation(unittest.TestCase):
 
     def test_config_returns_empty_when_unauthenticated(self):
         """Test that /api/config returns empty config for unauthenticated users"""
-        # Bind the real method to our mock handler
-        from pbx.api.rest_api import PBXAPIHandler
-        self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        self.handler._require_admin = lambda: (False, None)  # Not authenticated
+        # Set up handler without authentication
+        PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
         
         # Call the method
         PBXAPIHandler._handle_get_config(self.handler)

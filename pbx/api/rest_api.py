@@ -41,6 +41,14 @@ DEFAULT_DTMF_CONFIG = {
     "volume": -10
 }
 
+# Default config structure to use when not authenticated or PBX not initialized
+DEFAULT_CONFIG = {
+    "smtp": {"host": "", "port": 587, "username": ""},
+    "email": {"from_address": ""},
+    "email_notifications": False,
+    "integrations": {}
+}
+
 # Optional imports for SSL certificate generation
 try:
     from cryptography import x509
@@ -2699,14 +2707,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         # Return empty config if not authenticated to prevent UI errors
         is_admin, _ = self._require_admin()
         if not is_admin:
-            # Return minimal config structure for non-authenticated users
+            # Return default config structure for non-authenticated users
             # This allows the UI to load gracefully without errors
-            self._send_json({
-                "smtp": {"host": "", "port": 587, "username": ""},
-                "email": {"from_address": ""},
-                "email_notifications": False,
-                "integrations": {}
-            })
+            self._send_json(DEFAULT_CONFIG)
             return
 
         if self.pbx_core:
@@ -2726,13 +2729,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             }
             self._send_json(config_data)
         else:
-            # Return empty config if PBX not initialized
-            self._send_json({
-                "smtp": {"host": "", "port": 587, "username": ""},
-                "email": {"from_address": ""},
-                "email_notifications": False,
-                "integrations": {}
-            })
+            # Return default config if PBX not initialized
+            self._send_json(DEFAULT_CONFIG)
 
     def _handle_add_extension(self):
         """Add a new extension."""
