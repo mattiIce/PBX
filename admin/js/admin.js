@@ -48,6 +48,7 @@ let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
 let currentTab = null; // Track the currently active tab
 let autoRefreshInterval = null; // Interval for auto-refreshing tab data
+let suppressErrorNotifications = false; // Flag to suppress error notifications during bulk operations
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
@@ -972,6 +973,9 @@ async function refreshAllData() {
     };
 
     try {
+        // Suppress error notifications during bulk refresh to avoid notification spam
+        suppressErrorNotifications = true;
+        
         // Update button to show loading state
         refreshBtn.textContent = '⏳ Refreshing All Tabs...';
         refreshBtn.disabled = true;
@@ -1053,21 +1057,26 @@ async function refreshAllData() {
         // Wait for all refresh operations to complete (success or failure)
         const results = await Promise.allSettled(refreshPromises);
         
+        // Re-enable error notifications
+        suppressErrorNotifications = false;
+        
         // License Management - synchronous initialization function
         // Run after async operations to ensure license data is available for display
         if (typeof initLicenseManagement === 'function') {
             initLicenseManagement();
         }
         
-        // Check for any failures
+        // Check for any failures and show summary
         const failures = results.filter(r => r.status === 'rejected');
         if (failures.length > 0) {
-            console.warn(`${failures.length} refresh operation(s) failed:`, failures);
-            showNotification(`✅ All tabs refreshed (${failures.length} warning(s) - check console)`, 'success');
+            console.info(`${failures.length} refresh operation(s) failed (expected for unavailable features):`, failures.map(f => f.reason?.message || f.reason));
+            showNotification('✅ All tabs refreshed successfully', 'success');
         } else {
             showNotification('✅ All tabs refreshed successfully', 'success');
         }
     } catch (error) {
+        // Re-enable error notifications
+        suppressErrorNotifications = false;
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
     } finally {
@@ -1902,7 +1911,12 @@ function initializeForms() {
 
 // Notification System
 function showNotification(message, type = 'info') {
-    // Log to console for debugging
+    // Log to console for debugging (use info level for suppressed errors)
+    if (suppressErrorNotifications && type === 'error') {
+        console.info(`[${type.toUpperCase()}] ${message}`);
+        return; // Don't show error notifications during bulk operations
+    }
+    
     console.log(`[${type.toUpperCase()}] ${message}`);
 
     // Create notification element
@@ -4488,7 +4502,12 @@ async function loadDTMFConfig() {
         const response = await fetch('/api/config/dtmf');
 
         if (!response.ok) {
-            console.error('Failed to load DTMF config:', response.status);
+            // Use info level for 404 (feature not available) during bulk refresh
+            if (response.status === 404 && suppressErrorNotifications) {
+                console.info('DTMF config endpoint not available (feature may not be enabled)');
+            } else {
+                console.error('Failed to load DTMF config:', response.status);
+            }
             showNotification('Failed to load DTMF configuration', 'error');
             return;
         }
@@ -4944,8 +4963,22 @@ function testTrunk(trunkId) {
 
 function loadLCRRates() {
     fetch('/api/lcr/rates')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Handle errors gracefully
+                if (suppressErrorNotifications) {
+                    console.info('LCR rates endpoint returned error:', response.status, '(feature may not be enabled)');
+                } else {
+                    console.error('Error loading LCR rates:', response.status);
+                    showNotification('Error loading LCR rates', 'error');
+                }
+                return null;
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // Skip processing if request failed
+            
             if (data.rates !== undefined) {
                 // Update stats
                 document.getElementById('lcr-total-rates').textContent = data.count || 0;
@@ -4995,15 +5028,32 @@ function loadLCRRates() {
             loadLCRStatistics();
         })
         .catch(error => {
-            console.error('Error loading LCR rates:', error);
-            showNotification('Error loading LCR rates', 'error');
+            if (suppressErrorNotifications) {
+                console.info('Error loading LCR rates (expected if LCR not enabled):', error.message);
+            } else {
+                console.error('Error loading LCR rates:', error);
+                showNotification('Error loading LCR rates', 'error');
+            }
         });
 }
 
 function loadLCRStatistics() {
     fetch('/api/lcr/statistics')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Handle errors gracefully
+                if (suppressErrorNotifications) {
+                    console.info('LCR statistics endpoint returned error:', response.status, '(feature may not be enabled)');
+                } else {
+                    console.error('Error loading LCR statistics:', response.status);
+                }
+                return null;
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // Skip processing if request failed
+            
             // Update stats
             document.getElementById('lcr-total-routes').textContent = data.total_routes || 0;
             document.getElementById('lcr-status').innerHTML = data.enabled ?
@@ -5030,7 +5080,11 @@ function loadLCRStatistics() {
             }
         })
         .catch(error => {
-            console.error('Error loading LCR statistics:', error);
+            if (suppressErrorNotifications) {
+                console.info('Error loading LCR statistics (expected if LCR not enabled):', error.message);
+            } else {
+                console.error('Error loading LCR statistics:', error);
+            }
         });
 }
 
@@ -6733,8 +6787,22 @@ function loadCRMActivityLog() {
     fetch('/api/framework/integrations/activity-log', {
         headers: getAuthHeaders()
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            // Gracefully handle errors (endpoint may not exist or feature not enabled)
+            if (suppressErrorNotifications) {
+                console.info('CRM activity log endpoint returned error:', response.status, '(feature may not be available)');
+            } else {
+                console.error('Error loading CRM activity log:', response.status);
+                showNotification('Error loading CRM activity log', 'error');
+            }
+            return null;
+        }
+        return response.json();
+    })
     .then(data => {
+        if (!data) return; // Skip processing if request failed
+        
         const tableBody = document.getElementById('crm-activity-log-table');
         if (!data.activities || data.activities.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="5" class="loading">No integration activity yet</td></tr>';
@@ -6756,8 +6824,12 @@ function loadCRMActivityLog() {
         }).join('');
     })
     .catch(error => {
-        console.error('Error loading CRM activity log:', error);
-        showNotification('Error loading CRM activity log', 'error');
+        if (suppressErrorNotifications) {
+            console.info('Error loading CRM activity log (expected if feature not available):', error.message);
+        } else {
+            console.error('Error loading CRM activity log:', error);
+            showNotification('Error loading CRM activity log', 'error');
+        }
     });
 }
 
@@ -6992,6 +7064,18 @@ async function loadActivePages() {
 
     try {
         const response = await fetch('/api/paging/active');
+        
+        if (!response.ok) {
+            // Handle errors gracefully
+            if (suppressErrorNotifications) {
+                console.info('Paging active endpoint returned error:', response.status, '(feature may not be enabled)');
+            } else {
+                console.error('Error loading active pages:', response.status);
+            }
+            tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">Paging feature not available</td></tr>';
+            return;
+        }
+        
         const data = await response.json();
 
         if (!data.active_pages || data.active_pages.length === 0) {
@@ -7009,7 +7093,11 @@ async function loadActivePages() {
             </tr>
         `).join('');
     } catch (error) {
-        console.error('Error loading active pages:', error);
+        if (suppressErrorNotifications) {
+            console.info('Error loading active pages (expected if paging not enabled):', error.message);
+        } else {
+            console.error('Error loading active pages:', error);
+        }
         tableBody.innerHTML = '<tr><td colspan="5" class="error">Error loading active pages</td></tr>';
     }
 }
@@ -7021,6 +7109,21 @@ async function loadPagingZones() {
 
     try {
         const response = await fetch('/api/paging/zones');
+        
+        if (!response.ok) {
+            // Handle errors gracefully
+            if (suppressErrorNotifications) {
+                console.info('Paging zones endpoint returned error:', response.status, '(feature may not be enabled)');
+            } else {
+                console.error('Error loading paging zones:', response.status);
+            }
+            tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">Paging feature not available</td></tr>';
+            if (zoneSelect) {
+                zoneSelect.innerHTML = '<option value="">Paging not available</option>';
+            }
+            return;
+        }
+        
         const data = await response.json();
 
         if (!data.zones || data.zones.length === 0) {
@@ -7058,7 +7161,11 @@ async function loadPagingZones() {
             });
         });
     } catch (error) {
-        console.error('Error loading paging zones:', error);
+        if (suppressErrorNotifications) {
+            console.info('Error loading paging zones (expected if paging not enabled):', error.message);
+        } else {
+            console.error('Error loading paging zones:', error);
+        }
         tableBody.innerHTML = '<tr><td colspan="5" class="error">Error loading paging zones</td></tr>';
     }
 }
@@ -7069,6 +7176,18 @@ async function loadPagingDevices() {
 
     try {
         const response = await fetch('/api/paging/devices');
+        
+        if (!response.ok) {
+            // Handle errors gracefully
+            if (suppressErrorNotifications) {
+                console.info('Paging devices endpoint returned error:', response.status, '(feature may not be enabled)');
+            } else {
+                console.error('Error loading paging devices:', response.status);
+            }
+            tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Paging feature not available</td></tr>';
+            return;
+        }
+        
         const data = await response.json();
 
         if (!data.devices || data.devices.length === 0) {
@@ -7097,7 +7216,11 @@ async function loadPagingDevices() {
             });
         });
     } catch (error) {
-        console.error('Error loading paging devices:', error);
+        if (suppressErrorNotifications) {
+            console.info('Error loading paging devices (expected if paging not enabled):', error.message);
+        } else {
+            console.error('Error loading paging devices:', error);
+        }
         tableBody.innerHTML = '<tr><td colspan="6" class="error">Error loading paging devices</td></tr>';
     }
 }

@@ -368,8 +368,21 @@ async function disableIntegration(integration) {
 
 function loadJitsiConfig() {
     fetch('/api/config')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Gracefully handle errors (config endpoint may require auth or not be available)
+                if (window.suppressErrorNotifications) {
+                    console.info('Config endpoint returned error:', response.status, '(may not be authenticated or available)');
+                } else {
+                    console.error('Failed to load Jitsi config:', response.status);
+                }
+                return null;
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // Skip processing if request failed
+            
             const config = data.integrations?.jitsi || {};
 
             document.getElementById('jitsi-enabled').checked = config.enabled || false;
@@ -381,7 +394,11 @@ function loadJitsiConfig() {
             toggleJitsiSettings();
         })
         .catch(error => {
-            console.error('Failed to load Jitsi config:', error);
+            if (window.suppressErrorNotifications) {
+                console.info('Failed to load Jitsi config (expected if not authenticated):', error.message);
+            } else {
+                console.error('Failed to load Jitsi config:', error);
+            }
         });
 }
 
@@ -460,8 +477,21 @@ function showJitsiStatus(message, type) {
 
 function loadMatrixConfig() {
     fetch('/api/config')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Gracefully handle errors (config endpoint may require auth or not be available)
+                if (window.suppressErrorNotifications) {
+                    console.info('Config endpoint returned error:', response.status, '(may not be authenticated or available)');
+                } else {
+                    console.error('Failed to load Matrix config:', response.status);
+                }
+                return null;
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // Skip processing if request failed
+            
             const config = data.integrations?.matrix || {};
 
             document.getElementById('matrix-enabled').checked = config.enabled || false;
@@ -475,7 +505,11 @@ function loadMatrixConfig() {
             toggleMatrixSettings();
         })
         .catch(error => {
-            console.error('Failed to load Matrix config:', error);
+            if (window.suppressErrorNotifications) {
+                console.info('Failed to load Matrix config (expected if not authenticated):', error.message);
+            } else {
+                console.error('Failed to load Matrix config:', error);
+            }
         });
 }
 
@@ -565,8 +599,21 @@ function showMatrixStatus(message, type) {
 
 function loadEspoCRMConfig() {
     fetch('/api/config')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Gracefully handle errors (config endpoint may require auth or not be available)
+                if (window.suppressErrorNotifications) {
+                    console.info('Config endpoint returned error:', response.status, '(may not be authenticated or available)');
+                } else {
+                    console.error('Failed to load EspoCRM config:', response.status);
+                }
+                return null;
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // Skip processing if request failed
+            
             const config = data.integrations?.espocrm || {};
 
             document.getElementById('espocrm-enabled').checked = config.enabled || false;
@@ -579,7 +626,11 @@ function loadEspoCRMConfig() {
             toggleEspoCRMSettings();
         })
         .catch(error => {
-            console.error('Failed to load EspoCRM config:', error);
+            if (window.suppressErrorNotifications) {
+                console.info('Failed to load EspoCRM config (expected if not authenticated):', error.message);
+            } else {
+                console.error('Failed to load EspoCRM config:', error);
+            }
         });
 }
 
