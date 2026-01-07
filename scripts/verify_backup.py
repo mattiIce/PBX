@@ -12,12 +12,12 @@ Usage:
 import argparse
 import json
 import os
+import random
 import subprocess
 import sys
-import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Tuple
 
 
 class BackupVerifier:
@@ -124,8 +124,9 @@ class BackupVerifier:
         """Test restoring database backup to temporary database."""
         print("\nTesting database restore (full test)...")
 
-        # Create temporary database name
-        temp_db = f"pbx_verify_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        # Create temporary database name with random suffix to prevent collisions
+        random_suffix = random.randint(100000, 999999)
+        temp_db = f"pbx_verify_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{random_suffix}"
 
         try:
             # Create temporary database

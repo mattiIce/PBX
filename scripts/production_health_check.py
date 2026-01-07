@@ -26,11 +26,9 @@ import json
 import os
 import socket
 import ssl
-import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 try:
     import psycopg2
@@ -239,10 +237,8 @@ class HealthCheck:
                     with open(cert_path, "rb") as f:
                         cert_data = f.read()
 
-                    cert = ssl.PEM_cert_to_DER_cert(cert_data.decode())
-                    x509 = ssl.DER_cert_to_PEM_cert(cert)
-
-                    # Check expiration (simplified - would need cryptography module for full check)
+                    # Basic validation - just check if file is readable
+                    # Full certificate validation would require the cryptography module
                     self.log(f"SSL certificate found at {cert_path}", "pass", "warning")
                     break
                 except Exception as e:

@@ -3,11 +3,9 @@
 Provides security headers, rate limiting, and request validation.
 """
 
-import hashlib
+import threading
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
-from functools import wraps
 from typing import Dict, Optional, Tuple
 
 
@@ -25,9 +23,11 @@ class SecurityHeaders:
         # Referrer policy
         "Referrer-Policy": "strict-origin-when-cross-origin",
         # Content Security Policy
+        # Note: If you need 'unsafe-inline' or 'unsafe-eval' for compatibility,
+        # consider using nonces or hashes for inline scripts instead
         "Content-Security-Policy": (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data: https:; "
             "font-src 'self' data:; "
@@ -69,13 +69,14 @@ class SecurityHeaders:
 
 
 class RateLimiter:
-    """Token bucket rate limiter."""
+    """Token bucket rate limiter with thread safety and memory limits."""
 
     def __init__(
         self,
         requests_per_minute: int = 60,
         burst_size: int = 10,
-        cleanup_interval: int = 300
+        cleanup_interval: int = 300,
+        max_tracked_ips: int = 10000
     ):
         """Initialize rate limiter.
 
@@ -83,21 +84,19 @@ class RateLimiter:
             requests_per_minute: Number of requests allowed per minute
             burst_size: Maximum burst of requests
             cleanup_interval: How often to clean up old entries (seconds)
+            max_tracked_ips: Maximum number of IP addresses to track (prevents memory exhaustion)
         """
         self.requests_per_minute = requests_per_minute
         self.burst_size = burst_size
         self.cleanup_interval = cleanup_interval
+        self.max_tracked_ips = max_tracked_ips
 
         # Store buckets per client IP
-        self.buckets: Dict[str, Dict] = defaultdict(
-            lambda: {
-                "tokens": burst_size,
-                "last_update": time.time(),
-                "request_count": 0,
-            }
-        )
-
+        self.buckets: Dict[str, Dict] = {}
         self.last_cleanup = time.time()
+        
+        # Thread lock for concurrent access
+        self._lock = threading.Lock()
 
     def _refill_tokens(self, bucket: Dict) -> None:
         """Refill tokens based on time elapsed."""
@@ -117,9 +116,10 @@ class RateLimiter:
 
         # Remove buckets not used in last hour
         cutoff = now - 3600
+        old_buckets = self.buckets
         self.buckets = {
             ip: bucket
-            for ip, bucket in self.buckets.items()
+            for ip, bucket in old_buckets.items()
             if bucket["last_update"] > cutoff
         }
         self.last_cleanup = now
@@ -133,21 +133,41 @@ class RateLimiter:
         Returns:
             Tuple of (allowed, retry_after_seconds)
         """
-        bucket = self.buckets[client_ip]
-        self._refill_tokens(bucket)
+        with self._lock:
+            # Check if we've hit the maximum tracked IPs
+            if client_ip not in self.buckets and len(self.buckets) >= self.max_tracked_ips:
+                # Force cleanup before rejecting
+                self._cleanup_old_entries()
+                
+                # If still at max after cleanup, reject oldest entry
+                if len(self.buckets) >= self.max_tracked_ips:
+                    oldest_ip = min(self.buckets.keys(), 
+                                  key=lambda ip: self.buckets[ip]["last_update"])
+                    del self.buckets[oldest_ip]
+            
+            # Get or create bucket for this IP
+            if client_ip not in self.buckets:
+                self.buckets[client_ip] = {
+                    "tokens": self.burst_size,
+                    "last_update": time.time(),
+                    "request_count": 0,
+                }
+            
+            bucket = self.buckets[client_ip]
+            self._refill_tokens(bucket)
 
-        # Check if we have tokens available
-        if bucket["tokens"] >= 1:
-            bucket["tokens"] -= 1
-            bucket["request_count"] += 1
-            self._cleanup_old_entries()
-            return True, None
+            # Check if we have tokens available
+            if bucket["tokens"] >= 1:
+                bucket["tokens"] -= 1
+                bucket["request_count"] += 1
+                self._cleanup_old_entries()
+                return True, None
 
-        # Calculate retry after
-        tokens_needed = 1 - bucket["tokens"]
-        retry_after = int(tokens_needed / (self.requests_per_minute / 60.0))
+            # Calculate retry after
+            tokens_needed = 1 - bucket["tokens"]
+            retry_after = int(tokens_needed / (self.requests_per_minute / 60.0))
 
-        return False, retry_after
+            return False, retry_after
 
     def get_stats(self, client_ip: str) -> Dict:
         """Get rate limit stats for client.
@@ -158,18 +178,19 @@ class RateLimiter:
         Returns:
             Dictionary with stats
         """
-        bucket = self.buckets.get(client_ip)
-        if not bucket:
-            return {
-                "requests_remaining": self.burst_size,
-                "total_requests": 0,
-            }
+        with self._lock:
+            bucket = self.buckets.get(client_ip)
+            if not bucket:
+                return {
+                    "requests_remaining": self.burst_size,
+                    "total_requests": 0,
+                }
 
-        self._refill_tokens(bucket)
-        return {
-            "requests_remaining": int(bucket["tokens"]),
-            "total_requests": bucket["request_count"],
-        }
+            self._refill_tokens(bucket)
+            return {
+                "requests_remaining": int(bucket["tokens"]),
+                "total_requests": bucket["request_count"],
+            }
 
 
 class RequestValidator:

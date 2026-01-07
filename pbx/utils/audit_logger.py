@@ -6,7 +6,6 @@ Provides comprehensive audit trail for security and compliance.
 import json
 import logging
 import os
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -35,8 +34,17 @@ class AuditLogger:
 
         # Add file handler if not already present
         if not self.logger.handlers:
+            # Ensure parent directory exists
+            log_path = Path(log_file)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            
             handler = logging.FileHandler(log_file)
             handler.setLevel(logging.INFO)
+
+            # Set restrictive permissions on the log file (owner read/write only)
+            # This prevents unauthorized access to sensitive audit data
+            if log_path.exists():
+                os.chmod(log_file, 0o600)
 
             # JSON format for easy parsing
             formatter = logging.Formatter(
@@ -44,6 +52,10 @@ class AuditLogger:
             )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
+            
+            # Set permissions after handler is created (in case it creates the file)
+            if log_path.exists():
+                os.chmod(log_file, 0o600)
 
     def log_action(
         self,
