@@ -548,11 +548,9 @@ function refreshEmergencyTab() {
     loadEmergencyHistory();
 }
 
-// Wrapper function for fraud detection - handle both possible function names
+// Wrapper function for fraud detection - calls loadFraudAlerts directly
 function refreshFraudDetectionTab() {
-    if (typeof loadFraudDetectionData === 'function') {
-        loadFraudDetectionData();
-    } else if (typeof loadFraudAlerts === 'function') {
+    if (typeof loadFraudAlerts === 'function') {
         loadFraudAlerts();
     }
 }
@@ -562,6 +560,67 @@ function refreshCallbackQueueTab() {
     if (typeof loadCallbackQueue === 'function') {
         loadCallbackQueue();
     }
+}
+
+// ============================================================================
+// Stub/Wrapper Functions for Optional Features
+// These functions provide compatibility for features that may not be fully
+// implemented yet or are optional based on configuration
+// ============================================================================
+
+/**
+ * Load fraud detection data - delegates to loadFraudAlerts if available
+ */
+function loadFraudDetectionData() {
+    if (typeof loadFraudAlerts === 'function') {
+        return loadFraudAlerts();
+    } else {
+        console.debug('loadFraudAlerts function not available');
+        return undefined;
+    }
+}
+
+/**
+ * Load nomadic E911 data - delegates to E911 loading functions if available
+ */
+function loadNomadicE911Data() {
+    if (typeof loadE911Sites === 'function') {
+        return loadE911Sites();
+    } else {
+        console.debug('loadE911Sites function not available');
+        return undefined;
+    }
+}
+
+/**
+ * Load mobile push configuration - delegates to loadMobilePushDevices if available
+ */
+function loadMobilePushConfig() {
+    if (typeof loadMobilePushDevices === 'function') {
+        return loadMobilePushDevices();
+    } else {
+        console.debug('loadMobilePushDevices function not available');
+        return undefined;
+    }
+}
+
+/**
+ * Load recording announcements - delegates to loadRecordingAnnouncementsStats if available
+ */
+function loadRecordingAnnouncements() {
+    if (typeof loadRecordingAnnouncementsStats === 'function') {
+        return loadRecordingAnnouncementsStats();
+    } else {
+        console.debug('loadRecordingAnnouncementsStats function not available');
+        return undefined;
+    }
+}
+
+/**
+ * Load compliance data - placeholder for future implementation
+ */
+function loadComplianceData() {
+    console.debug('Compliance data loading not yet implemented');
 }
 
 // Setup auto-refresh for tabs that need periodic data updates
