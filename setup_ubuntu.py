@@ -117,7 +117,7 @@ class SetupWizard:
             return e.returncode, e.stdout, e.stderr
         except subprocess.TimeoutExpired:
             self.print_error(f"Command timed out: {description}")
-            return -1, "", "Command timed out"
+            return 124, "", "Command timed out"
 
     def check_root(self) -> bool:
         """Check if running as root"""
@@ -285,48 +285,51 @@ class SetupWizard:
             return False
 
         # Validate inputs to prevent SQL injection
-        # PostgreSQL identifiers: start with letter, contain letters, numbers, underscores, hyphens
-        if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", db_user):
+        # PostgreSQL identifiers: start with letter, contain letters, numbers, underscores
+        # Hyphens allowed in middle but not at end
+        if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9_]$|^[a-zA-Z]$", db_user):
             self.print_error(
-                "Database user must start with a letter and contain only letters, numbers, underscores, and hyphens"
+                "Database user must start with a letter, contain only letters, numbers, underscores, hyphens, and not end with a hyphen"
             )
             return False
-        if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", db_name):
+        if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9_]$|^[a-zA-Z]$", db_name):
             self.print_error(
-                "Database name must start with a letter and contain only letters, numbers, underscores, and hyphens"
+                "Database name must start with a letter, contain only letters, numbers, underscores, hyphens, and not end with a hyphen"
             )
             return False
 
         # Create database user
-        # Escape single quotes and backslashes in password for SQL (PostgreSQL standard)
-        escaped_password = db_password.replace("\\", "\\\\").replace("'", "''")
-        create_user_cmd = f"sudo -u postgres psql -c \"CREATE USER {db_user} WITH PASSWORD '{escaped_password}';\""
-        ret, _, stderr = self.run_command(
+        # Escape single quotes in password for SQL
+        escaped_password = db_password.replace("'", "''")
+        sql_cmd = f"CREATE USER {db_user} WITH PASSWORD '{escaped_password}';"
+        # Use shlex.quote to safely pass SQL to the shell
+        create_user_cmd = f"sudo -u postgres psql -c {shlex.quote(sql_cmd)}"
+        return_code, _, stderr = self.run_command(
             create_user_cmd, f"Creating database user '{db_user}'", check=False
         )
 
-        if ret != 0 and "already exists" not in stderr:
+        if return_code != 0 and "already exists" not in stderr:
             self.print_error(f"Failed to create database user: {stderr}")
             return False
         if "already exists" in stderr:
             self.print_warning(f"User '{db_user}' already exists")
 
         # Create database (safe - inputs validated above)
-        create_db_cmd = f'sudo -u postgres psql -c "CREATE DATABASE {db_name} OWNER {db_user};"'
-        ret, _, stderr = self.run_command(
+        sql_cmd = f"CREATE DATABASE {db_name} OWNER {db_user};"
+        create_db_cmd = f"sudo -u postgres psql -c {shlex.quote(sql_cmd)}"
+        return_code, _, stderr = self.run_command(
             create_db_cmd, f"Creating database '{db_name}'", check=False
         )
 
-        if ret != 0 and "already exists" not in stderr:
+        if return_code != 0 and "already exists" not in stderr:
             self.print_error(f"Failed to create database: {stderr}")
             return False
         if "already exists" in stderr:
             self.print_warning(f"Database '{db_name}' already exists")
 
         # Grant privileges (safe - inputs validated above)
-        grant_cmd = (
-            f'sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE {db_name} TO {db_user};"'
-        )
+        sql_cmd = f"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO {db_user};"
+        grant_cmd = f"sudo -u postgres psql -c {shlex.quote(sql_cmd)}"
         self.run_command(grant_cmd, "Granting privileges", check=False)
 
         self.print_success("Database configured successfully")
@@ -426,10 +429,10 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         )
 
         # Validate hostname to prevent command injection
-        # Allow alphanumeric, dots, hyphens (at beginning/end of char class), and colons (for IPv6)
-        if not re.match(r"^[a-zA-Z0-9.:_-]+$", hostname):
+        # Allow alphanumeric, dots, hyphens, and colons (for IPv6) per RFC 952/1123
+        if not re.match(r"^[a-zA-Z0-9.:-]+$", hostname):
             self.print_error(
-                "Invalid hostname format. Use only letters, numbers, dots, hyphens, colons, and underscores."
+                "Invalid hostname format. Use only letters, numbers, dots, hyphens, and colons."
             )
             return False
 
@@ -564,7 +567,26 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
             f"\n{Colors.BOLD}Setup verification: {checks_passed}/{total_checks} checks passed{Colors.ENDC}"
         )
 
-        return checks_passed >= 5  # Allow one check to fail
+        # Critical checks: PostgreSQL and Python packages must pass for system to be functional
+        # PostgreSQL check
+        ret_pg, _, _ = self.run_command(
+            "systemctl is-active postgresql", "Verifying PostgreSQL (critical)", check=False
+        )
+        if ret_pg != 0:
+            self.print_error("Critical check failed: PostgreSQL is not running")
+            return False
+
+        # Python packages check
+        pip_path = self.venv_path / "bin" / "pip"
+        ret_py, stdout, _ = self.run_command(
+            f"{pip_path} list", "Verifying Python packages (critical)", check=False
+        )
+        if ret_py != 0 or "PyYAML" not in stdout:
+            self.print_error("Critical check failed: Python packages not properly installed")
+            return False
+
+        # Allow non-critical checks to fail (5 out of 6 total)
+        return checks_passed >= 5
 
     def print_next_steps(self):
         """Print next steps after setup"""

@@ -10,7 +10,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -220,9 +220,8 @@ VERSION_ID="24.04"
         result = wizard.check_ubuntu_version()
         assert result is True, "Should pass for Ubuntu 24.04"
 
-    # Reset errors/warnings
-    wizard.errors = []
-    wizard.warnings = []
+    # Use a fresh wizard instance for the next scenario
+    wizard = SetupWizard()
 
     # Test with other Ubuntu version
     ubuntu_2204_content = """
