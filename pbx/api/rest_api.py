@@ -8442,8 +8442,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 # Delete entries older than 30 days
-                from datetime import datetime, timedelta
-
                 cutoff_date = datetime.now() - timedelta(days=30)
                 result = self.pbx_core.database.execute(
                     """DELETE FROM integration_activity_log

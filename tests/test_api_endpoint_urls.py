@@ -14,66 +14,74 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 class TestAPIEndpointURLs(unittest.TestCase):
     """Test that API endpoint URLs are correctly defined"""
 
+    @classmethod
+    def setUpClass(cls):
+        """Set up the test class by reading the REST API file once"""
+        # Get the path to the rest_api.py file relative to this test file
+        rest_api_path = os.path.join(
+            os.path.dirname(__file__), "..", "pbx", "api", "rest_api.py"
+        )
+        with open(rest_api_path, "r") as f:
+            cls.rest_api_content = f.read()
+
     def test_dtmf_config_endpoints(self):
         """Verify DTMF config endpoints use correct URL path"""
-        with open("pbx/api/rest_api.py", "r") as f:
-            content = f.read()
-
         # Check that the correct endpoint paths exist
-        self.assertIn('path == "/api/config/dtmf"', content, "GET endpoint for DTMF config")
-        self.assertIn('path == "/api/config/dtmf"', content, "PUT/POST endpoint for DTMF config")
+        self.assertIn(
+            'path == "/api/config/dtmf"', self.rest_api_content, "GET endpoint for DTMF config"
+        )
+        self.assertIn(
+            'path == "/api/config/dtmf"', self.rest_api_content, "PUT/POST endpoint for DTMF config"
+        )
 
         # Check that the old incorrect path does NOT exist
         self.assertNotIn(
             'path == "/api/config/dtm"',
-            content,
+            self.rest_api_content,
             "Old incorrect DTMF endpoint should not exist",
         )
 
     def test_activity_log_endpoints(self):
         """Verify activity log endpoints use correct URL path"""
-        with open("pbx/api/rest_api.py", "r") as f:
-            content = f.read()
-
         # Check that the correct endpoint paths exist
         self.assertIn(
             'path == "/api/framework/integrations/activity-log"',
-            content,
+            self.rest_api_content,
             "GET endpoint for activity log",
         )
         self.assertIn(
             'path == "/api/framework/integrations/activity-log/clear"',
-            content,
+            self.rest_api_content,
             "POST endpoint for clearing activity log",
         )
 
         # Check that the old incorrect path does NOT exist
         self.assertNotIn(
             'path == "/api/framework/integrations/activity"',
-            content,
+            self.rest_api_content,
             "Old incorrect activity log endpoint should not exist",
         )
 
     def test_dtmf_handler_method_exists(self):
         """Verify DTMF handler methods are defined"""
-        with open("pbx/api/rest_api.py", "r") as f:
-            content = f.read()
-
         # Check that handler methods exist
-        self.assertIn("def _handle_get_dtmf_config", content, "GET DTMF handler")
-        self.assertIn("def _handle_update_dtmf_config", content, "Update DTMF handler")
+        self.assertIn("def _handle_get_dtmf_config", self.rest_api_content, "GET DTMF handler")
+        self.assertIn(
+            "def _handle_update_dtmf_config", self.rest_api_content, "Update DTMF handler"
+        )
 
     def test_activity_log_handler_methods_exist(self):
         """Verify activity log handler methods are defined"""
-        with open("pbx/api/rest_api.py", "r") as f:
-            content = f.read()
-
         # Check that handler methods exist
         self.assertIn(
-            "def _handle_get_integration_activity", content, "GET activity log handler"
+            "def _handle_get_integration_activity",
+            self.rest_api_content,
+            "GET activity log handler",
         )
         self.assertIn(
-            "def _handle_clear_integration_activity", content, "Clear activity log handler"
+            "def _handle_clear_integration_activity",
+            self.rest_api_content,
+            "Clear activity log handler",
         )
 
 
