@@ -25,8 +25,10 @@ Requirements:
 """
 
 import os
+import socket
 import subprocess
 import sys
+import traceback
 from pathlib import Path
 from typing import Tuple
 
@@ -403,8 +405,6 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         self.print_header("Generating SSL Certificate")
 
         # Prompt for hostname
-        import socket
-
         default_hostname = socket.gethostname()
         hostname = (
             input(f"  Hostname or IP address [{default_hostname}]: ").strip() or default_hostname
@@ -665,8 +665,6 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"\n{Colors.FAIL}Unexpected error: {e}{Colors.ENDC}")
-        import traceback
-
         traceback.print_exc()
         sys.exit(1)
 
