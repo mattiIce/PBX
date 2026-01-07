@@ -169,8 +169,6 @@ def test_setup_environment_file():
     }
 
     # Create a proper temporary directory instead of file
-    import tempfile
-
     temp_dir = tempfile.mkdtemp()
     wizard.env_file = Path(temp_dir) / "test.env"
 

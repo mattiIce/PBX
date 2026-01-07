@@ -284,16 +284,21 @@ class SetupWizard:
             return False
 
         # Validate inputs to prevent SQL injection
-        if not re.match(r"^[a-zA-Z0-9_]+$", db_user):
-            self.print_error("Database user must contain only letters, numbers, and underscores")
+        # PostgreSQL identifiers: start with letter, contain letters, numbers, underscores, hyphens
+        if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", db_user):
+            self.print_error(
+                "Database user must start with a letter and contain only letters, numbers, underscores, and hyphens"
+            )
             return False
-        if not re.match(r"^[a-zA-Z0-9_]+$", db_name):
-            self.print_error("Database name must contain only letters, numbers, and underscores")
+        if not re.match(r"^[a-zA-Z][a-zA-Z0-9_-]*$", db_name):
+            self.print_error(
+                "Database name must start with a letter and contain only letters, numbers, underscores, and hyphens"
+            )
             return False
 
         # Create database user
-        # Escape single quotes in password by doubling them (SQL standard)
-        escaped_password = db_password.replace("'", "''")
+        # Escape single quotes and backslashes in password for SQL (PostgreSQL standard)
+        escaped_password = db_password.replace("\\", "\\\\").replace("'", "''")
         create_user_cmd = f"sudo -u postgres psql -c \"CREATE USER {db_user} WITH PASSWORD '{escaped_password}';\""
         ret, _, stderr = self.run_command(
             create_user_cmd, f"Creating database user '{db_user}'", check=False
@@ -420,10 +425,10 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         )
 
         # Validate hostname to prevent command injection
-        # Allow alphanumeric, dots, hyphens, and colons (for IPv6)
-        if not re.match(r"^[a-zA-Z0-9.\-:]+$", hostname):
+        # Allow alphanumeric, dots, hyphens (at beginning/end of char class), and colons (for IPv6)
+        if not re.match(r"^[a-zA-Z0-9.:_-]+$", hostname):
             self.print_error(
-                "Invalid hostname format. Use only letters, numbers, dots, hyphens, and colons."
+                "Invalid hostname format. Use only letters, numbers, dots, hyphens, colons, and underscores."
             )
             return False
 
