@@ -89,6 +89,51 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     logger = get_logger()  # Initialize logger for handler
     _integration_endpoints = None  # Cache for integration endpoints
     _health_checker = None  # Production health checker instance
+    _rate_limiter = None  # Rate limiter instance
+
+    def _check_rate_limit(self):
+        """Check if request should be rate limited.
+        
+        Returns:
+            bool: True if request is allowed, False if rate limited
+        """
+        # Skip rate limiting for health checks
+        if self.path in ["/health", "/healthz", "/live", "/liveness", "/ready", "/readiness"]:
+            return True
+        
+        # Get or create rate limiter
+        if PBXAPIHandler._rate_limiter is None:
+            try:
+                from pbx.utils.security_middleware import get_rate_limiter
+                PBXAPIHandler._rate_limiter = get_rate_limiter()
+            except ImportError:
+                # Rate limiting not available, allow request
+                return True
+        
+        # Get client IP
+        client_ip = self.client_address[0]
+        
+        # Check rate limit
+        allowed, retry_after = PBXAPIHandler._rate_limiter.is_allowed(client_ip)
+        
+        if not allowed:
+            # Send 429 Too Many Requests
+            self.send_response(429)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Retry-After", str(retry_after))
+            self.send_header("X-RateLimit-Limit", str(PBXAPIHandler._rate_limiter.requests_per_minute))
+            self.send_header("X-RateLimit-Remaining", "0")
+            self.end_headers()
+            
+            response = {
+                "error": "Rate limit exceeded",
+                "retry_after": retry_after,
+                "message": f"Too many requests. Please retry after {retry_after} seconds."
+            }
+            self.wfile.write(json.dumps(response).encode())
+            return False
+        
+        return True
 
     def _get_integration_endpoints(self):
         """Get integration endpoints (cached)."""
@@ -209,6 +254,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests."""
+        # Check rate limit
+        if not self._check_rate_limit():
+            return
+        
         parsed = urlparse(self.path)
         path = parsed.path
 
@@ -798,6 +847,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests."""
+        # Check rate limit
+        if not self._check_rate_limit():
+            return
+        
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
 
