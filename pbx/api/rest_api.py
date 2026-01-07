@@ -3145,9 +3145,22 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if dtmf_config is not None:
                 self._send_json(dtmf_config)
             else:
-                self._send_json({"error": "Failed to get DTMF configuration"}, 500)
+                # Return default DTMF configuration instead of error
+                self._send_json({
+                    "mode": "rfc2833",
+                    "payload_type": 101,
+                    "duration": 100,
+                    "volume": -10
+                })
         except Exception as e:
-            self._send_json({"error": str(e)}, 500)
+            self.logger.error(f"Error getting DTMF config: {e}")
+            # Return default configuration on error
+            self._send_json({
+                "mode": "rfc2833",
+                "payload_type": 101,
+                "duration": 100,
+                "volume": -10
+            })
 
     def _handle_update_dtmf_config(self):
         """Update DTMF configuration."""
@@ -3875,11 +3888,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_paging_zones(self):
         """Get all paging zones."""
         if not self.pbx_core or not hasattr(self.pbx_core, "paging_system"):
-            self._send_json({"error": "Paging system not enabled"}, 500)
+            # Return empty zones list when paging system is not available
+            self._send_json({"zones": []})
             return
 
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
-            self._send_json({"error": "Paging system not enabled"}, 500)
+            # Return empty zones list when paging system is disabled
+            self._send_json({"zones": []})
             return
 
         try:
@@ -3891,11 +3906,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_paging_devices(self):
         """Get all paging DAC devices."""
         if not self.pbx_core or not hasattr(self.pbx_core, "paging_system"):
-            self._send_json({"error": "Paging system not enabled"}, 500)
+            # Return empty devices list when paging system is not available
+            self._send_json({"devices": []})
             return
 
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
-            self._send_json({"error": "Paging system not enabled"}, 500)
+            # Return empty devices list when paging system is disabled
+            self._send_json({"devices": []})
             return
 
         try:
@@ -3907,11 +3924,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_get_active_pages(self):
         """Get all active paging sessions."""
         if not self.pbx_core or not hasattr(self.pbx_core, "paging_system"):
-            self._send_json({"error": "Paging system not enabled"}, 500)
+            # Return empty active pages list when paging system is not available
+            self._send_json({"active_pages": []})
             return
 
         if not self.pbx_core.paging_system or not self.pbx_core.paging_system.enabled:
-            self._send_json({"error": "Paging system not enabled"}, 500)
+            # Return empty active pages list when paging system is disabled
+            self._send_json({"active_pages": []})
             return
 
         try:
@@ -6817,7 +6836,8 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.logger.error(f"Error getting LCR rates: {e}")
                 self._send_json({"error": f"Error getting LCR rates: {str(e)}"}, 500)
         else:
-            self._send_json({"error": "LCR system not initialized"}, 500)
+            # Return empty rates when LCR is not initialized
+            self._send_json({"rates": [], "time_rates": [], "count": 0})
 
     def _handle_get_lcr_statistics(self):
         """Get LCR statistics."""
@@ -6830,7 +6850,13 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.logger.error(f"Error getting LCR statistics: {e}")
                 self._send_json({"error": f"Error getting LCR statistics: {str(e)}"}, 500)
         else:
-            self._send_json({"error": "LCR system not initialized"}, 500)
+            # Return empty statistics when LCR is not initialized
+            self._send_json({
+                "total_calls": 0,
+                "total_cost": 0.0,
+                "total_savings": 0.0,
+                "routes_by_trunk": {}
+            })
 
     def _handle_clear_lcr_rates(self):
         """Clear all LCR rates."""
@@ -8429,9 +8455,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"activities": activities})
             except Exception as e:
                 self.logger.error(f"Error getting integration activity: {e}")
-                self._send_json({"error": str(e)}, 500)
+                # Return empty activities instead of error to prevent UI errors
+                self._send_json({"activities": []})
         else:
-            self._send_json({"error": "Database not available"}, 500)
+            # Return empty activities when database is not available
+            self._send_json({"activities": []})
 
     def _handle_clear_integration_activity(self):
         """Clear old integration activity log entries."""
