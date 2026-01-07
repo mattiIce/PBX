@@ -27,9 +27,8 @@ Requirements:
 import os
 import subprocess
 import sys
-import time
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 
 # Color codes for terminal output
@@ -58,6 +57,7 @@ class SetupWizard:
         self.config_file = self.project_root / "config.yml"
         self.errors = []
         self.warnings = []
+        self.db_config = {}
 
     def print_header(self, text: str):
         """Print a formatted header"""
@@ -126,20 +126,18 @@ class SetupWizard:
         """Check Ubuntu version"""
         self.print_info("Checking Ubuntu version...")
         try:
-            with open("/etc/os-release", "r") as f:
+            with open("/etc/os-release", "r", encoding="utf-8") as f:
                 content = f.read()
                 if "Ubuntu" in content:
                     if "24.04" in content:
                         self.print_success("Ubuntu 24.04 LTS detected")
                         return True
-                    else:
-                        self.print_warning(
-                            "Ubuntu 24.04 LTS is recommended. Other versions may work but are not tested."
-                        )
-                        return True
-                else:
-                    self.print_error("This script is designed for Ubuntu")
-                    return False
+                    self.print_warning(
+                        "Ubuntu 24.04 LTS is recommended. Other versions may work but are not tested."
+                    )
+                    return True
+                self.print_error("This script is designed for Ubuntu")
+                return False
         except FileNotFoundError:
             self.print_error("Cannot detect OS version")
             return False
@@ -162,9 +160,7 @@ class SetupWizard:
         self.print_header("Installing System Dependencies")
 
         # Update package lists
-        ret, _, _ = self.run_command(
-            "apt-get update", "Updating package lists", check=False
-        )
+        ret, _, _ = self.run_command("apt-get update", "Updating package lists", check=False)
         if ret != 0:
             self.print_error("Failed to update package lists")
             return False
@@ -270,9 +266,7 @@ class SetupWizard:
                 return False
 
         # Enable PostgreSQL to start on boot
-        self.run_command(
-            "systemctl enable postgresql", "Enabling PostgreSQL on boot", check=False
-        )
+        self.run_command("systemctl enable postgresql", "Enabling PostgreSQL on boot", check=False)
 
         self.print_success("PostgreSQL is running")
 
@@ -287,7 +281,9 @@ class SetupWizard:
             return False
 
         # Create database user
-        create_user_cmd = f"sudo -u postgres psql -c \"CREATE USER {db_user} WITH PASSWORD '{db_password}';\""
+        create_user_cmd = (
+            f"sudo -u postgres psql -c \"CREATE USER {db_user} WITH PASSWORD '{db_password}';\""
+        )
         ret, _, stderr = self.run_command(
             create_user_cmd, f"Creating database user '{db_user}'", check=False
         )
@@ -299,7 +295,7 @@ class SetupWizard:
             self.print_warning(f"User '{db_user}' already exists")
 
         # Create database
-        create_db_cmd = f"sudo -u postgres psql -c \"CREATE DATABASE {db_name} OWNER {db_user};\""
+        create_db_cmd = f'sudo -u postgres psql -c "CREATE DATABASE {db_name} OWNER {db_user};"'
         ret, _, stderr = self.run_command(
             create_db_cmd, f"Creating database '{db_name}'", check=False
         )
@@ -311,7 +307,9 @@ class SetupWizard:
             self.print_warning(f"Database '{db_name}' already exists")
 
         # Grant privileges
-        grant_cmd = f"sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO {db_user};\""
+        grant_cmd = (
+            f'sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE {db_name} TO {db_user};"'
+        )
         self.run_command(grant_cmd, "Granting privileges", check=False)
 
         self.print_success("Database configured successfully")
@@ -367,13 +365,13 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
 """
 
         try:
-            with open(self.env_file, "w") as f:
+            with open(self.env_file, "w", encoding="utf-8") as f:
                 f.write(env_content)
             # Set restrictive permissions on .env file
             os.chmod(self.env_file, 0o600)
             self.print_success(f".env file created at {self.env_file}")
             return True
-        except Exception as e:
+        except OSError as e:
             self.print_error(f"Failed to create .env file: {e}")
             return False
 
@@ -387,7 +385,7 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
             return True
 
         python_path = self.venv_path / "bin" / "python"
-        ret, stdout, stderr = self.run_command(
+        ret, _, stderr = self.run_command(
             f"{python_path} {init_script}",
             "Initializing database tables",
             check=False,
@@ -409,8 +407,7 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
 
         default_hostname = socket.gethostname()
         hostname = (
-            input(f"  Hostname or IP address [{default_hostname}]: ").strip()
-            or default_hostname
+            input(f"  Hostname or IP address [{default_hostname}]: ").strip() or default_hostname
         )
 
         ssl_script = self.project_root / "scripts" / "generate_ssl_cert.py"
@@ -437,9 +434,7 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         """Generate voice prompts"""
         self.print_header("Generating Voice Prompts")
 
-        self.print_info(
-            "Voice prompts are required for voicemail and auto-attendant features."
-        )
+        self.print_info("Voice prompts are required for voicemail and auto-attendant features.")
         response = input("Generate voice prompts now? (Y/n): ").strip().lower()
 
         if response == "n":
@@ -465,7 +460,9 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
 
         if ret != 0:
             self.print_warning(f"Failed to generate voice prompts: {stderr}")
-            self.print_info("You can generate them later using: python scripts/generate_tts_prompts.py")
+            self.print_info(
+                "You can generate them later using: python scripts/generate_tts_prompts.py"
+            )
             return True
 
         self.print_success("Voice prompts generated")
@@ -538,7 +535,9 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         else:
             self.print_error("Some system packages are missing")
 
-        print(f"\n{Colors.BOLD}Setup verification: {checks_passed}/{total_checks} checks passed{Colors.ENDC}")
+        print(
+            f"\n{Colors.BOLD}Setup verification: {checks_passed}/{total_checks} checks passed{Colors.ENDC}"
+        )
 
         return checks_passed >= 5  # Allow one check to fail
 
@@ -546,31 +545,33 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         """Print next steps after setup"""
         self.print_header("Setup Complete!")
 
-        print(f"{Colors.OKGREEN}The Warden VoIP PBX system has been set up successfully!{Colors.ENDC}\n")
+        print(
+            f"{Colors.OKGREEN}The Warden VoIP PBX system has been set up successfully!{Colors.ENDC}\n"
+        )
 
         print(f"{Colors.BOLD}Next Steps:{Colors.ENDC}\n")
 
         print(f"{Colors.OKCYAN}1. Configure the system:{Colors.ENDC}")
-        print(f"   Edit config.yml to customize your PBX settings")
-        print(f"   (extensions, dialplan, features, etc.)\n")
+        print("   Edit config.yml to customize your PBX settings")
+        print("   (extensions, dialplan, features, etc.)\n")
 
         print(f"{Colors.OKCYAN}2. Start the PBX server:{Colors.ENDC}")
-        print(f"   source venv/bin/activate")
-        print(f"   python main.py\n")
+        print("   source venv/bin/activate")
+        print("   python main.py\n")
 
         print(f"{Colors.OKCYAN}3. Access the Admin Interface:{Colors.ENDC}")
-        print(f"   Open your browser to: https://localhost:8080")
-        print(f"   (You'll need to accept the self-signed certificate)\n")
+        print("   Open your browser to: https://localhost:8080")
+        print("   (You'll need to accept the self-signed certificate)\n")
 
         print(f"{Colors.OKCYAN}4. Optional - Install as a system service:{Colors.ENDC}")
-        print(f"   sudo cp pbx.service /etc/systemd/system/")
-        print(f"   sudo systemctl enable pbx")
-        print(f"   sudo systemctl start pbx\n")
+        print("   sudo cp pbx.service /etc/systemd/system/")
+        print("   sudo systemctl enable pbx")
+        print("   sudo systemctl start pbx\n")
 
         print(f"{Colors.OKCYAN}5. Review the documentation:{Colors.ENDC}")
-        print(f"   README.md - Quick overview")
-        print(f"   COMPLETE_GUIDE.md - Comprehensive documentation")
-        print(f"   TROUBLESHOOTING.md - Common issues and solutions\n")
+        print("   README.md - Quick overview")
+        print("   COMPLETE_GUIDE.md - Comprehensive documentation")
+        print("   TROUBLESHOOTING.md - Common issues and solutions\n")
 
         if self.warnings:
             print(f"{Colors.WARNING}Warnings during setup:{Colors.ENDC}")
@@ -610,9 +611,7 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
             return 1
 
         # Confirm before proceeding
-        print(
-            f"\n{Colors.BOLD}This wizard will:{Colors.ENDC}"
-        )
+        print(f"\n{Colors.BOLD}This wizard will:{Colors.ENDC}")
         print("  • Install system dependencies (espeak, ffmpeg, PostgreSQL, etc.)")
         print("  • Create Python virtual environment")
         print("  • Install Python packages")
