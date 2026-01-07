@@ -953,7 +953,7 @@
             <div class="config-section">
                 <h3>Provisioning Settings</h3>
                 <div class="form-group">
-                    <label for="provisioning-enabled">
+                    <label>
                         <input type="checkbox" id="provisioning-enabled" onchange="toggleProvisioningEnabled()">
                         Enable Auto-Provisioning
                     </label>
@@ -994,7 +994,7 @@
 
                 <!-- LDAPS Configuration -->
                 <div class="form-group">
-                    <label for="ldap-phonebook-enabled">
+                    <label>
                         <input type="checkbox" id="ldap-phonebook-enabled" onchange="toggleLdapPhonebookSettings()">
                         Enable LDAPS Phone Book
                     </label>
@@ -1028,7 +1028,7 @@
                         <small>⚠️ Store securely in .env file as LDAP_PHONEBOOK_PASSWORD</small>
                     </div>
                     <div class="form-group">
-                        <label for="ldap-phonebook-tls">
+                        <label>
                             <input type="checkbox" id="ldap-phonebook-tls" checked>
                             Use SSL/TLS (LDAPS)
                         </label>
@@ -1042,7 +1042,7 @@
 
                 <!-- Remote Phone Book URL Configuration -->
                 <div class="form-group" style="margin-top: 20px;">
-                    <label for="remote-phonebook-enabled">
+                    <label>
                         <input type="checkbox" id="remote-phonebook-enabled" onchange="toggleRemotePhonebookSettings()">
                         Enable Remote Phone Book URL
                     </label>
@@ -1196,7 +1196,7 @@
                 <h3>📞 General Settings</h3>
                 <form id="auto-attendant-config-form">
                     <div class="form-group">
-                        <label for="aa-enabled">
+                        <label>
                             <input type="checkbox" id="aa-enabled">
                             Enable Auto Attendant
                         </label>
@@ -1601,7 +1601,7 @@
                             <label>Extension: <span id="ctd-current-extension"></span></label>
                         </div>
                         <div class="form-group">
-                            <label for="ctd-enabled">
+                            <label>
                                 <input type="checkbox" id="ctd-enabled" checked>
                                 Enable Click-to-Dial for this Extension
                             </label>
@@ -1612,14 +1612,14 @@
                             <small>Override default caller ID for outbound calls</small>
                         </div>
                         <div class="form-group">
-                            <label for="ctd-auto-answer">
+                            <label>
                                 <input type="checkbox" id="ctd-auto-answer">
                                 Auto-Answer Outbound Calls
                             </label>
                             <small style="display: block; margin-top: 5px;">Automatically answer when the call connects (requires compatible phone)</small>
                         </div>
                         <div class="form-group">
-                            <label for="ctd-browser-notification">
+                            <label>
                                 <input type="checkbox" id="ctd-browser-notification" checked>
                                 Enable Browser Notifications
                             </label>
@@ -2331,7 +2331,7 @@ Content-Type: application/json
                 <h3>⚙️ Codec Configuration</h3>
                 <form id="codec-config-form" onsubmit="saveCodecConfig(event)">
                     <div class="form-group">
-                        <label for="codec-g722-enabled">
+                        <label>
                             <input type="checkbox" id="codec-g722-enabled" checked>
                             Enable G.722 HD Audio
                         </label>
@@ -2346,14 +2346,14 @@ Content-Type: application/json
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="codec-opus-enabled">
+                        <label>
                             <input type="checkbox" id="codec-opus-enabled" checked>
                             Enable Opus Codec
                         </label>
                         <small>Modern adaptive codec with best quality</small>
                     </div>
                     <div class="form-group">
-                        <label for="codec-g729-enabled">
+                        <label>
                             <input type="checkbox" id="codec-g729-enabled" checked>
                             Enable G.729 Codec
                         </label>
@@ -2370,7 +2370,7 @@ Content-Type: application/json
                         <small>Annex A: Reduced complexity, Annex B: Voice Activity Detection</small>
                     </div>
                     <div class="form-group">
-                        <label for="codec-g726-enabled">
+                        <label>
                             <input type="checkbox" id="codec-g726-enabled" checked>
                             Enable G.726 ADPCM Codec
                         </label>
@@ -2446,7 +2446,7 @@ G.726-32</textarea>
 
                     <h4>Fallback Options</h4>
                     <div class="form-group">
-                        <label for="dtmf-sip-info-fallback">
+                        <label>
                             <input type="checkbox" id="dtmf-sip-info-fallback" checked>
                             Enable SIP INFO Fallback
                         </label>
@@ -2454,7 +2454,7 @@ G.726-32</textarea>
                     </div>
 
                     <div class="form-group">
-                        <label for="dtmf-inband-fallback">
+                        <label>
                             <input type="checkbox" id="dtmf-inband-fallback" checked>
                             Enable In-Band Audio Detection Fallback
                         </label>
@@ -2470,7 +2470,7 @@ G.726-32</textarea>
                     </div>
 
                     <div class="form-group">
-                        <label for="dtmf-relay-enabled">
+                        <label>
                             <input type="checkbox" id="dtmf-relay-enabled" checked>
                             Enable DTMF Relay
                         </label>
@@ -2993,61 +2993,61 @@ G.726-32</textarea>
                 <p class="config-note">Enable or disable system features</p>
                 <form id="features-config-form">
                     <div class="form-group">
-                        <label for="feature-call-recording">
+                        <label>
                             <input type="checkbox" id="feature-call-recording">
                             Enable Call Recording
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-call-transfer">
+                        <label>
                             <input type="checkbox" id="feature-call-transfer">
                             Enable Call Transfer
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-call-hold">
+                        <label>
                             <input type="checkbox" id="feature-call-hold">
                             Enable Call Hold
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-conference">
+                        <label>
                             <input type="checkbox" id="feature-conference">
                             Enable Conference Calling
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-voicemail">
+                        <label>
                             <input type="checkbox" id="feature-voicemail">
                             Enable Voicemail
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-call-parking">
+                        <label>
                             <input type="checkbox" id="feature-call-parking">
                             Enable Call Parking
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-call-queues">
+                        <label>
                             <input type="checkbox" id="feature-call-queues">
                             Enable Call Queues
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-presence">
+                        <label>
                             <input type="checkbox" id="feature-presence">
                             Enable Presence (Status) System
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-music-on-hold">
+                        <label>
                             <input type="checkbox" id="feature-music-on-hold">
                             Enable Music on Hold
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="feature-auto-attendant">
+                        <label>
                             <input type="checkbox" id="feature-auto-attendant">
                             Enable Auto Attendant
                         </label>
@@ -3076,13 +3076,13 @@ G.726-32</textarea>
                         <small>How long to ring before sending to voicemail (10-60 seconds)</small>
                     </div>
                     <div class="form-group">
-                        <label for="voicemail-allow-custom-greetings">
+                        <label>
                             <input type="checkbox" id="voicemail-allow-custom-greetings">
                             Allow Custom Greetings
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="voicemail-email-notifications">
+                        <label>
                             <input type="checkbox" id="voicemail-email-notifications">
                             Enable Email Notifications
                         </label>
@@ -3105,7 +3105,7 @@ G.726-32</textarea>
                         <input type="number" id="smtp-port" placeholder="587">
                     </div>
                     <div class="form-group">
-                        <label for="smtp-use-tls">
+                        <label>
                             <input type="checkbox" id="smtp-use-tls">
                             Use TLS/SSL
                         </label>
@@ -3135,7 +3135,7 @@ G.726-32</textarea>
                 <h3>🎙️ Call Recording Settings</h3>
                 <form id="recording-config-form">
                     <div class="form-group">
-                        <label for="recording-auto-record">
+                        <label>
                             <input type="checkbox" id="recording-auto-record">
                             Automatically Record All Calls
                         </label>
@@ -3165,25 +3165,25 @@ G.726-32</textarea>
                         <input type="number" id="security-min-password" min="8" max="32" value="12">
                     </div>
                     <div class="form-group">
-                        <label for="security-require-uppercase">
+                        <label>
                             <input type="checkbox" id="security-require-uppercase">
                             Require Uppercase Letter
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="security-require-lowercase">
+                        <label>
                             <input type="checkbox" id="security-require-lowercase">
                             Require Lowercase Letter
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="security-require-digit">
+                        <label>
                             <input type="checkbox" id="security-require-digit">
                             Require Number
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="security-require-special">
+                        <label>
                             <input type="checkbox" id="security-require-special">
                             Require Special Character
                         </label>
@@ -3199,7 +3199,7 @@ G.726-32</textarea>
                         <small>How long accounts are locked after too many failed attempts (300-3600 seconds)</small>
                     </div>
                     <div class="form-group">
-                        <label for="security-fips-mode">
+                        <label>
                             <input type="checkbox" id="security-fips-mode">
                             Enable FIPS 140-2 Compliance
                         </label>
@@ -3214,7 +3214,7 @@ G.726-32</textarea>
                 <form id="advanced-features-form">
                     <h4>WebRTC Browser Calling</h4>
                     <div class="form-group">
-                        <label for="advanced-webrtc-enabled">
+                        <label>
                             <input type="checkbox" id="advanced-webrtc-enabled">
                             Enable WebRTC
                         </label>
@@ -3223,7 +3223,7 @@ G.726-32</textarea>
 
                     <h4>Webhooks</h4>
                     <div class="form-group">
-                        <label for="advanced-webhooks-enabled">
+                        <label>
                             <input type="checkbox" id="advanced-webhooks-enabled">
                             Enable Webhooks
                         </label>
@@ -3232,7 +3232,7 @@ G.726-32</textarea>
 
                     <h4>CRM Integration</h4>
                     <div class="form-group">
-                        <label for="advanced-crm-enabled">
+                        <label>
                             <input type="checkbox" id="advanced-crm-enabled">
                             Enable CRM Integration
                         </label>
@@ -3241,14 +3241,14 @@ G.726-32</textarea>
 
                     <h4>Hot Desking</h4>
                     <div class="form-group">
-                        <label for="advanced-hot-desking-enabled">
+                        <label>
                             <input type="checkbox" id="advanced-hot-desking-enabled">
                             Enable Hot Desking
                         </label>
                         <small>Allow users to log in from any phone</small>
                     </div>
                     <div class="form-group">
-                        <label for="advanced-hot-desking-require-pin">
+                        <label>
                             <input type="checkbox" id="advanced-hot-desking-require-pin">
                             Require PIN for Hot Desking
                         </label>
@@ -3256,7 +3256,7 @@ G.726-32</textarea>
 
                     <h4>Voicemail Transcription</h4>
                     <div class="form-group">
-                        <label for="advanced-transcription-enabled">
+                        <label>
                             <input type="checkbox" id="advanced-transcription-enabled">
                             Enable Voicemail Transcription
                         </label>
@@ -3277,7 +3277,7 @@ G.726-32</textarea>
                         <small>Maximum participants per conference (3-100)</small>
                     </div>
                     <div class="form-group">
-                        <label for="conference-record">
+                        <label>
                             <input type="checkbox" id="conference-record">
                             Record Conferences by Default
                         </label>
@@ -3300,7 +3300,7 @@ G.726-32</textarea>
 
                 <form id="ssl-config-form">
                     <div class="form-group">
-                        <label for="ssl-enabled">
+                        <label>
                             <input type="checkbox" id="ssl-enabled">
                             Enable HTTPS/SSL
                         </label>
@@ -3855,7 +3855,7 @@ G.726-32</textarea>
                 <h3>Configuration</h3>
                 <form id="jitsi-config-form">
                     <div class="form-group">
-                        <label for="jitsi-enabled">
+                        <label>
                             <input type="checkbox" id="jitsi-enabled">
                             Enable Jitsi Integration
                         </label>
@@ -3870,7 +3870,7 @@ G.726-32</textarea>
                         </div>
 
                         <div class="form-group">
-                            <label for="jitsi-auto-create-rooms">
+                            <label>
                                 <input type="checkbox" id="jitsi-auto-create-rooms" checked>
                                 Auto-Create Meeting Rooms
                             </label>
@@ -3973,7 +3973,7 @@ sudo apt-get install jitsi-meet</pre>
                 <h3>Configuration</h3>
                 <form id="matrix-config-form">
                     <div class="form-group">
-                        <label for="matrix-enabled">
+                        <label>
                             <input type="checkbox" id="matrix-enabled">
                             Enable Matrix Integration
                         </label>
@@ -4012,7 +4012,7 @@ sudo apt-get install jitsi-meet</pre>
                         </div>
 
                         <div class="form-group">
-                            <label for="matrix-missed-call-notifications">
+                            <label>
                                 <input type="checkbox" id="matrix-missed-call-notifications" checked>
                                 Send Missed Call Notifications
                             </label>
@@ -4129,7 +4129,7 @@ python3 -m synapse.app.homeserver \
                 <h3>Configuration</h3>
                 <form id="espocrm-config-form">
                     <div class="form-group">
-                        <label for="espocrm-enabled">
+                        <label>
                             <input type="checkbox" id="espocrm-enabled">
                             Enable EspoCRM Integration
                         </label>
@@ -4150,7 +4150,7 @@ python3 -m synapse.app.homeserver \
                         </div>
 
                         <div class="form-group">
-                            <label for="espocrm-auto-create-contacts">
+                            <label>
                                 <input type="checkbox" id="espocrm-auto-create-contacts" checked>
                                 Auto-Create Contacts
                             </label>
@@ -4158,7 +4158,7 @@ python3 -m synapse.app.homeserver \
                         </div>
 
                         <div class="form-group">
-                            <label for="espocrm-auto-log-calls">
+                            <label>
                                 <input type="checkbox" id="espocrm-auto-log-calls" checked>
                                 Auto-Log Calls
                             </label>
@@ -4166,7 +4166,7 @@ python3 -m synapse.app.homeserver \
                         </div>
 
                         <div class="form-group">
-                            <label for="espocrm-screen-pop">
+                            <label>
                                 <input type="checkbox" id="espocrm-screen-pop" checked>
                                 Enable Screen Pop
                             </label>
@@ -4290,7 +4290,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <p>Connect to HubSpot for marketing automation and CRM features.</p>
                 <form id="hubspot-config-form">
                     <div class="form-group">
-                        <label for="hubspot-enabled">
+                        <label>
                             <input type="checkbox" id="hubspot-enabled">
                             Enable HubSpot Integration
                         </label>
@@ -4308,21 +4308,21 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                             <small>Your HubSpot portal/account ID</small>
                         </div>
                         <div class="form-group">
-                            <label for="hubspot-sync-contacts">
+                            <label>
                                 <input type="checkbox" id="hubspot-sync-contacts" checked>
                                 Sync Contacts Automatically
                             </label>
                             <small>Create/update HubSpot contacts from call activity</small>
                         </div>
                         <div class="form-group">
-                            <label for="hubspot-create-deals">
+                            <label>
                                 <input type="checkbox" id="hubspot-create-deals">
                                 Create Deals from Calls
                             </label>
                             <small>Automatically create deals for qualified calls</small>
                         </div>
                         <div class="form-group">
-                            <label for="hubspot-log-calls">
+                            <label>
                                 <input type="checkbox" id="hubspot-log-calls" checked>
                                 Log Calls as Activities
                             </label>
@@ -4349,7 +4349,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <p>Connect to Zendesk for helpdesk ticket management.</p>
                 <form id="zendesk-config-form">
                     <div class="form-group">
-                        <label for="zendesk-enabled">
+                        <label>
                             <input type="checkbox" id="zendesk-enabled">
                             Enable Zendesk Integration
                         </label>
@@ -4372,14 +4372,14 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                             <small>Your Zendesk API token (Settings > API > Add API token)</small>
                         </div>
                         <div class="form-group">
-                            <label for="zendesk-create-tickets">
+                            <label>
                                 <input type="checkbox" id="zendesk-create-tickets" checked>
                                 Create Tickets Automatically
                             </label>
                             <small>Auto-create tickets for missed or escalated calls</small>
                         </div>
                         <div class="form-group">
-                            <label for="zendesk-update-tickets">
+                            <label>
                                 <input type="checkbox" id="zendesk-update-tickets">
                                 Update Existing Tickets
                             </label>
@@ -4471,7 +4471,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <h3>⚙️ System Configuration</h3>
                 <form id="speech-analytics-config-form">
                     <div class="form-group">
-                        <label for="speech-analytics-enabled">
+                        <label>
                             <input type="checkbox" id="speech-analytics-enabled">
                             Enable Speech Analytics
                         </label>
@@ -4488,14 +4488,14 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                         <small>Vosk provides offline transcription without external dependencies</small>
                     </div>
                     <div class="form-group">
-                        <label for="sentiment-analysis-enabled">
+                        <label>
                             <input type="checkbox" id="sentiment-analysis-enabled" checked>
                             Enable Sentiment Analysis
                         </label>
                         <small>Analyze caller emotion and sentiment during calls</small>
                     </div>
                     <div class="form-group">
-                        <label for="call-summarization-enabled">
+                        <label>
                             <input type="checkbox" id="call-summarization-enabled" checked>
                             Enable Call Summarization
                         </label>
@@ -4594,13 +4594,13 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Required for voicemail security</small>
                 </div>
                 <div class="form-group">
-                    <label for="new-ext-allow-external">
+                    <label>
                         <input type="checkbox" id="new-ext-allow-external" checked>
                         Allow External Calls
                     </label>
                 </div>
                 <div class="form-group">
-                    <label for="new-ext-is-admin">
+                    <label>
                         <input type="checkbox" id="new-ext-is-admin">
                         Admin Privileges
                     </label>
@@ -4641,13 +4641,13 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Leave blank to keep current PIN</small>
                 </div>
                 <div class="form-group">
-                    <label for="edit-ext-allow-external">
+                    <label>
                         <input type="checkbox" id="edit-ext-allow-external">
                         Allow External Calls
                     </label>
                 </div>
                 <div class="form-group">
-                    <label for="edit-ext-is-admin">
+                    <label>
                         <input type="checkbox" id="edit-ext-is-admin">
                         Admin Privileges
                     </label>
@@ -5012,7 +5012,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>How destinations should ring</small>
                 </div>
                 <div class="form-group">
-                    <label for="fmfm-enabled">Enabled:</label>
+                    <label>Enabled:</label>
                     <input type="checkbox" id="fmfm-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable FMFM for this extension</small>
                 </div>
@@ -5096,7 +5096,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label for="time-rule-enabled">Enabled:</label>
+                    <label>Enabled:</label>
                     <input type="checkbox" id="time-rule-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable this rule immediately</small>
                 </div>
@@ -5145,7 +5145,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 </div>
 
                 <div class="form-group">
-                    <label for="webhook-enabled">Enabled:</label>
+                    <label>Enabled:</label>
                     <input type="checkbox" id="webhook-enabled" checked style="width: auto; margin-left: 10px;">
                     <small style="display: block; margin-top: 5px;">Enable this webhook immediately</small>
                 </div>
