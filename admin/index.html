@@ -1353,7 +1353,7 @@
                 <h3>Voicemail PIN Management</h3>
                 <form id="voicemail-pin-form">
                     <div class="form-group">
-                        <label for="vm-pin">Current Extension: <span id="vm-current-extension"></span></label>
+                        <label>Current Extension: <span id="vm-current-extension"></span></label>
                     </div>
                     <div class="form-group">
                         <label for="vm-pin">New PIN (4 digits):</label>
@@ -1598,7 +1598,7 @@
                 <div id="ctd-config-section" style="display: none;">
                     <form id="ctd-config-form" onsubmit="saveClickToDialConfig(event)">
                         <div class="form-group">
-                            <label for="ctd-enabled">Extension: <span id="ctd-current-extension"></span></label>
+                            <label>Extension: <span id="ctd-current-extension"></span></label>
                         </div>
                         <div class="form-group">
                             <label for="ctd-enabled">
@@ -4709,7 +4709,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     <small>Type of destination for this menu option</small>
                 </div>
                 <div class="form-group" id="new-dest-extension-group">
-                    <label for="new-menu-destination">Destination <span id="new-dest-label">Extension</span>:</label>
+                    <label>Destination <span id="new-dest-label">Extension</span>:</label>
                     <input type="text" id="new-menu-destination" required placeholder="1001">
                     <small id="new-dest-help">Extension, queue, or feature code to transfer to</small>
                 </div>
@@ -4743,7 +4743,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
             <form id="edit-menu-option-form">
                 <input type="hidden" id="edit-menu-digit">
                 <div class="form-group">
-                    <label for="edit-menu-dest-type">Digit: <span id="edit-menu-digit-display"></span></label>
+                    <label>Digit: <span id="edit-menu-digit-display"></span></label>
                 </div>
                 <div class="form-group">
                     <label for="edit-menu-dest-type">Destination Type:</label>
@@ -4756,7 +4756,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group" id="edit-dest-extension-group">
-                    <label for="edit-menu-destination">Destination <span id="edit-dest-label">Extension</span>:</label>
+                    <label>Destination <span id="edit-dest-label">Extension</span>:</label>
                     <input type="text" id="edit-menu-destination" required placeholder="1001">
                 </div>
                 <div class="form-group" id="edit-dest-submenu-group" style="display: none;">
@@ -4852,21 +4852,21 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="method-call">Notification Methods:</label>
+                    <label>Notification Methods:</label>
                     <div style="margin-top: 10px;">
-                        <label for="method-call" style="display: block; margin-bottom: 5px;">
+                        <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" id="method-call" value="call" checked>
                             📞 Call (Voice notification)
                         </label>
-                        <label for="method-page" style="display: block; margin-bottom: 5px;">
+                        <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" id="method-page" value="page">
                             📢 Page (Overhead announcement)
                         </label>
-                        <label for="method-email" style="display: block; margin-bottom: 5px;">
+                        <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" id="method-email" value="email">
                             📧 Email
                         </label>
-                        <label for="method-sms" style="display: block; margin-bottom: 5px;">
+                        <label style="display: block; margin-bottom: 5px;">
                             <input type="checkbox" id="method-sms" value="sms">
                             💬 SMS (Text message)
                         </label>
@@ -4968,17 +4968,17 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 <div class="form-group">
                     <label>Codec Preferences:</label>
                     <div style="margin-top: 8px;">
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.711" checked> G.711 (PCMU/PCMA)
                         </label>
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="G.722"> G.722 HD Audio
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.722"> G.722 HD Audio
                         </label>
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="Opus"> Opus
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="Opus"> Opus
                         </label>
-                        <label for="trunk-codecs" style="display: block; margin-bottom: 5px;">
-                            <input id="trunk-codecs" type="checkbox" name="trunk-codecs" value="G.729"> G.729
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="trunk-codecs" value="G.729"> G.729
                         </label>
                     </div>
                 </div>
@@ -5070,10 +5070,10 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                             <label><input type="checkbox" name="time-rule-days" value="0" checked> Monday</label>
                             <label><input type="checkbox" name="time-rule-days" value="1" checked> Tuesday</label>
                             <label><input type="checkbox" name="time-rule-days" value="2" checked> Wednesday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="3" checked> Thursday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="4" checked> Friday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="5"> Saturday</label>
-                            <label for="time-rule-start"><input type="checkbox" name="time-rule-days" value="6"> Sunday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="3" checked> Thursday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="4" checked> Friday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="5"> Saturday</label>
+                            <label><input type="checkbox" name="time-rule-days" value="6"> Sunday</label>
                         </div>
                     </div>
 
@@ -5130,10 +5130,10 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                         <label><input type="checkbox" name="webhook-events" value="call_ended"> Call Ended</label>
                         <label><input type="checkbox" name="webhook-events" value="call_answered"> Call Answered</label>
                         <label><input type="checkbox" name="webhook-events" value="extension_registered"> Extension Registered</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="extension_unregistered"> Extension Unregistered</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="voicemail_new"> New Voicemail</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="voicemail_deleted"> Voicemail Deleted</label>
-                        <label for="webhook-secret"><input type="checkbox" name="webhook-events" value="*"> All Events</label>
+                        <label><input type="checkbox" name="webhook-events" value="extension_unregistered"> Extension Unregistered</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_new"> New Voicemail</label>
+                        <label><input type="checkbox" name="webhook-events" value="voicemail_deleted"> Voicemail Deleted</label>
+                        <label><input type="checkbox" name="webhook-events" value="*"> All Events</label>
                     </div>
                     <small>Select which events should trigger this webhook</small>
                 </div>
