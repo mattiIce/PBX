@@ -1035,7 +1035,8 @@ async function refreshAllData() {
         ];
 
         // Add conditional async functions that may or may not exist
-        addIfExists(loadAutoAttendantConfig, refreshPromises);
+        // Use string names for functions defined in files loaded after admin.js
+        addIfExists('loadAutoAttendantConfig', refreshPromises);  // from auto_attendant.js
         addIfExists(loadPagingData, refreshPromises);
         addIfExists(loadWebRTCPhoneConfig, refreshPromises);
         
@@ -1053,12 +1054,12 @@ async function refreshAllData() {
         addIfExists(loadRetentionPolicies, refreshPromises);
         
         // Integrations (use string names for functions that may not be defined yet)
-        addIfExists('loadJitsiConfig', refreshPromises);
-        addIfExists('loadMatrixConfig', refreshPromises);
-        addIfExists('loadEspoCRMConfig', refreshPromises);
-        addIfExists(loadClickToDialTab, refreshPromises);
+        addIfExists('loadJitsiConfig', refreshPromises);              // from opensource_integrations.js
+        addIfExists('loadMatrixConfig', refreshPromises);             // from opensource_integrations.js
+        addIfExists('loadEspoCRMConfig', refreshPromises);            // from opensource_integrations.js
+        addIfExists('loadClickToDialTab', refreshPromises);           // from framework_features.js
         addIfExists(loadCRMActivityLog, refreshPromises);
-        addIfExists(loadOpenSourceIntegrations, refreshPromises);
+        addIfExists('loadOpenSourceIntegrations', refreshPromises);   // from opensource_integrations.js
         
         // Security & Monitoring
         addIfExists(loadFraudDetectionData, refreshPromises);
