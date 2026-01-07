@@ -51,22 +51,27 @@ global.loadExtensions = jest.fn(() => Promise.resolve());
 
 // Mock the suppressErrorNotifications flag
 global.suppressErrorNotifications = false;
+global.window = global;
 
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
     if (!refreshBtn) return;
+    
+    // Prevent concurrent refresh operations
+    if (refreshBtn.disabled) return;
 
     // Store original button state
     const originalText = refreshBtn.textContent;
     const originalDisabled = refreshBtn.disabled;
 
     try {
-        // Suppress error notifications during bulk refresh to avoid notification spam
-        global.suppressErrorNotifications = true;
-        
         // Update button to show loading state
         refreshBtn.textContent = '⏳ Refreshing All Tabs...';
         refreshBtn.disabled = true;
+        
+        // Suppress error notifications during bulk refresh to avoid notification spam
+        global.suppressErrorNotifications = true;
+        global.window.suppressErrorNotifications = true;
 
         console.log('Refreshing all data for ALL tabs...');
 
@@ -81,9 +86,6 @@ async function refreshAllData() {
         // Wait for all refresh operations to complete (success or failure)
         const results = await Promise.allSettled(refreshPromises);
         
-        // Re-enable error notifications
-        global.suppressErrorNotifications = false;
-        
         // Check for any failures and show summary
         const failures = results.filter(r => r.status === 'rejected');
         if (failures.length > 0) {
@@ -93,11 +95,13 @@ async function refreshAllData() {
             showNotification('✅ All tabs refreshed successfully', 'success');
         }
     } catch (error) {
-        // Re-enable error notifications
-        global.suppressErrorNotifications = false;
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
     } finally {
+        // Re-enable error notifications
+        global.suppressErrorNotifications = false;
+        global.window.suppressErrorNotifications = false;
+        
         // Restore button state
         refreshBtn.textContent = originalText;
         refreshBtn.disabled = originalDisabled;

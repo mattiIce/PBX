@@ -48,7 +48,11 @@ let currentExtensions = [];
 let currentUser = null; // Stores current extension info including is_admin status
 let currentTab = null; // Track the currently active tab
 let autoRefreshInterval = null; // Interval for auto-refreshing tab data
-let suppressErrorNotifications = false; // Flag to suppress error notifications during bulk operations
+
+// Flag to suppress error notifications during bulk operations
+// Attached to window object for cross-file access (e.g., opensource_integrations.js)
+let suppressErrorNotifications = false;
+window.suppressErrorNotifications = suppressErrorNotifications;
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
@@ -960,6 +964,9 @@ function refreshDashboard() {
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
     if (!refreshBtn) return;
+    
+    // Prevent concurrent refresh operations
+    if (refreshBtn.disabled) return;
 
     // Store original button state
     const originalText = refreshBtn.textContent;
@@ -973,12 +980,13 @@ async function refreshAllData() {
     };
 
     try {
-        // Suppress error notifications during bulk refresh to avoid notification spam
-        suppressErrorNotifications = true;
-        
         // Update button to show loading state
         refreshBtn.textContent = '⏳ Refreshing All Tabs...';
         refreshBtn.disabled = true;
+        
+        // Suppress error notifications during bulk refresh to avoid notification spam
+        suppressErrorNotifications = true;
+        window.suppressErrorNotifications = true;
 
         console.log('Refreshing all data for ALL tabs...');
 
@@ -1057,9 +1065,6 @@ async function refreshAllData() {
         // Wait for all refresh operations to complete (success or failure)
         const results = await Promise.allSettled(refreshPromises);
         
-        // Re-enable error notifications
-        suppressErrorNotifications = false;
-        
         // License Management - synchronous initialization function
         // Run after async operations to ensure license data is available for display
         if (typeof initLicenseManagement === 'function') {
@@ -1075,11 +1080,13 @@ async function refreshAllData() {
             showNotification('✅ All tabs refreshed successfully', 'success');
         }
     } catch (error) {
-        // Re-enable error notifications
-        suppressErrorNotifications = false;
         console.error('Error refreshing data:', error);
         showNotification(`Failed to refresh: ${error.message}`, 'error');
     } finally {
+        // Re-enable error notifications
+        suppressErrorNotifications = false;
+        window.suppressErrorNotifications = false;
+        
         // Restore button state
         refreshBtn.textContent = originalText;
         refreshBtn.disabled = originalDisabled;

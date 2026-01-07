@@ -372,7 +372,7 @@ function loadJitsiConfig() {
             if (!response.ok) {
                 // Gracefully handle errors (config endpoint may require auth or not be available)
                 if (window.suppressErrorNotifications) {
-                    console.info('Config endpoint returned error:', response.status, '(may not be authenticated or available)');
+                    console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
                 } else {
                     console.error('Failed to load Jitsi config:', response.status);
                 }
@@ -481,7 +481,7 @@ function loadMatrixConfig() {
             if (!response.ok) {
                 // Gracefully handle errors (config endpoint may require auth or not be available)
                 if (window.suppressErrorNotifications) {
-                    console.info('Config endpoint returned error:', response.status, '(may not be authenticated or available)');
+                    console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
                 } else {
                     console.error('Failed to load Matrix config:', response.status);
                 }
@@ -603,7 +603,7 @@ function loadEspoCRMConfig() {
             if (!response.ok) {
                 // Gracefully handle errors (config endpoint may require auth or not be available)
                 if (window.suppressErrorNotifications) {
-                    console.info('Config endpoint returned error:', response.status, '(may not be authenticated or available)');
+                    console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
                 } else {
                     console.error('Failed to load EspoCRM config:', response.status);
                 }
