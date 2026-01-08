@@ -120,8 +120,8 @@ This approach ensures we never exceed the burst limit and stay well within the 6
 ## Files Modified
 
 ### 1. `admin/js/admin.js`
-- Modified `executeBatched()` to accept promise-returning functions (lines 963-994)
-- Updated `refreshAllData()` to create function arrays instead of promise arrays (lines 1033-1120)
+- Modified `executeBatched()` to accept promise-returning functions (lines 963-999)
+- Updated `refreshAllData()` to create function arrays instead of promise arrays (lines 1024-1113)
 - Changed batch size from 8 to 5 and delay from 200ms to 1000ms
 - Removed old `addIfExists` helper, added `addFunctionIfExists` helper
 
@@ -269,9 +269,9 @@ const results = await executeBatched(refreshFunctions, 8, 500);
 
 **Rule of thumb**: 
 - Batch size should be < burst limit
-- Delay should be ≥ (batch_size / refill_rate_per_second) * 1000ms
-- For 60 req/min (1 req/sec) with batch size 5: delay ≥ 5000ms
-- We use 1000ms which works because we have capacity from previous batch
+- Delay should be ≥ (batch_size / refill_rate_per_second) * 1000ms **if starting from an empty bucket with no burst capacity**
+- Naively applying this to 60 req/min (1 req/sec) with batch size 5 gives: delay ≥ 5000ms
+- In our actual setup, the token bucket starts with 10 tokens and refills at 1 token/sec, so a 1000ms delay with batch size 5 is safe because the initial burst plus ongoing refill provide enough capacity across batches
 
 ## Deployment
 

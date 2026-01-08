@@ -16,6 +16,11 @@
  * @returns {Promise<Array>} Results from Promise.allSettled for all promises
  */
 async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
+    // Validate input
+    if (!Array.isArray(promiseFunctions)) {
+        throw new TypeError('promiseFunctions must be an array');
+    }
+    
     const results = [];
     
     console.log(`\n📦 Executing ${promiseFunctions.length} promise functions in batches of ${batchSize} with ${delayMs}ms delay\n`);
@@ -64,9 +69,6 @@ function simulateAPICall(id, shouldFail = false) {
                 resolve({ id, data: `Result from API ${id}` });
             }
         }, delay);
-    }).catch(err => {
-        // Catch to prevent unhandled rejection, but still throw for Promise.allSettled
-        throw err;
     });
 }
 
