@@ -267,8 +267,13 @@ class PhoneProvisioning:
                     vendor=db_device["vendor"],
                     model=db_device["model"],
                     device_type=db_device.get("device_type"),  # Load device_type from DB
-                    config_url=db_device.get("config_url"),
                 )
+                
+                # Regenerate config_url to reflect current configuration
+                # This ensures the URL uses the current api.port and server.external_ip
+                # even if they changed since the device was originally registered
+                device.config_url = self._generate_config_url(device.mac_address)
+                
                 # Restore timestamps if available
                 if db_device.get("created_at"):
                     device.created_at = db_device["created_at"]
@@ -1108,32 +1113,8 @@ P2351 = 1
         """
         device = ProvisioningDevice(mac_address, extension_number, vendor, model)
 
-        # Generate config URL based on MAC
-        # Auto-detect protocol based on SSL settings
-        # Note: Most phones cannot validate self-signed certificates, so HTTP is recommended
-        # for provisioning even when SSL is enabled for the admin API
-        provisioning_url_format = self.config.get("provisioning.url_format")
-
-        if not provisioning_url_format:
-            # Auto-generate URL format based on SSL status
-            # Default to HTTP for phone provisioning (phones often can't handle
-            # self-signed certs)
-            ssl_enabled = self.config.get("api.ssl.enabled", False)
-            protocol = "http"  # Always use HTTP for provisioning by default
-            provisioning_url_format = (
-                f"{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/{{mac}}.cfg"
-            )
-            self.logger.info(f"Auto-generated provisioning URL format: {provisioning_url_format}")
-            if ssl_enabled:
-                self.logger.info("Note: Using HTTP for provisioning even though SSL is enabled")
-                self.logger.info("Phones typically cannot validate self-signed certificates")
-
-        config_url = provisioning_url_format.replace("{mac}", device.mac_address)
-        config_url = config_url.replace(
-            "{{SERVER_IP}}", self.config.get("server.external_ip", "127.0.0.1")
-        )
-        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", "8080")))
-
+        # Generate config URL for this device
+        config_url = self._generate_config_url(device.mac_address)
         device.config_url = config_url
         self.devices[device.mac_address] = device
 
@@ -1557,6 +1538,38 @@ P2351 = 1
         if limit:
             return self.provision_requests[-limit:]
         return self.provision_requests
+
+    def _generate_config_url(self, mac_address):
+        """
+        Generate provisioning config URL for a device
+
+        Args:
+            mac_address: Normalized MAC address
+
+        Returns:
+            Generated config URL string
+        """
+        provisioning_url_format = self.config.get("provisioning.url_format")
+
+        if not provisioning_url_format:
+            # Auto-generate URL format based on SSL status
+            # Default to HTTP for phone provisioning (phones often can't handle
+            # self-signed certs)
+            ssl_enabled = self.config.get("api.ssl.enabled", False)
+            protocol = "http"  # Always use HTTP for provisioning by default
+            provisioning_url_format = (
+                f"{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/{{mac}}.cfg"
+            )
+            if ssl_enabled:
+                self.logger.debug("Using HTTP for provisioning even though SSL is enabled")
+
+        config_url = provisioning_url_format.replace("{mac}", mac_address)
+        config_url = config_url.replace(
+            "{{SERVER_IP}}", self.config.get("server.external_ip", "127.0.0.1")
+        )
+        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", 8080)))
+
+        return config_url
 
     def get_supported_vendors(self):
         """
