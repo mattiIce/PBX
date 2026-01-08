@@ -89,18 +89,23 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     logger = get_logger()  # Initialize logger for handler
     _integration_endpoints = None  # Cache for integration endpoints
     _health_checker = None  # Production health checker instance
-    _rate_limiter = None  # Rate limiter instance (DISABLED)
+    _rate_limiter = None  # Rate limiter instance (functionality disabled, not instantiated)
 
     def _check_rate_limit(self):
         """Check if request should be rate limited.
         
-        NOTE: Rate limiting is currently DISABLED.
+        NOTE: Rate limiting functionality is currently DISABLED.
         This method always returns True to allow all requests.
+        
+        To re-enable rate limiting:
+        1. Restore the original implementation of this method
+        2. Restore rate limit checks in do_GET() and do_POST()
+        3. Consider adding a config flag for more flexible control
         
         Returns:
             bool: True (always allows requests)
         """
-        # Rate limiting disabled - always allow requests
+        # Rate limiting functionality disabled - always allow requests
         return True
 
     def _get_integration_endpoints(self):
