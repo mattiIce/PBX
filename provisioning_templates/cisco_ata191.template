@@ -8,8 +8,12 @@
 <!-- Provisioning Parameters -->
 <!-- ============================================================================ -->
 <Provision_Enable>No</Provision_Enable>
-<Resync_On_Reset>No</Resync_On_Reset>
+<Resync_On_Reset>Yes</Resync_On_Reset>
+<Resync_Random_Delay>2</Resync_Random_Delay>
+<Resync_Periodic>3600</Resync_Periodic>
 <Profile_Rule></Profile_Rule>
+<Upgrade_Enable>Yes</Upgrade_Enable>
+<Upgrade_Rule></Upgrade_Rule>
 
 <!-- ============================================================================ -->
 <!-- Regional Parameters -->
@@ -17,6 +21,8 @@
 <Time_Zone>GMT-08:00</Time_Zone>
 <Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
 <Secondary_NTP_Server>time.nist.gov</Secondary_NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- ============================================================================ -->
 <!-- Line 1 (FXS Port 1) Configuration -->
@@ -30,8 +36,13 @@
 <!-- SIP Settings -->
 <Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
 <Outbound_Proxy_1_></Outbound_Proxy_1_>
+<Use_Outbound_Proxy_1_>No</Use_Outbound_Proxy_1_>
 <Register_1_>Yes</Register_1_>
+<Make_Call_Without_Reg_1_>No</Make_Call_Without_Reg_1_>
 <Register_Expires_1_>3600</Register_Expires_1_>
+<Ans_Call_Without_Reg_1_>No</Ans_Call_Without_Reg_1_>
+<Use_DNS_SRV_1_>No</Use_DNS_SRV_1_>
+<DNS_SRV_Auto_Prefix_1_>No</DNS_SRV_Auto_Prefix_1_>
 
 <!-- Codec Configuration - Optimized for analog and fax -->
 <!-- G.711 codecs (PCMU/PCMA) are best for analog phones and fax -->
@@ -41,39 +52,92 @@
 <G729a_Enable_1_>Yes</G729a_Enable_1_>
 <G711u_Enable_1_>Yes</G711u_Enable_1_>
 <G711a_Enable_1_>Yes</G711a_Enable_1_>
+<G726-16_Enable_1_>No</G726-16_Enable_1_>
+<G726-24_Enable_1_>No</G726-24_Enable_1_>
 <G726-32_Enable_1_>No</G726-32_Enable_1_>
+<G726-40_Enable_1_>No</G726-40_Enable_1_>
+<G722_Enable_1_>No</G722_Enable_1_>
+<iLBC_Enable_1_>No</iLBC_Enable_1_>
 
 <!-- DTMF Settings -->
-<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+<DTMF_Tx_Method_1_>AVT</DTMF_Tx_Method_1_>
 <!-- Options: InBand, AVT (RFC2833), INFO, Auto -->
+<!-- AVT (RFC2833) is the most reliable method for ATAs -->
 <DTMF_Tx_Mode_1_>Strict</DTMF_Tx_Mode_1_>
+<Hook_Flash_Tx_Method_1_>None</Hook_Flash_Tx_Method_1_>
 <RTP_Packet_Size_1_>0.020</RTP_Packet_Size_1_>
 
 <!-- Fax Settings - T.38 -->
 <FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+<FAX_Codec_Symmetric_1_>Yes</FAX_Codec_Symmetric_1_>
 <FAX_T38_Redundancy_1_>1</FAX_T38_Redundancy_1_>
 <FAX_Passthru_Method_1_>NSE</FAX_Passthru_Method_1_>
+<FAX_Passthru_Codec_1_>G711u</FAX_Passthru_Codec_1_>
+<FAX_Process_NSE_1_>Yes</FAX_Process_NSE_1_>
+<FAX_Disable_ECAN_1_>Yes</FAX_Disable_ECAN_1_>
+<FAX_Tone_Detect_Mode_1_>caller or callee</FAX_Tone_Detect_Mode_1_>
+<FAX_CED_Detect_Enable_1_>Yes</FAX_CED_Detect_Enable_1_>
+<FAX_CNG_Detect_Enable_1_>Yes</FAX_CNG_Detect_Enable_1_>
 
 <!-- Voice Processing -->
 <Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
 <Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
 <Echo_Canc_Adapt_Enable_1_>Yes</Echo_Canc_Adapt_Enable_1_>
 <Echo_Supp_Enable_1_>Yes</Echo_Supp_Enable_1_>
+<Voice_Frames_Per_TX_1_>2</Voice_Frames_Per_TX_1_>
 
 <!-- Caller ID -->
 <Caller_ID_Method_1_>Bellcore(N.Amer,China)</Caller_ID_Method_1_>
 <Caller_ID_FSK_Standard_1_>bell202</Caller_ID_FSK_Standard_1_>
+<CWCID_Setting_1_>Bellcore</CWCID_Setting_1_>
+<Dist_Ring_Cadence_1_>0</Dist_Ring_Cadence_1_>
 
 <!-- Audio Configuration -->
 <Txgain_1_>0</Txgain_1_>
 <Rxgain_1_>0</Rxgain_1_>
+<FXS_Port_Input_Volume_1_>0</FXS_Port_Input_Volume_1_>
+<FXS_Port_Output_Volume_1_>0</FXS_Port_Output_Volume_1_>
+
+<!-- Call Features -->
+<Conference_Bridge_URL_1_></Conference_Bridge_URL_1_>
+<Three_Way_Call_Serv_1_>No</Three_Way_Call_Serv_1_>
+<Three_Way_Conf_Serv_1_>No</Three_Way_Conf_Serv_1_>
+<Call_Waiting_Serv_1_>Yes</Call_Waiting_Serv_1_>
+<Block_CID_Serv_1_>No</Block_CID_Serv_1_>
+<Block_ANC_Serv_1_>No</Block_ANC_Serv_1_>
+<Cfwd_All_Serv_1_>No</Cfwd_All_Serv_1_>
+<Cfwd_Busy_Serv_1_>No</Cfwd_Busy_Serv_1_>
+<Cfwd_No_Ans_Serv_1_>No</Cfwd_No_Ans_Serv_1_>
+<Block_Last_Callers_Serv_1_>No</Block_Last_Callers_Serv_1_>
+<Accept_Last_Callers_Serv_1_>No</Accept_Last_Callers_Serv_1_>
+<DND_Serv_1_>No</DND_Serv_1_>
+<Anonymous_Call_Block_1_>No</Anonymous_Call_Block_1_>
+<Secure_Call_Serv_1_>No</Secure_Call_Serv_1_>
 
 <!-- ============================================================================ -->
 <!-- Line 2 (FXS Port 2) Configuration -->
 <!-- NOTE: Typically configured separately with a different extension -->
 <!-- ============================================================================ -->
 <Line_Enable_2_>No</Line_Enable_2_>
-<!-- To enable port 2, manually configure via web UI or use multi-extension provisioning -->
+<!-- To enable port 2, set Line_Enable_2_ to Yes and configure these settings: -->
+<!--
+<Display_Name_2_>{{EXTENSION_NAME_2}}</Display_Name_2_>
+<User_ID_2_>{{EXTENSION_NUMBER_2}}</User_ID_2_>
+<Auth_ID_2_>{{EXTENSION_NUMBER_2}}</Auth_ID_2_>
+<Password_2_>{{EXTENSION_PASSWORD_2}}</Password_2_>
+<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
+<Register_2_>Yes</Register_2_>
+<Register_Expires_2_>3600</Register_Expires_2_>
+<Preferred_Codec_2_>G711u</Preferred_Codec_2_>
+<Second_Preferred_Codec_2_>G711a</Second_Preferred_Codec_2_>
+<Third_Preferred_Codec_2_>G729a</Third_Preferred_Codec_2_>
+<DTMF_Tx_Method_2_>AVT</DTMF_Tx_Method_2_>
+<FAX_Enable_T38_2_>Yes</FAX_Enable_T38_2_>
+<Echo_Canc_Enable_2_>Yes</Echo_Canc_Enable_2_>
+<Caller_ID_Method_2_>Bellcore(N.Amer,China)</Caller_ID_Method_2_>
+<Txgain_2_>0</Txgain_2_>
+<Rxgain_2_>0</Rxgain_2_>
+-->
 
 <!-- ============================================================================ -->
 <!-- System Parameters -->
@@ -81,7 +145,17 @@
 
 <!-- Network Configuration -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>
+<Static_IP></Static_IP>
+<NetMask></NetMask>
+<Gateway></Gateway>
+<Primary_DNS></Primary_DNS>
+<Secondary_DNS></Secondary_DNS>
+<Host_Name>ATA191</Host_Name>
+<Domain></Domain>
+
+<!-- VLAN Configuration -->
 <Enable_VLAN>No</Enable_VLAN>
+<VLAN_ID></VLAN_ID>
 
 <!-- Power over Ethernet (PoE) - ATA 191 specific -->
 <PoE_Enable>Yes</PoE_Enable>
@@ -90,18 +164,46 @@
 <SIP_Port>{{SIP_PORT}}</SIP_Port>
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
+<Max_Forward>70</Max_Forward>
+<Max_Redirection>5</Max_Redirection>
+<Max_Auth>2</Max_Auth>
+
+<!-- QoS/ToS Settings -->
 <SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
 <RTP_TOS_DiffServ_Value>0xb8</RTP_TOS_DiffServ_Value>
+<Enable_QOS>Yes</Enable_QOS>
 
 <!-- SIP Transport -->
 <SIP_Transport_1_>UDP</SIP_Transport_1_>
+<!-- Options: UDP, TCP, TLS -->
+
+<!-- SIP Timer Values (in seconds) -->
+<SIP_T1>0.5</SIP_T1>
+<SIP_T2>4</SIP_T2>
+<SIP_T4>5</SIP_T4>
+<SIP_Timer_B>32</SIP_Timer_B>
+<SIP_Timer_F>32</SIP_Timer_F>
+<SIP_Timer_H>32</SIP_Timer_H>
+<SIP_Timer_D>32</SIP_Timer_D>
+<SIP_Timer_J>32</SIP_Timer_J>
+
+<!-- SIP Session Timer -->
+<Session_Expires>180</Session_Expires>
+<Min_SE>90</Min_SE>
+<Caller_Request_Timer>No</Caller_Request_Timer>
+<Callee_Request_Timer>No</Callee_Request_Timer>
+<Force_Timer>No</Force_Timer>
+<UAC_Session_Expires>No</UAC_Session_Expires>
+<UAS_Session_Expires>No</UAS_Session_Expires>
+
+<!-- SIP Behavior -->
+<Use_Compact_Header>No</Use_Compact_Header>
+<Remove_Last_Reg>No</Remove_Last_Reg>
 
 <!-- Regional Settings (FCC/North America) -->
 <Ring_Waveform>Sinusoid</Ring_Waveform>
 <Ring_Frequency>20</Ring_Frequency>
 <Ring_Voltage>75</Ring_Voltage>
-
-<!-- FXS Port Parameters -->
 <FXS_Port_Impedance>600</FXS_Port_Impedance>
 <!-- Options: 600 (North America), 270, 370, 600+2.16, 900, 220+820, 220+820+120 -->
 
@@ -109,13 +211,41 @@
 <Hook_Flash_Timer_Min>0.1</Hook_Flash_Timer_Min>
 <Hook_Flash_Timer_Max>0.9</Hook_Flash_Timer_Max>
 
-<!-- QoS Settings -->
-<Enable_QOS>Yes</Enable_QOS>
+<!-- Dial Plan -->
+<Dial_Plan_1_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_1_>
+<Interdigit_Long_Timer>10</Interdigit_Long_Timer>
+<Interdigit_Short_Timer>3</Interdigit_Short_Timer>
+
+<!-- FXS Port Timers -->
+<Off_Hook_Speed>Fast</Off_Hook_Speed>
+<On_Hook_Speed>Normal</On_Hook_Speed>
 
 <!-- Security -->
-<!-- Enable TLS for encrypted SIP signaling (set to No only if PBX does not support TLS) -->
-<SIP_TLS_Enable>Yes</SIP_TLS_Enable>
-<!-- Enable SRTP for encrypted media (set to No only if PBX does not support SRTP) -->
-<SRTP_Enable>Yes</SRTP_Enable>
+<!-- Note: TLS/SRTP support depends on PBX capabilities -->
+<!-- Set to No if PBX does not support these features -->
+<SIP_TLS_Enable>No</SIP_TLS_Enable>
+<SRTP_Enable>No</SRTP_Enable>
+<!-- SRTP Options: Disabled, Enabled but not forced, Enabled and forced -->
+<SRTP_Crypto_Suite_List>AES_CM_128_HMAC_SHA1_80,AES_CM_128_HMAC_SHA1_32</SRTP_Crypto_Suite_List>
+
+<!-- Web Server -->
+<Enable_Web_Server>Yes</Enable_Web_Server>
+<Web_Server_Port>80</Web_Server_Port>
+<Enable_Web_Admin_Access>Yes</Enable_Web_Admin_Access>
+
+<!-- Syslog -->
+<Syslog_Server></Syslog_Server>
+<Debug_Server></Debug_Server>
+<Debug_Level>0</Debug_Level>
+<SIP_Debug_Option>0</SIP_Debug_Option>
+
+<!-- Miscellaneous -->
+<Primary_DNS></Primary_DNS>
+<Secondary_DNS></Secondary_DNS>
+<Language_Selection>English</Language_Selection>
+<Dictionary_Server_Script></Dictionary_Server_Script>
+
+<!-- Supplementary Services -->
+<Supplementary_Service_Subscription>package=full</Supplementary_Service_Subscription>
 
 </flat-profile>
