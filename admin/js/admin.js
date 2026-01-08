@@ -960,6 +960,44 @@ function refreshDashboard() {
     showNotification('Dashboard refreshed', 'success');
 }
 
+/**
+ * Execute promise-returning functions in batches to avoid overwhelming the rate limiter.
+ * IMPORTANT: Pass functions that return promises, not promises themselves.
+ * This ensures requests don't start until the batch is ready to execute them.
+ * 
+ * @param {Function[]} promiseFunctions - Array of functions that return promises
+ * @param {number} batchSize - Number of promises to execute concurrently (default: 5)
+ * @param {number} delayMs - Delay in milliseconds between batches (default: 1000)
+ * @returns {Promise<Array>} Results from Promise.allSettled for all promises
+ */
+async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
+    // Validate input
+    if (!Array.isArray(promiseFunctions)) {
+        throw new TypeError('promiseFunctions must be an array');
+    }
+    
+    const results = [];
+    
+    // Process promise functions in batches
+    for (let i = 0; i < promiseFunctions.length; i += batchSize) {
+        const batchFunctions = promiseFunctions.slice(i, i + batchSize);
+        
+        // Create promises only when ready to execute (lazy evaluation)
+        const batchPromises = batchFunctions.map(fn => typeof fn === 'function' ? fn() : fn);
+        
+        // Execute current batch
+        const batchResults = await Promise.allSettled(batchPromises);
+        results.push(...batchResults);
+        
+        // Add delay between batches (except after the last batch)
+        if (i + batchSize < promiseFunctions.length) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+    
+    return results;
+}
+
 // Global Refresh Function - refreshes all data for ALL tabs
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
@@ -972,20 +1010,6 @@ async function refreshAllData() {
     const originalText = refreshBtn.textContent;
     const originalDisabled = refreshBtn.disabled;
 
-    // Helper function to add optional functions to the promise array
-    // Accepts either a function reference or a string name to safely handle undefined functions
-    const addIfExists = (funcName, promises) => {
-        if (typeof funcName === 'function') {
-            promises.push(Promise.resolve(funcName()));
-        } else if (typeof funcName === 'string') {
-            // String-based lookup for functions that might not be defined yet
-            const func = window[funcName];
-            if (typeof func === 'function') {
-                promises.push(Promise.resolve(func()));
-            }
-        }
-    };
-
     try {
         // Update button to show loading state
         refreshBtn.textContent = '⏳ Refreshing All Tabs...';
@@ -997,81 +1021,96 @@ async function refreshAllData() {
 
         console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh ALL tabs in parallel using Promise.allSettled for better performance
-        // This ensures all data loads simultaneously and completes even if some fail
-        const refreshPromises = [
+        // Collect ALL tab refresh FUNCTIONS (not promises) for batched execution
+        // Functions will be called in batches to stay within API rate limits
+        // IMPORTANT: Store functions, not promises, so requests don't start until we're ready
+        const refreshFunctions = [
             // Dashboard & Analytics
-            loadDashboard(),
-            loadADStatus(),
-            loadAnalytics(),
+            () => loadDashboard(),
+            () => loadADStatus(),
+            () => loadAnalytics(),
             
             // Extensions & Devices
-            loadExtensions(),
-            loadRegisteredPhones(),
-            loadRegisteredATAs(),
+            () => loadExtensions(),
+            () => loadRegisteredPhones(),
+            () => loadRegisteredATAs(),
             
             // Communication
-            loadCalls(),
-            loadQoSMetrics(),
-            loadEmergencyContacts(),
-            loadEmergencyHistory(),
+            () => loadCalls(),
+            () => loadQoSMetrics(),
+            () => loadEmergencyContacts(),
+            () => loadEmergencyHistory(),
             
             // Provisioning
-            loadProvisioning(),
-            loadProvisioningSettings(),
-            loadPhonebookSettings(),
-            loadSupportedVendors(),
-            loadProvisioningDevices(),
+            () => loadProvisioning(),
+            () => loadProvisioningSettings(),
+            () => loadPhonebookSettings(),
+            () => loadSupportedVendors(),
+            () => loadProvisioningDevices(),
             
             // System Configuration
-            loadConfig(),
-            loadSSLStatus(),
-            loadFeaturesStatus(),
-            loadCodecStatus(),
-            loadDTMFConfig(),
+            () => loadConfig(),
+            () => loadSSLStatus(),
+            () => loadFeaturesStatus(),
+            () => loadCodecStatus(),
+            () => loadDTMFConfig(),
             
             // Voicemail
-            loadVoicemailTab(),
+            () => loadVoicemailTab(),
         ];
+
+        // Helper function to add optional functions
+        const addFunctionIfExists = (funcName, functions) => {
+            if (typeof funcName === 'function') {
+                functions.push(() => funcName());
+            } else if (typeof funcName === 'string') {
+                const func = window[funcName];
+                if (typeof func === 'function') {
+                    functions.push(() => func());
+                }
+            }
+        };
 
         // Add conditional async functions that may or may not exist
         // Use string names for functions defined in files loaded after admin.js
-        addIfExists('loadAutoAttendantConfig', refreshPromises);  // from auto_attendant.js
-        addIfExists(loadPagingData, refreshPromises);
-        addIfExists(loadWebRTCPhoneConfig, refreshPromises);
+        addFunctionIfExists('loadAutoAttendantConfig', refreshFunctions);  // from auto_attendant.js
+        addFunctionIfExists(loadPagingData, refreshFunctions);
+        addFunctionIfExists(loadWebRTCPhoneConfig, refreshFunctions);
         
         // SIP & Routing
-        addIfExists(loadSIPTrunks, refreshPromises);
-        addIfExists(loadTrunkHealth, refreshPromises);
-        addIfExists(loadLCRRates, refreshPromises);
-        addIfExists(loadLCRStatistics, refreshPromises);
-        addIfExists(loadFMFMExtensions, refreshPromises);
-        addIfExists(loadTimeRoutingRules, refreshPromises);
+        addFunctionIfExists(loadSIPTrunks, refreshFunctions);
+        addFunctionIfExists(loadTrunkHealth, refreshFunctions);
+        addFunctionIfExists(loadLCRRates, refreshFunctions);
+        addFunctionIfExists(loadLCRStatistics, refreshFunctions);
+        addFunctionIfExists(loadFMFMExtensions, refreshFunctions);
+        addFunctionIfExists(loadTimeRoutingRules, refreshFunctions);
         
         // Advanced Features
-        addIfExists(loadWebhooks, refreshPromises);
-        addIfExists(loadHotDeskSessions, refreshPromises);
-        addIfExists(loadRetentionPolicies, refreshPromises);
+        addFunctionIfExists(loadWebhooks, refreshFunctions);
+        addFunctionIfExists(loadHotDeskSessions, refreshFunctions);
+        addFunctionIfExists(loadRetentionPolicies, refreshFunctions);
         
         // Integrations (use string names for functions that may not be defined yet)
-        addIfExists('loadJitsiConfig', refreshPromises);              // from opensource_integrations.js
-        addIfExists('loadMatrixConfig', refreshPromises);             // from opensource_integrations.js
-        addIfExists('loadEspoCRMConfig', refreshPromises);            // from opensource_integrations.js
-        addIfExists('loadClickToDialTab', refreshPromises);           // from framework_features.js
-        addIfExists(loadCRMActivityLog, refreshPromises);
-        addIfExists('loadOpenSourceIntegrations', refreshPromises);   // from opensource_integrations.js
+        addFunctionIfExists('loadJitsiConfig', refreshFunctions);              // from opensource_integrations.js
+        addFunctionIfExists('loadMatrixConfig', refreshFunctions);             // from opensource_integrations.js
+        addFunctionIfExists('loadEspoCRMConfig', refreshFunctions);            // from opensource_integrations.js
+        addFunctionIfExists('loadClickToDialTab', refreshFunctions);           // from framework_features.js
+        addFunctionIfExists(loadCRMActivityLog, refreshFunctions);
+        addFunctionIfExists('loadOpenSourceIntegrations', refreshFunctions);   // from opensource_integrations.js
         
         // Security & Monitoring
-        addIfExists(loadFraudDetectionData, refreshPromises);
-        addIfExists(loadNomadicE911Data, refreshPromises);
-        addIfExists(loadCallbackQueue, refreshPromises);
-        addIfExists(loadMobilePushConfig, refreshPromises);
-        addIfExists(loadRecordingAnnouncements, refreshPromises);
-        addIfExists(loadSpeechAnalyticsConfigs, refreshPromises);
-        addIfExists(loadComplianceData, refreshPromises);
+        addFunctionIfExists(loadFraudDetectionData, refreshFunctions);
+        addFunctionIfExists(loadNomadicE911Data, refreshFunctions);
+        addFunctionIfExists(loadCallbackQueue, refreshFunctions);
+        addFunctionIfExists(loadMobilePushConfig, refreshFunctions);
+        addFunctionIfExists(loadRecordingAnnouncements, refreshFunctions);
+        addFunctionIfExists(loadSpeechAnalyticsConfigs, refreshFunctions);
+        addFunctionIfExists(loadComplianceData, refreshFunctions);
 
-        // Wait for all refresh operations to complete (success or failure)
-        const results = await Promise.allSettled(refreshPromises);
+        // Execute all refresh operations in batches to avoid overwhelming the rate limiter
+        // Batch size of 5 requests with 1000ms delay between batches
+        // This ensures we don't exceed the burst limit (10) and stay within 60 req/min
+        const results = await executeBatched(refreshFunctions, 5, 1000);
         
         // License Management - synchronous initialization function
         // Run after async operations to ensure license data is available for display

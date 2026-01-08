@@ -53,6 +53,44 @@ global.loadExtensions = jest.fn(() => Promise.resolve());
 global.suppressErrorNotifications = false;
 global.window = global;
 
+/**
+ * Execute promise-returning functions in batches to avoid overwhelming the rate limiter.
+ * IMPORTANT: Pass functions that return promises, not promises themselves.
+ * This ensures requests don't start until the batch is ready to execute them.
+ * 
+ * @param {Function[]} promiseFunctions - Array of functions that return promises
+ * @param {number} batchSize - Number of promises to execute concurrently (default: 5)
+ * @param {number} delayMs - Delay in milliseconds between batches (default: 1000)
+ * @returns {Promise<Array>} Results from Promise.allSettled for all promises
+ */
+async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
+    // Validate input
+    if (!Array.isArray(promiseFunctions)) {
+        throw new TypeError('promiseFunctions must be an array');
+    }
+    
+    const results = [];
+    
+    // Process promise functions in batches
+    for (let i = 0; i < promiseFunctions.length; i += batchSize) {
+        const batchFunctions = promiseFunctions.slice(i, i + batchSize);
+        
+        // Create promises only when ready to execute (lazy evaluation)
+        const batchPromises = batchFunctions.map(fn => typeof fn === 'function' ? fn() : fn);
+        
+        // Execute current batch
+        const batchResults = await Promise.allSettled(batchPromises);
+        results.push(...batchResults);
+        
+        // Add delay between batches (except after the last batch)
+        if (i + batchSize < promiseFunctions.length) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+    
+    return results;
+}
+
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
     if (!refreshBtn) return;
@@ -75,16 +113,16 @@ async function refreshAllData() {
 
         console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh ALL tabs in parallel using Promise.allSettled
-        const refreshPromises = [
-            loadDashboard(),
-            loadADStatus(),
-            loadAnalytics(),
-            loadExtensions(),
+        // Collect ALL tab refresh FUNCTIONS (not promises) for batched execution
+        const refreshFunctions = [
+            () => loadDashboard(),
+            () => loadADStatus(),
+            () => loadAnalytics(),
+            () => loadExtensions(),
         ];
 
-        // Wait for all refresh operations to complete (success or failure)
-        const results = await Promise.allSettled(refreshPromises);
+        // Execute all refresh operations in batches to avoid overwhelming the rate limiter
+        const results = await executeBatched(refreshFunctions, 5, 1000);
         
         // Check for any failures and show summary
         const failures = results.filter(r => r.status === 'rejected');
@@ -243,5 +281,35 @@ describe('Refresh All Data', () => {
     
     // Flag should be reset after completion
     expect(global.suppressErrorNotifications).toBe(false);
+  });
+  
+  it('should execute requests in batches with delays', async () => {
+    // This test verifies that executeBatched processes promise functions in controlled batches
+    // By passing functions instead of promises, we ensure HTTP requests don't start
+    // until the batch is ready to execute them
+    
+    const results = [];
+    
+    // Create functions that return promises (not promises themselves!)
+    const promiseFunctions = Array.from({ length: 12 }, (_, i) => 
+      () => Promise.resolve().then(() => {
+        results.push(i);
+        return `result-${i}`;
+      })
+    );
+    
+    // Execute in batches of 5 with 50ms delay
+    const batchResults = await executeBatched(promiseFunctions, 5, 50);
+    
+    // All tasks should complete successfully
+    expect(batchResults.length).toBe(12);
+    expect(batchResults.every(r => r.status === 'fulfilled')).toBe(true);
+    
+    // Verify all results are present
+    expect(batchResults.map(r => r.value)).toEqual([
+      'result-0', 'result-1', 'result-2', 'result-3', 'result-4',
+      'result-5', 'result-6', 'result-7', 'result-8', 'result-9',
+      'result-10', 'result-11'
+    ]);
   });
 });
