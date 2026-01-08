@@ -96,11 +96,12 @@ async function main() {
     console.log(`Total time: ${totalTime}ms`);
     
     // Calculate batching metrics
-    const numBatches = Math.ceil(results.length / 8);
+    const batchSize = 5; // From executeBatched call
+    const numBatches = Math.ceil(results.length / batchSize);
     const totalDelays = (numBatches - 1) * 1000; // delays between batches
     console.log(`\n📦 Batching Metrics:`);
     console.log(`  Batches: ${numBatches}`);
-    console.log(`  Batch size: 5 requests`);
+    console.log(`  Batch size: ${batchSize} requests`);
     console.log(`  Inter-batch delay: 1000ms`);
     console.log(`  Total delay time: ${totalDelays}ms`);
     
@@ -113,7 +114,7 @@ async function main() {
     console.log(`  ✅ Using promise FUNCTIONS prevents all requests from starting simultaneously`);
     console.log(`  ✅ 1-second delays between batches allow token bucket to refill`);
     console.log(`  ✅ For typical refresh (40 requests), completes in ~8 seconds`);
-    console.log(`  ✅ Token bucket refills 1 token/second = full refill during 5-second inter-batch delays`);
+    console.log(`  ✅ Token bucket refills 1 token/second during 1-second inter-batch delays`);
     
     console.log('\n' + '═'.repeat(80));
     console.log('\n✨ Verification complete!\n');
