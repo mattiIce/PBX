@@ -102,7 +102,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """
         # Rate limiting disabled - always allow requests
         return True
-        return True
 
     def _get_integration_endpoints(self):
         """Get integration endpoints (cached)."""
