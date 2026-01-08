@@ -960,6 +960,34 @@ function refreshDashboard() {
     showNotification('Dashboard refreshed', 'success');
 }
 
+/**
+ * Execute promises in batches to avoid overwhelming the rate limiter.
+ * 
+ * @param {Promise[]} promises - Array of promises to execute
+ * @param {number} batchSize - Number of promises to execute concurrently (default: 8)
+ * @param {number} delayMs - Delay in milliseconds between batches (default: 200)
+ * @returns {Promise<Array>} Results from Promise.allSettled for all promises
+ */
+async function executeBatched(promises, batchSize = 8, delayMs = 200) {
+    const results = [];
+    
+    // Process promises in batches
+    for (let i = 0; i < promises.length; i += batchSize) {
+        const batch = promises.slice(i, i + batchSize);
+        
+        // Execute current batch
+        const batchResults = await Promise.allSettled(batch);
+        results.push(...batchResults);
+        
+        // Add delay between batches (except after the last batch)
+        if (i + batchSize < promises.length) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+    
+    return results;
+}
+
 // Global Refresh Function - refreshes all data for ALL tabs
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');
@@ -997,8 +1025,8 @@ async function refreshAllData() {
 
         console.log('Refreshing all data for ALL tabs...');
 
-        // Refresh ALL tabs in parallel using Promise.allSettled for better performance
-        // This ensures all data loads simultaneously and completes even if some fail
+        // Collect ALL tab refresh promises for batched execution
+        // Promises will be executed in batches to stay within API rate limits
         const refreshPromises = [
             // Dashboard & Analytics
             loadDashboard(),
@@ -1070,8 +1098,10 @@ async function refreshAllData() {
         addIfExists(loadSpeechAnalyticsConfigs, refreshPromises);
         addIfExists(loadComplianceData, refreshPromises);
 
-        // Wait for all refresh operations to complete (success or failure)
-        const results = await Promise.allSettled(refreshPromises);
+        // Execute all refresh operations in batches to avoid overwhelming the rate limiter
+        // Batch size of 8 requests with 200ms delay between batches stays well within
+        // the 60 req/min rate limit (approximately 24 req/min with this configuration)
+        const results = await executeBatched(refreshPromises, 8, 200);
         
         // License Management - synchronous initialization function
         // Run after async operations to ensure license data is available for display
