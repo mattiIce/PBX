@@ -115,7 +115,7 @@ Functions defined in files 4-6 must use string-based lookups to avoid ReferenceE
 2. **Graceful Degradation**: Functions that haven't loaded yet are simply skipped
 3. **Backward Compatible**: Existing function reference calls still work
 4. **Flexible**: Can handle functions loaded from multiple files in any order
-5. **Minimal Changes**: Only modified the helper function and three function calls
+5. **Minimal Changes**: Only modified the helper function and six function calls
 
 ## Files Modified
 
@@ -181,7 +181,7 @@ This change is fully backward compatible:
 - ✅ No database schema changes
 - ✅ No configuration file changes
 - ✅ Existing function reference calls still work
-- ✅ Only affects three specific function calls
+- ✅ Only affects six specific function calls
 - ✅ No breaking changes to any interfaces
 
 ## Security Considerations
