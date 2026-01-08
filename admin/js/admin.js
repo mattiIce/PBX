@@ -961,16 +961,16 @@ function refreshDashboard() {
 }
 
 /**
- * Execute promise-returning functions in batches to avoid overwhelming the rate limiter.
+ * Execute promise-returning functions in batches to manage server load.
  * IMPORTANT: Pass functions that return promises, not promises themselves.
  * This ensures requests don't start until the batch is ready to execute them.
  * 
  * @param {Function[]} promiseFunctions - Array of functions that return promises
- * @param {number} batchSize - Number of promises to execute concurrently (default: 5)
- * @param {number} delayMs - Delay in milliseconds between batches (default: 1000)
+ * @param {number} batchSize - Number of promises to execute concurrently (default: 10)
+ * @param {number} delayMs - Delay in milliseconds between batches (default: 200)
  * @returns {Promise<Array>} Results from Promise.allSettled for all promises
  */
-async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
+async function executeBatched(promiseFunctions, batchSize = 10, delayMs = 200) {
     // Validate input
     if (!Array.isArray(promiseFunctions)) {
         throw new TypeError('promiseFunctions must be an array');
@@ -1107,10 +1107,10 @@ async function refreshAllData() {
         addFunctionIfExists(loadSpeechAnalyticsConfigs, refreshFunctions);
         addFunctionIfExists(loadComplianceData, refreshFunctions);
 
-        // Execute all refresh operations in batches to avoid overwhelming the rate limiter
-        // Batch size of 5 requests with 1000ms delay between batches
-        // This ensures we don't exceed the burst limit (10) and stay within 60 req/min
-        const results = await executeBatched(refreshFunctions, 5, 1000);
+        // Execute all refresh operations in batches
+        // Rate limiting is disabled, so we can use larger batches with minimal delay
+        // Batch size of 10 requests with 200ms delay between batches for performance
+        const results = await executeBatched(refreshFunctions, 10, 200);
         
         // License Management - synchronous initialization function
         // Run after async operations to ensure license data is available for display

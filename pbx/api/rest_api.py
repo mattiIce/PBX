@@ -89,50 +89,19 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     logger = get_logger()  # Initialize logger for handler
     _integration_endpoints = None  # Cache for integration endpoints
     _health_checker = None  # Production health checker instance
-    _rate_limiter = None  # Rate limiter instance
+    _rate_limiter = None  # Rate limiter instance (DISABLED)
 
     def _check_rate_limit(self):
         """Check if request should be rate limited.
         
+        NOTE: Rate limiting is currently DISABLED.
+        This method always returns True to allow all requests.
+        
         Returns:
-            bool: True if request is allowed, False if rate limited
+            bool: True (always allows requests)
         """
-        # Skip rate limiting for health checks
-        if self.path in ["/health", "/healthz", "/live", "/liveness", "/ready", "/readiness"]:
-            return True
-        
-        # Get or create rate limiter
-        if PBXAPIHandler._rate_limiter is None:
-            try:
-                from pbx.utils.security_middleware import get_rate_limiter
-                PBXAPIHandler._rate_limiter = get_rate_limiter()
-            except ImportError:
-                # Rate limiting not available, allow request
-                return True
-        
-        # Get client IP
-        client_ip = self.client_address[0]
-        
-        # Check rate limit
-        allowed, retry_after = PBXAPIHandler._rate_limiter.is_allowed(client_ip)
-        
-        if not allowed:
-            # Send 429 Too Many Requests
-            self.send_response(429)
-            self.send_header("Content-type", "application/json")
-            self.send_header("Retry-After", str(retry_after))
-            self.send_header("X-RateLimit-Limit", str(PBXAPIHandler._rate_limiter.requests_per_minute))
-            self.send_header("X-RateLimit-Remaining", "0")
-            self.end_headers()
-            
-            response = {
-                "error": "Rate limit exceeded",
-                "retry_after": retry_after,
-                "message": f"Too many requests. Please retry after {retry_after} seconds."
-            }
-            self.wfile.write(json.dumps(response).encode())
-            return False
-        
+        # Rate limiting disabled - always allow requests
+        return True
         return True
 
     def _get_integration_endpoints(self):
@@ -254,10 +223,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests."""
-        # Check rate limit
-        if not self._check_rate_limit():
-            return
-        
         parsed = urlparse(self.path)
         path = parsed.path
 
@@ -847,10 +812,6 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests."""
-        # Check rate limit
-        if not self._check_rate_limit():
-            return
-        
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
 
@@ -1454,33 +1415,37 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Authentication required"}, 401)
             return
 
-        if self.pbx_core:
-            extensions = self.pbx_core.extension_registry.get_all()
+        try:
+            if self.pbx_core:
+                extensions = self.pbx_core.extension_registry.get_all()
 
-            # Check if user is admin
-            is_admin = payload.get("is_admin", False)
-            current_extension = payload.get("extension")
+                # Check if user is admin
+                is_admin = payload.get("is_admin", False)
+                current_extension = payload.get("extension")
 
-            # Non-admin users should only see their own extension
-            if not is_admin:
-                extensions = [e for e in extensions if e.number == current_extension]
+                # Non-admin users should only see their own extension
+                if not is_admin:
+                    extensions = [e for e in extensions if e.number == current_extension]
 
-            data = [
-                {
-                    "number": e.number,
-                    "name": e.name,
-                    "email": e.config.get("email"),
-                    "registered": e.registered,
-                    "allow_external": e.config.get("allow_external", True),
-                    "ad_synced": e.config.get("ad_synced", False),
-                    "voicemail_pin_hash": e.config.get("voicemail_pin_hash"),
-                    "is_admin": e.config.get("is_admin", False),
-                }
-                for e in extensions
-            ]
-            self._send_json(data)
-        else:
-            self._send_json({"error": "PBX not initialized"}, 500)
+                data = [
+                    {
+                        "number": e.number,
+                        "name": e.name,
+                        "email": e.config.get("email"),
+                        "registered": e.registered,
+                        "allow_external": e.config.get("allow_external", True),
+                        "ad_synced": e.config.get("ad_synced", False),
+                        "voicemail_pin_hash": e.config.get("voicemail_pin_hash"),
+                        "is_admin": e.config.get("is_admin", False),
+                    }
+                    for e in extensions
+                ]
+                self._send_json(data)
+            else:
+                self._send_json({"error": "PBX not initialized"}, 500)
+        except Exception as e:
+            self.logger.error(f"Error getting extensions: {e}")
+            self._send_json({"error": "Failed to retrieve extensions"}, 500)
 
     def _handle_get_calls(self):
         """Get active calls."""
@@ -1770,13 +1735,17 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Authentication required"}, 401)
             return
 
-        if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
-            vendors = self.pbx_core.phone_provisioning.get_supported_vendors()
-            models = self.pbx_core.phone_provisioning.get_supported_models()
-            data = {"vendors": vendors, "models": models}
-            self._send_json(data)
-        else:
-            self._send_json({"error": "Phone provisioning not enabled"}, 500)
+        try:
+            if self.pbx_core and hasattr(self.pbx_core, "phone_provisioning"):
+                vendors = self.pbx_core.phone_provisioning.get_supported_vendors()
+                models = self.pbx_core.phone_provisioning.get_supported_models()
+                data = {"vendors": vendors, "models": models}
+                self._send_json(data)
+            else:
+                self._send_json({"error": "Phone provisioning not enabled"}, 500)
+        except Exception as e:
+            self.logger.error(f"Error getting provisioning vendors: {e}")
+            self._send_json({"error": "Failed to retrieve provisioning vendors"}, 500)
 
     def _handle_get_provisioning_diagnostics(self):
         """Get provisioning system diagnostics."""
