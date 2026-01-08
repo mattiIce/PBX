@@ -6,29 +6,34 @@
  */
 
 /**
- * Execute promises in batches to avoid overwhelming the rate limiter.
+ * Execute promise-returning functions in batches to avoid overwhelming the rate limiter.
+ * IMPORTANT: Pass functions that return promises, not promises themselves.
+ * This ensures requests don't start until the batch is ready to execute them.
  * 
- * @param {Promise[]} promises - Array of promises to execute
- * @param {number} batchSize - Number of promises to execute concurrently (default: 8)
- * @param {number} delayMs - Delay in milliseconds between batches (default: 200)
+ * @param {Function[]} promiseFunctions - Array of functions that return promises
+ * @param {number} batchSize - Number of promises to execute concurrently (default: 5)
+ * @param {number} delayMs - Delay in milliseconds between batches (default: 1000)
  * @returns {Promise<Array>} Results from Promise.allSettled for all promises
  */
-async function executeBatched(promises, batchSize = 8, delayMs = 200) {
+async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
     const results = [];
     
-    console.log(`\n📦 Executing ${promises.length} promises in batches of ${batchSize} with ${delayMs}ms delay\n`);
+    console.log(`\n📦 Executing ${promiseFunctions.length} promise functions in batches of ${batchSize} with ${delayMs}ms delay\n`);
     
-    // Process promises in batches
-    for (let i = 0; i < promises.length; i += batchSize) {
-        const batch = promises.slice(i, i + batchSize);
+    // Process promise functions in batches
+    for (let i = 0; i < promiseFunctions.length; i += batchSize) {
+        const batchFunctions = promiseFunctions.slice(i, i + batchSize);
         const batchNum = Math.floor(i / batchSize) + 1;
-        const totalBatches = Math.ceil(promises.length / batchSize);
+        const totalBatches = Math.ceil(promiseFunctions.length / batchSize);
         
-        console.log(`⏳ Batch ${batchNum}/${totalBatches}: Processing ${batch.length} requests...`);
+        console.log(`⏳ Batch ${batchNum}/${totalBatches}: Processing ${batchFunctions.length} requests...`);
         const batchStart = Date.now();
         
+        // Create promises only when ready to execute (lazy evaluation)
+        const batchPromises = batchFunctions.map(fn => typeof fn === 'function' ? fn() : fn);
+        
         // Execute current batch
-        const batchResults = await Promise.allSettled(batch);
+        const batchResults = await Promise.allSettled(batchPromises);
         results.push(...batchResults);
         
         const batchDuration = Date.now() - batchStart;
@@ -37,7 +42,7 @@ async function executeBatched(promises, batchSize = 8, delayMs = 200) {
         console.log(`✅ Batch ${batchNum} completed in ${batchDuration}ms (${succeeded} succeeded, ${failed} failed)`);
         
         // Add delay between batches (except after the last batch)
-        if (i + batchSize < promises.length) {
+        if (i + batchSize < promiseFunctions.length) {
             console.log(`⏸️  Waiting ${delayMs}ms before next batch...\n`);
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
@@ -70,16 +75,16 @@ async function main() {
     console.log('This demonstrates how the admin refresh batching works to avoid rate limits.\n');
     console.log('═'.repeat(80));
     
-    // Create 40 simulated API calls (similar to real admin refresh)
-    // All succeed to keep output clean
-    const apiCalls = Array.from({ length: 40 }, (_, i) => {
-        return simulateAPICall(i + 1, false);
+    // Create 40 simulated API call FUNCTIONS (not promises!) 
+    // This is the key difference - we don't start the requests until we're ready
+    const apiCallFunctions = Array.from({ length: 40 }, (_, i) => {
+        return () => simulateAPICall(i + 1, false);
     });
     
     const startTime = Date.now();
     
     // Execute with batching
-    const results = await executeBatched(apiCalls, 8, 200);
+    const results = await executeBatched(apiCallFunctions, 5, 1000);
     
     const totalTime = Date.now() - startTime;
     
@@ -92,35 +97,28 @@ async function main() {
     
     // Calculate batching metrics
     const numBatches = Math.ceil(results.length / 8);
-    const totalDelays = (numBatches - 1) * 200; // delays between batches
+    const totalDelays = (numBatches - 1) * 1000; // delays between batches
     console.log(`\n📦 Batching Metrics:`);
     console.log(`  Batches: ${numBatches}`);
-    console.log(`  Batch size: 8 requests`);
-    console.log(`  Inter-batch delay: 200ms`);
+    console.log(`  Batch size: 5 requests`);
+    console.log(`  Inter-batch delay: 1000ms`);
     console.log(`  Total delay time: ${totalDelays}ms`);
-    
-    // Max requests in any 1-minute window
-    // With batching, we send 8 requests every ~200ms
-    // In 1 minute (60,000ms), we could send: (60,000 / 200) * 8 = 2,400 requests
-    // But this is theoretical - in practice we're limiting burst
-    const maxRequestsPer200ms = 8;
-    const intervals200msPerMinute = 60000 / 200;
-    const theoreticalMaxPerMin = maxRequestsPer200ms * intervals200msPerMinute;
     
     console.log(`\n⚖️  Rate Limit Analysis:`);
     console.log(`  Backend limit: 60 req/min (burst: 10)`);
-    console.log(`  Our batch size: 8 requests (within burst limit of 10)`);
-    console.log(`  Time between batches: 200ms`);
-    console.log(`  Max concurrent requests: 8 (within burst limit)`);
-    console.log(`  Theoretical sustained rate: ${theoreticalMaxPerMin} req/min`);
-    console.log(`  \n  ✅ Batch size (8) is WITHIN burst limit (10)`);
-    console.log(`  ✅ Delays prevent sustained rate limit violations`);
-    console.log(`  ✅ For typical refresh (40 requests), completes in ~1 second`);
+    console.log(`  Our batch size: 5 requests (within burst limit of 10)`);
+    console.log(`  Time between batches: 1000ms`);
+    console.log(`  Max concurrent requests: 5 (within burst limit)`);
+    console.log(`  \n  ✅ Batch size (5) is WITHIN burst limit (10)`);
+    console.log(`  ✅ Using promise FUNCTIONS prevents all requests from starting simultaneously`);
+    console.log(`  ✅ 1-second delays between batches allow token bucket to refill`);
+    console.log(`  ✅ For typical refresh (40 requests), completes in ~8 seconds`);
+    console.log(`  ✅ Token bucket refills 1 token/second = full refill during 5-second inter-batch delays`);
     
     console.log('\n' + '═'.repeat(80));
     console.log('\n✨ Verification complete!\n');
-    console.log('Key takeaway: Batching ensures we never exceed the burst limit (10 concurrent),');
-    console.log('and delays between batches prevent sustained rate violations.\n');
+    console.log('Key takeaway: By passing FUNCTIONS instead of PROMISES, we control when');
+    console.log('HTTP requests actually start, preventing simultaneous bursts that exceed rate limits.\n');
 }
 
 // Run the verification

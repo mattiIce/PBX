@@ -54,26 +54,31 @@ global.suppressErrorNotifications = false;
 global.window = global;
 
 /**
- * Execute promises in batches to avoid overwhelming the rate limiter.
+ * Execute promise-returning functions in batches to avoid overwhelming the rate limiter.
+ * IMPORTANT: Pass functions that return promises, not promises themselves.
+ * This ensures requests don't start until the batch is ready to execute them.
  * 
- * @param {Promise[]} promises - Array of promises to execute
- * @param {number} batchSize - Number of promises to execute concurrently (default: 8)
- * @param {number} delayMs - Delay in milliseconds between batches (default: 200)
+ * @param {Function[]} promiseFunctions - Array of functions that return promises
+ * @param {number} batchSize - Number of promises to execute concurrently (default: 5)
+ * @param {number} delayMs - Delay in milliseconds between batches (default: 1000)
  * @returns {Promise<Array>} Results from Promise.allSettled for all promises
  */
-async function executeBatched(promises, batchSize = 8, delayMs = 200) {
+async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
     const results = [];
     
-    // Process promises in batches
-    for (let i = 0; i < promises.length; i += batchSize) {
-        const batch = promises.slice(i, i + batchSize);
+    // Process promise functions in batches
+    for (let i = 0; i < promiseFunctions.length; i += batchSize) {
+        const batchFunctions = promiseFunctions.slice(i, i + batchSize);
+        
+        // Create promises only when ready to execute (lazy evaluation)
+        const batchPromises = batchFunctions.map(fn => typeof fn === 'function' ? fn() : fn);
         
         // Execute current batch
-        const batchResults = await Promise.allSettled(batch);
+        const batchResults = await Promise.allSettled(batchPromises);
         results.push(...batchResults);
         
         // Add delay between batches (except after the last batch)
-        if (i + batchSize < promises.length) {
+        if (i + batchSize < promiseFunctions.length) {
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
     }
@@ -103,16 +108,16 @@ async function refreshAllData() {
 
         console.log('Refreshing all data for ALL tabs...');
 
-        // Collect ALL tab refresh promises for batched execution
-        const refreshPromises = [
-            loadDashboard(),
-            loadADStatus(),
-            loadAnalytics(),
-            loadExtensions(),
+        // Collect ALL tab refresh FUNCTIONS (not promises) for batched execution
+        const refreshFunctions = [
+            () => loadDashboard(),
+            () => loadADStatus(),
+            () => loadAnalytics(),
+            () => loadExtensions(),
         ];
 
         // Execute all refresh operations in batches to avoid overwhelming the rate limiter
-        const results = await executeBatched(refreshPromises, 8, 200);
+        const results = await executeBatched(refreshFunctions, 5, 1000);
         
         // Check for any failures and show summary
         const failures = results.filter(r => r.status === 'rejected');
@@ -274,22 +279,22 @@ describe('Refresh All Data', () => {
   });
   
   it('should execute requests in batches with delays', async () => {
-    // This test verifies that executeBatched processes promises in controlled batches
-    // Note: Since promises start executing when created, this test verifies the batching
-    // logic completes all promises and returns results in the correct format
+    // This test verifies that executeBatched processes promise functions in controlled batches
+    // By passing functions instead of promises, we ensure HTTP requests don't start
+    // until the batch is ready to execute them
     
     const results = [];
     
-    // Create promises that resolve with their index
-    const promises = Array.from({ length: 12 }, (_, i) => 
-      Promise.resolve().then(() => {
+    // Create functions that return promises (not promises themselves!)
+    const promiseFunctions = Array.from({ length: 12 }, (_, i) => 
+      () => Promise.resolve().then(() => {
         results.push(i);
         return `result-${i}`;
       })
     );
     
     // Execute in batches of 5 with 50ms delay
-    const batchResults = await executeBatched(promises, 5, 50);
+    const batchResults = await executeBatched(promiseFunctions, 5, 50);
     
     // All tasks should complete successfully
     expect(batchResults.length).toBe(12);
