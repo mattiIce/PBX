@@ -89,10 +89,10 @@
 - **Microsoft Teams** - Presence sync and meeting escalation
 
 ### Security & Compliance
-- **HTTPS/SSL Support** - Secure API communication with TLS 1.2+ (see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md#62-ssltls-configuration))
+- **HTTPS/SSL Support** - Secure API communication with TLS 1.2-1.3 (see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md#62-ssltls-configuration))
 - **In-House CA Integration** - Automatic certificate request from enterprise Certificate Authority
 - **FIPS 140-2 Compliant Encryption** - Government-grade security
-- **TLS/SIPS** - Encrypted SIP signaling
+- **TLS/SIPS** - Encrypted SIP signaling with TLS 1.3 support
 - **SRTP** - Encrypted media streams
 - **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
 - **Password Security** - PBKDF2-HMAC-SHA256 hashing with 600,000 iterations (OWASP 2024 recommendation)
