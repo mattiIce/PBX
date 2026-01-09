@@ -10909,11 +10909,15 @@ class PBXAPIServer:
                 self.ssl_context.load_verify_locations(cafile=ca_cert)
                 self.logger.info(f"Loaded CA certificate: {ca_cert}")
 
-            # Configure strong cipher suites
+            # Configure strong cipher suites for TLS 1.2 and TLS 1.3
+            # TLS 1.3 cipher suites are configured automatically by the protocol
             self.ssl_context.set_ciphers("HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4")
 
-            # Require TLS 1.2 or higher
+            # Require TLS 1.2 or higher (includes TLS 1.3)
             self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+
+            # Enable TLS 1.3 by not setting a maximum version restriction
+            # This allows the latest supported TLS version (1.3) to be negotiated
 
             # Additional security settings
             self.ssl_context.options |= ssl.OP_NO_SSLv2
@@ -10922,7 +10926,9 @@ class PBXAPIServer:
             self.ssl_context.options |= ssl.OP_NO_TLSv1_1
 
             self.ssl_enabled = True
-            self.logger.info(f"SSL/HTTPS enabled with certificate: {cert_file}")
+            self.logger.info(
+                f"SSL/HTTPS enabled with certificate: {cert_file} (TLS 1.2-1.3 supported)"
+            )
 
         except Exception as e:
             self.logger.error("=" * 80)

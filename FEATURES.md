@@ -186,7 +186,7 @@ When a call goes to voicemail:
   - Voicemail audio attached to email
   - Configurable email templates
 - **SMTP Configuration**
-  - Supports TLS/SSL encryption
+  - Supports TLS 1.2-1.3 encryption
   - Compatible with any SMTP server
   - Configurable authentication
 - **Daily Reminders**

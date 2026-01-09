@@ -41,7 +41,7 @@ class TLSManager:
             self._create_ssl_context()
 
     def _create_ssl_context(self):
-        """Create SSL context with FIPS-approved settings"""
+        """Create SSL context with FIPS-approved settings and TLS 1.3 support"""
         try:
             # Create SSL context
             self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -50,8 +50,9 @@ class TLSManager:
             self.ssl_context.load_cert_chain(self.cert_file, self.key_file)
 
             if self.fips_mode:
-                # Configure FIPS-approved cipher suites
-                # These are AES-based ciphers approved by FIPS 140-2
+                # Configure FIPS-approved cipher suites for TLS 1.2 and TLS 1.3
+                # TLS 1.2 ciphers: AES-based ciphers approved by FIPS 140-2
+                # TLS 1.3 ciphers are handled automatically by the TLS 1.3 protocol
                 fips_ciphers = [
                     "ECDHE-RSA-AES256-GCM-SHA384",
                     "ECDHE-RSA-AES128-GCM-SHA256",
@@ -60,12 +61,16 @@ class TLSManager:
                 ]
                 self.ssl_context.set_ciphers(":".join(fips_ciphers))
 
-                # Require TLS 1.2 or higher (FIPS requirement)
+                # Require TLS 1.2 or higher (includes TLS 1.3)
                 self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
             else:
                 # Use strong ciphers but not limited to FIPS
                 self.ssl_context.set_ciphers("HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4")
                 self.ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+
+            # Enable TLS 1.3 by not setting a maximum version restriction
+            # This allows the latest supported TLS version (1.3) to be negotiated
+            # Note: TLS 1.3 cipher suites are configured automatically
 
             # Additional security settings
             self.ssl_context.options |= ssl.OP_NO_SSLv2
@@ -73,7 +78,10 @@ class TLSManager:
             self.ssl_context.options |= ssl.OP_NO_TLSv1
             self.ssl_context.options |= ssl.OP_NO_TLSv1_1
 
-            self.logger.info(f"TLS context created (FIPS mode: {self.fips_mode})")
+            self.logger.info(
+                f"TLS context created (FIPS mode: {self.fips_mode}, "
+                f"TLS 1.2-1.3 supported)"
+            )
 
         except Exception as e:
             self.logger.error(f"Failed to create SSL context: {e}")
