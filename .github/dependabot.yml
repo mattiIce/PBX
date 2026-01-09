@@ -1,0 +1,104 @@
+# Dependabot configuration for the PBX project
+# This file configures automated dependency updates for Python (pip) and npm packages
+# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Python dependencies (pip)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    # Group dependency updates by type
+    groups:
+      # Security updates (patches)
+      security-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      # Minor and patch updates for production dependencies
+      production-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "*-dev"
+          - "pytest*"
+          - "black"
+          - "flake8"
+          - "pylint"
+          - "mypy"
+          - "isort"
+    # Automatically merge security patches
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+
+  # npm dependencies (for admin web interface)
+  - package-ecosystem: "npm"
+    directory: "/admin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    # Group dependency updates by type
+    groups:
+      # Security updates (patches)
+      security-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      # Minor and patch updates for production dependencies
+      production-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "*-dev"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"

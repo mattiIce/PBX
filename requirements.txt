@@ -78,6 +78,8 @@ av>=16.0.1  # PyAV - Pythonic binding for FFmpeg
 
 # Web interface (FREE, open source)
 flask>=3.1.2  # Web framework
+werkzeug>=3.1.3  # Web framework utilities (Flask dependency) - security updates
+jinja2>=3.1.5  # Template engine (Flask dependency) - security fix for CVE-2024-56326
 websockets>=15.0.1  # Real-time updates (already installed by vosk)
 
 # Monitoring (FREE, open source)
