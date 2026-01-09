@@ -77,7 +77,7 @@ websockets==14.1
 # Monitoring
 prometheus-client==0.21.1
 redis==5.2.1
-psutil==6.1.1
+psutil==7.2.1
 
 # ============================================================================
 # Development Dependencies
