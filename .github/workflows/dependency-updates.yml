@@ -22,16 +22,19 @@ jobs:
 
     - name: Install pip-tools
       run: |
+        set -e
         python -m pip install --upgrade pip pip-tools
 
     - name: Update requirements
       run: |
+        set -e
         # Generate updated requirements with latest versions
         pip-compile --upgrade requirements.txt --output-file requirements-updated.txt
 
     - name: Check for updates
       id: check
       run: |
+        set -e
         if ! diff -q requirements.txt requirements-updated.txt > /dev/null 2>&1; then
           echo "updates_available=true" >> $GITHUB_OUTPUT
           echo "Updates available!"
