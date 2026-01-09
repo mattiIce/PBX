@@ -8,6 +8,7 @@ import ssl
 import sys
 import tempfile
 import time
+import traceback
 from pathlib import Path
 
 # Add parent directory to path
@@ -189,30 +190,29 @@ def test_api_server_tls13_support():
         return True
 
     try:
-        # Create mock PBX core
+        # Create mock PBX core with mock config
+        class MockConfig:
+            """Mock config for testing"""
+            def get(self, key, default=None):
+                """Mock get method that returns appropriate values for SSL testing"""
+                if key == "api.ssl":
+                    return {
+                        "enabled": True,
+                        "cert_file": cert_file,
+                        "key_file": key_file,
+                        "ca": {"enabled": False},
+                    }
+                # Return defaults for other config values
+                return default
+
         class MockPBXCore:
             def __init__(self):
-                self.config = Config("test_config.yml")
+                self.config = MockConfig()
 
             def get_status(self):
                 return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
         mock_pbx = MockPBXCore()
-
-        # Override config to enable SSL
-        original_get = mock_pbx.config.get
-
-        def mock_get(key, default=None):
-            if key == "api.ssl":
-                return {
-                    "enabled": True,
-                    "cert_file": cert_file,
-                    "key_file": key_file,
-                    "ca": {"enabled": False},
-                }
-            return original_get(key, default)
-
-        mock_pbx.config.get = mock_get
 
         # Create API server
         print("  Creating API server with SSL...")
@@ -353,8 +353,6 @@ def main():
         except Exception as e:
             failed += 1
             print(f"✗ {test_name} error: {e}\n")
-            import traceback
-
             traceback.print_exc()
 
     print("=" * 60)
