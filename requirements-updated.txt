@@ -240,7 +240,7 @@ srsly==2.5.2
     #   weasel
 srt==3.5.3
     # via vosk
-thinc==8.3.10
+thinc==9.1.1
     # via spacy
 threadpoolctl==3.6.0
     # via scikit-learn
