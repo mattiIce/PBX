@@ -61,7 +61,7 @@ nltk>=3.9.2  # Natural language toolkit for tokenization, lemmatization, intent 
 # NLTK will auto-download required corpora on first use
 
 # Machine Learning (FREE, open source)
-numpy>=2.2.0,<2.4  # Array operations and numerical computing (constrained by librosa)
+numpy>=2.2.0,<2.5  # Array operations and numerical computing (constrained by librosa)
 scikit-learn>=1.8.0  # ML algorithms (classification, regression, clustering)
 scipy>=1.16.3  # Scientific computing and optimization
 
