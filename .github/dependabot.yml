@@ -11,15 +11,9 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    # Group dependency updates by type
+    # Group dependency updates
     groups:
-      # Security updates (patches)
-      security-patches:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
-      # Minor and patch updates for production dependencies
+      # Production dependencies (minor and patch updates)
       production-dependencies:
         patterns:
           - "*"
@@ -34,7 +28,7 @@ updates:
           - "pylint"
           - "mypy"
           - "isort"
-    # Automatically merge security patches
+    # Limit the number of open Dependabot PRs for Python dependencies
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -43,22 +37,16 @@ updates:
       prefix: "⬆️"
       include: "scope"
 
-  # npm dependencies (for admin web interface)
+  # npm dependencies
   - package-ecosystem: "npm"
-    directory: "/admin"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    # Group dependency updates by type
+    # Group dependency updates
     groups:
-      # Security updates (patches)
-      security-patches:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
-      # Minor and patch updates for production dependencies
+      # Production dependencies (minor and patch updates)
       production-dependencies:
         patterns:
           - "*"
