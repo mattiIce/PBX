@@ -72,7 +72,7 @@ av==14.0.1
 
 # Web Interface
 flask==3.1.1
-websockets==14.1
+websockets==15.0.1
 
 # Monitoring
 prometheus-client==0.21.1
