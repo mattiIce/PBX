@@ -91,7 +91,7 @@ pytest-timeout==2.3.1
 pytest-mock==3.14.0
 
 # Code Quality
-pylint==3.3.3
+pylint==4.0.4
 flake8==7.1.1
 black==24.10.0
 mypy==1.14.0
