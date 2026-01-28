@@ -40,7 +40,7 @@ cffi==2.0.0
     #   vosk
 charset-normalizer==3.4.4
     # via requests
-click==8.1.8
+click==8.3.1
     # via
     #   flask
     #   gtts
@@ -129,7 +129,7 @@ nltk==3.9.2
     # via -r requirements.txt
 numba==0.63.1
     # via librosa
-numpy==2.3.5
+numpy==2.4.1
     # via
     #   -r requirements.txt
     #   blis
