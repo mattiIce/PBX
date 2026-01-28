@@ -85,7 +85,7 @@ psutil==7.2.1
 
 # Testing
 pytest==8.3.4
-pytest-cov==6.0.0
+pytest-cov==7.0.0
 pytest-asyncio==0.25.2
 pytest-timeout==2.3.1
 pytest-mock==3.14.0
