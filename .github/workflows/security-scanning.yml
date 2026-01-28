@@ -26,26 +26,27 @@ jobs:
 
     - name: Install dependencies
       run: |
+        set -e
         python -m pip install --upgrade pip
         pip install safety pip-audit
 
     - name: Run Safety check
       id: safety
       run: |
+        set -e
         safety check --json --output safety-report.json || true
         safety check || echo "safety_failed=true" >> $GITHUB_OUTPUT
-      continue-on-error: true
 
     - name: Run pip-audit
       id: pip-audit
       run: |
+        set -e
         pip-audit --format json --output pip-audit-report.json || true
         pip-audit || echo "audit_failed=true" >> $GITHUB_OUTPUT
-      continue-on-error: true
 
     - name: Upload Safety report
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: safety-report
         path: safety-report.json
@@ -53,7 +54,7 @@ jobs:
 
     - name: Upload pip-audit report
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: pip-audit-report
         path: pip-audit-report.json
@@ -80,17 +81,19 @@ jobs:
 
     - name: Install Bandit
       run: |
+        set -e
         python -m pip install --upgrade pip
         pip install bandit[toml]
 
     - name: Run Bandit
       run: |
+        set -e
         bandit -r pbx/ -f json -o bandit-report.json -c .bandit || true
         bandit -r pbx/ -c .bandit
 
     - name: Upload Bandit report
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: bandit-report
         path: bandit-report.json
@@ -133,7 +136,7 @@ jobs:
         exit-code: '0'  # Don't fail the build
 
     - name: Upload Trivy results to GitHub Security
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
