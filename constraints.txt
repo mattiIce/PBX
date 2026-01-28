@@ -71,8 +71,8 @@ imageio-ffmpeg==0.6.0
 av==14.0.1
 
 # Web Interface
+websockets==15.0.1
 flask==3.1.2
-websockets==14.1
 
 # Monitoring
 prometheus-client==0.24.1
