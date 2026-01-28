@@ -21,6 +21,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        set -e
         python -m pip install --upgrade pip
         pip install pylint flake8 black isort mypy
         pip install -r requirements.txt
@@ -43,8 +44,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy pbx/ --ignore-missing-imports --no-strict-optional
-      continue-on-error: true  # Keep this as optional for now due to missing types
+        mypy pbx/ --ignore-missing-imports --no-strict-optional || echo "⚠️ MyPy found type issues (non-blocking)"
 
   security:
     runs-on: ubuntu-latest
@@ -59,6 +59,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        set -e
         python -m pip install --upgrade pip
         pip install bandit safety
 
@@ -68,6 +69,6 @@ jobs:
 
     - name: Check dependencies with safety
       run: |
+        set -e
         pip install -r requirements.txt
-        safety check --json
-      continue-on-error: true  # Safety check can fail due to network or DB issues
+        safety check --json || echo "⚠️ Safety check found issues or failed (non-blocking)"
