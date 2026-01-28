@@ -40,7 +40,7 @@ cffi==2.0.0
     #   vosk
 charset-normalizer==3.4.4
     # via requests
-click==8.1.8
+click==8.3.1
     # via
     #   flask
     #   gtts
@@ -128,7 +128,7 @@ nltk==3.9.2
     # via -r requirements.txt
 numba==0.63.1
     # via librosa
-numpy==2.3.5
+numpy==2.4.1
     # via
     #   -r requirements.txt
     #   blis
@@ -158,7 +158,7 @@ preshed==3.0.12
     # via
     #   spacy
     #   thinc
-prometheus-client==0.23.1
+prometheus-client==0.24.1
     # via -r requirements.txt
 psutil==7.2.1
     # via -r requirements.txt
@@ -209,7 +209,7 @@ scikit-learn==1.8.0
     # via
     #   -r requirements.txt
     #   librosa
-scipy==1.16.3
+scipy==1.17.0
     # via
     #   -r requirements.txt
     #   librosa
@@ -251,7 +251,7 @@ tqdm==4.67.1
     #   vosk
 twisted==25.5.0
     # via -r requirements.txt
-typer-slim==0.21.0
+typer-slim==0.21.1
     # via
     #   spacy
     #   weasel
@@ -283,11 +283,11 @@ websockets==15.0.1
     # via
     #   -r requirements.txt
     #   vosk
-werkzeug==3.1.4
+werkzeug==3.1.5
     # via flask
 wrapt==2.0.1
     # via smart-open
-zope-interface==8.1.1
+zope-interface==8.2
     # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:
