@@ -209,9 +209,7 @@ class WebhookSystem:
                 )
                 self.subscriptions.append(subscription)
                 self.logger.info(
-                    f"Loaded webhook subscription: {
-                        subscription.url} (events: {
-                        subscription.events})"
+                    f"Loaded webhook subscription: {subscription.url} (events: {subscription.events})"
                 )
 
     def _start_workers(self):
@@ -224,8 +222,7 @@ class WebhookSystem:
             worker.start()
             self.workers.append(worker)
         self.logger.info(
-            f"Started {
-                self.worker_threads} webhook delivery workers"
+            f"Started {self.worker_threads} webhook delivery workers"
         )
 
     def stop(self):
@@ -287,10 +284,7 @@ class WebhookSystem:
                 subscription.last_sent = datetime.now()
                 subscription.success_count += 1
                 self.logger.info(
-                    f"Webhook delivered: {
-                        event.event_type} -> {
-                        subscription.url} (status: {
-                        response.status})"
+                    f"Webhook delivered: {event.event_type} -> {subscription.url} (status: {response.status})"
                 )
                 return
 
@@ -298,20 +292,14 @@ class WebhookSystem:
                 attempt += 1
                 subscription.failure_count += 1
                 self.logger.warning(
-                    f"Webhook delivery failed (attempt {attempt}/{
-                        self.max_retries}): {
-                        event.event_type} -> {
-                        subscription.url} - {e}"
+                    f"Webhook delivery failed (attempt {attempt}/{self.max_retries}): {event.event_type} -> {subscription.url} - {e}"
                 )
 
                 if attempt < self.max_retries:
                     time.sleep(self.retry_delay)
                 else:
                     self.logger.error(
-                        f"Webhook delivery failed after {
-                            self.max_retries} attempts: {
-                            event.event_type} -> {
-                            subscription.url}"
+                        f"Webhook delivery failed after {self.max_retries} attempts: {event.event_type} -> {subscription.url}"
                     )
 
             except Exception as e:
@@ -347,8 +335,7 @@ class WebhookSystem:
             self.delivery_queue.enqueue(event, subscription)
 
         self.logger.debug(
-            f"Triggered webhook event: {event_type} (subscriptions: {
-                len(matching_subscriptions)})"
+            f"Triggered webhook event: {event_type} (subscriptions: {len(matching_subscriptions)})"
         )
 
     def add_subscription(

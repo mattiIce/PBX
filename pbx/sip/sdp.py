@@ -121,14 +121,8 @@ class SDPSession:
         if self.origin:
             o = self.origin
             lines.append(
-                f"o={
-                    o['username']} {
-                    o['session_id']} {
-                    o['version']} "
-                f"{
-                    o['network_type']} {
-                        o['address_type']} {
-                            o['address']}"
+                f"o={o['username']} {o['session_id']} {o['version']} "
+                f"{o['network_type']} {o['address_type']} {o['address']}"
             )
 
         # Session name
@@ -138,10 +132,7 @@ class SDPSession:
         if self.connection:
             c = self.connection
             lines.append(
-                f"c={
-                    c['network_type']} {
-                    c['address_type']} {
-                    c['address']}"
+                f"c={c['network_type']} {c['address_type']} {c['address']}"
             )
 
         # Time (required by SDP spec)
@@ -152,20 +143,14 @@ class SDPSession:
             # Media line
             formats = " ".join(media["formats"])
             lines.append(
-                f"m={
-                    media['type']} {
-                    media['port']} {
-                    media['protocol']} {formats}"
+                f"m={media['type']} {media['port']} {media['protocol']} {formats}"
             )
 
             # Media-level connection
             if "connection" in media:
                 c = media["connection"]
                 lines.append(
-                    f"c={
-                        c['network_type']} {
-                        c['address_type']} {
-                        c['address']}"
+                    f"c={c['network_type']} {c['address_type']} {c['address']}"
                 )
 
             # Attributes

@@ -107,9 +107,7 @@ class EmergencyNotificationSystem:
             self.logger.info("Emergency notification system initialized")
             self.logger.info(f"Emergency contacts configured: {len(self.emergency_contacts)}")
             self.logger.info(
-                f"Notification methods: {
-                    ', '.join(
-                        self.notify_methods)}"
+                f"Notification methods: {', '.join(self.notify_methods)}"
             )
         else:
             self.logger.info("Emergency notification system disabled")
@@ -168,8 +166,7 @@ class EmergencyNotificationSystem:
                     self.emergency_contacts.append(contact)
 
             self.logger.info(
-                f"Loaded {
-                    len(results)} emergency contacts from database"
+                f"Loaded {len(results)} emergency contacts from database"
             )
 
         except Exception as e:
@@ -358,8 +355,7 @@ class EmergencyNotificationSystem:
             return False
 
         with self.lock:
-            notification_id = f"emergency_{
-                datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            notification_id = f"emergency_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
             self.logger.warning(f"🚨 EMERGENCY NOTIFICATION TRIGGERED: {trigger_type}")
             self.logger.warning(f"Details: {details}")

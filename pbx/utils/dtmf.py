@@ -104,7 +104,7 @@ class DTMFDetector:
         # Check if signal has sufficient energy (reject silence/very weak
         # signals)
         max_val = max(abs(s) for s in samples)
-        if max_val < 0.01:  # Reject very weak signals before normalization
+        if max_val < 0.15:  # Reject weak signals before normalization amplifies noise
             return None
 
         # Normalize samples (max_val guaranteed to be >= 0.01 from check above)
@@ -141,9 +141,7 @@ class DTMFDetector:
                 for digit, (low, high) in DTMF_FREQUENCIES.items():
                     if low == low_freq and high == high_freq:
                         self.logger.debug(
-                            f"Detected DTMF tone: {digit} (L:{low_freq}Hz={
-                                low_mag:.3f}, H:{high_freq}Hz={
-                                high_mag:.3f})"
+                            f"Detected DTMF tone: {digit} (L:{low_freq}Hz={low_mag:.3f}, H:{high_freq}Hz={high_mag:.3f})"
                         )
                         return digit
 
@@ -307,7 +305,6 @@ class DTMFGenerator:
             samples.extend(gap_samples)
 
         self.logger.info(
-            f"Generated DTMF sequence: {digits} ({
-                len(samples)} samples)"
+            f"Generated DTMF sequence: {digits} ({len(samples)} samples)"
         )
         return samples

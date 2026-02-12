@@ -33,8 +33,7 @@ def test_sip_message_parsing():
     assert msg.method == "INVITE", f"Expected INVITE, got {msg.method}"
     assert (
         msg.uri == "sip:1002@pbx.local"
-    ), f"Expected sip:1002@pbx.local, got {
-        msg.uri}"
+    ), f"Expected sip:1002@pbx.local, got {msg.uri}"
     assert (
         msg.get_header("Call-ID") == "test-call-123"
     ), f"Expected test-call-123, got {msg.get_header('Call-ID')}"

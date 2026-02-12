@@ -59,8 +59,7 @@ def test_emergency_contact_persistence_across_restarts():
         contacts = emergency_system.get_emergency_contacts()
         assert (
             len(contacts) == 0
-        ), f"Expected 0 contacts initially, got {
-            len(contacts)}"
+        ), f"Expected 0 contacts initially, got {len(contacts)}"
         print("    ✓ No contacts initially")
 
         # Add emergency contacts (simulating admin UI)
@@ -133,8 +132,7 @@ def test_emergency_contact_persistence_across_restarts():
         contacts = emergency_system2.get_emergency_contacts()
         assert (
             len(contacts) == 3
-        ), f"Expected 3 contacts after restart, got {
-            len(contacts)}"
+        ), f"Expected 3 contacts after restart, got {len(contacts)}"
         print("    ✓ All 3 contacts loaded after restart")
 
         # Verify contact details
@@ -174,8 +172,7 @@ def test_emergency_contact_persistence_across_restarts():
         contacts = emergency_system2.get_emergency_contacts()
         assert (
             len(contacts) == 2
-        ), f"Expected 2 contacts after removal, got {
-            len(contacts)}"
+        ), f"Expected 2 contacts after removal, got {len(contacts)}"
         print("    ✓ Contact removed successfully")
 
         # Clean up
@@ -197,8 +194,7 @@ def test_emergency_contact_persistence_across_restarts():
         contacts = emergency_system3.get_emergency_contacts()
         assert (
             len(contacts) == 2
-        ), f"Expected 2 contacts after restart, got {
-            len(contacts)}"
+        ), f"Expected 2 contacts after restart, got {len(contacts)}"
 
         contact_names = [c["name"] for c in contacts]
         assert "Security Officer" in contact_names, "Security Officer should remain"

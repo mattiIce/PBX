@@ -63,8 +63,7 @@ class Config:
                 self.config = self.env_loader.resolve_config(self.config)
         else:
             raise FileNotFoundError(
-                f"Configuration file not found: {
-                    self.config_file}"
+                f"Configuration file not found: {self.config_file}"
             )
 
     def get(self, key, default=None):

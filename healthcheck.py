@@ -33,12 +33,12 @@ def check_http_health(url, timeout=5):
 def main():
     """Run health checks"""
     # Check if HTTP API port is listening
-    if not check_port("localhost", 8880, timeout=3):
-        print("ERROR: HTTP API port 8880 not responding", file=sys.stderr)
+    if not check_port("localhost", 9000, timeout=3):
+        print("ERROR: HTTP API port 9000 not responding", file=sys.stderr)
         sys.exit(1)
 
     # Check HTTP health endpoint
-    if not check_http_health("http://localhost:8880/health", timeout=3):
+    if not check_http_health("http://localhost:9000/health", timeout=3):
         print("ERROR: Health endpoint not responding", file=sys.stderr)
         sys.exit(1)
 

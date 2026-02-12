@@ -152,8 +152,7 @@ class ZoomIntegration:
             if response.status_code in [200, 201]:
                 meeting_data = response.json()
                 self.logger.info(
-                    f"Zoom meeting created: {
-                        meeting_data.get('id')}"
+                    f"Zoom meeting created: {meeting_data.get('id')}"
                 )
 
                 return {
@@ -241,15 +240,13 @@ class ZoomIntegration:
 
                 if trunk and trunk.can_make_call():
                     self.logger.info(
-                        f"Using SIP trunk '{
-                            trunk.name}' for Zoom Phone call"
+                        f"Using SIP trunk '{trunk.name}' for Zoom Phone call"
                     )
 
                     # Allocate channel
                     if trunk.allocate_channel():
                         self.logger.info(
-                            f"Initiating SIP call to {sip_uri} via trunk {
-                                trunk.name}"
+                            f"Initiating SIP call to {sip_uri} via trunk {trunk.name}"
                         )
 
                         # In production, this would:

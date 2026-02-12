@@ -409,8 +409,7 @@ class SkillsBasedRouter:
                 self.logger.error(f"Failed to store queue requirements in database: {e}")
 
         self.logger.info(
-            f"Set {
-                len(skill_reqs)} skill requirements for queue {queue_number}"
+            f"Set {len(skill_reqs)} skill requirements for queue {queue_number}"
         )
         return True
 

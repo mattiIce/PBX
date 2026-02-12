@@ -53,9 +53,7 @@ class CallRecording:
         self.start_time = datetime.now()
 
         self.logger.info(
-            f"Started recording call {
-                self.call_id} to {
-                self.file_path}"
+            f"Started recording call {self.call_id} to {self.file_path}"
         )
         return self.file_path
 

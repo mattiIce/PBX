@@ -107,7 +107,7 @@ class SmokeTestRunner:
         """Test if health endpoint is reachable (if server is running)"""
         # This test only runs if we can detect a server running
         try:
-            req = urllib.request.Request("http://localhost:8880/health", method="GET")
+            req = urllib.request.Request("http://localhost:9000/health", method="GET")
             with urllib.request.urlopen(req, timeout=2) as response:
                 assert response.status == 200, "Health endpoint returned non-200"
         except Exception:

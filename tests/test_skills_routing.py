@@ -212,9 +212,7 @@ def test_find_best_agents():
     assert best_agents[0]["extension"] == "1001", "Agent 1001 should be first (highest proficiency)"
     print("  ✓ Best agents found and ranked correctly")
     print(
-        f"    Top agent: {
-            best_agents[0]['extension']} (score: {
-            best_agents[0]['score']:.2f})"
+        f"    Top agent: {best_agents[0]['extension']} (score: {best_agents[0]['score']:.2f})"
     )
 
     return True
@@ -284,11 +282,7 @@ def test_scoring_algorithm():
     print("  ✓ Scoring algorithm ranks agents correctly")
     for i, agent in enumerate(best_agents, 1):
         print(
-            f"    {i}. Agent {
-                agent['extension']}: score {
-                agent['score']:.3f}, {
-                len(
-                    agent['matching_skills'])} skills"
+            f"    {i}. Agent {agent['extension']}: score {agent['score']:.3f}, {len(agent['matching_skills'])} skills"
         )
 
     return True

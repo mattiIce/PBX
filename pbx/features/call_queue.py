@@ -138,9 +138,7 @@ class CallQueue:
         """
         self.agents[agent.extension] = agent
         self.logger.info(
-            f"Added agent {
-                agent.extension} to queue {
-                self.queue_number}"
+            f"Added agent {agent.extension} to queue {self.queue_number}"
         )
 
     def remove_agent(self, extension):
@@ -168,9 +166,7 @@ class CallQueue:
         self.queue.append(queued_call)
 
         self.logger.info(
-            f"Call {call_id} added to queue {
-                self.queue_number}, position {
-                queued_call.position}"
+            f"Call {call_id} added to queue {self.queue_number}, position {queued_call.position}"
         )
         return queued_call
 
@@ -253,9 +249,7 @@ class CallQueue:
                 agent.set_busy(call.call_id)
                 assignments.append((call, agent))
                 self.logger.info(
-                    f"Assigned call {
-                        call.call_id} to agent {
-                        agent.extension}"
+                    f"Assigned call {call.call_id} to agent {agent.extension}"
                 )
 
         return assignments

@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for PBX System
 # Stage 1: Builder stage for dependencies
-FROM python:3.14-slim-bookworm AS builder
+FROM python:3.12-slim-bookworm AS builder
 
 # Install system dependencies required for building Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime stage
-FROM python:3.14-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 # Install runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -78,7 +78,7 @@ EXPOSE 5060/udp
 # RTP media ports (default range)
 EXPOSE 10000-20000/udp
 # HTTP API
-EXPOSE 8880/tcp
+EXPOSE 9000/tcp
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \

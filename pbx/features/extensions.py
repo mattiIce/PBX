@@ -126,8 +126,7 @@ class ExtensionRegistry:
 
             if db_extensions:
                 self.logger.info(
-                    f"Loading {
-                        len(db_extensions)} extensions from database"
+                    f"Loading {len(db_extensions)} extensions from database"
                 )
                 for ext_data in db_extensions:
                     number = ext_data["number"]

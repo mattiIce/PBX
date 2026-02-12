@@ -92,9 +92,7 @@ def test_phone_book_auto_sync_after_ad_sync():
     assert synced_count == 2, f"Should have synced 2 entries, got {synced_count}"
     assert (
         len(phone_book.entries) == 2
-    ), f"Should have 2 entries in phone book, got {
-        len(
-            phone_book.entries)}"
+    ), f"Should have 2 entries in phone book, got {len(phone_book.entries)}"
 
     # Verify the entries are correct
     assert "1001" in phone_book.entries, "Extension 1001 should be in phone book"

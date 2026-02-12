@@ -46,6 +46,7 @@ class DatabaseBackend:
         self.db_type = config.get("database.type", "sqlite")
         self.connection = None
         self.enabled = False
+        self._autocommit = False
 
         if self.db_type == "postgresql" and not POSTGRES_AVAILABLE:
             self.logger.error(
@@ -67,8 +68,7 @@ class DatabaseBackend:
             bool: True if connected successfully
         """
         self.logger.info(
-            f"Initiating database connection (type: {
-                self.db_type})..."
+            f"Initiating database connection (type: {self.db_type})..."
         )
         try:
             if self.db_type == "postgresql":
@@ -111,6 +111,7 @@ class DatabaseBackend:
             # This ensures each query is automatically committed and errors don't
             # leave the connection in a failed transaction state
             self.connection.autocommit = True
+            self._autocommit = True
             self.enabled = True
             self.logger.info("✓ Successfully connected to PostgreSQL database")
             self.logger.info(f"  Connection established: {host}:{port}/{database}")
@@ -136,10 +137,7 @@ class DatabaseBackend:
         try:
             self.connection = sqlite3.connect(db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
-            # SQLite doesn't have autocommit attribute by default, so we set it explicitly
-            # This ensures consistent behavior when checking autocommit in
-            # other methods
-            self.connection.autocommit = False
+            self._autocommit = False
             self.enabled = True
             self.logger.info("✓ Successfully connected to SQLite database")
             self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
@@ -181,7 +179,7 @@ class DatabaseBackend:
             else:
                 cursor.execute(query)
             # Only commit if not in autocommit mode
-            if not self.connection.autocommit:
+            if not self._autocommit:
                 self.connection.commit()
             cursor.close()
             return True
@@ -205,13 +203,13 @@ class DatabaseBackend:
                 # This is expected when tables/indexes exist but user lacks ownership
                 # Log as debug instead of error to avoid alarming users
                 self.logger.debug(f"Skipping {context}: {e}")
-                if self.connection and not self.connection.autocommit:
+                if self.connection and not self._autocommit:
                     self.connection.rollback()
                 return True  # Return True since this is not a critical failure
             elif any(pattern in error_msg for pattern in already_exists_errors):
                 # Object already exists - this is fine
                 self.logger.debug(f"{context.capitalize()} already exists: {e}")
-                if self.connection and not self.connection.autocommit:
+                if self.connection and not self._autocommit:
                     self.connection.rollback()
                 return True
             else:
@@ -221,7 +219,7 @@ class DatabaseBackend:
                 self.logger.error(f"  Parameters: {params}")
                 self.logger.error(f"  Database type: {self.db_type}")
                 self.logger.error(f"  Traceback: {traceback.format_exc()}")
-                if self.connection and not self.connection.autocommit:
+                if self.connection and not self._autocommit:
                     self.connection.rollback()
                 return False
 
@@ -239,9 +237,7 @@ class DatabaseBackend:
         if not self.enabled or not self.connection:
             self.logger.error("Execute called but database is not enabled or connected")
             self.logger.error(
-                f"  Enabled: {
-                    self.enabled}, Connection: {
-                    self.connection is not None}"
+                f"  Enabled: {self.enabled}, Connection: {self.connection is not None}"
             )
             return False
         return self._execute_with_context(query, "query execution", params, critical=True)
@@ -270,7 +266,7 @@ class DatabaseBackend:
                 cursor = self.connection.cursor()
                 cursor.executescript(script)
                 cursor.close()
-                if not self.connection.autocommit:
+                if not self._autocommit:
                     self.connection.commit()
             else:
                 # PostgreSQL - split and execute individual statements
@@ -294,7 +290,7 @@ class DatabaseBackend:
                     if stmt:
                         cursor.execute(stmt)
                 cursor.close()
-                if not self.connection.autocommit:
+                if not self._autocommit:
                     self.connection.commit()
 
             return True
@@ -303,7 +299,7 @@ class DatabaseBackend:
             self.logger.error(f"  Script length: {len(script)} characters")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self.connection.autocommit:
+            if self.connection and not self._autocommit:
                 self.connection.rollback()
             return False
 
@@ -346,7 +342,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self.connection.autocommit:
+            if self.connection and not self._autocommit:
                 self.connection.rollback()
             return None
 
@@ -388,7 +384,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self.connection.autocommit:
+            if self.connection and not self._autocommit:
                 self.connection.rollback()
             return []
 
@@ -715,7 +711,7 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
-                if self.connection and not self.connection.autocommit:
+                if self.connection and not self._autocommit:
                     self.connection.rollback()
 
         # Migration: Add security columns to extensions table
@@ -760,7 +756,7 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists in extensions")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
-                if self.connection and not self.connection.autocommit:
+                if self.connection and not self._autocommit:
                     self.connection.rollback()
 
         # Migration: Add device_type column to provisioned_devices table
@@ -802,7 +798,7 @@ class DatabaseBackend:
             self.logger.debug(
                 f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
             )
-            if self.connection and not self.connection.autocommit:
+            if self.connection and not self._autocommit:
                 self.connection.rollback()
 
         # Apply framework feature migrations
@@ -949,8 +945,7 @@ class RegisteredPhonesDB:
             if old_by_mac and old_by_mac["extension_number"] != extension_number:
                 old_registrations.append(old_by_mac)
                 self.logger.info(
-                    f"Phone MAC {mac_address} was registered to extension {
-                        old_by_mac['extension_number']}, will update to {extension_number}"
+                    f"Phone MAC {mac_address} was registered to extension {old_by_mac['extension_number']}, will update to {extension_number}"
                 )
 
         # Check if this IP is registered to a different extension
@@ -961,8 +956,7 @@ class RegisteredPhonesDB:
             if not any(r["id"] == old_by_ip["id"] for r in old_registrations):
                 old_registrations.append(old_by_ip)
                 self.logger.info(
-                    f"Phone IP {ip_address} was registered to extension {
-                        old_by_ip['extension_number']}, will update to {extension_number}"
+                    f"Phone IP {ip_address} was registered to extension {old_by_ip['extension_number']}, will update to {extension_number}"
                 )
 
         # Delete old registrations to different extensions
@@ -978,10 +972,7 @@ class RegisteredPhonesDB:
             )
             self.db.execute(delete_query, (old_reg["id"],))
             self.logger.info(
-                f"Removed old registration: ext={
-                    old_reg['extension_number']}, ip={
-                    old_reg.get('ip_address')}, mac={
-                    old_reg.get('mac_address')}"
+                f"Removed old registration: ext={old_reg['extension_number']}, ip={old_reg.get('ip_address')}, mac={old_reg.get('mac_address')}"
             )
 
         # Now check if this phone is already registered to THIS extension (by

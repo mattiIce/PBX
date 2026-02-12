@@ -105,13 +105,11 @@ class AutoAttendant:
         if not os.path.exists(self.audio_path):
             os.makedirs(self.audio_path)
             self.logger.info(
-                f"Created auto attendant audio directory: {
-                    self.audio_path}"
+                f"Created auto attendant audio directory: {self.audio_path}"
             )
 
         self.logger.info(
-            f"Auto Attendant initialized on extension {
-                self.extension}"
+            f"Auto Attendant initialized on extension {self.extension}"
         )
         self.logger.info(f"Menu options: {len(self.menu_options)}")
 
@@ -883,8 +881,7 @@ class AutoAttendant:
             dict: Action to take
         """
         self.logger.warning(
-            f"Auto attendant timeout for call {
-                session.get('call_id')}"
+            f"Auto attendant timeout for call {session.get('call_id')}"
         )
 
         session["retry_count"] += 1

@@ -340,8 +340,7 @@ class PhoneBook:
                 ad_extensions = ext_db.get_ad_synced()
 
                 self.logger.info(
-                    f"Found {
-                        len(ad_extensions)} AD-synced extensions in database"
+                    f"Found {len(ad_extensions)} AD-synced extensions in database"
                 )
 
                 for ext_data in ad_extensions:
@@ -364,8 +363,7 @@ class PhoneBook:
                 # extension_registry for ANY database issue (connection,
                 # permissions, missing table, etc.)
                 self.logger.error(
-                    f"Error syncing from extensions database: {
-                        type(e).__name__}: {e}"
+                    f"Error syncing from extensions database: {type(e).__name__}: {e}"
                 )
                 self.logger.info("Falling back to extension registry...")
 
@@ -406,14 +404,10 @@ class PhoneBook:
         for entry in sorted(self.entries.values(), key=lambda x: x["name"]):
             xml_lines.append("  <DirectoryEntry>")
             xml_lines.append(
-                f'    <Name>{
-                    self._xml_escape(
-                        entry["name"])}</Name>'
+                f'    <Name>{self._xml_escape(entry["name"])}</Name>'
             )
             xml_lines.append(
-                f'    <Telephone>{
-                    self._xml_escape(
-                        entry["extension"])}</Telephone>'
+                f'    <Telephone>{self._xml_escape(entry["extension"])}</Telephone>'
             )
             xml_lines.append("  </DirectoryEntry>")
 
@@ -438,14 +432,10 @@ class PhoneBook:
         for entry in sorted(self.entries.values(), key=lambda x: x["name"]):
             xml_lines.append("  <DirectoryEntry>")
             xml_lines.append(
-                f'    <Name>{
-                    self._xml_escape(
-                        entry["name"])}</Name>'
+                f'    <Name>{self._xml_escape(entry["name"])}</Name>'
             )
             xml_lines.append(
-                f'    <Telephone>{
-                    self._xml_escape(
-                        entry["extension"])}</Telephone>'
+                f'    <Telephone>{self._xml_escape(entry["extension"])}</Telephone>'
             )
             xml_lines.append("  </DirectoryEntry>")
 

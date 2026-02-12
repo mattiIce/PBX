@@ -74,8 +74,7 @@ class VoicemailTranscriptionService:
                                 )
                             else:
                                 self.logger.warning(
-                                    f"  Vosk model not found at {
-                                        self.vosk_model_path}"
+                                    f"  Vosk model not found at {self.vosk_model_path}"
                                 )
                                 self.logger.info(
                                     "  Download model from: https://alphacephei.com/vosk/models"
@@ -88,9 +87,7 @@ class VoicemailTranscriptionService:
                         )
                 else:
                     self.logger.info(
-                        f"  API key configured: {
-                            bool(
-                                self.api_key)}"
+                        f"  API key configured: {bool(self.api_key)}"
                     )
             else:
                 self.logger.debug("Voicemail transcription service disabled in configuration")
@@ -148,8 +145,7 @@ class VoicemailTranscriptionService:
             elif self.provider == "google":
                 return self._transcribe_google(audio_file_path, language)
             else:
-                error_msg = f"Unsupported transcription provider: {
-                    self.provider}. Use 'vosk' (recommended, free) or 'google'"
+                error_msg = f"Unsupported transcription provider: {self.provider}. Use 'vosk' (recommended, free) or 'google'"
                 self.logger.error(error_msg)
                 return {
                     "success": False,
@@ -211,8 +207,7 @@ class VoicemailTranscriptionService:
             return self._create_error_response(error_msg, language, "vosk")
 
         if not self.vosk_model:
-            error_msg = f"Vosk model not loaded. Check model path: {
-                self.vosk_model_path}"
+            error_msg = f"Vosk model not loaded. Check model path: {self.vosk_model_path}"
             self.logger.error(error_msg)
             self.logger.info("Download models from: https://alphacephei.com/vosk/models")
             return self._create_error_response(error_msg, language, "vosk")
@@ -338,8 +333,7 @@ class VoicemailTranscriptionService:
                     if text:
                         self.logger.info("✓ Transcription successful")
                         self.logger.info(
-                            f"  Text length: {
-                                len(text)} characters"
+                            f"  Text length: {len(text)} characters"
                         )
                         self.logger.info(f"  Confidence: {confidence:.2%}")
                         self.logger.debug(f"  Text: {text[:100]}...")

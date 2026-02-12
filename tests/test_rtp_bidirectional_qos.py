@@ -69,8 +69,7 @@ class TestRTPBidirectionalQoS(unittest.TestCase):
         self.assertGreater(
             summary_a_to_b["mos_score"],
             4.0,
-            f"A->B MOS should be > 4.0, got {
-                summary_a_to_b['mos_score']}",
+            f"A->B MOS should be > 4.0, got {summary_a_to_b['mos_score']}",
         )
 
         # Verify B->A direction has no packet loss
@@ -80,8 +79,7 @@ class TestRTPBidirectionalQoS(unittest.TestCase):
         self.assertGreater(
             summary_b_to_a["mos_score"],
             4.0,
-            f"B->A MOS should be > 4.0, got {
-                summary_b_to_a['mos_score']}",
+            f"B->A MOS should be > 4.0, got {summary_b_to_a['mos_score']}",
         )
 
         # Clean up

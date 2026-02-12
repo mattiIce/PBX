@@ -56,8 +56,7 @@ class ConferenceRoom:
             if participant["extension"] == extension:
                 self.participants.pop(i)
                 self.logger.info(
-                    f"Removed {extension} from conference {
-                        self.room_number}"
+                    f"Removed {extension} from conference {self.room_number}"
                 )
                 return True
         return False

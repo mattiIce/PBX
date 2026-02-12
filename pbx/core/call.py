@@ -101,11 +101,7 @@ class Call:
         return (end - self.start_time).total_seconds()
 
     def __str__(self):
-        return f"Call {
-            self.call_id}: {
-            self.from_extension} -> {
-            self.to_extension} ({
-                self.state.value})"
+        return f"Call {self.call_id}: {self.from_extension} -> {self.to_extension} ({self.state.value})"
 
 
 class CallManager:

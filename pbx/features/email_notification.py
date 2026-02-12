@@ -63,10 +63,7 @@ class EmailNotifier:
                 )
             else:
                 self.logger.info(
-                    f"Email notifications enabled - SMTP: {
-                        self.smtp_host}:{
-                        self.smtp_port}, From: {
-                        self.from_address}"
+                    f"Email notifications enabled - SMTP: {self.smtp_host}:{self.smtp_port}, From: {self.from_address}"
                 )
 
             # Start reminder thread if enabled
@@ -104,9 +101,7 @@ class EmailNotifier:
         # Validate SMTP configuration before attempting to send
         if not self.smtp_host or not self.from_address:
             self.logger.warning(
-                f"Cannot send email notification - SMTP not properly configured (host: {
-                    self.smtp_host}, from: {
-                    self.from_address})"
+                f"Cannot send email notification - SMTP not properly configured (host: {self.smtp_host}, from: {self.from_address})"
             )
             return False
 
@@ -193,14 +188,12 @@ class EmailNotifier:
             msg["To"] = to_email
             msg["Date"] = formatdate(localtime=True)
             msg["Subject"] = (
-                f"Voicemail Reminder: {unread_count} Unread Message{
-                    's' if unread_count > 1 else ''}"
+                f"Voicemail Reminder: {unread_count} Unread Message{'s' if unread_count > 1 else ''}"
             )
 
             # Create body
             body = "Hello,\n\n"
-            body += f"You have {unread_count} unread voicemail message{
-                's' if unread_count > 1 else ''} "
+            body += f"You have {unread_count} unread voicemail message{'s' if unread_count > 1 else ''} "
             body += f"in your mailbox (Extension {extension_number}):\n\n"
 
             for i, msg_info in enumerate(messages, 1):

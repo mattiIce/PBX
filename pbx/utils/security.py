@@ -89,15 +89,13 @@ class PasswordPolicy:
         if len(password) < self.min_length:
             return (
                 False,
-                f"Password must be at least {
-                    self.min_length} characters",
+                f"Password must be at least {self.min_length} characters",
             )
 
         if len(password) > self.max_length:
             return (
                 False,
-                f"Password must be no more than {
-                    self.max_length} characters",
+                f"Password must be no more than {self.max_length} characters",
             )
 
         # Check for common weak passwords (case-insensitive)
@@ -118,8 +116,7 @@ class PasswordPolicy:
         if self.require_special and not re.search(f"[{re.escape(self.SPECIAL_CHARS)}]", password):
             return (
                 False,
-                f"Password must contain at least one special character: {
-                    self.SPECIAL_CHARS}",
+                f"Password must contain at least one special character: {self.SPECIAL_CHARS}",
             )
 
         # Check for sequential characters (4 or more in sequence)
@@ -261,8 +258,7 @@ class RateLimiter:
                 # Initiate lockout
                 self.lockouts[identifier] = now + self.lockout_duration
                 self.logger.warning(
-                    f"Rate limit exceeded for {identifier}. Locked out for {
-                        self.lockout_duration} seconds"
+                    f"Rate limit exceeded for {identifier}. Locked out for {self.lockout_duration} seconds"
                 )
                 return True, self.lockout_duration
 
@@ -669,8 +665,7 @@ class ThreatDetector:
                     self.blocked_ips[ip_address] = {"until": blocked_until_ts, "reason": reason}
 
                 self.logger.info(
-                    f"Loaded {
-                        len(results)} blocked IPs from database"
+                    f"Loaded {len(results)} blocked IPs from database"
                 )
         except Exception as e:
             self.logger.error(f"Failed to load blocked IPs from database: {e}")

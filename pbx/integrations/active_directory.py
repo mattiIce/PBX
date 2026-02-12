@@ -70,8 +70,7 @@ class ActiveDirectoryIntegration:
 
         try:
             self.logger.info(
-                f"Connecting to Active Directory: {
-                    self.ldap_server}"
+                f"Connecting to Active Directory: {self.ldap_server}"
             )
 
             # Create server object
@@ -770,8 +769,7 @@ class ActiveDirectoryIntegration:
             if hasattr(user_entry, "thumbnailPhoto") and user_entry.thumbnailPhoto.value:
                 photo_data = user_entry.thumbnailPhoto.value
                 self.logger.info(
-                    f"Retrieved photo for user {username} ({
-                        len(photo_data)} bytes)"
+                    f"Retrieved photo for user {username} ({len(photo_data)} bytes)"
                 )
                 return photo_data
             else:

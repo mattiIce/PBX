@@ -104,8 +104,7 @@ class RTPHandler:
         payload = data[12:]
 
         self.logger.debug(
-            f"Received RTP packet: seq={seq_num}, pt={payload_type}, size={
-                len(payload)}"
+            f"Received RTP packet: seq={seq_num}, pt={payload_type}, size={len(payload)}"
         )
 
         # In a real implementation, you would:
@@ -315,9 +314,7 @@ class RTPRelayHandler:
             self._start_time = time.time()  # Track start time for learning timeout
 
             self.logger.info(
-                f"RTP relay handler started on port {
-                    self.local_port} for call {
-                    self.call_id}"
+                f"RTP relay handler started on port {self.local_port} for call {self.call_id}"
             )
 
             # Start receiving thread
@@ -344,8 +341,7 @@ class RTPRelayHandler:
                 self.qos_monitor.stop_monitoring(f"{self.call_id}_b_to_a")
 
         self.logger.info(
-            f"RTP relay handler stopped on port {
-                self.local_port}"
+            f"RTP relay handler stopped on port {self.local_port}"
         )
 
     def _relay_loop(self):
@@ -415,8 +411,7 @@ class RTPRelayHandler:
                         self.learned_a = addr
                         is_from_a = True
                         expected_str = (
-                            f" (expected {
-                                self.endpoint_a})"
+                            f" (expected {self.endpoint_a})"
                             if self.endpoint_a
                             else " (no SDP endpoint set)"
                         )
@@ -442,8 +437,7 @@ class RTPRelayHandler:
                         self.learned_b = addr
                         is_from_b = True
                         expected_str = (
-                            f" (expected {
-                                self.endpoint_b})"
+                            f" (expected {self.endpoint_b})"
                             if self.endpoint_b
                             else " (no SDP endpoint set)"
                         )
@@ -453,9 +447,7 @@ class RTPRelayHandler:
                     else:
                         # Packet from unknown third source or duplicate
                         self.logger.debug(
-                            f"RTP packet from unknown source: {addr} (learned A:{
-                                self.learned_a}, B:{
-                                self.learned_b})"
+                            f"RTP packet from unknown source: {addr} (learned A:{self.learned_a}, B:{self.learned_b})"
                         )
                         continue
 
@@ -505,8 +497,7 @@ class RTPRelayHandler:
                             )
                             self.qos_metrics_a_to_b.update_packet_sent()
                         self.logger.debug(
-                            f"Relayed {
-                                len(data)} bytes: A->B (B not learned, using SDP)"
+                            f"Relayed {len(data)} bytes: A->B (B not learned, using SDP)"
                         )
                     elif is_from_b and self.endpoint_a:
                         # From B but A not learned yet - try sending to
@@ -519,8 +510,7 @@ class RTPRelayHandler:
                             )
                             self.qos_metrics_b_to_a.update_packet_sent()
                         self.logger.debug(
-                            f"Relayed {
-                                len(data)} bytes: B->A (A not learned, using SDP)"
+                            f"Relayed {len(data)} bytes: B->A (A not learned, using SDP)"
                         )
                     elif is_from_a:
                         # From A but B not known at all yet - must drop packet
@@ -575,9 +565,7 @@ class RTPRecorder:
             self.running = True
 
             self.logger.info(
-                f"RTP recorder started on port {
-                    self.local_port} for call {
-                    self.call_id}"
+                f"RTP recorder started on port {self.local_port} for call {self.call_id}"
             )
 
             # Start recording thread
@@ -635,9 +623,7 @@ class RTPRecorder:
                         self.recorded_data.append(payload)
 
                     self.logger.debug(
-                        f"Recorded {
-                            len(payload)} bytes (PT {payload_type}) from call {
-                            self.call_id}"
+                        f"Recorded {len(payload)} bytes (PT {payload_type}) from call {self.call_id}"
                     )
 
             except socket.timeout:
@@ -719,9 +705,7 @@ class RTPPlayer:
             self.running = True
 
             self.logger.info(
-                f"RTP player started on port {
-                    self.local_port} for call {
-                    self.call_id}"
+                f"RTP player started on port {self.local_port} for call {self.call_id}"
             )
             return True
         except Exception as e:
@@ -794,8 +778,7 @@ class RTPPlayer:
                 time.sleep(0.020)
 
             self.logger.info(
-                f"Sent {num_packets} RTP packets for call {
-                    self.call_id}"
+                f"Sent {num_packets} RTP packets for call {self.call_id}"
             )
             return True
 
@@ -999,8 +982,7 @@ class RTPPlayer:
                         if len(audio_data) < chunk_size:
                             self.logger.warning(
                                 f"Truncated audio data in WAV file: {file_path} "
-                                f"(expected {chunk_size}, got {
-                                    len(audio_data)})"
+                                f"(expected {chunk_size}, got {len(audio_data)})"
                             )
                             # Continue with partial data rather than failing
                             # completely
@@ -1047,8 +1029,7 @@ class RTPPlayer:
                                 # Convert to μ-law
                                 audio_data = pcm16_to_ulaw(audio_data)
                                 self.logger.info(
-                                    f"Converted PCM to PCMU: {
-                                        len(audio_data)} bytes (μ-law)"
+                                    f"Converted PCM to PCMU: {len(audio_data)} bytes (μ-law)"
                                 )
                             except Exception as e:
                                 self.logger.error(f"Failed to convert PCM to PCMU: {e}")
@@ -1065,8 +1046,7 @@ class RTPPlayer:
 
                         # Send the audio
                         self.logger.info(
-                            f"Playing audio file: {file_path} ({
-                                len(audio_data)} bytes)"
+                            f"Playing audio file: {file_path} ({len(audio_data)} bytes)"
                         )
                         return self.send_audio(audio_data, payload_type, samples_per_packet)
 
@@ -1138,9 +1118,7 @@ class RTPDTMFListener:
             self.running = True
 
             self.logger.info(
-                f"RTP DTMF listener started on port {
-                    self.local_port} for call {
-                    self.call_id}"
+                f"RTP DTMF listener started on port {self.local_port} for call {self.call_id}"
             )
 
             # Start listening thread

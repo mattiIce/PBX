@@ -196,8 +196,7 @@ class HotDeskingSystem:
                 existing_session = self.sessions[device_id]
                 if existing_session.extension != extension:
                     self.logger.info(
-                        f"Logging out {
-                            existing_session.extension} from {device_id} before new login"
+                        f"Logging out {existing_session.extension} from {device_id} before new login"
                     )
                     self._logout_internal(device_id)
 

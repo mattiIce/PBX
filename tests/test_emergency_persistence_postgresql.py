@@ -102,8 +102,7 @@ def test_emergency_contact_persistence_postgresql():
         test_contact = [c for c in contacts if c["name"] == test_contact_name]
         assert (
             len(test_contact) == 1
-        ), f"Expected 1 test contact, found {
-            len(test_contact)}"
+        ), f"Expected 1 test contact, found {len(test_contact)}"
         print("    ✓ Verified contact in database")
 
         # Clean up - disconnect database

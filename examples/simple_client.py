@@ -66,7 +66,8 @@ class SimpleSIPClient:
                 print(f"✓ Extension {self.extension} registered successfully")
                 return True
             else:
-                print(f"✗ Registration failed: {response.split('\\r\\n')[0]}")
+                first_line = response.split('\r\n')[0]
+                print(f"✗ Registration failed: {first_line}")
                 return False
         except socket.timeout:
             print("✗ Registration timeout")

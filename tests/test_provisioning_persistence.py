@@ -62,9 +62,7 @@ def test_provisioning_persistence():
         # Verify devices were loaded from database
         assert (
             len(provisioning2.devices) == 2
-        ), f"Expected 2 devices after reload, got {
-            len(
-                provisioning2.devices)}"
+        ), f"Expected 2 devices after reload, got {len(provisioning2.devices)}"
 
         # Verify device details
         device1_reloaded = provisioning2.get_device("00:15:65:12:34:56")

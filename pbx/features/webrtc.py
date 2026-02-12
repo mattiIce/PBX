@@ -152,8 +152,7 @@ class WebRTCSignalingServer:
                 self.logger.info(f"  TURN servers: {len(self.turn_servers)} configured")
                 self.logger.info(f"  Session timeout: {self.session_timeout}s")
                 self.logger.info(
-                    f"  ICE transport policy: {
-                        self.ice_transport_policy}"
+                    f"  ICE transport policy: {self.ice_transport_policy}"
                 )
             self._start_cleanup_thread()
         else:
@@ -203,8 +202,7 @@ class WebRTCSignalingServer:
                 session = self.sessions.get(session_id)
                 if session:
                     self.logger.info(
-                        f"Cleaning up stale WebRTC session: {session_id} (extension: {
-                            session.extension})"
+                        f"Cleaning up stale WebRTC session: {session_id} (extension: {session.extension})"
                     )
                     self._remove_session(session_id)
 
@@ -333,7 +331,7 @@ class WebRTCSignalingServer:
                     self.logger.error(f"Error registering WebRTC session in phones database: {e}")
         else:
             self.logger.warning(f"Extension {extension} not found in registry for WebRTC session")
-            if self.verbose_logging:
+            if self.verbose_logging and self.pbx_core:
                 self.logger.warning(
                     f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions.keys())[:10]}"
                 )
@@ -434,9 +432,7 @@ class WebRTCSignalingServer:
                 self.logger.warning("[VERBOSE] Unknown session details:")
                 self.logger.warning(f"  Session ID: {session_id}")
                 self.logger.warning(
-                    f"  Active sessions: {
-                        list(
-                            self.sessions.keys())}"
+                    f"  Active sessions: {list(self.sessions.keys())}"
                 )
             return False
 
@@ -519,10 +515,7 @@ class WebRTCSignalingServer:
             self.logger.info("[VERBOSE] ICE candidate added:")
             self.logger.info(f"  Session ID: {session_id}")
             self.logger.info(
-                f"  Candidate: {
-                    candidate.get(
-                        'candidate',
-                        'N/A')}"
+                f"  Candidate: {candidate.get('candidate', 'N/A')}"
             )
             self.logger.info(f"  SDP MID: {candidate.get('sdpMid', 'N/A')}")
             self.logger.info(f"  SDP M-Line Index: {candidate.get('sdpMLineIndex', 'N/A')}")
@@ -825,9 +818,7 @@ class WebRTCGateway:
                     self.logger.error("[VERBOSE] Session lookup failed:")
                     if webrtc_signaling:
                         self.logger.error(
-                            f"  Active sessions: {
-                                list(
-                                    webrtc_signaling.sessions.keys())}"
+                            f"  Active sessions: {list(webrtc_signaling.sessions.keys())}"
                         )
                     else:
                         self.logger.error("  No signaling server provided")
@@ -841,8 +832,7 @@ class WebRTCGateway:
                 self.logger.info(f"  From Extension: {from_extension}")
                 self.logger.info(f"  Session State: {session.state}")
                 self.logger.info(
-                    f"  Has Local SDP: {
-                        session.local_sdp is not None}"
+                    f"  Has Local SDP: {session.local_sdp is not None}"
                 )
 
             # Verify target extension exists or is a valid dialplan pattern
@@ -934,21 +924,17 @@ class WebRTCGateway:
                         "formats": audio_info.get("formats", []),
                     }
                     self.logger.debug(
-                        f"WebRTC RTP endpoint: {
-                            call.caller_rtp}"
+                        f"WebRTC RTP endpoint: {call.caller_rtp}"
                     )
 
                     if self.verbose_logging:
                         self.logger.info("[VERBOSE] RTP endpoint info extracted:")
                         self.logger.info(
-                            f"  Address: {
-                                audio_info.get('address')}"
+                            f"  Address: {audio_info.get('address')}"
                         )
                         self.logger.info(f"  Port: {audio_info.get('port')}")
                         self.logger.info(
-                            f"  Formats: {
-                                audio_info.get(
-                                    'formats', [])}"
+                            f"  Formats: {audio_info.get('formats', [])}"
                         )
                 else:
                     if self.verbose_logging:
@@ -994,8 +980,7 @@ class WebRTCGateway:
                 if self.verbose_logging:
                     self.logger.info("[VERBOSE] Auto attendant session started")
                     self.logger.info(
-                        f"[VERBOSE] Initial action: {
-                            aa_session.get('action')}"
+                        f"[VERBOSE] Initial action: {aa_session.get('action')}"
                     )
 
                 # Set up RTP player to play the welcome message
@@ -1090,8 +1075,7 @@ class WebRTCGateway:
                     call.connect()
                     if self.verbose_logging:
                         self.logger.info(
-                            f"[VERBOSE] Call marked as connected, state: {
-                                call.state}"
+                            f"[VERBOSE] Call marked as connected, state: {call.state}"
                         )
 
                     # Start CDR record for analytics
@@ -1114,8 +1098,7 @@ class WebRTCGateway:
                                 )
                                 self.logger.info(f"  Caller RTP: {caller_address}:{caller_port}")
                                 self.logger.info(
-                                    f"  Local RTP port: {
-                                        call.rtp_ports[0]}"
+                                    f"  Local RTP port: {call.rtp_ports[0]}"
                                 )
 
                             # Start voicemail IVR session in a separate thread
@@ -1152,8 +1135,7 @@ class WebRTCGateway:
                         )
                         if self.verbose_logging:
                             self.logger.warning(
-                                f"[VERBOSE] caller_rtp: {
-                                    call.caller_rtp}"
+                                f"[VERBOSE] caller_rtp: {call.caller_rtp}"
                             )
                 else:
                     self.logger.error(f"Voicemail system not available for WebRTC call {call_id}")
@@ -1178,8 +1160,7 @@ class WebRTCGateway:
             if self.verbose_logging:
                 self.logger.error("[VERBOSE] ===== Call initiation FAILED =====")
                 self.logger.error(
-                    f"[VERBOSE] Exception type: {
-                        type(e).__name__}"
+                    f"[VERBOSE] Exception type: {type(e).__name__}"
                 )
                 self.logger.error(f"[VERBOSE] Exception message: {str(e)}")
             import traceback
@@ -1187,8 +1168,7 @@ class WebRTCGateway:
             self.logger.debug(traceback.format_exc())
             if self.verbose_logging:
                 self.logger.error(
-                    f"[VERBOSE] Full traceback:\n{
-                        traceback.format_exc()}"
+                    f"[VERBOSE] Full traceback:\n{traceback.format_exc()}"
                 )
             return None
 
@@ -1315,8 +1295,7 @@ class WebRTCGateway:
                         "formats": audio_info.get("formats", []),
                     }
                     self.logger.debug(
-                        f"WebRTC answered RTP endpoint: {
-                            call.callee_rtp}"
+                        f"WebRTC answered RTP endpoint: {call.callee_rtp}"
                     )
 
             # Connect the call
@@ -1325,8 +1304,7 @@ class WebRTCGateway:
             session.update_activity()
 
             self.logger.info(
-                f"WebRTC session {session_id} answered call {
-                    session.call_id}"
+                f"WebRTC session {session_id} answered call {session.call_id}"
             )
             return True
 

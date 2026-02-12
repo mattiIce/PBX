@@ -31,8 +31,7 @@ def test_email_notifier_config():
     smtp_port = config.get("voicemail.smtp.port")
     assert (
         smtp_port == 587 or smtp_port == "587"
-    ), f"Expected port 587, got {smtp_port} (type: {
-        type(smtp_port)})"
+    ), f"Expected port 587, got {smtp_port} (type: {type(smtp_port)})"
     assert config.get("voicemail.smtp.use_tls")
     # Username should be set (actual value from .env)
     smtp_username = config.get("voicemail.smtp.username")
@@ -62,8 +61,7 @@ def test_email_notifier_initialization():
     # Port should be an integer
     assert (
         notifier.smtp_port == 587 or notifier.smtp_port == "587"
-    ), f"Expected port 587, got {
-        notifier.smtp_port}"
+    ), f"Expected port 587, got {notifier.smtp_port}"
     assert notifier.use_tls
     assert notifier.from_address == "Voicemail@albl.com"
     assert notifier.from_name == "ABCo Voicemail"

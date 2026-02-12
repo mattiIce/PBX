@@ -75,8 +75,7 @@ class PBXCore:
             self.registered_phones_db = RegisteredPhonesDB(self.database)
             self.extension_db = ExtensionDB(self.database)
             self._log_startup(
-                f"Database backend initialized successfully ({
-                    self.database.db_type})"
+                f"Database backend initialized successfully ({self.database.db_type})"
             )
             self._log_startup(
                 "Extensions, voicemail metadata, and phone registrations will be stored in database"
@@ -156,8 +155,7 @@ class PBXCore:
 
             self.auto_attendant = AutoAttendant(self.config, self)
             self.logger.info(
-                f"Auto Attendant initialized on extension {
-                    self.auto_attendant.get_extension()}"
+                f"Auto Attendant initialized on extension {self.auto_attendant.get_extension()}"
             )
         else:
             self.auto_attendant = None
@@ -505,7 +503,7 @@ class PBXCore:
         api_host = self.config.get(
             "api.host", "0.0.0.0"
         )  # nosec B104 - API server needs to bind to all interfaces
-        api_port = self.config.get("api.port", 8080)
+        api_port = self.config.get("api.port", 9000)
         self.api_server = PBXAPIServer(self, api_host, api_port)
 
         self.running = False
@@ -612,17 +610,15 @@ class PBXCore:
                         self.logger.warning("=" * 70)
                         self.logger.warning("Extension: 1001")
                         self.logger.warning(
-                            f"Password:  {
-                                ext_config['password']}"
+                            f"Password:  {ext_config['password']}"
                         )
                         self.logger.warning(
-                            f"Voicemail PIN: {
-                                ext_config['voicemail_pin']}"
+                            f"Voicemail PIN: {ext_config['voicemail_pin']}"
                         )
                         self.logger.warning("")
                         self.logger.warning("⚠️  CHANGE THIS PASSWORD IMMEDIATELY via admin panel!")
                         self.logger.warning(
-                            "   Access admin panel: https://<your-server-ip>:8080/admin/"
+                            "   Access admin panel: https://<your-server-ip>:9000/admin/"
                         )
                         self.logger.warning("=" * 70)
 
@@ -809,8 +805,7 @@ class PBXCore:
                         self.logger.error(f"  User Agent: {user_agent}")
                         self.logger.error(f"  Contact URI: {contact}")
                         self.logger.error(
-                            f"  Traceback: {
-                                traceback.format_exc()}"
+                            f"  Traceback: {traceback.format_exc()}"
                         )
 
                 # Trigger webhook event
@@ -1076,9 +1071,7 @@ class PBXCore:
 
             if caller_sdp:
                 self.logger.info(
-                    f"Caller RTP: {
-                        caller_sdp['address']}:{
-                        caller_sdp['port']}"
+                    f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}"
                 )
                 # Extract caller's codec list to maintain codec compatibility
                 caller_codecs = caller_sdp.get("formats", None)
@@ -1126,8 +1119,7 @@ class PBXCore:
                     # 200 OK
                     handler.set_endpoints(caller_endpoint, None)
                     self.logger.info(
-                        f"RTP relay allocated on port {
-                            rtp_ports[0]}, caller endpoint set to {caller_endpoint}"
+                        f"RTP relay allocated on port {rtp_ports[0]}, caller endpoint set to {caller_endpoint}"
                     )
 
         # Get destination extension's address
@@ -1284,8 +1276,7 @@ class PBXCore:
             call.callee_invite = invite_to_callee  # Store the INVITE for CANCEL reference
 
             self.logger.info(
-                f"Forwarded INVITE to {to_ext} at {
-                    dest_ext_obj.address}"
+                f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}"
             )
             self.logger.info(
                 f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
@@ -1352,9 +1343,7 @@ class PBXCore:
 
             if callee_sdp:
                 self.logger.info(
-                    f"Callee RTP: {
-                        callee_sdp['address']}:{
-                        callee_sdp['port']}"
+                    f"Callee RTP: {callee_sdp['address']}:{callee_sdp['port']}"
                 )
                 call.callee_rtp = callee_sdp
                 call.callee_addr = callee_addr
@@ -1430,8 +1419,7 @@ class PBXCore:
 
                 # Build Contact header
                 sip_port = self.config.get("server.sip_port", 5060)
-                contact_uri = f"<sip:{
-                    call.to_extension}@{server_ip}:{sip_port}>"
+                contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
                 ok_response.set_header("Contact", contact_uri)
 
                 # Send to caller
@@ -1477,9 +1465,7 @@ class PBXCore:
                             duration=duration,
                         )
                         self.logger.info(
-                            f"Saved voicemail (on hangup) for extension {
-                                call.to_extension} from {
-                                call.from_extension}, duration: {duration}s"
+                            f"Saved voicemail (on hangup) for extension {call.to_extension} from {call.from_extension}, duration: {duration}s"
                         )
                     else:
                         self.logger.warning(f"No audio recorded for voicemail on call {call_id}")
@@ -1562,8 +1548,7 @@ class PBXCore:
             return False
 
         self.logger.info(
-            f"Transferring call {call_id} from {
-                call.from_extension} to {new_destination}"
+            f"Transferring call {call_id} from {call.from_extension} to {new_destination}"
         )
 
         # Determine which party to send REFER to (typically the caller)
@@ -1594,8 +1579,7 @@ class PBXCore:
         # Add Contact header
         refer_msg.set_header(
             "Contact",
-            f"<sip:{
-                call.to_extension}@{server_ip}:{sip_port}>",
+            f"<sip:{call.to_extension}@{server_ip}:{sip_port}>",
         )
 
         # Send REFER message
@@ -2016,9 +2000,7 @@ class PBXCore:
                     duration=duration,
                 )
                 self.logger.info(
-                    f"Saved voicemail for extension {
-                        call.to_extension} from {
-                        call.from_extension}, duration: {duration}s"
+                    f"Saved voicemail for extension {call.to_extension} from {call.from_extension}, duration: {duration}s"
                 )
             else:
                 self.logger.warning(f"No audio recorded for voicemail on call {call_id}")
@@ -2405,8 +2387,7 @@ class PBXCore:
                 self.rtp_relay.port_pool.append(call.aa_rtp_port)
                 self.rtp_relay.port_pool.sort()
                 self.logger.info(
-                    f"Returned RTP port {
-                        call.aa_rtp_port} to pool"
+                    f"Returned RTP port {call.aa_rtp_port} to pool"
                 )
 
         except Exception as e:
@@ -2490,10 +2471,7 @@ class PBXCore:
             caller_sdp = caller_sdp_obj.get_audio_info()
             if caller_sdp:
                 self.logger.info(
-                    f"[VM Access] ✓ Caller SDP parsed: address={
-                        caller_sdp.get('address')}, port={
-                        caller_sdp.get('port')}, formats={
-                        caller_sdp.get('formats')}"
+                    f"[VM Access] ✓ Caller SDP parsed: address={caller_sdp.get('address')}, port={caller_sdp.get('port')}, formats={caller_sdp.get('formats')}"
                 )
                 # Extract caller's codec list for negotiation
                 caller_codecs = caller_sdp.get("formats", None)
@@ -2512,8 +2490,7 @@ class PBXCore:
         call.voicemail_access = True
         call.voicemail_extension = target_ext
         self.logger.info(
-            f"[VM Access] ✓ Call object created with state: {
-                call.state}"
+            f"[VM Access] ✓ Call object created with state: {call.state}"
         )
 
         # Start CDR record for analytics
@@ -2569,8 +2546,7 @@ class PBXCore:
             ilbc_mode=ilbc_mode,
         )
         self.logger.info(
-            f"[VM Access] ✓ SDP built for response (RTP port: {
-                call.rtp_ports[0]})"
+            f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})"
         )
 
         # Send 200 OK to answer the call
@@ -2607,9 +2583,7 @@ class PBXCore:
         messages = mailbox.get_messages(unread_only=False)
         unread = mailbox.get_messages(unread_only=True)
         self.logger.info(
-            f"[VM Access] ✓ Mailbox status: {
-                len(unread)} unread, {
-                len(messages)} total messages"
+            f"[VM Access] ✓ Mailbox status: {len(unread)} unread, {len(messages)} total messages"
         )
 
         # Start IVR-based voicemail management
@@ -2673,9 +2647,7 @@ class PBXCore:
 
             if caller_sdp:
                 self.logger.info(
-                    f"Paging caller RTP: {
-                        caller_sdp['address']}:{
-                        caller_sdp['port']}"
+                    f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}"
                 )
                 # Extract caller's codec list for negotiation
                 caller_codecs = caller_sdp.get("formats", None)
@@ -2715,8 +2687,7 @@ class PBXCore:
 
         if not dac_device_id:
             self.logger.warning(
-                f"No DAC device configured for zone {
-                    zone.get('name')}"
+                f"No DAC device configured for zone {zone.get('name')}"
             )
             # Continue anyway - this allows testing without hardware
 
@@ -2789,8 +2760,7 @@ class PBXCore:
             # No hardware - just maintain the call for testing
             self.logger.warning(f"Paging call {call_id} connected but no DAC device available")
             self.logger.info(
-                f"Audio from {from_ext} would be routed to {
-                    page_info.get('zone_names')}"
+                f"Audio from {from_ext} would be routed to {page_info.get('zone_names')}"
             )
 
         return True
@@ -2810,9 +2780,7 @@ class PBXCore:
         try:
             self.logger.info(f"Paging session started for {call_id}")
             self.logger.info(
-                f"DAC device: {
-                    dac_device.get('device_id')} ({
-                    dac_device.get('device_type')})"
+                f"DAC device: {dac_device.get('device_id')} ({dac_device.get('device_type')})"
             )
             self.logger.info(f"Paging zones: {page_info.get('zone_names')}")
 
@@ -2823,8 +2791,7 @@ class PBXCore:
 
             if not dac_sip_uri or not dac_ip:
                 self.logger.error(
-                    f"DAC device {
-                        dac_device.get('device_id')} missing SIP configuration"
+                    f"DAC device {dac_device.get('device_id')} missing SIP configuration"
                 )
                 return
 
@@ -2841,9 +2808,7 @@ class PBXCore:
 
             if call.caller_rtp:
                 self.logger.info(
-                    f"Caller RTP: {
-                        call.caller_rtp['address']}:{
-                        call.caller_rtp['port']}"
+                    f"Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}"
                 )
                 self.logger.info(f"Audio relay: Caller -> PBX:{call.rtp_ports[0]} -> DAC:{dac_ip}")
 
@@ -2906,17 +2871,14 @@ class PBXCore:
                 if not messages:
                     # No messages - play short beep and hang up
                     self.logger.info(
-                        f"No voicemail messages for {
-                            call.voicemail_extension}"
+                        f"No voicemail messages for {call.voicemail_extension}"
                     )
                     player.play_beep(frequency=400, duration_ms=500)
                     time.sleep(2)
                 else:
                     # Play messages
                     self.logger.info(
-                        f"Playing {
-                            len(messages)} voicemail messages for {
-                            call.voicemail_extension}"
+                        f"Playing {len(messages)} voicemail messages for {call.voicemail_extension}"
                     )
 
                     for idx, message in enumerate(messages):
@@ -2936,8 +2898,7 @@ class PBXCore:
                             # Mark message as listened
                             mailbox.mark_listened(message["id"])
                             self.logger.info(
-                                f"Marked voicemail {
-                                    message['id']} as listened"
+                                f"Marked voicemail {message['id']} as listened"
                             )
                         else:
                             self.logger.warning(f"Failed to play voicemail: {file_path}")
@@ -2946,8 +2907,7 @@ class PBXCore:
                         time.sleep(1)
 
                     self.logger.info(
-                        f"Finished playing all voicemails for {
-                            call.voicemail_extension}"
+                        f"Finished playing all voicemails for {call.voicemail_extension}"
                     )
                     time.sleep(1)
 
@@ -3017,9 +2977,7 @@ class PBXCore:
                 self.end_call(call_id)
                 return
             self.logger.info(
-                f"[VM IVR] ✓ Caller RTP: {
-                    call.caller_rtp['address']}:{
-                    call.caller_rtp['port']}"
+                f"[VM IVR] ✓ Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}"
             )
 
             # ============================================================
@@ -3037,9 +2995,7 @@ class PBXCore:
             self.logger.info("[VM IVR] Creating RTP player for audio prompts...")
             self.logger.info(f"[VM IVR]   Local port: {call.rtp_ports[0]}")
             self.logger.info(
-                f"[VM IVR]   Remote: {
-                    call.caller_rtp['address']}:{
-                    call.caller_rtp['port']}"
+                f"[VM IVR]   Remote: {call.caller_rtp['address']}:{call.caller_rtp['port']}"
             )
             player = RTPPlayer(
                 local_port=call.rtp_ports[0],
@@ -3065,8 +3021,7 @@ class PBXCore:
             # This listens on the same port, captures incoming RTP packets, and
             # extracts audio
             self.logger.info(
-                f"[VM IVR] Creating RTP recorder for DTMF detection (port {
-                    call.rtp_ports[0]})..."
+                f"[VM IVR] Creating RTP recorder for DTMF detection (port {call.rtp_ports[0]})..."
             )
             recorder = RTPRecorder(call.rtp_ports[0], call_id)
             if not recorder.start():
@@ -3090,15 +3045,12 @@ class PBXCore:
                 # Play the PIN entry prompt that the IVR returned
                 if not isinstance(initial_action, dict):
                     self.logger.error(
-                        f"[VM IVR] ✗ IVR handle_dtmf returned unexpected type: {
-                            type(initial_action)}"
+                        f"[VM IVR] ✗ IVR handle_dtmf returned unexpected type: {type(initial_action)}"
                     )
                     initial_action = {"action": "play_prompt", "prompt": "enter_pin"}
 
                 self.logger.info(
-                    f"[VM IVR] ✓ IVR initialized - Action: {
-                        initial_action.get('action')}, Prompt: {
-                        initial_action.get('prompt')}"
+                    f"[VM IVR] ✓ IVR initialized - Action: {initial_action.get('action')}, Prompt: {initial_action.get('prompt')}"
                 )
 
                 prompt_type = initial_action.get("prompt", "enter_pin")
@@ -3107,8 +3059,7 @@ class PBXCore:
                 self.logger.info(f"[VM IVR] Loading audio prompt: {prompt_type}")
                 pin_prompt = get_prompt_audio(prompt_type)
                 self.logger.info(
-                    f"[VM IVR] ✓ Prompt audio loaded ({
-                        len(pin_prompt)} bytes)"
+                    f"[VM IVR] ✓ Prompt audio loaded ({len(pin_prompt)} bytes)"
                 )
 
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
@@ -3117,13 +3068,11 @@ class PBXCore:
 
                 try:
                     self.logger.info(
-                        f"[VM IVR] Playing PIN entry prompt (call state: {
-                            call.state})..."
+                        f"[VM IVR] Playing PIN entry prompt (call state: {call.state})..."
                     )
                     player.play_file(prompt_file)
                     self.logger.info(
-                        f"[VM IVR] ✓ Finished playing PIN entry prompt (call state: {
-                            call.state})"
+                        f"[VM IVR] ✓ Finished playing PIN entry prompt (call state: {call.state})"
                     )
                 finally:
                     try:
@@ -3137,18 +3086,14 @@ class PBXCore:
                 # Check if call was terminated early (e.g., immediate BYE after answering)
                 # Log the actual call state for debugging
                 self.logger.info(
-                    f"[VM IVR] Call state check: call_id={call_id}, state={
-                        call.state}, state.value={
-                        call.state.value if hasattr(
-                            call.state, 'value') else 'N/A'}"
+                    f"[VM IVR] Call state check: call_id={call_id}, state={call.state}, state.value={call.state.value if hasattr(call.state, 'value') else 'N/A'}"
                 )
 
                 if call.state == CallState.ENDED:
                     self.logger.info("")
                     self.logger.info("[VM IVR] ✗ call ended before IVR could start")
                     self.logger.info(
-                        f"[VM IVR] Extension: {
-                            call.voicemail_extension}"
+                        f"[VM IVR] Extension: {call.voicemail_extension}"
                     )
                     self.logger.info(f"[VM IVR] State: {call.state}")
                     self.logger.info("[VM IVR] Exiting IVR session")
@@ -3158,8 +3103,7 @@ class PBXCore:
                 self.logger.info("")
                 self.logger.info("[VM IVR] ✓ IVR fully started and ready for user input")
                 self.logger.info(
-                    f"[VM IVR] Extension: {
-                        call.voicemail_extension}"
+                    f"[VM IVR] Extension: {call.voicemail_extension}"
                 )
                 self.logger.info(f"[VM IVR] State: {call.state}")
                 self.logger.info("[VM IVR] Waiting for PIN entry...")
@@ -3253,17 +3197,14 @@ class PBXCore:
                             f"[VM IVR] Processing DTMF '{digit}' through IVR state machine..."
                         )
                         self.logger.info(
-                            f"[VM IVR] Current IVR state: {
-                                voicemail_ivr.state}"
+                            f"[VM IVR] Current IVR state: {voicemail_ivr.state}"
                         )
                         action = voicemail_ivr.handle_dtmf(digit)
                         self.logger.info(
-                            f"[VM IVR] IVR returned action: {
-                                action.get('action')}"
+                            f"[VM IVR] IVR returned action: {action.get('action')}"
                         )
                         self.logger.info(
-                            f"[VM IVR] New IVR state: {
-                                voicemail_ivr.state}"
+                            f"[VM IVR] New IVR state: {voicemail_ivr.state}"
                         )
 
                         # Process IVR action
@@ -3364,8 +3305,7 @@ class PBXCore:
                                 break
 
                             self.logger.info(
-                                f"Starting greeting recording for extension {
-                                    call.voicemail_extension}"
+                                f"Starting greeting recording for extension {call.voicemail_extension}"
                             )
 
                             # Play beep tone
@@ -3454,9 +3394,7 @@ class PBXCore:
                                         )
                                         voicemail_ivr.save_recorded_greeting(greeting_audio_wav)
                                         self.logger.info(
-                                            f"Saved recorded greeting as WAV ({
-                                                len(greeting_audio_wav)} bytes, {
-                                                len(greeting_audio_raw)} bytes raw audio)"
+                                            f"Saved recorded greeting as WAV ({len(greeting_audio_wav)} bytes, {len(greeting_audio_raw)} bytes raw audio)"
                                         )
                                     # Handle the returned action
                                     if action.get("action") == "play_prompt":
@@ -3483,8 +3421,7 @@ class PBXCore:
                                     else:
                                         # Unexpected action type
                                         self.logger.warning(
-                                            f"Unexpected action from IVR after #: {
-                                                action.get('action')}"
+                                            f"Unexpected action from IVR after #: {action.get('action')}"
                                         )
                                     # Clear recorder after saving
                                     recorder.recorded_data = []
@@ -3499,8 +3436,7 @@ class PBXCore:
                             greeting_data = voicemail_ivr.get_recorded_greeting()
                             if greeting_data:
                                 self.logger.info(
-                                    f"Playing recorded greeting for review ({
-                                        len(greeting_data)} bytes)"
+                                    f"Playing recorded greeting for review ({len(greeting_data)} bytes)"
                                 )
 
                                 # Greeting is already in WAV format (converted when recorded)
@@ -3563,8 +3499,7 @@ class PBXCore:
                     # Timeout after 60 seconds of no activity
                     if time.time() - last_audio_check > 60:
                         self.logger.info(
-                            f"Voicemail IVR timeout for {
-                                call.voicemail_extension}"
+                            f"Voicemail IVR timeout for {call.voicemail_extension}"
                         )
                         ivr_active = False
 
@@ -3903,8 +3838,7 @@ class PBXCore:
                 and self.phone_provisioning
             ):
                 self.logger.info(
-                    f"Auto-provisioning: Automatically rebooting {
-                        len(extensions_to_reboot)} phones after AD sync"
+                    f"Auto-provisioning: Automatically rebooting {len(extensions_to_reboot)} phones after AD sync"
                 )
                 for extension_number in extensions_to_reboot:
                     try:

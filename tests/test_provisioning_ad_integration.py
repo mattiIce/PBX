@@ -27,8 +27,7 @@ def test_ldap_config_from_ad_credentials():
     # Verify that ldap_config is a dict
     assert isinstance(
         ldap_config, dict
-    ), f"Expected dict, got {
-        type(ldap_config)}"
+    ), f"Expected dict, got {type(ldap_config)}"
 
     # Check for required fields
     required_fields = [

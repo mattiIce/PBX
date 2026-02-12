@@ -33,21 +33,17 @@ a=sendrecv
     assert sdp.version == 0, f"Expected version 0, got {sdp.version}"
     assert (
         sdp.origin["username"] == "user1"
-    ), f"Expected user1, got {
-        sdp.origin['username']}"
+    ), f"Expected user1, got {sdp.origin['username']}"
     assert (
         sdp.origin["address"] == "192.168.1.100"
-    ), f"Expected 192.168.1.100, got {
-        sdp.origin['address']}"
+    ), f"Expected 192.168.1.100, got {sdp.origin['address']}"
     assert len(sdp.media) == 1, f"Expected 1 media, got {len(sdp.media)}"
     assert (
         sdp.media[0]["type"] == "audio"
-    ), f"Expected audio, got {
-        sdp.media[0]['type']}"
+    ), f"Expected audio, got {sdp.media[0]['type']}"
     assert (
         sdp.media[0]["port"] == 10000
-    ), f"Expected port 10000, got {
-        sdp.media[0]['port']}"
+    ), f"Expected port 10000, got {sdp.media[0]['port']}"
 
     print("  ✓ SDP parsing works")
 
@@ -74,12 +70,10 @@ a=rtpmap:8 PCMA/8000
     assert audio_info is not None, "Audio info should not be None"
     assert (
         audio_info["address"] == "192.168.1.100"
-    ), f"Expected 192.168.1.100, got {
-        audio_info['address']}"
+    ), f"Expected 192.168.1.100, got {audio_info['address']}"
     assert (
         audio_info["port"] == 10000
-    ), f"Expected port 10000, got {
-        audio_info['port']}"
+    ), f"Expected port 10000, got {audio_info['port']}"
     assert "0" in audio_info["formats"], "Expected codec 0 (PCMU) in formats"
 
     print("  ✓ Audio info extraction works")
@@ -135,8 +129,7 @@ a=rtpmap:0 PCMU/8000
     # Should use media-level connection, not session-level
     assert (
         audio_info["address"] == "192.168.1.200"
-    ), f"Expected media-level IP 192.168.1.200, got {
-        audio_info['address']}"
+    ), f"Expected media-level IP 192.168.1.200, got {audio_info['address']}"
 
     print("  ✓ Media-level connection works")
 

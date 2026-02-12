@@ -222,22 +222,13 @@ class PhoneProvisioning:
 
         self.logger.info("Phone provisioning initialized")
         self.logger.info(
-            f"Provisioning URL format: {
-                self.config.get(
-                    'provisioning.url_format',
-                    'Not configured')}"
+            f"Provisioning URL format: {self.config.get('provisioning.url_format', 'Not configured')}"
         )
         self.logger.info(
-            f"Server external IP: {
-                self.config.get(
-                    'server.external_ip',
-                    'Not configured')}"
+            f"Server external IP: {self.config.get('server.external_ip', 'Not configured')}"
         )
         self.logger.info(
-            f"API port: {
-                self.config.get(
-                    'api.port',
-                    'Not configured')}"
+            f"API port: {self.config.get('api.port', 'Not configured')}"
         )
 
         # Check SSL status for provisioning URL generation
@@ -283,8 +274,7 @@ class PhoneProvisioning:
                 self.devices[device.mac_address] = device
 
             self.logger.info(
-                f"Loaded {
-                    len(db_devices)} provisioned devices from database"
+                f"Loaded {len(db_devices)} provisioned devices from database"
             )
         except Exception as e:
             self.logger.error(f"Error loading devices from database: {e}")
@@ -1366,9 +1356,7 @@ P2351 = 1
         self.logger.info(f"Provisioning request received for MAC: {mac_address}")
         if request_info:
             self.logger.info(
-                f"  Request from IP: {
-                    request_info.get(
-                        'ip', 'Unknown')}"
+                f"  Request from IP: {request_info.get('ip', 'Unknown')}"
             )
             self.logger.info(f"  User-Agent: {request_info.get('user_agent', 'Unknown')}")
 
@@ -1379,9 +1367,7 @@ P2351 = 1
             self.logger.warning(error_msg)
             self.logger.warning(f"  Normalized MAC: {normalized}")
             self.logger.warning(
-                f"  Registered devices: {
-                    list(
-                        self.devices.keys())}"
+                f"  Registered devices: {list(self.devices.keys())}"
             )
 
             # Provide helpful guidance
@@ -1390,7 +1376,7 @@ P2351 = 1
             # because phones often cannot validate self-signed certificates
             ssl_enabled = self.config.get("api.ssl.enabled", False)
             api_protocol = "https" if ssl_enabled else "http"
-            api_port = self.config.get("api.port", 8080)
+            api_port = self.config.get("api.port", 9000)
             server_ip = self.config.get("server.external_ip", "192.168.1.14")
 
             self.logger.warning("  → Device needs to be registered first")
@@ -1419,23 +1405,16 @@ P2351 = 1
             return None, None
 
         self.logger.info(
-            f"  Found device: vendor={
-                device.vendor}, model={
-                device.model}, extension={
-                device.extension_number}"
+            f"  Found device: vendor={device.vendor}, model={device.model}, extension={device.extension_number}"
         )
 
         # Get template
         template = self.get_template(device.vendor, device.model)
         if not template:
-            error_msg = f"Template not found for {
-                device.vendor} {
-                device.model}"
+            error_msg = f"Template not found for {device.vendor} {device.model}"
             self.logger.warning(error_msg)
             self.logger.warning(
-                f"  Available templates: {
-                    list(
-                        self.templates.keys())}"
+                f"  Available templates: {list(self.templates.keys())}"
             )
             request_log["error"] = error_msg
             self._add_request_log(request_log)
@@ -1454,9 +1433,7 @@ P2351 = 1
             return None, None
 
         self.logger.info(
-            f"  Extension found: {
-                extension.number} ({
-                extension.name})"
+            f"  Extension found: {extension.number} ({extension.name})"
         )
 
         # Build extension config dict
@@ -1478,9 +1455,7 @@ P2351 = 1
         server_config["remote_phonebook"] = self.config.get("provisioning.remote_phonebook", {})
 
         self.logger.info(
-            f"  Server config: SIP={
-                server_config['sip_host']}:{
-                server_config['sip_port']}"
+            f"  Server config: SIP={server_config['sip_host']}:{server_config['sip_port']}"
         )
 
         # Generate configuration
@@ -1505,8 +1480,7 @@ P2351 = 1
 
         self.logger.info(f"✓ Successfully generated config for device {mac_address}")
         self.logger.info(
-            f"  Config size: {
-                len(config_content)} bytes, Content-Type: {content_type}"
+            f"  Config size: {len(config_content)} bytes, Content-Type: {content_type}"
         )
 
         request_log["success"] = True
@@ -1567,7 +1541,7 @@ P2351 = 1
         config_url = config_url.replace(
             "{{SERVER_IP}}", self.config.get("server.external_ip", "127.0.0.1")
         )
-        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", 8080)))
+        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", 9000)))
 
         return config_url
 
@@ -1655,8 +1629,7 @@ P2351 = 1
             sip_server._send_message(notify_msg.build(), extension.address)
 
             self.logger.info(
-                f"Sent reboot NOTIFY to extension {extension_number} at {
-                    extension.address}"
+                f"Sent reboot NOTIFY to extension {extension_number} at {extension.address}"
             )
             return True
 
@@ -1689,9 +1662,7 @@ P2351 = 1
                     results["failed"].append(extension.number)
 
         self.logger.info(
-            f"Rebooted {
-                results['success_count']} phones, {
-                results['failed_count']} failed"
+            f"Rebooted {results['success_count']} phones, {results['failed_count']} failed"
         )
         return results
 

@@ -123,14 +123,11 @@ def test_pcm_to_pcmu_conversion():
 
         if len(ulaw_data) == 100:  # Should be half the size (16-bit PCM -> 8-bit μ-law)
             print(
-                f"   ✓ Manual conversion successful: {
-                    len(test_pcm_data)} bytes PCM -> {
-                    len(ulaw_data)} bytes PCMU"
+                f"   ✓ Manual conversion successful: {len(test_pcm_data)} bytes PCM -> {len(ulaw_data)} bytes PCMU"
             )
         else:
             print(
-                f"   ✗ Manual conversion failed: expected 100 bytes, got {
-                    len(ulaw_data)} bytes"
+                f"   ✗ Manual conversion failed: expected 100 bytes, got {len(ulaw_data)} bytes"
             )
             return False
 

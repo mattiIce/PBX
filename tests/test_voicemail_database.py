@@ -28,8 +28,7 @@ def test_database_configuration():
     db_port = config.get("database.port")
     assert (
         db_port == 5432 or db_port == "5432"
-    ), f"Expected port 5432, got {db_port} (type: {
-        type(db_port)})"
+    ), f"Expected port 5432, got {db_port} (type: {type(db_port)})"
     assert config.get("database.name") is not None, "Database name should be set"
     assert config.get("database.user") is not None, "Database user should be set"
 
