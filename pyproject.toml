@@ -59,6 +59,7 @@ dependencies = [
     "prometheus-client>=0.24.1",
     "redis>=7.1.1",
     "psutil>=7.2.2",
+    "alembic>=1.15.0",
 ]
 
 [project.optional-dependencies]
@@ -97,7 +98,7 @@ Repository = "https://github.com/mattiIce/PBX"
 Issues = "https://github.com/mattiIce/PBX/issues"
 
 [tool.setuptools]
-packages = ["pbx", "pbx.api", "pbx.api.routes", "pbx.api.schemas", "pbx.core", "pbx.features", "pbx.integrations", "pbx.rtp", "pbx.sip", "pbx.utils"]
+packages = ["pbx", "pbx.api", "pbx.api.routes", "pbx.api.schemas", "pbx.core", "pbx.features", "pbx.integrations", "pbx.models", "pbx.rtp", "pbx.sip", "pbx.utils"]
 
 [tool.setuptools.package-data]
 pbx = ["py.typed"]
