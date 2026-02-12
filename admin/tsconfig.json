@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "strict": false,
+        "noEmit": true,
+        "allowJs": true,
+        "checkJs": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "outDir": "./dist",
+        "baseUrl": ".",
+        "paths": {
+            "@api/*": ["js/api/*"],
+            "@state/*": ["js/state/*"],
+            "@ui/*": ["js/ui/*"],
+            "@utils/*": ["js/utils/*"],
+            "@pages/*": ["js/pages/*"]
+        }
+    },
+    "include": ["js/**/*.ts", "js/**/*.js"],
+    "exclude": ["node_modules", "dist"]
+}

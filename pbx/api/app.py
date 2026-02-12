@@ -1,0 +1,108 @@
+"""Flask application factory for PBX API."""
+
+import os
+
+from flask import Flask
+
+from pbx.api.errors import register_error_handlers
+from pbx.utils.logger import get_logger
+
+logger = get_logger()
+
+# Admin directory path
+ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "admin")
+
+
+def create_app(pbx_core=None):
+    """Create and configure the Flask application.
+
+    Args:
+        pbx_core: PBXCore instance to make available to routes.
+
+    Returns:
+        Configured Flask application.
+    """
+    app = Flask(__name__, static_folder=None)
+    app.config["PBX_CORE"] = pbx_core
+    app.config["ADMIN_DIR"] = ADMIN_DIR
+
+    # Security headers via after_request
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(self), camera=()"
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
+        )
+        response.headers["Content-Security-Policy"] = csp
+        return response
+
+    # Register error handlers
+    register_error_handlers(app)
+
+    # Register all Blueprints
+    _register_blueprints(app)
+
+    return app
+
+
+def _register_blueprints(app):
+    """Register all route Blueprints."""
+    from pbx.api.routes.health import health_bp
+    from pbx.api.routes.auth import auth_bp
+    from pbx.api.routes.extensions import extensions_bp
+    from pbx.api.routes.calls import calls_bp
+    from pbx.api.routes.provisioning import provisioning_bp
+    from pbx.api.routes.phones import phones_bp
+    from pbx.api.routes.config import config_bp
+    from pbx.api.routes.voicemail import voicemail_bp
+    from pbx.api.routes.webrtc import webrtc_bp
+    from pbx.api.routes.integrations import integrations_bp
+    from pbx.api.routes.phone_book import phone_book_bp
+    from pbx.api.routes.paging import paging_bp
+    from pbx.api.routes.webhooks import webhooks_bp
+    from pbx.api.routes.emergency import emergency_bp
+    from pbx.api.routes.security import security_bp
+    from pbx.api.routes.qos import qos_bp
+    from pbx.api.routes.features import features_bp
+    from pbx.api.routes.framework import framework_bp
+    from pbx.api.routes.static import static_bp
+    from pbx.api.routes.license import license_bp
+
+    blueprints = [
+        health_bp,
+        auth_bp,
+        extensions_bp,
+        calls_bp,
+        provisioning_bp,
+        phones_bp,
+        config_bp,
+        voicemail_bp,
+        webrtc_bp,
+        integrations_bp,
+        phone_book_bp,
+        paging_bp,
+        webhooks_bp,
+        emergency_bp,
+        security_bp,
+        qos_bp,
+        features_bp,
+        framework_bp,
+        static_bp,
+        license_bp,
+    ]
+
+    for bp in blueprints:
+        app.register_blueprint(bp)
+        logger.debug(f"Registered blueprint: {bp.name}")

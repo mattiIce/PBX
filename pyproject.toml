@@ -51,6 +51,7 @@ dependencies = [
     "soundfile>=0.13.1",
     "imageio-ffmpeg>=0.6.0",
     "av>=16.1.0",
+    "pydantic>=2.0",
     "flask>=3.1.2",
     "werkzeug>=3.1.5",
     "jinja2>=3.1.6",
@@ -96,7 +97,7 @@ Repository = "https://github.com/mattiIce/PBX"
 Issues = "https://github.com/mattiIce/PBX/issues"
 
 [tool.setuptools]
-packages = ["pbx", "pbx.api", "pbx.core", "pbx.features", "pbx.integrations", "pbx.rtp", "pbx.sip", "pbx.utils"]
+packages = ["pbx", "pbx.api", "pbx.api.routes", "pbx.core", "pbx.features", "pbx.integrations", "pbx.rtp", "pbx.sip", "pbx.utils"]
 
 [tool.setuptools.package-data]
 pbx = ["py.typed"]

@@ -15,8 +15,6 @@ load_env_file(".env")
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.graceful_shutdown import setup_graceful_shutdown
-from pbx.utils.test_runner import run_all_tests
-
 # Get logger
 logger = logging.getLogger(__name__)
 
@@ -33,32 +31,6 @@ def signal_handler(sig, frame):  # pylint: disable=unused-argument
     running = False
     if pbx:
         pbx.stop()
-
-
-def run_tests_before_start():
-    """Run all tests before starting the server"""
-    print("=" * 70)
-    print("RUNNING TESTS BEFORE SERVER START")
-    print("=" * 70)
-    print()
-
-    try:
-        _, failed, _, _ = run_all_tests()
-
-        print()
-        if failed > 0:
-            print("⚠ WARNING: Some tests failed!")
-            print("  You can still start the server, but there may be issues.")
-        else:
-            print("✓ All tests passed!")
-
-        return failed == 0
-    except Exception as e:
-        print(f"Error running tests: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
 
 
 if __name__ == "__main__":
@@ -80,25 +52,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Warning: Could not check dependencies: {e}")
         print("Continuing anyway...")
-
-    # Startup tests disabled - can be re-enabled by uncommenting below
-    # Run tests first
-    # tests_passed = run_tests_before_start()
-    #
-    # print()
-    # print("=" * 70)
-    # if tests_passed:
-    #     print("Tests completed successfully!")
-    # else:
-    #     print("Tests completed with failures - review results above")
-    # print("=" * 70)
-    # print()
-    # print("Press ENTER to continue and start the server...")
-    # try:
-    #     input()
-    # except (EOFError, KeyboardInterrupt):
-    #     print("\nServer start cancelled.")
-    #     sys.exit(0)
 
     print("\n" + "=" * 60)
     print("STARTING PBX SERVER")
