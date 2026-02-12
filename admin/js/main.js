@@ -20,6 +20,21 @@ window.initializeTabs = initializeTabs;
 window.escapeHtml = escapeHtml;
 window.copyToClipboard = copyToClipboard;
 
+// Page module imports — each module self-registers window.* exports
+import './pages/dashboard.js';
+import './pages/extensions.js';
+import './pages/voicemail.js';
+import './pages/calls.js';
+import './pages/config.js';
+import './pages/provisioning.js';
+import './pages/phones.js';
+import './pages/security.js';
+import './pages/emergency.js';
+import './pages/phone_book.js';
+import './pages/paging.js';
+import './pages/license.js';
+import './pages/analytics.js';
+
 // Named exports for use by other ES modules
 export {
     fetchWithTimeout,
