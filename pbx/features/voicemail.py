@@ -169,11 +169,15 @@ class VoicemailBox:
         if self.database and self.database.enabled:
             self.logger.info("Saving voicemail metadata to database...")
             try:
+                placeholder = self._get_db_placeholder()
                 query = """
                 INSERT INTO voicemail_messages
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
-                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
-                """  # nosec B608 - placeholders are safely parameterized
+                VALUES ({}, {}, {}, {}, {}, {}, {})
+                """.format(  # nosec B608 - placeholder is safely parameterized
+                    placeholder, placeholder, placeholder, placeholder,
+                    placeholder, placeholder, placeholder
+                )
 
                 params = (
                     message_id,
@@ -231,15 +235,19 @@ class VoicemailBox:
                 # Update database with transcription
                 if self.database and self.database.enabled:
                     try:
+                        placeholder = self._get_db_placeholder()
                         query = """
                         UPDATE voicemail_messages
-                        SET transcription_text = {placeholder},
-                            transcription_confidence = {placeholder},
-                            transcription_language = {placeholder},
-                            transcription_provider = {placeholder},
-                            transcribed_at = {placeholder}
-                        WHERE message_id = {placeholder}
-                        """  # nosec B608 - placeholders are safely parameterized
+                        SET transcription_text = {},
+                            transcription_confidence = {},
+                            transcription_language = {},
+                            transcription_provider = {},
+                            transcribed_at = {}
+                        WHERE message_id = {}
+                        """.format(  # nosec B608 - placeholder is safely parameterized
+                            placeholder, placeholder, placeholder,
+                            placeholder, placeholder, placeholder
+                        )
                         self.database.execute(
                             query,
                             (
@@ -356,11 +364,14 @@ class VoicemailBox:
                 if self.database and self.database.enabled:
                     self.logger.info("Updating voicemail listened status in database...")
                     try:
+                        placeholder = self._get_db_placeholder()
                         query = """
                         UPDATE voicemail_messages
-                        SET listened = {placeholder}
-                        WHERE message_id = {placeholder}
-                        """  # nosec B608 - placeholders are safely parameterized
+                        SET listened = {}
+                        WHERE message_id = {}
+                        """.format(  # nosec B608 - placeholder is safely parameterized
+                            placeholder, placeholder
+                        )
                         self.database.execute(query, (True, message_id))
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
@@ -399,10 +410,13 @@ class VoicemailBox:
                 if self.database and self.database.enabled:
                     self.logger.info("Deleting voicemail from database...")
                     try:
+                        placeholder = self._get_db_placeholder()
                         query = """
                         DELETE FROM voicemail_messages
-                        WHERE message_id = {placeholder}
-                        """  # nosec B608 - placeholders are safely parameterized
+                        WHERE message_id = {}
+                        """.format(  # nosec B608 - placeholder is safely parameterized
+                            placeholder
+                        )
                         self.database.execute(query, (message_id,))
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"

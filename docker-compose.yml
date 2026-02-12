@@ -4,7 +4,7 @@ services:
   # =============================================================================
   # Stores extensions, voicemail, CDR, and other persistent data
   postgres:
-    image: postgres:18-alpine
+    image: postgres:17-alpine
     container_name: pbx-postgres
     restart: unless-stopped
     environment:
@@ -36,7 +36,7 @@ services:
   # =============================================================================
   # Used for caching, session storage, and real-time features
   redis:
-    image: redis:8-alpine
+    image: redis:7-alpine
     container_name: pbx-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
@@ -140,7 +140,7 @@ services:
       - "10000-20000:10000-20000/udp"
 
       # HTTP API / Web interface (TCP)
-      - "8880:8880/tcp"
+      - "9000:9000/tcp"
     networks:
       - pbx-network
     # Security options

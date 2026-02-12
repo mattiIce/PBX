@@ -331,7 +331,7 @@ class WebRTCSignalingServer:
                     self.logger.error(f"Error registering WebRTC session in phones database: {e}")
         else:
             self.logger.warning(f"Extension {extension} not found in registry for WebRTC session")
-            if self.verbose_logging:
+            if self.verbose_logging and self.pbx_core:
                 self.logger.warning(
                     f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions.keys())[:10]}"
                 )

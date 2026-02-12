@@ -216,7 +216,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         ssl_enabled = self.pbx_core.config.get("api.ssl.enabled", False)
         protocol = "https" if ssl_enabled else "http"
         server_ip = self.pbx_core.config.get("server.external_ip", "192.168.1.14")
-        port = self.pbx_core.config.get("api.port", 8080)
+        port = self.pbx_core.config.get("api.port", 9000)
         base_url = f"{protocol}://{server_ip}:{port}"
 
         return protocol, server_ip, port, base_url
@@ -2982,7 +2982,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     "server_name": self.pbx_core.config.get("server.server_name", "Warden Voip"),
                 },
                 "api": {
-                    "port": self.pbx_core.config.get("api.port", 8080),
+                    "port": self.pbx_core.config.get("api.port", 9000),
                     "ssl": {
                         "enabled": self.pbx_core.config.get("api.ssl.enabled", False),
                         "cert_file": self.pbx_core.config.get(
@@ -10365,10 +10365,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_license_generate(self):
         """Generate a new license key (license admin only)."""
         # Check license admin authorization
-        is_authorized, status_code = self._require_license_admin()
+        is_authorized, payload = self._require_license_admin()
         if not is_authorized:
-            if not status_code:
-                status_code = 401
+            status_code = payload.get("status_code", 401) if isinstance(payload, dict) else 401
             self._send_json(
                 {
                     "success": False,
@@ -10427,14 +10426,15 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_license_install(self):
         """Install a license key (license admin only)."""
         # Check license admin authorization
-        is_authorized, status_code = self._require_license_admin()
+        is_authorized, payload = self._require_license_admin()
         if not is_authorized:
+            status_code = payload.get("status_code", 401) if isinstance(payload, dict) else 401
             self._send_json(
                 {
                     "success": False,
                     "error": "Unauthorized. License management requires administrator authentication.",
                 },
-                status_code or 401,
+                status_code,
             )
             return
 
@@ -10511,9 +10511,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Determine appropriate status code:
             # - 401 for authentication failures
             # - 403 for authenticated users lacking license-admin privileges
-            status_code = 401
-            if isinstance(auth_status, int) and auth_status in (401, 403):
-                status_code = auth_status
+            status_code = auth_status.get("status_code", 401) if isinstance(auth_status, dict) else 401
             self._send_json(
                 {
                     "success": False,
@@ -10619,10 +10617,9 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     def _handle_license_remove_lock(self):
         """Remove license lock file (license admin only)."""
         # Check license admin authorization
-        is_authorized, status_code = self._require_license_admin()
+        is_authorized, payload = self._require_license_admin()
         if not is_authorized:
-            if not status_code:
-                status_code = 401
+            status_code = payload.get("status_code", 401) if isinstance(payload, dict) else 401
             self._send_json(
                 {
                     "success": False,
@@ -10692,7 +10689,7 @@ def get_process_using_port(port):
     try:
         # Try lsof first (most reliable)
         result = subprocess.run(
-            ["lso", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
+            ["lsof", "-i", f":{port}", "-n", "-P"], capture_output=True, text=True, timeout=2
         )
         if result.returncode == 0 and result.stdout:
             lines = result.stdout.strip().split("\n")
@@ -10730,7 +10727,7 @@ class PBXAPIServer:
         self,
         pbx_core,
         host="0.0.0.0",
-        port=8080,  # nosec B104 - PBX API needs to bind all interfaces for network access
+        port=9000,  # nosec B104 - PBX API needs to bind all interfaces for network access
     ):
         """Initialize API server.
 

@@ -127,7 +127,7 @@ class ConfigValidator:
         api_config = self.config.get("api", {})
 
         # Check API port
-        api_port = api_config.get("port", 8080)
+        api_port = api_config.get("port", 9000)
         if not isinstance(api_port, int) or api_port < 1 or api_port > 65535:
             self.errors.append(f"Invalid API port: {api_port}")
 

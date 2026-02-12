@@ -503,7 +503,7 @@ class PBXCore:
         api_host = self.config.get(
             "api.host", "0.0.0.0"
         )  # nosec B104 - API server needs to bind to all interfaces
-        api_port = self.config.get("api.port", 8080)
+        api_port = self.config.get("api.port", 9000)
         self.api_server = PBXAPIServer(self, api_host, api_port)
 
         self.running = False
@@ -618,7 +618,7 @@ class PBXCore:
                         self.logger.warning("")
                         self.logger.warning("⚠️  CHANGE THIS PASSWORD IMMEDIATELY via admin panel!")
                         self.logger.warning(
-                            "   Access admin panel: https://<your-server-ip>:8080/admin/"
+                            "   Access admin panel: https://<your-server-ip>:9000/admin/"
                         )
                         self.logger.warning("=" * 70)
 

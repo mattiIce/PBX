@@ -104,7 +104,7 @@ class DTMFDetector:
         # Check if signal has sufficient energy (reject silence/very weak
         # signals)
         max_val = max(abs(s) for s in samples)
-        if max_val < 0.01:  # Reject very weak signals before normalization
+        if max_val < 0.15:  # Reject weak signals before normalization amplifies noise
             return None
 
         # Normalize samples (max_val guaranteed to be >= 0.01 from check above)

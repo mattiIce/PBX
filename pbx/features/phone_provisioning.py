@@ -1376,7 +1376,7 @@ P2351 = 1
             # because phones often cannot validate self-signed certificates
             ssl_enabled = self.config.get("api.ssl.enabled", False)
             api_protocol = "https" if ssl_enabled else "http"
-            api_port = self.config.get("api.port", 8080)
+            api_port = self.config.get("api.port", 9000)
             server_ip = self.config.get("server.external_ip", "192.168.1.14")
 
             self.logger.warning("  → Device needs to be registered first")
@@ -1541,7 +1541,7 @@ P2351 = 1
         config_url = config_url.replace(
             "{{SERVER_IP}}", self.config.get("server.external_ip", "127.0.0.1")
         )
-        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", 8080)))
+        config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", 9000)))
 
         return config_url
 
