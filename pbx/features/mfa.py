@@ -150,9 +150,7 @@ class TOTPGenerator:
         # Encode secret as base32 (standard for TOTP apps)
         secret_b32 = base64.b32encode(self.secret).decode("utf-8").rstrip("=")
 
-        uri = f"otpauth://totp/{issuer}:{account_name}?secret={secret_b32}&issuer={issuer}&period={
-            self.period}&digits={
-            self.digits}&algorithm=SHA1"
+        uri = f"otpauth://totp/{issuer}:{account_name}?secret={secret_b32}&issuer={issuer}&period={self.period}&digits={self.digits}&algorithm=SHA1"
         return uri
 
 
@@ -519,8 +517,7 @@ class FIDO2Verifier:
                     except (json_lib.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
                         return (
                             False,
-                            f"Invalid client_data_json format: {
-                                str(e)}",
+                            f"Invalid client_data_json format: {str(e)}",
                         )
 
                     # Verify challenge if provided
@@ -533,8 +530,7 @@ class FIDO2Verifier:
                     origin = client_data.get("origin", "")
                     if self.rp_id not in origin:
                         self.logger.warning(
-                            f"Origin {origin} does not match RP ID {
-                                self.rp_id}"
+                            f"Origin {origin} does not match RP ID {self.rp_id}"
                         )
 
                     # Parse authenticator data
@@ -571,8 +567,7 @@ class FIDO2Verifier:
                     except Exception as e:
                         return (
                             False,
-                            f"Signature verification failed: {
-                                str(e)}",
+                            f"Signature verification failed: {str(e)}",
                         )
 
                 except Exception as e:

@@ -115,8 +115,7 @@ def test_periodic_reregistration_preserves_data():
     all_phones = phones_db.get_by_extension("1001")
     assert (
         len(all_phones) == 1
-    ), f"Expected 1 phone record, got {
-        len(all_phones)}"
+    ), f"Expected 1 phone record, got {len(all_phones)}"
     print("    ✓ Only ONE record in database (no duplicates)")
 
     print("✓ Periodic re-registration preserves all data correctly")

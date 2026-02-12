@@ -31,20 +31,16 @@ def test_device_mac_normalization():
     expected = "001565123456"
     assert (
         device1.mac_address == expected
-    ), f"Expected {expected}, got {
-        device1.mac_address}"
+    ), f"Expected {expected}, got {device1.mac_address}"
     assert (
         device2.mac_address == expected
-    ), f"Expected {expected}, got {
-        device2.mac_address}"
+    ), f"Expected {expected}, got {device2.mac_address}"
     assert (
         device3.mac_address == expected
-    ), f"Expected {expected}, got {
-        device3.mac_address}"
+    ), f"Expected {expected}, got {device3.mac_address}"
     assert (
         device4.mac_address == expected
-    ), f"Expected {expected}, got {
-        device4.mac_address}"
+    ), f"Expected {expected}, got {device4.mac_address}"
 
     print("✓ MAC address normalization works")
 
@@ -92,12 +88,10 @@ def test_provisioning_device_registration():
     assert device is not None, "Device registration failed"
     assert (
         device.mac_address == "001565123456"
-    ), f"Unexpected MAC: {
-        device.mac_address}"
+    ), f"Unexpected MAC: {device.mac_address}"
     assert (
         device.extension_number == "1001"
-    ), f"Unexpected extension: {
-        device.extension_number}"
+    ), f"Unexpected extension: {device.extension_number}"
     assert device.vendor == "zultys", f"Unexpected vendor: {device.vendor}"
     assert device.model == "zip33g", f"Unexpected model: {device.model}"
 

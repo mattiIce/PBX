@@ -141,9 +141,7 @@ class DTMFDetector:
                 for digit, (low, high) in DTMF_FREQUENCIES.items():
                     if low == low_freq and high == high_freq:
                         self.logger.debug(
-                            f"Detected DTMF tone: {digit} (L:{low_freq}Hz={
-                                low_mag:.3f}, H:{high_freq}Hz={
-                                high_mag:.3f})"
+                            f"Detected DTMF tone: {digit} (L:{low_freq}Hz={low_mag:.3f}, H:{high_freq}Hz={high_mag:.3f})"
                         )
                         return digit
 
@@ -307,7 +305,6 @@ class DTMFGenerator:
             samples.extend(gap_samples)
 
         self.logger.info(
-            f"Generated DTMF sequence: {digits} ({
-                len(samples)} samples)"
+            f"Generated DTMF sequence: {digits} ({len(samples)} samples)"
         )
         return samples

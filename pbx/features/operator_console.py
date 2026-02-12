@@ -48,8 +48,7 @@ class OperatorConsole:
 
         if self.enabled:
             self.logger.info(
-                f"Operator console enabled for extensions: {
-                    self.operator_extensions}"
+                f"Operator console enabled for extensions: {self.operator_extensions}"
             )
 
     def is_operator(self, extension: str) -> bool:

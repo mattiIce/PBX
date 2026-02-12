@@ -171,8 +171,7 @@ def test_mfa_with_database():
         # 10
         assert (
             len(backup_codes) == 10
-        ), f"Expected 10 backup codes, got {
-            len(backup_codes)}"
+        ), f"Expected 10 backup codes, got {len(backup_codes)}"
         print("  ✓ User enrolled successfully")
         print(f"    Provisioning URI: {uri[:60]}...")
         print(f"    Backup codes: {len(backup_codes)} codes generated")

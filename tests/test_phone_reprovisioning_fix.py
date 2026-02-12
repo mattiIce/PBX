@@ -70,15 +70,13 @@ def test_phone_reprovisioning_removes_old_mapping():
     phones_ext_1001 = phones_db.get_by_extension("1001")
     assert (
         len(phones_ext_1001) == 0
-    ), f"Extension 1001 should have 0 phones, but has {
-        len(phones_ext_1001)}"
+    ), f"Extension 1001 should have 0 phones, but has {len(phones_ext_1001)}"
 
     # Step 4: Verify new mapping exists
     phones_ext_1002 = phones_db.get_by_extension("1002")
     assert (
         len(phones_ext_1002) == 1
-    ), f"Extension 1002 should have 1 phone, but has {
-        len(phones_ext_1002)}"
+    ), f"Extension 1002 should have 1 phone, but has {len(phones_ext_1002)}"
     assert phones_ext_1002[0]["mac_address"] == "001122334455", "Wrong MAC on extension 1002"
     assert phones_ext_1002[0]["ip_address"] == "192.168.1.100", "Wrong IP on extension 1002"
 

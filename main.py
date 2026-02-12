@@ -180,10 +180,8 @@ if __name__ == "__main__":
                 if current_time - last_status_time >= 600:
                     status = pbx.get_status()
                     print(
-                        f"Status: {
-                            status['registered_extensions']} extensions registered, "
-                        f"{
-                            status['active_calls']} active calls"
+                        f"Status: {status['registered_extensions']} extensions registered, "
+                        f"{status['active_calls']} active calls"
                     )
                     last_status_time = current_time
 

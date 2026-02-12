@@ -165,8 +165,7 @@ class RFC2833Receiver:
             self.running = True
 
             self.logger.info(
-                f"RFC 2833 receiver started on port {
-                    self.local_port}"
+                f"RFC 2833 receiver started on port {self.local_port}"
             )
 
             # Start receiving thread
@@ -188,8 +187,7 @@ class RFC2833Receiver:
             except BaseException:
                 pass
         self.logger.info(
-            f"RFC 2833 receiver stopped on port {
-                self.local_port}"
+            f"RFC 2833 receiver stopped on port {self.local_port}"
         )
 
     def _receive_loop(self):
@@ -252,8 +250,7 @@ class RFC2833Receiver:
                 if self.last_event == digit:
                     # This is the end of the current event
                     self.logger.info(
-                        f"RFC 2833 DTMF event completed: {digit} (duration: {
-                            event_packet.duration})"
+                        f"RFC 2833 DTMF event completed: {digit} (duration: {event_packet.duration})"
                     )
 
                     # Deliver DTMF to PBX core
@@ -315,8 +312,7 @@ class RFC2833Sender:
             )
 
             self.logger.info(
-                f"RFC 2833 sender started on port {
-                    self.local_port}"
+                f"RFC 2833 sender started on port {self.local_port}"
             )
             return True
         except Exception as e:

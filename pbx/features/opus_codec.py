@@ -79,25 +79,19 @@ class OpusCodec:
         # Validation
         if self.sample_rate not in self.SAMPLE_RATES:
             self.logger.warning(
-                f"Invalid sample rate {
-                    self.sample_rate}, using {
-                    self.DEFAULT_SAMPLE_RATE}"
+                f"Invalid sample rate {self.sample_rate}, using {self.DEFAULT_SAMPLE_RATE}"
             )
             self.sample_rate = self.DEFAULT_SAMPLE_RATE
 
         if not 6000 <= self.bitrate <= 510000:
             self.logger.warning(
-                f"Invalid bitrate {
-                    self.bitrate}, using {
-                    self.DEFAULT_BITRATE}"
+                f"Invalid bitrate {self.bitrate}, using {self.DEFAULT_BITRATE}"
             )
             self.bitrate = self.DEFAULT_BITRATE
 
         if self.complexity < 0 or self.complexity > 10:
             self.logger.warning(
-                f"Invalid complexity {
-                    self.complexity}, using {
-                    self.DEFAULT_COMPLEXITY}"
+                f"Invalid complexity {self.complexity}, using {self.DEFAULT_COMPLEXITY}"
             )
             self.complexity = self.DEFAULT_COMPLEXITY
 
@@ -118,10 +112,7 @@ class OpusCodec:
         self.decoder = None
 
         self.logger.info(
-            f"Opus codec initialized: {
-                self.sample_rate}Hz, {
-                self.bitrate}bps, {
-                self.frame_size}ms frames"
+            f"Opus codec initialized: {self.sample_rate}Hz, {self.bitrate}bps, {self.frame_size}ms frames"
         )
 
     def is_available(self) -> bool:
@@ -202,9 +193,7 @@ class OpusCodec:
             self.encoder.dtx = 1 if self.dtx_enabled else 0
 
             self.logger.info(
-                f"Opus encoder created: {
-                    self.sample_rate}Hz, {
-                    self.bitrate}bps"
+                f"Opus encoder created: {self.sample_rate}Hz, {self.bitrate}bps"
             )
             return self.encoder
         except Exception as e:
@@ -256,8 +245,7 @@ class OpusCodec:
 
             if len(pcm_data) != expected_bytes:
                 self.logger.warning(
-                    f"PCM data size mismatch: got {
-                        len(pcm_data)}, expected {expected_bytes}"
+                    f"PCM data size mismatch: got {len(pcm_data)}, expected {expected_bytes}"
                 )
                 return None
 

@@ -40,7 +40,8 @@ class FindMeFollowMe:
 
         # FMFM configurations table
         # Boolean default value varies by database type
-        fmfm_table = """
+        bool_default = "TRUE" if self.database.db_type == "postgresql" else "1"
+        fmfm_table = f"""
         CREATE TABLE IF NOT EXISTS fmfm_configs (
             extension VARCHAR(20) PRIMARY KEY,
             mode VARCHAR(20) NOT NULL CHECK (mode IN ('sequential', 'simultaneous')),

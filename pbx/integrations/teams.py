@@ -235,15 +235,13 @@ class TeamsIntegration:
 
                 if trunk and trunk.can_make_call():
                     self.logger.info(
-                        f"Using SIP trunk '{
-                            trunk.name}' for Teams call"
+                        f"Using SIP trunk '{trunk.name}' for Teams call"
                     )
 
                     # Allocate channel
                     if trunk.allocate_channel():
                         self.logger.info(
-                            f"Initiating SIP call to {sip_uri} via trunk {
-                                trunk.name}"
+                            f"Initiating SIP call to {sip_uri} via trunk {trunk.name}"
                         )
 
                         # In production, this would:
@@ -262,8 +260,7 @@ class TeamsIntegration:
                 else:
                     self.logger.warning(
                         "No Teams SIP trunk found. Configure a trunk with Teams Direct Routing domain "
-                        f"'{
-                            self.direct_routing_domain}' in config.yml"
+                        f"'{self.direct_routing_domain}' in config.yml"
                     )
                     return False
 
@@ -374,9 +371,7 @@ class TeamsIntegration:
                 return True
             else:
                 self.logger.warning(
-                    f"Failed to send Teams chat message: {
-                        message_response.status_code} - {
-                        message_response.text}"
+                    f"Failed to send Teams chat message: {message_response.status_code} - {message_response.text}"
                 )
                 return False
 
@@ -427,8 +422,7 @@ class TeamsIntegration:
             if response.status_code in [200, 201]:
                 meeting_data = response.json()
                 self.logger.info(
-                    f"Teams meeting created: {
-                        meeting_data.get('id')}"
+                    f"Teams meeting created: {meeting_data.get('id')}"
                 )
 
                 return {

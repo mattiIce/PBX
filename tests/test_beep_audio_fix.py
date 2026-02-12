@@ -31,8 +31,7 @@ def test_beep_generation():
         print(f"   ✓ PCM beep generated: {len(beep_data)} bytes (correct)")
     else:
         print(
-            f"   ✗ PCM beep size wrong: expected {expected_pcm_size}, got {
-                len(beep_data)}"
+            f"   ✗ PCM beep size wrong: expected {expected_pcm_size}, got {len(beep_data)}"
         )
         return False
 

@@ -143,8 +143,7 @@ class OutlookIntegration:
         try:
             self.logger.info(f"Fetching calendar events for {user_email}")
 
-            url = f"{
-                self.graph_endpoint}/users/{user_email}/calendar/calendarView"
+            url = f"{self.graph_endpoint}/users/{user_email}/calendar/calendarView"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
                 "Content-Type": "application/json",
@@ -176,8 +175,7 @@ class OutlookIntegration:
                     )
 
                 self.logger.info(
-                    f"Found {
-                        len(events)} calendar events for {user_email}"
+                    f"Found {len(events)} calendar events for {user_email}"
                 )
                 return events
             else:
@@ -281,8 +279,7 @@ class OutlookIntegration:
                     )
 
                 self.logger.info(
-                    f"Synced {
-                        len(contacts)} contacts for {user_email}"
+                    f"Synced {len(contacts)} contacts for {user_email}"
                 )
                 return contacts
             else:
@@ -387,8 +384,7 @@ class OutlookIntegration:
             return None
 
         try:
-            url = f"{
-                self.graph_endpoint}/users/{user_email}/mailboxSettings/automaticRepliesSetting"
+            url = f"{self.graph_endpoint}/users/{user_email}/mailboxSettings/automaticRepliesSetting"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
                 "Content-Type": "application/json",
@@ -408,8 +404,7 @@ class OutlookIntegration:
                 }
             else:
                 self.logger.error(
-                    f"Failed to get OOO status: {
-                        response.status_code}"
+                    f"Failed to get OOO status: {response.status_code}"
                 )
                 return None
 
@@ -459,8 +454,7 @@ class OutlookIntegration:
                 return False
 
             # Fetch meeting details
-            url = f"{
-                self.graph_endpoint}/users/{user_email}/calendar/events/{meeting_id}"
+            url = f"{self.graph_endpoint}/users/{user_email}/calendar/events/{meeting_id}"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
                 "Content-Type": "application/json",
@@ -470,8 +464,7 @@ class OutlookIntegration:
 
             if response.status_code != 200:
                 self.logger.warning(
-                    f"Failed to fetch meeting details: {
-                        response.status_code}"
+                    f"Failed to fetch meeting details: {response.status_code}"
                 )
                 return False
 
@@ -509,8 +502,7 @@ class OutlookIntegration:
                 return False
 
             self.logger.info(
-                f"Meeting '{subject}' reminder scheduled for {reminder_time} (in {
-                    delay_seconds:.0f} seconds)"
+                f"Meeting '{subject}' reminder scheduled for {reminder_time} (in {delay_seconds:.0f} seconds)"
             )
 
             # If PBX core provided, schedule the reminder

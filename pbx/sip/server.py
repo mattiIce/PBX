@@ -122,8 +122,7 @@ class SIPServer:
             message = SIPMessage(raw_message)
 
             self.logger.debug(
-                f"Received {
-                    message.method or message.status_code} from {addr}"
+                f"Received {message.method or message.status_code} from {addr}"
             )
 
             if message.is_request():
@@ -249,16 +248,12 @@ class SIPServer:
             # Forward BYE to the other party in the call if present
             if call:
                 self.logger.info(
-                    f"  Call Type: {
-                        'Voicemail Access' if hasattr(
-                            call,
-                            'voicemail_access') and call.voicemail_access else 'Regular Call'}"
+                    f"  Call Type: {'Voicemail Access' if hasattr(call, 'voicemail_access') and call.voicemail_access else 'Regular Call'}"
                 )
                 self.logger.info(f"  Call State: {call.state}")
                 if hasattr(call, "voicemail_extension"):
                     self.logger.info(
-                        f"  Voicemail Extension: {
-                            call.voicemail_extension}"
+                        f"  Voicemail Extension: {call.voicemail_extension}"
                     )
                 # Determine which party sent BYE and forward to the other
                 other_party_addr = None
@@ -542,8 +537,7 @@ class SIPServer:
     def _handle_response(self, message, addr):
         """Handle SIP response"""
         self.logger.debug(
-            f"Received response {
-                message.status_code} from {addr}"
+            f"Received response {message.status_code} from {addr}"
         )
 
         # Handle responses from callee

@@ -220,8 +220,7 @@ class CalendarMonitor:
                     # User entered meeting
                     self.active_meetings[extension] = current_meeting
                     self.logger.info(
-                        f"Extension {extension} entered meeting: {
-                            current_meeting['subject']}"
+                        f"Extension {extension} entered meeting: {current_meeting['subject']}"
                     )
                 elif not in_meeting and previous_state:
                     # User left meeting
@@ -452,8 +451,7 @@ class DNDScheduler:
             self.presence_system.set_status(extension, status)
 
         self.logger.info(
-            f"Manual DND override for {extension}: {
-                status.value} until {until_time}"
+            f"Manual DND override for {extension}: {status.value} until {until_time}"
         )
 
     def clear_manual_override(self, extension: str):

@@ -177,8 +177,7 @@ def test_list_all_phones():
     all_phones = phones_db.list_all()
     assert (
         len(all_phones) >= 3
-    ), f"Expected at least 3 phones, got {
-        len(all_phones)}"
+    ), f"Expected at least 3 phones, got {len(all_phones)}"
 
     print("✓ Listing all phones works")
 

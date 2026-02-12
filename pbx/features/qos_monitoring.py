@@ -341,8 +341,7 @@ class QoSMonitor:
             del self.active_calls[call_id]
 
             self.logger.info(
-                f"Stopped QoS monitoring for call {call_id}, MOS: {
-                    summary['mos_score']}"
+                f"Stopped QoS monitoring for call {call_id}, MOS: {summary['mos_score']}"
             )
 
             # Store in database if available
@@ -470,9 +469,7 @@ class QoSMonitor:
                 {
                     "type": "low_mos",
                     "severity": "warning",
-                    "message": f"Low MOS score: {
-                        summary['mos_score']} (threshold: {
-                        self.alert_thresholds['mos_min']})",
+                    "message": f"Low MOS score: {summary['mos_score']} (threshold: {self.alert_thresholds['mos_min']})",
                     "call_id": summary["call_id"],
                     "timestamp": datetime.now().isoformat(),
                 }
@@ -484,9 +481,7 @@ class QoSMonitor:
                 {
                     "type": "high_packet_loss",
                     "severity": "error",
-                    "message": f"High packet loss: {
-                        summary['packet_loss_percentage']}% (threshold: {
-                        self.alert_thresholds['packet_loss_max']}%)",
+                    "message": f"High packet loss: {summary['packet_loss_percentage']}% (threshold: {self.alert_thresholds['packet_loss_max']}%)",
                     "call_id": summary["call_id"],
                     "timestamp": datetime.now().isoformat(),
                 }
@@ -498,9 +493,7 @@ class QoSMonitor:
                 {
                     "type": "high_jitter",
                     "severity": "warning",
-                    "message": f"High jitter: {
-                        summary['jitter_avg_ms']}ms (threshold: {
-                        self.alert_thresholds['jitter_max']}ms)",
+                    "message": f"High jitter: {summary['jitter_avg_ms']}ms (threshold: {self.alert_thresholds['jitter_max']}ms)",
                     "call_id": summary["call_id"],
                     "timestamp": datetime.now().isoformat(),
                 }
@@ -512,9 +505,7 @@ class QoSMonitor:
                 {
                     "type": "high_latency",
                     "severity": "warning",
-                    "message": f"High latency: {
-                        summary['latency_avg_ms']}ms (threshold: {
-                        self.alert_thresholds['latency_max']}ms)",
+                    "message": f"High latency: {summary['latency_avg_ms']}ms (threshold: {self.alert_thresholds['latency_max']}ms)",
                     "call_id": summary["call_id"],
                     "timestamp": datetime.now().isoformat(),
                 }
@@ -567,8 +558,7 @@ class QoSMonitor:
 
                 self.pbx.db.execute(query, params)
                 self.logger.debug(
-                    f"Stored QoS metrics for call {
-                        summary['call_id']} in database"
+                    f"Stored QoS metrics for call {summary['call_id']} in database"
                 )
         except Exception as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
@@ -583,6 +573,5 @@ class QoSMonitor:
         with self.lock:
             self.alert_thresholds.update(thresholds)
             self.logger.info(
-                f"Updated QoS alert thresholds: {
-                    self.alert_thresholds}"
+                f"Updated QoS alert thresholds: {self.alert_thresholds}"
             )

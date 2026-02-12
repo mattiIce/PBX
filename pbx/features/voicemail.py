@@ -158,8 +158,7 @@ class VoicemailBox:
 
         self.messages.append(message)
         self.logger.info(
-            f"Voicemail saved to file system for extension {
-                self.extension_number}"
+            f"Voicemail saved to file system for extension {self.extension_number}"
         )
         self.logger.info(f"  Message ID: {message_id}")
         self.logger.info(f"  Caller ID: {caller_id}")
@@ -191,16 +190,14 @@ class VoicemailBox:
 
                 if self.database.execute(query, params):
                     self.logger.info(
-                        f"✓ Voicemail metadata successfully saved to {
-                            self.database.db_type} database"
+                        f"✓ Voicemail metadata successfully saved to {self.database.db_type} database"
                     )
                     self.logger.info(f"  Extension: {self.extension_number}")
                     self.logger.info(f"  Message ID: {message_id}")
                     self.logger.info(f"  Caller: {caller_id}")
                 else:
                     self.logger.warning(
-                        f"✗ Failed to save voicemail metadata to database for extension {
-                            self.extension_number}"
+                        f"✗ Failed to save voicemail metadata to database for extension {self.extension_number}"
                     )
                     self.logger.warning(f"  Message ID: {message_id}")
             except Exception as e:
@@ -220,8 +217,7 @@ class VoicemailBox:
             if transcription_result["success"]:
                 self.logger.info("✓ Voicemail transcribed successfully")
                 self.logger.info(
-                    f"  Confidence: {
-                        transcription_result['confidence']:.2%}"
+                    f"  Confidence: {transcription_result['confidence']:.2%}"
                 )
                 self.logger.debug(f"  Text: {transcription_result['text'][:100]}...")
 
@@ -260,8 +256,7 @@ class VoicemailBox:
                         self.logger.error(f"✗ Error saving transcription to database: {e}")
             else:
                 self.logger.warning(
-                    f"✗ Voicemail transcription failed: {
-                        transcription_result['error']}"
+                    f"✗ Voicemail transcription failed: {transcription_result['error']}"
                 )
 
         # Send email notification if enabled
@@ -287,8 +282,7 @@ class VoicemailBox:
                         extension_config = db_extension
                         email_address = db_extension.get("email")
                         self.logger.debug(
-                            f"Found email address from database for extension {
-                                self.extension_number}"
+                            f"Found email address from database for extension {self.extension_number}"
                         )
                 except Exception as e:
                     self.logger.error(f"Error getting extension from database: {e}")
@@ -299,8 +293,7 @@ class VoicemailBox:
                 if extension_config:
                     email_address = extension_config.get("email")
                     self.logger.debug(
-                        f"Found email address from config for extension {
-                            self.extension_number}"
+                        f"Found email address from config for extension {self.extension_number}"
                     )
 
             if extension_config and email_address:
@@ -370,8 +363,7 @@ class VoicemailBox:
                         """  # nosec B608 - placeholders are safely parameterized
                         self.database.execute(query, (True, message_id))
                         self.logger.info(
-                            f"✓ Successfully updated voicemail {message_id} as listened in {
-                                self.database.db_type} database"
+                            f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
                         )
                     except Exception as e:
                         self.logger.error(f"✗ Error updating voicemail in database: {e}")
@@ -400,8 +392,7 @@ class VoicemailBox:
                 if os.path.exists(msg["file_path"]):
                     os.remove(msg["file_path"])
                     self.logger.info(
-                        f"  ✓ Deleted audio file: {
-                            msg['file_path']}"
+                        f"  ✓ Deleted audio file: {msg['file_path']}"
                     )
 
                 # Delete from database if available
@@ -414,8 +405,7 @@ class VoicemailBox:
                         """  # nosec B608 - placeholders are safely parameterized
                         self.database.execute(query, (message_id,))
                         self.logger.info(
-                            f"  ✓ Successfully deleted voicemail {message_id} from {
-                                self.database.db_type} database"
+                            f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"
                         )
                     except Exception as e:
                         self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
@@ -433,8 +423,7 @@ class VoicemailBox:
         # Try loading from database first if available
         if self.database and self.database.enabled:
             self.logger.info(
-                f"Loading voicemail messages from database for extension {
-                    self.extension_number}..."
+                f"Loading voicemail messages from database for extension {self.extension_number}..."
             )
             try:
                 placeholder = self._get_db_placeholder()
@@ -450,9 +439,8 @@ class VoicemailBox:
                 """.format(  # nosec B608 - placeholder is safely parameterized
                     placeholder
                 )
-                self.logger.debug(
-                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {  # nosec B608 - log statement only
-                        self.extension_number}"
+                self.logger.debug(  # nosec B608 - log statement only
+                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}"
                 )
                 rows = self.database.fetch_all(query, (self.extension_number,))
 
@@ -477,14 +465,12 @@ class VoicemailBox:
                                     # If parsing fails, use current time and
                                     # log warning
                                     self.logger.warning(
-                                        f"Could not parse timestamp '{timestamp}' for voicemail {
-                                            row['message_id']}, using current time"
+                                        f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time"
                                     )
                                     timestamp = datetime.now()
                         except ValueError:
                             self.logger.warning(
-                                f"Invalid timestamp format for voicemail {
-                                    row['message_id']}, using current time"
+                                f"Invalid timestamp format for voicemail {row['message_id']}, using current time"
                             )
                             timestamp = datetime.now()
 
@@ -507,16 +493,11 @@ class VoicemailBox:
 
                     self.messages.append(message)
                     self.logger.debug(
-                        f"  Loaded message: {
-                            row['message_id']} from {
-                            row['caller_id']}"
+                        f"  Loaded message: {row['message_id']} from {row['caller_id']}"
                     )
 
                 self.logger.info(
-                    f"✓ Successfully loaded {
-                        len(
-                            self.messages)} voicemail message(s) from {
-                        self.database.db_type} database"
+                    f"✓ Successfully loaded {len(self.messages)} voicemail message(s) from {self.database.db_type} database"
                 )
                 if len(self.messages) > 0:
                     unread_count = sum(1 for m in self.messages if not m["listened"])
@@ -577,15 +558,13 @@ class VoicemailBox:
         """
         if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
             self.logger.warning(
-                f"Invalid PIN format for extension {
-                    self.extension_number}"
+                f"Invalid PIN format for extension {self.extension_number}"
             )
             return False
 
         self.pin = str(pin)
         self.logger.info(
-            f"Updated voicemail PIN for extension {
-                self.extension_number}"
+            f"Updated voicemail PIN for extension {self.extension_number}"
         )
         return True
 
@@ -657,8 +636,7 @@ class VoicemailBox:
             with open(self.greeting_path, "wb") as f:
                 f.write(audio_data)
             self.logger.info(
-                f"Saved custom greeting for extension {
-                    self.extension_number} ({len(audio_data)} bytes) to {self.greeting_path}"
+                f"Saved custom greeting for extension {self.extension_number} ({len(audio_data)} bytes) to {self.greeting_path}"
             )
 
             # Verify the file was written successfully
@@ -671,8 +649,7 @@ class VoicemailBox:
                 return False
         except Exception as e:
             self.logger.error(
-                f"Error saving greeting for extension {
-                    self.extension_number}: {e}"
+                f"Error saving greeting for extension {self.extension_number}: {e}"
             )
             return False
 
@@ -702,15 +679,13 @@ class VoicemailBox:
             if os.path.exists(self.greeting_path):
                 os.remove(self.greeting_path)
                 self.logger.info(
-                    f"Deleted custom greeting for extension {
-                        self.extension_number}"
+                    f"Deleted custom greeting for extension {self.extension_number}"
                 )
                 return True
             return False
         except Exception as e:
             self.logger.error(
-                f"Error deleting greeting for extension {
-                    self.extension_number}: {e}"
+                f"Error deleting greeting for extension {self.extension_number}: {e}"
             )
             return False
 
@@ -1213,8 +1188,7 @@ class VoicemailIVR:
                         }
                     else:
                         self.logger.error(
-                            f"Failed to save greeting for extension {
-                                self.extension_number}"
+                            f"Failed to save greeting for extension {self.extension_number}"
                         )
                         return {
                             "action": "play_prompt",

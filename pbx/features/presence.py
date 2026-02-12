@@ -249,8 +249,7 @@ class PresenceSystem:
             user = self.users.get(extension)
             if user:
                 self.logger.debug(
-                    f"Notifying {
-                        len(subscribers)} subscribers of {extension} presence change"
+                    f"Notifying {len(subscribers)} subscribers of {extension} presence change"
                 )
                 # In a real implementation, send presence update messages
 

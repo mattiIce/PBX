@@ -1976,16 +1976,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 logger.error(f"Error loading registered phones from database: {e}")
                 logger.error(
-                    f"  Database type: {
-                        self.pbx_core.registered_phones_db.db.db_type if hasattr(
-                            self.pbx_core.registered_phones_db,
-                            'db') else 'unknown'}"
+                    f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}"
                 )
                 logger.error(
-                    f"  Database enabled: {
-                        self.pbx_core.registered_phones_db.db.enabled if hasattr(
-                            self.pbx_core.registered_phones_db,
-                            'db') else 'unknown'}"
+                    f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}"
                 )
                 logger.error(f"  Traceback: {traceback.format_exc()}")
                 self._send_json(
@@ -1998,15 +1992,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if self.pbx_core:
                 logger.warning("  pbx_core exists: True")
                 logger.warning(
-                    f"  has registered_phones_db attr: {
-                        hasattr(
-                            self.pbx_core,
-                            'registered_phones_db')}"
+                    f"  has registered_phones_db attr: {hasattr(self.pbx_core, 'registered_phones_db')}"
                 )
                 if hasattr(self.pbx_core, "registered_phones_db"):
                     logger.warning(
-                        f"  registered_phones_db is None: {
-                            self.pbx_core.registered_phones_db is None}"
+                        f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}"
                     )
             self._send_json([])
 
@@ -2196,16 +2186,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 )
                 logger.error(f"  Extension: {extension}")
                 logger.error(
-                    f"  Database type: {
-                        self.pbx_core.registered_phones_db.db.db_type if hasattr(
-                            self.pbx_core.registered_phones_db,
-                            'db') else 'unknown'}"
+                    f"  Database type: {self.pbx_core.registered_phones_db.db.db_type if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}"
                 )
                 logger.error(
-                    f"  Database enabled: {
-                        self.pbx_core.registered_phones_db.db.enabled if hasattr(
-                            self.pbx_core.registered_phones_db,
-                            'db') else 'unknown'}"
+                    f"  Database enabled: {self.pbx_core.registered_phones_db.db.enabled if hasattr(self.pbx_core.registered_phones_db, 'db') else 'unknown'}"
                 )
                 logger.error(f"  Traceback: {traceback.format_exc()}")
                 self._send_json(
@@ -2220,15 +2204,11 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             if self.pbx_core:
                 logger.warning("  pbx_core exists: True")
                 logger.warning(
-                    f"  has registered_phones_db attr: {
-                        hasattr(
-                            self.pbx_core,
-                            'registered_phones_db')}"
+                    f"  has registered_phones_db attr: {hasattr(self.pbx_core, 'registered_phones_db')}"
                 )
                 if hasattr(self.pbx_core, "registered_phones_db"):
                     logger.warning(
-                        f"  registered_phones_db is None: {
-                            self.pbx_core.registered_phones_db is None}"
+                        f"  registered_phones_db is None: {self.pbx_core.registered_phones_db is None}"
                     )
             self._send_json([])
 
@@ -2361,8 +2341,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             }
 
             logger.info(
-                f"Provisioning config request: path={path}, IP={
-                    request_info['ip']}"
+                f"Provisioning config request: path={path}, IP={request_info['ip']}"
             )
 
             # Detect if MAC is a literal placeholder (misconfiguration)
@@ -2450,9 +2429,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._set_headers(200, content_type)
                 self.wfile.write(config_content.encode())
                 logger.info(
-                    f"✓ Provisioning config delivered: {
-                        len(config_content)} bytes to {
-                        request_info['ip']}"
+                    f"✓ Provisioning config delivered: {len(config_content)} bytes to {request_info['ip']}"
                 )
 
                 # Store IP to MAC mapping in database for admin panel tracking
@@ -2482,17 +2459,14 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                                 # stored_mac should equal normalized_mac since
                                 # we're providing it
                                 logger.info(
-                                    f"  Stored IP-MAC mapping: {
-                                        request_info['ip']} → {stored_mac} (ext {
-                                        device.extension_number})"
+                                    f"  Stored IP-MAC mapping: {request_info['ip']} → {stored_mac} (ext {device.extension_number})"
                                 )
                     except Exception as e:
                         # Don't fail provisioning if database storage fails
                         logger.warning(f"  Could not store IP-MAC mapping in database: {e}")
             else:
                 logger.warning(
-                    f"✗ Provisioning failed for MAC {mac} from IP {
-                        request_info['ip']}"
+                    f"✗ Provisioning failed for MAC {mac} from IP {request_info['ip']}"
                 )
                 logger.warning("  Reason: Device not registered or template not found")
                 logger.warning("  See detailed error messages above for troubleshooting guidance")
@@ -3620,8 +3594,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(
                     {
                         "success": True,
-                        "message": f'Successfully synchronized {
-                            result["synced_count"]} users from Active Directory',
+                        "message": f'Successfully synchronized {result["synced_count"]} users from Active Directory',
                         "synced_count": result["synced_count"],
                     }
                 )
@@ -4197,8 +4170,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 import traceback
 
                 self.logger.error(
-                    f"[VERBOSE] Traceback:\n{
-                        traceback.format_exc()}"
+                    f"[VERBOSE] Traceback:\n{traceback.format_exc()}"
                 )
             self._send_json({"error": str(e)}, 500)
 
@@ -4219,8 +4191,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.logger.info("[VERBOSE] WebRTC offer received:")
                 self.logger.info(f"  Session ID: {session_id}")
                 self.logger.info(
-                    f"  SDP length: {
-                        len(sdp) if sdp else 0} bytes"
+                    f"  SDP length: {len(sdp) if sdp else 0} bytes"
                 )
                 self.logger.info(f"  Client IP: {self.client_address[0]}")
 
@@ -4244,8 +4215,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 import traceback
 
                 self.logger.error(
-                    f"[VERBOSE] Traceback:\n{
-                        traceback.format_exc()}"
+                    f"[VERBOSE] Traceback:\n{traceback.format_exc()}"
                 )
             self._send_json({"error": str(e)}, 500)
 
@@ -4291,10 +4261,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 self.logger.info(f"  Session ID: {session_id}")
                 if candidate:
                     self.logger.info(
-                        f"  Candidate: {
-                            candidate.get(
-                                'candidate',
-                                'N/A')}"
+                        f"  Candidate: {candidate.get('candidate', 'N/A')}"
                     )
 
             if not session_id or not candidate:
@@ -4370,8 +4337,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 import traceback
 
                 self.logger.error(
-                    f"[VERBOSE] Traceback:\n{
-                        traceback.format_exc()}"
+                    f"[VERBOSE] Traceback:\n{traceback.format_exc()}"
                 )
             self._send_json({"error": str(e)}, 500)
 
@@ -4433,8 +4399,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 import traceback
 
                 self.logger.error(
-                    f"[VERBOSE] Traceback:\n{
-                        traceback.format_exc()}"
+                    f"[VERBOSE] Traceback:\n{traceback.format_exc()}"
                 )
             self._send_json({"error": str(e)}, 500)
 
@@ -4499,8 +4464,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             if verbose_logging:
                 self.logger.info(
-                    f"[VERBOSE] Found call object for {
-                        session.call_id}"
+                    f"[VERBOSE] Found call object for {session.call_id}"
                 )
                 self.logger.info(f"  Caller: {call.caller_extension}")
                 self.logger.info(f"  Callee: {call.callee_extension}")
@@ -4546,8 +4510,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             else:
                 if verbose_logging:
                     self.logger.warning(
-                        f"[VERBOSE] No RTP handlers found for call {
-                            session.call_id}"
+                        f"[VERBOSE] No RTP handlers found for call {session.call_id}"
                     )
                 self._send_json({"error": "No RTP handlers available for this call"}, 500)
 
@@ -4557,8 +4520,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 import traceback
 
                 self.logger.error(
-                    f"[VERBOSE] Traceback:\n{
-                        traceback.format_exc()}"
+                    f"[VERBOSE] Traceback:\n{traceback.format_exc()}"
                 )
             self._send_json({"error": str(e)}, 500)
 
@@ -5738,8 +5700,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             # Check if TTS is available
             if not is_tts_available():
                 raise ImportError(
-                    f"TTS dependencies not available. Install with: {
-                        get_tts_requirements()}"
+                    f"TTS dependencies not available. Install with: {get_tts_requirements()}"
                 )
 
             # Get configuration
@@ -6213,8 +6174,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
             # Create temporary directory for ZIP creation
             temp_dir = tempfile.mkdtemp()
-            zip_filename = f"voicemail_{extension}_{
-                datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+            zip_filename = f"voicemail_{extension}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
             zip_path = os.path.join(temp_dir, zip_filename)
 
             try:
@@ -6223,12 +6183,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     manifest_lines = ["Voicemail Export Manifest\n"]
                     manifest_lines.append(f"Extension: {extension}\n")
                     manifest_lines.append(
-                        f"Export Date: {
-                            datetime.now().isoformat()}\n"
+                        f"Export Date: {datetime.now().isoformat()}\n"
                     )
                     manifest_lines.append(
-                        f"Total Messages: {
-                            len(messages)}\n\n"
+                        f"Total Messages: {len(messages)}\n\n"
                     )
                     manifest_lines.append("Message Details:\n")
                     manifest_lines.append("-" * 80 + "\n")
@@ -6244,14 +6202,10 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                             manifest_lines.append(f"Caller ID: {msg['caller_id']}\n")
                             manifest_lines.append(f"Timestamp: {msg['timestamp']}\n")
                             manifest_lines.append(
-                                f"Duration: {
-                                    msg.get(
-                                        'duration',
-                                        'Unknown')}s\n"
+                                f"Duration: {msg.get('duration', 'Unknown')}s\n"
                             )
                             manifest_lines.append(
-                                f"Status: {
-                                    'Read' if msg['listened'] else 'Unread'}\n"
+                                f"Status: {'Read' if msg['listened'] else 'Unread'}\n"
                             )
 
                     # Add manifest to ZIP
@@ -11139,8 +11093,7 @@ class PBXAPIServer:
 
             if response.status_code != 200:
                 self.logger.error(
-                    f"CA server returned error: {
-                        response.status_code}"
+                    f"CA server returned error: {response.status_code}"
                 )
                 self.logger.error(f"Response: {response.text}")
                 return False
