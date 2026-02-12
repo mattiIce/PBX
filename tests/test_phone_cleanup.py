@@ -3,6 +3,7 @@
 Comprehensive Phone Cleanup and Registration Tests
 Tests phone cleanup on boot, registration preservation, and incomplete registration cleanup
 """
+
 import os
 import shutil
 import sys

@@ -182,8 +182,7 @@ class LeastCostRouting:
             cursor = conn.cursor()
 
             # Create LCR rates table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS lcr_rates (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     trunk_id TEXT NOT NULL,
@@ -197,12 +196,10 @@ class LeastCostRouting:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(trunk_id, pattern)
                 )
-            """
-            )
+            """)
 
             # Create time-based rates table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS lcr_time_rates (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL UNIQUE,
@@ -215,8 +212,7 @@ class LeastCostRouting:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """
-            )
+            """)
 
             conn.commit()
             conn.close()
@@ -231,13 +227,11 @@ class LeastCostRouting:
             cursor = conn.cursor()
 
             # Load regular rates
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT trunk_id, pattern, description, rate_per_minute,
                        connection_fee, minimum_seconds, billing_increment
                 FROM lcr_rates
-            """
-            )
+            """)
             rows = cursor.fetchall()
 
             for row in rows:
@@ -253,13 +247,11 @@ class LeastCostRouting:
                 self.rate_entries.append(rate_entry)
 
             # Load time-based rates
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT name, start_hour, start_minute, end_hour, end_minute,
                        days_of_week, rate_multiplier
                 FROM lcr_time_rates
-            """
-            )
+            """)
             time_rows = cursor.fetchall()
 
             for row in time_rows:

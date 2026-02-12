@@ -6,6 +6,7 @@ This script provides an interactive way to set up phone auto-provisioning
 by asking the user for settings rather than requiring manual REST API calls
 or config file editing.
 """
+
 import os
 import sys
 from pathlib import Path

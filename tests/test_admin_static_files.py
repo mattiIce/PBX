@@ -3,6 +3,7 @@
 Test Admin Static File Serving
 Tests that the admin UI static files can be served correctly
 """
+
 import socket
 import sys
 import time

@@ -2,6 +2,7 @@
 """
 Test hot-desking feature
 """
+
 import os
 import sys
 import time

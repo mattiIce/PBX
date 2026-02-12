@@ -5,6 +5,7 @@ Quick check script to verify where voicemails are being stored
 This script checks the current PBX configuration and reports whether
 voicemails are being saved to the database or file system only.
 """
+
 import os
 import sys
 

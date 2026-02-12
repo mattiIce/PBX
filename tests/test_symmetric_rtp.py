@@ -4,6 +4,7 @@ Test symmetric RTP support in RTP relay
 This test verifies that the RTP relay can handle NAT traversal where
 actual RTP source addresses differ from what's advertised in SDP.
 """
+
 import os
 import socket
 import struct

@@ -3,6 +3,7 @@
 Tests for E911 protection system
 Ensures that emergency (911) calls are never placed during testing
 """
+
 import os
 import sys
 

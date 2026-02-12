@@ -7,6 +7,7 @@ This script lists all extensions stored in the database.
 Usage:
     python scripts/list_extensions_from_db.py [--config CONFIG_FILE] [--ad-only]
 """
+
 import argparse
 import os
 import sys

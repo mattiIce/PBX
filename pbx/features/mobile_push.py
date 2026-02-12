@@ -128,19 +128,15 @@ class MobilePushNotifications:
             cursor.execute(notification_table)
 
             # Create indexes
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_mobile_devices_user_id
                 ON mobile_devices(user_id)
-            """
-            )
+            """)
 
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_push_notifications_user_id
                 ON push_notifications(user_id)
-            """
-            )
+            """)
 
             self.database.connection.commit()
             cursor.close()
@@ -158,23 +154,19 @@ class MobilePushNotifications:
 
             # Handle boolean enabled field for both database types
             if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT user_id, device_token, platform, registered_at, last_seen
                     FROM mobile_devices
                     WHERE enabled = TRUE
                     ORDER BY last_seen DESC
-                """
-                )
+                """)
             else:
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT user_id, device_token, platform, registered_at, last_seen
                     FROM mobile_devices
                     WHERE enabled = 1
                     ORDER BY last_seen DESC
-                """
-                )
+                """)
 
             rows = cursor.fetchall()
             for row in rows:

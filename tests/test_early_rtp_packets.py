@@ -4,6 +4,7 @@ Test that early RTP packets are not dropped
 This test verifies the fix for the race condition where RTP packets arriving
 before both endpoints are set were being dropped, causing "0 audio" issues.
 """
+
 import os
 import socket
 import struct

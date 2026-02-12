@@ -7,6 +7,7 @@ This test validates:
 2. Reviewing the recorded greeting (play, re-record, delete, save)
 3. Proper state transitions during greeting management
 """
+
 import os
 import sys
 

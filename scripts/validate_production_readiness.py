@@ -148,9 +148,7 @@ class ProductionValidator:
                 if mode == "600" or mode == "400":
                     self.log("SSL private key permissions: Secure", "pass")
                 else:
-                    self.log(
-                        f"SSL private key permissions: {mode} (should be 600 or 400)", "warn"
-                    )
+                    self.log(f"SSL private key permissions: {mode} (should be 600 or 400)", "warn")
         else:
             self.log("SSL certificate not found (required for HTTPS)", "fail")
 
@@ -213,9 +211,7 @@ class ProductionValidator:
                                 f"Database connectivity: Failed (operational error: {e})", "fail"
                             )
                         except psycopg2.Error as e:
-                            self.log(
-                                f"Database connectivity: Failed (database error: {e})", "fail"
-                            )
+                            self.log(f"Database connectivity: Failed (database error: {e})", "fail")
                         except Exception as e:
                             self.log(
                                 f"Database connectivity: Failed (unexpected error: {e})", "fail"
@@ -353,9 +349,7 @@ class ProductionValidator:
 
         # Check for cron jobs
         try:
-            result = subprocess.run(
-                ["crontab", "-l"], capture_output=True, text=True, timeout=5
-            )
+            result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=5)
             if "backup" in result.stdout.lower() or "pbx" in result.stdout.lower():
                 self.log("Backup cron job: Configured", "pass")
             else:
@@ -428,15 +422,9 @@ class ProductionValidator:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Validate PBX system production readiness"
-    )
-    parser.add_argument(
-        "--json", action="store_true", help="Output results in JSON format"
-    )
-    parser.add_argument(
-        "--verbose", action="store_true", help="Show detailed output"
-    )
+    parser = argparse.ArgumentParser(description="Validate PBX system production readiness")
+    parser.add_argument("--json", action="store_true", help="Output results in JSON format")
+    parser.add_argument("--verbose", action="store_true", help="Show detailed output")
     args = parser.parse_args()
 
     validator = ProductionValidator(verbose=args.verbose)

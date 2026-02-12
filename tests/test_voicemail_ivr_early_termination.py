@@ -6,6 +6,7 @@ This test validates that when a call is terminated immediately after being answe
 (e.g., BYE received during RTP stabilization period), the IVR session properly
 detects this and exits gracefully without starting the IVR loop.
 """
+
 import os
 import sys
 import threading

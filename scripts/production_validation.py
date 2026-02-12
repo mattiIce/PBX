@@ -310,9 +310,7 @@ class ProductionValidator:
         print(f"{BLUE}{'=' * 70}{RESET}")
 
         total = self.results["passed"] + self.results["failed"] + self.results["skipped"]
-        passed_pct = (
-            (self.results["passed"] / total * 100) if total > 0 else 0
-        )
+        passed_pct = (self.results["passed"] / total * 100) if total > 0 else 0
 
         print(f"{GREEN}Passed:{RESET}  {self.results['passed']}/{total} ({passed_pct:.1f}%)")
         print(f"{RED}Failed:{RESET}  {self.results['failed']}/{total}")
@@ -323,9 +321,7 @@ class ProductionValidator:
             print(f"\n{GREEN}✓ PRODUCTION READY{RESET}")
             return 0
         elif self.results["failed"] <= 2:
-            print(
-                f"\n{YELLOW}⚠ MOSTLY READY (review {self.results['failed']} failures){RESET}"
-            )
+            print(f"\n{YELLOW}⚠ MOSTLY READY (review {self.results['failed']} failures){RESET}")
             return 1
         else:
             print(f"\n{RED}✗ NOT PRODUCTION READY ({self.results['failed']} failures){RESET}")
@@ -335,17 +331,11 @@ class ProductionValidator:
 def main():
     parser = argparse.ArgumentParser(description="Production Validation Test Suite")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    parser.add_argument(
-        "--skip-integration", action="store_true", help="Skip integration tests"
-    )
-    parser.add_argument(
-        "--json", action="store_true", help="Output results in JSON format"
-    )
+    parser.add_argument("--skip-integration", action="store_true", help="Skip integration tests")
+    parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     args = parser.parse_args()
 
-    validator = ProductionValidator(
-        verbose=args.verbose, skip_integration=args.skip_integration
-    )
+    validator = ProductionValidator(verbose=args.verbose, skip_integration=args.skip_integration)
     validator.run_all_tests()
 
     if args.json:

@@ -2,6 +2,7 @@
 """
 FIPS compliance tests
 """
+
 import os
 import sys
 

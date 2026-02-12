@@ -3,6 +3,7 @@
 Test that extension registry is reloaded after AD sync completes
 Verifies the fix for extensions not being available after AD sync at startup
 """
+
 import os
 import sys
 

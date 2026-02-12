@@ -2,6 +2,7 @@
 """
 Tests for security features
 """
+
 import os
 import sys
 import tempfile

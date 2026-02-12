@@ -114,23 +114,17 @@ class CapacityCalculator:
         # Storage calculation
         # Voicemail storage
         voicemail_users = int(extensions * (voicemail_users_percent / 100))
-        voicemail_gb = (
-            voicemail_users * self.VOICEMAIL_PER_USER_MB / 1024
-        )  # Convert to GB
+        voicemail_gb = voicemail_users * self.VOICEMAIL_PER_USER_MB / 1024  # Convert to GB
 
         # Call recording storage
         recording_gb = 0.0
         if recording_enabled:
             hours_per_day = (calls_per_day * avg_call_duration_min) / 60
             recording_mb_per_day = hours_per_day * self.RECORDING_PER_HOUR_MB
-            recording_gb = (
-                recording_mb_per_day * recording_retention_days / 1024
-            )  # Convert to GB
+            recording_gb = recording_mb_per_day * recording_retention_days / 1024  # Convert to GB
 
         # Database storage
-        database_mb = (
-            self.DATABASE_BASE_MB + extensions * self.DATABASE_PER_EXTENSION_MB
-        )
+        database_mb = self.DATABASE_BASE_MB + extensions * self.DATABASE_PER_EXTENSION_MB
         # Add CDR storage (assume 200 bytes per call)
         cdr_days = 365  # Keep CDR for 1 year
         cdr_mb = (calls_per_day * cdr_days * 200) / (1024 * 1024)
@@ -237,17 +231,13 @@ class CapacityCalculator:
 
         print("SCALING RECOMMENDATIONS:")
         print("-" * 70)
-        print(
-            f"  • Current capacity supports {requirements.max_concurrent_calls} concurrent calls"
-        )
-        print(f"  • Monitor CPU usage; scale up if consistently > 70%")
-        print(f"  • Monitor memory usage; scale up if consistently > 80%")
+        print(f"  • Current capacity supports {requirements.max_concurrent_calls} concurrent calls")
+        print("  • Monitor CPU usage; scale up if consistently > 70%")
+        print("  • Monitor memory usage; scale up if consistently > 80%")
         print(
             f"  • Consider load balancing for > {int(requirements.max_concurrent_calls * 1.5)} concurrent calls"
         )
-        print(
-            f"  • Review storage monthly; current allocation for {requirements.disk_gb}GB"
-        )
+        print(f"  • Review storage monthly; current allocation for {requirements.disk_gb}GB")
         print()
 
 
@@ -272,9 +262,7 @@ Examples:
         """,
     )
 
-    parser.add_argument(
-        "--extensions", type=int, required=True, help="Number of extensions"
-    )
+    parser.add_argument("--extensions", type=int, required=True, help="Number of extensions")
     parser.add_argument(
         "--concurrent-calls",
         type=int,

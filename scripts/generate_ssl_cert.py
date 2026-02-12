@@ -3,6 +3,7 @@
 Generate self-signed SSL certificate for HTTPS support
 For development and testing purposes only
 """
+
 import ipaddress
 import os
 import sys

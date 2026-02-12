@@ -3,6 +3,7 @@
 Test SSL configuration mismatch handling
 Tests the scenario where SSL is enabled in config but certificates are missing
 """
+
 import os
 import sys
 import time

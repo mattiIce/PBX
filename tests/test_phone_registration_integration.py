@@ -3,6 +3,7 @@
 Integration test for phone registration tracking
 Tests the full flow from SIP REGISTER to database storage
 """
+
 import os
 import sys
 

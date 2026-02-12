@@ -3,6 +3,7 @@
 Test API server restart and socket reuse
 Tests that the server can be stopped and restarted quickly without "Address already in use" errors
 """
+
 import sys
 import time
 from pathlib import Path

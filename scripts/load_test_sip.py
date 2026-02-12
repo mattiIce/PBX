@@ -16,19 +16,19 @@ import asyncio
 import json
 import logging
 import random
+import socket
 import sys
 import time
 from collections import defaultdict
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import List, Dict, Any
-import socket
-import struct
+from typing import Any, Dict
 
 
 @dataclass
 class LoadTestConfig:
     """Load test configuration"""
+
     pbx_host: str = "localhost"
     pbx_sip_port: int = 5060
     pbx_api_port: int = 8080
@@ -45,6 +45,7 @@ class LoadTestConfig:
 @dataclass
 class LoadTestResults:
     """Load test results"""
+
     test_type: str
     timestamp: str
     duration: float
@@ -70,13 +71,13 @@ class SIPLoadTester:
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.results = {
-            'response_times': [],
-            'successful': 0,
-            'failed': 0,
-            'timeouts': 0,
-            'errors': defaultdict(int),
-            'concurrent_active': 0,
-            'peak_concurrent': 0
+            "response_times": [],
+            "successful": 0,
+            "failed": 0,
+            "timeouts": 0,
+            "errors": defaultdict(int),
+            "concurrent_active": 0,
+            "peak_concurrent": 0,
         }
         self.start_time = None
         self.end_time = None
@@ -162,7 +163,9 @@ class SIPLoadTester:
 
                 # Simulate call duration
                 if success:
-                    await asyncio.sleep(min(self.config.call_duration, 1))  # Shortened for load test
+                    await asyncio.sleep(
+                        min(self.config.call_duration, 1)
+                    )  # Shortened for load test
 
                 response_time = time.time() - start
                 return success, response_time
@@ -196,15 +199,15 @@ class SIPLoadTester:
         # Process results
         for result in results:
             if isinstance(result, Exception):
-                self.results['failed'] += 1
-                self.results['errors'][str(result)] += 1
+                self.results["failed"] += 1
+                self.results["errors"][str(result)] += 1
             else:
                 success, response_time = result
                 if success:
-                    self.results['successful'] += 1
+                    self.results["successful"] += 1
                 else:
-                    self.results['failed'] += 1
-                self.results['response_times'].append(response_time)
+                    self.results["failed"] += 1
+                self.results["response_times"].append(response_time)
 
         self.end_time = time.time()
 
@@ -222,22 +225,23 @@ class SIPLoadTester:
 
         while calls_completed < self.config.total_calls:
             # Start new calls up to concurrent limit
-            while len(active_tasks) < self.config.concurrent_calls and calls_started < self.config.total_calls:
+            while (
+                len(active_tasks) < self.config.concurrent_calls
+                and calls_started < self.config.total_calls
+            ):
                 task = asyncio.create_task(self.simulate_call(calls_started))
                 active_tasks.append(task)
                 calls_started += 1
 
                 # Update peak concurrent
-                self.results['concurrent_active'] = len(active_tasks)
-                if self.results['concurrent_active'] > self.results['peak_concurrent']:
-                    self.results['peak_concurrent'] = self.results['concurrent_active']
+                self.results["concurrent_active"] = len(active_tasks)
+                if self.results["concurrent_active"] > self.results["peak_concurrent"]:
+                    self.results["peak_concurrent"] = self.results["concurrent_active"]
 
             # Wait for at least one call to complete
             if active_tasks:
                 done, active_tasks = await asyncio.wait(
-                    active_tasks,
-                    return_when=asyncio.FIRST_COMPLETED,
-                    timeout=1
+                    active_tasks, return_when=asyncio.FIRST_COMPLETED, timeout=1
                 )
 
                 # Process completed calls
@@ -245,17 +249,17 @@ class SIPLoadTester:
                     try:
                         success, response_time = await task
                         if success:
-                            self.results['successful'] += 1
+                            self.results["successful"] += 1
                         else:
-                            self.results['failed'] += 1
-                        self.results['response_times'].append(response_time)
+                            self.results["failed"] += 1
+                        self.results["response_times"].append(response_time)
                         calls_completed += 1
                     except Exception as e:
-                        self.results['failed'] += 1
-                        self.results['errors'][str(e)] += 1
+                        self.results["failed"] += 1
+                        self.results["errors"][str(e)] += 1
                         calls_completed += 1
 
-                self.results['concurrent_active'] = len(active_tasks)
+                self.results["concurrent_active"] = len(active_tasks)
 
         # Wait for remaining calls
         if active_tasks:
@@ -269,10 +273,7 @@ class SIPLoadTester:
         self.start_time = time.time()
 
         # Run registrations first
-        reg_tasks = [
-            self.send_sip_register(i)
-            for i in range(self.config.users_count)
-        ]
+        reg_tasks = [self.send_sip_register(i) for i in range(self.config.users_count)]
         await asyncio.gather(*reg_tasks, return_exceptions=True)
 
         # Then run calls
@@ -282,11 +283,13 @@ class SIPLoadTester:
 
     def calculate_statistics(self) -> LoadTestResults:
         """Calculate test statistics"""
-        if not self.results['response_times']:
-            self.results['response_times'] = [0]
+        if not self.results["response_times"]:
+            self.results["response_times"] = [0]
 
-        sorted_times = sorted(self.results['response_times'])
-        total_attempts = self.results['successful'] + self.results['failed'] + self.results['timeouts']
+        sorted_times = sorted(self.results["response_times"])
+        total_attempts = (
+            self.results["successful"] + self.results["failed"] + self.results["timeouts"]
+        )
         duration = self.end_time - self.start_time if self.end_time else 0
 
         return LoadTestResults(
@@ -294,18 +297,18 @@ class SIPLoadTester:
             timestamp=datetime.now().isoformat(),
             duration=duration,
             total_attempts=total_attempts,
-            successful=self.results['successful'],
-            failed=self.results['failed'],
-            timeouts=self.results['timeouts'],
+            successful=self.results["successful"],
+            failed=self.results["failed"],
+            timeouts=self.results["timeouts"],
             avg_response_time=sum(sorted_times) / len(sorted_times),
             min_response_time=min(sorted_times),
             max_response_time=max(sorted_times),
             p95_response_time=sorted_times[int(len(sorted_times) * 0.95)] if sorted_times else 0,
             p99_response_time=sorted_times[int(len(sorted_times) * 0.99)] if sorted_times else 0,
             requests_per_second=total_attempts / duration if duration > 0 else 0,
-            concurrent_peak=self.results['peak_concurrent'],
-            errors=dict(self.results['errors']),
-            system_metrics={}
+            concurrent_peak=self.results["peak_concurrent"],
+            errors=dict(self.results["errors"]),
+            system_metrics={},
         )
 
 
@@ -321,7 +324,9 @@ def print_results(results: LoadTestResults):
 
     print("Performance Metrics:")
     print(f"  Total Attempts: {results.total_attempts}")
-    print(f"  Successful: {results.successful} ({results.successful/results.total_attempts*100:.1f}%)")
+    print(
+        f"  Successful: {results.successful} ({results.successful/results.total_attempts*100:.1f}%)"
+    )
     print(f"  Failed: {results.failed} ({results.failed/results.total_attempts*100:.1f}%)")
     print(f"  Timeouts: {results.timeouts}")
     print(f"  Requests/sec: {results.requests_per_second:.2f}")
@@ -343,7 +348,9 @@ def print_results(results: LoadTestResults):
         print()
 
     # Pass/Fail determination
-    success_rate = results.successful / results.total_attempts * 100 if results.total_attempts > 0 else 0
+    success_rate = (
+        results.successful / results.total_attempts * 100 if results.total_attempts > 0 else 0
+    )
     print("=" * 70)
     if success_rate >= 95 and results.p95_response_time < 2.0:
         print("✅ LOAD TEST PASSED")
@@ -360,78 +367,47 @@ def print_results(results: LoadTestResults):
 
 async def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(
-        description="Load testing tool for Warden VoIP PBX System"
-    )
+    parser = argparse.ArgumentParser(description="Load testing tool for Warden VoIP PBX System")
     parser.add_argument(
-        "--pbx-host",
-        default="localhost",
-        help="PBX server hostname or IP (default: localhost)"
+        "--pbx-host", default="localhost", help="PBX server hostname or IP (default: localhost)"
     )
-    parser.add_argument(
-        "--sip-port",
-        type=int,
-        default=5060,
-        help="SIP port (default: 5060)"
-    )
+    parser.add_argument("--sip-port", type=int, default=5060, help="SIP port (default: 5060)")
     parser.add_argument(
         "--test-type",
         choices=["calls", "registrations", "mixed"],
         default="calls",
-        help="Type of load test to run"
+        help="Type of load test to run",
     )
     parser.add_argument(
-        "--concurrent-calls",
-        type=int,
-        default=10,
-        help="Number of concurrent calls (default: 10)"
+        "--concurrent-calls", type=int, default=10, help="Number of concurrent calls (default: 10)"
     )
     parser.add_argument(
-        "--total-calls",
-        type=int,
-        default=100,
-        help="Total number of calls to make (default: 100)"
+        "--total-calls", type=int, default=100, help="Total number of calls to make (default: 100)"
     )
     parser.add_argument(
-        "--users",
-        type=int,
-        default=50,
-        help="Number of users for registration test (default: 50)"
+        "--users", type=int, default=50, help="Number of users for registration test (default: 50)"
     )
     parser.add_argument(
-        "--duration",
-        type=int,
-        default=60,
-        help="Test duration in seconds (default: 60)"
+        "--duration", type=int, default=60, help="Test duration in seconds (default: 60)"
     )
     parser.add_argument(
         "--call-duration",
         type=int,
         default=10,
-        help="Duration of each call in seconds (default: 10)"
+        help="Duration of each call in seconds (default: 10)",
     )
     parser.add_argument(
-        "--ramp-up",
-        type=int,
-        default=10,
-        help="Ramp-up time in seconds (default: 10)"
+        "--ramp-up", type=int, default=10, help="Ramp-up time in seconds (default: 10)"
     )
-    parser.add_argument(
-        "--save-report",
-        help="Save results to JSON file"
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable verbose logging"
-    )
+    parser.add_argument("--save-report", help="Save results to JSON file")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 
     args = parser.parse_args()
 
     # Configure logging
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
     # Create config
@@ -444,7 +420,7 @@ async def main():
         users_count=args.users,
         test_duration=args.duration,
         ramp_up_time=args.ramp_up,
-        test_type=args.test_type
+        test_type=args.test_type,
     )
 
     # Run test
@@ -464,12 +440,14 @@ async def main():
 
         # Save report if requested
         if args.save_report:
-            with open(args.save_report, 'w') as f:
+            with open(args.save_report, "w") as f:
                 json.dump(asdict(results), f, indent=2)
             print(f"Results saved to {args.save_report}")
 
         # Exit with appropriate code
-        success_rate = results.successful / results.total_attempts * 100 if results.total_attempts > 0 else 0
+        success_rate = (
+            results.successful / results.total_attempts * 100 if results.total_attempts > 0 else 0
+        )
         sys.exit(0 if success_rate >= 95 else 1)
 
     except KeyboardInterrupt:

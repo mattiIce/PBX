@@ -79,8 +79,7 @@ class TLSManager:
             self.ssl_context.options |= ssl.OP_NO_TLSv1_1
 
             self.logger.info(
-                f"TLS context created (FIPS mode: {self.fips_mode}, "
-                f"TLS 1.2-1.3 supported)"
+                f"TLS context created (FIPS mode: {self.fips_mode}, " f"TLS 1.2-1.3 supported)"
             )
 
         except Exception as e:

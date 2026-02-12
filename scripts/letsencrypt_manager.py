@@ -14,9 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -166,7 +164,7 @@ class CertificateManager:
         """
         if not isinstance(min_days, int) or min_days < 0:
             raise ValueError("min_days must be a positive integer")
-            
+
         expiry = self.get_certificate_expiry()
         if not expiry:
             return False
@@ -410,7 +408,7 @@ class CertificateManager:
             logger.info("Certificate is valid, no renewal needed")
             return True
 
-        logger.info(f"Certificate expiring soon, renewing...")
+        logger.info("Certificate expiring soon, renewing...")
         success = self.renew_certificate()
 
         if success:
@@ -421,16 +419,12 @@ class CertificateManager:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Manage SSL/TLS certificates with Let's Encrypt"
-    )
-    parser.add_argument(
-        "--reload-only", action="store_true", help="Only reload PBX service"
-    )
-    
+    parser = argparse.ArgumentParser(description="Manage SSL/TLS certificates with Let's Encrypt")
+    parser.add_argument("--reload-only", action="store_true", help="Only reload PBX service")
+
     # Parse args first to check reload-only mode
     args, remaining = parser.parse_known_args()
-    
+
     # Handle reload-only mode early (doesn't need domain/email)
     if args.reload_only:
         # Minimal parsing for reload-only
@@ -440,14 +434,10 @@ def main():
         parser.add_argument(
             "--email", default="admin@localhost", help="Email (not used in reload-only)"
         )
-        parser.add_argument(
-            "--cert-dir", default="/opt/pbx/ssl", help="Certificate directory"
-        )
-        parser.add_argument(
-            "--webroot", default="/var/www/html", help="Webroot directory"
-        )
+        parser.add_argument("--cert-dir", default="/opt/pbx/ssl", help="Certificate directory")
+        parser.add_argument("--webroot", default="/var/www/html", help="Webroot directory")
         args = parser.parse_args()
-        
+
         manager = CertificateManager(
             domain=args.domain,
             email=args.email,
@@ -457,41 +447,29 @@ def main():
         manager.copy_certificates()
         manager.reload_pbx_service()
         return 0
-    
+
     # Normal mode requires domain and email
     parser.add_argument("--domain", required=True, help="Domain name")
-    parser.add_argument(
-        "--email", required=True, help="Email for Let's Encrypt notifications"
-    )
-    parser.add_argument(
-        "--cert-dir", default="/opt/pbx/ssl", help="Certificate directory"
-    )
-    parser.add_argument(
-        "--webroot", default="/var/www/html", help="Webroot directory"
-    )
+    parser.add_argument("--email", required=True, help="Email for Let's Encrypt notifications")
+    parser.add_argument("--cert-dir", default="/opt/pbx/ssl", help="Certificate directory")
+    parser.add_argument("--webroot", default="/var/www/html", help="Webroot directory")
     parser.add_argument(
         "--install-certbot",
         action="store_true",
         help="Install certbot if not present",
     )
-    parser.add_argument(
-        "--obtain", action="store_true", help="Obtain new certificate"
-    )
-    parser.add_argument(
-        "--renew", action="store_true", help="Renew existing certificate"
-    )
-    parser.add_argument(
-        "--check", action="store_true", help="Check and renew if needed"
-    )
-    parser.add_argument(
-        "--setup-auto-renewal", action="store_true", help="Setup automatic renewal"
-    )
+    parser.add_argument("--obtain", action="store_true", help="Obtain new certificate")
+    parser.add_argument("--renew", action="store_true", help="Renew existing certificate")
+    parser.add_argument("--check", action="store_true", help="Check and renew if needed")
+    parser.add_argument("--setup-auto-renewal", action="store_true", help="Setup automatic renewal")
     parser.add_argument(
         "--staging",
         action="store_true",
         help="Use Let's Encrypt staging server (for testing)",
     )
-    parser.add_argument("--min-days", type=int, default=30, help="Minimum days before expiry to renew")
+    parser.add_argument(
+        "--min-days", type=int, default=30, help="Minimum days before expiry to renew"
+    )
 
     args = parser.parse_args()
 
@@ -509,9 +487,7 @@ def main():
                 logger.error("Failed to install certbot")
                 return 1
         else:
-            logger.error(
-                "Certbot is not installed. Run with --install-certbot to install it."
-            )
+            logger.error("Certbot is not installed. Run with --install-certbot to install it.")
             return 1
 
     # Perform requested action

@@ -4,6 +4,7 @@ Tests for PostgreSQL transaction rollback handling
 Validates that failed transactions are properly rolled back to prevent
 "current transaction is aborted" errors
 """
+
 import os
 import sys
 import tempfile

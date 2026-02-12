@@ -29,7 +29,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
 
         # Set up handler
         PBXAPIHandler.pbx_core = self.pbx_core
-        
+
         # Create a minimal handler mock
         self.handler = MagicMock(spec=PBXAPIHandler)
         self.handler.pbx_core = self.pbx_core
@@ -37,11 +37,11 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.handler.path = "/"
         self.handler.wfile = BytesIO()
         self.handler.logger = MagicMock()
-        
+
         # Track response
         self.response_data = None
         self.response_status = 200
-        
+
     def _capture_json_response(self, data, status=200):
         """Helper to capture JSON response"""
         self.response_data = data
@@ -50,6 +50,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
     def _setup_handler_with_auth(self, is_admin=True):
         """Helper to set up handler with authentication state"""
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
         # Return consistent dict type for payload, with is_admin flag set accordingly
         payload = {"is_admin": is_admin} if is_admin else {}
@@ -59,13 +60,14 @@ class TestAPIGracefulDegradation(unittest.TestCase):
     def test_paging_zones_when_disabled(self):
         """Test that /api/paging/zones returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
-        if hasattr(self.pbx_core, 'paging_system'):
+        if hasattr(self.pbx_core, "paging_system"):
             del self.pbx_core.paging_system
 
         # Bind the real method to our mock handler
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_paging_zones(self.handler)
 
@@ -78,13 +80,14 @@ class TestAPIGracefulDegradation(unittest.TestCase):
     def test_paging_devices_when_disabled(self):
         """Test that /api/paging/devices returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
-        if hasattr(self.pbx_core, 'paging_system'):
+        if hasattr(self.pbx_core, "paging_system"):
             del self.pbx_core.paging_system
 
         # Bind the real method to our mock handler
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_paging_devices(self.handler)
 
@@ -97,13 +100,14 @@ class TestAPIGracefulDegradation(unittest.TestCase):
     def test_active_pages_when_disabled(self):
         """Test that /api/paging/active returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
-        if hasattr(self.pbx_core, 'paging_system'):
+        if hasattr(self.pbx_core, "paging_system"):
             del self.pbx_core.paging_system
 
         # Bind the real method to our mock handler
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_active_pages(self.handler)
 
@@ -116,13 +120,14 @@ class TestAPIGracefulDegradation(unittest.TestCase):
     def test_lcr_rates_when_disabled(self):
         """Test that /api/lcr/rates returns empty array when LCR is disabled"""
         # Configure pbx_core without LCR
-        if hasattr(self.pbx_core, 'lcr'):
+        if hasattr(self.pbx_core, "lcr"):
             del self.pbx_core.lcr
 
         # Bind the real method to our mock handler
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_lcr_rates(self.handler)
 
@@ -137,13 +142,14 @@ class TestAPIGracefulDegradation(unittest.TestCase):
     def test_lcr_statistics_when_disabled(self):
         """Test that /api/lcr/statistics returns empty stats when LCR is disabled"""
         # Configure pbx_core without LCR
-        if hasattr(self.pbx_core, 'lcr'):
+        if hasattr(self.pbx_core, "lcr"):
             del self.pbx_core.lcr
 
         # Bind the real method to our mock handler
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_lcr_statistics(self.handler)
 
@@ -161,8 +167,9 @@ class TestAPIGracefulDegradation(unittest.TestCase):
 
         # Bind the real method to our mock handler
         from pbx.api.rest_api import PBXAPIHandler
+
         self.handler._send_json = lambda data, status=200: self._capture_json_response(data, status)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_integration_activity(self.handler)
 
@@ -179,7 +186,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
 
         # Set up handler with admin authentication
         PBXAPIHandler = self._setup_handler_with_auth(is_admin=True)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_dtmf_config(self.handler)
 
@@ -195,7 +202,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         """Test that /api/config/dtmf returns defaults for unauthenticated users"""
         # Set up handler without authentication
         PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_dtmf_config(self.handler)
 
@@ -211,7 +218,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         """Test that /api/config returns empty config for unauthenticated users"""
         # Set up handler without authentication
         PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
-        
+
         # Call the method
         PBXAPIHandler._handle_get_config(self.handler)
 

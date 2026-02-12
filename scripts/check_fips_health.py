@@ -4,6 +4,7 @@ FIPS Health Check Script
 Performs continuous monitoring of FIPS compliance status
 Can be run as a cron job or service health check
 """
+
 import json
 import os
 import sys

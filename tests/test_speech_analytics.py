@@ -40,8 +40,7 @@ class TestSpeechAnalytics(unittest.TestCase):
         self.db = MockDB()
 
         # Create tables
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS speech_analytics_configs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 extension TEXT NOT NULL,
@@ -54,11 +53,9 @@ class TestSpeechAnalytics(unittest.TestCase):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS call_summaries (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 call_id TEXT NOT NULL,
@@ -68,8 +65,7 @@ class TestSpeechAnalytics(unittest.TestCase):
                 sentiment_score REAL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         self.config = {
             "speech_analytics.enabled": True,

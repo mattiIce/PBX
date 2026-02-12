@@ -8,11 +8,11 @@ and performance in production environments.
 
 try:
     from prometheus_client import (
+        CollectorRegistry,
         Counter,
         Gauge,
         Histogram,
         Info,
-        CollectorRegistry,
         generate_latest,
     )
 except ImportError as exc:
@@ -330,9 +330,7 @@ class PBXMetricsExporter:
         """
         self.extension_registrations_total.labels(status=status).inc()
 
-    def record_api_request(
-        self, method: str, endpoint: str, status_code: int, duration: float
-    ):
+    def record_api_request(self, method: str, endpoint: str, status_code: int, duration: float):
         """
         Record API request.
 
@@ -345,9 +343,7 @@ class PBXMetricsExporter:
         self.api_requests_total.labels(
             method=method, endpoint=endpoint, status=str(status_code)
         ).inc()
-        self.api_request_duration.labels(method=method, endpoint=endpoint).observe(
-            duration
-        )
+        self.api_request_duration.labels(method=method, endpoint=endpoint).observe(duration)
 
     def update_system_resources(self, cpu_percent: float, memory_bytes: int):
         """
@@ -360,9 +356,7 @@ class PBXMetricsExporter:
         self.cpu_usage_percent.set(cpu_percent)
         self.memory_usage_bytes.set(memory_bytes)
 
-    def update_queue_metrics(
-        self, queue_name: str, waiting_calls: int, avg_wait_time: float
-    ):
+    def update_queue_metrics(self, queue_name: str, waiting_calls: int, avg_wait_time: float):
         """
         Update call queue metrics.
 
@@ -423,9 +417,7 @@ class PBXMetricsExporter:
             cert_name: Certificate name
             days_until_expiry: Days until expiration
         """
-        self.certificate_expiry_days.labels(certificate_name=cert_name).set(
-            days_until_expiry
-        )
+        self.certificate_expiry_days.labels(certificate_name=cert_name).set(days_until_expiry)
 
     def export_metrics(self) -> bytes:
         """

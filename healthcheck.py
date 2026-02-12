@@ -3,6 +3,7 @@
 Health check script for PBX Docker container.
 Tests both port availability and HTTP health endpoint.
 """
+
 import socket
 import sys
 import urllib.request

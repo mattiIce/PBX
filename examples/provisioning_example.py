@@ -2,6 +2,7 @@
 """
 Example script demonstrating phone provisioning
 """
+
 import json
 import time
 

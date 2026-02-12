@@ -93,28 +93,22 @@ class CallbackQueue:
             cursor.execute(callback_table)
 
             # Create index on queue_id for faster lookups
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_callback_queue_id
                 ON callback_requests(queue_id)
-            """
-            )
+            """)
 
             # Create index on status for filtering
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_callback_status
                 ON callback_requests(status)
-            """
-            )
+            """)
 
             # Create index on callback_time for scheduling
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_callback_time
                 ON callback_requests(callback_time)
-            """
-            )
+            """)
 
             self.database.connection.commit()
             cursor.close()
@@ -131,16 +125,14 @@ class CallbackQueue:
             cursor = self.database.connection.cursor()
 
             # Load callbacks that are not completed, failed, or cancelled
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT callback_id, queue_id, caller_number, caller_name,
                        requested_at, callback_time, status, attempts, max_attempts,
                        agent_id, started_at
                 FROM callback_requests
                 WHERE status IN ('scheduled', 'in_progress', 'pending')
                 ORDER BY callback_time ASC
-            """
-            )
+            """)
 
             rows = cursor.fetchall()
             for row in rows:

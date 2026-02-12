@@ -5,6 +5,7 @@ Tests for the Ubuntu setup wizard
 These tests validate the basic functionality of the setup_ubuntu.py script
 without actually running system commands or making system changes.
 """
+
 import os
 import shutil
 import sys

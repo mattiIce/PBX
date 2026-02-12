@@ -3,6 +3,7 @@
 Smoke Tests for PBX System
 Quick validation of critical functionality
 """
+
 import sys
 import urllib.request
 from pathlib import Path

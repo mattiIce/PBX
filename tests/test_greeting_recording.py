@@ -2,6 +2,7 @@
 """
 Test voicemail greeting recording functionality
 """
+
 import os
 import sys
 import tempfile

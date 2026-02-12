@@ -37,7 +37,7 @@ class AuditLogger:
             # Ensure parent directory exists
             log_path = Path(log_file)
             log_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             handler = logging.FileHandler(log_file)
             handler.setLevel(logging.INFO)
 
@@ -52,7 +52,7 @@ class AuditLogger:
             )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
-            
+
             # Set permissions after handler is created (in case it creates the file)
             if log_path.exists():
                 os.chmod(log_file, 0o600)
@@ -150,9 +150,7 @@ class AuditLogger:
 
     def log_logout(self, user: str, ip_address: str):
         """Log a logout."""
-        self.log_action(
-            action="logout", user=user, resource="auth", ip_address=ip_address
-        )
+        self.log_action(action="logout", user=user, resource="auth", ip_address=ip_address)
 
     def log_extension_create(
         self, user: str, extension_number: str, details: Dict, ip_address: str
@@ -180,9 +178,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_extension_delete(
-        self, user: str, extension_number: str, ip_address: str
-    ):
+    def log_extension_delete(self, user: str, extension_number: str, ip_address: str):
         """Log extension deletion."""
         self.log_action(
             action="delete",
@@ -192,9 +188,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_config_change(
-        self, user: str, config_key: str, details: Dict, ip_address: str
-    ):
+    def log_config_change(self, user: str, config_key: str, details: Dict, ip_address: str):
         """Log configuration change."""
         self.log_action(
             action="update",
@@ -215,9 +209,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_permission_change(
-        self, user: str, target_user: str, details: Dict, ip_address: str
-    ):
+    def log_permission_change(self, user: str, target_user: str, details: Dict, ip_address: str):
         """Log permission change."""
         self.log_action(
             action="permission_change",
@@ -228,9 +220,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_security_event(
-        self, event_type: str, user: str, details: Dict, ip_address: str
-    ):
+    def log_security_event(self, event_type: str, user: str, details: Dict, ip_address: str):
         """Log security event."""
         self.log_action(
             action=event_type,
@@ -241,9 +231,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_data_export(
-        self, user: str, export_type: str, details: Dict, ip_address: str
-    ):
+    def log_data_export(self, user: str, export_type: str, details: Dict, ip_address: str):
         """Log data export."""
         self.log_action(
             action="export",

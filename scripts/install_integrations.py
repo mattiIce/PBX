@@ -33,9 +33,13 @@ class IntegrationInstaller:
 
     def log(self, message, level="INFO"):
         """Log a message"""
-        prefix = {"INFO": "ℹ️ ", "SUCCESS": "✅", "ERROR": "❌", "WARNING": "⚠️ ", "STEP": "🔧"}.get(
-            level, ""
-        )
+        prefix = {
+            "INFO": "ℹ️ ",
+            "SUCCESS": "✅",
+            "ERROR": "❌",
+            "WARNING": "⚠️ ",
+            "STEP": "🔧",
+        }.get(level, "")
         print(f"{prefix} {message}")
 
     def run_command(self, cmd, check=True, capture=False, show_output=True):

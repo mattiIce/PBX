@@ -7,9 +7,10 @@ call setup, RTP media exchange, and teardown.
 """
 
 import asyncio
-import pytest
 import time
 from typing import Optional
+
+import pytest
 
 
 @pytest.fixture
@@ -187,9 +188,7 @@ class TestSIPCallFlow:
             participants.append(call_id)
 
         # Verify all participants connected
-        all_connected = await self._verify_conference_participants(
-            conf_id, 3, pbx_config
-        )
+        all_connected = await self._verify_conference_participants(conf_id, 3, pbx_config)
         assert all_connected
 
     @pytest.mark.integration
@@ -251,31 +250,23 @@ class TestSIPCallFlow:
 
     # Helper methods (would be implemented with actual SIP/RTP handling)
 
-    async def _simulate_register(
-        self, extension: str, config: dict
-    ) -> bool:
+    async def _simulate_register(self, extension: str, config: dict) -> bool:
         """Simulate SIP REGISTER."""
         # Mock implementation
         await asyncio.sleep(0.1)
         return True
 
-    async def _simulate_invite(
-        self, from_ext: str, to_ext: str, config: dict
-    ) -> Optional[str]:
+    async def _simulate_invite(self, from_ext: str, to_ext: str, config: dict) -> Optional[str]:
         """Simulate SIP INVITE."""
         await asyncio.sleep(0.1)
         return f"call-{from_ext}-{to_ext}-{int(time.time())}"
 
-    async def _simulate_answer(
-        self, extension: str, call_id: str, config: dict
-    ) -> bool:
+    async def _simulate_answer(self, extension: str, call_id: str, config: dict) -> bool:
         """Simulate SIP 200 OK (answer)."""
         await asyncio.sleep(0.1)
         return True
 
-    async def _simulate_bye(
-        self, extension: str, call_id: str, config: dict
-    ) -> bool:
+    async def _simulate_bye(self, extension: str, call_id: str, config: dict) -> bool:
         """Simulate SIP BYE."""
         await asyncio.sleep(0.1)
         return True
@@ -292,44 +283,32 @@ class TestSIPCallFlow:
         await asyncio.sleep(0.1)
         return True
 
-    async def _verify_transfer_received(
-        self, extension: str, config: dict
-    ) -> Optional[str]:
+    async def _verify_transfer_received(self, extension: str, config: dict) -> Optional[str]:
         """Verify transfer was received."""
         await asyncio.sleep(0.1)
         return f"transferred-call-{extension}"
 
-    async def _verify_connected(
-        self, ext1: str, ext2: str, config: dict
-    ) -> bool:
+    async def _verify_connected(self, ext1: str, ext2: str, config: dict) -> bool:
         """Verify two extensions are connected."""
         await asyncio.sleep(0.1)
         return True
 
-    async def _set_call_forwarding(
-        self, extension: str, forward_to: str, config: dict
-    ) -> bool:
+    async def _set_call_forwarding(self, extension: str, forward_to: str, config: dict) -> bool:
         """Set call forwarding."""
         await asyncio.sleep(0.1)
         return True
 
-    async def _verify_forwarded_to(
-        self, extension: str, config: dict
-    ) -> Optional[str]:
+    async def _verify_forwarded_to(self, extension: str, config: dict) -> Optional[str]:
         """Verify call was forwarded."""
         await asyncio.sleep(0.1)
         return f"forwarded-call-{extension}"
 
-    async def _create_conference(
-        self, conf_number: str, config: dict
-    ) -> Optional[str]:
+    async def _create_conference(self, conf_number: str, config: dict) -> Optional[str]:
         """Create conference room."""
         await asyncio.sleep(0.1)
         return f"conf-{conf_number}"
 
-    async def _join_conference(
-        self, extension: str, conf_id: str, config: dict
-    ) -> Optional[str]:
+    async def _join_conference(self, extension: str, conf_id: str, config: dict) -> Optional[str]:
         """Join conference."""
         await asyncio.sleep(0.1)
         return f"conf-participant-{extension}"
@@ -346,9 +325,7 @@ class TestSIPCallFlow:
         await asyncio.sleep(0.1)
         return True
 
-    async def _leave_voicemail_message(
-        self, from_ext: str, to_ext: str, config: dict
-    ) -> bool:
+    async def _leave_voicemail_message(self, from_ext: str, to_ext: str, config: dict) -> bool:
         """Leave voicemail message."""
         await asyncio.sleep(0.1)
         return True

@@ -3,6 +3,7 @@
 Test Root Path Redirect to Admin Panel
 Tests that the root path "/" redirects to "/admin"
 """
+
 import sys
 import time
 from http.client import HTTPConnection

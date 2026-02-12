@@ -3,6 +3,7 @@
 Tests for Active Directory search API endpoint
 Tests that the /api/integrations/ad/search endpoint properly searches for users by telephoneNumber
 """
+
 import os
 import sys
 

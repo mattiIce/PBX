@@ -3,6 +3,7 @@
 Test for database-based extension registration validation
 Verifies that extensions in the database can register even if not in config.yml
 """
+
 import os
 import sys
 

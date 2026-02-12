@@ -3,6 +3,7 @@
 FIPS 140-2 Compliance Verification Script
 Verifies that the PBX system is running in FIPS-compliant mode
 """
+
 import os
 import subprocess
 import sys
