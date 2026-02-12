@@ -71,6 +71,14 @@ help: ## Display this help message
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; /^clean/ {printf "  $(COLOR_YELLOW)%-25s$(COLOR_RESET) %s\n", $$1, $$2}'
 	@echo ""
+	@echo -e "$(COLOR_BOLD)Development:$(COLOR_RESET)"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; /^(dev|dev-backend|dev-frontend):/ {printf "  $(COLOR_GREEN)%-25s$(COLOR_RESET) %s\n", $$1, $$2}'
+	@echo ""
+	@echo -e "$(COLOR_BOLD)Dependency Management:$(COLOR_RESET)"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; /^(lock|sync):/ {printf "  $(COLOR_BLUE)%-25s$(COLOR_RESET) %s\n", $$1, $$2}'
+	@echo ""
 	@echo -e "$(COLOR_BOLD)Utilities:$(COLOR_RESET)"
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; /^(run|pre-commit-install|pre-commit-run):/ {printf "  $(COLOR_GREEN)%-25s$(COLOR_RESET) %s\n", $$1, $$2}'
@@ -260,6 +268,42 @@ clean-all: clean ## Deep clean including .venv, .pytest_cache, etc.
 	rm -rf $(COV_REPORT)/ .coverage
 	rm -rf logs/ recordings/ voicemail/ cdr/
 	@echo -e "$(COLOR_GREEN)✓ Deep clean complete!$(COLOR_RESET)"
+
+# =============================================================================
+# Development
+# =============================================================================
+
+.PHONY: dev
+dev: ## Start backend and frontend concurrently for local development
+	@echo -e "$(COLOR_BOLD)Starting backend and frontend...$(COLOR_RESET)"
+	$(PYTHON) main.py & npm run dev & wait
+
+.PHONY: dev-backend
+dev-backend: ## Run backend only with Flask debug mode
+	@echo -e "$(COLOR_BOLD)Starting backend (debug mode)...$(COLOR_RESET)"
+	FLASK_DEBUG=1 $(PYTHON) main.py
+
+.PHONY: dev-frontend
+dev-frontend: ## Run frontend dev server only
+	@echo -e "$(COLOR_BOLD)Starting frontend dev server...$(COLOR_RESET)"
+	npm run dev
+
+# =============================================================================
+# Dependency Management
+# =============================================================================
+
+.PHONY: lock
+lock: ## Generate requirements.lock from current environment
+	@echo -e "$(COLOR_BOLD)Generating requirements.lock...$(COLOR_RESET)"
+	pip-compile --output-file=requirements.lock pyproject.toml 2>/dev/null || \
+		$(PIP) freeze > requirements.lock
+	@echo -e "$(COLOR_GREEN)✓ requirements.lock generated!$(COLOR_RESET)"
+
+.PHONY: sync
+sync: ## Install dependencies from requirements.lock
+	@echo -e "$(COLOR_BOLD)Installing from requirements.lock...$(COLOR_RESET)"
+	$(PIP) install -r requirements.lock
+	@echo -e "$(COLOR_GREEN)✓ Dependencies synced from lock file!$(COLOR_RESET)"
 
 # =============================================================================
 # Utilities

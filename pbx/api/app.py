@@ -79,6 +79,7 @@ def _register_blueprints(app):
     from pbx.api.routes.framework import framework_bp
     from pbx.api.routes.static import static_bp
     from pbx.api.routes.license import license_bp
+    from pbx.api.routes.compat import compat_bp
 
     blueprints = [
         health_bp,
@@ -101,6 +102,7 @@ def _register_blueprints(app):
         framework_bp,
         static_bp,
         license_bp,
+        compat_bp,
     ]
 
     for bp in blueprints:
