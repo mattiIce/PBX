@@ -1,0 +1,227 @@
+/* ==========================================================================
+   Base Styles
+   CSS reset, typography, body, and foundational element styles.
+   ========================================================================== */
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf0 100%);
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    color: #2c3e50;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h2 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+h3 {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+/* Container */
+.container {
+    max-width: 100%;
+    margin: 0;
+    background: #ffffff;
+    box-shadow: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f5f7fa;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Enhanced form focus states */
+select:focus {
+    outline: none;
+    border-color: #3b9dd6;
+    box-shadow: 0 0 0 3px rgba(59, 157, 214, 0.1);
+}
+
+/* Volume slider styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-track {
+    background: #ddd;
+    height: 6px;
+    border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #3b9dd6;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin-top: -6px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: #ddd;
+    height: 6px;
+    border-radius: 3px;
+}
+
+input[type="range"]::-moz-range-thumb {
+    background: #3b9dd6;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #2980b9;
+    transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: #2980b9;
+    transform: scale(1.1);
+}
+
+/* Professional shadow layers */
+.elevated-1 {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.elevated-2 {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.elevated-3 {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Loading Spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b9dd6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+/* Loading state */
+.loading {
+    position: relative;
+}
+
+.loading::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    border: 2px solid #e1e8ed;
+    border-top-color: #3b9dd6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Audio element - keep accessible but visually hidden */
+#webrtc-remote-audio {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+/* Print styles */
+@media print {
+    header, .tabs, .action-buttons {
+        display: none;
+    }
+
+    .container {
+        max-width: 100%;
+        box-shadow: none;
+    }
+
+    .tab-content {
+        display: block !important;
+        padding: 0;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        width: 100%;
+    }
+}

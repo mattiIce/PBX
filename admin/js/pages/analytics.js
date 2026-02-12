@@ -1,0 +1,123 @@
+/**
+ * Analytics page module.
+ * Handles call analytics, charts, and QoS metrics.
+ */
+
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
+import { showNotification } from '../ui/notifications.js';
+
+let analyticsCharts = {};
+
+function isChartJsAvailable() {
+    return typeof Chart !== 'undefined';
+}
+
+export async function loadAnalytics() {
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/analytics/overview`, {
+            headers: getAuthHeaders()
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        updateAnalyticsOverview(data);
+
+        if (isChartJsAvailable()) {
+            if (data.daily_trends) renderDailyTrendsChart(data.daily_trends);
+            if (data.hourly_distribution) renderHourlyDistributionChart(data.hourly_distribution);
+            if (data.disposition) renderDispositionChart(data.disposition);
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
+
+function updateAnalyticsOverview(data) {
+    const el = (id) => document.getElementById(id);
+    if (el('analytics-total-calls')) el('analytics-total-calls').textContent = data.total_calls || 0;
+    if (el('analytics-avg-duration')) el('analytics-avg-duration').textContent = `${data.avg_duration || 0}s`;
+    if (el('analytics-answer-rate')) el('analytics-answer-rate').textContent = `${data.answer_rate || 0}%`;
+    if (el('analytics-active-now')) el('analytics-active-now').textContent = data.active_calls || 0;
+}
+
+function renderDailyTrendsChart(trends) {
+    const ctx = document.getElementById('daily-trends-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (analyticsCharts.dailyTrends) analyticsCharts.dailyTrends.destroy();
+
+    analyticsCharts.dailyTrends = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trends.labels || [],
+            datasets: [{
+                label: 'Calls',
+                data: trends.data || [],
+                borderColor: '#3b82f6',
+                tension: 0.3,
+                fill: false
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+function renderHourlyDistributionChart(hourly) {
+    const ctx = document.getElementById('hourly-distribution-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (analyticsCharts.hourlyDist) analyticsCharts.hourlyDist.destroy();
+
+    analyticsCharts.hourlyDist = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: hourly.labels || [],
+            datasets: [{
+                label: 'Calls by Hour',
+                data: hourly.data || [],
+                backgroundColor: '#60a5fa'
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+function renderDispositionChart(disposition) {
+    const ctx = document.getElementById('disposition-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (analyticsCharts.disposition) analyticsCharts.disposition.destroy();
+
+    analyticsCharts.disposition = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: disposition.labels || [],
+            datasets: [{
+                data: disposition.data || [],
+                backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#6b7280']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+export async function loadQoSMetrics() {
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/qos/metrics`, {
+            headers: getAuthHeaders()
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        const el = (id) => document.getElementById(id);
+        if (el('qos-mos')) el('qos-mos').textContent = data.avg_mos?.toFixed(2) || 'N/A';
+        if (el('qos-jitter')) el('qos-jitter').textContent = `${data.avg_jitter || 0}ms`;
+        if (el('qos-packet-loss')) el('qos-packet-loss').textContent = `${data.avg_packet_loss || 0}%`;
+        if (el('qos-latency')) el('qos-latency').textContent = `${data.avg_latency || 0}ms`;
+    } catch (error) {
+        console.error('Error loading QoS metrics:', error);
+    }
+}
+
+// Backward compatibility
+window.loadAnalytics = loadAnalytics;
+window.loadQoSMetrics = loadQoSMetrics;

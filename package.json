@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "PBX Admin Panel JavaScript Testing",
   "scripts": {
+    "dev": "vite admin",
+    "build": "vite build admin",
+    "preview": "vite preview admin",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -10,15 +13,18 @@
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0"
+    "jest-environment-jsdom": "^30.2.0",
+    "vite": "^6.0.0"
   },
   "jest": {
     "testEnvironment": "jsdom",
     "testMatch": [
       "**/admin/tests/**/*.test.js"
     ],
+    "transform": {},
     "collectCoverageFrom": [
-      "admin/tests/**/*.test.js"
+      "admin/js/**/*.{js,ts}",
+      "!admin/js/**/*.d.ts"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [
