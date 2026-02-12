@@ -3,6 +3,14 @@
 Provides HTTP/HTTPS API for managing PBX features.
 """
 
+import warnings
+warnings.warn(
+    "pbx.api.rest_api is deprecated. Use pbx.api.app (Flask Blueprints) instead. "
+    "This module will be removed in a future release.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 import base64
 import errno
 import ipaddress

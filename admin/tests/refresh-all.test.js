@@ -42,11 +42,14 @@ global.loadAnalytics = jest.fn(() => Promise.resolve());
 global.loadExtensions = jest.fn(() => Promise.resolve());
 
 /**
- * NOTE: The function below is duplicated from admin.js for testing purposes.
- * This is a temporary approach while admin.js is not modularized.
- * 
- * TODO: Refactor admin.js to use ES6 modules to enable proper import/testing
- * of the actual production code instead of duplicating functions here.
+ * NOTE: The functions below (executeBatched, refreshAllData) are duplicated
+ * here for testing purposes. While admin.js has been modularized into ES
+ * modules (see admin/js/pages/*.js, admin/js/api/client.js, etc.), these
+ * orchestration functions have not yet been extracted into their own module.
+ *
+ * TODO: Extract executeBatched and refreshAllData into a dedicated module
+ * (e.g., admin/js/utils/refresh.js) and import them here instead of
+ * duplicating the implementations.
  */
 
 // Mock the suppressErrorNotifications flag

@@ -101,14 +101,39 @@ class PBXFlaskServer:
             traceback.print_exc()
 
     def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
-        """Request certificate from in-house CA (delegates to legacy implementation)."""
+        """Request certificate from in-house CA."""
         try:
-            from pbx.api.rest_api import PBXAPIServer as LegacyServer
+            import requests
+            ca_url = ca_config.get("url")
+            ca_token = ca_config.get("token")
+            hostname = ca_config.get("hostname", socket.gethostname())
 
-            legacy = LegacyServer.__new__(LegacyServer)
-            legacy.pbx_core = self.pbx_core
-            legacy.logger = logger
-            return legacy._request_certificate_from_ca(ca_config, cert_file, key_file)
+            if not ca_url:
+                logger.error("CA URL not configured")
+                return False
+
+            response = requests.post(
+                f"{ca_url}/api/certificate/request",
+                json={"hostname": hostname, "type": "server"},
+                headers={"Authorization": f"Bearer {ca_token}"} if ca_token else {},
+                timeout=30,
+                verify=ca_config.get("verify_ssl", True)
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("certificate") and data.get("private_key"):
+                    os.makedirs(os.path.dirname(cert_file), exist_ok=True)
+                    with open(cert_file, "w") as f:
+                        f.write(data["certificate"])
+                    with open(key_file, "w") as f:
+                        f.write(data["private_key"])
+                    os.chmod(key_file, 0o600)
+                    logger.info(f"Certificate obtained from CA: {cert_file}")
+                    return True
+
+            logger.error(f"CA certificate request failed: {response.status_code}")
+            return False
         except Exception as e:
             logger.error(f"Error requesting certificate from CA: {e}")
             return False
@@ -134,14 +159,14 @@ class PBXFlaskServer:
         """Run Flask server in thread."""
         try:
             ssl_ctx = self.ssl_context if self.ssl_enabled else None
-            # Use Flask's built-in Werkzeug server (threaded for concurrent requests)
+            debug = os.environ.get("FLASK_DEBUG", "0") == "1"
             self.app.run(
                 host=self.host,
                 port=self.port,
                 ssl_context=ssl_ctx,
                 threaded=True,
-                use_reloader=False,  # No reloader in production thread
-                debug=False,
+                use_reloader=debug,
+                debug=debug,
             )
         except Exception as e:
             if self.running:

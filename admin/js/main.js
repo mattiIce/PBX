@@ -21,19 +21,19 @@ window.escapeHtml = escapeHtml;
 window.copyToClipboard = copyToClipboard;
 
 // Page module imports — each module self-registers window.* exports
-import './pages/dashboard.js';
-import './pages/extensions.js';
-import './pages/voicemail.js';
-import './pages/calls.js';
-import './pages/config.js';
-import './pages/provisioning.js';
-import './pages/phones.js';
-import './pages/security.js';
-import './pages/emergency.js';
-import './pages/phone_book.js';
-import './pages/paging.js';
-import './pages/license.js';
-import './pages/analytics.js';
+import './pages/dashboard.ts';
+import './pages/extensions.ts';
+import './pages/voicemail.ts';
+import './pages/calls.ts';
+import './pages/config.ts';
+import './pages/provisioning.ts';
+import './pages/phones.ts';
+import './pages/security.ts';
+import './pages/emergency.ts';
+import './pages/phone_book.ts';
+import './pages/paging.ts';
+import './pages/license.ts';
+import './pages/analytics.ts';
 
 // Named exports for use by other ES modules
 export {

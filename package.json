@@ -21,8 +21,10 @@
     "testMatch": [
       "**/admin/tests/**/*.test.js"
     ],
+    "transform": {},
     "collectCoverageFrom": [
-      "admin/tests/**/*.test.js"
+      "admin/js/**/*.{js,ts}",
+      "!admin/js/**/*.d.ts"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [
