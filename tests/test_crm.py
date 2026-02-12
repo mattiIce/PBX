@@ -3,6 +3,7 @@
 Comprehensive CRM Integration Tests
 Tests CRM integration framework, screen pop support, and specific integrations (HubSpot, Zendesk)
 """
+
 import os
 import sys
 import unittest
@@ -414,8 +415,7 @@ class TestHubSpotIntegration(unittest.TestCase):
         self.db = MockDB()
 
         # Create tables
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS hubspot_integration (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 enabled INTEGER DEFAULT 0,
@@ -427,11 +427,9 @@ class TestHubSpotIntegration(unittest.TestCase):
                 webhook_url TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS integration_activity_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 integration_type TEXT,
@@ -440,8 +438,7 @@ class TestHubSpotIntegration(unittest.TestCase):
                 details TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         self.config = {}
         self.integration = HubSpotIntegration(self.db, self.config)
@@ -522,8 +519,7 @@ class TestZendeskIntegration(unittest.TestCase):
         self.db = MockDB()
 
         # Create tables
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS zendesk_integration (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 enabled INTEGER DEFAULT 0,
@@ -535,11 +531,9 @@ class TestZendeskIntegration(unittest.TestCase):
                 webhook_url TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS integration_activity_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 integration_type TEXT,
@@ -548,8 +542,7 @@ class TestZendeskIntegration(unittest.TestCase):
                 details TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         self.config = {}
         self.integration = ZendeskIntegration(self.db, self.config)

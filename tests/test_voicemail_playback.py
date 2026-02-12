@@ -3,6 +3,7 @@
 Test voicemail playback functionality
 Tests that extensions can retrieve and listen to their voicemail messages
 """
+
 import os
 import shutil
 import sys

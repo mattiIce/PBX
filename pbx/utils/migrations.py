@@ -217,8 +217,7 @@ def register_all_migrations(manager: MigrationManager):
     manager.register_migration(
         1000,
         "AI Features Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Real-time speech analytics
         CREATE TABLE IF NOT EXISTS speech_analytics_configs (
             id {SERIAL},
@@ -265,16 +264,14 @@ def register_all_migrations(manager: MigrationManager):
             prediction_accuracy FLOAT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1001: Video Conferencing Framework
     manager.register_migration(
         1001,
         "Video Conferencing Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Video conferencing rooms
         CREATE TABLE IF NOT EXISTS video_conference_rooms (
             id {SERIAL},
@@ -311,16 +308,14 @@ def register_all_migrations(manager: MigrationManager):
             max_bitrate INTEGER DEFAULT 2000,
             min_bitrate INTEGER DEFAULT 500
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1002: Emergency Services Framework
     manager.register_migration(
         1002,
         "Emergency Services Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Nomadic E911 locations
         CREATE TABLE IF NOT EXISTS nomadic_e911_locations (
             id {SERIAL},
@@ -362,16 +357,14 @@ def register_all_migrations(manager: MigrationManager):
             elin VARCHAR(20),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1003: Analytics & Reporting Framework
     manager.register_migration(
         1003,
         "Analytics & Reporting Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- BI integration configs
         CREATE TABLE IF NOT EXISTS bi_integration_configs (
             id {SERIAL},
@@ -402,16 +395,14 @@ def register_all_migrations(manager: MigrationManager):
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             auto_assigned BOOLEAN DEFAULT {BOOLEAN_FALSE}
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1004: Integration Framework
     manager.register_migration(
         1004,
         "Integration Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- HubSpot integration
         CREATE TABLE IF NOT EXISTS hubspot_integration (
             id {SERIAL},
@@ -446,16 +437,14 @@ def register_all_migrations(manager: MigrationManager):
             details TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1005: Mobile Framework
     manager.register_migration(
         1005,
         "Mobile Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Mobile app installations
         CREATE TABLE IF NOT EXISTS mobile_app_installations (
             id {SERIAL},
@@ -480,16 +469,14 @@ def register_all_migrations(manager: MigrationManager):
             port_date TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1006: Advanced Call Features Framework
     manager.register_migration(
         1006,
         "Advanced Call Features Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Call blending configurations
         CREATE TABLE IF NOT EXISTS call_blending_configs (
             id {SERIAL},
@@ -521,16 +508,14 @@ def register_all_migrations(manager: MigrationManager):
             quality_score FLOAT,
             analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1007: SIP Trunking Framework
     manager.register_migration(
         1007,
         "SIP Trunking Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Geographic redundancy
         CREATE TABLE IF NOT EXISTS trunk_geographic_regions (
             id {SERIAL},
@@ -564,16 +549,14 @@ def register_all_migrations(manager: MigrationManager):
             security_profiles TEXT,
             enabled BOOLEAN DEFAULT {BOOLEAN_TRUE}
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1008: Collaboration Framework
     manager.register_migration(
         1008,
         "Collaboration Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Team messaging
         CREATE TABLE IF NOT EXISTS team_messaging_channels (
             id {SERIAL},
@@ -614,8 +597,7 @@ def register_all_migrations(manager: MigrationManager):
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1009: Compliance Framework (SOC 2 Type 2 only)
@@ -623,8 +605,7 @@ def register_all_migrations(manager: MigrationManager):
     manager.register_migration(
         1009,
         "Compliance Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- SOC 2 Type 2 enhanced
         CREATE TABLE IF NOT EXISTS soc2_controls (
             id {SERIAL},
@@ -645,16 +626,14 @@ def register_all_migrations(manager: MigrationManager):
             encryption_required BOOLEAN DEFAULT {BOOLEAN_TRUE},
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
-        ),
+    """),
     )
 
     # Migration 1010: Click-to-Dial Framework
     manager.register_migration(
         1010,
         "Click-to-Dial Framework",
-        manager._build_migration_sql(
-            """
+        manager._build_migration_sql("""
         -- Click-to-dial configurations
         CREATE TABLE IF NOT EXISTS click_to_dial_configs (
             id {SERIAL},
@@ -677,6 +656,5 @@ def register_all_migrations(manager: MigrationManager):
             connected_at TIMESTAMP,
             status VARCHAR(20)
         );
-    """
-        ),
+    """),
     )

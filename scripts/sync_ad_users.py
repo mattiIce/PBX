@@ -23,6 +23,7 @@ Configuration:
     - AD_BIND_DN: Service account DN
     - AD_BIND_PASSWORD: Service account password
 """
+
 import argparse
 import os
 import sys

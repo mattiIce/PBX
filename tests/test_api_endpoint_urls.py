@@ -18,9 +18,7 @@ class TestAPIEndpointURLs(unittest.TestCase):
     def setUpClass(cls):
         """Set up the test class by reading the REST API file once"""
         # Get the path to the rest_api.py file relative to this test file
-        rest_api_path = os.path.join(
-            os.path.dirname(__file__), "..", "pbx", "api", "rest_api.py"
-        )
+        rest_api_path = os.path.join(os.path.dirname(__file__), "..", "pbx", "api", "rest_api.py")
         with open(rest_api_path, "r") as f:
             cls.rest_api_content = f.read()
 

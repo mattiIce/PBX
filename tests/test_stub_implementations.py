@@ -2,6 +2,7 @@
 """
 Tests for stub feature implementations
 """
+
 import os
 import sys
 import tempfile

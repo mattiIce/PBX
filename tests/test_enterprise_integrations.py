@@ -3,6 +3,7 @@
 Tests for enterprise integration implementations
 Tests the newly implemented features in Zoom, Teams, Outlook, and Active Directory integrations
 """
+
 import os
 import sys
 from datetime import datetime, timedelta, timezone

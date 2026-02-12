@@ -6,6 +6,7 @@ This script verifies that the PostgreSQL database is properly configured
 and accessible. It provides detailed diagnostic information to help
 troubleshoot database connectivity issues.
 """
+
 import os
 import sys
 

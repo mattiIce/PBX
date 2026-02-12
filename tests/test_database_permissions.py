@@ -2,6 +2,7 @@
 """
 Tests for database permission error handling
 """
+
 import os
 import sys
 import tempfile

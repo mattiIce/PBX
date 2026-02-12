@@ -41,8 +41,7 @@ class TestNomadicE911(unittest.TestCase):
         self.db = MockDB()
 
         # Create tables
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS nomadic_e911_locations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 extension TEXT NOT NULL,
@@ -61,11 +60,9 @@ class TestNomadicE911(unittest.TestCase):
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 auto_detected INTEGER DEFAULT 0
             )
-        """
-        )
+        """)
 
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS e911_location_updates (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 extension TEXT NOT NULL,
@@ -74,11 +71,9 @@ class TestNomadicE911(unittest.TestCase):
                 update_source TEXT,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
-        self.db.execute(
-            """
+        self.db.execute("""
             CREATE TABLE IF NOT EXISTS multi_site_e911_configs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 site_name TEXT NOT NULL,
@@ -96,8 +91,7 @@ class TestNomadicE911(unittest.TestCase):
                 floor TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         self.config = {"nomadic_e911.enabled": True}
         self.engine = NomadicE911Engine(self.db, self.config)

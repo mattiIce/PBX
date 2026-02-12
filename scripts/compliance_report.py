@@ -45,12 +45,14 @@ class ComplianceReporter:
 
         audit_log = self.base_dir / "logs" / "audit.log"
         if not audit_log.exists():
-            self.report_data["findings"].append({
-                "severity": "medium",
-                "category": "audit_logging",
-                "finding": "Audit log file not found",
-                "recommendation": "Enable audit logging for all admin actions"
-            })
+            self.report_data["findings"].append(
+                {
+                    "severity": "medium",
+                    "category": "audit_logging",
+                    "finding": "Audit log file not found",
+                    "recommendation": "Enable audit logging for all admin actions",
+                }
+            )
             return
 
         try:
@@ -79,12 +81,14 @@ class ComplianceReporter:
             self._check_suspicious_activity(events)
 
         except Exception as e:
-            self.report_data["findings"].append({
-                "severity": "low",
-                "category": "audit_logging",
-                "finding": f"Error analyzing audit logs: {e}",
-                "recommendation": "Review audit log format and permissions"
-            })
+            self.report_data["findings"].append(
+                {
+                    "severity": "low",
+                    "category": "audit_logging",
+                    "finding": f"Error analyzing audit logs: {e}",
+                    "recommendation": "Review audit log format and permissions",
+                }
+            )
 
     def _count_event_types(self, events: List[Dict]) -> Dict:
         """Count events by type."""
@@ -110,25 +114,24 @@ class ComplianceReporter:
     def _count_security_events(self, events: List[Dict]) -> int:
         """Count security-related events."""
         security_actions = ["login", "logout", "password_change", "permission_change"]
-        return sum(
-            1 for event in events if event.get("action") in security_actions
-        )
+        return sum(1 for event in events if event.get("action") in security_actions)
 
     def _check_suspicious_activity(self, events: List[Dict]):
         """Check for suspicious activity in audit logs."""
         # Check for multiple failed logins
         failed_logins = [
-            e for e in events
-            if e.get("action") == "login" and not e.get("success", True)
+            e for e in events if e.get("action") == "login" and not e.get("success", True)
         ]
 
         if len(failed_logins) > 10:
-            self.report_data["findings"].append({
-                "severity": "high",
-                "category": "security",
-                "finding": f"{len(failed_logins)} failed login attempts detected",
-                "recommendation": "Review failed login attempts and consider enabling account lockout"
-            })
+            self.report_data["findings"].append(
+                {
+                    "severity": "high",
+                    "category": "security",
+                    "finding": f"{len(failed_logins)} failed login attempts detected",
+                    "recommendation": "Review failed login attempts and consider enabling account lockout",
+                }
+            )
 
     def check_security_controls(self):
         """Check security controls."""
@@ -140,20 +143,19 @@ class ComplianceReporter:
         fips_script = self.base_dir / "scripts" / "verify_fips.py"
         if fips_script.exists():
             import subprocess
+
             try:
                 result = subprocess.run(
-                    [sys.executable, str(fips_script)],
-                    capture_output=True,
-                    timeout=30
+                    [sys.executable, str(fips_script)], capture_output=True, timeout=30
                 )
                 controls["fips_140_2"] = {
                     "status": "compliant" if result.returncode == 0 else "non_compliant",
-                    "description": "FIPS 140-2 cryptographic standards"
+                    "description": "FIPS 140-2 cryptographic standards",
                 }
             except Exception:
                 controls["fips_140_2"] = {
                     "status": "unknown",
-                    "description": "FIPS 140-2 cryptographic standards"
+                    "description": "FIPS 140-2 cryptographic standards",
                 }
 
         # Check SSL/TLS
@@ -164,63 +166,63 @@ class ComplianceReporter:
         has_cert = any(p.exists() for p in cert_paths)
         controls["ssl_tls"] = {
             "status": "compliant" if has_cert else "non_compliant",
-            "description": "SSL/TLS encryption for communications"
+            "description": "SSL/TLS encryption for communications",
         }
 
         if not has_cert:
-            self.report_data["findings"].append({
-                "severity": "high",
-                "category": "encryption",
-                "finding": "No SSL certificate found",
-                "recommendation": "Deploy SSL certificate for secure communications"
-            })
+            self.report_data["findings"].append(
+                {
+                    "severity": "high",
+                    "category": "encryption",
+                    "finding": "No SSL certificate found",
+                    "recommendation": "Deploy SSL certificate for secure communications",
+                }
+            )
 
         # Check backup configuration
         backup_script = self.base_dir / "scripts" / "backup.sh"
         controls["backup_recovery"] = {
             "status": "compliant" if backup_script.exists() else "non_compliant",
-            "description": "Backup and recovery procedures"
+            "description": "Backup and recovery procedures",
         }
 
         # Check rate limiting
         controls["rate_limiting"] = {
             "status": "compliant",  # Now implemented
-            "description": "API rate limiting to prevent abuse"
+            "description": "API rate limiting to prevent abuse",
         }
 
         # Check audit logging
         audit_log = self.base_dir / "logs" / "audit.log"
         controls["audit_logging"] = {
             "status": "compliant" if audit_log.exists() else "non_compliant",
-            "description": "Comprehensive audit logging"
+            "description": "Comprehensive audit logging",
         }
 
         # Check security headers
         controls["security_headers"] = {
             "status": "compliant",  # Implemented in API
-            "description": "HTTP security headers (CSP, X-Frame-Options, etc.)"
+            "description": "HTTP security headers (CSP, X-Frame-Options, etc.)",
         }
 
         # Check access controls
         controls["access_control"] = {
             "status": "compliant",  # Password protection implemented
-            "description": "User authentication and authorization"
+            "description": "User authentication and authorization",
         }
 
         self.report_data["security_controls"] = controls
 
         # Calculate compliance score
         total_controls = len(controls)
-        compliant_controls = sum(
-            1 for c in controls.values() if c["status"] == "compliant"
-        )
+        compliant_controls = sum(1 for c in controls.values() if c["status"] == "compliant")
         compliance_score = (compliant_controls / total_controls * 100) if total_controls > 0 else 0
 
         self.report_data["compliance_status"] = {
             "overall_score": round(compliance_score, 1),
             "total_controls": total_controls,
             "compliant_controls": compliant_controls,
-            "status": "compliant" if compliance_score >= 90 else "needs_improvement"
+            "status": "compliant" if compliance_score >= 90 else "needs_improvement",
         }
 
     def check_system_status(self):
@@ -231,32 +233,37 @@ class ComplianceReporter:
         health_script = self.base_dir / "scripts" / "production_health_check.py"
         if health_script.exists():
             import subprocess
+
             try:
                 result = subprocess.run(
-                    [sys.executable, str(health_script), "--json"],
-                    capture_output=True,
-                    timeout=30
+                    [sys.executable, str(health_script), "--json"], capture_output=True, timeout=30
                 )
                 if result.returncode == 0:
-                    self.report_data["recommendations"].append({
-                        "priority": "low",
-                        "category": "operations",
-                        "recommendation": "System health check passed - continue regular monitoring"
-                    })
+                    self.report_data["recommendations"].append(
+                        {
+                            "priority": "low",
+                            "category": "operations",
+                            "recommendation": "System health check passed - continue regular monitoring",
+                        }
+                    )
                 else:
-                    self.report_data["findings"].append({
-                        "severity": "medium",
-                        "category": "operations",
-                        "finding": "System health check reported issues",
-                        "recommendation": "Review health check output and address any issues"
-                    })
+                    self.report_data["findings"].append(
+                        {
+                            "severity": "medium",
+                            "category": "operations",
+                            "finding": "System health check reported issues",
+                            "recommendation": "Review health check output and address any issues",
+                        }
+                    )
             except Exception as e:
-                self.report_data["findings"].append({
-                    "severity": "low",
-                    "category": "operations",
-                    "finding": f"Could not run health check: {e}",
-                    "recommendation": "Ensure health check script is accessible"
-                })
+                self.report_data["findings"].append(
+                    {
+                        "severity": "low",
+                        "category": "operations",
+                        "finding": f"Could not run health check: {e}",
+                        "recommendation": "Ensure health check script is accessible",
+                    }
+                )
 
     def generate_recommendations(self):
         """Generate recommendations based on findings."""
@@ -265,27 +272,27 @@ class ComplianceReporter:
             {
                 "priority": "high",
                 "category": "security",
-                "recommendation": "Review audit logs weekly for suspicious activity"
+                "recommendation": "Review audit logs weekly for suspicious activity",
             },
             {
                 "priority": "high",
                 "category": "security",
-                "recommendation": "Rotate passwords and secrets quarterly"
+                "recommendation": "Rotate passwords and secrets quarterly",
             },
             {
                 "priority": "medium",
                 "category": "operations",
-                "recommendation": "Test disaster recovery procedures quarterly"
+                "recommendation": "Test disaster recovery procedures quarterly",
             },
             {
                 "priority": "medium",
                 "category": "operations",
-                "recommendation": "Review and update documentation monthly"
+                "recommendation": "Review and update documentation monthly",
             },
             {
                 "priority": "low",
                 "category": "compliance",
-                "recommendation": "Conduct annual compliance review"
+                "recommendation": "Conduct annual compliance review",
             },
         ]
 
@@ -336,7 +343,7 @@ class ComplianceReporter:
         </tr>
 """
 
-        for control_name, control in self.report_data.get('security_controls', {}).items():
+        for control_name, control in self.report_data.get("security_controls", {}).items():
             status_class = f"status-{control['status'].replace('_', '-')}"
             html += f"""
         <tr>
@@ -351,7 +358,7 @@ class ComplianceReporter:
 
     <h2>Audit Summary</h2>
 """
-        audit = self.report_data.get('audit_summary', {})
+        audit = self.report_data.get("audit_summary", {})
         html += f"""
     <p>Total Events: {audit.get('total_events', 0)}</p>
     <p>Unique Users: {audit.get('users', 0)}</p>
@@ -359,7 +366,7 @@ class ComplianceReporter:
     <p>Security Events: {audit.get('security_events', 0)}</p>
 """
 
-        if self.report_data.get('findings'):
+        if self.report_data.get("findings"):
             html += """
     <h2>Findings</h2>
     <table>
@@ -370,7 +377,7 @@ class ComplianceReporter:
             <th>Recommendation</th>
         </tr>
 """
-            for finding in self.report_data['findings']:
+            for finding in self.report_data["findings"]:
                 severity_class = f"severity-{finding['severity']}"
                 html += f"""
         <tr>
@@ -389,19 +396,19 @@ class ComplianceReporter:
 </html>
 """
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             f.write(html)
 
     def generate_json_report(self, output_file: str):
         """Generate JSON report."""
         print(f"Generating JSON report: {output_file}")
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(self.report_data, f, indent=2)
 
     def run_full_report(self, output_format: str = "html", output_file: str = None):
         """Run full compliance report."""
-        print("="  * 70)
+        print("=" * 70)
         print("PBX Compliance Report Generator")
         print("=" * 70)
 
@@ -430,16 +437,8 @@ class ComplianceReporter:
 
 def main():
     parser = argparse.ArgumentParser(description="PBX Compliance Report Generator")
-    parser.add_argument(
-        "--format",
-        choices=["html", "json"],
-        default="html",
-        help="Output format"
-    )
-    parser.add_argument(
-        "--output",
-        help="Output file path"
-    )
+    parser.add_argument("--format", choices=["html", "json"], default="html", help="Output format")
+    parser.add_argument("--output", help="Output file path")
     args = parser.parse_args()
 
     reporter = ComplianceReporter()

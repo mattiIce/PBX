@@ -11,6 +11,7 @@ Requirements:
 Note: Requires internet connection to use Google TTS API (free, no API key needed)
       Voice quality is natural and professional-sounding.
 """
+
 import os
 import sys
 

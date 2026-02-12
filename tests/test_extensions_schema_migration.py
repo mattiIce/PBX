@@ -3,6 +3,7 @@
 Tests for extensions table schema migration
 Tests that voicemail_pin_hash and voicemail_pin_salt columns are added during migration
 """
+
 import os
 import sqlite3
 import sys
@@ -30,8 +31,7 @@ def test_extensions_columns_migration():
         cursor = conn.cursor()
 
         # Create old schema without voicemail_pin_hash and voicemail_pin_salt
-        cursor.execute(
-            """
+        cursor.execute("""
         CREATE TABLE extensions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             number VARCHAR(20) UNIQUE NOT NULL,
@@ -47,8 +47,7 @@ def test_extensions_columns_migration():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """
-        )
+        """)
         conn.commit()
         conn.close()
 
@@ -162,8 +161,7 @@ def test_insert_with_voicemail_pin():
         # First, create old schema without voicemail_pin columns
         conn = sqlite3.connect(temp_db.name)
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
         CREATE TABLE extensions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             number VARCHAR(20) UNIQUE NOT NULL,
@@ -176,8 +174,7 @@ def test_insert_with_voicemail_pin():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """
-        )
+        """)
         conn.commit()
         conn.close()
 

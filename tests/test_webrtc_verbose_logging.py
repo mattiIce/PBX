@@ -2,6 +2,7 @@
 """
 Test WebRTC verbose logging feature
 """
+
 import logging
 import os
 import sys

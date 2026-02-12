@@ -17,7 +17,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -113,7 +113,7 @@ class SOC2ControlTester:
         # Verify security configuration requires integrity
         require_auth = self.config.get("security.require_authentication", False)
         enforce_fips = self.config.get("security.enforce_fips", False)
-        
+
         if require_auth and enforce_fips:
             return True, "Authentication and FIPS enforcement demonstrate integrity commitment"
         elif require_auth:
@@ -130,7 +130,7 @@ class SOC2ControlTester:
         """
         # Check for admin role separation and audit logging
         api_auth = self.config.get("api.require_authentication", False)
-        
+
         if api_auth:
             return True, "API authentication enables role-based access control and oversight"
         else:
@@ -145,9 +145,12 @@ class SOC2ControlTester:
         """
         # Verify system has proper configuration and validation
         min_password_length = self.config.get("security.password.min_length", 0)
-        
+
         if min_password_length >= 12:
-            return True, f"Strong password policy ({min_password_length} chars) demonstrates competent security practices"
+            return (
+                True,
+                f"Strong password policy ({min_password_length} chars) demonstrates competent security practices",
+            )
         else:
             return False, f"Weak password policy ({min_password_length} chars) - should be >= 12"
 
@@ -161,7 +164,7 @@ class SOC2ControlTester:
         # Check for security objectives in configuration
         fips_mode = self.config.get("security.fips_mode", False)
         enable_tls = self.config.get("security.enable_tls", False)
-        
+
         if fips_mode or enable_tls:
             return True, "Clear security objectives defined (FIPS/TLS compliance)"
         else:
@@ -176,7 +179,7 @@ class SOC2ControlTester:
         """
         # Verify control activities are configured
         max_failed_attempts = self.config.get("security.max_failed_attempts", 999)
-        
+
         if max_failed_attempts <= 10:
             return True, f"Account lockout control active ({max_failed_attempts} max attempts)"
         else:
@@ -192,7 +195,7 @@ class SOC2ControlTester:
         # Check authentication requirements
         require_auth = self.config.get("security.require_authentication", False)
         api_auth = self.config.get("api.require_authentication", False)
-        
+
         if require_auth and api_auth:
             return True, "Access controls enforced for both SIP and API interfaces"
         elif require_auth or api_auth:
@@ -210,7 +213,7 @@ class SOC2ControlTester:
         # Verify authentication and authorization mechanisms
         require_auth = self.config.get("security.require_authentication", False)
         min_password_length = self.config.get("security.password.min_length", 0)
-        
+
         if require_auth and min_password_length >= 12:
             return True, "Strong authentication controls in place"
         elif require_auth:
@@ -229,7 +232,7 @@ class SOC2ControlTester:
         fips_mode = self.config.get("security.fips_mode", False)
         enable_tls = self.config.get("security.enable_tls", False)
         enable_srtp = self.config.get("security.enable_srtp", False)
-        
+
         encryption_methods = []
         if fips_mode:
             encryption_methods.append("FIPS 140-2 compliant encryption")
@@ -237,7 +240,7 @@ class SOC2ControlTester:
             encryption_methods.append("TLS for SIP signaling")
         if enable_srtp:
             encryption_methods.append("SRTP for media")
-        
+
         if len(encryption_methods) >= 2:
             return True, f"Strong encryption: {', '.join(encryption_methods)}"
         elif len(encryption_methods) >= 1:
@@ -254,7 +257,7 @@ class SOC2ControlTester:
         """
         # Check for security monitoring capabilities
         max_failed_attempts = self.config.get("security.max_failed_attempts", 999)
-        
+
         if max_failed_attempts <= 10:
             return True, "Failed login detection configured for incident detection"
         else:
@@ -269,9 +272,12 @@ class SOC2ControlTester:
         """
         # Verify incident response capabilities
         max_failed_attempts = self.config.get("security.max_failed_attempts", 999)
-        
+
         if max_failed_attempts <= 10:
-            return True, f"Automated incident response via account lockout (after {max_failed_attempts} failures)"
+            return (
+                True,
+                f"Automated incident response via account lockout (after {max_failed_attempts} failures)",
+            )
         else:
             return True, "Manual incident response procedures in place"
 
@@ -287,7 +293,7 @@ class SOC2ControlTester:
         healthcheck_exists = os.path.exists(
             os.path.join(os.path.dirname(__file__), "..", "healthcheck.py")
         )
-        
+
         if healthcheck_exists:
             return True, "Health monitoring system available (healthcheck.py)"
         else:
@@ -302,7 +308,7 @@ class SOC2ControlTester:
         """
         # Verify database backend supports backup operations
         db_type = self.config.get("database.type", "sqlite")
-        
+
         if db_type == "postgresql":
             return True, "PostgreSQL backend supports automated backup and recovery"
         elif db_type == "sqlite":
@@ -319,7 +325,7 @@ class SOC2ControlTester:
         """
         # Check for data integrity mechanisms
         fips_mode = self.config.get("security.fips_mode", False)
-        
+
         if fips_mode:
             return True, "FIPS mode ensures cryptographic integrity of processed data"
         else:
@@ -335,7 +341,7 @@ class SOC2ControlTester:
         # Verify processing accuracy controls
         # Database transactions ensure processing accuracy
         db_type = self.config.get("database.type", "sqlite")
-        
+
         return True, f"Transaction integrity enforced by {db_type} database"
 
     def test_control_c1_1(self) -> Tuple[bool, str]:
@@ -347,7 +353,7 @@ class SOC2ControlTester:
         """
         # Check for confidentiality controls
         require_auth = self.config.get("security.require_authentication", False)
-        
+
         if require_auth:
             return True, "Authentication protects confidential information access"
         else:
@@ -362,7 +368,7 @@ class SOC2ControlTester:
         """
         # Verify secure disposal capabilities
         fips_mode = self.config.get("security.fips_mode", False)
-        
+
         if fips_mode:
             return True, "FIPS-compliant encryption ensures secure data disposal"
         else:
@@ -439,9 +445,7 @@ class SOC2ControlTester:
             category = control.get("control_category")
             description = control.get("description")
 
-            self.print_status(
-                f"Testing {control_id} ({category}): {description}", "INFO"
-            )
+            self.print_status(f"Testing {control_id} ({category}): {description}", "INFO")
 
             # Run test
             passed, details = self.test_control(control_id)
@@ -539,22 +543,16 @@ class SOC2ControlTester:
         print("=" * 80)
 
         if self.test_results["failed"] == 0:
-            self.print_status(
-                "All controls passed testing ✓", "PASS"
-            )
+            self.print_status("All controls passed testing ✓", "PASS")
         else:
-            self.print_status(
-                f"{self.test_results['failed']} control(s) failed testing", "FAIL"
-            )
+            self.print_status(f"{self.test_results['failed']} control(s) failed testing", "FAIL")
 
         print()
 
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(
-        description="SOC 2 Type 2 Controls Testing Script"
-    )
+    parser = argparse.ArgumentParser(description="SOC 2 Type 2 Controls Testing Script")
     parser.add_argument(
         "--config",
         type=str,

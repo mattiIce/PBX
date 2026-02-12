@@ -2,6 +2,7 @@
 """
 Tests for emergency tables in database
 """
+
 import os
 import sys
 import tempfile

@@ -4,6 +4,7 @@ Provisioning Troubleshooting Tool
 
 This script helps diagnose and troubleshoot phone auto-provisioning issues.
 """
+
 import json
 import os
 import sys
@@ -362,8 +363,7 @@ def main():
 
     if len(sys.argv) > 1:
         if sys.argv[1] in ["-h", "--help"]:
-            print(
-                """
+            print("""
 Usage: python troubleshoot_provisioning.py [OPTIONS]
 
 Options:
@@ -375,8 +375,7 @@ Examples:
   python troubleshoot_provisioning.py
   python troubleshoot_provisioning.py --host 192.168.1.100 --port 8080
   python troubleshoot_provisioning.py --mac 00:15:65:12:34:56
-"""
-            )
+""")
             return
 
         # Parse arguments

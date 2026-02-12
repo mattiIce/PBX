@@ -2,6 +2,7 @@
 """
 Test PBX shutdown functionality
 """
+
 import os
 import sys
 import tempfile

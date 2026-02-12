@@ -8,6 +8,7 @@ to automatically assign PBX privileges based on security group membership.
 Run this example:
     python examples/test_ad_group_permissions.py
 """
+
 import os
 import sys
 

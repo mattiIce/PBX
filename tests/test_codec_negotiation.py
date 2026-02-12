@@ -3,6 +3,7 @@
 Test codec negotiation between caller and callee
 Verifies that PBX correctly negotiates codecs to prevent "488 Not Acceptable Here" errors
 """
+
 import os
 import sys
 

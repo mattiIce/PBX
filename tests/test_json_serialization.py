@@ -2,6 +2,7 @@
 """
 Tests for JSON serialization of datetime objects in API responses
 """
+
 import json
 import os
 import sys

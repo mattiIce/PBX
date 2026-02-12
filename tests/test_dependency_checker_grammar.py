@@ -3,6 +3,7 @@
 Test Dependency Checker Grammar
 Tests that the dependency checker uses correct singular/plural forms
 """
+
 import io
 import sys
 from pathlib import Path

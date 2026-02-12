@@ -2,6 +2,7 @@
 """
 Database initialization script for PBX system
 """
+
 import os
 import sys
 

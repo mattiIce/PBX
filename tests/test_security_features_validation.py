@@ -3,6 +3,7 @@
 Comprehensive security feature validation tests
 Verifies all security features are functional and properly enforced
 """
+
 import os
 import sys
 

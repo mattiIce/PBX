@@ -127,7 +127,7 @@ class HealthMonitor:
                             "status": "healthy",
                             "message": f"PBX process running (PID: {proc.info['pid']})",
                         }
-                        
+
                         # Get process resource usage
                         try:
                             cpu = proc.cpu_percent(interval=0.1)
@@ -226,9 +226,7 @@ class HealthMonitor:
                         "status": "critical",
                         "message": f"Database connection failed: {e}",
                     }
-                    self.health_data["alerts"].append(
-                        f"CRITICAL: Database connection failed: {e}"
-                    )
+                    self.health_data["alerts"].append(f"CRITICAL: Database connection failed: {e}")
 
         except ImportError:
             checks["connectivity"] = {
@@ -258,7 +256,7 @@ class HealthMonitor:
             try:
                 url = f"{self.api_url}{path}"
                 response = requests.get(url, verify=self.verify_ssl, timeout=5)
-                
+
                 checks[path] = {
                     "status": "healthy" if response.status_code == 200 else "warning",
                     "status_code": response.status_code,
@@ -278,7 +276,7 @@ class HealthMonitor:
     def check_disk_space_specific(self):
         """Check disk space for specific PBX directories."""
         checks = {}
-        
+
         directories = [
             (self.base_dir / "voicemail", "Voicemail"),
             (self.base_dir / "recordings", "Call Recordings"),
@@ -303,7 +301,7 @@ class HealthMonitor:
     def check_ssl_certificate(self):
         """Check SSL certificate expiration."""
         checks = {}
-        
+
         ssl_cert = self.base_dir / "ssl" / "pbx.crt"
         if ssl_cert.exists():
             try:
@@ -313,13 +311,13 @@ class HealthMonitor:
                     text=True,
                     timeout=5,
                 )
-                
+
                 if result.returncode == 0:
                     # Parse expiration date
                     expiry_str = result.stdout.strip().split("=")[1]
                     expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
                     days_until_expiry = (expiry_date - datetime.datetime.now()).days
-                    
+
                     if days_until_expiry < 7:
                         status = "critical"
                         self.health_data["alerts"].append(
@@ -329,7 +327,7 @@ class HealthMonitor:
                         status = "warning"
                     else:
                         status = "healthy"
-                    
+
                     checks["expiration"] = {
                         "status": status,
                         "days_until_expiry": days_until_expiry,
@@ -397,7 +395,7 @@ class HealthMonitor:
         lines.append(f"Timestamp: {self.health_data['timestamp']}")
         lines.append(f"Hostname: {self.health_data['hostname']}")
         lines.append("")
-        
+
         # Summary
         summary = self.health_data["summary"]
         lines.append("SUMMARY:")
@@ -405,14 +403,14 @@ class HealthMonitor:
         lines.append(f"  Warnings: {summary['warning']}")
         lines.append(f"  Critical: {summary['critical']}")
         lines.append("")
-        
+
         # Alerts
         if self.health_data["alerts"]:
             lines.append("ALERTS:")
             for alert in self.health_data["alerts"]:
                 lines.append(f"  • {alert}")
             lines.append("")
-        
+
         # Detailed checks
         for category, checks in self.health_data["checks"].items():
             lines.append(f"{category.upper().replace('_', ' ')}:")
@@ -425,7 +423,7 @@ class HealthMonitor:
                     }.get(check.get("status", ""), "?")
                     lines.append(f"  {status_icon} {check.get('message', name)}")
             lines.append("")
-        
+
         lines.append("=" * 80)
         return "\n".join(lines)
 
@@ -435,7 +433,8 @@ class HealthMonitor:
 
     def generate_html_report(self):
         """Generate HTML report."""
-        html = """
+        html = (
+            """
 <!DOCTYPE html>
 <html>
 <head>
@@ -466,24 +465,35 @@ class HealthMonitor:
 <body>
     <div class="container">
         <h1>PBX System Health Report</h1>
-        <p class="timestamp">Generated: """ + self.health_data["timestamp"] + """</p>
-        <p>Hostname: """ + self.health_data["hostname"] + """</p>
-        
+        <p class="timestamp">Generated: """
+            + self.health_data["timestamp"]
+            + """</p>
+        <p>Hostname: """
+            + self.health_data["hostname"]
+            + """</p>
+
         <div class="summary">
             <div class="summary-box healthy">
-                <h3>""" + str(self.health_data["summary"]["healthy"]) + """</h3>
+                <h3>"""
+            + str(self.health_data["summary"]["healthy"])
+            + """</h3>
                 <p>Healthy</p>
             </div>
             <div class="summary-box warning">
-                <h3>""" + str(self.health_data["summary"]["warning"]) + """</h3>
+                <h3>"""
+            + str(self.health_data["summary"]["warning"])
+            + """</h3>
                 <p>Warnings</p>
             </div>
             <div class="summary-box critical">
-                <h3>""" + str(self.health_data["summary"]["critical"]) + """</h3>
+                <h3>"""
+            + str(self.health_data["summary"]["critical"])
+            + """</h3>
                 <p>Critical</p>
             </div>
         </div>
 """
+        )
 
         # Alerts
         if self.health_data["alerts"]:
@@ -518,9 +528,7 @@ def main():
         help="Output format",
     )
     parser.add_argument("--output", help="Output file (default: stdout)")
-    parser.add_argument(
-        "--alert", action="store_true", help="Send alerts for critical issues"
-    )
+    parser.add_argument("--alert", action="store_true", help="Send alerts for critical issues")
     parser.add_argument("--api-url", default="https://localhost:8080", help="PBX API URL")
     args = parser.parse_args()
 

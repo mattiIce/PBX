@@ -6,6 +6,7 @@ This setup.py is provided for backward compatibility.
 Modern installations should use pyproject.toml via:
     pip install .
 """
+
 from setuptools import setup
 
 # Read dependencies from pyproject.toml for consistency

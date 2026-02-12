@@ -6,6 +6,7 @@ This test validates that when a BYE request is received during voicemail IVR
 (e.g., after PIN entry with pound key), the IVR session properly handles the
 call termination without continuing to play audio.
 """
+
 import os
 import sys
 

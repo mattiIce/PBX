@@ -25,7 +25,6 @@ import argparse
 import json
 import os
 import socket
-import ssl
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -175,9 +174,7 @@ class HealthCheck:
             free_percent = (free / total) * 100
 
             if free_percent < 10:
-                self.log(
-                    f"Disk space critically low: {free_percent:.1f}% free", "fail", "critical"
-                )
+                self.log(f"Disk space critically low: {free_percent:.1f}% free", "fail", "critical")
             elif free_percent < 20:
                 self.log(f"Disk space low: {free_percent:.1f}% free", "warn", "warning")
             else:
@@ -209,9 +206,7 @@ class HealthCheck:
                         "critical",
                     )
                 elif available_percent < 20:
-                    self.log(
-                        f"Memory low: {available_percent:.1f}% available", "warn", "warning"
-                    )
+                    self.log(f"Memory low: {available_percent:.1f}% available", "warn", "warning")
                 else:
                     self.log(f"Memory: {available_percent:.1f}% available", "pass", "info")
         except Exception as e:
@@ -233,12 +228,10 @@ class HealthCheck:
             if cert_path.exists():
                 cert_found = True
                 try:
-                    # Read certificate
-                    with open(cert_path, "rb") as f:
-                        cert_data = f.read()
-
                     # Basic validation - just check if file is readable
                     # Full certificate validation would require the cryptography module
+                    with open(cert_path, "rb") as f:
+                        f.read()
                     self.log(f"SSL certificate found at {cert_path}", "pass", "warning")
                     break
                 except Exception as e:
@@ -316,9 +309,7 @@ class HealthCheck:
 def main():
     parser = argparse.ArgumentParser(description="PBX Production Health Check")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
-    parser.add_argument(
-        "--critical-only", action="store_true", help="Only show critical checks"
-    )
+    parser.add_argument("--critical-only", action="store_true", help="Only show critical checks")
     args = parser.parse_args()
 
     health_check = HealthCheck(json_output=args.json, critical_only=args.critical_only)

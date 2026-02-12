@@ -6,6 +6,7 @@ Demonstrates how to use the phone lookup API to correlate MAC addresses
 with IP addresses, which is useful when phones register without providing
 their MAC address in SIP headers.
 """
+
 import json
 import sys
 

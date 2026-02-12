@@ -7,6 +7,7 @@ Kari's Law requires multi-line telephone systems (MLTS) to:
 2. Route emergency calls immediately
 3. Notify designated contacts automatically
 """
+
 import os
 import sys
 from unittest.mock import MagicMock

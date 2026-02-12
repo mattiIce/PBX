@@ -3,6 +3,7 @@
 Tests for provisioning config URL generation
 Tests the fix for connection error when API port differs from default
 """
+
 import os
 import sys
 

@@ -12,6 +12,7 @@ Options:
     --config    Path to config file (default: config.yml)
     --dry-run   Show what would be migrated without making changes
 """
+
 import argparse
 import os
 import sys

@@ -81,12 +81,10 @@ class FindMeFollowMe:
 
         try:
             cursor = self.database.connection.cursor()
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT extension, mode, enabled, destinations, no_answer_destination, updated_at
                 FROM fmfm_configs
-            """
-            )
+            """)
 
             rows = cursor.fetchall()
             for row in rows:

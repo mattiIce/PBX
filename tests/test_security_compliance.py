@@ -2,6 +2,7 @@
 """
 Tests for security compliance checker
 """
+
 import json
 import os
 import subprocess

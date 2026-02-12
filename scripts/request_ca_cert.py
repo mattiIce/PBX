@@ -3,6 +3,7 @@
 Request SSL certificate from in-house CA
 Generates a CSR and submits it to the CA for signing
 """
+
 import argparse
 import os
 import sys

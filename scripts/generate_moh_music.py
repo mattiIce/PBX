@@ -5,6 +5,7 @@ Generate Music on Hold (MOH) audio files for the PBX system.
 Creates simple, pleasant musical tones suitable for hold music.
 All files are in telephony format: 8000 Hz, 16-bit, mono WAV.
 """
+
 import argparse
 import math
 import os

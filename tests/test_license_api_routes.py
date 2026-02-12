@@ -3,6 +3,7 @@
 Test license API routes integration
 Tests that license management routes are accessible and working
 """
+
 import http.client
 import json
 import sys

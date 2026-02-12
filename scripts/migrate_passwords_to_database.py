@@ -10,6 +10,7 @@ Usage:
     python scripts/migrate_passwords_to_database.py --dry-run
     python scripts/migrate_passwords_to_database.py --config custom_config.yml
 """
+
 import argparse
 import os
 import sys

@@ -2,6 +2,7 @@
 """
 Test newly implemented PBX features
 """
+
 import os
 import struct
 import sys

@@ -26,6 +26,7 @@ Exit codes:
     1 - One or more tests failed
     2 - Configuration error
 """
+
 import argparse
 import os
 import sys
@@ -344,9 +345,7 @@ class ADIntegrationTester:
                 all_valid = False
 
         if all_valid:
-            self.print_test(
-                "User attributes", "PASS", "All checked users have required attributes"
-            )
+            self.print_test("User attributes", "PASS", "All checked users have required attributes")
         else:
             self.print_test(
                 "User attributes",

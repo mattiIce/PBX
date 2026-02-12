@@ -13,6 +13,7 @@ The .env file location:
     - This file is automatically loaded when the PBX system starts
     - It's ignored by Git, so your credentials stay private
 """
+
 import sys
 from pathlib import Path
 

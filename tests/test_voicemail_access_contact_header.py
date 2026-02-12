@@ -5,6 +5,7 @@ Test for voicemail access Contact header fix
 This test validates that when accessing voicemail via *xxxx, the Contact header
 in the 200 OK response uses the extension number without the asterisk prefix.
 """
+
 import os
 import sys
 

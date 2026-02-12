@@ -8,12 +8,12 @@ Measures and records baseline performance metrics for comparison.
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Dict, Any
-import subprocess
+from typing import Any, Dict
 
 
 @dataclass
@@ -54,15 +54,11 @@ class PerformanceBenchmark:
         # Get CPU info
         try:
             with open("/proc/cpuinfo", "r") as f:
-                cpu_lines = [
-                    line for line in f.readlines() if "model name" in line.lower()
-                ]
+                cpu_lines = [line for line in f.readlines() if "model name" in line.lower()]
                 if cpu_lines:
                     info["cpu_model"] = cpu_lines[0].split(":")[1].strip()
 
-            result = subprocess.run(
-                ["nproc"], capture_output=True, text=True, check=True
-            )
+            result = subprocess.run(["nproc"], capture_output=True, text=True, check=True)
             info["cpu_cores"] = int(result.stdout.strip())
         except Exception:
             info["cpu_model"] = "Unknown"
@@ -81,9 +77,7 @@ class PerformanceBenchmark:
 
         # Get disk info
         try:
-            result = subprocess.run(
-                ["df", "-h", "/"], capture_output=True, text=True, check=True
-            )
+            result = subprocess.run(["df", "-h", "/"], capture_output=True, text=True, check=True)
             lines = result.stdout.strip().split("\n")
             if len(lines) > 1:
                 parts = lines[1].split()
@@ -167,7 +161,7 @@ class PerformanceBenchmark:
                 metrics["connection_time_ms"] = -1
                 metrics["error"] = "DB_PASSWORD environment variable not set"
                 return metrics
-                
+
             start = time.time()
             result = subprocess.run(
                 [
@@ -237,9 +231,7 @@ class PerformanceBenchmark:
 
         # CPU usage
         try:
-            result = subprocess.run(
-                ["top", "-bn1"], capture_output=True, text=True, check=True
-            )
+            result = subprocess.run(["top", "-bn1"], capture_output=True, text=True, check=True)
             for line in result.stdout.split("\n"):
                 if "Cpu(s)" in line:
                     # Parse CPU usage
@@ -266,9 +258,7 @@ class PerformanceBenchmark:
 
                 if mem_total > 0:
                     mem_used = mem_total - mem_available
-                    metrics["memory_usage_percent"] = round(
-                        (mem_used / mem_total) * 100, 2
-                    )
+                    metrics["memory_usage_percent"] = round((mem_used / mem_total) * 100, 2)
         except Exception:
             metrics["memory_usage_percent"] = 0
 
@@ -419,11 +409,7 @@ class PerformanceBenchmark:
 
         print("RESOURCE USAGE:")
         for key, value in results.resource_usage.items():
-            status = (
-                "✓" if value < 70 else "⚠" if value < 90 else "✗"
-                if "percent" in key
-                else "•"
-            )
+            status = "✓" if value < 70 else "⚠" if value < 90 else "✗" if "percent" in key else "•"
             print(f"  {status} {key}: {value}")
         print()
 
@@ -458,12 +444,8 @@ class PerformanceBenchmark:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Run PBX performance benchmarks")
-    parser.add_argument(
-        "--api-url", default="http://localhost:8080", help="PBX API URL"
-    )
-    parser.add_argument(
-        "--format", choices=["text", "json"], default="text", help="Output format"
-    )
+    parser.add_argument("--api-url", default="http://localhost:8080", help="PBX API URL")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     parser.add_argument("--save", help="Save results to file")
 
     args = parser.parse_args()

@@ -2,6 +2,7 @@
 """
 Test Click-to-Dial functionality
 """
+
 import os
 import sqlite3
 import sys
@@ -24,8 +25,7 @@ class MockDB:
     def _init_tables(self):
         """Initialize test tables"""
         # Click-to-dial configs
-        self.conn.execute(
-            """
+        self.conn.execute("""
             CREATE TABLE IF NOT EXISTS click_to_dial_configs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 extension TEXT NOT NULL UNIQUE,
@@ -34,12 +34,10 @@ class MockDB:
                 auto_answer INTEGER DEFAULT 0,
                 browser_notification INTEGER DEFAULT 1
             )
-        """
-        )
+        """)
 
         # Click-to-dial history
-        self.conn.execute(
-            """
+        self.conn.execute("""
             CREATE TABLE IF NOT EXISTS click_to_dial_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 extension TEXT NOT NULL,
@@ -50,8 +48,7 @@ class MockDB:
                 connected_at TIMESTAMP,
                 status TEXT DEFAULT 'initiated'
             )
-        """
-        )
+        """)
         self.conn.commit()
 
     def execute(self, query, params=None):

@@ -36,11 +36,9 @@ class BackupVerifier:
 
     def log_check(self, name: str, status: bool, details: str = ""):
         """Log a check result."""
-        self.results["checks"].append({
-            "name": name,
-            "status": "pass" if status else "fail",
-            "details": details
-        })
+        self.results["checks"].append(
+            {"name": name, "status": "pass" if status else "fail", "details": details}
+        )
 
         if status:
             self.results["passed"] += 1
@@ -81,7 +79,11 @@ class BackupVerifier:
             self.log_check("Backup file exists", False, f"{backup_file} not found")
             return False
 
-        self.log_check("Backup file exists", True, f"Size: {Path(backup_file).stat().st_size / 1024 / 1024:.2f} MB")
+        self.log_check(
+            "Backup file exists",
+            True,
+            f"Size: {Path(backup_file).stat().st_size / 1024 / 1024:.2f} MB",
+        )
 
         # Check file is not empty
         if Path(backup_file).stat().st_size == 0:
@@ -93,7 +95,7 @@ class BackupVerifier:
         # For SQL backups, check basic structure
         if backup_file.endswith(".sql"):
             try:
-                with open(backup_file, 'r') as f:
+                with open(backup_file, "r") as f:
                     first_lines = [next(f) for _ in range(10)]
                     content = "".join(first_lines)
 
@@ -131,9 +133,7 @@ class BackupVerifier:
         try:
             # Create temporary database
             result = subprocess.run(
-                ["sudo", "-u", "postgres", "createdb", temp_db],
-                capture_output=True,
-                timeout=30
+                ["sudo", "-u", "postgres", "createdb", temp_db], capture_output=True, timeout=30
             )
 
             if result.returncode != 0:
@@ -143,12 +143,12 @@ class BackupVerifier:
             self.log_check("Create temporary database", True, f"Database: {temp_db}")
 
             # Restore backup to temporary database
-            with open(backup_file, 'r') as f:
+            with open(backup_file, "r") as f:
                 result = subprocess.run(
                     ["sudo", "-u", "postgres", "psql", temp_db],
                     stdin=f,
                     capture_output=True,
-                    timeout=300  # 5 minutes
+                    timeout=300,  # 5 minutes
                 )
 
             if result.returncode != 0:
@@ -159,9 +159,17 @@ class BackupVerifier:
 
             # Verify restored data
             result = subprocess.run(
-                ["sudo", "-u", "postgres", "psql", temp_db, "-c", "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';"],
+                [
+                    "sudo",
+                    "-u",
+                    "postgres",
+                    "psql",
+                    temp_db,
+                    "-c",
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';",
+                ],
                 capture_output=True,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -181,9 +189,7 @@ class BackupVerifier:
             # Clean up temporary database
             try:
                 subprocess.run(
-                    ["sudo", "-u", "postgres", "dropdb", temp_db],
-                    capture_output=True,
-                    timeout=30
+                    ["sudo", "-u", "postgres", "dropdb", temp_db], capture_output=True, timeout=30
                 )
                 print(f"  Cleaned up temporary database: {temp_db}")
             except Exception:
@@ -234,11 +240,7 @@ class BackupVerifier:
 
         # Check for cron job
         try:
-            result = subprocess.run(
-                ["crontab", "-l"],
-                capture_output=True,
-                timeout=10
-            )
+            result = subprocess.run(["crontab", "-l"], capture_output=True, timeout=10)
 
             if result.returncode == 0:
                 cron_content = result.stdout.decode()
@@ -283,7 +285,7 @@ class BackupVerifier:
         print(f"Passed: {self.results['passed']}")
         print(f"Failed: {self.results['failed']}")
 
-        if self.results['failed'] == 0:
+        if self.results["failed"] == 0:
             print("\n✓ All backup verifications passed")
             return 0
         else:
@@ -292,32 +294,21 @@ class BackupVerifier:
 
     def save_report(self, output_file: str):
         """Save verification report."""
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
         print(f"\nReport saved to: {output_file}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Backup Verification Tool")
+    parser.add_argument("--backup-path", help="Path to specific backup file to verify")
     parser.add_argument(
-        "--backup-path",
-        help="Path to specific backup file to verify"
+        "--full-test", action="store_true", help="Perform full restore test (requires sudo access)"
     )
-    parser.add_argument(
-        "--full-test",
-        action="store_true",
-        help="Perform full restore test (requires sudo access)"
-    )
-    parser.add_argument(
-        "--report",
-        help="Save verification report to file"
-    )
+    parser.add_argument("--report", help="Save verification report to file")
     args = parser.parse_args()
 
-    verifier = BackupVerifier(
-        backup_path=args.backup_path,
-        full_test=args.full_test
-    )
+    verifier = BackupVerifier(backup_path=args.backup_path, full_test=args.full_test)
 
     exit_code = verifier.run_verification()
 

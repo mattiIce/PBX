@@ -8,6 +8,7 @@ This is the secure way to initialize extensions instead of using config.yml.
 Usage:
     python scripts/seed_extensions.py [--config CONFIG_FILE]
 """
+
 import argparse
 import os
 import sys

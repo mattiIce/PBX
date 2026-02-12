@@ -20,8 +20,7 @@ class TestSIPSendLineIntegration(unittest.TestCase):
         self.temp_config_path = self.temp_config.name
 
         # Create a minimal test config
-        self.temp_config.write(
-            """
+        self.temp_config.write("""
 server:
   sip_host: 0.0.0.0
   sip_port: 5060
@@ -48,8 +47,7 @@ features:
 logging:
   level: ERROR
   console: false
-"""
-        )
+""")
         self.temp_config.close()
 
     def tearDown(self):

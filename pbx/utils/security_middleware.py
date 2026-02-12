@@ -5,7 +5,6 @@ Provides security headers, rate limiting, and request validation.
 
 import threading
 import time
-from collections import defaultdict
 from typing import Dict, Optional, Tuple
 
 
@@ -36,11 +35,7 @@ class SecurityHeaders:
         ),
         # Permissions policy (formerly Feature-Policy)
         "Permissions-Policy": (
-            "geolocation=(), "
-            "microphone=(), "
-            "camera=(), "
-            "payment=(), "
-            "usb=()"
+            "geolocation=(), " "microphone=(), " "camera=(), " "payment=(), " "usb=()"
         ),
         # HSTS (only for HTTPS)
         # "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
@@ -63,8 +58,7 @@ class SecurityHeaders:
         # Add HSTS for HTTPS
         if is_https:
             handler.send_header(
-                "Strict-Transport-Security",
-                "max-age=31536000; includeSubDomains; preload"
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload"
             )
 
 
@@ -76,7 +70,7 @@ class RateLimiter:
         requests_per_minute: int = 60,
         burst_size: int = 10,
         cleanup_interval: int = 300,
-        max_tracked_ips: int = 10000
+        max_tracked_ips: int = 10000,
     ):
         """Initialize rate limiter.
 
@@ -94,7 +88,7 @@ class RateLimiter:
         # Store buckets per client IP
         self.buckets: Dict[str, Dict] = {}
         self.last_cleanup = time.time()
-        
+
         # Thread lock for concurrent access
         self._lock = threading.Lock()
 
@@ -118,9 +112,7 @@ class RateLimiter:
         cutoff = now - 3600
         old_buckets = self.buckets
         self.buckets = {
-            ip: bucket
-            for ip, bucket in old_buckets.items()
-            if bucket["last_update"] > cutoff
+            ip: bucket for ip, bucket in old_buckets.items() if bucket["last_update"] > cutoff
         }
         self.last_cleanup = now
 
@@ -138,13 +130,15 @@ class RateLimiter:
             if client_ip not in self.buckets and len(self.buckets) >= self.max_tracked_ips:
                 # Force cleanup before rejecting
                 self._cleanup_old_entries()
-                
+
                 # If still at max after cleanup, reject oldest entry
                 if len(self.buckets) >= self.max_tracked_ips:
-                    oldest_ip = min(self.buckets.keys(), 
-                                  key=lambda ip: self.buckets[ip]["last_update"])
+                    oldest_ip = min(
+                        self.buckets.keys(),
+                        key=lambda ip: self.buckets[ip]["last_update"],
+                    )
                     del self.buckets[oldest_ip]
-            
+
             # Get or create bucket for this IP
             if client_ip not in self.buckets:
                 self.buckets[client_ip] = {
@@ -152,7 +146,7 @@ class RateLimiter:
                     "last_update": time.time(),
                     "request_count": 0,
                 }
-            
+
             bucket = self.buckets[client_ip]
             self._refill_tokens(bucket)
 
