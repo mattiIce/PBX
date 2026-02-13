@@ -89,6 +89,7 @@ logging:
         rpid = invite.get_header("Remote-Party-ID")
         assert "John Doe" in rpid
         assert "party=calling" in rpid
+
     def test_invite_includes_mac_address_header(self) -> None:
         """Test that INVITE messages include X-MAC-Address when available"""
         from pbx.sip.message import SIPMessageBuilder
@@ -109,6 +110,7 @@ logging:
         # Verify header is present
         assert invite.get_header("X-MAC-Address") is not None
         assert invite.get_header("X-MAC-Address") == "00:11:22:33:44:55"
+
     def test_config_defaults_enable_features(self) -> None:
         """Test that features are enabled by default"""
         from pbx.utils.config import Config
@@ -120,6 +122,7 @@ logging:
         assert config.get("sip.caller_id.send_remote_party_id", True)
         assert config.get("sip.device.send_mac_address", True)
         assert config.get("sip.device.accept_mac_in_invite", True)
+
     def test_mac_address_accepted_from_invite(self) -> None:
         """Test that MAC address can be read from incoming INVITE"""
         raw_invite = (
@@ -138,6 +141,7 @@ logging:
         # Verify MAC can be extracted
         mac = message.get_header("X-MAC-Address")
         assert mac == "aa:bb:cc:dd:ee:ff"
+
     def test_complete_invite_with_all_headers(self) -> None:
         """Test building a complete INVITE with all SIP send line/MAC headers"""
         from pbx.sip.message import SIPMessageBuilder

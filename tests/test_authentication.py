@@ -26,6 +26,7 @@ class TestSessionToken:
         assert isinstance(token, str)
         # Token should have 3 parts separated by dots (header.payload.signature)
         assert len(token.split(".")) == 3
+
     def test_verify_valid_token(self) -> None:
         """Test verification of valid token"""
         token = self.token_manager.generate_token(
@@ -39,6 +40,7 @@ class TestSessionToken:
         assert payload["extension"] == "1001"
         assert payload["is_admin"]
         assert payload["name"] == "Admin User"
+
     def test_verify_invalid_signature(self) -> None:
         """Test verification fails with tampered token"""
         token = self.token_manager.generate_token(
@@ -53,12 +55,14 @@ class TestSessionToken:
 
         assert not is_valid
         assert payload is None
+
     def test_verify_malformed_token(self) -> None:
         """Test verification fails with malformed token"""
         is_valid, payload = self.token_manager.verify_token("not.a.valid.token.format")
 
         assert not is_valid
         assert payload is None
+
     def test_admin_vs_regular_user(self) -> None:
         """Test distinguishing admin from regular user"""
         admin_token = self.token_manager.generate_token(
@@ -74,12 +78,14 @@ class TestSessionToken:
 
         assert admin_payload["is_admin"]
         assert not user_payload["is_admin"]
+
     def test_extract_extension(self) -> None:
         """Test extracting extension from token"""
         token = self.token_manager.generate_token(extension="1001", is_admin=True)
 
         extension = self.token_manager.extract_extension(token)
         assert extension == "1001"
+
     def test_global_token_manager(self) -> None:
         """Test global token manager singleton"""
         manager1 = get_session_token_manager()
@@ -87,6 +93,7 @@ class TestSessionToken:
 
         # Should be the same instance
         assert manager1 is manager2
+
     def test_auto_generated_key_entropy(self) -> None:
         """Test that auto-generated secret keys have sufficient entropy"""
         # Create a token manager with auto-generated key
@@ -97,10 +104,12 @@ class TestSessionToken:
         # Create multiple managers and verify they generate different keys
         manager2 = SessionToken()
         assert manager.secret_key != manager2.secret_key
+
 class TestAuthenticationEndpoint:
     """Test authentication API endpoint"""
 
     @patch("pbx.api.rest_api.PBXAPIHandler")
+
     def test_login_success(self, mock_handler: MagicMock) -> None:
         """Test successful login"""
         # This is a placeholder - actual integration test would require
@@ -117,6 +126,7 @@ class TestAuthenticationEndpoint:
         assert is_valid
         assert payload["extension"] == "1001"
         assert payload["is_admin"]
+
     def test_authorization_levels(self) -> None:
         """Test different authorization levels"""
         token_manager = SessionToken(secret_key="test_key")

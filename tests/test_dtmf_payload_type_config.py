@@ -22,6 +22,7 @@ class TestDTMFPayloadTypeConfiguration:
         assert "101" in sdp
         assert "rtpmap:101 telephone-event/8000" in sdp
         assert "fmtp:101 0-16" in sdp
+
     def test_sdp_builder_custom_payload_type_100(self) -> None:
         """Test SDP builder with custom payload type 100"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -34,6 +35,7 @@ class TestDTMFPayloadTypeConfiguration:
         assert "fmtp:100 0-16" in sdp
         # Should NOT include 101
         assert "rtpmap:101" not in sdp
+
     def test_sdp_builder_custom_payload_type_102(self) -> None:
         """Test SDP builder with custom payload type 102"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -44,6 +46,7 @@ class TestDTMFPayloadTypeConfiguration:
         assert "102" in sdp
         assert "rtpmap:102 telephone-event/8000" in sdp
         assert "fmtp:102 0-16" in sdp
+
     def test_sdp_builder_with_custom_codecs_and_payload_type(self) -> None:
         """Test SDP builder with custom codecs and payload type"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -59,24 +62,29 @@ class TestDTMFPayloadTypeConfiguration:
         assert "rtpmap:0 PCMU/8000" in sdp
         assert "rtpmap:8 PCMA/8000" in sdp
         assert "rtpmap:100 telephone-event/8000" in sdp
+
     def test_rfc2833_receiver_default_payload_type(self) -> None:
         """Test RFC2833 receiver with default payload type"""
         receiver = RFC2833Receiver(local_port=10000)
         assert receiver.payload_type == 101
+
     def test_rfc2833_receiver_custom_payload_type(self) -> None:
         """Test RFC2833 receiver with custom payload type"""
         receiver = RFC2833Receiver(local_port=10000, payload_type=100)
         assert receiver.payload_type == 100
+
     def test_rfc2833_sender_default_payload_type(self) -> None:
         """Test RFC2833 sender with default payload type"""
         sender = RFC2833Sender(local_port=10000, remote_host="192.168.1.200", remote_port=20000)
         assert sender.payload_type == 101
+
     def test_rfc2833_sender_custom_payload_type(self) -> None:
         """Test RFC2833 sender with custom payload type"""
         sender = RFC2833Sender(
             local_port=10000, remote_host="192.168.1.200", remote_port=20000, payload_type=102
         )
         assert sender.payload_type == 102
+
     def test_phone_template_dtmf_payload_replacement(self) -> None:
         """Test phone template replaces DTMF payload type placeholder"""
         template_content = """
@@ -99,6 +107,7 @@ account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}
 
         assert "account.1.dtmf.dtmf_payload = 100" in config
         assert "{{DTMF_PAYLOAD_TYPE}}" not in config
+
     def test_phone_template_dtmf_payload_default(self) -> None:
         """Test phone template uses default 101 when not configured"""
         template_content = """
@@ -115,6 +124,7 @@ account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}
         )
 
         assert "account.1.dtmf.dtmf_payload = 101" in config
+
     def test_rfc2833_event_packet_independence(self) -> None:
         """Test RFC2833 event packet is independent of payload type"""
         # Event packet structure should be same regardless of payload type
@@ -124,7 +134,7 @@ account.1.dtmf.dtmf_payload = {{DTMF_PAYLOAD_TYPE}}
         # Both should pack to same payload
         assert event1.pack() == event2.pack()
         # Payload type only affects RTP header, not RFC2833 payload
-        self.assertEqual(len(event1.pack()), 4)  # Always 4 bytes
+        assert len(event1.pack()) == 4  # Always 4 bytes
 
     def test_sdp_parser_with_alternative_payload_type(self) -> None:
         """Test SDP parser handles alternative DTMF payload types"""
@@ -146,6 +156,7 @@ a=fmtp:100 0-16
         audio_info = session.get_audio_info()
         assert audio_info is not None
         assert "100" in audio_info["formats"]
+
 class TestDTMFPayloadTypeValidation:
     """Test DTMF payload type validation"""
 
@@ -159,6 +170,7 @@ class TestDTMFPayloadTypeValidation:
                 local_ip="192.168.1.100", local_port=10000, dtmf_payload_type=pt
             )
             assert str(pt) in sdp
+
     def test_standard_payload_type_101(self) -> None:
         """Test standard RFC2833 payload type 101"""
         # 101 is the RFC standard for telephone-event

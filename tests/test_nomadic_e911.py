@@ -101,6 +101,7 @@ class TestNomadicE911:
         """Test engine initialization"""
         assert self.engine is not None
         assert self.engine.enabled
+
     def test_update_location(self) -> None:
         """Test updating extension location"""
         location_data = {
@@ -117,6 +118,7 @@ class TestNomadicE911:
 
         result = self.engine.update_location("1001", location_data)
         assert result
+
     def test_get_location(self) -> None:
         """Test retrieving extension location"""
         # First create a location
@@ -136,6 +138,7 @@ class TestNomadicE911:
         assert location is not None
         assert location["extension"] == "1001"
         assert location["city"] == "Detroit"
+
     def test_create_site_config(self) -> None:
         """Test creating multi-site E911 configuration"""
         site_data = {
@@ -154,6 +157,7 @@ class TestNomadicE911:
 
         result = self.engine.create_site_config(site_data)
         assert result
+
     def test_get_all_sites(self) -> None:
         """Test retrieving all site configurations"""
         # Create a site
@@ -172,6 +176,7 @@ class TestNomadicE911:
         sites = self.engine.get_all_sites()
         assert len(sites) > 0
         assert sites[0]["site_name"] == "Main Office"
+
     def test_ip_in_range(self) -> None:
         """Test IP range checking"""
         # Test IP in range
@@ -180,6 +185,7 @@ class TestNomadicE911:
         # Test IP not in range
         result = self.engine._ip_in_range("192.168.2.50", "192.168.1.0", "192.168.1.255")
         assert not result
+
     def test_is_private_ip(self) -> None:
         """Test private IP detection"""
         # Test private IPs
@@ -188,6 +194,7 @@ class TestNomadicE911:
         assert self.engine._is_private_ip("172.16.0.1")
         # Test public IP
         assert not self.engine._is_private_ip("8.8.8.8")
+
     def test_find_site_by_ip(self) -> None:
         """Test finding site by IP address"""
         # Create a site
@@ -206,6 +213,7 @@ class TestNomadicE911:
         site = self.engine._find_site_by_ip("192.168.1.100")
         assert site is not None
         assert site["site_name"] == "Office A"
+
     def test_detect_location_by_ip(self) -> None:
         """Test automatic location detection by IP"""
         # Create a site
@@ -229,16 +237,19 @@ class TestNomadicE911:
         assert location["location_name"] == "Manufacturing Plant"
         assert location["city"] == "Detroit"
         assert location["auto_detected"]
+
     def test_detect_location_private_ip_no_match(self) -> None:
         """Test detecting private IP with no site match"""
         location = self.engine.detect_location_by_ip("1003", "192.168.99.1")
         assert location is not None
         assert location["location_name"] == "Unknown Internal Location"
         assert location.get("needs_configuration", False)
+
     def test_detect_location_public_ip(self) -> None:
         """Test detecting public IP (no match)"""
         location = self.engine.detect_location_by_ip("1004", "8.8.8.8")
         assert location is None
+
     def test_location_history(self) -> None:
         """Test location update history"""
         # Create initial location
@@ -252,6 +263,7 @@ class TestNomadicE911:
         # Get history
         history = self.engine.get_location_history("1005")
         assert len(history) > 0
+
     def test_multiple_sites(self) -> None:
         """Test multiple site configurations"""
         # Create multiple sites
@@ -276,6 +288,7 @@ class TestNomadicE911:
         # Verify both sites
         all_sites = self.engine.get_all_sites()
         assert len(all_sites) == 2
+
     def test_location_with_coordinates(self) -> None:
         """Test location with latitude/longitude"""
         location_data = {

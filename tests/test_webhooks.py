@@ -16,6 +16,7 @@ from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSyst
 
 
 # Mock webhook receiver server
+
 class MockWebhookReceiver(BaseHTTPRequestHandler):
     """Mock HTTP server to receive webhooks"""
 

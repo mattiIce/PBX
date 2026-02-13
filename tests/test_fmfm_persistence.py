@@ -60,6 +60,7 @@ class TestFMFMPersistence:
         assert len(loaded_config["destinations"]) == 2
         assert loaded_config["destinations"][0]["number"] == "1001"
         assert loaded_config["no_answer_destination"] == "2000"
+
     def test_add_destination_persistence(self) -> None:
         """Test that adding destinations persists to database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -73,6 +74,7 @@ class TestFMFMPersistence:
         config = fmfm2.get_config("1000")
         assert config is not None
         assert len(config["destinations"]) == 2
+
     def test_remove_destination_persistence(self) -> None:
         """Test that removing destinations persists to database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -97,6 +99,7 @@ class TestFMFMPersistence:
         assert loaded_config is not None
         assert len(loaded_config["destinations"]) == 1
         assert loaded_config["destinations"][0]["number"] == "1002"
+
     def test_enable_disable_persistence(self) -> None:
         """Test that enable/disable persists to database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -125,6 +128,7 @@ class TestFMFMPersistence:
 
         loaded_config = fmfm3.get_config("1000")
         assert loaded_config["enabled"]
+
     def test_delete_config_persistence(self) -> None:
         """Test that delete removes config from database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -146,6 +150,7 @@ class TestFMFMPersistence:
 
         loaded_config = fmfm2.get_config("1000")
         assert loaded_config, "Config should be deleted from database" is None
+
     def test_simultaneous_mode_persistence(self) -> None:
         """Test that simultaneous mode configs persist correctly"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)

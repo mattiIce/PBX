@@ -78,6 +78,7 @@ class TestVoicemailTranscription:
         assert not result["success"]
         assert result["text"] is None
         assert result["error"] == "Transcription service is disabled"
+
     def test_transcription_file_not_found(self) -> None:
         """Test transcription with non-existent file"""
         config = Mock()
@@ -97,6 +98,7 @@ class TestVoicemailTranscription:
 
         assert not result["success"]
         assert "Audio file not found" in result["error"]
+
     def test_transcription_unsupported_provider(self) -> None:
         """Test transcription with unsupported provider"""
         config = Mock()
@@ -117,6 +119,7 @@ class TestVoicemailTranscription:
         assert "Unsupported transcription provider" in result["error"]
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
+
     def test_transcription_google_success(self, mock_speech: MagicMock) -> None:
         """Test successful Google Cloud Speech-to-Text transcription"""
         config = Mock()
@@ -162,6 +165,7 @@ class TestVoicemailTranscription:
         assert result["error"] is None
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
+
     def test_transcription_google_no_results(self, mock_speech: MagicMock) -> None:
         """Test Google transcription with no results"""
         config = Mock()
@@ -191,6 +195,7 @@ class TestVoicemailTranscription:
 
         assert not result["success"]
         assert result["error"] == "Transcription returned no results"
+
     def test_transcription_result_structure(self) -> None:
         """Test that transcription result has correct structure"""
         config = Mock()

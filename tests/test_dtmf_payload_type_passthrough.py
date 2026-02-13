@@ -29,6 +29,7 @@ class TestDTMFPayloadTypePassthrough:
         assert "m=audio 10000 RTP/AVP 0 8 9 18 2 101" in sdp
         assert "a=rtpmap:101 telephone-event/8000" in sdp
         assert "a=fmtp:101 0-16" in sdp
+
     def test_dtmf_payload_type_custom_96(self) -> None:
         """Test that custom DTMF payload type (96) is properly used"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -44,6 +45,7 @@ class TestDTMFPayloadTypePassthrough:
         assert "a=fmtp:96 0-16" in sdp
         # Should NOT contain 101
         assert "101" not in sdp
+
     def test_dtmf_payload_type_custom_100(self) -> None:
         """Test that custom DTMF payload type (100) is properly used"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -57,6 +59,7 @@ class TestDTMFPayloadTypePassthrough:
         assert "m=audio 10000 RTP/AVP 0 8 9 18 2 100" in sdp
         assert "a=rtpmap:100 telephone-event/8000" in sdp
         assert "a=fmtp:100 0-16" in sdp
+
     def test_dtmf_payload_type_with_custom_codecs(self) -> None:
         """Test that DTMF payload type works correctly with custom codec list"""
         # Custom codec list that includes DTMF payload type 102
@@ -74,6 +77,7 @@ class TestDTMFPayloadTypePassthrough:
         assert "m=audio 10000 RTP/AVP 0 8 102" in sdp
         assert "a=rtpmap:102 telephone-event/8000" in sdp
         assert "a=fmtp:102 0-16" in sdp
+
     def test_dtmf_payload_type_with_phone_model_codecs(self) -> None:
         """Test DTMF payload type with phone model specific codecs (ZIP37G example)"""
         # ZIP37G uses PCMU/PCMA only with custom DTMF payload
@@ -96,6 +100,7 @@ class TestDTMFPayloadTypePassthrough:
         # Should NOT have other codecs
         assert "G722" not in sdp
         assert "G729" not in sdp
+
     def test_dtmf_payload_type_mismatch_detection(self) -> None:
         """Test that DTMF payload type in codec list is used for rtpmap"""
         # Codec list includes 101, and we want to verify it uses what's in the list
@@ -115,6 +120,7 @@ class TestDTMFPayloadTypePassthrough:
         # Should have rtpmap for 101 since it IS in the codec list
         assert "a=rtpmap:101 telephone-event/8000" in sdp
         assert "a=fmtp:101 0-16" in sdp
+
 class TestDTMFPayloadTypeIntegration:
     """Test DTMF payload type integration with PBX configuration"""
 
@@ -137,6 +143,7 @@ class TestDTMFPayloadTypeIntegration:
         mock_config.get.assert_called_once_with("features.dtmf.payload_type", 101)
         # Verify it returned the configured value
         assert payload_type == 100
+
     def test_get_dtmf_payload_type_default(self) -> None:
         """Test that _get_dtmf_payload_type() returns default when not configured"""
         # Create a mock config that returns the default
@@ -153,6 +160,7 @@ class TestDTMFPayloadTypeIntegration:
 
         # Verify it returned the default value
         assert payload_type == 101
+
     def test_get_codecs_for_phone_model_uses_same_config_key(self) -> None:
         """Test that _get_codecs_for_phone_model() uses same config key"""
         # Create a mock config
@@ -177,6 +185,7 @@ class TestDTMFPayloadTypeIntegration:
         # Verify the codec list includes the custom DTMF payload type
         assert "100" in codecs
         assert codecs == ["0", "8", "100"]
+
     def test_dtmf_payload_type_end_to_end(self) -> None:
         """Test end-to-end flow from config to SDP generation through _get_dtmf_payload_type()"""
         # Create a mock config with custom DTMF payload type
@@ -213,6 +222,7 @@ class TestDTMFPayloadTypeIntegration:
         assert "a=fmtp:100 0-16" in sdp
         # Should NOT contain the default 101
         assert "101" not in sdp
+
     def test_config_key_consistency(self) -> None:
         """Test that both methods use 'features.dtmf.payload_type' config key"""
         # Create a mock config that tracks all get() calls

@@ -34,6 +34,7 @@ class TestSIPCallerIDHeaders:
         assert "party=calling" in rpid
         assert "privacy=of" in rpid
         assert "screen=no" in rpid
+
     def test_caller_id_headers_format(self) -> None:
         """Test caller ID headers are properly formatted"""
         message = SIPMessage()
@@ -49,6 +50,7 @@ class TestSIPCallerIDHeaders:
         rpid = message.get_header("Remote-Party-ID")
         # Should have proper parameters
         assert '"Sales Department" <sip:2001@10.0.0.1>' in rpid
+
 class TestSIPMACAddressHeader:
     """Test SIP MAC address header functionality"""
 
@@ -63,6 +65,7 @@ class TestSIPMACAddressHeader:
         x_mac = message.get_header("X-MAC-Address")
         assert x_mac is not None
         assert x_mac == "00:11:22:33:44:55"
+
     def test_add_mac_address_header_dash_format(self) -> None:
         """Test adding MAC address header with dash format"""
         message = SIPMessage()
@@ -75,6 +78,7 @@ class TestSIPMACAddressHeader:
         assert x_mac is not None
         # Should be normalized to colon format and lowercase
         assert x_mac == "aa:bb:cc:dd:ee:ff"
+
     def test_add_mac_address_header_no_separator(self) -> None:
         """Test adding MAC address header without separators"""
         message = SIPMessage()
@@ -87,6 +91,7 @@ class TestSIPMACAddressHeader:
         assert x_mac is not None
         # Should be formatted with colons
         assert x_mac == "00:11:22:33:44:55"
+
     def test_add_mac_address_header_invalid(self) -> None:
         """Test adding invalid MAC address doesn't add header"""
         message = SIPMessage()
@@ -98,6 +103,7 @@ class TestSIPMACAddressHeader:
         x_mac = message.get_header("X-MAC-Address")
         # Should not add header for invalid MAC
         assert x_mac is None
+
     def test_add_mac_address_header_none(self) -> None:
         """Test adding None MAC address doesn't crash"""
         message = SIPMessage()
@@ -108,6 +114,7 @@ class TestSIPMACAddressHeader:
 
         x_mac = message.get_header("X-MAC-Address")
         assert x_mac is None
+
     def test_add_mac_address_header_invalid_chars(self) -> None:
         """Test adding MAC with invalid characters doesn't add header"""
         message = SIPMessage()
@@ -119,6 +126,7 @@ class TestSIPMACAddressHeader:
         x_mac = message.get_header("X-MAC-Address")
         # Should not add header for invalid MAC
         assert x_mac is None
+
 class TestSIPMessageParsing:
     """Test parsing SIP messages with new headers"""
 
@@ -146,6 +154,7 @@ class TestSIPMessageParsing:
         rpid = message.get_header("Remote-Party-ID")
         assert rpid is not None
         assert "John Doe" in rpid
+
     def test_parse_invite_with_mac_header(self) -> None:
         """Test parsing INVITE with X-MAC-Address header"""
         raw_message = (
@@ -166,6 +175,7 @@ class TestSIPMessageParsing:
         x_mac = message.get_header("X-MAC-Address")
         assert x_mac is not None
         assert x_mac == "00:11:22:33:44:55"
+
 class TestSIPMessageBuilding:
     """Test building complete SIP messages with all headers"""
 

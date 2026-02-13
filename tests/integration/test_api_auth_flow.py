@@ -39,6 +39,7 @@ def _auth_header(token: str) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.integration
+
 class TestLoginEndpoint:
     """Test that the /api/auth/login endpoint returns a token."""
 
@@ -105,6 +106,7 @@ class TestLoginEndpoint:
 
 
 @pytest.mark.integration
+
 class TestProtectedEndpoints:
     """Test that protected endpoints reject unauthenticated requests."""
 
@@ -149,6 +151,7 @@ class TestProtectedEndpoints:
 
 
 @pytest.mark.integration
+
 class TestAdminOnlyEndpoints:
     """Test that admin-only endpoints reject non-admin users."""
 

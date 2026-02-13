@@ -22,6 +22,7 @@ class TestCSPHeaders:
         assert "'self'" in self.EXPECTED_CSP
         # Verify 'sel' is NOT present (typo check)
         assert "'sel'" not in self.EXPECTED_CSP
+
     def test_csp_script_src_contains_self(self) -> None:
         """Test that script-src directive contains 'self'"""
         # script-src should contain 'self'
@@ -33,6 +34,7 @@ class TestCSPHeaders:
         assert len(script_src) == 1, "Should have exactly one script-src directive"
         assert "'self'" in script_src[0]
         assert "'sel'" not in script_src[0]
+
     def test_csp_style_src_contains_self(self) -> None:
         """Test that style-src directive contains 'self'"""
         # style-src should contain 'self'
@@ -44,11 +46,13 @@ class TestCSPHeaders:
         assert len(style_src) == 1, "Should have exactly one style-src directive"
         assert "'self'" in style_src[0]
         assert "'sel'" not in style_src[0]
+
     def test_csp_default_src_contains_self(self) -> None:
         """Test that default-src directive contains 'self'"""
         # default-src should contain 'self'
         assert "default-src" in self.EXPECTED_CSP
         assert "default-src 'self'" in self.EXPECTED_CSP
+
     def test_csp_connect_src_allows_api(self) -> None:
         """Test that connect-src directive allows API connections"""
         # connect-src should be present
@@ -61,7 +65,4 @@ class TestCSPHeaders:
         # Should allow 'self'
         assert "'self'" in connect_src[0]
         # Should allow API port 9000
-        self.assertTrue(
-            "http://*:9000" in connect_src[0] or "https://*:9000" in connect_src[0],
-            "connect-src should allow connections to port 9000",
-        )
+        assert "http://*:9000" in connect_src[0] or "https://*:9000" in connect_src[0]

@@ -17,19 +17,20 @@ class TestILBCCodec:
         """Test codec initialization with default settings"""
         codec = ILBCCodec()
 
-        self.assertEqual(codec.mode, 30)  # Default 30ms mode
-        self.assertEqual(codec.bitrate, 13330)  # 13.33 kbps for 30ms
-        self.assertEqual(codec.frame_size, 240)  # 240 samples for 30ms
-        self.assertEqual(codec.encoded_size, 50)  # 50 bytes for 30ms
+        assert codec.mode == 30  # Default 30ms mode
+        assert codec.bitrate == 13330  # 13.33 kbps for 30ms
+        assert codec.frame_size == 240  # 240 samples for 30ms
+        assert codec.encoded_size == 50  # 50 bytes for 30ms
         assert codec.payload_type == 97
+
     def test_codec_initialization_20ms_mode(self) -> None:
         """Test codec initialization with 20ms mode"""
         codec = ILBCCodec({"mode": 20})
 
         assert codec.mode == 20
-        self.assertEqual(codec.bitrate, 15200)  # 15.2 kbps for 20ms
-        self.assertEqual(codec.frame_size, 160)  # 160 samples for 20ms
-        self.assertEqual(codec.encoded_size, 38)  # 38 bytes for 20ms
+        assert codec.bitrate == 15200  # 15.2 kbps for 20ms
+        assert codec.frame_size == 160  # 160 samples for 20ms
+        assert codec.encoded_size == 38  # 38 bytes for 20ms
 
     def test_codec_initialization_30ms_mode(self) -> None:
         """Test codec initialization with 30ms mode"""
@@ -39,17 +40,19 @@ class TestILBCCodec:
         assert codec.bitrate == 13330
         assert codec.frame_size == 240
         assert codec.encoded_size == 50
+
     def test_invalid_mode_defaults_to_30ms(self) -> None:
         """Test that invalid mode defaults to 30ms"""
         codec = ILBCCodec({"mode": 99})
 
-        self.assertEqual(codec.mode, 30)  # Should default to 30ms
+        assert codec.mode == 30  # Should default to 30ms
 
     def test_custom_payload_type(self) -> None:
         """Test custom payload type configuration"""
         codec = ILBCCodec({"payload_type": 100})
 
         assert codec.payload_type == 100
+
     def test_get_info(self) -> None:
         """Test get_info returns correct codec information"""
         codec = ILBCCodec({"mode": 30})
@@ -65,24 +68,28 @@ class TestILBCCodec:
         assert "Packet loss concealment" in info["features"]
         assert "Low bitrate" in info["features"]
         assert "Royalty-free" in info["features"]
+
     def test_get_sdp_description(self) -> None:
         """Test SDP description generation"""
         codec = ILBCCodec({"mode": 30, "payload_type": 97})
         sdp = codec.get_sdp_description()
 
         assert sdp == "rtpmap:97 iLBC/8000"
+
     def test_get_fmtp_20ms(self) -> None:
         """Test FMTP generation for 20ms mode"""
         codec = ILBCCodec({"mode": 20, "payload_type": 97})
         fmtp = codec.get_fmtp()
 
         assert fmtp == "fmtp:97 mode=20"
+
     def test_get_fmtp_30ms(self) -> None:
         """Test FMTP generation for 30ms mode"""
         codec = ILBCCodec({"mode": 30, "payload_type": 97})
         fmtp = codec.get_fmtp()
 
         assert fmtp == "fmtp:97 mode=30"
+
     def test_get_sdp_parameters(self) -> None:
         """Test complete SDP parameters"""
         codec = ILBCCodec({"mode": 30, "payload_type": 97})
@@ -95,6 +102,7 @@ class TestILBCCodec:
         assert params["mode"] == 30
         assert params["rtpmap"] == "rtpmap:97 iLBC/8000"
         assert params["fmtp"] == "fmtp:97 mode=30"
+
     def test_is_available_without_library(self) -> None:
         """Test availability check when library not installed"""
         codec = ILBCCodec()
@@ -104,6 +112,7 @@ class TestILBCCodec:
         available = codec.is_available()
         assert isinstance(available, bool)
     @patch("pbx.features.ilbc_codec.ILBCCodec.is_available")
+
     def test_create_encoder_when_available(self, mock_available: MagicMock) -> None:
         """Test encoder creation when library is available"""
         mock_available.return_value = True
@@ -119,6 +128,7 @@ class TestILBCCodec:
 
             assert codec.encoder is not None
     @patch("pbx.features.ilbc_codec.ILBCCodec.is_available")
+
     def test_create_decoder_when_available(self, mock_available: MagicMock) -> None:
         """Test decoder creation when library is available"""
         mock_available.return_value = True
@@ -133,6 +143,7 @@ class TestILBCCodec:
             codec.create_decoder()
 
             assert codec.decoder is not None
+
     def test_encode_without_encoder(self) -> None:
         """Test encoding fails gracefully without encoder"""
         codec = ILBCCodec({"mode": 30})
@@ -142,6 +153,7 @@ class TestILBCCodec:
         result = codec.encode(pcm_data)
 
         assert result is None
+
     def test_encode_wrong_size(self) -> None:
         """Test encoding with wrong PCM data size"""
         codec = ILBCCodec({"mode": 30})
@@ -151,6 +163,7 @@ class TestILBCCodec:
         result = codec.encode(pcm_data)
 
         assert result is None
+
     def test_decode_without_decoder(self) -> None:
         """Test decoding fails gracefully without decoder"""
         codec = ILBCCodec({"mode": 30})
@@ -160,6 +173,7 @@ class TestILBCCodec:
         result = codec.decode(ilbc_data)
 
         assert result is None
+
     def test_decode_wrong_size(self) -> None:
         """Test decoding with wrong iLBC data size"""
         codec = ILBCCodec({"mode": 30})
@@ -169,6 +183,7 @@ class TestILBCCodec:
         result = codec.decode(ilbc_data)
 
         assert result is None
+
     def test_handle_packet_loss_without_decoder(self) -> None:
         """Test packet loss concealment without decoder"""
         codec = ILBCCodec({"mode": 30})
@@ -177,6 +192,7 @@ class TestILBCCodec:
         result = codec.handle_packet_loss()
 
         assert result is None
+
     def test_reset_encoder(self) -> None:
         """Test encoder reset"""
         codec = ILBCCodec({"mode": 30})
@@ -187,6 +203,7 @@ class TestILBCCodec:
 
         # Should recreate encoder (or remain None if library unavailable)
         assert codec is not None
+
     def test_reset_decoder(self) -> None:
         """Test decoder reset"""
         codec = ILBCCodec({"mode": 30})
@@ -197,6 +214,7 @@ class TestILBCCodec:
 
         # Should recreate decoder (or remain None if library unavailable)
         assert codec is not None
+
 class TestILBCCodecManager:
     """Test iLBC codec manager functionality"""
 
@@ -210,6 +228,7 @@ class TestILBCCodecManager:
         assert manager.pbx == pbx
         assert manager.config == {"enabled": True, "mode": 30}
         assert len(manager.codecs) == 0
+
     def test_manager_initialization_no_config(self) -> None:
         """Test codec manager with no config"""
         pbx = Mock()
@@ -218,6 +237,7 @@ class TestILBCCodecManager:
         manager = ILBCCodecManager(pbx)
 
         assert manager.config == {}
+
     def test_create_codec(self) -> None:
         """Test creating codec for a call"""
         pbx = Mock()
@@ -230,6 +250,7 @@ class TestILBCCodecManager:
         assert codec.mode == 30
         assert "call-123" in manager.codecs
         assert manager.codecs["call-123"] == codec
+
     def test_create_codec_with_custom_config(self) -> None:
         """Test creating codec with custom configuration"""
         pbx = Mock()
@@ -241,6 +262,7 @@ class TestILBCCodecManager:
 
         assert codec.mode == 20
         assert codec.payload_type == 100
+
     def test_get_codec(self) -> None:
         """Test retrieving codec for a call"""
         pbx = Mock()
@@ -251,6 +273,7 @@ class TestILBCCodecManager:
 
         retrieved = manager.get_codec("call-789")
         assert retrieved == codec
+
     def test_get_codec_not_found(self) -> None:
         """Test retrieving non-existent codec"""
         pbx = Mock()
@@ -260,6 +283,7 @@ class TestILBCCodecManager:
         retrieved = manager.get_codec("call-999")
 
         assert retrieved is None
+
     def test_remove_codec(self) -> None:
         """Test removing codec for a call"""
         pbx = Mock()
@@ -272,6 +296,7 @@ class TestILBCCodecManager:
         manager.remove_codec("call-111")
 
         assert "call-111" not in manager.codecs
+
     def test_remove_codec_not_found(self) -> None:
         """Test removing non-existent codec doesn't raise error"""
         pbx = Mock()
@@ -299,6 +324,7 @@ class TestILBCCodecManager:
         assert "call-2" in all_codecs
         assert "call-3" in all_codecs
         assert all_codecs["call-1"] == codec1
+
     def test_get_all_codecs_returns_copy(self) -> None:
         """Test that get_all_codecs returns a copy"""
         pbx = Mock()
@@ -312,6 +338,7 @@ class TestILBCCodecManager:
 
         # Original should not be modified
         assert "call-999" not in manager.codecs
+
     def test_is_ilbc_available(self) -> None:
         """Test checking iLBC availability"""
         pbx = Mock()
@@ -321,6 +348,7 @@ class TestILBCCodecManager:
         available = manager.is_ilbc_available()
 
         assert isinstance(available, bool)
+
 class TestILBCSDP:
     """Test iLBC SDP integration"""
 
@@ -334,6 +362,7 @@ class TestILBCSDP:
 
         # Verify iLBC is in SDP
         assert "rtpmap:97 iLBC/8000" in sdp
+
     def test_sdp_fmtp_for_ilbc(self) -> None:
         """Test that SDP includes FMTP for iLBC"""
         # Note: The current SDP builder doesn't include fmtp for iLBC

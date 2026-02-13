@@ -79,6 +79,7 @@ class TestSpeechAnalytics:
         assert self.engine is not None
         # Enabled based on config key 'speech_analytics.enabled'
         assert self.engine.enabled
+
     def test_update_config(self) -> None:
         """Test updating configuration"""
         config = {
@@ -90,6 +91,7 @@ class TestSpeechAnalytics:
 
         result = self.engine.update_config("1001", config)
         assert result
+
     def test_get_config(self) -> None:
         """Test retrieving configuration"""
         # First create a config
@@ -101,6 +103,7 @@ class TestSpeechAnalytics:
         assert retrieved is not None
         assert retrieved["extension"] == "1001"
         assert retrieved["enabled"]
+
     def test_sentiment_analysis_positive(self) -> None:
         """Test positive sentiment analysis"""
         text = "This is excellent service! I'm very happy and satisfied with the great support."
@@ -109,6 +112,7 @@ class TestSpeechAnalytics:
         assert result["sentiment"] == "positive"
         assert result["score"] > 0
         assert result["confidence"] > 0
+
     def test_sentiment_analysis_negative(self) -> None:
         """Test negative sentiment analysis"""
         text = (
@@ -119,6 +123,7 @@ class TestSpeechAnalytics:
         assert result["sentiment"] == "negative"
         assert result["score"] < 0
         assert result["confidence"] > 0
+
     def test_sentiment_analysis_neutral(self) -> None:
         """Test neutral sentiment analysis"""
         text = "This is a regular phone call about account information."
@@ -126,12 +131,14 @@ class TestSpeechAnalytics:
 
         assert result["sentiment"] == "neutral"
         assert result["score"] == pytest.approx(0.0, abs=0.1)
+
     def test_sentiment_analysis_empty(self) -> None:
         """Test sentiment analysis with empty text"""
         result = self.engine.analyze_sentiment("")
 
         assert result["sentiment"] == "neutral"
         assert result["score"] == 0.0
+
     def test_keyword_detection(self) -> None:
         """Test keyword detection"""
         text = "I have an urgent complaint about my refund"
@@ -142,6 +149,7 @@ class TestSpeechAnalytics:
         assert "complaint" in detected
         assert "refund" in detected
         assert "cancel" not in detected
+
     def test_keyword_detection_case_insensitive(self) -> None:
         """Test case-insensitive keyword detection"""
         text = "URGENT: This is an IMPORTANT issue"
@@ -150,6 +158,7 @@ class TestSpeechAnalytics:
         detected = self.engine.detect_keywords(text, keywords)
         assert "urgent" in detected
         assert "important" in detected
+
     def test_generate_summary(self) -> None:
         """Test call summary generation"""
         transcript = """
@@ -165,12 +174,14 @@ class TestSpeechAnalytics:
         assert len(summary) > 0
         # Summary should be shorter than original
         assert len(summary) < len(transcript)
+
     def test_generate_summary_short_text(self) -> None:
         """Test summary generation with short text"""
         transcript = "Hello, thanks."
         summary = self.engine.generate_summary("call-124", transcript)
 
         assert summary == "Call too short to summarize"
+
     def test_generate_summary_stores_in_db(self) -> None:
         """Test that summary is stored in database"""
         transcript = """
@@ -187,10 +198,12 @@ class TestSpeechAnalytics:
         assert retrieved is not None
         assert retrieved["call_id"] == call_id
         assert "summary" in retrieved
+
     def test_get_call_summary_not_found(self) -> None:
         """Test retrieving non-existent summary"""
         summary = self.engine.get_call_summary("nonexistent")
         assert summary is None
+
     def test_get_all_configs(self) -> None:
         """Test retrieving all configurations"""
         # Create multiple configs
@@ -199,6 +212,7 @@ class TestSpeechAnalytics:
 
         configs = self.engine.get_all_configs()
         assert len(configs) == 3
+
     def test_analyze_audio_stream_without_vosk(self) -> None:
         """Test audio analysis without Vosk library"""
         # Should not crash even without Vosk
@@ -207,6 +221,7 @@ class TestSpeechAnalytics:
         assert result is not None
         assert "call_id" in result
         assert result["call_id"] == "call-126"
+
     def test_analyze_call_recording(self) -> None:
         """Test full call recording analysis"""
         result = self.engine.analyze_call_recording("call-127", "/tmp/test.wav")
@@ -214,6 +229,7 @@ class TestSpeechAnalytics:
         assert result is not None
         assert result["call_id"] == "call-127"
         assert "status" in result
+
     def test_sentiment_scoring(self) -> None:
         """Test sentiment score calculation"""
         # Mixed sentiment
@@ -222,6 +238,7 @@ class TestSpeechAnalytics:
 
         # Should be close to neutral or slightly negative
         assert abs(result["score"]) < 0.5
+
     def test_summary_preserves_important_info(self) -> None:
         """Test that summary preserves important information"""
         transcript = """

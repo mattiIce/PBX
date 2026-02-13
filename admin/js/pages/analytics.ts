@@ -147,5 +147,5 @@ export async function loadQoSMetrics(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadAnalytics = loadAnalytics;
-(window as any).loadQoSMetrics = loadQoSMetrics;
+window.loadAnalytics = loadAnalytics;
+window.loadQoSMetrics = loadQoSMetrics;

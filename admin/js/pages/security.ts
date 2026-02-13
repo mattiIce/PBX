@@ -191,9 +191,9 @@ export async function loadSpeechAnalyticsConfigs(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadFraudAlerts = loadFraudAlerts;
-(window as any).loadCallbackQueue = loadCallbackQueue;
-(window as any).startCallback = startCallback;
-(window as any).cancelCallback = cancelCallback;
-(window as any).loadMobilePushDevices = loadMobilePushDevices;
-(window as any).loadSpeechAnalyticsConfigs = loadSpeechAnalyticsConfigs;
+window.loadFraudAlerts = loadFraudAlerts;
+window.loadCallbackQueue = loadCallbackQueue;
+window.startCallback = startCallback;
+window.cancelCallback = cancelCallback;
+window.loadMobilePushDevices = loadMobilePushDevices;
+window.loadSpeechAnalyticsConfigs = loadSpeechAnalyticsConfigs;

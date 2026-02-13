@@ -28,21 +28,25 @@ class TestDTMFDetection:
         # Detector should recognize it
         digit = self.detector.detect_tone(samples)
         assert digit == "1"
+
     def test_detect_valid_tone_5(self) -> None:
         """Test detection of valid DTMF tone '5'"""
         samples = self.generator.generate_tone("5", duration_ms=100)
         digit = self.detector.detect_tone(samples)
         assert digit == "5"
+
     def test_detect_valid_tone_star(self) -> None:
         """Test detection of valid DTMF tone '*'"""
         samples = self.generator.generate_tone("*", duration_ms=100)
         digit = self.detector.detect_tone(samples)
         assert digit == "*"
+
     def test_detect_valid_tone_pound(self) -> None:
         """Test detection of valid DTMF tone '#'"""
         samples = self.generator.generate_tone("#", duration_ms=100)
         digit = self.detector.detect_tone(samples)
         assert digit == "#"
+
     def test_no_detection_on_silence(self) -> None:
         """Test that silence does not trigger false DTMF detection"""
         # Create silence (all zeros)
@@ -51,6 +55,7 @@ class TestDTMFDetection:
         # Detector should NOT detect any tone
         digit = self.detector.detect_tone(samples)
         assert digit, "Silence should not be detected as DTMF tone" is None
+
     def test_no_detection_on_white_noise(self) -> None:
         """Test that white noise does not trigger false DTMF detection"""
         import random
@@ -61,6 +66,7 @@ class TestDTMFDetection:
         # Detector should NOT detect any tone
         digit = self.detector.detect_tone(samples)
         assert digit, "White noise should not be detected as DTMF tone" is None
+
     def test_no_detection_on_single_frequency(self) -> None:
         """Test that a single frequency tone is not detected as DTMF"""
         # DTMF requires TWO frequencies (low + high)
@@ -74,6 +80,7 @@ class TestDTMFDetection:
         # Detector should NOT detect a tone (needs both low and high freq)
         digit = self.detector.detect_tone(samples)
         assert digit, "Single frequency should not be detected as DTMF tone" is None
+
     def test_no_detection_on_weak_tone(self) -> None:
         """Test that very weak tones are not detected"""
         # Generate a very weak DTMF tone (amplitude 0.005, below 0.01
@@ -93,6 +100,7 @@ class TestDTMFDetection:
         # threshold)
         digit = self.detector.detect_tone(samples)
         assert digit, "Very weak tones (below energy threshold) should not be detected" is None
+
     def test_detect_sequence(self) -> None:
         """Test detection of a sequence of DTMF tones"""
         # Generate a sequence "123"
@@ -103,6 +111,7 @@ class TestDTMFDetection:
 
         # Should detect the full sequence
         assert sequence == "123"
+
     def test_threshold_parameter(self) -> None:
         """Test that threshold parameter works correctly"""
         # Generate a medium-strength tone
@@ -138,6 +147,7 @@ class TestDTMFDetection:
         # Detector should detect this (DTMF is dominant over noise)
         digit = self.detector.detect_tone(samples)
         assert digit == "1", "DTMF tone should be detected when dominant over noise"
+
 class TestDTMFGenerator:
     """Test DTMF tone generation"""
 
@@ -153,12 +163,14 @@ class TestDTMFGenerator:
         assert len(samples) == pytest.approx(800, abs=10)
         # Samples should be in valid range [-1, 1]
         assert all(-1.0 <= s <= 1.0 for s in samples)
+
     def test_generate_invalid_digit(self) -> None:
         """Test generating tone for invalid digit"""
         samples = self.generator.generate_tone("X", duration_ms=100)
 
         # Should return empty list
         assert samples == []
+
     def test_generate_sequence(self) -> None:
         """Test generating a sequence of tones"""
         samples = self.generator.generate_sequence("123", tone_ms=100, gap_ms=50)

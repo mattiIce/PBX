@@ -29,7 +29,7 @@ class TestCompleteCallFlow:
 
         # Verify SDP structure
         assert "m=audio 10000 RTP/AVP" in sdp
-        self.assertIn("0 8 9 18 2 101", sdp)  # All default codecs
+        assert "0 8 9 18 2 101" in sdp  # All default codecs
 
         # Verify codec mappings
         assert "a=rtpmap:0 PCMU/8000" in sdp
@@ -163,7 +163,7 @@ a=sendrecv
 
             # Pack to bytes
             data = packet.pack()
-            self.assertEqual(len(data), 4)  # RFC2833 payload is always 4 bytes
+            assert len(data) == 4  # RFC2833 payload is always 4 bytes
 
             # Unpack and verify
             unpacked = RFC2833EventPacket.unpack(data)
@@ -190,7 +190,6 @@ a=sendrecv
         sdp_to_caller = SDPBuilder.build_audio_sdp(pbx_ip, pbx_rtp_port, "12345")
         assert f"m=audio {pbx_rtp_port}" in sdp_to_caller
 
-
     def test_codec_negotiation(self) -> None:
         """Test that codec negotiation works correctly"""
         # Generate SDP with default codecs
@@ -202,7 +201,7 @@ a=sendrecv
         audio = session.get_audio_info()
 
         # Verify all codecs are present
-        self.assertIn("0", audio["formats"])  # PCMU
-        self.assertIn("8", audio["formats"])  # PCMA
-        self.assertIn("9", audio["formats"])  # G722
-        self.assertIn("101", audio["formats"])  # telephone-event
+        assert "0" in audio["formats"]  # PCMU
+        assert "8" in audio["formats"]  # PCMA
+        assert "9" in audio["formats"]  # G722
+        assert "101" in audio["formats"]  # telephone-event

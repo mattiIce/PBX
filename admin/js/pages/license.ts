@@ -119,7 +119,7 @@ export function initLicenseManagement(): void {
 }
 
 // Backward compatibility
-(window as any).loadLicenseStatus = loadLicenseStatus;
-(window as any).loadLicenseFeatures = loadLicenseFeatures;
-(window as any).installLicense = installLicense;
-(window as any).initLicenseManagement = initLicenseManagement;
+window.loadLicenseStatus = loadLicenseStatus;
+window.loadLicenseFeatures = loadLicenseFeatures;
+window.installLicense = installLicense;
+window.initLicenseManagement = initLicenseManagement;

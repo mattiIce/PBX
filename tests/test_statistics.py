@@ -93,9 +93,10 @@ class TestStatisticsEngine:
         assert "average_metrics" in stats
         # Check overview stats
         overview = stats["overview"]
-        self.assertEqual(overview["total_calls"], 30)  # 10 calls per day * 3 days
+        assert overview["total_calls"] == 30  # 10 calls per day * 3 days
         assert overview["answered_calls"] > 0
         assert overview["answer_rate"] > 0
+
     def test_daily_trends(self) -> None:
         """Test daily trends calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
@@ -110,6 +111,7 @@ class TestStatisticsEngine:
             assert "answered" in trend
             assert "missed" in trend
             assert "failed" in trend
+
     def test_hourly_distribution(self) -> None:
         """Test hourly distribution calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
@@ -121,6 +123,7 @@ class TestStatisticsEngine:
         for i, dist in enumerate(distribution):
             assert dist["hour"] == i
             assert "calls" in dist
+
     def test_top_callers(self) -> None:
         """Test top callers calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
@@ -131,6 +134,7 @@ class TestStatisticsEngine:
         # Check that callers are sorted by call count
         for i in range(len(top_callers) - 1):
             assert top_callers[i]["calls"] >= top_callers[i + 1]["calls"]
+
     def test_call_disposition(self) -> None:
         """Test call disposition breakdown"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
@@ -141,6 +145,7 @@ class TestStatisticsEngine:
         # Check that percentages add up to approximately 100
         total_percentage = sum(d["percentage"] for d in disposition)
         assert total_percentage == pytest.approx(100.0, abs=0.1)
+
     def test_peak_hours(self) -> None:
         """Test peak hours calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
@@ -152,6 +157,7 @@ class TestStatisticsEngine:
         for peak in peak_hours:
             assert "hour" in peak
             assert "calls" in peak
+
     def test_average_metrics(self) -> None:
         """Test average metrics calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
@@ -163,6 +169,7 @@ class TestStatisticsEngine:
         assert "avg_duration_per_day" in avg_metrics
         # Averages should be positive
         assert avg_metrics["avg_calls_per_day"] > 0
+
     def test_call_quality_metrics(self) -> None:
         """Test call quality metrics (placeholder)"""
         quality = self.stats_engine.get_call_quality_metrics()
@@ -173,6 +180,7 @@ class TestStatisticsEngine:
         assert "average_packet_loss" in quality
         assert "average_latency" in quality
         assert "quality_distribution" in quality
+
     def test_real_time_metrics(self) -> None:
         """Test real-time metrics"""
         metrics = self.stats_engine.get_real_time_metrics(self.pbx_core)
@@ -184,6 +192,7 @@ class TestStatisticsEngine:
         assert "timestamp" in metrics
         # Uptime should be greater than 0
         assert metrics["system_uptime"] > 0
+
     def test_empty_data(self) -> None:
         """Test statistics with empty data"""
         # Create a new statistics engine with empty CDR
@@ -230,6 +239,7 @@ class TestCDRSystem:
 
         # Record should be saved and removed from active records
         assert "test-call" not in self.cdr_system.active_records
+
     def test_get_statistics(self) -> None:
         """Test getting CDR statistics"""
         # Create a sample record

@@ -229,6 +229,7 @@ class TestPhoneCleanupStartup:
         assert "mac_address IS NULL" in call_args
         assert "ip_address IS NULL" in call_args
         assert "extension_number IS NULL" in call_args
+
     def test_cleanup_database_error(self) -> None:
         """Test cleanup handles database errors gracefully"""
         # Mock fetch_one to raise an exception
@@ -238,6 +239,7 @@ class TestPhoneCleanupStartup:
 
         assert not success
         assert count == 0
+
     def test_cleanup_delete_failure(self) -> None:
         """Test cleanup when delete operation fails"""
         # Mock fetch_one to return 2 incomplete registrations

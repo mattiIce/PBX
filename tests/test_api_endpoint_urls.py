@@ -10,6 +10,7 @@ class TestAPIEndpointURLs:
     """Test that API endpoint URLs are correctly defined"""
 
     @classmethod
+
     def setUpClass(cls) -> None:
         """Set up the test class by reading the REST API file once"""
         # Get the path to the rest_api.py file relative to this test file
@@ -22,11 +23,7 @@ class TestAPIEndpointURLs:
         # Check that the correct endpoint paths exist for both GET and PUT/POST
         dtmf_path = 'path == "/api/config/dtmf"'
         dtmf_path_count = self.rest_api_content.count(dtmf_path)
-        self.assertGreaterEqual(
-            dtmf_path_count,
-            2,
-            "DTMF config path should be defined for both GET and PUT/POST endpoints",
-        )
+        assert dtmf_path_count >= 2
 
         # Check that the old incorrect path does NOT exist
         self.assertNotIn(

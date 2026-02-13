@@ -62,21 +62,13 @@ class TestRTPBidirectionalQoS:
         assert summary_a_to_b["packets_received"] == 50
         assert summary_a_to_b["packets_lost"] == 0
         assert summary_a_to_b["packet_loss_percentage"] == 0.0
-        self.assertGreater(
-            summary_a_to_b["mos_score"],
-            4.0,
-            f"A->B MOS should be > 4.0, got {summary_a_to_b['mos_score']}",
-        )
+        assert summary_a_to_b["mos_score"] > 4.0
 
         # Verify B->A direction has no packet loss
         assert summary_b_to_a["packets_received"] == 50
         assert summary_b_to_a["packets_lost"] == 0
         assert summary_b_to_a["packet_loss_percentage"] == 0.0
-        self.assertGreater(
-            summary_b_to_a["mos_score"],
-            4.0,
-            f"B->A MOS should be > 4.0, got {summary_b_to_a['mos_score']}",
-        )
+        assert summary_b_to_a["mos_score"] > 4.0
 
         # Clean up
         handler.stop()
@@ -158,8 +150,8 @@ class TestRTPBidirectionalQoS:
         summary_b_to_a = handler.qos_metrics_b_to_a.get_summary()
 
         # A->B should show ~10% packet loss
-        self.assertEqual(summary_a_to_b["packets_received"], 90)  # 90 packets received
-        self.assertEqual(summary_a_to_b["packets_lost"], 10)  # 10 packets lost
+        assert summary_a_to_b["packets_received"] == 90  # 90 packets received
+        assert summary_a_to_b["packets_lost"] == 10  # 10 packets lost
         assert summary_a_to_b["packet_loss_percentage"] == pytest.approx(10.0, abs=0.1)
         # B->A should have 0% packet loss
         assert summary_b_to_a["packets_received"] == 100

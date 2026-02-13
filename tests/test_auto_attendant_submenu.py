@@ -83,6 +83,7 @@ class TestAutoAttendantSubmenu:
         assert menu["menu_id"] == "shipping-submenu"
         assert menu["parent_menu_id"] == "main"
         assert menu["menu_name"] == "Shipping and Receiving"
+
     def test_circular_reference_prevention(self) -> None:
         """Test that circular references are prevented"""
         # Create two menus
@@ -97,6 +98,7 @@ class TestAutoAttendantSubmenu:
         # For now, test that the check function works
         would_create_circle = self.aa._would_create_circular_reference("menu1", "menu3")
         assert would_create_circle
+
     def test_menu_depth_validation(self) -> None:
         """Test that menu depth is limited to 5 levels total (main + 4 sublevels)"""
         # Create a chain of menus: main(0) -> level1(1) -> level2(2) -> level3(3) -> level4(4)
@@ -110,6 +112,7 @@ class TestAutoAttendantSubmenu:
         # Try to create a 5th level after main (would be depth 5, should fail)
         success = self.aa.create_menu("level5", "level4", "Level 5", "Level 5 prompt")
         assert not success, "Should not allow depth 5"
+
     def test_add_menu_item_extension(self) -> None:
         """Test adding extension-type menu item"""
         success = self.aa.add_menu_item("main", "1", "extension", "1001", "Sales Department")
@@ -121,6 +124,7 @@ class TestAutoAttendantSubmenu:
         assert items[0]["digit"] == "1"
         assert items[0]["destination_type"] == "extension"
         assert items[0]["destination_value"] == "1001"
+
     def test_add_menu_item_submenu(self) -> None:
         """Test adding submenu-type menu item"""
         # Create a submenu first
@@ -135,11 +139,13 @@ class TestAutoAttendantSubmenu:
         assert len(items) == 1
         assert items[0]["destination_type"] == "submenu"
         assert items[0]["destination_value"] == "sales-submenu"
+
     def test_add_menu_item_invalid_submenu(self) -> None:
         """Test that adding menu item with non-existent submenu fails"""
         success = self.aa.add_menu_item("main", "1", "submenu", "nonexistent", "Invalid")
 
         assert not success
+
     def test_get_menu_tree(self) -> None:
         """Test getting complete menu tree"""
         # Create a menu structure
@@ -164,6 +170,7 @@ class TestAutoAttendantSubmenu:
         assert sales_item["destination_type"] == "submenu"
         assert "submenu" in sales_item
         assert len(sales_item["submenu"]["items"]) == 2
+
     def test_delete_menu(self) -> None:
         """Test deleting a menu"""
         # Create a submenu
@@ -175,10 +182,12 @@ class TestAutoAttendantSubmenu:
         # Verify it's gone
         menu = self.aa.get_menu("test-menu")
         assert menu is None
+
     def test_delete_main_menu_fails(self) -> None:
         """Test that main menu cannot be deleted"""
         success = self.aa.delete_menu("main")
         assert not success
+
     def test_delete_referenced_menu_fails(self) -> None:
         """Test that a menu referenced by items cannot be deleted"""
         # Create a submenu and reference it
@@ -188,6 +197,7 @@ class TestAutoAttendantSubmenu:
         # Try to delete (should fail)
         success = self.aa.delete_menu("referenced")
         assert not success
+
     def test_submenu_navigation(self) -> None:
         """Test navigating to a submenu"""
         # Create a submenu
@@ -207,6 +217,7 @@ class TestAutoAttendantSubmenu:
         assert session["current_menu_id"] == "sales"
         assert len(session["menu_stack"]) == 1
         assert session["menu_stack"][0] == "main"
+
     def test_go_back_navigation(self) -> None:
         """Test going back to previous menu with * key"""
         # Create submenu structure
@@ -225,6 +236,7 @@ class TestAutoAttendantSubmenu:
         assert session["current_menu_id"] == "main"
         assert session["state"] == AAState.MAIN_MENU
         assert len(session["menu_stack"]) == 0
+
     def test_repeat_menu(self) -> None:
         """Test repeating current menu with # key"""
         # Start session
@@ -236,6 +248,7 @@ class TestAutoAttendantSubmenu:
 
         assert result["action"] == "play"
         assert session["current_menu_id"] == "main"
+
     def test_transfer_from_submenu(self) -> None:
         """Test transferring from a submenu"""
         # Create submenu with extension
@@ -255,6 +268,7 @@ class TestAutoAttendantSubmenu:
         assert result["action"] == "transfer"
         assert result["destination"] == "1001"
         assert session["state"] == AAState.TRANSFERRING
+
     def test_list_menus(self) -> None:
         """Test listing all menus"""
         # Create some menus
@@ -264,11 +278,12 @@ class TestAutoAttendantSubmenu:
         # List menus
         menus = self.aa.list_menus()
 
-        self.assertGreaterEqual(len(menus), 3)  # main + sales + support
+        assert len(menus) >= 3  # main + sales + support
         menu_ids = [m["menu_id"] for m in menus]
         assert "main" in menu_ids
         assert "sales" in menu_ids
         assert "support" in menu_ids
+
     def test_update_menu(self) -> None:
         """Test updating a menu"""
         # Create a menu
@@ -281,6 +296,7 @@ class TestAutoAttendantSubmenu:
         menu = self.aa.get_menu("test")
         assert menu["menu_name"] == "Updated Test"
         assert menu["prompt_text"] == "New prompt"
+
     def test_destination_type_enum(self) -> None:
         """Test DestinationType enum"""
         assert DestinationType.EXTENSION.value == "extension"
@@ -288,6 +304,7 @@ class TestAutoAttendantSubmenu:
         assert DestinationType.QUEUE.value == "queue"
         assert DestinationType.VOICEMAIL.value == "voicemail"
         assert DestinationType.OPERATOR.value == "operator"
+
     def test_backward_compatibility_with_legacy_menu(self) -> None:
         """Test that legacy menu_options still work"""
         # Add a legacy menu option directly to the old table
@@ -315,6 +332,7 @@ class TestAutoAttendantSubmenu:
 
         assert result["action"] == "transfer"
         assert result["destination"] == "1005"
+
 class MockConfig:
     """Mock configuration object for testing"""
 

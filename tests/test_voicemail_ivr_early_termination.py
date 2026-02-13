@@ -125,6 +125,7 @@ class TestVoicemailIVREarlyTermination:
                 # and NOT see the "IVR started" message
                 assert ended_before_start, "Should log that call ended before IVR started"
                 assert not ivr_started, "Should NOT log 'IVR started' if call ended early"
+
     def test_ivr_session_ended_message_only_after_loop(self) -> None:
         """
         Test that "IVR session ended" log only appears after the IVR loop runs.

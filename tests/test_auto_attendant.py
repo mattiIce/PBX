@@ -56,6 +56,7 @@ class TestAutoAttendant:
         assert self.aa.is_enabled()
         assert self.aa.get_extension() == "0"
         assert len(self.aa.menu_options) == 4
+
     def test_start_session(self) -> None:
         """Test starting an auto attendant session"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -64,6 +65,7 @@ class TestAutoAttendant:
         assert result.get("session") is not None
         assert result["session"]["state"] == AAState.MAIN_MENU
         assert result["session"]["from_extension"] == "1001"
+
     def test_menu_selection_sales(self) -> None:
         """Test selecting sales queue option"""
         # Start session
@@ -76,6 +78,7 @@ class TestAutoAttendant:
         assert result["action"] == "transfer"
         assert result["destination"] == "8001"
         assert result["session"]["state"] == AAState.TRANSFERRING
+
     def test_menu_selection_support(self) -> None:
         """Test selecting support queue option"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -86,6 +89,7 @@ class TestAutoAttendant:
 
         assert result["action"] == "transfer"
         assert result["destination"] == "8002"
+
     def test_menu_selection_operator(self) -> None:
         """Test selecting operator option"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -96,6 +100,7 @@ class TestAutoAttendant:
 
         assert result["action"] == "transfer"
         assert result["destination"] == "1001"
+
     def test_invalid_input(self) -> None:
         """Test handling invalid menu option"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -107,6 +112,7 @@ class TestAutoAttendant:
         assert result["action"] == "play"
         assert result["session"]["state"] == AAState.INVALID
         assert result["session"]["retry_count"] == 1
+
     def test_max_retries_invalid(self) -> None:
         """Test maximum retries for invalid input"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -135,6 +141,7 @@ class TestAutoAttendant:
         assert result.get("reason") == "invalid_input"
         # Should happen on 5th keypress (3 invalid + 2 menu replays)
         assert attempts <= 6
+
     def test_timeout_handling(self) -> None:
         """Test timeout handling"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -145,6 +152,7 @@ class TestAutoAttendant:
 
         assert result["action"] == "play"
         assert result["session"]["retry_count"] == 1
+
     def test_max_timeouts(self) -> None:
         """Test maximum timeouts"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -159,6 +167,7 @@ class TestAutoAttendant:
         assert result["action"] == "transfer"
         assert result["destination"] == "1001"
         assert result.get("reason") == "timeout"
+
     def test_get_menu_text(self) -> None:
         """Test getting menu text description"""
         menu_text = self.aa.get_menu_text()
@@ -168,6 +177,7 @@ class TestAutoAttendant:
         assert "Sales Queue" in menu_text
         assert "Press 2" in menu_text
         assert "Support Queue" in menu_text
+
     def test_end_session(self) -> None:
         """Test ending a session"""
         result = self.aa.start_session("test-call-123", "1001")
@@ -176,6 +186,7 @@ class TestAutoAttendant:
         self.aa.end_session(session)
 
         assert session["state"] == AAState.ENDED
+
 class MockConfig:
     """Mock configuration object for testing"""
 

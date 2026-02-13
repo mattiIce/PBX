@@ -63,6 +63,7 @@ class TestDialPattern:
         assert pattern.matches("18885551234")
         assert not pattern.matches("12125551234")
         assert not pattern.matches("5551234")
+
     def test_international_pattern(self) -> None:
         """Test international dial pattern"""
         # International calls (011 prefix)
@@ -71,6 +72,7 @@ class TestDialPattern:
         assert pattern.matches("011441234567890")
         assert pattern.matches("01133123456789")
         assert not pattern.matches("12125551234")
+
 class TestRateEntry:
     """Test RateEntry class"""
 
@@ -85,6 +87,7 @@ class TestRateEntry:
         assert rate.calculate_cost(60) == 0.01
         # 180 seconds = 3 minutes = $0.03
         assert rate.calculate_cost(180) == 0.03
+
     def test_cost_calculation_with_connection_fee(self) -> None:
         """Test cost calculation with connection fee"""
         pattern = DialPattern(r"^011", "International")
@@ -94,6 +97,7 @@ class TestRateEntry:
 
         # 60 seconds = 1 minute = $0.20 + $0.05 connection = $0.25
         assert rate.calculate_cost(60) == 0.25
+
     def test_cost_calculation_with_minimum(self) -> None:
         """Test cost calculation with minimum duration"""
         pattern = DialPattern(r"^\d{10}$", "US Local")
@@ -104,6 +108,7 @@ class TestRateEntry:
         # 10 seconds, but minimum is 30 seconds = $0.005
         cost = rate.calculate_cost(10)
         assert cost == round((30 / 60.0) * 0.01, 4)
+
     def test_cost_calculation_with_increment(self) -> None:
         """Test cost calculation with billing increment"""
         pattern = DialPattern(r"^\d{10}$", "US Local")
@@ -115,6 +120,7 @@ class TestRateEntry:
         # 66 / 60 * 0.01 = $0.011
         cost = rate.calculate_cost(65)
         assert cost == 0.011
+
 class TestTimeBasedRate:
     """Test TimeBasedRate class"""
 
@@ -173,6 +179,7 @@ class TestLeastCostRouting:
 
         assert len(self.lcr.rate_entries) == 1
         assert self.lcr.rate_entries[0].trunk_id == "trunk1"
+
     def test_add_time_based_rate(self) -> None:
         """Test adding time-based rate"""
         self.lcr.add_time_based_rate(
@@ -187,6 +194,7 @@ class TestLeastCostRouting:
 
         assert len(self.lcr.time_based_rates) == 1
         assert self.lcr.time_based_rates[0].name == "Peak Hours"
+
     def test_get_applicable_rates(self) -> None:
         """Test getting applicable rates for a number"""
         # Add multiple rates for different patterns
@@ -196,9 +204,10 @@ class TestLeastCostRouting:
 
         # Test local number
         rates = self.lcr.get_applicable_rates("2125551234")
-        self.assertEqual(len(rates), 2)  # Should match trunk1 and trunk2
+        assert len(rates) == 2  # Should match trunk1 and trunk2
         # Should be sorted by cost (lowest first)
         assert rates[0][0] == "trunk1"
+
     def test_select_trunk_cost_based(self) -> None:
         """Test trunk selection based on cost"""
         # Add rates
@@ -208,6 +217,7 @@ class TestLeastCostRouting:
         # Select trunk (trunk2 should be selected as it's cheaper)
         selected = self.lcr.select_trunk("2125551234", ["trunk1", "trunk2"])
         assert selected == "trunk2"
+
     def test_select_trunk_with_quality(self) -> None:
         """Test trunk selection considering quality"""
         self.lcr.prefer_quality = True
@@ -233,6 +243,7 @@ class TestLeastCostRouting:
         selected = self.lcr.select_trunk("2125551234", ["trunk1", "trunk2"])
         # Result depends on the weighting algorithm, just ensure it's one of the trunks
         assert selected in ["trunk1", "trunk2"]
+
     def test_statistics(self) -> None:
         """Test statistics gathering"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -243,6 +254,7 @@ class TestLeastCostRouting:
         assert stats["enabled"]
         assert stats["total_routes"] == 1
         assert stats["rate_entries"] == 1
+
     def test_clear_rates(self) -> None:
         """Test clearing rates"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -252,6 +264,7 @@ class TestLeastCostRouting:
         self.lcr.clear_rates()
 
         assert len(self.lcr.rate_entries) == 0
+
     def test_disabled_lcr(self) -> None:
         """Test that disabled LCR returns None"""
         self.lcr.enabled = False
@@ -259,6 +272,7 @@ class TestLeastCostRouting:
 
         selected = self.lcr.select_trunk("2125551234", ["trunk1"])
         assert selected is None
+
     def test_rate_persists_to_database(self) -> None:
         """Test that rates are saved to database"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -274,6 +288,7 @@ class TestLeastCostRouting:
         assert row[0] == "trunk1"
         assert row[1] == r"^\d{10}$"
         assert row[2] == 0.01
+
     def test_time_rate_persists_to_database(self) -> None:
         """Test that time-based rates are saved to database"""
         self.lcr.add_time_based_rate("Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
@@ -289,6 +304,7 @@ class TestLeastCostRouting:
         assert row[0] == "Peak Hours"
         assert row[1] == 9
         assert row[2] == 1.2
+
     def test_rates_load_from_database(self) -> None:
         """Test that rates are loaded from database on initialization"""
         # Add rate and create new LCR instance (simulating restart)
@@ -300,6 +316,7 @@ class TestLeastCostRouting:
         # Verify rate was loaded
         assert len(lcr2.rate_entries) == 1
         assert lcr2.rate_entries[0].trunk_id == "trunk1"
+
     def test_time_rates_load_from_database(self) -> None:
         """Test that time-based rates are loaded from database"""
         self.lcr.add_time_based_rate("Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
@@ -310,6 +327,7 @@ class TestLeastCostRouting:
         # Verify time rate was loaded
         assert len(lcr2.time_based_rates) == 1
         assert lcr2.time_based_rates[0].name == "Peak Hours"
+
     def test_clear_rates_deletes_from_database(self) -> None:
         """Test that clearing rates deletes from database"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -323,6 +341,7 @@ class TestLeastCostRouting:
         conn.close()
 
         assert count == 0
+
     def test_multiple_rates_persist(self) -> None:
         """Test that multiple rates persist across restarts"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")

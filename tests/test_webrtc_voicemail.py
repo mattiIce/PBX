@@ -99,7 +99,6 @@ class TestWebRTCVoicemailAccess:
             assert args[2] == mock_mailbox, "Third arg should be mailbox"
             # Fourth arg is the VoicemailIVR instance
 
-
     def test_webrtc_voicemail_invalid_pattern(self) -> None:
         """Test that invalid patterns are not treated as voicemail"""
 
@@ -129,7 +128,6 @@ class TestWebRTCVoicemailAccess:
 
         # Should fail because dialplan check returns False
         assert call_id is None, "Call should fail for invalid extension"
-
 
     def test_webrtc_voicemail_missing_rtp_info(self) -> None:
         """Test that voicemail gracefully handles missing RTP info"""

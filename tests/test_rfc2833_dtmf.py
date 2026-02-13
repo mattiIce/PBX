@@ -33,6 +33,7 @@ class TestRFC2833EventPacket:
         assert RFC2833_CODE_TO_DIGIT[0] == "0"
         assert RFC2833_CODE_TO_DIGIT[10] == "*"
         assert RFC2833_CODE_TO_DIGIT[11] == "#"
+
     def test_packet_creation_with_digit(self) -> None:
         """Test creating packet with DTMF digit"""
         packet = RFC2833EventPacket("5", end=False, volume=10, duration=160)
@@ -41,22 +42,26 @@ class TestRFC2833EventPacket:
         assert packet.volume == 10
         assert packet.duration == 160
         assert packet.get_digit() == "5"
+
     def test_packet_creation_with_star(self) -> None:
         """Test creating packet with * digit"""
         packet = RFC2833EventPacket("*", end=False, volume=10, duration=160)
         assert packet.event == 10
         assert packet.get_digit() == "*"
+
     def test_packet_creation_with_pound(self) -> None:
         """Test creating packet with # digit"""
         packet = RFC2833EventPacket("#", end=True, volume=10, duration=320)
         assert packet.event == 11
         assert packet.end == True
         assert packet.get_digit() == "#"
+
     def test_packet_creation_with_event_code(self) -> None:
         """Test creating packet with event code directly"""
         packet = RFC2833EventPacket(event=7, end=False, volume=5, duration=240)
         assert packet.event == 7
         assert packet.get_digit() == "7"
+
     def test_packet_pack_format(self) -> None:
         """Test that packet packs to correct 4-byte format"""
         packet = RFC2833EventPacket("3", end=False, volume=10, duration=160)
@@ -73,6 +78,7 @@ class TestRFC2833EventPacket:
         volume = byte2 & 0x3F
         assert end_bit == False
         assert volume == 10
+
     def test_packet_pack_with_end_bit(self) -> None:
         """Test packet packing with end bit set"""
         packet = RFC2833EventPacket("1", end=True, volume=15, duration=320)
@@ -84,6 +90,7 @@ class TestRFC2833EventPacket:
         assert end_bit == True
         assert event == 1
         assert duration == 320
+
     def test_packet_unpack(self) -> None:
         """Test unpacking RFC 2833 event packet"""
         # Create a packet with known values
@@ -99,6 +106,7 @@ class TestRFC2833EventPacket:
         assert unpacked.volume == 12
         assert unpacked.duration == 200
         assert unpacked.get_digit() == "8"
+
     def test_packet_unpack_with_end_bit(self) -> None:
         """Test unpacking packet with end bit set"""
         original = RFC2833EventPacket("9", end=True, volume=8, duration=480)
@@ -109,6 +117,7 @@ class TestRFC2833EventPacket:
         assert unpacked is not None
         assert unpacked.end == True
         assert unpacked.get_digit() == "9"
+
     def test_packet_unpack_invalid_data(self) -> None:
         """Test unpacking with invalid data"""
         # Too short
@@ -117,6 +126,7 @@ class TestRFC2833EventPacket:
         # Empty
         result = RFC2833EventPacket.unpack(b"")
         assert result is None
+
     def test_all_dtmf_digits(self) -> None:
         """Test packet creation and packing for all DTMF digits"""
         digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#"]
@@ -129,6 +139,7 @@ class TestRFC2833EventPacket:
             unpacked = RFC2833EventPacket.unpack(data)
             assert unpacked is not None
             assert unpacked.get_digit() == digit
+
     def test_volume_range(self) -> None:
         """Test that volume is properly clamped to 6 bits (0-63)"""
         # Volume should be masked to 6 bits (0-63)
@@ -138,6 +149,7 @@ class TestRFC2833EventPacket:
         unpacked = RFC2833EventPacket.unpack(data)
         # Volume should be masked: 70 & 0x3F = 6
         assert unpacked.volume == 6
+
     def test_duration_16bit(self) -> None:
         """Test that duration is properly handled as 16-bit value"""
         # Test maximum duration (65535)
@@ -146,6 +158,7 @@ class TestRFC2833EventPacket:
 
         unpacked = RFC2833EventPacket.unpack(data)
         assert unpacked.duration == 65535
+
 class TestRFC2833Integration:
     """Integration tests for RFC 2833 components"""
 
@@ -155,12 +168,14 @@ class TestRFC2833Integration:
         assert receiver.local_port == 20000
         assert not receiver.running
         assert receiver.last_event is None
+
     def test_rfc2833_sender_initialization(self) -> None:
         """Test RFC 2833 sender can be initialized"""
         sender = RFC2833Sender(local_port=20002, remote_host="127.0.0.1", remote_port=20003)
         assert sender.local_port == 20002
         assert sender.remote_host == "127.0.0.1"
         assert sender.remote_port == 20003
+
     def test_event_packet_roundtrip(self) -> None:
         """Test complete round-trip of event packet creation"""
         # Create event for each digit
@@ -187,6 +202,7 @@ class TestRFC2833Integration:
             assert unpacked is not None
             assert unpacked.get_digit() == digit
             assert unpacked.event == expected_code
+
     def test_rtp_packet_building(self) -> None:
         """Test that RFC 2833 can build valid RTP packet structure"""
         RFC2833Sender(local_port=20004, remote_host="127.0.0.1", remote_port=20005)
@@ -200,6 +216,7 @@ class TestRFC2833Integration:
         # Verify we can extract event from payload
         unpacked = RFC2833EventPacket.unpack(payload)
         assert unpacked.get_digit() == "5"
+
 class TestRFC2833Compliance:
     """Test RFC 2833 compliance and specifications"""
 
@@ -209,11 +226,13 @@ class TestRFC2833Compliance:
             packet = RFC2833EventPacket(digit)
             data = packet.pack()
             assert len(data) == 4, f"RFC 2833 payload must be 4 bytes for digit {digit}"
+
     def test_event_code_range(self) -> None:
         """Test that DTMF event codes are in valid range (0-15)"""
         for digit, code in RFC2833_EVENT_CODES.items():
             assert code >= 0
             assert code <= 15
+
     def test_end_bit_behavior(self) -> None:
         """Test that end bit is properly set and detected"""
         # Start packet
@@ -226,6 +245,7 @@ class TestRFC2833Compliance:
         end_data = end_packet.pack()
         end_unpacked = RFC2833EventPacket.unpack(end_data)
         assert end_unpacked.end
+
     def test_reserved_bit_zero(self) -> None:
         """Test that reserved bit (R) is zero per RFC 2833"""
         packet = RFC2833EventPacket("7", end=False, volume=10)
@@ -236,6 +256,7 @@ class TestRFC2833Compliance:
         # R bit is bit 6 (0x40)
         r_bit = bool(byte2 & 0x40)
         assert not r_bit, "Reserved bit must be 0 per RFC 2833"
+
     def test_duration_timestamp_units(self) -> None:
         """Test that duration is in timestamp units (8kHz sample rate)"""
         # 20ms at 8kHz = 160 timestamp units

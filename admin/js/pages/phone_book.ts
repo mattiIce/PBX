@@ -74,5 +74,5 @@ export async function deletePhoneBookEntry(entryId: string): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadPhoneBook = loadPhoneBook;
-(window as any).deletePhoneBookEntry = deletePhoneBookEntry;
+window.loadPhoneBook = loadPhoneBook;
+window.deletePhoneBookEntry = deletePhoneBookEntry;

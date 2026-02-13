@@ -430,6 +430,7 @@ class TestHubSpotIntegration:
         """Test integration initialization"""
         assert self.integration is not None
         assert not self.integration.enabled
+
     def test_update_config(self) -> None:
         """Test updating configuration"""
         config = {
@@ -441,6 +442,7 @@ class TestHubSpotIntegration:
 
         result = self.integration.update_config(config)
         assert result
+
     def test_get_config(self) -> None:
         """Test retrieving configuration"""
         # First create a config
@@ -452,18 +454,21 @@ class TestHubSpotIntegration:
         assert retrieved is not None
         assert retrieved["enabled"]
         assert retrieved["portal_id"] == "67890"
+
     def test_sync_contact_disabled(self) -> None:
         """Test sync contact when integration is disabled"""
         contact = {"email": "test@example.com", "first_name": "John", "last_name": "Doe"}
 
         result = self.integration.sync_contact(contact)
         assert not result
+
     def test_create_deal_disabled(self) -> None:
         """Test create deal when integration is disabled"""
         deal = {"dealname": "Test Deal", "amount": 1000}
 
         result = self.integration.create_deal(deal)
         assert not result
+
 class TestZendeskIntegration:
     """Test Zendesk integration functionality"""
 
@@ -528,6 +533,7 @@ class TestZendeskIntegration:
         """Test integration initialization"""
         assert self.integration is not None
         assert not self.integration.enabled
+
     def test_update_config(self) -> None:
         """Test updating configuration"""
         config = {
@@ -541,6 +547,7 @@ class TestZendeskIntegration:
 
         result = self.integration.update_config(config)
         assert result
+
     def test_get_config(self) -> None:
         """Test retrieving configuration"""
         # First create a config
@@ -557,6 +564,7 @@ class TestZendeskIntegration:
         assert retrieved is not None
         assert retrieved["enabled"]
         assert retrieved["subdomain"] == "mycompany"
+
     def test_create_ticket_disabled(self) -> None:
         """Test create ticket when integration is disabled"""
         ticket = {
@@ -567,10 +575,12 @@ class TestZendeskIntegration:
 
         result = self.integration.create_ticket(ticket)
         assert result is None
+
     def test_update_ticket_disabled(self) -> None:
         """Test update ticket when integration is disabled"""
         result = self.integration.update_ticket("123", {"status": "solved"})
         assert not result
+
     def test_activity_logging(self) -> None:
         """Test that integration activity is logged"""
         # Enable integration

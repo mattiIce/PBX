@@ -28,6 +28,7 @@ class TestQoSMetrics:
         assert metrics.packets_lost == 0
         assert metrics.mos_score == 0.0
         assert metrics.end_time is None
+
     def test_packet_sent_tracking(self) -> None:
         """Test packet sent counter"""
         metrics = QoSMetrics("test-call-123")
@@ -36,6 +37,7 @@ class TestQoSMetrics:
             metrics.update_packet_sent()
 
         assert metrics.packets_sent == 10
+
     def test_packet_received_no_loss(self) -> None:
         """Test packet reception with no packet loss"""
         metrics = QoSMetrics("test-call-123")
@@ -46,6 +48,7 @@ class TestQoSMetrics:
 
         assert metrics.packets_received == 10
         assert metrics.packets_lost == 0
+
     def test_packet_loss_detection(self) -> None:
         """Test packet loss detection"""
         metrics = QoSMetrics("test-call-123")
@@ -58,6 +61,7 @@ class TestQoSMetrics:
 
         assert metrics.packets_received == 2
         assert metrics.packets_lost == 3
+
     def test_out_of_order_detection(self) -> None:
         """Test out-of-order packet detection"""
         metrics = QoSMetrics("test-call-123")
@@ -71,6 +75,7 @@ class TestQoSMetrics:
         metrics.update_packet_received(99, 15840, 160)
 
         assert metrics.packets_out_of_order == 1
+
     def test_jitter_calculation(self) -> None:
         """Test jitter calculation"""
         metrics = QoSMetrics("test-call-123")
@@ -94,6 +99,7 @@ class TestQoSMetrics:
         # Jitter should be calculated and stored
         assert len(metrics.jitter_samples) > 0
         assert metrics.avg_jitter > 0.0
+
     def test_mos_score_perfect_conditions(self) -> None:
         """Test MOS score with perfect network conditions"""
         metrics = QoSMetrics("test-call-123")
@@ -110,6 +116,7 @@ class TestQoSMetrics:
         summary = metrics.get_summary()
         assert summary["mos_score"] >= 4.0
         assert summary["quality_rating"] == "Excellent"
+
     def test_mos_score_poor_conditions(self) -> None:
         """Test MOS score with poor network conditions"""
         metrics = QoSMetrics("test-call-123")
@@ -130,6 +137,7 @@ class TestQoSMetrics:
         summary = metrics.get_summary()
         assert summary["mos_score"] < 3.5
         assert summary["quality_rating"] in ["Poor", "Bad"]
+
     def test_summary_generation(self) -> None:
         """Test summary data generation"""
         metrics = QoSMetrics("test-call-123")
@@ -157,6 +165,7 @@ class TestQoSMetrics:
         assert "quality_rating" in summary
         assert summary["call_id"] == "test-call-123"
         assert summary["packets_received"] == 10
+
 class TestQoSMonitor:
     """Test QoSMonitor class"""
 
@@ -171,6 +180,7 @@ class TestQoSMonitor:
         assert len(self.monitor.active_calls) == 0
         assert len(self.monitor.historical_data) == 0
         assert len(self.monitor.alerts) == 0
+
     def test_start_monitoring(self) -> None:
         """Test starting QoS monitoring for a call"""
         metrics = self.monitor.start_monitoring("call-001")
@@ -179,6 +189,7 @@ class TestQoSMonitor:
         assert metrics.call_id == "call-001"
         assert "call-001" in self.monitor.active_calls
         assert len(self.monitor.active_calls) == 1
+
     def test_stop_monitoring(self) -> None:
         """Test stopping QoS monitoring"""
         # Start monitoring
@@ -191,6 +202,7 @@ class TestQoSMonitor:
         assert summary["call_id"] == "call-001"
         assert "call-001" not in self.monitor.active_calls
         assert len(self.monitor.historical_data) == 1
+
     def test_get_metrics(self) -> None:
         """Test getting current metrics for active call"""
         self.monitor.start_monitoring("call-001")
@@ -199,6 +211,7 @@ class TestQoSMonitor:
 
         assert metrics is not None
         assert metrics["call_id"] == "call-001"
+
     def test_get_all_active_metrics(self) -> None:
         """Test getting metrics for all active calls"""
         self.monitor.start_monitoring("call-001")
@@ -212,6 +225,7 @@ class TestQoSMonitor:
         assert "call-001" in call_ids
         assert "call-002" in call_ids
         assert "call-003" in call_ids
+
     def test_historical_metrics(self) -> None:
         """Test historical metrics storage"""
         # Monitor and complete 5 calls
@@ -223,6 +237,7 @@ class TestQoSMonitor:
         history = self.monitor.get_historical_metrics(limit=10)
 
         assert len(history) == 5
+
     def test_historical_metrics_filtering(self) -> None:
         """Test filtering historical metrics by MOS score"""
         # Create calls with different quality
@@ -252,6 +267,7 @@ class TestQoSMonitor:
         assert len(high_quality) > 0
         for call in high_quality:
             assert call["mos_score"] >= 4.0
+
     def test_alert_generation_low_mos(self) -> None:
         """Test alert generation for low MOS score"""
         call_id = "bad-quality-call"
@@ -270,6 +286,7 @@ class TestQoSMonitor:
         # Check for low MOS alert
         alert_types = [a["type"] for a in self.monitor.alerts]
         assert "low_mos" in alert_types
+
     def test_alert_generation_packet_loss(self) -> None:
         """Test alert generation for high packet loss"""
         call_id = "packet-loss-call"
@@ -285,6 +302,7 @@ class TestQoSMonitor:
         alerts = self.monitor.get_alerts()
         alert_types = [a["type"] for a in alerts]
         assert "high_packet_loss" in alert_types
+
     def test_clear_alerts(self) -> None:
         """Test clearing alerts"""
         # Generate some alerts
@@ -305,6 +323,7 @@ class TestQoSMonitor:
 
         assert count > 0
         assert len(self.monitor.alerts) == 0
+
     def test_get_statistics(self) -> None:
         """Test overall statistics generation"""
         # Monitor several calls with varying quality
@@ -331,6 +350,7 @@ class TestQoSMonitor:
         assert stats["average_mos"] > 0.0
         assert stats["calls_with_issues"] > 0
         assert stats["issue_percentage"] > 0.0
+
     def test_update_thresholds(self) -> None:
         """Test updating alert thresholds"""
         # Set custom thresholds
@@ -347,6 +367,7 @@ class TestQoSMonitor:
         assert self.monitor.alert_thresholds["packet_loss_max"] == 1.0
         assert self.monitor.alert_thresholds["jitter_max"] == 30.0
         assert self.monitor.alert_thresholds["latency_max"] == 200.0
+
     def test_max_historical_records_limit(self) -> None:
         """Test that historical data doesn't exceed maximum"""
         # Set a small limit for testing

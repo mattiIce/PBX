@@ -19,6 +19,7 @@ class TestG729Codec:
         assert codec.SAMPLE_RATE == 8000
         assert codec.PAYLOAD_TYPE == 18
         assert codec.BITRATE == 8000
+
     def test_g729_info(self) -> None:
         """Test G.729 codec info retrieval"""
         codec = G729Codec(variant="G729A")
@@ -30,6 +31,7 @@ class TestG729Codec:
         assert info["bitrate"] == 8000
         assert info["payload_type"] == 18
         assert info["license_required"]
+
     def test_g729_sdp_description(self) -> None:
         """Test G.729 SDP format string"""
         codec = G729Codec()
@@ -37,6 +39,7 @@ class TestG729Codec:
 
         assert "rtpmap:18" in sdp_desc
         assert "G729/8000" in sdp_desc
+
     def test_g729_fmtp_params(self) -> None:
         """Test G.729 FMTP parameters"""
         # Base variant should disable Annex B
@@ -48,6 +51,7 @@ class TestG729Codec:
         codec_ab = G729Codec(variant="G729AB")
         fmtp_ab = codec_ab.get_fmtp_params()
         assert fmtp_ab is None
+
     def test_g729_capabilities(self) -> None:
         """Test G.729 capabilities"""
         caps = G729Codec.get_capabilities()
@@ -56,6 +60,7 @@ class TestG729Codec:
         assert caps["sample_rate"] == 8000
         assert caps["bitrate"] == 8000
         assert caps["channels"] == 1
+
 class TestG729CodecManager:
     """Test G.729 codec manager"""
 
@@ -66,6 +71,7 @@ class TestG729CodecManager:
 
         assert manager.enabled
         assert manager.variant == "G729A"
+
     def test_manager_create_encoder(self) -> None:
         """Test creating encoder"""
         config = {"codecs.g729.enabled": True}
@@ -77,6 +83,7 @@ class TestG729CodecManager:
         # Should be retrievable
         retrieved = manager.get_encoder("call123")
         assert encoder == retrieved
+
     def test_manager_disabled(self) -> None:
         """Test manager when disabled"""
         config = {"codecs.g729.enabled": False}
@@ -84,6 +91,7 @@ class TestG729CodecManager:
 
         encoder = manager.create_encoder("call123")
         assert encoder is None
+
     def test_manager_release_codec(self) -> None:
         """Test releasing codec resources"""
         config = {"codecs.g729.enabled": True}
@@ -96,6 +104,7 @@ class TestG729CodecManager:
 
         assert manager.get_encoder("call123") is None
         assert manager.get_decoder("call123") is None
+
     def test_manager_sdp_capabilities(self) -> None:
         """Test SDP capabilities"""
         config = {"codecs.g729.enabled": True}
@@ -104,6 +113,7 @@ class TestG729CodecManager:
         caps = manager.get_sdp_capabilities()
         assert len(caps) > 0
         assert any("rtpmap:18" in cap for cap in caps)
+
 class TestG726Codec:
     """Test G.726 codec functionality"""
 
@@ -113,7 +123,7 @@ class TestG726Codec:
         assert codec.bitrate == 32000
         assert codec.bitrate_kbps == 32
         assert codec.bits_per_sample == 4
-        self.assertEqual(codec.payload_type, 2)  # Static type for G.726-32
+        assert codec.payload_type == 2  # Static type for G.726-32
 
     def test_g726_initialization_40k(self) -> None:
         """Test G.726-40 initialization"""
@@ -121,7 +131,7 @@ class TestG726Codec:
         assert codec.bitrate == 40000
         assert codec.bitrate_kbps == 40
         assert codec.bits_per_sample == 5
-        self.assertEqual(codec.payload_type, 114)  # Dynamic type
+        assert codec.payload_type == 114  # Dynamic type
 
     def test_g726_invalid_bitrate(self) -> None:
         """Test invalid bitrate raises error"""
@@ -138,6 +148,7 @@ class TestG726Codec:
         assert info["bitrate"] == 32000
         assert info["bits_per_sample"] == 4
         assert info["payload_type"] == 2
+
     def test_g726_sdp_description(self) -> None:
         """Test G.726 SDP format strings"""
         codec_32 = G726Codec(bitrate=32000)
@@ -147,6 +158,7 @@ class TestG726Codec:
         codec_24 = G726Codec(bitrate=24000)
         sdp_24 = codec_24.get_sdp_description()
         assert "G726-24/8000" in sdp_24
+
     def test_g726_capabilities(self) -> None:
         """Test G.726 capabilities"""
         caps = G726Codec.get_capabilities()
@@ -156,6 +168,7 @@ class TestG726Codec:
         assert 16000 in caps["bitrates"]
         assert 40000 in caps["bitrates"]
         assert caps["sample_rate"] == 8000
+
     def test_g726_is_supported(self) -> None:
         """Test G.726 support detection"""
         # G.726-32 should be supported via audioop
@@ -164,6 +177,7 @@ class TestG726Codec:
         # We can't guarantee audioop is available in all environments
         # but we can check the method works
         assert isinstance(supported_32, bool)
+
 class TestG726CodecManager:
     """Test G.726 codec manager"""
 
@@ -174,6 +188,7 @@ class TestG726CodecManager:
 
         assert manager.enabled
         assert manager.default_bitrate == 32000
+
     def test_manager_invalid_bitrate(self) -> None:
         """Test manager handles invalid bitrate"""
         config = {"codecs.g726.enabled": True, "codecs.g726.bitrate": 99999}
@@ -181,6 +196,7 @@ class TestG726CodecManager:
 
         # Should default to 32000
         assert manager.default_bitrate == 32000
+
     def test_manager_create_encoder(self) -> None:
         """Test creating encoder"""
         config = {"codecs.g726.enabled": True}
@@ -190,6 +206,7 @@ class TestG726CodecManager:
         assert encoder is not None
         assert isinstance(encoder, G726Codec)
         assert encoder.bitrate == 24000
+
     def test_manager_statistics(self) -> None:
         """Test manager statistics"""
         config = {"codecs.g726.enabled": True, "codecs.g726.bitrate": 32000}
@@ -203,6 +220,7 @@ class TestG726CodecManager:
         assert stats["default_bitrate"] == 32000
         assert stats["active_encoders"] == 1
         assert stats["active_decoders"] == 1
+
 class TestSDPWithNewCodecs:
     """Test SDP generation with G.729 and G.726"""
 
@@ -215,10 +233,11 @@ class TestSDPWithNewCodecs:
         )
 
         assert "m=audio 10000" in sdp
-        self.assertIn("0 18 101", sdp)  # Payload types in m= line
+        assert "0 18 101" in sdp  # Payload types in m= line
         assert "a=rtpmap:0 PCMU/8000" in sdp
         assert "a=rtpmap:18 G729/8000" in sdp
         assert "a=rtpmap:101 telephone-event/8000" in sdp
+
     def test_sdp_with_g726_32(self) -> None:
         """Test SDP includes G.726-32"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -229,6 +248,7 @@ class TestSDPWithNewCodecs:
 
         assert "0 2 101" in sdp
         assert "a=rtpmap:2 G726-32/8000" in sdp
+
     def test_sdp_with_g726_variants(self) -> None:
         """Test SDP includes G.726 variants"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -240,6 +260,7 @@ class TestSDPWithNewCodecs:
         assert "a=rtpmap:112 G726-16/8000" in sdp
         assert "a=rtpmap:113 G726-24/8000" in sdp
         assert "a=rtpmap:114 G726-40/8000" in sdp
+
     def test_sdp_default_includes_new_codecs(self) -> None:
         """Test default SDP includes G.729 and G.726-32"""
         sdp = SDPBuilder.build_audio_sdp(
@@ -255,6 +276,7 @@ class TestSDPWithNewCodecs:
         assert "a=rtpmap:18 G729/8000" in sdp
         assert "a=rtpmap:2 G726-32/8000" in sdp
         assert "a=rtpmap:101 telephone-event/8000" in sdp
+
     def test_sdp_parsing_preserves_new_codecs(self) -> None:
         """Test SDP parser handles new codecs"""
         sdp_text = """v=0

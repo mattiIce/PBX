@@ -66,10 +66,10 @@ class TestAutoAttendantPersistence:
         conn.close()
 
         assert row is not None
-        self.assertEqual(row[0], 1)  # enabled
-        self.assertEqual(row[1], "0")  # extension
-        self.assertEqual(row[2], 10)  # timeout
-        self.assertEqual(row[3], 3)  # max_retries
+        assert row[0] == 1  # enabled
+        assert row[1] == "0"  # extension
+        assert row[2] == 10  # timeout
+        assert row[3] == 3  # max_retries
 
     def test_initial_menu_options_saved_to_db(self) -> None:
         """Test that initial menu options are saved to database"""
@@ -92,6 +92,7 @@ class TestAutoAttendantPersistence:
         assert rows[1][0] == "2"
         assert rows[1][1] == "1002"
         assert rows[1][2] == "Support"
+
     def test_config_persists_across_restarts(self) -> None:
         """Test that configuration persists across restarts"""
         # Create auto attendant and update config
@@ -106,6 +107,7 @@ class TestAutoAttendantPersistence:
         assert aa2.extension == "9"
         assert aa2.timeout == 20
         assert aa2.max_retries == 5
+
     def test_menu_options_persist_across_restarts(self) -> None:
         """Test that menu options persist across restarts"""
         # Create auto attendant and add menu option
@@ -119,6 +121,7 @@ class TestAutoAttendantPersistence:
         assert "3" in aa2.menu_options
         assert aa2.menu_options["3"]["destination"] == "1003"
         assert aa2.menu_options["3"]["description"] == "Billing"
+
     def test_menu_option_update_persists(self) -> None:
         """Test that menu option updates persist"""
         # Create auto attendant
@@ -133,6 +136,7 @@ class TestAutoAttendantPersistence:
         # Verify update persisted
         assert aa2.menu_options["1"]["destination"] == "1005"
         assert aa2.menu_options["1"]["description"] == "New Sales"
+
     def test_menu_option_deletion_persists(self) -> None:
         """Test that menu option deletion persists"""
         # Create auto attendant
@@ -146,7 +150,7 @@ class TestAutoAttendantPersistence:
 
         # Verify deletion persisted
         assert "1" not in aa2.menu_options
-        self.assertIn("2", aa2.menu_options)  # Other option still exists
+        assert "2" in aa2.menu_options  # Other option still exists
 
     def test_database_tables_created(self) -> None:
         """Test that database tables are created"""

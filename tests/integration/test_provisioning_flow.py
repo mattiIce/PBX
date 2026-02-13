@@ -61,10 +61,12 @@ def _admin_token(client: FlaskClient, mock_pbx_core: MagicMock) -> dict[str, str
 # =========================================================================
 
 @pytest.mark.integration
+
 class TestProvisioningTemplateCRUD:
     """Test provisioning template create / read / update / delete operations."""
 
     @pytest.fixture
+
     def provisioning(self, mock_config: MagicMock) -> PhoneProvisioning:
         """Create a PhoneProvisioning instance with no database."""
         return PhoneProvisioning(mock_config, database=None)
@@ -166,10 +168,12 @@ class TestProvisioningTemplateCRUD:
 # =========================================================================
 
 @pytest.mark.integration
+
 class TestPhoneRegistrationFlow:
     """Test registering, querying, and unregistering phone devices."""
 
     @pytest.fixture
+
     def provisioning(self, mock_config: MagicMock) -> PhoneProvisioning:
         """Create a PhoneProvisioning instance with no database."""
         return PhoneProvisioning(mock_config, database=None)
@@ -279,6 +283,7 @@ class TestPhoneRegistrationFlow:
 # =========================================================================
 
 @pytest.mark.integration
+
 class TestProvisioningAPI:
     """Test provisioning endpoints through the Flask test client."""
 
