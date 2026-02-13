@@ -17,7 +17,7 @@ from pbx.features.phone_provisioning import (
 from pbx.utils.config import Config
 
 
-def test_device_mac_normalization():
+def test_device_mac_normalization() -> None:
     """Test MAC address normalization"""
     print("Testing MAC address normalization...")
 
@@ -45,7 +45,7 @@ def test_device_mac_normalization():
     print("✓ MAC address normalization works")
 
 
-def test_phone_template():
+def test_phone_template() -> None:
     """Test phone template configuration generation"""
     print("Testing phone template...")
 
@@ -74,7 +74,7 @@ account.1.sip_server.1.port = {{SIP_PORT}}
     print("✓ Phone template works")
 
 
-def test_provisioning_device_registration():
+def test_provisioning_device_registration() -> None:
     """Test device registration"""
     print("Testing device registration...")
 
@@ -111,7 +111,7 @@ def test_provisioning_device_registration():
     print("✓ Device registration works")
 
 
-def test_supported_vendors_and_models():
+def test_supported_vendors_and_models() -> None:
     """Test supported vendors and models"""
     print("Testing supported vendors and models...")
 
@@ -144,7 +144,7 @@ def test_supported_vendors_and_models():
     print("✓ Supported vendors and models work")
 
 
-def test_builtin_templates():
+def test_builtin_templates() -> None:
     """Test that built-in templates exist"""
     print("Testing built-in templates...")
 
@@ -178,7 +178,7 @@ def test_builtin_templates():
     print("✓ Built-in templates exist")
 
 
-def test_config_generation():
+def test_config_generation() -> None:
     """Test configuration generation"""
     print("Testing configuration generation...")
 
@@ -213,7 +213,7 @@ def test_config_generation():
     print("✓ Configuration generation works")
 
 
-def test_unregistered_device_error_message():
+def test_unregistered_device_error_message() -> None:
     """Test that unregistered devices produce helpful error messages"""
     print("Testing unregistered device error messages...")
 
@@ -242,7 +242,7 @@ def test_unregistered_device_error_message():
     print("✓ Unregistered device error messages work")
 
 
-def test_similar_mac_detection():
+def test_similar_mac_detection() -> None:
     """Test that similar MAC addresses are detected (helps identify typos)"""
     print("Testing similar MAC detection...")
 
@@ -268,7 +268,7 @@ def test_similar_mac_detection():
     print("✓ Similar MAC detection works")
 
 
-def test_mac_placeholder_detection():
+def test_mac_placeholder_detection() -> None:
     """Test that MAC address placeholders are detected properly"""
     print("Testing MAC placeholder detection...")
 
@@ -327,7 +327,7 @@ def test_mac_placeholder_detection():
     print("✓ MAC placeholder detection works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Phone Provisioning Tests")

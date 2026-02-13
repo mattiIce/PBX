@@ -19,7 +19,7 @@ from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
 
 
-def test_complete_voicemail_flow():
+def test_complete_voicemail_flow() -> None:
     """Test complete voicemail flow from recording to playback"""
     print("Testing complete voicemail flow...")
 
@@ -115,7 +115,7 @@ def test_complete_voicemail_flow():
         shutil.rmtree(temp_dir)
 
 
-def test_multiple_voicemails():
+def test_multiple_voicemails() -> None:
     """Test handling multiple voicemail messages"""
     print("Testing multiple voicemail messages...")
 
@@ -169,7 +169,7 @@ def test_multiple_voicemails():
         shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Integration Tests")

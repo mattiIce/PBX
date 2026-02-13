@@ -5,9 +5,12 @@ registration flow using mock PBXCore subsystems.
 """
 
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from flask.testing import FlaskClient
+from werkzeug.test import TestResponse
 
 from pbx.features.phone_provisioning import (
     PhoneProvisioning,
@@ -21,21 +24,21 @@ from pbx.features.phone_provisioning import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _post_json(client, url, data, headers=None):
+def _post_json(client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None) -> TestResponse:
     all_headers = {"Content-Type": "application/json"}
     if headers:
         all_headers.update(headers)
     return client.post(url, data=json.dumps(data), headers=all_headers)
 
 
-def _put_json(client, url, data, headers=None):
+def _put_json(client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None) -> TestResponse:
     all_headers = {"Content-Type": "application/json"}
     if headers:
         all_headers.update(headers)
     return client.put(url, data=json.dumps(data), headers=all_headers)
 
 
-def _admin_token(client, mock_pbx_core):
+def _admin_token(client: FlaskClient, mock_pbx_core: MagicMock) -> dict[str, str]:
     """Log in as an admin and return the Bearer header dict."""
     mock_pbx_core.extension_db.get.return_value = {
         "number": "1001",
@@ -62,13 +65,13 @@ class TestProvisioningTemplateCRUD:
     """Test provisioning template create / read / update / delete operations."""
 
     @pytest.fixture
-    def provisioning(self, mock_config):
+    def provisioning(self, mock_config: MagicMock) -> PhoneProvisioning:
         """Create a PhoneProvisioning instance with no database."""
         return PhoneProvisioning(mock_config, database=None)
 
     # -- Read built-in templates ------------------------------------------
 
-    def test_builtin_templates_loaded(self, provisioning):
+    def test_builtin_templates_loaded(self, provisioning: PhoneProvisioning) -> None:
         """After init the built-in templates should be available."""
         templates = provisioning.list_all_templates()
         assert len(templates) > 0
@@ -77,20 +80,20 @@ class TestProvisioningTemplateCRUD:
         assert "yealink" in vendors
         assert "polycom" in vendors
 
-    def test_get_template_by_vendor_model(self, provisioning):
+    def test_get_template_by_vendor_model(self, provisioning: PhoneProvisioning) -> None:
         """Fetch a specific template by vendor and model."""
         template = provisioning.get_template("yealink", "t46s")
         assert template is not None
         assert isinstance(template, PhoneTemplate)
         assert "{{EXTENSION_NUMBER}}" in template.template_content
 
-    def test_get_nonexistent_template_returns_none(self, provisioning):
+    def test_get_nonexistent_template_returns_none(self, provisioning: PhoneProvisioning) -> None:
         """Requesting a template for an unknown vendor/model returns None."""
         assert provisioning.get_template("unknown", "phone") is None
 
     # -- Create (add) templates -------------------------------------------
 
-    def test_add_custom_template(self, provisioning):
+    def test_add_custom_template(self, provisioning: PhoneProvisioning) -> None:
         """Adding a custom template should make it retrievable."""
         custom_content = "custom config for {{EXTENSION_NUMBER}}"
         provisioning.add_template("acme", "rocket", custom_content)
@@ -103,7 +106,7 @@ class TestProvisioningTemplateCRUD:
 
     # -- Update templates -------------------------------------------------
 
-    def test_update_template_content(self, provisioning):
+    def test_update_template_content(self, provisioning: PhoneProvisioning) -> None:
         """Updating a template replaces its content in memory."""
         # Add a template first
         provisioning.add_template("acme", "rocket", "original content")
@@ -122,7 +125,7 @@ class TestProvisioningTemplateCRUD:
 
     # -- Delete (reload clears custom) ------------------------------------
 
-    def test_reload_restores_builtins(self, provisioning):
+    def test_reload_restores_builtins(self, provisioning: PhoneProvisioning) -> None:
         """Reloading templates should restore built-in templates."""
         original_count = len(provisioning.templates)
 
@@ -138,7 +141,7 @@ class TestProvisioningTemplateCRUD:
 
     # -- Template generate_config -----------------------------------------
 
-    def test_template_generates_config_with_placeholders(self, provisioning):
+    def test_template_generates_config_with_placeholders(self, provisioning: PhoneProvisioning) -> None:
         """PhoneTemplate.generate_config should replace placeholders."""
         template = provisioning.get_template("yealink", "t46s")
         ext_config = {"number": "1001", "name": "Alice", "password": "s3cret"}
@@ -167,11 +170,11 @@ class TestPhoneRegistrationFlow:
     """Test registering, querying, and unregistering phone devices."""
 
     @pytest.fixture
-    def provisioning(self, mock_config):
+    def provisioning(self, mock_config: MagicMock) -> PhoneProvisioning:
         """Create a PhoneProvisioning instance with no database."""
         return PhoneProvisioning(mock_config, database=None)
 
-    def test_register_device(self, provisioning):
+    def test_register_device(self, provisioning: PhoneProvisioning) -> None:
         """Registering a device should store it and return the object."""
         device = provisioning.register_device(
             mac_address="AA:BB:CC:DD:EE:FF",
@@ -186,7 +189,7 @@ class TestPhoneRegistrationFlow:
         assert device.vendor == "yealink"
         assert device.model == "t46s"
 
-    def test_get_device_by_mac(self, provisioning):
+    def test_get_device_by_mac(self, provisioning: PhoneProvisioning) -> None:
         """A registered device should be retrievable by MAC address."""
         provisioning.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
 
@@ -194,7 +197,7 @@ class TestPhoneRegistrationFlow:
         assert device is not None
         assert device.extension_number == "1001"
 
-    def test_get_device_normalizes_mac(self, provisioning):
+    def test_get_device_normalizes_mac(self, provisioning: PhoneProvisioning) -> None:
         """MAC formats with various separators should match."""
         provisioning.register_device("aa:bb:cc:dd:ee:ff", "1001", "yealink", "t46s")
 
@@ -203,7 +206,7 @@ class TestPhoneRegistrationFlow:
         assert provisioning.get_device("aabb.ccdd.eeff") is not None
         assert provisioning.get_device("aabbccddeeff") is not None
 
-    def test_get_all_devices(self, provisioning):
+    def test_get_all_devices(self, provisioning: PhoneProvisioning) -> None:
         """get_all_devices returns every registered device."""
         provisioning.register_device("AA:BB:CC:DD:EE:01", "1001", "yealink", "t46s")
         provisioning.register_device("AA:BB:CC:DD:EE:02", "1002", "polycom", "vvx450")
@@ -211,7 +214,7 @@ class TestPhoneRegistrationFlow:
         devices = provisioning.get_all_devices()
         assert len(devices) == 2
 
-    def test_unregister_device(self, provisioning):
+    def test_unregister_device(self, provisioning: PhoneProvisioning) -> None:
         """Unregistering a device removes it from the store."""
         provisioning.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
 
@@ -219,12 +222,12 @@ class TestPhoneRegistrationFlow:
         assert removed is True
         assert provisioning.get_device("AA:BB:CC:DD:EE:FF") is None
 
-    def test_unregister_nonexistent_device(self, provisioning):
+    def test_unregister_nonexistent_device(self, provisioning: PhoneProvisioning) -> None:
         """Unregistering an unknown device returns False."""
         removed = provisioning.unregister_device("00:00:00:00:00:00")
         assert removed is False
 
-    def test_generate_config_for_registered_device(self, provisioning):
+    def test_generate_config_for_registered_device(self, provisioning: PhoneProvisioning) -> None:
         """Full round-trip: register device then generate its config."""
         provisioning.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
 
@@ -246,14 +249,14 @@ class TestPhoneRegistrationFlow:
         assert "Alice" in config_content
         assert content_type == "text/plain"
 
-    def test_generate_config_missing_device_returns_none(self, provisioning):
+    def test_generate_config_missing_device_returns_none(self, provisioning: PhoneProvisioning) -> None:
         """Generating config for an unregistered MAC returns (None, None)."""
         registry = MagicMock()
         config, ctype = provisioning.generate_config("00:00:00:00:00:00", registry)
         assert config is None
         assert ctype is None
 
-    def test_device_marked_provisioned_after_config_generation(self, provisioning):
+    def test_device_marked_provisioned_after_config_generation(self, provisioning: PhoneProvisioning) -> None:
         """After generate_config the device should have last_provisioned set."""
         provisioning.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
 
@@ -279,7 +282,7 @@ class TestPhoneRegistrationFlow:
 class TestProvisioningAPI:
     """Test provisioning endpoints through the Flask test client."""
 
-    def test_register_device_via_api(self, api_client, mock_pbx_core):
+    def test_register_device_via_api(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """POST /api/provisioning/devices should register a device."""
         # Set up phone_provisioning on the mock
         mock_pbx_core.phone_provisioning = PhoneProvisioning(
@@ -300,7 +303,7 @@ class TestProvisioningAPI:
         assert data["success"] is True
         assert data["device"]["mac_address"] == "112233445566"
 
-    def test_get_templates_via_api(self, api_client, mock_pbx_core):
+    def test_get_templates_via_api(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """GET /api/provisioning/templates should list templates."""
         mock_pbx_core.phone_provisioning = PhoneProvisioning(
             mock_pbx_core.config, database=None

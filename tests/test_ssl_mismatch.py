@@ -8,6 +8,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -19,11 +20,11 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         self.config = config
 
 
-def create_mock_config_with_ssl(cert_file, key_file):
+def create_mock_config_with_ssl(cert_file: str, key_file: str) -> Config:
     """
     Helper function to create a mock config with SSL settings
 
@@ -39,7 +40,7 @@ def create_mock_config_with_ssl(cert_file, key_file):
     # Override the get method to return our SSL config
     original_get = config.get
 
-    def mock_get(key, default=None):
+    def mock_get(key: str, default: Any = None) -> Any:
         if key == "api.ssl":
             return {
                 "enabled": True,
@@ -53,7 +54,7 @@ def create_mock_config_with_ssl(cert_file, key_file):
     return config
 
 
-def test_ssl_enabled_missing_certificates():
+def test_ssl_enabled_missing_certificates() -> bool:
     """
     Test that server handles SSL enabled with missing certificates gracefully
 
@@ -76,7 +77,7 @@ def test_ssl_enabled_missing_certificates():
     # Override the get method to simulate SSL enabled but missing certs
     original_get = config.get
 
-    def mock_get(key, default=None):
+    def mock_get(key: str, default: Any = None) -> Any:
         if key == "api.ssl":
             return {
                 "enabled": True,
@@ -158,7 +159,7 @@ def test_ssl_enabled_missing_certificates():
     return True
 
 
-def test_ssl_enabled_with_valid_certificates():
+def test_ssl_enabled_with_valid_certificates() -> bool:
     """Test that server works correctly with valid SSL certificates"""
     print("=" * 80)
     print("Test: SSL Enabled With Valid Certificates")
@@ -181,7 +182,7 @@ def test_ssl_enabled_with_valid_certificates():
     # Override the get method to enable SSL with real certs
     original_get = config.get
 
-    def mock_get(key, default=None):
+    def mock_get(key: str, default: Any = None) -> Any:
         if key == "api.ssl":
             return {
                 "enabled": True,
@@ -243,7 +244,7 @@ def test_ssl_enabled_with_valid_certificates():
     return True
 
 
-def main():
+def main() -> bool:
     """Run all tests"""
     print("\n" + "=" * 80)
     print("SSL Configuration Mismatch Tests")

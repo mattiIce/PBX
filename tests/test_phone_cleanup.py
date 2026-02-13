@@ -23,7 +23,7 @@ from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 # ============================================================================
 
 
-def test_clear_all_phones():
+def test_clear_all_phones() -> None:
     """Test clearing all phone registrations"""
     print("Testing clear_all() functionality...")
 
@@ -57,7 +57,7 @@ def test_clear_all_phones():
     print("✓ clear_all() works correctly")
 
 
-def test_clear_empty_table():
+def test_clear_empty_table() -> None:
     """Test clearing an already empty table"""
     print("Testing clear_all() on empty table...")
 
@@ -82,7 +82,7 @@ def test_clear_empty_table():
     print("✓ clear_all() on empty table works")
 
 
-def test_register_after_clear():
+def test_register_after_clear() -> None:
     """Test that phones can be registered after clearing"""
     print("Testing registration after clear_all()...")
 
@@ -123,7 +123,7 @@ def test_register_after_clear():
 # ============================================================================
 
 
-def test_pbx_preserves_phones_on_boot():
+def test_pbx_preserves_phones_on_boot() -> None:
     """Test that PBX preserves registered phones table on boot"""
     print("\nTesting PBX preserves phones on boot...")
 
@@ -209,14 +209,14 @@ extensions: []
 class TestPhoneCleanupStartup(unittest.TestCase):
     """Test cleanup of incomplete phone registrations"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.db = Mock(spec=DatabaseBackend)
         self.db.db_type = "sqlite"
         self.db.enabled = True
         self.phones_db = RegisteredPhonesDB(self.db)
 
-    def test_cleanup_no_incomplete_registrations(self):
+    def test_cleanup_no_incomplete_registrations(self) -> None:
         """Test cleanup when there are no incomplete registrations"""
         # Mock fetch_one to return 0 count
         self.db.fetch_one.return_value = {"count": 0}
@@ -228,7 +228,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
         # Execute should not be called since count is 0
         self.db.execute.assert_not_called()
 
-    def test_cleanup_with_incomplete_registrations(self):
+    def test_cleanup_with_incomplete_registrations(self) -> None:
         """Test cleanup when there are incomplete registrations"""
         # Mock fetch_one to return 3 incomplete registrations
         self.db.fetch_one.return_value = {"count": 3}
@@ -246,7 +246,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
         self.assertIn("ip_address IS NULL", call_args)
         self.assertIn("extension_number IS NULL", call_args)
 
-    def test_cleanup_database_error(self):
+    def test_cleanup_database_error(self) -> None:
         """Test cleanup handles database errors gracefully"""
         # Mock fetch_one to raise an exception
         self.db.fetch_one.side_effect = Exception("Database error")
@@ -256,7 +256,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
         self.assertFalse(success)
         self.assertEqual(count, 0)
 
-    def test_cleanup_delete_failure(self):
+    def test_cleanup_delete_failure(self) -> None:
         """Test cleanup when delete operation fails"""
         # Mock fetch_one to return 2 incomplete registrations
         self.db.fetch_one.return_value = {"count": 2}
@@ -270,7 +270,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
         # Verify DELETE was attempted
         self.db.execute.assert_called_once()
 
-    def test_cleanup_query_structure(self):
+    def test_cleanup_query_structure(self) -> None:
         """Test that cleanup query checks all required fields"""
         self.db.fetch_one.return_value = {"count": 5}
         self.db.execute.return_value = True
@@ -295,7 +295,7 @@ class TestPhoneCleanupStartup(unittest.TestCase):
 # ============================================================================
 
 
-def run_functional_tests():
+def run_functional_tests() -> bool:
     """Run functional tests (non-unittest)"""
     print("=" * 60)
     print("Phone Cleanup and Registration Functional Tests")
@@ -322,7 +322,7 @@ def run_functional_tests():
         return False
 
 
-def run_unit_tests():
+def run_unit_tests() -> bool:
     """Run unit tests"""
     print("\n" + "=" * 60)
     print("Incomplete Registration Cleanup Unit Tests")

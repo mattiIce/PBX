@@ -4,13 +4,13 @@ Provides /api/v1/* routes that forward to the existing /api/* handlers,
 allowing gradual migration to versioned API endpoints.
 """
 
-from flask import Blueprint, redirect, request
+from flask import Blueprint, Response, redirect, request
 
 compat_bp = Blueprint("compat", __name__)
 
 
 @compat_bp.route("/api/v1/<path:path>", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-def api_v1_proxy(path):
+def api_v1_proxy(path: str) -> Response:
     """Forward /api/v1/* requests to /api/* routes.
 
     This enables clients to start using versioned endpoints immediately.

@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.core.pbx import PBXCore
 
 
-def test_pbx_shutdown():
+def test_pbx_shutdown() -> None:
     """Test that PBX shuts down properly when stop() is called"""
     print("Testing PBX shutdown...")
 
@@ -82,7 +82,7 @@ def test_pbx_shutdown():
     print("✓ PBX shutdown test passed")
 
 
-def test_signal_handling_simulation():
+def test_signal_handling_simulation() -> None:
     """Test that signal handling mechanism works"""
     print("\nTesting signal handling simulation...")
 
@@ -119,7 +119,7 @@ def test_signal_handling_simulation():
     running = True
     pbx = None
 
-    def signal_handler_test():
+    def signal_handler_test() -> None:
         """Simulate the signal handler"""
         nonlocal running
         print("Signal handler called")
@@ -160,7 +160,7 @@ def test_signal_handling_simulation():
     print("✓ Signal handling test passed")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     test_pbx_shutdown()
     test_signal_handling_simulation()

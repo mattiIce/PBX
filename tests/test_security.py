@@ -20,7 +20,7 @@ from pbx.utils.security import (
 )
 
 
-def test_password_policy():
+def test_password_policy() -> None:
     """Test password policy validation"""
     print("Testing password policy...")
 
@@ -73,7 +73,7 @@ def test_password_policy():
     print("✓ Password policy validation works")
 
 
-def test_password_generation():
+def test_password_generation() -> None:
     """Test password generation"""
     print("Testing password generation...")
 
@@ -93,7 +93,7 @@ def test_password_generation():
     print("✓ Password generation works")
 
 
-def test_rate_limiter():
+def test_rate_limiter() -> None:
     """Test rate limiting"""
     print("Testing rate limiter...")
 
@@ -141,7 +141,7 @@ def test_rate_limiter():
     print("✓ Rate limiter works")
 
 
-def test_security_auditor():
+def test_security_auditor() -> None:
     """Test security audit logging"""
     print("Testing security auditor...")
 
@@ -191,7 +191,7 @@ def test_security_auditor():
     print("✓ Security auditor works")
 
 
-def test_password_manager():
+def test_password_manager() -> None:
     """Test secure password manager"""
     print("Testing password manager...")
 
@@ -227,7 +227,7 @@ def test_password_manager():
     print("✓ Password manager works")
 
 
-def test_password_migration_compatibility():
+def test_password_migration_compatibility() -> None:
     """Test that hashed passwords work with existing systems"""
     print("Testing password migration compatibility...")
 
@@ -263,7 +263,7 @@ def test_password_migration_compatibility():
     print("✓ Password migration compatibility verified")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests"""
     print("=" * 60)
     print("Running Security Tests")

@@ -5,7 +5,7 @@ Handles phone lookup by MAC/IP address and phone reboot operations.
 
 import re
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 
 from pbx.api.utils import (
     DateTimeEncoder,
@@ -26,7 +26,7 @@ phones_bp = Blueprint("phones", __name__)
 
 @phones_bp.route("/api/phone-lookup/<identifier>", methods=["GET"])
 @require_auth
-def handle_phone_lookup(identifier):
+def handle_phone_lookup(identifier: str) -> Response:
     """Unified phone lookup by MAC or IP address."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -145,7 +145,7 @@ def handle_phone_lookup(identifier):
 
 @phones_bp.route("/api/phones/reboot", methods=["POST"])
 @require_admin
-def handle_reboot_phones():
+def handle_reboot_phones() -> Response:
     """Reboot all registered phones."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -171,7 +171,7 @@ def handle_reboot_phones():
 
 @phones_bp.route("/api/phones/<extension>/reboot", methods=["POST"])
 @require_admin
-def handle_reboot_phone(extension):
+def handle_reboot_phone(extension: str) -> Response:
     """Reboot a specific phone."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):

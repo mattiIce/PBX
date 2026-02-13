@@ -10,7 +10,7 @@ Recording Analytics, Voicemail Drop, DNS SRV, SBC, and Data Residency.
 import base64
 from datetime import datetime, timedelta
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -35,7 +35,7 @@ framework_bp = Blueprint("framework", __name__, url_prefix="/api/framework")
 
 @framework_bp.route("/speech-analytics/configs", methods=["GET"])
 @require_auth
-def get_speech_analytics_configs():
+def get_speech_analytics_configs() -> tuple[Response, int]:
     """Get all speech analytics configurations."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -54,7 +54,7 @@ def get_speech_analytics_configs():
 
 @framework_bp.route("/speech-analytics/config/<extension>", methods=["GET"])
 @require_auth
-def get_speech_analytics_config(extension):
+def get_speech_analytics_config(extension: str) -> tuple[Response, int]:
     """Get speech analytics config for extension."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -76,7 +76,7 @@ def get_speech_analytics_config(extension):
 
 @framework_bp.route("/speech-analytics/summary/<call_id>", methods=["GET"])
 @require_auth
-def get_call_summary(call_id):
+def get_call_summary(call_id: str) -> tuple[Response, int]:
     """Get stored call summary."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -98,7 +98,7 @@ def get_call_summary(call_id):
 
 @framework_bp.route("/speech-analytics/config/<extension>", methods=["POST"])
 @require_auth
-def update_speech_analytics_config(extension):
+def update_speech_analytics_config(extension: str) -> tuple[Response, int]:
     """Update speech analytics configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -120,7 +120,7 @@ def update_speech_analytics_config(extension):
 
 @framework_bp.route("/speech-analytics/analyze-sentiment", methods=["POST"])
 @require_auth
-def analyze_sentiment():
+def analyze_sentiment() -> tuple[Response, int]:
     """Analyze sentiment of provided text."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -144,7 +144,7 @@ def analyze_sentiment():
 
 @framework_bp.route("/speech-analytics/generate-summary/<call_id>", methods=["POST"])
 @require_auth
-def generate_summary(call_id):
+def generate_summary(call_id: str) -> tuple[Response, int]:
     """Generate call summary from transcript."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -173,7 +173,7 @@ def generate_summary(call_id):
 
 @framework_bp.route("/video-conference/rooms", methods=["GET"])
 @require_auth
-def get_video_rooms():
+def get_video_rooms() -> tuple[Response, int]:
     """Get all video conference rooms."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -192,7 +192,7 @@ def get_video_rooms():
 
 @framework_bp.route("/video-conference/room/<room_id>", methods=["GET"])
 @require_auth
-def get_video_room(room_id):
+def get_video_room(room_id: str) -> tuple[Response, int]:
     """Get video conference room details."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -216,7 +216,7 @@ def get_video_room(room_id):
 
 @framework_bp.route("/video-conference/create-room", methods=["POST"])
 @require_auth
-def create_video_room():
+def create_video_room() -> tuple[Response, int]:
     """Create video conference room."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -239,7 +239,7 @@ def create_video_room():
 
 @framework_bp.route("/video-conference/join/<room_id>", methods=["POST"])
 @require_auth
-def join_video_room(room_id):
+def join_video_room(room_id: str) -> tuple[Response, int]:
     """Join video conference room."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -266,7 +266,7 @@ def join_video_room(room_id):
 
 @framework_bp.route("/click-to-dial/configs", methods=["GET"])
 @require_auth
-def get_click_to_dial_configs():
+def get_click_to_dial_configs() -> tuple[Response, int]:
     """Get all click-to-dial configurations."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -287,7 +287,7 @@ def get_click_to_dial_configs():
 
 @framework_bp.route("/click-to-dial/config/<extension>", methods=["GET"])
 @require_auth
-def get_click_to_dial_config(extension):
+def get_click_to_dial_config(extension: str) -> tuple[Response, int]:
     """Get click-to-dial config for extension."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -319,7 +319,7 @@ def get_click_to_dial_config(extension):
 
 @framework_bp.route("/click-to-dial/history/<extension>", methods=["GET"])
 @require_auth
-def get_click_to_dial_history(extension):
+def get_click_to_dial_history(extension: str) -> tuple[Response, int]:
     """Get click-to-dial call history."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -340,7 +340,7 @@ def get_click_to_dial_history(extension):
 
 @framework_bp.route("/click-to-dial/call/<extension>", methods=["POST"])
 @require_auth
-def click_to_dial_call(extension):
+def click_to_dial_call(extension: str) -> tuple[Response, int]:
     """Initiate click-to-dial call."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -369,7 +369,7 @@ def click_to_dial_call(extension):
 
 @framework_bp.route("/click-to-dial/config/<extension>", methods=["POST"])
 @require_auth
-def update_click_to_dial_config(extension):
+def update_click_to_dial_config(extension: str) -> tuple[Response, int]:
     """Update click-to-dial configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -398,7 +398,7 @@ def update_click_to_dial_config(extension):
 
 @framework_bp.route("/team-messaging/channels", methods=["GET"])
 @require_auth
-def get_team_channels():
+def get_team_channels() -> tuple[Response, int]:
     """Get all team messaging channels."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -417,7 +417,7 @@ def get_team_channels():
 
 @framework_bp.route("/team-messaging/messages/<channel_id>", methods=["GET"])
 @require_auth
-def get_team_messages(channel_id):
+def get_team_messages(channel_id: str) -> tuple[Response, int]:
     """Get team messages for channel."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -436,7 +436,7 @@ def get_team_messages(channel_id):
 
 @framework_bp.route("/team-messaging/create-channel", methods=["POST"])
 @require_auth
-def create_team_channel():
+def create_team_channel() -> tuple[Response, int]:
     """Create team messaging channel."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -459,7 +459,7 @@ def create_team_channel():
 
 @framework_bp.route("/team-messaging/send-message", methods=["POST"])
 @require_auth
-def send_team_message():
+def send_team_message() -> tuple[Response, int]:
     """Send team message."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -487,7 +487,7 @@ def send_team_message():
 
 @framework_bp.route("/nomadic-e911/sites", methods=["GET"])
 @require_auth
-def get_e911_sites():
+def get_e911_sites() -> tuple[Response, int]:
     """Get all E911 site configurations."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -506,7 +506,7 @@ def get_e911_sites():
 
 @framework_bp.route("/nomadic-e911/location/<extension>", methods=["GET"])
 @require_auth
-def get_e911_location(extension):
+def get_e911_location(extension: str) -> tuple[Response, int]:
     """Get E911 location for extension."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -528,7 +528,7 @@ def get_e911_location(extension):
 
 @framework_bp.route("/nomadic-e911/history/<extension>", methods=["GET"])
 @require_auth
-def get_e911_history(extension):
+def get_e911_history(extension: str) -> tuple[Response, int]:
     """Get E911 location history for extension."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -547,7 +547,7 @@ def get_e911_history(extension):
 
 @framework_bp.route("/nomadic-e911/update-location/<extension>", methods=["POST"])
 @require_auth
-def update_e911_location(extension):
+def update_e911_location(extension: str) -> tuple[Response, int]:
     """Update E911 location for extension."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -569,7 +569,7 @@ def update_e911_location(extension):
 
 @framework_bp.route("/nomadic-e911/detect-location/<extension>", methods=["POST"])
 @require_auth
-def detect_e911_location(extension):
+def detect_e911_location(extension: str) -> tuple[Response, int]:
     """Auto-detect E911 location for extension by IP."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -596,7 +596,7 @@ def detect_e911_location(extension):
 
 @framework_bp.route("/nomadic-e911/create-site", methods=["POST"])
 @require_auth
-def create_e911_site():
+def create_e911_site() -> tuple[Response, int]:
     """Create E911 site configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -623,7 +623,7 @@ def create_e911_site():
 
 @framework_bp.route("/integrations/hubspot", methods=["GET"])
 @require_auth
-def get_hubspot_config():
+def get_hubspot_config() -> tuple[Response, int]:
     """Get HubSpot integration configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -645,7 +645,7 @@ def get_hubspot_config():
 
 @framework_bp.route("/integrations/zendesk", methods=["GET"])
 @require_auth
-def get_zendesk_config():
+def get_zendesk_config() -> tuple[Response, int]:
     """Get Zendesk integration configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -667,7 +667,7 @@ def get_zendesk_config():
 
 @framework_bp.route("/integrations/activity-log", methods=["GET"])
 @require_auth
-def get_integration_activity():
+def get_integration_activity() -> tuple[Response, int]:
     """Get integration activity log."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -702,7 +702,7 @@ def get_integration_activity():
 
 @framework_bp.route("/integrations/hubspot/config", methods=["POST"])
 @require_auth
-def update_hubspot_config():
+def update_hubspot_config() -> tuple[Response, int]:
     """Update HubSpot integration configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -724,7 +724,7 @@ def update_hubspot_config():
 
 @framework_bp.route("/integrations/zendesk/config", methods=["POST"])
 @require_auth
-def update_zendesk_config():
+def update_zendesk_config() -> tuple[Response, int]:
     """Update Zendesk integration configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -746,7 +746,7 @@ def update_zendesk_config():
 
 @framework_bp.route("/integrations/activity-log/clear", methods=["POST"])
 @require_admin
-def clear_integration_activity():
+def clear_integration_activity() -> tuple[Response, int]:
     """Clear old integration activity log entries."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -800,7 +800,7 @@ def clear_integration_activity():
 
 @framework_bp.route("/compliance/gdpr/consents", methods=["GET"])
 @require_auth
-def get_gdpr_consents():
+def get_gdpr_consents() -> tuple[Response, int]:
     """Get GDPR consent records."""
     extension = request.args.get("extension", "")
     pbx_core = get_pbx_core()
@@ -820,7 +820,7 @@ def get_gdpr_consents():
 
 @framework_bp.route("/compliance/gdpr/requests", methods=["GET"])
 @require_auth
-def get_gdpr_requests():
+def get_gdpr_requests() -> tuple[Response, int]:
     """Get pending GDPR data requests."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -839,7 +839,7 @@ def get_gdpr_requests():
 
 @framework_bp.route("/compliance/soc2/controls", methods=["GET"])
 @require_auth
-def get_soc2_controls():
+def get_soc2_controls() -> tuple[Response, int]:
     """Get SOC 2 Type 2 controls."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -858,7 +858,7 @@ def get_soc2_controls():
 
 @framework_bp.route("/compliance/pci/audit-log", methods=["GET"])
 @require_auth
-def get_pci_audit_log():
+def get_pci_audit_log() -> tuple[Response, int]:
     """Get PCI DSS audit log."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -877,7 +877,7 @@ def get_pci_audit_log():
 
 @framework_bp.route("/compliance/gdpr/consent", methods=["POST"])
 @require_auth
-def record_gdpr_consent():
+def record_gdpr_consent() -> tuple[Response, int]:
     """Record GDPR consent."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -899,7 +899,7 @@ def record_gdpr_consent():
 
 @framework_bp.route("/compliance/gdpr/withdraw", methods=["POST"])
 @require_auth
-def withdraw_gdpr_consent():
+def withdraw_gdpr_consent() -> tuple[Response, int]:
     """Withdraw GDPR consent."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -921,7 +921,7 @@ def withdraw_gdpr_consent():
 
 @framework_bp.route("/compliance/gdpr/request", methods=["POST"])
 @require_auth
-def create_gdpr_request():
+def create_gdpr_request() -> tuple[Response, int]:
     """Create GDPR data request."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -944,7 +944,7 @@ def create_gdpr_request():
 
 @framework_bp.route("/compliance/soc2/control", methods=["POST"])
 @require_auth
-def register_soc2_control():
+def register_soc2_control() -> tuple[Response, int]:
     """Register SOC 2 Type 2 control."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -966,7 +966,7 @@ def register_soc2_control():
 
 @framework_bp.route("/compliance/pci/log", methods=["POST"])
 @require_auth
-def log_pci_event():
+def log_pci_event() -> tuple[Response, int]:
     """Log PCI DSS event."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
@@ -993,7 +993,7 @@ def log_pci_event():
 
 @framework_bp.route("/bi-integration/datasets", methods=["GET"])
 @require_auth
-def get_bi_datasets():
+def get_bi_datasets() -> tuple[Response, int]:
     """Get available BI datasets."""
     try:
         pbx_core = get_pbx_core()
@@ -1009,7 +1009,7 @@ def get_bi_datasets():
 
 @framework_bp.route("/bi-integration/statistics", methods=["GET"])
 @require_auth
-def get_bi_statistics():
+def get_bi_statistics() -> tuple[Response, int]:
     """Get BI statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1025,7 +1025,7 @@ def get_bi_statistics():
 
 @framework_bp.route("/bi-integration/export/<dataset_name>", methods=["GET"])
 @require_auth
-def get_bi_export_status(dataset_name):
+def get_bi_export_status(dataset_name: str) -> tuple[Response, int]:
     """Get BI export status for a dataset."""
     try:
         pbx_core = get_pbx_core()
@@ -1045,7 +1045,7 @@ def get_bi_export_status(dataset_name):
 
 @framework_bp.route("/bi-integration/export", methods=["POST"])
 @require_auth
-def export_bi_dataset():
+def export_bi_dataset() -> tuple[Response, int]:
     """Export BI dataset."""
     try:
         pbx_core = get_pbx_core()
@@ -1076,7 +1076,7 @@ def export_bi_dataset():
 
 @framework_bp.route("/bi-integration/dataset", methods=["POST"])
 @require_auth
-def create_bi_dataset():
+def create_bi_dataset() -> tuple[Response, int]:
     """Create custom BI dataset."""
     try:
         pbx_core = get_pbx_core()
@@ -1099,7 +1099,7 @@ def create_bi_dataset():
 
 @framework_bp.route("/bi-integration/test-connection", methods=["POST"])
 @require_auth
-def test_bi_connection():
+def test_bi_connection() -> tuple[Response, int]:
     """Test BI provider connection."""
     try:
         pbx_core = get_pbx_core()
@@ -1132,7 +1132,7 @@ def test_bi_connection():
 
 @framework_bp.route("/call-tagging/tags", methods=["GET"])
 @require_auth
-def get_call_tags():
+def get_call_tags() -> tuple[Response, int]:
     """Get all call tags."""
     try:
         pbx_core = get_pbx_core()
@@ -1148,7 +1148,7 @@ def get_call_tags():
 
 @framework_bp.route("/call-tagging/rules", methods=["GET"])
 @require_auth
-def get_tagging_rules():
+def get_tagging_rules() -> tuple[Response, int]:
     """Get tagging rules."""
     try:
         pbx_core = get_pbx_core()
@@ -1164,7 +1164,7 @@ def get_tagging_rules():
 
 @framework_bp.route("/call-tagging/statistics", methods=["GET"])
 @require_auth
-def get_tagging_statistics():
+def get_tagging_statistics() -> tuple[Response, int]:
     """Get tagging statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1180,7 +1180,7 @@ def get_tagging_statistics():
 
 @framework_bp.route("/call-tagging/tag", methods=["POST"])
 @require_auth
-def create_call_tag():
+def create_call_tag() -> tuple[Response, int]:
     """Create new call tag."""
     try:
         pbx_core = get_pbx_core()
@@ -1204,7 +1204,7 @@ def create_call_tag():
 
 @framework_bp.route("/call-tagging/rule", methods=["POST"])
 @require_auth
-def create_tagging_rule():
+def create_tagging_rule() -> tuple[Response, int]:
     """Create tagging rule."""
     try:
         pbx_core = get_pbx_core()
@@ -1228,7 +1228,7 @@ def create_tagging_rule():
 
 @framework_bp.route("/call-tagging/classify/<call_id>", methods=["POST"])
 @require_auth
-def classify_call(call_id):
+def classify_call(call_id: str) -> tuple[Response, int]:
     """Classify call with tags."""
     try:
         pbx_core = get_pbx_core()
@@ -1249,7 +1249,7 @@ def classify_call(call_id):
 
 @framework_bp.route("/call-blending/agents", methods=["GET"])
 @require_auth
-def get_blending_agents():
+def get_blending_agents() -> tuple[Response, int]:
     """Get all blending agents."""
     try:
         pbx_core = get_pbx_core()
@@ -1265,7 +1265,7 @@ def get_blending_agents():
 
 @framework_bp.route("/call-blending/statistics", methods=["GET"])
 @require_auth
-def get_blending_statistics():
+def get_blending_statistics() -> tuple[Response, int]:
     """Get blending statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1281,7 +1281,7 @@ def get_blending_statistics():
 
 @framework_bp.route("/call-blending/agent/<agent_id>", methods=["GET"])
 @require_auth
-def get_blending_agent_status(agent_id):
+def get_blending_agent_status(agent_id: str) -> tuple[Response, int]:
     """Get blending agent status."""
     try:
         pbx_core = get_pbx_core()
@@ -1300,7 +1300,7 @@ def get_blending_agent_status(agent_id):
 
 @framework_bp.route("/call-blending/agent", methods=["POST"])
 @require_auth
-def register_blending_agent():
+def register_blending_agent() -> tuple[Response, int]:
     """Register blending agent."""
     try:
         pbx_core = get_pbx_core()
@@ -1323,7 +1323,7 @@ def register_blending_agent():
 
 @framework_bp.route("/call-blending/agent/<agent_id>/mode", methods=["POST"])
 @require_auth
-def set_agent_mode(agent_id):
+def set_agent_mode(agent_id: str) -> tuple[Response, int]:
     """Set blending agent mode."""
     try:
         pbx_core = get_pbx_core()
@@ -1347,7 +1347,7 @@ def set_agent_mode(agent_id):
 
 @framework_bp.route("/geo-redundancy/regions", methods=["GET"])
 @require_auth
-def get_geo_regions():
+def get_geo_regions() -> tuple[Response, int]:
     """Get all geo regions."""
     try:
         pbx_core = get_pbx_core()
@@ -1363,7 +1363,7 @@ def get_geo_regions():
 
 @framework_bp.route("/geo-redundancy/statistics", methods=["GET"])
 @require_auth
-def get_geo_statistics():
+def get_geo_statistics() -> tuple[Response, int]:
     """Get geo redundancy statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1379,7 +1379,7 @@ def get_geo_statistics():
 
 @framework_bp.route("/geo-redundancy/region/<region_id>", methods=["GET"])
 @require_auth
-def get_geo_region_status(region_id):
+def get_geo_region_status(region_id: str) -> tuple[Response, int]:
     """Get geo region status."""
     try:
         pbx_core = get_pbx_core()
@@ -1398,7 +1398,7 @@ def get_geo_region_status(region_id):
 
 @framework_bp.route("/geo-redundancy/region", methods=["POST"])
 @require_auth
-def create_geo_region():
+def create_geo_region() -> tuple[Response, int]:
     """Create geo region."""
     try:
         pbx_core = get_pbx_core()
@@ -1422,7 +1422,7 @@ def create_geo_region():
 
 @framework_bp.route("/geo-redundancy/region/<region_id>/failover", methods=["POST"])
 @require_auth
-def trigger_geo_failover(region_id):
+def trigger_geo_failover(region_id: str) -> tuple[Response, int]:
     """Trigger geo failover for a region."""
     try:
         pbx_core = get_pbx_core()
@@ -1443,7 +1443,7 @@ def trigger_geo_failover(region_id):
 
 @framework_bp.route("/conversational-ai/config", methods=["GET"])
 @require_auth
-def get_ai_config():
+def get_ai_config() -> tuple[Response, int]:
     """Get AI configuration."""
     try:
         pbx_core = get_pbx_core()
@@ -1468,7 +1468,7 @@ def get_ai_config():
 
 @framework_bp.route("/conversational-ai/statistics", methods=["GET"])
 @require_auth
-def get_ai_statistics():
+def get_ai_statistics() -> tuple[Response, int]:
     """Get AI statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1485,7 +1485,7 @@ def get_ai_statistics():
 
 @framework_bp.route("/conversational-ai/conversations", methods=["GET"])
 @require_auth
-def get_ai_conversations():
+def get_ai_conversations() -> tuple[Response, int]:
     """Get active AI conversations."""
     try:
         pbx_core = get_pbx_core()
@@ -1513,7 +1513,7 @@ def get_ai_conversations():
 
 @framework_bp.route("/conversational-ai/history", methods=["GET"])
 @require_auth
-def get_ai_conversation_history():
+def get_ai_conversation_history() -> tuple[Response, int]:
     """Get conversation history from database."""
     try:
         pbx_core = get_pbx_core()
@@ -1534,7 +1534,7 @@ def get_ai_conversation_history():
 
 @framework_bp.route("/conversational-ai/conversation", methods=["POST"])
 @require_auth
-def start_ai_conversation():
+def start_ai_conversation() -> tuple[Response, int]:
     """Start AI conversation."""
     try:
         pbx_core = get_pbx_core()
@@ -1567,7 +1567,7 @@ def start_ai_conversation():
 
 @framework_bp.route("/conversational-ai/process", methods=["POST"])
 @require_auth
-def process_ai_input():
+def process_ai_input() -> tuple[Response, int]:
     """Process user input in AI conversation."""
     try:
         pbx_core = get_pbx_core()
@@ -1594,7 +1594,7 @@ def process_ai_input():
 
 @framework_bp.route("/conversational-ai/config", methods=["POST"])
 @require_auth
-def configure_ai_provider():
+def configure_ai_provider() -> tuple[Response, int]:
     """Configure AI provider."""
     try:
         pbx_core = get_pbx_core()
@@ -1626,7 +1626,7 @@ def configure_ai_provider():
 
 @framework_bp.route("/predictive-dialing/campaigns", methods=["GET"])
 @require_auth
-def get_dialing_campaigns():
+def get_dialing_campaigns() -> tuple[Response, int]:
     """Get all dialing campaigns."""
     try:
         pbx_core = get_pbx_core()
@@ -1656,7 +1656,7 @@ def get_dialing_campaigns():
 
 @framework_bp.route("/predictive-dialing/statistics", methods=["GET"])
 @require_auth
-def get_dialing_statistics():
+def get_dialing_statistics() -> tuple[Response, int]:
     """Get dialing statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1675,7 +1675,7 @@ def get_dialing_statistics():
 
 @framework_bp.route("/predictive-dialing/campaign/<campaign_id>", methods=["GET"])
 @require_auth
-def get_campaign_details(campaign_id):
+def get_campaign_details(campaign_id: str) -> tuple[Response, int]:
     """Get campaign details."""
     try:
         pbx_core = get_pbx_core()
@@ -1697,7 +1697,7 @@ def get_campaign_details(campaign_id):
 
 @framework_bp.route("/predictive-dialing/campaign", methods=["POST"])
 @require_auth
-def create_dialing_campaign():
+def create_dialing_campaign() -> tuple[Response, int]:
     """Create dialing campaign."""
     try:
         pbx_core = get_pbx_core()
@@ -1750,7 +1750,7 @@ def create_dialing_campaign():
 
 @framework_bp.route("/predictive-dialing/contacts", methods=["POST"])
 @require_auth
-def add_campaign_contacts():
+def add_campaign_contacts() -> tuple[Response, int]:
     """Add contacts to dialing campaign."""
     try:
         pbx_core = get_pbx_core()
@@ -1777,7 +1777,7 @@ def add_campaign_contacts():
 
 @framework_bp.route("/predictive-dialing/campaign/<campaign_id>/start", methods=["POST"])
 @require_auth
-def start_dialing_campaign(campaign_id):
+def start_dialing_campaign(campaign_id: str) -> tuple[Response, int]:
     """Start dialing campaign."""
     try:
         pbx_core = get_pbx_core()
@@ -1796,7 +1796,7 @@ def start_dialing_campaign(campaign_id):
 
 @framework_bp.route("/predictive-dialing/campaign/<campaign_id>/pause", methods=["POST"])
 @require_auth
-def pause_dialing_campaign(campaign_id):
+def pause_dialing_campaign(campaign_id: str) -> tuple[Response, int]:
     """Pause dialing campaign."""
     try:
         pbx_core = get_pbx_core()
@@ -1820,7 +1820,7 @@ def pause_dialing_campaign(campaign_id):
 
 @framework_bp.route("/voice-biometrics/profiles", methods=["GET"])
 @require_auth
-def get_voice_profiles():
+def get_voice_profiles() -> tuple[Response, int]:
     """Get all voice profiles."""
     try:
         pbx_core = get_pbx_core()
@@ -1850,7 +1850,7 @@ def get_voice_profiles():
 
 @framework_bp.route("/voice-biometrics/statistics", methods=["GET"])
 @require_auth
-def get_voice_statistics():
+def get_voice_statistics() -> tuple[Response, int]:
     """Get voice biometrics statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -1869,7 +1869,7 @@ def get_voice_statistics():
 
 @framework_bp.route("/voice-biometrics/profile/<user_id>", methods=["GET"])
 @require_auth
-def get_voice_profile(user_id):
+def get_voice_profile(user_id: str) -> tuple[Response, int]:
     """Get voice profile for a user."""
     try:
         pbx_core = get_pbx_core()
@@ -1901,7 +1901,7 @@ def get_voice_profile(user_id):
 
 @framework_bp.route("/voice-biometrics/profile", methods=["POST"])
 @require_auth
-def create_voice_profile():
+def create_voice_profile() -> tuple[Response, int]:
     """Create voice profile."""
     try:
         pbx_core = get_pbx_core()
@@ -1935,7 +1935,7 @@ def create_voice_profile():
 
 @framework_bp.route("/voice-biometrics/enroll", methods=["POST"])
 @require_auth
-def start_voice_enrollment():
+def start_voice_enrollment() -> tuple[Response, int]:
     """Start voice enrollment."""
     try:
         pbx_core = get_pbx_core()
@@ -1961,7 +1961,7 @@ def start_voice_enrollment():
 
 @framework_bp.route("/voice-biometrics/verify", methods=["POST"])
 @require_auth
-def verify_speaker():
+def verify_speaker() -> tuple[Response, int]:
     """Verify speaker identity."""
     try:
         pbx_core = get_pbx_core()
@@ -1998,7 +1998,7 @@ def verify_speaker():
 
 @framework_bp.route("/voice-biometrics/profile/<user_id>", methods=["DELETE"])
 @require_auth
-def delete_voice_profile(user_id):
+def delete_voice_profile(user_id: str) -> tuple[Response, int]:
     """Delete voice profile."""
     try:
         pbx_core = get_pbx_core()
@@ -2025,7 +2025,7 @@ def delete_voice_profile(user_id):
 
 @framework_bp.route("/call-quality-prediction/predictions", methods=["GET"])
 @require_auth
-def get_quality_predictions():
+def get_quality_predictions() -> tuple[Response, int]:
     """Get all quality predictions."""
     try:
         pbx_core = get_pbx_core()
@@ -2044,7 +2044,7 @@ def get_quality_predictions():
 
 @framework_bp.route("/call-quality-prediction/statistics", methods=["GET"])
 @require_auth
-def get_quality_statistics():
+def get_quality_statistics() -> tuple[Response, int]:
     """Get quality prediction statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2063,7 +2063,7 @@ def get_quality_statistics():
 
 @framework_bp.route("/call-quality-prediction/alerts", methods=["GET"])
 @require_auth
-def get_quality_alerts():
+def get_quality_alerts() -> tuple[Response, int]:
     """Get active quality alerts from database."""
     try:
         pbx_core = get_pbx_core()
@@ -2084,7 +2084,7 @@ def get_quality_alerts():
 
 @framework_bp.route("/call-quality-prediction/prediction/<call_id>", methods=["GET"])
 @require_auth
-def get_call_prediction(call_id):
+def get_call_prediction(call_id: str) -> tuple[Response, int]:
     """Get quality prediction for a specific call."""
     try:
         pbx_core = get_pbx_core()
@@ -2106,7 +2106,7 @@ def get_call_prediction(call_id):
 
 @framework_bp.route("/call-quality-prediction/metrics", methods=["POST"])
 @require_auth
-def collect_quality_metrics():
+def collect_quality_metrics() -> tuple[Response, int]:
     """Collect quality metrics for a call."""
     try:
         pbx_core = get_pbx_core()
@@ -2140,7 +2140,7 @@ def collect_quality_metrics():
 
 @framework_bp.route("/call-quality-prediction/train", methods=["POST"])
 @require_auth
-def train_quality_model():
+def train_quality_model() -> tuple[Response, int]:
     """Train quality prediction model."""
     try:
         pbx_core = get_pbx_core()
@@ -2171,7 +2171,7 @@ def train_quality_model():
 
 @framework_bp.route("/video-codec/codecs", methods=["GET"])
 @require_auth
-def get_video_codecs():
+def get_video_codecs() -> tuple[Response, int]:
     """Get supported video codecs."""
     try:
         pbx_core = get_pbx_core()
@@ -2187,7 +2187,7 @@ def get_video_codecs():
 
 @framework_bp.route("/video-codec/statistics", methods=["GET"])
 @require_auth
-def get_video_statistics():
+def get_video_statistics() -> tuple[Response, int]:
     """Get video codec statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2203,7 +2203,7 @@ def get_video_statistics():
 
 @framework_bp.route("/video-codec/bandwidth", methods=["POST"])
 @require_auth
-def calculate_video_bandwidth():
+def calculate_video_bandwidth() -> tuple[Response, int]:
     """Calculate required video bandwidth."""
     try:
         pbx_core = get_pbx_core()
@@ -2248,7 +2248,7 @@ def calculate_video_bandwidth():
 
 @framework_bp.route("/mobile-portability/mappings", methods=["GET"])
 @require_auth
-def get_mobile_mappings():
+def get_mobile_mappings() -> tuple[Response, int]:
     """Get all mobile number mappings."""
     try:
         pbx_core = get_pbx_core()
@@ -2267,7 +2267,7 @@ def get_mobile_mappings():
 
 @framework_bp.route("/mobile-portability/statistics", methods=["GET"])
 @require_auth
-def get_mobile_statistics():
+def get_mobile_statistics() -> tuple[Response, int]:
     """Get mobile portability statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2283,7 +2283,7 @@ def get_mobile_statistics():
 
 @framework_bp.route("/mobile-portability/mapping/<business_number>", methods=["GET"])
 @require_auth
-def get_mobile_mapping(business_number):
+def get_mobile_mapping(business_number: str) -> tuple[Response, int]:
     """Get specific mobile number mapping."""
     try:
         pbx_core = get_pbx_core()
@@ -2302,7 +2302,7 @@ def get_mobile_mapping(business_number):
 
 @framework_bp.route("/mobile-portability/mapping", methods=["POST"])
 @require_auth
-def create_mobile_mapping():
+def create_mobile_mapping() -> tuple[Response, int]:
     """Create mobile number mapping."""
     try:
         pbx_core = get_pbx_core()
@@ -2331,7 +2331,7 @@ def create_mobile_mapping():
 
 @framework_bp.route("/mobile-portability/mapping/<business_number>/toggle", methods=["POST"])
 @require_auth
-def toggle_mobile_mapping(business_number):
+def toggle_mobile_mapping(business_number: str) -> tuple[Response, int]:
     """Toggle mobile number mapping active state."""
     try:
         pbx_core = get_pbx_core()
@@ -2354,7 +2354,7 @@ def toggle_mobile_mapping(business_number):
 
 @framework_bp.route("/mobile-portability/mapping/<business_number>", methods=["DELETE"])
 @require_auth
-def delete_mobile_mapping(business_number):
+def delete_mobile_mapping(business_number: str) -> tuple[Response, int]:
     """Delete mobile number mapping."""
     try:
         pbx_core = get_pbx_core()
@@ -2379,7 +2379,7 @@ def delete_mobile_mapping(business_number):
 
 @framework_bp.route("/recording-analytics/analyses", methods=["GET"])
 @require_auth
-def get_recording_analyses():
+def get_recording_analyses() -> tuple[Response, int]:
     """Get all recording analyses."""
     try:
         pbx_core = get_pbx_core()
@@ -2395,7 +2395,7 @@ def get_recording_analyses():
 
 @framework_bp.route("/recording-analytics/statistics", methods=["GET"])
 @require_auth
-def get_recording_statistics():
+def get_recording_statistics() -> tuple[Response, int]:
     """Get recording analytics statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2411,7 +2411,7 @@ def get_recording_statistics():
 
 @framework_bp.route("/recording-analytics/analysis/<recording_id>", methods=["GET"])
 @require_auth
-def get_recording_analysis(recording_id):
+def get_recording_analysis(recording_id: str) -> tuple[Response, int]:
     """Get specific recording analysis."""
     try:
         pbx_core = get_pbx_core()
@@ -2430,7 +2430,7 @@ def get_recording_analysis(recording_id):
 
 @framework_bp.route("/recording-analytics/analyze", methods=["POST"])
 @require_auth
-def analyze_recording():
+def analyze_recording() -> tuple[Response, int]:
     """Analyze a recording."""
     try:
         pbx_core = get_pbx_core()
@@ -2456,7 +2456,7 @@ def analyze_recording():
 
 @framework_bp.route("/recording-analytics/search", methods=["POST"])
 @require_auth
-def search_recordings():
+def search_recordings() -> tuple[Response, int]:
     """Search recordings."""
     try:
         pbx_core = get_pbx_core()
@@ -2481,7 +2481,7 @@ def search_recordings():
 
 @framework_bp.route("/voicemail-drop/messages", methods=["GET"])
 @require_auth
-def get_voicemail_messages():
+def get_voicemail_messages() -> tuple[Response, int]:
     """Get all voicemail drop messages."""
     try:
         pbx_core = get_pbx_core()
@@ -2497,7 +2497,7 @@ def get_voicemail_messages():
 
 @framework_bp.route("/voicemail-drop/statistics", methods=["GET"])
 @require_auth
-def get_voicemail_drop_statistics():
+def get_voicemail_drop_statistics() -> tuple[Response, int]:
     """Get voicemail drop statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2513,7 +2513,7 @@ def get_voicemail_drop_statistics():
 
 @framework_bp.route("/voicemail-drop/message", methods=["POST"])
 @require_auth
-def add_voicemail_message():
+def add_voicemail_message() -> tuple[Response, int]:
     """Add voicemail drop message."""
     try:
         pbx_core = get_pbx_core()
@@ -2538,7 +2538,7 @@ def add_voicemail_message():
 
 @framework_bp.route("/voicemail-drop/drop", methods=["POST"])
 @require_auth
-def drop_voicemail():
+def drop_voicemail() -> tuple[Response, int]:
     """Drop message to voicemail."""
     try:
         pbx_core = get_pbx_core()
@@ -2567,7 +2567,7 @@ def drop_voicemail():
 
 @framework_bp.route("/dns-srv/records", methods=["GET"])
 @require_auth
-def get_srv_records():
+def get_srv_records() -> tuple[Response, int]:
     """Get SRV records."""
     try:
         pbx_core = get_pbx_core()
@@ -2589,7 +2589,7 @@ def get_srv_records():
 
 @framework_bp.route("/dns-srv/statistics", methods=["GET"])
 @require_auth
-def get_dns_srv_statistics():
+def get_dns_srv_statistics() -> tuple[Response, int]:
     """Get DNS SRV statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2605,7 +2605,7 @@ def get_dns_srv_statistics():
 
 @framework_bp.route("/dns-srv/lookup", methods=["POST"])
 @require_auth
-def lookup_srv():
+def lookup_srv() -> tuple[Response, int]:
     """Lookup SRV records."""
     try:
         pbx_core = get_pbx_core()
@@ -2635,7 +2635,7 @@ def lookup_srv():
 
 @framework_bp.route("/sbc/statistics", methods=["GET"])
 @require_auth
-def get_sbc_statistics():
+def get_sbc_statistics() -> tuple[Response, int]:
     """Get SBC statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2651,7 +2651,7 @@ def get_sbc_statistics():
 
 @framework_bp.route("/sbc/relays", methods=["GET"])
 @require_auth
-def get_sbc_relays():
+def get_sbc_relays() -> tuple[Response, int]:
     """Get active RTP relays."""
     try:
         pbx_core = get_pbx_core()
@@ -2667,7 +2667,7 @@ def get_sbc_relays():
 
 @framework_bp.route("/sbc/relay", methods=["POST"])
 @require_auth
-def allocate_sbc_relay():
+def allocate_sbc_relay() -> tuple[Response, int]:
     """Allocate RTP relay."""
     try:
         pbx_core = get_pbx_core()
@@ -2696,7 +2696,7 @@ def allocate_sbc_relay():
 
 @framework_bp.route("/data-residency/regions", methods=["GET"])
 @require_auth
-def get_data_regions():
+def get_data_regions() -> tuple[Response, int]:
     """Get configured data residency regions."""
     try:
         pbx_core = get_pbx_core()
@@ -2712,7 +2712,7 @@ def get_data_regions():
 
 @framework_bp.route("/data-residency/statistics", methods=["GET"])
 @require_auth
-def get_data_residency_statistics():
+def get_data_residency_statistics() -> tuple[Response, int]:
     """Get data residency statistics."""
     try:
         pbx_core = get_pbx_core()
@@ -2728,7 +2728,7 @@ def get_data_residency_statistics():
 
 @framework_bp.route("/data-residency/location", methods=["POST"])
 @require_auth
-def get_storage_location():
+def get_storage_location() -> tuple[Response, int]:
     """Get storage location for data category."""
     try:
         pbx_core = get_pbx_core()

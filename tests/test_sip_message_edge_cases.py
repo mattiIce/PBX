@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.sip.message import SIPMessage
 
 
-def test_empty_message():
+def test_empty_message() -> None:
     """Test parsing an empty message"""
     print("Testing empty message parsing...")
 
@@ -26,7 +26,7 @@ def test_empty_message():
     print("✓ Empty message handling works")
 
 
-def test_single_newline_message():
+def test_single_newline_message() -> None:
     """Test parsing a message with just newlines"""
     print("Testing single newline message...")
 
@@ -39,7 +39,7 @@ def test_single_newline_message():
     print("✓ Single newline message handling works")
 
 
-def test_malformed_request_no_uri():
+def test_malformed_request_no_uri() -> None:
     """Test parsing a request with no URI"""
     print("Testing malformed request with no URI...")
 
@@ -53,7 +53,7 @@ def test_malformed_request_no_uri():
     print("✓ Malformed request (no URI) handling works")
 
 
-def test_malformed_response_no_status_code():
+def test_malformed_response_no_status_code() -> None:
     """Test parsing a response with no status code"""
     print("Testing malformed response with no status code...")
 
@@ -66,7 +66,7 @@ def test_malformed_response_no_status_code():
     print("✓ Malformed response (no status code) handling works")
 
 
-def test_malformed_response_invalid_status_code():
+def test_malformed_response_invalid_status_code() -> None:
     """Test parsing a response with invalid status code"""
     print("Testing malformed response with invalid status code...")
 
@@ -79,7 +79,7 @@ def test_malformed_response_invalid_status_code():
     print("✓ Malformed response (invalid status code) handling works")
 
 
-def test_valid_request():
+def test_valid_request() -> None:
     """Test parsing a valid request still works"""
     print("Testing valid request parsing...")
 
@@ -104,7 +104,7 @@ def test_valid_request():
     print("✓ Valid request parsing still works")
 
 
-def test_valid_response():
+def test_valid_response() -> None:
     """Test parsing a valid response still works"""
     print("Testing valid response parsing...")
 
@@ -129,7 +129,7 @@ def test_valid_response():
     print("✓ Valid response parsing still works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all edge case tests"""
     print("\n" + "=" * 60)
     print("Running SIP Message Edge Case Tests")

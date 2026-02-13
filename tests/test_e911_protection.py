@@ -14,7 +14,7 @@ from pbx.features.sip_trunk import OutboundRule, SIPTrunk, SIPTrunkSystem
 from pbx.utils.e911_protection import E911Protection
 
 
-def test_e911_pattern_detection():
+def test_e911_pattern_detection() -> None:
     """Test that E911 patterns are correctly detected"""
     print("Testing E911 pattern detection...")
 
@@ -36,7 +36,7 @@ def test_e911_pattern_detection():
     print("✓ E911 pattern detection works correctly")
 
 
-def test_e911_blocking_in_test_mode():
+def test_e911_blocking_in_test_mode() -> None:
     """Test that E911 calls are blocked when in test mode"""
     print("Testing E911 blocking in test mode...")
 
@@ -68,7 +68,7 @@ def test_e911_blocking_in_test_mode():
     print("✓ E911 blocking in test mode works correctly")
 
 
-def test_e911_warning_in_production_mode():
+def test_e911_warning_in_production_mode() -> None:
     """Test that E911 calls generate warnings but are not blocked in production"""
     print("Testing E911 warning in production mode...")
 
@@ -93,7 +93,7 @@ def test_e911_warning_in_production_mode():
     print("✓ E911 warning in production mode works correctly")
 
 
-def test_sip_trunk_e911_blocking():
+def test_sip_trunk_e911_blocking() -> None:
     """Test that SIP trunk system blocks E911 calls in test mode"""
     print("Testing SIP trunk E911 blocking...")
 
@@ -145,7 +145,7 @@ def test_sip_trunk_e911_blocking():
     print("✓ SIP trunk E911 blocking works correctly")
 
 
-def test_test_mode_detection():
+def test_test_mode_detection() -> None:
     """Test various methods of test mode detection"""
     print("Testing test mode detection...")
 
@@ -185,7 +185,7 @@ def test_test_mode_detection():
     print("✓ Test mode detection works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all E911 protection tests"""
     print("=" * 60)
     print("E911 Protection Tests")

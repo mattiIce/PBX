@@ -13,7 +13,7 @@ from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import ThreatDetector
 
 
-def test_threat_detector_initialization():
+def test_threat_detector_initialization() -> bool:
     """Test threat detector initialization"""
     print("Testing threat detector initialization...")
 
@@ -26,7 +26,7 @@ def test_threat_detector_initialization():
     return True
 
 
-def test_ip_blocking():
+def test_ip_blocking() -> bool:
     """Test IP blocking"""
     print("Testing IP blocking...")
 
@@ -60,7 +60,7 @@ def test_ip_blocking():
     return True
 
 
-def test_auto_unblock():
+def test_auto_unblock() -> bool:
     """Test automatic unblocking after duration"""
     print("Testing automatic unblocking...")
 
@@ -88,7 +88,7 @@ def test_auto_unblock():
     return True
 
 
-def test_failed_attempt_tracking():
+def test_failed_attempt_tracking() -> bool:
     """Test failed attempt tracking and auto-blocking"""
     print("Testing failed attempt tracking...")
 
@@ -123,7 +123,7 @@ def test_failed_attempt_tracking():
     return True
 
 
-def test_suspicious_pattern_detection():
+def test_suspicious_pattern_detection() -> bool:
     """Test suspicious pattern detection"""
     print("Testing suspicious pattern detection...")
 
@@ -155,7 +155,7 @@ def test_suspicious_pattern_detection():
     return True
 
 
-def test_request_pattern_analysis():
+def test_request_pattern_analysis() -> bool:
     """Test request pattern analysis"""
     print("Testing request pattern analysis...")
 
@@ -182,7 +182,7 @@ def test_request_pattern_analysis():
     return True
 
 
-def test_with_database():
+def test_with_database() -> bool:
     """Test threat detection with database persistence"""
     print("Testing threat detection with database...")
 
@@ -253,7 +253,7 @@ def test_with_database():
         raise e
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all threat detection tests"""
     print("=" * 60)
     print("Enhanced Threat Detection Tests")

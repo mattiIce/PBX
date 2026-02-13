@@ -14,7 +14,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_emergency_contacts_table_creation():
+def test_emergency_contacts_table_creation() -> None:
     """Test that emergency_contacts table is created"""
     print("Testing emergency_contacts table creation...")
 
@@ -68,7 +68,7 @@ def test_emergency_contacts_table_creation():
             os.unlink(temp_db.name)
 
 
-def test_emergency_notifications_table_creation():
+def test_emergency_notifications_table_creation() -> None:
     """Test that emergency_notifications table is created"""
     print("Testing emergency_notifications table creation...")
 
@@ -120,7 +120,7 @@ def test_emergency_notifications_table_creation():
             os.unlink(temp_db.name)
 
 
-def test_emergency_indexes_creation():
+def test_emergency_indexes_creation() -> None:
     """Test that emergency table indexes are created"""
     print("Testing emergency table indexes creation...")
 
@@ -164,7 +164,7 @@ def test_emergency_indexes_creation():
             os.unlink(temp_db.name)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Emergency Tables Tests")

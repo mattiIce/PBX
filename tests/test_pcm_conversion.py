@@ -11,7 +11,7 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-def test_pcm16_to_g722_conversion():
+def test_pcm16_to_g722_conversion() -> None:
     """Test PCM 16-bit to G.722 conversion"""
     from pbx.utils.audio import pcm16_to_g722
 
@@ -39,7 +39,7 @@ def test_pcm16_to_g722_conversion():
     print(f"  Compression ratio: {len(pcm_data) / len(g722_data):.1f}x")
 
 
-def test_pcm_wav_to_g722_with_rtp():
+def test_pcm_wav_to_g722_with_rtp() -> None:
     """Test playing a PCM WAV file via RTP (with conversion to G.722)"""
     from pbx.rtp.handler import RTPPlayer
     from pbx.utils.audio import build_wav_header, generate_beep_tone
@@ -89,7 +89,7 @@ def test_pcm_wav_to_g722_with_rtp():
             os.remove(temp_path)
 
 
-def test_ulaw_wav_still_works():
+def test_ulaw_wav_still_works() -> None:
     """Test that μ-law WAV files still work correctly (no conversion needed)"""
     import struct
 
@@ -155,7 +155,7 @@ def test_ulaw_wav_still_works():
             os.remove(temp_path)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("Testing PCM to G.722 conversion...")
     print("-" * 60)

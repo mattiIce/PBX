@@ -9,7 +9,9 @@ import json
 import os
 import re
 
-from flask import Blueprint, jsonify, request, current_app
+from typing import Any
+
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -34,7 +36,7 @@ features_bp = Blueprint("features", __name__)
 
 @features_bp.route("/api/auto-attendant/config", methods=["GET"])
 @require_auth
-def get_auto_attendant_config():
+def get_auto_attendant_config() -> tuple[Response, int]:
     """Get auto attendant configuration."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -56,7 +58,7 @@ def get_auto_attendant_config():
 
 @features_bp.route("/api/auto-attendant/config", methods=["PUT"])
 @require_auth
-def update_auto_attendant_config():
+def update_auto_attendant_config() -> tuple[Response, int]:
     """Update auto attendant configuration."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -106,7 +108,7 @@ def update_auto_attendant_config():
 
 @features_bp.route("/api/auto-attendant/menu-options", methods=["GET"])
 @require_auth
-def get_auto_attendant_menu_options():
+def get_auto_attendant_menu_options() -> tuple[Response, int]:
     """Get auto attendant menu options."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -130,7 +132,7 @@ def get_auto_attendant_menu_options():
 
 @features_bp.route("/api/auto-attendant/menu-options", methods=["POST"])
 @require_auth
-def add_auto_attendant_menu_option():
+def add_auto_attendant_menu_option() -> tuple[Response, int]:
     """Add auto attendant menu option."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -164,7 +166,7 @@ def add_auto_attendant_menu_option():
 
 @features_bp.route("/api/auto-attendant/menu-options/<path:subpath>", methods=["PUT"])
 @require_auth
-def update_auto_attendant_menu_option(subpath):
+def update_auto_attendant_menu_option(subpath: str) -> tuple[Response, int]:
     """Update auto attendant menu option."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -209,7 +211,7 @@ def update_auto_attendant_menu_option(subpath):
 
 @features_bp.route("/api/auto-attendant/menu-options/<digit>", methods=["DELETE"])
 @require_auth
-def delete_auto_attendant_menu_option(digit):
+def delete_auto_attendant_menu_option(digit: str) -> tuple[Response, int]:
     """Delete auto attendant menu option."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -241,7 +243,7 @@ def delete_auto_attendant_menu_option(digit):
 
 @features_bp.route("/api/auto-attendant/prompts", methods=["GET"])
 @require_auth
-def get_auto_attendant_prompts():
+def get_auto_attendant_prompts() -> tuple[Response, int]:
     """Get auto attendant prompt texts."""
     pbx_core = get_pbx_core()
     try:
@@ -271,7 +273,7 @@ def get_auto_attendant_prompts():
 
 @features_bp.route("/api/auto-attendant/prompts", methods=["PUT"])
 @require_auth
-def update_auto_attendant_prompts():
+def update_auto_attendant_prompts() -> tuple[Response, int]:
     """Update auto attendant prompt texts and regenerate voices."""
     pbx_core = get_pbx_core()
     try:
@@ -314,7 +316,7 @@ def update_auto_attendant_prompts():
 
 @features_bp.route("/api/auto-attendant/menus", methods=["GET"])
 @require_auth
-def get_menus():
+def get_menus() -> tuple[Response, int]:
     """Get list of all menus."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -330,7 +332,7 @@ def get_menus():
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>", methods=["GET"])
 @require_auth
-def get_menu(menu_id):
+def get_menu(menu_id: str) -> tuple[Response, int]:
     """Get details of a specific menu."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -350,7 +352,7 @@ def get_menu(menu_id):
 
 @features_bp.route("/api/auto-attendant/menus", methods=["POST"])
 @require_auth
-def create_menu():
+def create_menu() -> tuple[Response, int]:
     """Create a new menu or submenu."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -412,7 +414,7 @@ def create_menu():
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>", methods=["PUT"])
 @require_auth
-def update_menu(menu_id):
+def update_menu(menu_id: str) -> tuple[Response, int]:
     """Update an existing menu."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -455,7 +457,7 @@ def update_menu(menu_id):
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>", methods=["DELETE"])
 @require_auth
-def delete_menu(menu_id):
+def delete_menu(menu_id: str) -> tuple[Response, int]:
     """Delete a menu."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -480,7 +482,7 @@ def delete_menu(menu_id):
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>/items", methods=["GET"])
 @require_auth
-def get_menu_items(menu_id):
+def get_menu_items(menu_id: str) -> tuple[Response, int]:
     """Get menu items for a specific menu."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -501,7 +503,7 @@ def get_menu_items(menu_id):
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>/items", methods=["POST"])
 @require_auth
-def add_menu_item(menu_id):
+def add_menu_item(menu_id: str) -> tuple[Response, int]:
     """Add an item to a menu."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -546,7 +548,7 @@ def add_menu_item(menu_id):
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>/items/<digit>", methods=["PUT"])
 @require_auth
-def update_menu_item(menu_id, digit):
+def update_menu_item(menu_id: str, digit: str) -> tuple[Response, int]:
     """Update a menu item."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -598,7 +600,7 @@ def update_menu_item(menu_id, digit):
 
 @features_bp.route("/api/auto-attendant/menus/<menu_id>/items/<digit>", methods=["DELETE"])
 @require_auth
-def delete_menu_item(menu_id, digit):
+def delete_menu_item(menu_id: str, digit: str) -> tuple[Response, int]:
     """Delete a menu item."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -625,7 +627,7 @@ def delete_menu_item(menu_id, digit):
 
 @features_bp.route("/api/auto-attendant/menu-tree", methods=["GET"])
 @require_auth
-def get_menu_tree():
+def get_menu_tree() -> tuple[Response, int]:
     """Get complete menu hierarchy as a tree."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "auto_attendant"):
@@ -643,7 +645,7 @@ def get_menu_tree():
         return send_json({"error": str(e)}, 500), 500
 
 
-def _regenerate_voice_prompts(pbx_core, custom_prompts=None, company_name=None):
+def _regenerate_voice_prompts(pbx_core: Any, custom_prompts: dict[str, str] | None = None, company_name: str | None = None) -> None:
     """Regenerate voice prompts using gTTS.
 
     Args:
@@ -716,7 +718,7 @@ def _regenerate_voice_prompts(pbx_core, custom_prompts=None, company_name=None):
 
 @features_bp.route("/api/sip-trunks", methods=["GET"])
 @require_auth
-def get_sip_trunks():
+def get_sip_trunks() -> tuple[Response, int]:
     """Get all SIP trunks."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "trunk_system"):
@@ -732,7 +734,7 @@ def get_sip_trunks():
 
 @features_bp.route("/api/sip-trunks/health", methods=["GET"])
 @require_auth
-def get_trunk_health():
+def get_trunk_health() -> tuple[Response, int]:
     """Get health status of all trunks."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "trunk_system"):
@@ -760,7 +762,7 @@ def get_trunk_health():
 
 @features_bp.route("/api/sip-trunks", methods=["POST"])
 @require_auth
-def add_sip_trunk():
+def add_sip_trunk() -> tuple[Response, int]:
     """Add a new SIP trunk."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "trunk_system"):
@@ -802,7 +804,7 @@ def add_sip_trunk():
 
 @features_bp.route("/api/sip-trunks/test", methods=["POST"])
 @require_auth
-def test_sip_trunk():
+def test_sip_trunk() -> tuple[Response, int]:
     """Test a SIP trunk connection."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "trunk_system"):
@@ -836,7 +838,7 @@ def test_sip_trunk():
 
 @features_bp.route("/api/sip-trunks/<trunk_id>", methods=["DELETE"])
 @require_auth
-def delete_sip_trunk(trunk_id):
+def delete_sip_trunk(trunk_id: str) -> tuple[Response, int]:
     """Delete a SIP trunk."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "trunk_system"):
@@ -864,7 +866,7 @@ def delete_sip_trunk(trunk_id):
 
 @features_bp.route("/api/lcr/rates", methods=["GET"])
 @require_auth
-def get_lcr_rates():
+def get_lcr_rates() -> tuple[Response, int]:
     """Get all LCR rates."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
@@ -908,7 +910,7 @@ def get_lcr_rates():
 
 @features_bp.route("/api/lcr/statistics", methods=["GET"])
 @require_auth
-def get_lcr_statistics():
+def get_lcr_statistics() -> tuple[Response, int]:
     """Get LCR statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
@@ -937,7 +939,7 @@ def get_lcr_statistics():
 
 @features_bp.route("/api/lcr/rate", methods=["POST"])
 @require_auth
-def add_lcr_rate():
+def add_lcr_rate() -> tuple[Response, int]:
     """Add a new LCR rate."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
@@ -965,7 +967,7 @@ def add_lcr_rate():
 
 @features_bp.route("/api/lcr/time-rate", methods=["POST"])
 @require_auth
-def add_lcr_time_rate():
+def add_lcr_time_rate() -> tuple[Response, int]:
     """Add a time-based rate modifier."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
@@ -993,7 +995,7 @@ def add_lcr_time_rate():
 
 @features_bp.route("/api/lcr/clear-rates", methods=["POST"])
 @require_auth
-def clear_lcr_rates():
+def clear_lcr_rates() -> tuple[Response, int]:
     """Clear all LCR rates."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
@@ -1010,7 +1012,7 @@ def clear_lcr_rates():
 
 @features_bp.route("/api/lcr/clear-time-rates", methods=["POST"])
 @require_auth
-def clear_lcr_time_rates():
+def clear_lcr_time_rates() -> tuple[Response, int]:
     """Clear all time-based rates."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
@@ -1034,7 +1036,7 @@ def clear_lcr_time_rates():
 
 @features_bp.route("/api/fmfm/extensions", methods=["GET"])
 @require_auth
-def get_fmfm_extensions():
+def get_fmfm_extensions() -> tuple[Response, int]:
     """Get all extensions with FMFM configured."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "find_me_follow_me"):
@@ -1056,7 +1058,7 @@ def get_fmfm_extensions():
 
 @features_bp.route("/api/fmfm/config/<extension>", methods=["GET"])
 @require_auth
-def get_fmfm_config(extension):
+def get_fmfm_config(extension: str) -> tuple[Response, int]:
     """Get FMFM configuration for an extension."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "find_me_follow_me"):
@@ -1081,7 +1083,7 @@ def get_fmfm_config(extension):
 
 @features_bp.route("/api/fmfm/statistics", methods=["GET"])
 @require_auth
-def get_fmfm_statistics():
+def get_fmfm_statistics() -> tuple[Response, int]:
     """Get FMFM statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "find_me_follow_me"):
@@ -1097,7 +1099,7 @@ def get_fmfm_statistics():
 
 @features_bp.route("/api/fmfm/config", methods=["POST"])
 @require_auth
-def set_fmfm_config():
+def set_fmfm_config() -> tuple[Response, int]:
     """Set FMFM configuration for an extension."""
     logger.info("Received FMFM config save request")
 
@@ -1138,7 +1140,7 @@ def set_fmfm_config():
 
 @features_bp.route("/api/fmfm/destination", methods=["POST"])
 @require_auth
-def add_fmfm_destination():
+def add_fmfm_destination() -> tuple[Response, int]:
     """Add a destination to FMFM config."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "find_me_follow_me"):
@@ -1176,7 +1178,7 @@ def add_fmfm_destination():
 
 @features_bp.route("/api/fmfm/destination/<extension>/<number>", methods=["DELETE"])
 @require_auth
-def remove_fmfm_destination(extension, number):
+def remove_fmfm_destination(extension: str, number: str) -> tuple[Response, int]:
     """Remove a destination from FMFM config."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "find_me_follow_me"):
@@ -1202,7 +1204,7 @@ def remove_fmfm_destination(extension, number):
 
 @features_bp.route("/api/fmfm/config/<extension>", methods=["DELETE"])
 @require_auth
-def disable_fmfm(extension):
+def disable_fmfm(extension: str) -> tuple[Response, int]:
     """Delete FMFM configuration for an extension."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "find_me_follow_me"):
@@ -1233,7 +1235,7 @@ def disable_fmfm(extension):
 
 @features_bp.route("/api/time-routing/rules", methods=["GET"])
 @require_auth
-def get_time_routing_rules():
+def get_time_routing_rules() -> tuple[Response, int]:
     """Get all time-based routing rules."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "time_based_routing"):
@@ -1252,7 +1254,7 @@ def get_time_routing_rules():
 
 @features_bp.route("/api/time-routing/statistics", methods=["GET"])
 @require_auth
-def get_time_routing_statistics():
+def get_time_routing_statistics() -> tuple[Response, int]:
     """Get time-based routing statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "time_based_routing"):
@@ -1268,7 +1270,7 @@ def get_time_routing_statistics():
 
 @features_bp.route("/api/time-routing/rule", methods=["POST"])
 @require_auth
-def add_time_routing_rule():
+def add_time_routing_rule() -> tuple[Response, int]:
     """Add a time-based routing rule."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "time_based_routing"):
@@ -1302,7 +1304,7 @@ def add_time_routing_rule():
 
 @features_bp.route("/api/time-routing/rule/<rule_id>", methods=["DELETE"])
 @require_auth
-def delete_time_routing_rule(rule_id):
+def delete_time_routing_rule(rule_id: str) -> tuple[Response, int]:
     """Delete a time-based routing rule."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "time_based_routing"):
@@ -1330,7 +1332,7 @@ def delete_time_routing_rule(rule_id):
 
 @features_bp.route("/api/recording-retention/policies", methods=["GET"])
 @require_auth
-def get_retention_policies():
+def get_retention_policies() -> tuple[Response, int]:
     """Get all recording retention policies."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "recording_retention"):
@@ -1366,7 +1368,7 @@ def get_retention_policies():
 
 @features_bp.route("/api/recording-retention/statistics", methods=["GET"])
 @require_auth
-def get_retention_statistics():
+def get_retention_statistics() -> tuple[Response, int]:
     """Get recording retention statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "recording_retention"):
@@ -1391,7 +1393,7 @@ def get_retention_statistics():
 
 @features_bp.route("/api/recording-retention/policy", methods=["POST"])
 @require_auth
-def add_retention_policy():
+def add_retention_policy() -> tuple[Response, int]:
     """Add a recording retention policy."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "recording_retention"):
@@ -1439,7 +1441,7 @@ def add_retention_policy():
 
 @features_bp.route("/api/recording-retention/policy/<policy_id>", methods=["DELETE"])
 @require_auth
-def delete_retention_policy(policy_id):
+def delete_retention_policy(policy_id: str) -> tuple[Response, int]:
     """Delete a retention policy."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "recording_retention"):
@@ -1466,7 +1468,7 @@ def delete_retention_policy(policy_id):
 
 @features_bp.route("/api/fraud-detection/alerts", methods=["GET"])
 @require_auth
-def get_fraud_alerts():
+def get_fraud_alerts() -> tuple[Response, int]:
     """Get fraud detection alerts."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "fraud_detection"):
@@ -1491,7 +1493,7 @@ def get_fraud_alerts():
 
 @features_bp.route("/api/fraud-detection/statistics", methods=["GET"])
 @require_auth
-def get_fraud_statistics():
+def get_fraud_statistics() -> tuple[Response, int]:
     """Get fraud detection statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "fraud_detection"):
@@ -1522,7 +1524,7 @@ def get_fraud_statistics():
 
 @features_bp.route("/api/fraud-detection/extension/<extension>", methods=["GET"])
 @require_auth
-def get_fraud_extension_stats(extension):
+def get_fraud_extension_stats(extension: str) -> tuple[Response, int]:
     """Get fraud statistics for a specific extension."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "fraud_detection"):
@@ -1542,7 +1544,7 @@ def get_fraud_extension_stats(extension):
 
 @features_bp.route("/api/fraud-detection/blocked-pattern", methods=["POST"])
 @require_auth
-def add_blocked_pattern():
+def add_blocked_pattern() -> tuple[Response, int]:
     """Add a blocked number pattern."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "fraud_detection"):
@@ -1582,7 +1584,7 @@ def add_blocked_pattern():
 
 @features_bp.route("/api/fraud-detection/blocked-pattern/<pattern_id>", methods=["DELETE"])
 @require_auth
-def delete_blocked_pattern(pattern_id):
+def delete_blocked_pattern(pattern_id: str) -> tuple[Response, int]:
     """Delete a blocked pattern."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "fraud_detection"):
@@ -1612,7 +1614,7 @@ def delete_blocked_pattern(pattern_id):
 
 @features_bp.route("/api/callback-queue/statistics", methods=["GET"])
 @require_auth
-def get_callback_statistics():
+def get_callback_statistics() -> tuple[Response, int]:
     """Get callback queue statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1628,7 +1630,7 @@ def get_callback_statistics():
 
 @features_bp.route("/api/callback-queue/list", methods=["GET"])
 @require_auth
-def get_callback_list():
+def get_callback_list() -> tuple[Response, int]:
     """Get list of all callbacks."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1652,7 +1654,7 @@ def get_callback_list():
 
 @features_bp.route("/api/callback-queue/queue/<queue_id>", methods=["GET"])
 @require_auth
-def get_queue_callbacks(queue_id):
+def get_queue_callbacks(queue_id: str) -> tuple[Response, int]:
     """Get callbacks for a specific queue."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1674,7 +1676,7 @@ def get_queue_callbacks(queue_id):
 
 @features_bp.route("/api/callback-queue/info/<callback_id>", methods=["GET"])
 @require_auth
-def get_callback_info(callback_id):
+def get_callback_info(callback_id: str) -> tuple[Response, int]:
     """Get information about a specific callback."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1698,7 +1700,7 @@ def get_callback_info(callback_id):
 
 @features_bp.route("/api/callback-queue/request", methods=["POST"])
 @require_auth
-def request_callback():
+def request_callback() -> tuple[Response, int]:
     """Request a callback from queue."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1749,7 +1751,7 @@ def request_callback():
 
 @features_bp.route("/api/callback-queue/start", methods=["POST"])
 @require_auth
-def start_callback():
+def start_callback() -> tuple[Response, int]:
     """Start processing a callback."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1781,7 +1783,7 @@ def start_callback():
 
 @features_bp.route("/api/callback-queue/complete", methods=["POST"])
 @require_auth
-def complete_callback():
+def complete_callback() -> tuple[Response, int]:
     """Complete a callback."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1812,7 +1814,7 @@ def complete_callback():
 
 @features_bp.route("/api/callback-queue/cancel", methods=["POST"])
 @require_auth
-def cancel_callback():
+def cancel_callback() -> tuple[Response, int]:
     """Cancel a pending callback."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "callback_queue"):
@@ -1846,7 +1848,7 @@ def cancel_callback():
 
 @features_bp.route("/api/mobile-push/devices", methods=["GET"])
 @require_auth
-def get_all_devices():
+def get_all_devices() -> tuple[Response, int]:
     """Get all registered mobile devices."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -1876,7 +1878,7 @@ def get_all_devices():
 
 @features_bp.route("/api/mobile-push/devices/<user_id>", methods=["GET"])
 @require_auth
-def get_user_devices(user_id):
+def get_user_devices(user_id: str) -> tuple[Response, int]:
     """Get devices for a specific user."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -1896,7 +1898,7 @@ def get_user_devices(user_id):
 
 @features_bp.route("/api/mobile-push/statistics", methods=["GET"])
 @require_auth
-def get_push_statistics():
+def get_push_statistics() -> tuple[Response, int]:
     """Get push notification statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -1934,7 +1936,7 @@ def get_push_statistics():
 
 @features_bp.route("/api/mobile-push/history", methods=["GET"])
 @require_auth
-def get_push_history():
+def get_push_history() -> tuple[Response, int]:
     """Get push notification history."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -1966,7 +1968,7 @@ def get_push_history():
 
 @features_bp.route("/api/mobile-push/register", methods=["POST"])
 @require_auth
-def register_mobile_device():
+def register_mobile_device() -> tuple[Response, int]:
     """Register a mobile device for push notifications."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -1999,7 +2001,7 @@ def register_mobile_device():
 
 @features_bp.route("/api/mobile-push/unregister", methods=["POST"])
 @require_auth
-def unregister_mobile_device():
+def unregister_mobile_device() -> tuple[Response, int]:
     """Unregister a mobile device."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -2033,7 +2035,7 @@ def unregister_mobile_device():
 
 @features_bp.route("/api/mobile-push/test", methods=["POST"])
 @require_auth
-def test_push_notification():
+def test_push_notification() -> tuple[Response, int]:
     """Send a test push notification."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
@@ -2067,7 +2069,7 @@ def test_push_notification():
 
 @features_bp.route("/api/recording-announcements/statistics", methods=["GET"])
 @require_auth
-def get_announcement_statistics():
+def get_announcement_statistics() -> tuple[Response, int]:
     """Get recording announcements statistics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "recording_announcements"):
@@ -2090,7 +2092,7 @@ def get_announcement_statistics():
 
 @features_bp.route("/api/recording-announcements/config", methods=["GET"])
 @require_auth
-def get_announcement_config():
+def get_announcement_config() -> tuple[Response, int]:
     """Get recording announcements configuration."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "recording_announcements"):
@@ -2111,7 +2113,7 @@ def get_announcement_config():
 
 @features_bp.route("/api/skills/all", methods=["GET"])
 @require_auth
-def get_all_skills():
+def get_all_skills() -> tuple[Response, int]:
     """Get all skills."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):
@@ -2126,7 +2128,7 @@ def get_all_skills():
 
 @features_bp.route("/api/skills/agent/<path:subpath>", methods=["GET"])
 @require_auth
-def get_agent_skills(subpath):
+def get_agent_skills(subpath: str) -> tuple[Response, int]:
     """Get agent skills."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):
@@ -2143,7 +2145,7 @@ def get_agent_skills(subpath):
 
 @features_bp.route("/api/skills/queue/<path:subpath>", methods=["GET"])
 @require_auth
-def get_queue_requirements(subpath):
+def get_queue_requirements(subpath: str) -> tuple[Response, int]:
     """Get queue skill requirements."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):
@@ -2160,7 +2162,7 @@ def get_queue_requirements(subpath):
 
 @features_bp.route("/api/skills/skill", methods=["POST"])
 @require_auth
-def add_skill():
+def add_skill() -> tuple[Response, int]:
     """Handle adding a new skill."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):
@@ -2189,7 +2191,7 @@ def add_skill():
 
 @features_bp.route("/api/skills/assign", methods=["POST"])
 @require_auth
-def assign_skill():
+def assign_skill() -> tuple[Response, int]:
     """Handle assigning skill to agent."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):
@@ -2220,7 +2222,7 @@ def assign_skill():
 
 @features_bp.route("/api/skills/queue-requirements", methods=["POST"])
 @require_auth
-def set_queue_requirements():
+def set_queue_requirements() -> tuple[Response, int]:
     """Handle setting queue skill requirements."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):
@@ -2248,7 +2250,7 @@ def set_queue_requirements():
 
 @features_bp.route("/api/skills/assign/<agent_extension>/<skill_id>", methods=["DELETE"])
 @require_auth
-def remove_skill_from_agent(agent_extension, skill_id):
+def remove_skill_from_agent(agent_extension: str, skill_id: str) -> tuple[Response, int]:
     """Handle removing skill from agent."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "skills_router"):

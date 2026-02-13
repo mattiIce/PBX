@@ -4,9 +4,10 @@ Handles webhook subscription management including listing,
 adding, and removing webhook subscriptions.
 """
 
+from typing import Any
 from urllib.parse import unquote
 
-from flask import Blueprint
+from flask import Blueprint, Response
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -21,7 +22,7 @@ logger = get_logger()
 webhooks_bp = Blueprint("webhooks", __name__, url_prefix="/api/webhooks")
 
 
-def _get_webhook_system():
+def _get_webhook_system() -> tuple[Any, Response | None]:
     """Get webhook system instance or return error response."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webhook_system"):
@@ -32,7 +33,7 @@ def _get_webhook_system():
 
 @webhooks_bp.route("", methods=["GET"])
 @require_auth
-def handle_get_webhooks():
+def handle_get_webhooks() -> Response:
     """Get all webhook subscriptions."""
     webhook_system, error = _get_webhook_system()
     if error:
@@ -47,7 +48,7 @@ def handle_get_webhooks():
 
 @webhooks_bp.route("", methods=["POST"])
 @require_auth
-def handle_add_webhook():
+def handle_add_webhook() -> Response:
     """Add a webhook subscription."""
     webhook_system, error = _get_webhook_system()
     if error:
@@ -84,7 +85,7 @@ def handle_add_webhook():
 
 @webhooks_bp.route("/<path:url>", methods=["DELETE"])
 @require_auth
-def handle_delete_webhook(url):
+def handle_delete_webhook(url: str) -> Response:
     """Delete a webhook subscription.
 
     The URL is passed as a path parameter. Since webhook URLs contain

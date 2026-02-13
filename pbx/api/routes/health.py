@@ -6,7 +6,9 @@ readiness/liveness probes, Prometheus metrics, and status endpoints.
 
 import json
 
-from flask import Blueprint, current_app, redirect, request
+from typing import Any
+
+from flask import Blueprint, Response, current_app, redirect, request
 
 from pbx.api.utils import get_pbx_core, send_json
 from pbx.utils.logger import get_logger
@@ -19,7 +21,7 @@ health_bp = Blueprint("health", __name__)
 _health_checker = None
 
 
-def _get_health_checker():
+def _get_health_checker() -> Any:
     """Get or create production health checker instance."""
     global _health_checker
     if _health_checker is None:
@@ -38,14 +40,14 @@ def _get_health_checker():
 
 
 @health_bp.route("/")
-def handle_root():
+def handle_root() -> Response:
     """Handle root path - redirect to admin panel."""
     return redirect("/admin", code=302)
 
 
 @health_bp.route("/health")
 @health_bp.route("/healthz")
-def handle_health():
+def handle_health() -> Response:
     """Lightweight health check endpoint for container orchestration.
 
     Combined liveness/readiness check for backward compatibility.
@@ -63,7 +65,7 @@ def handle_health():
 
 @health_bp.route("/ready")
 @health_bp.route("/readiness")
-def handle_readiness():
+def handle_readiness() -> Response:
     """Kubernetes-style readiness probe - check if the app is ready for traffic."""
     try:
         checker = _get_health_checker()
@@ -78,7 +80,7 @@ def handle_readiness():
 
 @health_bp.route("/live")
 @health_bp.route("/liveness")
-def handle_liveness():
+def handle_liveness() -> Response:
     """Kubernetes-style liveness probe - check if the app is alive."""
     try:
         checker = _get_health_checker()
@@ -92,7 +94,7 @@ def handle_liveness():
 
 
 @health_bp.route("/api/health/detailed")
-def handle_detailed_health():
+def handle_detailed_health() -> Response:
     """Comprehensive health status for monitoring dashboards."""
     try:
         checker = _get_health_checker()
@@ -113,7 +115,7 @@ def handle_detailed_health():
 
 
 @health_bp.route("/metrics")
-def handle_prometheus_metrics():
+def handle_prometheus_metrics() -> Response:
     """Prometheus metrics endpoint."""
     try:
         checker = _get_health_checker()
@@ -144,7 +146,7 @@ def handle_prometheus_metrics():
 
 
 @health_bp.route("/api/status")
-def handle_status():
+def handle_status() -> Response:
     """Get PBX status."""
     pbx_core = get_pbx_core()
     if pbx_core:

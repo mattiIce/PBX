@@ -4,7 +4,9 @@ Handles Active Directory, CRM, Jitsi, EspoCRM, and Matrix integration
 endpoints.
 """
 
-from flask import Blueprint, jsonify, request, current_app
+from typing import Any
+
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -25,7 +27,7 @@ integrations_bp = Blueprint("integrations", __name__)
 _integration_endpoints = None
 
 
-def _get_integration_endpoints():
+def _get_integration_endpoints() -> Any:
     """Get integration endpoints (cached)."""
     global _integration_endpoints
     if _integration_endpoints is None:
@@ -35,7 +37,7 @@ def _get_integration_endpoints():
     return _integration_endpoints
 
 
-def _check_integration_available(integration_name):
+def _check_integration_available(integration_name: str) -> tuple[bool, str | None]:
     """Check if integration is available and enabled."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -57,7 +59,7 @@ def _check_integration_available(integration_name):
 
 @integrations_bp.route("/api/integrations/ad/status", methods=["GET"])
 @require_auth
-def handle_ad_status():
+def handle_ad_status() -> Response:
     """Get Active Directory integration status."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -72,7 +74,7 @@ def handle_ad_status():
 
 @integrations_bp.route("/api/integrations/ad/search", methods=["GET"])
 @require_auth
-def handle_ad_search():
+def handle_ad_search() -> Response:
     """Search for users in Active Directory."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -106,7 +108,7 @@ def handle_ad_search():
 
 @integrations_bp.route("/api/integrations/ad/sync", methods=["POST"])
 @require_admin
-def handle_ad_sync():
+def handle_ad_sync() -> Response:
     """Manually trigger Active Directory user synchronization."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -133,7 +135,7 @@ def handle_ad_sync():
 
 @integrations_bp.route("/api/crm/lookup", methods=["GET"])
 @require_auth
-def handle_crm_lookup():
+def handle_crm_lookup() -> Response:
     """Look up caller information."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "crm_integration"):
@@ -159,7 +161,7 @@ def handle_crm_lookup():
 
 @integrations_bp.route("/api/crm/providers", methods=["GET"])
 @require_auth
-def handle_get_crm_providers():
+def handle_get_crm_providers() -> Response:
     """Get CRM provider status."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "crm_integration"):
@@ -179,7 +181,7 @@ def handle_get_crm_providers():
 
 @integrations_bp.route("/api/integrations/jitsi/meetings", methods=["POST"])
 @require_auth
-def handle_jitsi_create_meeting():
+def handle_jitsi_create_meeting() -> Response:
     """Create Jitsi meeting."""
     available, error = _check_integration_available("jitsi")
     if not available:
@@ -199,7 +201,7 @@ def handle_jitsi_create_meeting():
 
 @integrations_bp.route("/api/integrations/jitsi/instant", methods=["POST"])
 @require_auth
-def handle_jitsi_instant_meeting():
+def handle_jitsi_instant_meeting() -> Response:
     """Create instant Jitsi meeting."""
     available, error = _check_integration_available("jitsi")
     if not available:
@@ -222,7 +224,7 @@ def handle_jitsi_instant_meeting():
 
 @integrations_bp.route("/api/integrations/espocrm/contacts", methods=["POST"])
 @require_auth
-def handle_espocrm_create_contact():
+def handle_espocrm_create_contact() -> Response:
     """Create EspoCRM contact."""
     available, error = _check_integration_available("espocrm")
     if not available:
@@ -242,7 +244,7 @@ def handle_espocrm_create_contact():
 
 @integrations_bp.route("/api/integrations/espocrm/calls", methods=["POST"])
 @require_auth
-def handle_espocrm_log_call():
+def handle_espocrm_log_call() -> Response:
     """Log call in EspoCRM."""
     available, error = _check_integration_available("espocrm")
     if not available:
@@ -262,7 +264,7 @@ def handle_espocrm_log_call():
 
 @integrations_bp.route("/api/integrations/espocrm/contacts/search", methods=["GET"])
 @require_auth
-def handle_espocrm_search_contact():
+def handle_espocrm_search_contact() -> Response:
     """Search EspoCRM contact by phone."""
     available, error = _check_integration_available("espocrm")
     if not available:
@@ -285,7 +287,7 @@ def handle_espocrm_search_contact():
 
 @integrations_bp.route("/api/integrations/matrix/messages", methods=["POST"])
 @require_auth
-def handle_matrix_send_message():
+def handle_matrix_send_message() -> Response:
     """Send message to Matrix room."""
     available, error = _check_integration_available("matrix")
     if not available:
@@ -305,7 +307,7 @@ def handle_matrix_send_message():
 
 @integrations_bp.route("/api/integrations/matrix/notifications", methods=["POST"])
 @require_auth
-def handle_matrix_send_notification():
+def handle_matrix_send_notification() -> Response:
     """Send Matrix notification."""
     available, error = _check_integration_available("matrix")
     if not available:
@@ -325,7 +327,7 @@ def handle_matrix_send_notification():
 
 @integrations_bp.route("/api/integrations/matrix/rooms", methods=["POST"])
 @require_auth
-def handle_matrix_create_room():
+def handle_matrix_create_room() -> Response:
     """Create Matrix room."""
     available, error = _check_integration_available("matrix")
     if not available:

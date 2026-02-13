@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -18,10 +19,10 @@ from pbx.features.auto_attendant import AutoAttendant
 class MockConfig:
     """Mock configuration for testing"""
 
-    def __init__(self, db_path):
+    def __init__(self, db_path: str) -> None:
         self.db_path = db_path
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         if key == "database":
             return {"path": self.db_path}
         elif key == "auto_attendant":
@@ -42,19 +43,19 @@ class MockConfig:
 class TestAutoAttendantPersistence(unittest.TestCase):
     """Test auto attendant database persistence"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test environment"""
         # Create temporary database
         self.db_fd, self.db_path = tempfile.mkstemp(suffix=".db")
         self.config = MockConfig(self.db_path)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test environment"""
         # Close and remove temporary database
         os.close(self.db_fd)
         os.unlink(self.db_path)
 
-    def test_initial_config_saved_to_db(self):
+    def test_initial_config_saved_to_db(self) -> None:
         """Test that initial configuration is saved to database"""
         # Create auto attendant
         AutoAttendant(config=self.config)
@@ -74,7 +75,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         self.assertEqual(row[2], 10)  # timeout
         self.assertEqual(row[3], 3)  # max_retries
 
-    def test_initial_menu_options_saved_to_db(self):
+    def test_initial_menu_options_saved_to_db(self) -> None:
         """Test that initial menu options are saved to database"""
         # Create auto attendant
         AutoAttendant(config=self.config)
@@ -96,7 +97,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         self.assertEqual(rows[1][1], "1002")
         self.assertEqual(rows[1][2], "Support")
 
-    def test_config_persists_across_restarts(self):
+    def test_config_persists_across_restarts(self) -> None:
         """Test that configuration persists across restarts"""
         # Create auto attendant and update config
         aa1 = AutoAttendant(config=self.config)
@@ -111,7 +112,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         self.assertEqual(aa2.timeout, 20)
         self.assertEqual(aa2.max_retries, 5)
 
-    def test_menu_options_persist_across_restarts(self):
+    def test_menu_options_persist_across_restarts(self) -> None:
         """Test that menu options persist across restarts"""
         # Create auto attendant and add menu option
         aa1 = AutoAttendant(config=self.config)
@@ -125,7 +126,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         self.assertEqual(aa2.menu_options["3"]["destination"], "1003")
         self.assertEqual(aa2.menu_options["3"]["description"], "Billing")
 
-    def test_menu_option_update_persists(self):
+    def test_menu_option_update_persists(self) -> None:
         """Test that menu option updates persist"""
         # Create auto attendant
         aa1 = AutoAttendant(config=self.config)
@@ -140,7 +141,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         self.assertEqual(aa2.menu_options["1"]["destination"], "1005")
         self.assertEqual(aa2.menu_options["1"]["description"], "New Sales")
 
-    def test_menu_option_deletion_persists(self):
+    def test_menu_option_deletion_persists(self) -> None:
         """Test that menu option deletion persists"""
         # Create auto attendant
         aa1 = AutoAttendant(config=self.config)
@@ -155,7 +156,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         self.assertNotIn("1", aa2.menu_options)
         self.assertIn("2", aa2.menu_options)  # Other option still exists
 
-    def test_database_tables_created(self):
+    def test_database_tables_created(self) -> None:
         """Test that database tables are created"""
         # Create auto attendant
         AutoAttendant(config=self.config)
@@ -178,7 +179,7 @@ class TestAutoAttendantPersistence(unittest.TestCase):
 
         conn.close()
 
-    def test_multiple_updates_persist(self):
+    def test_multiple_updates_persist(self) -> None:
         """Test that multiple sequential updates persist"""
         # Create auto attendant
         aa1 = AutoAttendant(config=self.config)

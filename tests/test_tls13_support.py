@@ -11,6 +11,7 @@ import tempfile
 import time
 import traceback
 from pathlib import Path
+from typing import Any, Optional
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -20,7 +21,7 @@ from pbx.utils.config import Config
 from pbx.utils.tls_support import TLSManager
 
 
-def generate_test_certificate():
+def generate_test_certificate() -> tuple[Optional[str], Optional[str]]:
     """Generate a test certificate for TLS testing"""
     try:
         from datetime import datetime, timedelta, timezone
@@ -84,7 +85,7 @@ def generate_test_certificate():
     return cert_file.name, key_file.name
 
 
-def test_tls_version_availability():
+def test_tls_version_availability() -> bool:
     """Test that TLS 1.3 is available in Python ssl module"""
     print("=" * 60)
     print("Test 1: TLS 1.3 Availability")
@@ -108,7 +109,7 @@ def test_tls_version_availability():
     return True
 
 
-def test_tls_manager_context():
+def test_tls_manager_context() -> bool:
     """Test TLSManager creates context that supports TLS 1.3"""
     print("=" * 60)
     print("Test 2: TLSManager TLS 1.3 Support")
@@ -179,7 +180,7 @@ def test_tls_manager_context():
     return True
 
 
-def test_api_server_tls13_support():
+def test_api_server_tls13_support() -> bool:
     """Test that API server supports TLS 1.3"""
     print("=" * 60)
     print("Test 3: API Server TLS 1.3 Support")
@@ -196,7 +197,7 @@ def test_api_server_tls13_support():
         class MockConfig:
             """Mock config for testing"""
 
-            def get(self, key, default=None):
+            def get(self, key: str, default: Any = None) -> Any:
                 """Mock get method that returns appropriate values for SSL testing"""
                 if key == "api.ssl":
                     return {
@@ -209,10 +210,10 @@ def test_api_server_tls13_support():
                 return default
 
         class MockPBXCore:
-            def __init__(self):
+            def __init__(self) -> None:
                 self.config = MockConfig()
 
-            def get_status(self):
+            def get_status(self) -> dict[str, int]:
                 return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
         mock_pbx = MockPBXCore()
@@ -263,7 +264,7 @@ def test_api_server_tls13_support():
     return True
 
 
-def test_ssl_context_security_options():
+def test_ssl_context_security_options() -> bool:
     """Test that SSL context has proper security options set"""
     print("=" * 60)
     print("Test 4: SSL Context Security Options")
@@ -328,7 +329,7 @@ def test_ssl_context_security_options():
     return True
 
 
-def main():
+def main() -> bool:
     """Run all TLS 1.3 support tests"""
     print("\n" + "=" * 60)
     print("TLS 1.3 Support Tests")

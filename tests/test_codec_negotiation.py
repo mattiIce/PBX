@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
-def test_codec_extraction_from_sdp():
+def test_codec_extraction_from_sdp() -> None:
     """Test extracting codecs from caller's SDP"""
     print("Testing codec extraction from SDP...")
 
@@ -48,7 +48,7 @@ a=sendrecv
     print("  ✓ Codec order preserved")
 
 
-def test_sdp_building_with_caller_codecs():
+def test_sdp_building_with_caller_codecs() -> None:
     """Test building SDP with caller's codec preferences"""
     print("Testing SDP building with caller's codecs...")
 
@@ -75,7 +75,7 @@ def test_sdp_building_with_caller_codecs():
     print("  ✓ Codec order maintained")
 
 
-def test_default_codecs_when_none_provided():
+def test_default_codecs_when_none_provided() -> None:
     """Test that default codecs are used when caller codecs are None"""
     print("Testing default codec behavior...")
 
@@ -92,7 +92,7 @@ def test_default_codecs_when_none_provided():
     print("  ✓ Default codecs used when none provided")
 
 
-def test_codec_negotiation_scenario():
+def test_codec_negotiation_scenario() -> None:
     """Test full codec negotiation scenario"""
     print("Testing full codec negotiation scenario...")
 
@@ -141,7 +141,7 @@ a=sendrecv
     print("  ✓ Phone and PBX codec lists match")
 
 
-def test_partial_codec_support():
+def test_partial_codec_support() -> None:
     """Test when phone offers codecs we support"""
     print("Testing partial codec support...")
 
@@ -162,7 +162,7 @@ def test_partial_codec_support():
     print("  ✓ Partial codec support works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all codec negotiation tests"""
     print("=" * 70)
     print("Running Codec Negotiation Tests")

@@ -20,15 +20,15 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
         self.extension_db = None  # No database for this test
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def test_license_routes():
+def test_license_routes() -> bool:
     """Test that license API routes are accessible"""
     print("=" * 60)
     print("Test: License API Routes Integration")

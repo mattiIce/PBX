@@ -13,7 +13,7 @@ from pbx.features.extensions import Extension
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 
 
-def test_sip_message_parsing():
+def test_sip_message_parsing() -> None:
     """Test SIP message parsing"""
     print("Testing SIP message parsing...")
 
@@ -42,7 +42,7 @@ def test_sip_message_parsing():
     print("✓ SIP message parsing works")
 
 
-def test_sip_message_building():
+def test_sip_message_building() -> None:
     """Test SIP message building"""
     print("Testing SIP message building...")
 
@@ -64,7 +64,7 @@ def test_sip_message_building():
     print("✓ SIP message building works")
 
 
-def test_call_management():
+def test_call_management() -> None:
     """Test call management"""
     print("Testing call management...")
 
@@ -102,7 +102,7 @@ def test_call_management():
     print("✓ Call management works")
 
 
-def test_extension():
+def test_extension() -> None:
     """Test extension functionality"""
     print("Testing extensions...")
 
@@ -125,7 +125,7 @@ def test_extension():
     print("✓ Extensions work")
 
 
-def test_config():
+def test_config() -> None:
     """Test configuration loading"""
     print("Testing configuration...")
 
@@ -151,7 +151,7 @@ def test_config():
     print("✓ Configuration works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests"""
     print("=" * 60)
     print("Running PBX System Tests")

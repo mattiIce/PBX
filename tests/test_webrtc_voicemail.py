@@ -19,11 +19,11 @@ from pbx.features.webrtc import WebRTCGateway
 class TestWebRTCVoicemailAccess(unittest.TestCase):
     """Test cases for WebRTC voicemail access"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.config_file = "config.yml"
 
-    def test_webrtc_voicemail_pattern_detection(self):
+    def test_webrtc_voicemail_pattern_detection(self) -> None:
         """Test that WebRTC gateway detects voicemail access pattern"""
         print("\nTesting WebRTC voicemail pattern detection...")
 
@@ -106,7 +106,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         print("✓ WebRTC voicemail pattern detection works")
 
-    def test_webrtc_voicemail_invalid_pattern(self):
+    def test_webrtc_voicemail_invalid_pattern(self) -> None:
         """Test that invalid patterns are not treated as voicemail"""
         print("\nTesting invalid voicemail pattern rejection...")
 
@@ -139,7 +139,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         print("✓ Invalid pattern rejection works")
 
-    def test_webrtc_voicemail_missing_rtp_info(self):
+    def test_webrtc_voicemail_missing_rtp_info(self) -> None:
         """Test that voicemail gracefully handles missing RTP info"""
         print("\nTesting voicemail with missing RTP info...")
 
@@ -199,7 +199,7 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
         print("✓ Graceful handling of missing RTP info works")
 
 
-def run_tests():
+def run_tests() -> bool:
     """Run all tests"""
     print("=" * 70)
     print("WebRTC Voicemail Access RTP Setup Tests")

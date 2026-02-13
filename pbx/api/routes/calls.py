@@ -3,7 +3,7 @@
 import os
 import tempfile
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -24,7 +24,7 @@ calls_bp = Blueprint("calls", __name__)
 
 @calls_bp.route("/api/calls", methods=["GET"])
 @require_auth
-def get_calls():
+def get_calls() -> tuple[Response, int]:
     """Get active calls."""
     pbx_core = get_pbx_core()
     if pbx_core:
@@ -37,7 +37,7 @@ def get_calls():
 
 @calls_bp.route("/api/statistics", methods=["GET"])
 @require_auth
-def get_statistics():
+def get_statistics() -> tuple[Response, int]:
     """Get comprehensive statistics for dashboard."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "statistics_engine"):
@@ -67,7 +67,7 @@ def get_statistics():
 
 @calls_bp.route("/api/analytics/advanced", methods=["GET"])
 @require_auth
-def get_advanced_analytics():
+def get_advanced_analytics() -> tuple[Response, int]:
     """Get advanced analytics with date range and filters."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "statistics_engine"):
@@ -104,7 +104,7 @@ def get_advanced_analytics():
 
 @calls_bp.route("/api/analytics/call-center", methods=["GET"])
 @require_auth
-def get_call_center_metrics():
+def get_call_center_metrics() -> tuple[Response, int]:
     """Get call center performance metrics."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "statistics_engine"):
@@ -125,7 +125,7 @@ def get_call_center_metrics():
 
 @calls_bp.route("/api/analytics/export", methods=["GET"])
 @require_auth
-def export_analytics():
+def export_analytics() -> Response | tuple[Response, int]:
     """Export analytics data to CSV."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "statistics_engine"):

@@ -19,14 +19,14 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def test_root_redirect():
+def test_root_redirect() -> bool:
     """Test that root path redirects to /admin"""
     print("=" * 60)
     print("Test: Root Path Redirect to Admin Panel")

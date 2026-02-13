@@ -13,7 +13,7 @@ from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
 
-def test_ldap_config_from_ad_credentials():
+def test_ldap_config_from_ad_credentials() -> None:
     """Test that LDAP phonebook config is built from AD credentials"""
     print("Testing LDAP phonebook config from AD credentials...")
 
@@ -72,7 +72,7 @@ def test_ldap_config_from_ad_credentials():
     print("✓ LDAP phonebook config from AD credentials works")
 
 
-def test_server_config_includes_ldap():
+def test_server_config_includes_ldap() -> None:
     """Test that server_config in generate_config includes LDAP configuration"""
     print("Testing server_config includes LDAP configuration...")
 

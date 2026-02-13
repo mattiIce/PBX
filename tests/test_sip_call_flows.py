@@ -14,7 +14,7 @@ import pytest
 
 
 @pytest.fixture
-def pbx_config():
+def pbx_config() -> dict[str, object]:
     """Mock PBX configuration."""
     return {
         "sip_port": 5060,
@@ -31,7 +31,7 @@ class TestSIPCallFlow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_basic_call_flow(self, pbx_config):
+    async def test_basic_call_flow(self, pbx_config: dict[str, object]) -> None:
         """
         Test basic call flow: registration, invite, answer, bye.
 
@@ -72,7 +72,7 @@ class TestSIPCallFlow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_call_transfer(self, pbx_config):
+    async def test_call_transfer(self, pbx_config: dict[str, object]) -> None:
         """
         Test call transfer scenario.
 
@@ -119,7 +119,7 @@ class TestSIPCallFlow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_call_forwarding(self, pbx_config):
+    async def test_call_forwarding(self, pbx_config: dict[str, object]) -> None:
         """
         Test call forwarding.
 
@@ -156,7 +156,7 @@ class TestSIPCallFlow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_conference_call(self, pbx_config):
+    async def test_conference_call(self, pbx_config: dict[str, object]) -> None:
         """
         Test conference call.
 
@@ -193,7 +193,7 @@ class TestSIPCallFlow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_voicemail_deposit(self, pbx_config):
+    async def test_voicemail_deposit(self, pbx_config: dict[str, object]) -> None:
         """
         Test voicemail deposit.
 
@@ -225,7 +225,7 @@ class TestSIPCallFlow:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_codec_negotiation(self, pbx_config):
+    async def test_codec_negotiation(self, pbx_config: dict[str, object]) -> None:
         """
         Test codec negotiation.
 

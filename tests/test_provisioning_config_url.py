@@ -6,6 +6,7 @@ Tests the fix for connection error when API port differs from default
 
 import os
 import sys
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -14,16 +15,16 @@ from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
 
-def test_config_url_uses_correct_port():
+def test_config_url_uses_correct_port() -> None:
     """Test that config URLs use the configured API port, not hardcoded default"""
     print("Testing config URL generation with custom port...")
 
     # Create a test config with custom port
     class TestConfig:
-        def __init__(self, api_port):
+        def __init__(self, api_port: int) -> None:
             self._api_port = api_port
 
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             if key == "api.port":
                 return self._api_port
             elif key == "server.external_ip":
@@ -63,13 +64,13 @@ def test_config_url_uses_correct_port():
     print(f"✓ Config URL correctly uses port 8080: {device2.config_url}")
 
 
-def test_config_url_regenerated_from_database():
+def test_config_url_regenerated_from_database() -> None:
     """Test that config URLs are regenerated when loading from database"""
     print("Testing config URL regeneration from database...")
 
     # Create a mock database that returns old config URL with wrong port
     class MockDevice:
-        def __init__(self):
+        def __init__(self) -> None:
             self.mac_address = "aa:bb:cc:dd:ee:ff"
             self.extension_number = "1001"
             self.vendor = "yealink"
@@ -81,7 +82,7 @@ def test_config_url_regenerated_from_database():
             self.last_provisioned = None
 
     class MockDevicesDB:
-        def list_all(self):
+        def list_all(self) -> list[dict[str, Any]]:
             return [
                 {
                     "mac_address": "aa:bb:cc:dd:ee:ff",
@@ -96,7 +97,7 @@ def test_config_url_regenerated_from_database():
             ]
 
     class TestConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             if key == "api.port":
                 return 9000  # New correct port
             elif key == "server.external_ip":
@@ -137,12 +138,12 @@ def test_config_url_regenerated_from_database():
     print(f"✓ Config URL regenerated correctly: {device.config_url}")
 
 
-def test_generate_config_url_helper():
+def test_generate_config_url_helper() -> None:
     """Test the _generate_config_url helper method directly"""
     print("Testing _generate_config_url helper method...")
 
     class TestConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             if key == "api.port":
                 return 9000
             elif key == "server.external_ip":

@@ -7,6 +7,7 @@ Tests the newly implemented features in Zoom, Teams, Outlook, and Active Directo
 import os
 import sys
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 # Add parent directory to path
@@ -21,10 +22,10 @@ from pbx.integrations.zoom import ZoomIntegration
 class MockConfig:
     """Mock config object that mimics Config class behavior"""
 
-    def __init__(self, data):
+    def __init__(self, data: dict[str, Any]) -> None:
         self.data = data
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         keys = key.split(".")
         val = self.data
         for k in keys:
@@ -40,22 +41,22 @@ class MockConfig:
 class MockTrunk:
     """Mock SIP trunk for testing"""
 
-    def __init__(self, name, host):
+    def __init__(self, name: str, host: str) -> None:
         self.name = name
         self.host = host
         self.channels_in_use = 0
         self.channels_available = 10
 
-    def can_make_call(self):
+    def can_make_call(self) -> bool:
         return self.channels_in_use < self.channels_available
 
-    def allocate_channel(self):
+    def allocate_channel(self) -> bool:
         if self.can_make_call():
             self.channels_in_use += 1
             return True
         return False
 
-    def release_channel(self):
+    def release_channel(self) -> None:
         if self.channels_in_use > 0:
             self.channels_in_use -= 1
 
@@ -63,23 +64,23 @@ class MockTrunk:
 class MockTrunkSystem:
     """Mock trunk system for testing"""
 
-    def __init__(self):
-        self.trunks = {}
+    def __init__(self) -> None:
+        self.trunks: dict[str, MockTrunk] = {}
 
-    def add_trunk(self, trunk_id, trunk):
+    def add_trunk(self, trunk_id: str, trunk: MockTrunk) -> None:
         self.trunks[trunk_id] = trunk
 
 
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.trunk_system = MockTrunkSystem()
         self.extension_registry = MagicMock()
         self.call_manager = MagicMock()
 
 
-def test_zoom_phone_routing():
+def test_zoom_phone_routing() -> None:
     """Test Zoom Phone SIP trunk routing"""
     print("\nTesting Zoom Phone routing...")
 
@@ -118,7 +119,7 @@ def test_zoom_phone_routing():
     print("✓ Zoom Phone routing works")
 
 
-def test_teams_direct_routing():
+def test_teams_direct_routing() -> None:
     """Test Microsoft Teams Direct Routing"""
     print("\nTesting Teams Direct Routing...")
 
@@ -168,7 +169,7 @@ def test_teams_direct_routing():
     print("✓ Teams Direct Routing works")
 
 
-def test_outlook_meeting_reminder():
+def test_outlook_meeting_reminder() -> None:
     """Test Outlook meeting reminder scheduling"""
     print("\nTesting Outlook meeting reminder...")
 
@@ -221,7 +222,7 @@ def test_outlook_meeting_reminder():
     print("✓ Outlook meeting reminder works")
 
 
-def test_active_directory_sync():
+def test_active_directory_sync() -> None:
     """Test Active Directory user sync (already fully implemented)"""
     print("\nTesting Active Directory sync...")
 
@@ -252,7 +253,7 @@ def test_active_directory_sync():
     print("✓ Active Directory integration structure validated")
 
 
-def test_integration_error_handling():
+def test_integration_error_handling() -> None:
     """Test that integrations handle errors gracefully"""
     print("\nTesting error handling...")
 
@@ -280,7 +281,7 @@ def test_integration_error_handling():
     print("✓ Error handling works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all enterprise integration tests"""
     print("=" * 60)
     print("Running Enterprise Integration Tests")

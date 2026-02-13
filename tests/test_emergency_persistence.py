@@ -15,7 +15,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_emergency_contact_persistence_across_restarts():
+def test_emergency_contact_persistence_across_restarts() -> None:
     """Test that emergency contacts persist when system restarts"""
     print("Testing emergency contact persistence across restarts...")
 
@@ -212,7 +212,7 @@ def test_emergency_contact_persistence_across_restarts():
             shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Emergency Contact Persistence Tests")

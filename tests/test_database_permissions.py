@@ -14,7 +14,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_index_creation_with_permission_error():
+def test_index_creation_with_permission_error() -> None:
     """Test that index creation failures don't cause startup errors"""
     print("Testing repeated table creation (simulates permission scenario)...")
 
@@ -54,7 +54,7 @@ def test_index_creation_with_permission_error():
             os.unlink(temp_db.name)
 
 
-def test_table_already_exists_handling():
+def test_table_already_exists_handling() -> None:
     """Test that 'already exists' errors are handled gracefully"""
     print("Testing 'already exists' error handling...")
 
@@ -82,7 +82,7 @@ def test_table_already_exists_handling():
             os.unlink(temp_db.name)
 
 
-def test_critical_vs_non_critical_errors():
+def test_critical_vs_non_critical_errors() -> None:
     """Test that critical and non-critical errors are handled differently"""
     print("Testing critical vs non-critical error handling...")
 
@@ -119,7 +119,7 @@ def test_critical_vs_non_critical_errors():
             os.unlink(temp_db.name)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Database Permission Tests")

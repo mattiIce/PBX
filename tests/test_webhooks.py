@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -24,7 +25,7 @@ class MockWebhookReceiver(BaseHTTPRequestHandler):
 
     received_webhooks = []
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         content_length = int(self.headers["Content-Length"])
         body = self.rfile.read(content_length)
         webhook_data = json.loads(body.decode("utf-8"))
@@ -35,12 +36,12 @@ class MockWebhookReceiver(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'{"success": true}')
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args: Any) -> None:
         # Suppress logging
         pass
 
 
-def start_mock_server(port=9999):
+def start_mock_server(port: int = 9999) -> HTTPServer:
     """Start mock webhook receiver server"""
     server = HTTPServer(("localhost", port), MockWebhookReceiver)
     server.socket.settimeout(0.1)
@@ -51,7 +52,7 @@ def start_mock_server(port=9999):
     return server
 
 
-def serve_with_timeout(server):
+def serve_with_timeout(server: HTTPServer) -> None:
     """Serve requests with timeout"""
     while True:
         try:
@@ -60,7 +61,7 @@ def serve_with_timeout(server):
             break
 
 
-def test_webhook_event_creation():
+def test_webhook_event_creation() -> bool:
     """Test webhook event creation"""
     print("Testing webhook event creation...")
 
@@ -85,7 +86,7 @@ def test_webhook_event_creation():
     return True
 
 
-def test_webhook_subscription():
+def test_webhook_subscription() -> bool:
     """Test webhook subscription"""
     print("\nTesting webhook subscription...")
 
@@ -121,12 +122,12 @@ def test_webhook_subscription():
     return True
 
 
-def test_webhook_system_initialization():
+def test_webhook_system_initialization() -> bool:
     """Test webhook system initialization"""
     print("\nTesting webhook system initialization...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.webhooks.enabled": True,
                 "features.webhooks.max_retries": 3,
@@ -152,7 +153,7 @@ def test_webhook_system_initialization():
     return True
 
 
-def test_webhook_delivery():
+def test_webhook_delivery() -> bool:
     """Test webhook delivery (skipped - requires HTTP server)"""
     print("\nTesting webhook delivery...")
     print("⊘ Webhook delivery test skipped (requires HTTP server infrastructure)")
@@ -161,12 +162,12 @@ def test_webhook_delivery():
     return True
 
 
-def test_webhook_subscription_management():
+def test_webhook_subscription_management() -> bool:
     """Test webhook subscription management"""
     print("\nTesting webhook subscription management...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webhooks.enabled": True, "features.webhooks.subscriptions": []}
             return config_map.get(key, default)
 
@@ -214,12 +215,12 @@ def test_webhook_subscription_management():
     return True
 
 
-def test_webhook_disabled():
+def test_webhook_disabled() -> bool:
     """Test webhook system when disabled"""
     print("\nTesting webhook system when disabled...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webhooks.enabled": False}
             return config_map.get(key, default)
 
@@ -236,7 +237,7 @@ def test_webhook_disabled():
     return True
 
 
-def test_webhook_hmac_signature():
+def test_webhook_hmac_signature() -> bool:
     """Test HMAC signature generation"""
     print("\nTesting HMAC signature generation...")
 
@@ -264,7 +265,7 @@ def test_webhook_hmac_signature():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Testing Webhook System")

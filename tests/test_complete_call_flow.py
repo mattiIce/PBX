@@ -27,7 +27,7 @@ from pbx.sip.sdp import SDPBuilder, SDPSession
 class TestCompleteCallFlow(unittest.TestCase):
     """Test complete call flow from INVITE to call end"""
 
-    def test_sdp_generation_includes_all_codecs(self):
+    def test_sdp_generation_includes_all_codecs(self) -> None:
         """Test that SDP includes PCMU, PCMA, G722, G729, G726-32, and telephone-event"""
         sdp = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, "12345")
 
@@ -47,7 +47,7 @@ class TestCompleteCallFlow(unittest.TestCase):
 
         print("✓ SDP includes all required codecs")
 
-    def test_sdp_parsing_extracts_audio_info(self):
+    def test_sdp_parsing_extracts_audio_info(self) -> None:
         """Test that SDP parsing correctly extracts audio information"""
         sdp_text = """v=0
 o=user 123456 123456 IN IP4 192.168.1.100
@@ -74,7 +74,7 @@ a=sendrecv
 
         print("✓ SDP parsing correctly extracts audio info")
 
-    def test_rtp_relay_symmetric_learning(self):
+    def test_rtp_relay_symmetric_learning(self) -> None:
         """Test that RTP relay learns endpoints via symmetric RTP"""
         # Create relay handler
         relay = RTPRelayHandler(20000, "test-call-123")
@@ -103,7 +103,7 @@ a=sendrecv
             port_b = sock_b.getsockname()[1]
 
             # Build simple RTP packet
-            def build_rtp_packet(payload_type=0, seq=1, timestamp=160, ssrc=0x12345678):
+            def build_rtp_packet(payload_type: int = 0, seq: int = 1, timestamp: int = 160, ssrc: int = 0x12345678) -> bytes:
                 version = 2
                 header = struct.pack(
                     "!BBHII",
@@ -170,7 +170,7 @@ a=sendrecv
         finally:
             relay.stop()
 
-    def test_rfc2833_dtmf_packet_structure(self):
+    def test_rfc2833_dtmf_packet_structure(self) -> None:
         """Test RFC2833 DTMF packet encoding/decoding"""
         # Test all DTMF digits
         test_digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#"]
@@ -197,7 +197,7 @@ a=sendrecv
 
         print("✓ RFC2833 DTMF packets encode/decode correctly")
 
-    def test_call_flow_sequence(self):
+    def test_call_flow_sequence(self) -> None:
         """Test the SIP call flow sequence"""
         print("\n" + "=" * 60)
         print("TESTING COMPLETE CALL FLOW SEQUENCE")
@@ -233,7 +233,7 @@ a=sendrecv
         print("CALL FLOW VERIFICATION COMPLETE")
         print("=" * 60)
 
-    def test_codec_negotiation(self):
+    def test_codec_negotiation(self) -> None:
         """Test that codec negotiation works correctly"""
         # Generate SDP with default codecs
         sdp = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, "12345")
@@ -252,7 +252,7 @@ a=sendrecv
         print("✓ Codec negotiation includes all standard codecs")
 
 
-def run_tests():
+def run_tests() -> bool:
     """Run all tests with detailed output"""
     print("\n" + "=" * 70)
     print("COMPREHENSIVE CALL FLOW TESTS")

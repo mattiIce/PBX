@@ -19,14 +19,14 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def test_socket_reuse_options():
+def test_socket_reuse_options() -> bool:
     """Test that ReusableHTTPServer sets SO_REUSEADDR and SO_REUSEPORT"""
     print("=" * 60)
     print("Test 1: Socket Reuse Options")
@@ -80,7 +80,7 @@ def test_socket_reuse_options():
         return False
 
 
-def test_retry_on_port_in_use():
+def test_retry_on_port_in_use() -> bool:
     """Test that API server retries when port is already in use"""
     print("=" * 60)
     print("Test 2: Retry on Port In Use")
@@ -147,7 +147,7 @@ def test_retry_on_port_in_use():
         return False
 
 
-def test_rapid_restart():
+def test_rapid_restart() -> bool:
     """Test that API server can handle rapid restarts"""
     print("=" * 60)
     print("Test 3: Rapid Restart")
@@ -188,7 +188,7 @@ def test_rapid_restart():
         return False
 
 
-def main():
+def main() -> bool:
     """Run all tests"""
     print("\n")
     print("=" * 60)

@@ -20,7 +20,7 @@ from pbx.features.voicemail import VoicemailBox, VoicemailSystem
 from pbx.utils.config import Config
 
 
-def test_api_serves_audio_by_default():
+def test_api_serves_audio_by_default() -> None:
     """Test that API endpoint serves audio file by default"""
     print("Testing API serves audio file by default...")
 
@@ -89,7 +89,7 @@ def test_api_serves_audio_by_default():
         shutil.rmtree(temp_dir)
 
 
-def test_voicemail_access_checks_registry():
+def test_voicemail_access_checks_registry() -> None:
     """Test that voicemail access checks extension registry"""
     print("Testing voicemail access checks extension registry...")
 
@@ -144,7 +144,7 @@ def test_voicemail_access_checks_registry():
         print("This is expected if PBX cannot fully initialize in test environment")
 
 
-def test_email_notification_checks_database():
+def test_email_notification_checks_database() -> None:
     """Test that email notification checks database for extension info"""
     print("Testing email notification checks database for extensions...")
 
@@ -193,7 +193,7 @@ def test_email_notification_checks_database():
         shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Fixes Tests")

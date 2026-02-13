@@ -15,7 +15,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_provisioning_persistence():
+def test_provisioning_persistence() -> None:
     """Test that provisioned devices persist across restarts"""
     print("Testing provisioning persistence...")
 
@@ -87,7 +87,7 @@ def test_provisioning_persistence():
         shutil.rmtree(temp_dir)
 
 
-def test_static_ip_assignment():
+def test_static_ip_assignment() -> None:
     """Test setting static IP for a device"""
     print("Testing static IP assignment...")
 
@@ -134,7 +134,7 @@ def test_static_ip_assignment():
         shutil.rmtree(temp_dir)
 
 
-def test_device_unregister_removes_from_db():
+def test_device_unregister_removes_from_db() -> None:
     """Test that unregistering a device removes it from database"""
     print("Testing device unregister removes from database...")
 
@@ -191,7 +191,7 @@ def test_device_unregister_removes_from_db():
         shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Provisioning Persistence Tests")
