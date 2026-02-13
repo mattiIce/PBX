@@ -17,7 +17,7 @@ Generates **PROFESSIONAL-QUALITY VOICE** prompts using gTTS (Google Text-to-Spee
 **Usage:**
 ```bash
 # Install dependencies
-pip install gTTS pydub
+uv pip install gTTS pydub
 
 # Generate all prompts with default company name
 python3 scripts/generate_espeak_voices.py
@@ -34,7 +34,7 @@ python3 scripts/generate_espeak_voices.py --vm-only
 
 **Requirements:**
 ```bash
-pip install gTTS pydub
+uv pip install gTTS pydub
 ```
 
 **Voice Quality:** Natural and professional-sounding American English voice. **This is the ONLY supported voice generation method.**
@@ -47,7 +47,7 @@ Same functionality as `generate_espeak_voices.py`, provided for compatibility. B
 
 **Usage:**
 ```bash
-pip install gTTS pydub
+uv pip install gTTS pydub
 python3 scripts/generate_tts_prompts.py --company "Your Company"
 ```
 
@@ -141,7 +141,7 @@ Make sure they're in the correct format (8000 Hz, 16-bit, mono).
 
 ### "No module named 'gtts'"
 ```bash
-pip install gTTS pydub
+uv pip install gTTS pydub
 ```
 
 ### "Failed to connect" or Network Error
@@ -151,7 +151,7 @@ pip install gTTS pydub
 
 ### "No module named 'pydub'"
 ```bash
-pip install pydub
+uv pip install pydub
 ```
 
 ### Voice sounds choppy
@@ -185,6 +185,5 @@ Other TTS methods (espeak, pyttsx3, festival) produce robotic voices unsuitable 
 
 ## Additional Resources
 
-- [SETUP_GTTS_VOICES.md](../SETUP_GTTS_VOICES.md) - Detailed setup guide
-- [HOW_TO_ADD_VOICE_FILES.md](../HOW_TO_ADD_VOICE_FILES.md) - Voice file management
-- [ADMIN_PANEL_AUTO_ATTENDANT.md](../ADMIN_PANEL_AUTO_ATTENDANT.md) - Admin panel guide
+- [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive PBX documentation
+- [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide

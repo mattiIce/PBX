@@ -537,11 +537,10 @@ Use this section to document any exceptions, deviations, or additional notes:
 ## Appendix
 
 ### A. Related Documentation
-- [README.md](README.md) - Project overview
-- [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md) - Comprehensive documentation
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Troubleshooting guide
-- [FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md) - FIPS compliance
-- [SECURITY_BEST_PRACTICES.md](docs/SECURITY_BEST_PRACTICES.md) - Security guide
+- [README.md](../README.md) - Project overview
+- [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive documentation
+- [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide
+- [COMPLETE_GUIDE.md - Section 6: Security & Compliance](../COMPLETE_GUIDE.md#6-security--compliance) - FIPS compliance and security
 
 ### B. Deployment Scripts
 - `scripts/deploy_production_pilot.sh` - Automated deployment script

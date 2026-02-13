@@ -21,9 +21,9 @@
 
 > **🔧 Troubleshooting**: See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** for a comprehensive troubleshooting guide for administrators with solutions to all known issues.
 
-> **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md) for business overview, ROI analysis, and strategic recommendations.
+> **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](docs/EXECUTIVE_SUMMARY.md) for business overview, ROI analysis, and strategic recommendations.
 
-> **🗂️ Documentation Index**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for a full navigation guide.
+> **🗂️ Documentation Index**: See [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) for a full navigation guide.
 
 ## 🌟 Features
 
@@ -125,7 +125,7 @@ The wizard will automatically:
 - Create voice prompts
 - Initialize the database
 
-See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed instructions.
+See **[COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start)** for detailed instructions.
 
 > **📌 Production Deployment?** If you're deploying to Ubuntu 24.04 LTS for production use, see the [Production Deployment](#-production-deployment-ubuntu-2404-lts) section below for automated setup.
 
@@ -685,7 +685,7 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 
 **Documentation:**
 - [docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview with free options
-- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) - Implementation status and details
+- [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) - Implementation status and details
 - [COMPLETE_GUIDE.md - Section 5](COMPLETE_GUIDE.md#5-integration-guides) - Business Intelligence integration
 - [docs/reference/CALL_TAGGING_GUIDE.md](docs/reference/CALL_TAGGING_GUIDE.md) - Call tagging and categorization
 - [docs/reference/MOBILE_APPS_GUIDE.md](docs/reference/MOBILE_APPS_GUIDE.md) - Mobile app framework
@@ -703,7 +703,7 @@ The PBX system includes comprehensive framework implementations for 20+ advanced
 - [ ] Full SIP Direct Routing to Teams
 - [ ] Professional voice recordings for auto attendant (TTS or voice actor)
 
-See [TODO.md](TODO.md) for a comprehensive list of planned features organized by priority.
+See [TODO.md](docs/TODO.md) for a comprehensive list of planned features organized by priority.
 
 ---
 

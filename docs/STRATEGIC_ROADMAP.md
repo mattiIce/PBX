@@ -188,7 +188,7 @@ The system currently has **8 features with complete backend frameworks** that ne
 **Implementation Steps** (40-50 hours):
 ```bash
 # Install dependencies
-pip install av  # PyAV library
+uv pip install av  # PyAV library
 
 # Integration tasks:
 - [ ] Connect video_codec.py to PyAV encoder/decoder
@@ -233,7 +233,7 @@ pip install av  # PyAV library
 **Implementation** (30-40 hours):
 ```bash
 # Option A: Free (recommended)
-pip install textblob spacy
+uv pip install textblob spacy
 python -m spacy download en_core_web_sm
 
 # Integration tasks:
@@ -368,7 +368,7 @@ _sip._udp.example.com.  3600  IN  SRV  20  40  5060  sip2.example.com.
 **Implementation** (20-30 hours):
 ```bash
 # Option A: Twilio AMD (recommended for manufacturing)
-pip install twilio
+uv pip install twilio
 
 # Integration tasks:
 - [ ] Connect predictive_voicemail_drop.py to Twilio AMD

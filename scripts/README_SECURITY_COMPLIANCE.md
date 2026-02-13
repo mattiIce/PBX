@@ -233,7 +233,7 @@ security:
 #### 3. Install Required Libraries
 
 ```bash
-pip install cryptography>=41.0.0
+uv pip install cryptography>=41.0.0
 ```
 
 #### 4. Verify Compliance
@@ -325,10 +325,10 @@ cat /proc/sys/crypto/fips_enabled
 **Solution**:
 ```bash
 # Verify cryptography library version
-pip show cryptography
+uv pip show cryptography
 
 # Upgrade if needed
-pip install --upgrade 'cryptography>=41.0.0'
+uv pip install --upgrade 'cryptography>=41.0.0'
 
 # Test encryption
 python -c "from pbx.utils.encryption import get_encryption; enc = get_encryption(fips_mode=True); print('OK')"
@@ -450,10 +450,9 @@ python scripts/security_compliance_check.py --quiet
 
 ## Related Documentation
 
-- [SECURITY_GUIDE.md](../SECURITY_GUIDE.md) - Comprehensive security documentation
-- [REGULATIONS_COMPLIANCE_GUIDE.md](../REGULATIONS_COMPLIANCE_GUIDE.md) - Regulatory compliance
-- [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) - Production deployment
-- [API_DOCUMENTATION.md](../API_DOCUMENTATION.md) - API reference for compliance endpoints
+- [COMPLETE_GUIDE.md - Section 6: Security & Compliance](../COMPLETE_GUIDE.md#6-security--compliance) - Comprehensive security documentation
+- [COMPLETE_GUIDE.md - Section 2: Production Deployment](../COMPLETE_GUIDE.md#2-production-deployment) - Production deployment
+- [COMPLETE_GUIDE.md - Section 9.2: REST API](../COMPLETE_GUIDE.md#92-rest-api-reference) - API reference
 
 ## Support
 
@@ -465,5 +464,5 @@ For issues or questions:
 
 ---
 
-**Last Updated**: 2024-12-29
+**Last Updated**: 2026-02-13
 **Status**: Production Ready

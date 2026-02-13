@@ -71,7 +71,7 @@ The PBX includes auto-provisioning templates for popular ATAs:
 - Connect overhead paging amplifiers
 - Multi-zone paging support
 - Auto-answer configuration
-- See [Paging System Guide](FEATURES.md#paging-system) for details
+- See [Paging System Guide](../COMPLETE_GUIDE.md#46-paging-system) for details
 
 ## Setup Guide
 
@@ -183,7 +183,7 @@ curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
 3. Set up paging zones in admin panel
 4. Dial paging extension (e.g., 701) to page
 
-See [Paging System Guide](FEATURES.md#paging-system) for complete setup.
+See [Paging System Guide](../COMPLETE_GUIDE.md#46-paging-system) for complete setup.
 
 ### Use Case 4: Remote Office with Router
 
@@ -387,9 +387,9 @@ Sends SIP NOTIFY to trigger ATA reboot.
 - [Grandstream HT801 Documentation](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht801)
 - [Grandstream HT802 Documentation](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht802)
 - [Cisco SPA112 Documentation](https://www.cisco.com/c/en/us/support/unified-communications/spa112-2-port-phone-adapter/model.html)
-- [Phone Provisioning Guide](PHONE_PROVISIONING.md)
-- [Paging System Guide](FEATURES.md#paging-system)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Phone Provisioning Guide](../COMPLETE_GUIDE.md#43-phone-provisioning)
+- [Paging System Guide](../COMPLETE_GUIDE.md#46-paging-system)
+- [Troubleshooting Guide](../TROUBLESHOOTING.md)
 
 ## Support
 

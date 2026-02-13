@@ -32,7 +32,7 @@ extract_key_phrases_with_spacy(text)  # Extract key phrases
 **Usage**:
 ```bash
 # Install spaCy
-pip install spacy
+uv pip install spacy
 
 # Download English model
 python -m spacy download en_core_web_sm
@@ -62,7 +62,7 @@ detect_intent(text)  # NLTK-enhanced intent detection
 **Usage**:
 ```bash
 # Install NLTK
-pip install nltk
+uv pip install nltk
 
 # NLTK will auto-download required data on first use
 # Or manually: python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
@@ -95,7 +95,7 @@ _extract_voice_features(audio_data)  # Now uses pyAudioAnalysis + librosa
 ```bash
 # Install dependencies
 sudo apt-get install python3-tk portaudio19-dev
-pip install pyAudioAnalysis librosa soundfile
+uv pip install pyAudioAnalysis librosa soundfile
 ```
 
 ---
@@ -122,7 +122,7 @@ _analyze_sentiment(audio_path)  # Now uses Vosk + spaCy
 
 **Usage**:
 ```bash
-# Vosk already integrated (see requirements.txt)
+# Vosk already integrated (see pyproject.toml)
 # spaCy already installed (from Call Tagging)
 ```
 
@@ -155,7 +155,7 @@ sudo apt-get install ffmpeg  # Ubuntu/Debian
 brew install ffmpeg  # macOS
 
 # Optional: Install PyAV for Python bindings
-pip install av
+uv pip install av
 ```
 
 ---
@@ -166,25 +166,25 @@ pip install av
 
 ```bash
 # Core NLP and ML libraries
-pip install spacy nltk
+uv pip install spacy nltk
 
 # Download spaCy model
 python -m spacy download en_core_web_sm
 
 # Audio analysis libraries
 sudo apt-get install python3-tk portaudio19-dev  # System dependencies
-pip install pyAudioAnalysis librosa soundfile
+uv pip install pyAudioAnalysis librosa soundfile
 
 # Video codec support
 sudo apt-get install ffmpeg
 
 # Optional: Python bindings for video
-pip install av
+uv pip install av
 ```
 
-### Already in requirements.txt
+### Already in pyproject.toml
 
-All dependencies have been added to `requirements.txt`:
+All dependencies have been added to `pyproject.toml`:
 
 ```
 # === FREE & OPEN-SOURCE AI/ML INTEGRATION ===
@@ -307,16 +307,15 @@ python3 -c "from pbx.features.video_codec import VideoCodecManager; vm = VideoCo
 
 ## Documentation References
 
-- [FREE_INTEGRATION_OPTIONS.md](FREE_INTEGRATION_OPTIONS.md) - Complete library reference
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Feature guide
-- [requirements.txt](requirements.txt) - All dependencies
+- [pyproject.toml](../../pyproject.toml) - All dependencies
 
 ---
 
 ## Next Steps
 
 ### For Developers
-1. Install required libraries: `pip install -r requirements.txt`
+1. Install required libraries: `make install`
 2. Download spaCy model: `python -m spacy download en_core_web_sm`
 3. Install FFmpeg: `sudo apt-get install ffmpeg`
 4. Enable features in `config.yml`

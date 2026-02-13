@@ -1171,10 +1171,10 @@ python -c "import yaml; yaml.safe_load(open('config.yml'))"
 **4. Verify Python Dependencies:**
 ```bash
 pip list | grep -i twisted
-pip list | grep -i yaml
+uv pip list | grep -i yaml
 
 # Reinstall if missing
-pip install -r requirements.txt
+make install-prod
 ```
 
 **5. Check File Permissions:**
@@ -1686,7 +1686,7 @@ MAX_QUANTIZATION_RANGE = 32768  # Corrected
 ### Documentation
 - [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md) - Comprehensive PBX guide
 - [README.md](README.md) - Project overview
-- [API_DOCUMENTATION.md](docs/archive/API_DOCUMENTATION.md) - REST API reference (if available)
+- [COMPLETE_GUIDE.md - Section 9.2: REST API](COMPLETE_GUIDE.md#92-rest-api-reference) - REST API reference
 
 ### Support
 - GitHub Issues: https://github.com/mattiIce/PBX/issues

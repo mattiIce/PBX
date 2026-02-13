@@ -219,7 +219,7 @@ These improvements deliver high impact with minimal effort:
 
 3. **Predictive Voicemail Drop**
    - Integrate with free AMD (Answering Machine Detection) libraries
-   - Use pyAudioAnalysis (already in requirements.txt) for audio pattern recognition
+   - Use pyAudioAnalysis (already in pyproject.toml) for audio pattern recognition
    - Improves outbound calling efficiency
    - Estimated effort: 40-50 hours
    - Cost: $0 (open-source)
@@ -430,7 +430,7 @@ These improvements deliver high impact with minimal effort:
    - Implement Redis for session management
    - Cache frequently accessed data (extensions, config)
    - Enable distributed caching for multi-server setups
-   - Note: Redis already in requirements.txt
+   - Note: Redis already in pyproject.toml
    - **Estimated effort**: 30-40 hours
    - **Value**: 40-60% reduction in API response time
 

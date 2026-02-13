@@ -2547,8 +2547,8 @@ integrations:
 **Documentation:**
 - README.md - Project overview
 - CHANGELOG.md - Version history
-- TODO.md - Planned features
-- EXECUTIVE_SUMMARY.md - Business overview
+- docs/TODO.md - Planned features
+- docs/EXECUTIVE_SUMMARY.md - Business overview
 
 **External Resources:**
 - SIP Protocol: RFC 3261
