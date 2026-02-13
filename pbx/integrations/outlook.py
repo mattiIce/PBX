@@ -4,7 +4,6 @@ Provides calendar sync, contact sync, and presence integration
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -114,7 +113,7 @@ class OutlookIntegration:
 
     def get_calendar_events(
         self, user_email: str, start_time: str = None, end_time: str = None
-    ) -> List[Dict]:
+    ) -> list[Dict]:
         """
         Get calendar events for a user
 
@@ -227,7 +226,7 @@ class OutlookIntegration:
 
         return "available"
 
-    def sync_contacts(self, user_email: str) -> List[Dict]:
+    def sync_contacts(self, user_email: str) -> list[Dict]:
         """
         Synchronize Outlook contacts with PBX
 
@@ -367,7 +366,7 @@ class OutlookIntegration:
             self.logger.error(f"Error logging call to calendar: {e}")
             return False
 
-    def get_out_of_office_status(self, user_email: str) -> Optional[Dict]:
+    def get_out_of_office_status(self, user_email: str) -> Dict | None:
         """
         Get user's out-of-office status
 

@@ -6,7 +6,6 @@ AI analysis of recorded calls using FREE open-source libraries
 import os
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -79,7 +78,7 @@ class RecordingAnalytics:
         )
 
         # Analysis results storage
-        self.analyses: Dict[str, Dict] = {}
+        self.analyses: dict[str, Dict] = {}
 
         # Statistics
         self.total_analyses = 0
@@ -125,7 +124,7 @@ class RecordingAnalytics:
                 self.logger.info("Download with: python -m spacy download en_core_web_sm")
 
     def analyze_recording(
-        self, recording_id: str, audio_path: str, analysis_types: List[str] = None
+        self, recording_id: str, audio_path: str, analysis_types: list[str] = None
     ) -> Dict:
         """
         Analyze a call recording
@@ -749,7 +748,7 @@ class RecordingAnalytics:
             "outcomes": outcomes[:3],  # Top 3 outcomes
         }
 
-    def search_recordings(self, criteria: Dict) -> List[str]:
+    def search_recordings(self, criteria: Dict) -> list[str]:
         """
         Search recordings by analysis criteria with improved matching
 
@@ -761,7 +760,7 @@ class RecordingAnalytics:
                 - compliant: True/False for compliance status
 
         Returns:
-            List[str]: Matching recording IDs
+            list[str]: Matching recording IDs
         """
         matching = []
 
@@ -799,7 +798,7 @@ class RecordingAnalytics:
 
         return matching
 
-    def get_analysis(self, recording_id: str) -> Optional[Dict]:
+    def get_analysis(self, recording_id: str) -> Dict | None:
         """
         Get analysis results for a recording
 
@@ -807,7 +806,7 @@ class RecordingAnalytics:
             recording_id: Recording identifier
 
         Returns:
-            Optional[Dict]: Analysis results or None if not found
+            Dict | None: Analysis results or None if not found
         """
         return self.analyses.get(recording_id)
 

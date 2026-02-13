@@ -5,7 +5,6 @@ Avoid hold time with scheduled callbacks
 
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -282,8 +281,8 @@ class CallbackQueue:
         self,
         queue_id: str,
         caller_number: str,
-        caller_name: Optional[str] = None,
-        preferred_time: Optional[datetime] = None,
+        caller_name: str | None = None,
+        preferred_time: datetime | None = None,
     ) -> Dict:
         """
         Request a callback instead of waiting in queue
@@ -349,7 +348,7 @@ class CallbackQueue:
             "status": "scheduled",
         }
 
-    def get_next_callback(self, queue_id: str) -> Optional[Dict]:
+    def get_next_callback(self, queue_id: str) -> Dict | None:
         """Get next callback to process for a queue"""
         if queue_id not in self.queue_callbacks or not self.queue_callbacks[queue_id]:
             return None
@@ -392,7 +391,7 @@ class CallbackQueue:
         }
 
     def complete_callback(
-        self, callback_id: str, success: bool, notes: Optional[str] = None
+        self, callback_id: str, success: bool, notes: str | None = None
     ) -> bool:
         """Mark callback as completed"""
         if callback_id not in self.callbacks:
@@ -465,7 +464,7 @@ class CallbackQueue:
         self.logger.info(f"Callback {callback_id} cancelled")
         return True
 
-    def get_callback_info(self, callback_id: str) -> Optional[Dict]:
+    def get_callback_info(self, callback_id: str) -> Dict | None:
         """Get information about a callback"""
         callback = self.callbacks.get(callback_id)
         if not callback:
@@ -483,8 +482,8 @@ class CallbackQueue:
         }
 
     def list_queue_callbacks(
-        self, queue_id: str, status: Optional[CallbackStatus] = None
-    ) -> List[Dict]:
+        self, queue_id: str, status: CallbackStatus | None = None
+    ) -> list[Dict]:
         """List callbacks for a queue"""
         callback_ids = self.queue_callbacks.get(queue_id, [])
 

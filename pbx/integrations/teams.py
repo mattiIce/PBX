@@ -3,7 +3,6 @@ Microsoft Teams Integration
 Enables SIP Direct Routing, presence sync, and collaboration features with Microsoft Teams
 """
 
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -380,8 +379,8 @@ class TeamsIntegration:
             return False
 
     def create_meeting_from_call(
-        self, call_id: str, subject: str = None, participants: List[str] = None
-    ) -> Optional[Dict]:
+        self, call_id: str, subject: str = None, participants: list[str] = None
+    ) -> Dict | None:
         """
         Escalate a phone call to a Teams meeting
 

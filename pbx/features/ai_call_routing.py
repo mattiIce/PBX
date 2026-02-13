@@ -6,7 +6,6 @@ Intelligent routing using free machine learning (scikit-learn)
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -141,7 +140,7 @@ class AICallRouting:
             self.logger.error(f"Error training ML model: {e}")
 
     def get_routing_recommendation(
-        self, call_info: Dict, available_destinations: List[str]
+        self, call_info: Dict, available_destinations: list[str]
     ) -> Dict:
         """
         Get AI-recommended routing destination
@@ -204,7 +203,7 @@ class AICallRouting:
             self.logger.error(f"Error in ML routing: {e}")
             return self._rule_based_routing(call_info, available_destinations)
 
-    def _rule_based_routing(self, call_info: Dict, available_destinations: List[str]) -> Dict:
+    def _rule_based_routing(self, call_info: Dict, available_destinations: list[str]) -> Dict:
         """Fallback rule-based routing"""
         if not available_destinations:
             return {"destination": None, "confidence": 0.0, "method": "no_destinations"}

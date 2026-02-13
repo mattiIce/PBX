@@ -19,7 +19,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Dict, List, Optional, Tuple
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -45,7 +44,7 @@ class TOTPGenerator:
         self.digits = digits
         self.logger = get_logger()
 
-    def generate(self, timestamp: Optional[int] = None) -> str:
+    def generate(self, timestamp: int | None = None) -> str:
         """
         Generate TOTP code for given timestamp
 
@@ -64,7 +63,7 @@ class TOTPGenerator:
         # Generate HOTP
         return self._hotp(counter)
 
-    def verify(self, code: str, timestamp: Optional[int] = None, window: int = 1) -> bool:
+    def verify(self, code: str, timestamp: int | None = None, window: int = 1) -> bool:
         """
         Verify TOTP code with time window
 
@@ -181,7 +180,7 @@ class YubiKeyOTPVerifier:
         self.api_key = api_key
         self.logger = get_logger()
 
-    def verify_otp(self, otp: str) -> Tuple[bool, Optional[str]]:
+    def verify_otp(self, otp: str) -> tuple[bool, str | None]:
         """
         Verify YubiKey OTP
 
@@ -208,7 +207,7 @@ class YubiKeyOTPVerifier:
         # Verify via YubiCloud API
         return self._verify_via_yubico(otp)
 
-    def extract_public_id(self, otp: str) -> Optional[str]:
+    def extract_public_id(self, otp: str) -> str | None:
         """
         Extract YubiKey public ID from OTP
 
@@ -274,7 +273,7 @@ class YubiKeyOTPVerifier:
 
         return True
 
-    def _query_yubico_server(self, server_url: str, params: dict) -> Optional[dict]:
+    def _query_yubico_server(self, server_url: str, params: dict) -> dict | None:
         """Query a single YubiCloud validation server"""
         try:
             # Build full URL with parameters
@@ -300,7 +299,7 @@ class YubiKeyOTPVerifier:
             self.logger.debug(f"Failed to query {server_url}: {e}")
             return None
 
-    def _verify_via_yubico(self, otp: str) -> Tuple[bool, Optional[str]]:
+    def _verify_via_yubico(self, otp: str) -> tuple[bool, str | None]:
         """
         Verify OTP via YubiCloud API
         Implements YubiCloud Validation Protocol 2.0
@@ -402,7 +401,7 @@ class FIDO2Verifier:
 
     def register_credential(
         self, extension_number: str, credential_data: dict
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Register FIDO2 credential
 
@@ -457,7 +456,7 @@ class FIDO2Verifier:
 
     def verify_assertion(
         self, credential_id: str, assertion_data: dict, public_key: bytes, challenge: str = None
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Verify FIDO2 authentication assertion
 
@@ -784,7 +783,7 @@ class MFAManager:
         except Exception as e:
             self.logger.error(f"Failed to initialize MFA schema: {e}")
 
-    def enroll_user(self, extension_number: str) -> Tuple[bool, Optional[str], Optional[list]]:
+    def enroll_user(self, extension_number: str) -> tuple[bool, str | None, list | None]:
         """
         Enroll user in MFA
 
@@ -1068,7 +1067,7 @@ class MFAManager:
 
     def enroll_yubikey(
         self, extension_number: str, otp: str, device_name: str = None
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Enroll YubiKey device for user
 
@@ -1137,7 +1136,7 @@ class MFAManager:
 
     def enroll_fido2(
         self, extension_number: str, credential_data: dict, device_name: str = None
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Enroll FIDO2/WebAuthn credential for user
 
@@ -1197,7 +1196,7 @@ class MFAManager:
             self.logger.error(f"FIDO2 enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
-    def get_enrolled_methods(self, extension_number: str) -> Dict[str, List]:
+    def get_enrolled_methods(self, extension_number: str) -> dict[str, List]:
         """
         Get all enrolled MFA methods for user
 
@@ -1341,7 +1340,7 @@ class MFAManager:
             self.logger.error(f"YubiKey verification failed for {extension_number}: {e}")
             return False
 
-    def _get_secret(self, extension_number: str) -> Optional[bytes]:
+    def _get_secret(self, extension_number: str) -> bytes | None:
         """Get decrypted secret for user"""
         if not self.database or not self.database.enabled:
             return None
@@ -1392,7 +1391,7 @@ class MFAManager:
             self.logger.error(f"Failed to get secret for {extension_number}: {e}")
             return None
 
-    def _get_secret_for_enrollment(self, extension_number: str) -> Optional[bytes]:
+    def _get_secret_for_enrollment(self, extension_number: str) -> bytes | None:
         """Get decrypted secret for user during enrollment (doesn't check enabled status)"""
         if not self.database or not self.database.enabled:
             return None

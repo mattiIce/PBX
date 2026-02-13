@@ -5,7 +5,6 @@ Pattern analysis for unusual call behavior using custom algorithms
 
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -237,7 +236,7 @@ class FraudDetectionSystem:
                 return True, pattern["reason"]
         return False, None
 
-    def get_alerts(self, extension: Optional[str] = None, hours: int = 24) -> List[Dict]:
+    def get_alerts(self, extension: str | None = None, hours: int = 24) -> list[Dict]:
         """Get recent fraud alerts"""
         cutoff = datetime.now() - timedelta(hours=hours)
 

@@ -5,7 +5,6 @@ Mix inbound and outbound calls for agent efficiency
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -66,11 +65,11 @@ class CallBlending:
         self.blend_ratio = blending_config.get("blend_ratio", 0.7)  # 70% inbound, 30% outbound
 
         # Agents
-        self.agents: Dict[str, Agent] = {}
+        self.agents: dict[str, Agent] = {}
 
         # Call queues
-        self.inbound_queue: List[Dict] = []
-        self.outbound_queue: List[Dict] = []
+        self.inbound_queue: list[Dict] = []
+        self.outbound_queue: list[Dict] = []
 
         # Statistics
         self.total_blended_calls = 0
@@ -82,7 +81,7 @@ class CallBlending:
         self.logger.info(f"  Blend ratio: {self.blend_ratio:.0%} inbound")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def get_next_call_for_agent(self, agent_id: str) -> Optional[Dict]:
+    def get_next_call_for_agent(self, agent_id: str) -> Dict | None:
         """
         Get next call for agent based on blending rules
 
@@ -90,7 +89,7 @@ class CallBlending:
             agent_id: Agent identifier
 
         Returns:
-            Optional[Dict]: Next call or None
+            Dict | None: Next call or None
         """
         if agent_id not in self.agents:
             return None
@@ -112,7 +111,7 @@ class CallBlending:
 
         return None
 
-    def _get_inbound_call(self) -> Optional[Dict]:
+    def _get_inbound_call(self) -> Dict | None:
         """Get next inbound call"""
         if self.inbound_queue:
             call = self.inbound_queue.pop(0)
@@ -120,7 +119,7 @@ class CallBlending:
             return call
         return None
 
-    def _get_outbound_call(self) -> Optional[Dict]:
+    def _get_outbound_call(self) -> Dict | None:
         """Get next outbound call"""
         if self.outbound_queue:
             call = self.outbound_queue.pop(0)
@@ -128,7 +127,7 @@ class CallBlending:
             return call
         return None
 
-    def _blend_call(self, agent: Agent) -> Optional[Dict]:
+    def _blend_call(self, agent: Agent) -> Dict | None:
         """
         Blend calls based on configured ratio
 
@@ -136,7 +135,7 @@ class CallBlending:
             agent: Agent to assign call to
 
         Returns:
-            Optional[Dict]: Next call
+            Dict | None: Next call
         """
         # Always prioritize inbound if queue is building
         if self.inbound_priority and self.inbound_queue:
@@ -171,7 +170,7 @@ class CallBlending:
         # Fallback to any available call
         return self._get_inbound_call() or self._get_outbound_call()
 
-    def _auto_blend_call(self, agent: Agent) -> Optional[Dict]:
+    def _auto_blend_call(self, agent: Agent) -> Dict | None:
         """
         Automatically blend based on current conditions
 
@@ -179,7 +178,7 @@ class CallBlending:
             agent: Agent to assign call to
 
         Returns:
-            Optional[Dict]: Next call
+            Dict | None: Next call
         """
         # Analyze current queue lengths
         inbound_count = len(self.inbound_queue)
@@ -264,7 +263,7 @@ class CallBlending:
             "mode": agent.mode.value,
         }
 
-    def get_all_agents(self) -> List[Dict]:
+    def get_all_agents(self) -> list[Dict]:
         """Get all registered agents"""
         return [
             {
@@ -279,7 +278,7 @@ class CallBlending:
             for agent in self.agents.values()
         ]
 
-    def get_agent_status(self, agent_id: str) -> Optional[Dict]:
+    def get_agent_status(self, agent_id: str) -> Dict | None:
         """Get status of a specific agent"""
         if agent_id not in self.agents:
             return None

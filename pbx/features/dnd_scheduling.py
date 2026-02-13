@@ -6,7 +6,6 @@ Automatically sets DND status based on calendar events and scheduled rules
 import threading
 import time
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional, Tuple
 
 from pbx.features.presence import PresenceStatus
 from pbx.utils.logger import get_logger
@@ -233,7 +232,7 @@ class CalendarMonitor:
             except Exception as e:
                 self.logger.error(f"Error checking calendar for {extension}: {e}")
 
-    def is_in_meeting(self, extension: str) -> Tuple[bool, Optional[dict]]:
+    def is_in_meeting(self, extension: str) -> tuple[bool, dict | None]:
         """
         Check if user is currently in a meeting
 
@@ -394,7 +393,7 @@ class DNDScheduler:
                     return True
         return False
 
-    def get_rules(self, extension: str) -> List[dict]:
+    def get_rules(self, extension: str) -> list[dict]:
         """
         Get all rules for extension
 

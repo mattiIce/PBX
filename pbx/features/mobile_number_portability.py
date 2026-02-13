@@ -4,7 +4,6 @@ Use business number on mobile device
 """
 
 from datetime import datetime
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -39,7 +38,7 @@ class MobileNumberPortability:
         self.mobile_first = mnp_config.get("mobile_first", False)
 
         # Number mappings
-        self.number_mappings: Dict[str, Dict] = {}
+        self.number_mappings: dict[str, Dict] = {}
 
         # Statistics
         self.total_mappings = 0
@@ -199,7 +198,7 @@ class MobileNumberPortability:
             return True
         return False
 
-    def get_mapping(self, business_number: str) -> Optional[Dict]:
+    def get_mapping(self, business_number: str) -> Dict | None:
         """Get mapping for a business number"""
         return self.number_mappings.get(business_number)
 

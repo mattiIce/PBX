@@ -5,7 +5,6 @@ Note: GDPR and PCI DSS engines are commented out as they are not required for US
 """
 
 from datetime import datetime
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -107,7 +106,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.error(f"Failed to withdraw consent: {e}")
 #             return False
 #
-#     def get_consent_status(self, extension: str) -> List[Dict]:
+#     def get_consent_status(self, extension: str) -> list[Dict]:
 #         \"\"\"
 #         Get consent status for extension
 #
@@ -145,7 +144,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.error(f"Failed to get consent status: {e}")
 #             return []
 #
-#     def create_data_request(self, request_data: Dict) -> Optional[int]:
+#     def create_data_request(self, request_data: Dict) -> int | None:
 #         \"\"\"
 #         Create GDPR data request (access, portability, erasure)
 #
@@ -225,7 +224,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.error(f"Failed to complete data request: {e}")
 #             return False
 #
-#     def get_pending_requests(self) -> List[Dict]:
+#     def get_pending_requests(self) -> list[Dict]:
 #         \"\"\"
 #         Get all pending GDPR data requests
 #
@@ -502,7 +501,7 @@ class SOC2ComplianceEngine:
             self.logger.error(f"Failed to update control test: {e}")
             return False
 
-    def get_all_controls(self) -> List[Dict]:
+    def get_all_controls(self) -> list[Dict]:
         """
         Get all SOC 2 controls
 
@@ -531,7 +530,7 @@ class SOC2ComplianceEngine:
             self.logger.error(f"Failed to get controls: {e}")
             return []
 
-    def get_controls_by_category(self, category: str) -> List[Dict]:
+    def get_controls_by_category(self, category: str) -> list[Dict]:
         """
         Get SOC 2 controls by category
 
@@ -672,7 +671,7 @@ class SOC2ComplianceEngine:
 #             self.logger.error(f"Failed to log audit event: {e}")
 #             return False
 #
-#     def get_audit_log(self, limit: int = 1000, event_type: Optional[str] = None) -> List[Dict]:
+#     def get_audit_log(self, limit: int = 1000, event_type: str | None = None) -> list[Dict]:
 #         \"\"\"
 #         Get PCI DSS audit log
 #

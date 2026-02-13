@@ -4,7 +4,6 @@ Provides live transcription, sentiment analysis, and call summarization
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -30,7 +29,7 @@ class SpeechAnalyticsEngine:
 
         self.logger.info("Speech Analytics Framework initialized")
 
-    def get_config(self, extension: str) -> Optional[Dict]:
+    def get_config(self, extension: str) -> Dict | None:
         """
         Get speech analytics configuration for extension
 
@@ -451,7 +450,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Error storing summary: {e}")
             return False
 
-    def detect_keywords(self, text: str, keywords: List[str]) -> List[str]:
+    def detect_keywords(self, text: str, keywords: list[str]) -> list[str]:
         """
         Detect keywords in text
 
@@ -471,7 +470,7 @@ class SpeechAnalyticsEngine:
 
         return detected
 
-    def get_all_configs(self) -> List[Dict]:
+    def get_all_configs(self) -> list[Dict]:
         """
         Get all speech analytics configurations
 
@@ -501,7 +500,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Failed to get all speech analytics configs: {e}")
             return []
 
-    def get_call_summary(self, call_id: str) -> Optional[Dict]:
+    def get_call_summary(self, call_id: str) -> Dict | None:
         """
         Get stored call summary
 

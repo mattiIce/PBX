@@ -4,7 +4,6 @@ Integration with Lansweeper IT asset management system (free API)
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -50,8 +49,8 @@ class LansweeperIntegration:
                 )
 
     def _make_request(
-        self, endpoint: str, method: str = "GET", data: Optional[Dict] = None
-    ) -> Optional[Dict]:
+        self, endpoint: str, method: str = "GET", data: Dict | None = None
+    ) -> Dict | None:
         """Make API request to Lansweeper"""
         if not REQUESTS_AVAILABLE:
             return None
@@ -90,7 +89,7 @@ class LansweeperIntegration:
             self.logger.error(f"Lansweeper API error: {e}")
             return None
 
-    def get_asset_by_mac(self, mac_address: str) -> Optional[Dict]:
+    def get_asset_by_mac(self, mac_address: str) -> Dict | None:
         """
         Get asset information by MAC address
 
@@ -125,7 +124,7 @@ class LansweeperIntegration:
 
         return None
 
-    def get_asset_by_ip(self, ip_address: str) -> Optional[Dict]:
+    def get_asset_by_ip(self, ip_address: str) -> Dict | None:
         """Get asset information by IP address"""
         if not self.enabled:
             return None
@@ -208,7 +207,7 @@ class LansweeperIntegration:
         )
         return True
 
-    def get_extension_location(self, extension: str) -> Optional[Dict]:
+    def get_extension_location(self, extension: str) -> Dict | None:
         """
         Get physical location of an extension from Lansweeper
 
@@ -285,7 +284,7 @@ class LansweeperIntegration:
 
         return success
 
-    def get_all_phones(self) -> List[Dict]:
+    def get_all_phones(self) -> list[Dict]:
         """
         Get all IP phone assets from Lansweeper
 
@@ -305,7 +304,7 @@ class LansweeperIntegration:
 
         return []
 
-    def get_user_assets(self, username: str) -> List[Dict]:
+    def get_user_assets(self, username: str) -> list[Dict]:
         """
         Get all assets assigned to a user
 
@@ -325,7 +324,7 @@ class LansweeperIntegration:
 
         return []
 
-    def search_assets(self, query: str) -> List[Dict]:
+    def search_assets(self, query: str) -> list[Dict]:
         """
         Search for assets by name, IP, MAC, etc.
 
@@ -345,7 +344,7 @@ class LansweeperIntegration:
 
         return []
 
-    def get_building_phones(self, building: str) -> List[Dict]:
+    def get_building_phones(self, building: str) -> list[Dict]:
         """
         Get all phones in a specific building
 

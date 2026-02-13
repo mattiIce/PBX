@@ -8,7 +8,6 @@ import threading
 import time
 from datetime import datetime
 from email.utils import formatdate
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -23,7 +22,7 @@ class EmergencyContact:
         phone: str = None,
         email: str = None,
         priority: int = 1,
-        notification_methods: List[str] = None,
+        notification_methods: list[str] = None,
     ):
         """
         Initialize emergency contact
@@ -179,7 +178,7 @@ class EmergencyNotificationSystem:
         phone: str = None,
         email: str = None,
         priority: int = 1,
-        notification_methods: List[str] = None,
+        notification_methods: list[str] = None,
     ) -> EmergencyContact:
         """
         Add an emergency contact
@@ -321,7 +320,7 @@ class EmergencyNotificationSystem:
 
             return False
 
-    def get_emergency_contacts(self, priority_filter: int = None) -> List[Dict]:
+    def get_emergency_contacts(self, priority_filter: int = None) -> list[Dict]:
         """
         Get list of emergency contacts
 
@@ -704,7 +703,7 @@ PBX Emergency Notification System
         except Exception as e:
             self.logger.error(f"Failed to save notification to database: {e}")
 
-    def get_notification_history(self, limit: int = 50) -> List[Dict]:
+    def get_notification_history(self, limit: int = 50) -> list[Dict]:
         """
         Get notification history
 

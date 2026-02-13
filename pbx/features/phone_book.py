@@ -6,7 +6,6 @@ and can be pushed to IP phones
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -250,7 +249,7 @@ class PhoneBook:
 
         return True
 
-    def get_entry(self, extension: str) -> Optional[Dict]:
+    def get_entry(self, extension: str) -> Dict | None:
         """
         Get a phone book entry
 
@@ -265,7 +264,7 @@ class PhoneBook:
 
         return self.entries.get(extension)
 
-    def get_all_entries(self) -> List[Dict]:
+    def get_all_entries(self) -> list[Dict]:
         """
         Get all phone book entries
 
@@ -277,7 +276,7 @@ class PhoneBook:
 
         return sorted(self.entries.values(), key=lambda x: x["name"])
 
-    def search(self, query: str, max_results: int = 50) -> List[Dict]:
+    def search(self, query: str, max_results: int = 50) -> list[Dict]:
         """
         Search phone book entries
 

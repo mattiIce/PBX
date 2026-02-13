@@ -6,7 +6,6 @@ Video codec support for video calling using FREE open-source FFmpeg
 import subprocess
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -230,7 +229,7 @@ class VideoCodecManager:
 
     def encode_frame(
         self, frame_data: bytes, codec: str = None, resolution: tuple = None, bitrate: int = None
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         """
         Encode video frame using FFmpeg/PyAV
 
@@ -241,7 +240,7 @@ class VideoCodecManager:
             bitrate: Target bitrate in kbps
 
         Returns:
-            Optional[bytes]: Encoded frame data or None
+            bytes | None: Encoded frame data or None
         """
         if not self.enabled:
             return None
@@ -306,7 +305,7 @@ class VideoCodecManager:
         # Placeholder return (in production, return actual encoded data)
         return frame_data
 
-    def decode_frame(self, encoded_data: bytes, codec: str = None) -> Optional[bytes]:
+    def decode_frame(self, encoded_data: bytes, codec: str = None) -> bytes | None:
         """
         Decode video frame
 
@@ -315,7 +314,7 @@ class VideoCodecManager:
             codec: Codec used for encoding
 
         Returns:
-            Optional[bytes]: Decoded frame data (raw YUV or RGB) or None
+            bytes | None: Decoded frame data (raw YUV or RGB) or None
         """
         if not self.enabled:
             return None
@@ -475,7 +474,7 @@ class VideoCodecManager:
 
         return decoder_config
 
-    def negotiate_codec(self, local_codecs: list, remote_codecs: list) -> Optional[str]:
+    def negotiate_codec(self, local_codecs: list, remote_codecs: list) -> str | None:
         """
         Negotiate codec between local and remote endpoints
 
@@ -484,7 +483,7 @@ class VideoCodecManager:
             remote_codecs: List of remotely supported codecs
 
         Returns:
-            Optional[str]: Negotiated codec or None
+            str | None: Negotiated codec or None
         """
         # Find common codec with preference order
         codec_preference = ["H.265", "H.264", "VP9", "VP8"]

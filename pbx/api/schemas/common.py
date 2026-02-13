@@ -1,6 +1,6 @@
 """Common response schemas shared across API endpoints."""
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -23,7 +23,7 @@ class SuccessResponse(BaseModel):
     """Standard success response."""
 
     success: bool = True
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class PaginatedResponse(BaseModel):

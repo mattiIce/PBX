@@ -5,7 +5,6 @@ Provides SSO, user provisioning, and group-based permissions
 
 import re
 import secrets
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -97,7 +96,7 @@ class ActiveDirectoryIntegration:
             self.connection = None
             return False
 
-    def authenticate_user(self, username: str, password: str) -> Optional[Dict]:
+    def authenticate_user(self, username: str, password: str) -> Dict | None:
         """
         Authenticate user against Active Directory
 
@@ -537,7 +536,7 @@ class ActiveDirectoryIntegration:
             traceback.print_exc()
             return {"synced_count": 0, "extensions_to_reboot": []}
 
-    def _map_groups_to_permissions(self, user_groups: List[str]) -> Dict[str, bool]:
+    def _map_groups_to_permissions(self, user_groups: list[str]) -> dict[str, bool]:
         """
         Map AD groups to PBX permissions based on configuration
 
@@ -654,7 +653,7 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error getting groups for user {username}: {e}")
             return []
 
-    def search_users(self, query: str, max_results: int = 50) -> List[Dict]:
+    def search_users(self, query: str, max_results: int = 50) -> list[Dict]:
         """
         Search for users in Active Directory
 

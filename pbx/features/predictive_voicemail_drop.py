@@ -4,7 +4,6 @@ Auto-leave message on voicemail detection
 """
 
 from datetime import datetime
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -35,7 +34,7 @@ class VoicemailDropSystem:
         self.message_path = vmd_config.get("message_path", "/var/pbx/voicemail_drops")
 
         # Pre-recorded messages
-        self.messages: Dict[str, Dict] = {}
+        self.messages: dict[str, Dict] = {}
 
         # Statistics
         self.total_detections = 0
@@ -298,7 +297,7 @@ class VoicemailDropSystem:
             return True
         return False
 
-    def get_message(self, message_id: str) -> Optional[Dict]:
+    def get_message(self, message_id: str) -> Dict | None:
         """Get message information"""
         return self.messages.get(message_id)
 

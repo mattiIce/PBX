@@ -5,7 +5,6 @@ Auto-play recording disclosure before recording starts
 
 import os
 from datetime import datetime
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -106,7 +105,7 @@ class RecordingAnnouncements:
         party: str,
         announcement_played: bool,
         consent_required: bool,
-        consent_given: Optional[bool],
+        consent_given: bool | None,
         consent_timeout: bool,
     ):
         """Log announcement to database"""

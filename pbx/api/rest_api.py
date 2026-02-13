@@ -30,7 +30,6 @@ from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
 from pbx.features.phone_provisioning import normalize_mac_address
@@ -1468,7 +1467,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({"error": "PBX not initialized"}, 500)
 
-    def _validate_limit_param(self, params: dict, default: int, max_value: int) -> Optional[int]:
+    def _validate_limit_param(self, params: dict, default: int, max_value: int) -> int | None:
         """Validate limit query parameters.
 
         Args:

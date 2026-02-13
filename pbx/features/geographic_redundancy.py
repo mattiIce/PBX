@@ -7,7 +7,6 @@ import socket
 import time
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -30,7 +29,7 @@ class GeographicRegion:
         self.name = name
         self.location = location
         self.status = RegionStatus.STANDBY
-        self.trunks: List[str] = []
+        self.trunks: list[str] = []
         self.priority = 100
         self.last_health_check = None
         self.health_score = 1.0
@@ -62,12 +61,12 @@ class GeographicRedundancy:
         self.failover_threshold = geo_config.get("failover_threshold", 3)  # failures
 
         # Regions
-        self.regions: Dict[str, GeographicRegion] = {}
+        self.regions: dict[str, GeographicRegion] = {}
         self.active_region = None
 
         # Statistics
         self.total_failovers = 0
-        self.failover_history: List[Dict] = []
+        self.failover_history: list[Dict] = []
 
         self.logger.info("Geographic redundancy initialized")
         self.logger.info(f"  Auto-failover: {self.auto_failover}")
@@ -80,7 +79,7 @@ class GeographicRedundancy:
         name: str,
         location: str,
         priority: int = 100,
-        trunks: List[str] = None,
+        trunks: list[str] = None,
     ) -> Dict:
         """
         Add geographic region
@@ -324,7 +323,7 @@ class GeographicRedundancy:
         self.logger.warning(f"Failover executed: {failed_region_id} -> {backup_region}")
         self.logger.warning(f"  Reason: {reason}")
 
-    def _select_backup_region(self, exclude_region: str) -> Optional[str]:
+    def _select_backup_region(self, exclude_region: str) -> str | None:
         """Select best backup region"""
         candidates = [
             (region_id, region)
@@ -369,7 +368,7 @@ class GeographicRedundancy:
 
         return {"success": True, "from_region": old_region, "to_region": target_region_id}
 
-    def get_active_region(self) -> Optional[Dict]:
+    def get_active_region(self) -> Dict | None:
         """Get current active region"""
         if self.active_region and self.active_region in self.regions:
             region = self.regions[self.active_region]
@@ -383,7 +382,7 @@ class GeographicRedundancy:
             }
         return None
 
-    def get_all_regions(self) -> List[Dict]:
+    def get_all_regions(self) -> list[Dict]:
         """Get all regions"""
         return [
             {
@@ -399,7 +398,7 @@ class GeographicRedundancy:
             for region in self.regions.values()
         ]
 
-    def get_region_status(self, region_id: str) -> Optional[Dict]:
+    def get_region_status(self, region_id: str) -> Dict | None:
         """Get status of a specific region"""
         if region_id not in self.regions:
             return None

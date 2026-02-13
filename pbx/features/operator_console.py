@@ -6,7 +6,6 @@ Provides advanced call handling for receptionists and front desk staff
 import json
 import os
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
@@ -103,7 +102,7 @@ class OperatorConsole:
 
         return "available"
 
-    def get_all_blf_status(self) -> Dict[str, str]:
+    def get_all_blf_status(self) -> dict[str, str]:
         """
         Get BLF status for all extensions
 
@@ -245,7 +244,7 @@ class OperatorConsole:
 
     def park_and_page(
         self, call_id: str, page_message: str, page_method: str = "log"
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Park call and page staff member
 
@@ -329,7 +328,7 @@ class OperatorConsole:
             }
         )
 
-    def get_directory(self, search_query: str = None) -> List[Dict]:
+    def get_directory(self, search_query: str = None) -> list[Dict]:
         """
         Get company directory for quick lookup
 
@@ -445,7 +444,7 @@ class OperatorConsole:
             return True
         return False
 
-    def get_vip_caller(self, caller_id: str) -> Optional[Dict]:
+    def get_vip_caller(self, caller_id: str) -> Dict | None:
         """
         Get VIP caller information
 
@@ -470,7 +469,7 @@ class OperatorConsole:
         """
         return self.get_vip_caller(caller_id) is not None
 
-    def list_vip_callers(self) -> List[Dict]:
+    def list_vip_callers(self) -> list[Dict]:
         """
         List all VIP callers
 

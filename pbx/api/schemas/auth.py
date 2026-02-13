@@ -1,6 +1,5 @@
 """Authentication request/response schemas."""
 
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -24,7 +23,7 @@ class LoginResponse(BaseModel):
 
     token: str
     extension: str
-    name: Optional[str] = None
+    name: str | None = None
     is_admin: bool = False
     expires_in: int = Field(default=86400, description="Token TTL in seconds")
 

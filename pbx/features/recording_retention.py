@@ -5,7 +5,6 @@ Automated management of call recording retention and cleanup
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -75,7 +74,7 @@ class RecordingRetentionManager:
         self.logger.info(f"Added retention policy: {policy_id} ({policy['retention_days']} days)")
         return policy_id
 
-    def tag_recording(self, recording_id: str, tags: List[str]) -> bool:
+    def tag_recording(self, recording_id: str, tags: list[str]) -> bool:
         """
         Tag a recording for special handling
 
@@ -100,8 +99,8 @@ class RecordingRetentionManager:
         self,
         recording_id: str,
         recording_date: datetime,
-        extension: Optional[str] = None,
-        queue: Optional[str] = None,
+        extension: str | None = None,
+        queue: str | None = None,
     ) -> int:
         """
         Get retention period for a recording

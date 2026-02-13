@@ -5,7 +5,6 @@ SAML/OAuth enterprise authentication using free libraries
 
 import secrets
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -188,7 +187,7 @@ class SSOAuthService:
 
         return session_id
 
-    def validate_session(self, session_id: str) -> Optional[Dict]:
+    def validate_session(self, session_id: str) -> Dict | None:
         """Validate an SSO session"""
         if session_id not in self.active_sessions:
             return None

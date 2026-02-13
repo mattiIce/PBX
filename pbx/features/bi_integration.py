@@ -8,7 +8,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from tableauhyperapi import TableDefinition
@@ -75,7 +75,7 @@ class BIIntegration:
         self.export_schedule = bi_config.get("export_schedule", "daily")  # daily, weekly, monthly
 
         # Datasets
-        self.datasets: Dict[str, DataSet] = {}
+        self.datasets: dict[str, DataSet] = {}
         self._initialize_default_datasets()
 
         # Statistics
@@ -115,7 +115,7 @@ class BIIntegration:
             "QoS Metrics", "SELECT * FROM qos_metrics WHERE timestamp >= :start_date"
         )
 
-    def _execute_query(self, query: str, start_date: datetime, end_date: datetime) -> List[Dict]:
+    def _execute_query(self, query: str, start_date: datetime, end_date: datetime) -> list[Dict]:
         """
         Execute query and fetch data from database
 
@@ -125,7 +125,7 @@ class BIIntegration:
             end_date: End date parameter
 
         Returns:
-            List[Dict]: Query results
+            list[Dict]: Query results
         """
         try:
             from pbx.utils.database import get_database
@@ -164,7 +164,7 @@ class BIIntegration:
             self.logger.error(f"Query execution failed: {e}")
             return []
 
-    def _format_data(self, data: List[Dict], format: ExportFormat, dataset_name: str) -> str:
+    def _format_data(self, data: list[Dict], format: ExportFormat, dataset_name: str) -> str:
         """
         Convert data to requested format
 
@@ -191,7 +191,7 @@ class BIIntegration:
             self.logger.warning(f"Format {format.value} not yet implemented")
             return ""
 
-    def _export_csv(self, data: List[Dict], dataset_name: str, timestamp: str) -> str:
+    def _export_csv(self, data: list[Dict], dataset_name: str, timestamp: str) -> str:
         """Export data to CSV"""
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.csv"
 
@@ -210,7 +210,7 @@ class BIIntegration:
         self.logger.info(f"Exported {len(data)} rows to {filename}")
         return filename
 
-    def _export_json(self, data: List[Dict], dataset_name: str, timestamp: str) -> str:
+    def _export_json(self, data: list[Dict], dataset_name: str, timestamp: str) -> str:
         """Export data to JSON"""
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.json"
 
@@ -226,7 +226,7 @@ class BIIntegration:
         self.logger.info(f"Exported {len(data)} rows to {filename}")
         return filename
 
-    def _export_excel(self, data: List[Dict], dataset_name: str, timestamp: str) -> str:
+    def _export_excel(self, data: list[Dict], dataset_name: str, timestamp: str) -> str:
         """Export data to Excel (requires openpyxl)"""
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.xlsx"
 
@@ -309,7 +309,7 @@ class BIIntegration:
             "exported_at": datetime.now().isoformat(),
         }
 
-    def create_tableau_extract(self, dataset_name: str) -> Optional[str]:
+    def create_tableau_extract(self, dataset_name: str) -> str | None:
         """
         Create Tableau TDE/Hyper extract
 
@@ -317,7 +317,7 @@ class BIIntegration:
             dataset_name: Dataset to export
 
         Returns:
-            Optional[str]: Path to extract file
+            str | None: Path to extract file
         """
         self.logger.info(f"Creating Tableau extract for {dataset_name}")
 
@@ -474,7 +474,7 @@ class BIIntegration:
             self.logger.error(f"Failed to create Power BI dataset: {e}")
             return {"success": False, "error": str(e)}
 
-    def _create_powerbi_schema(self, dataset_name: str, sample_data: List[Dict]) -> Dict:
+    def _create_powerbi_schema(self, dataset_name: str, sample_data: list[Dict]) -> Dict:
         """Create Power BI dataset schema"""
         if not sample_data:
             return {"name": dataset_name, "tables": []}
@@ -622,7 +622,7 @@ class BIIntegration:
             # Default to daily
             return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
-    def get_available_datasets(self) -> List[Dict]:
+    def get_available_datasets(self) -> list[Dict]:
         """Get list of available datasets"""
         return [
             {

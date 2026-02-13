@@ -9,7 +9,6 @@ requires a licensed library (e.g., Intel IPP, Broadcom, or open-source implement
 For production use, integrate with a G.729 codec library.
 """
 
-from typing import Optional
 
 from pbx.utils.logger import get_logger
 
@@ -53,7 +52,7 @@ class G729Codec:
             "Currently providing framework support for codec negotiation only."
         )
 
-    def encode(self, pcm_data: bytes) -> Optional[bytes]:
+    def encode(self, pcm_data: bytes) -> bytes | None:
         """
         Encode PCM audio to G.729
 
@@ -73,7 +72,7 @@ class G729Codec:
         self.logger.warning("G.729 encoding not implemented - requires codec library")
         return None
 
-    def decode(self, g729_data: bytes) -> Optional[bytes]:
+    def decode(self, g729_data: bytes) -> bytes | None:
         """
         Decode G.729 to PCM audio
 
@@ -123,7 +122,7 @@ class G729Codec:
         # G.729 uses 8000 Hz sample rate with one channel
         return f"rtpmap:{self.PAYLOAD_TYPE} G729/{self.SAMPLE_RATE}"
 
-    def get_fmtp_params(self) -> Optional[str]:
+    def get_fmtp_params(self) -> str | None:
         """
         Get format parameters for SDP
 
@@ -213,7 +212,7 @@ class G729CodecManager:
         else:
             self.logger.info("G.729 codec disabled in configuration")
 
-    def create_encoder(self, call_id: str, variant: str = None) -> Optional[G729Codec]:
+    def create_encoder(self, call_id: str, variant: str = None) -> G729Codec | None:
         """
         Create encoder for a call
 
@@ -234,7 +233,7 @@ class G729CodecManager:
         self.logger.debug(f"Created G.729 encoder for call {call_id}")
         return encoder
 
-    def create_decoder(self, call_id: str, variant: str = None) -> Optional[G729Codec]:
+    def create_decoder(self, call_id: str, variant: str = None) -> G729Codec | None:
         """
         Create decoder for a call
 
@@ -270,11 +269,11 @@ class G729CodecManager:
 
         self.logger.debug(f"Released G.729 codecs for call {call_id}")
 
-    def get_encoder(self, call_id: str) -> Optional[G729Codec]:
+    def get_encoder(self, call_id: str) -> G729Codec | None:
         """Get encoder for a call"""
         return self.encoders.get(call_id)
 
-    def get_decoder(self, call_id: str) -> Optional[G729Codec]:
+    def get_decoder(self, call_id: str) -> G729Codec | None:
         """Get decoder for a call"""
         return self.decoders.get(call_id)
 

@@ -5,7 +5,6 @@ HD video calls, screen sharing, and 4K video support
 
 import hashlib
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -31,7 +30,7 @@ class VideoConferencingEngine:
 
         self.logger.info("Video Conferencing Framework initialized")
 
-    def create_room(self, room_data: Dict) -> Optional[int]:
+    def create_room(self, room_data: Dict) -> int | None:
         """
         Create video conference room
 
@@ -162,7 +161,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to remove participant from room: {e}")
             return False
 
-    def get_room(self, room_id: int) -> Optional[Dict]:
+    def get_room(self, room_id: int) -> Dict | None:
         """
         Get video conference room details
 
@@ -201,7 +200,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to get video conference room: {e}")
             return None
 
-    def get_room_participants(self, room_id: int) -> List[Dict]:
+    def get_room_participants(self, room_id: int) -> list[Dict]:
         """
         Get active participants in room
 
@@ -315,7 +314,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to update video codec config: {e}")
             return False
 
-    def get_all_rooms(self) -> List[Dict]:
+    def get_all_rooms(self) -> list[Dict]:
         """
         Get all video conference rooms
 

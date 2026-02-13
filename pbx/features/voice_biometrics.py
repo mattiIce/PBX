@@ -8,7 +8,6 @@ import random
 import struct
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -103,7 +102,7 @@ class VoiceBiometrics:
         self.fraud_detection_enabled = biometric_config.get("fraud_detection", True)
 
         # Voice profiles
-        self.profiles: Dict[str, VoiceProfile] = {}
+        self.profiles: dict[str, VoiceProfile] = {}
 
         # GMM log-likelihood to similarity score mapping
         # Based on empirical testing with typical voice samples
@@ -718,7 +717,7 @@ class VoiceBiometrics:
             self.logger.warning(f"Error extracting voice features: {e}")
             return {}
 
-    def get_profile(self, user_id: str) -> Optional[VoiceProfile]:
+    def get_profile(self, user_id: str) -> VoiceProfile | None:
         """Get voice profile for a user"""
         return self.profiles.get(user_id)
 

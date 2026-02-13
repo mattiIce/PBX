@@ -5,7 +5,6 @@ iOS and Android mobile client support
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -74,7 +73,7 @@ class MobileAppFramework:
         self.push_enabled = mobile_config.get("push_enabled", True)
 
         # Registered devices
-        self.devices: Dict[str, MobileDevice] = {}
+        self.devices: dict[str, MobileDevice] = {}
 
         # Statistics
         self.total_devices = 0
@@ -339,12 +338,12 @@ class MobileAppFramework:
 
         return sip_config
 
-    def _get_turn_servers(self) -> List[Dict]:
+    def _get_turn_servers(self) -> list[Dict]:
         """
         Get configured TURN servers for NAT traversal
 
         Returns:
-            List[Dict]: TURN server configurations
+            list[Dict]: TURN server configurations
         """
         mobile_config = self.config.get("features", {}).get("mobile_apps", {})
         turn_config = mobile_config.get("turn_servers", [])
@@ -423,7 +422,7 @@ class MobileAppFramework:
 
         return False
 
-    def get_user_devices(self, user_id: str) -> List[Dict]:
+    def get_user_devices(self, user_id: str) -> list[Dict]:
         """Get all devices for a user"""
         user_devices = [
             {

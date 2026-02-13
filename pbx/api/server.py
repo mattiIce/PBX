@@ -9,7 +9,6 @@ import socket
 import threading
 import time
 import traceback
-from typing import Optional
 
 from pbx.api.app import create_app
 from pbx.utils.logger import get_logger
@@ -36,10 +35,10 @@ class PBXFlaskServer:
         self.pbx_core = pbx_core
         self.host = host
         self.port = port
-        self.server_thread: Optional[threading.Thread] = None
+        self.server_thread: threading.Thread | None = None
         self.running = False
         self.ssl_enabled = False
-        self.ssl_context: Optional[ssl.SSLContext] = None
+        self.ssl_context: ssl.SSLContext | None = None
 
         # Create Flask app
         self.app = create_app(pbx_core)

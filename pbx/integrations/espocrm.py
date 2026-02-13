@@ -4,7 +4,6 @@ Enables contact management, deal tracking, and call logging
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -61,7 +60,7 @@ class EspoCRMIntegration:
 
     def _make_request(
         self, method: str, endpoint: str, data: Dict = None, params: Dict = None
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Make authenticated API request to EspoCRM
 
@@ -96,7 +95,7 @@ class EspoCRMIntegration:
             self.logger.error(f"EspoCRM API request failed: {e}")
             return None
 
-    def find_contact_by_phone(self, phone_number: str) -> Optional[Dict]:
+    def find_contact_by_phone(self, phone_number: str) -> Dict | None:
         """
         Find contact by phone number (screen pop)
 
@@ -146,7 +145,7 @@ class EspoCRMIntegration:
 
     def create_contact(
         self, name: str, phone: str, email: str = None, company: str = None, title: str = None
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Create new contact in EspoCRM
 
@@ -192,7 +191,7 @@ class EspoCRMIntegration:
 
     def log_call(
         self, contact_id: str, direction: str, duration: int, status: str, description: str = None
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Log call activity in EspoCRM
 
@@ -234,7 +233,7 @@ class EspoCRMIntegration:
             self.logger.error(f"Failed to log call: {e}")
             return None
 
-    def get_contact(self, contact_id: str) -> Optional[Dict]:
+    def get_contact(self, contact_id: str) -> Dict | None:
         """
         Get contact details by ID
 
@@ -255,7 +254,7 @@ class EspoCRMIntegration:
             self.logger.error(f"Failed to get contact: {e}")
             return None
 
-    def update_contact(self, contact_id: str, updates: Dict) -> Optional[Dict]:
+    def update_contact(self, contact_id: str, updates: Dict) -> Dict | None:
         """
         Update contact information
 
@@ -282,7 +281,7 @@ class EspoCRMIntegration:
             self.logger.error(f"Failed to update contact: {e}")
             return None
 
-    def search_contacts(self, query: str, max_results: int = 10) -> List[Dict]:
+    def search_contacts(self, query: str, max_results: int = 10) -> list[Dict]:
         """
         Search contacts by name or email
 
@@ -329,7 +328,7 @@ class EspoCRMIntegration:
         account_id: str = None,
         stage: str = "Prospecting",
         close_date: str = None,
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Create sales opportunity/deal
 
@@ -369,7 +368,7 @@ class EspoCRMIntegration:
             self.logger.error(f"Failed to create opportunity: {e}")
             return None
 
-    def get_recent_activities(self, contact_id: str, limit: int = 10) -> List[Dict]:
+    def get_recent_activities(self, contact_id: str, limit: int = 10) -> list[Dict]:
         """
         Get recent activities for a contact
 

@@ -5,7 +5,6 @@ Proactive network issue detection using ML
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -83,11 +82,11 @@ class CallQualityPrediction:
         self.alert_threshold_packet_loss = prediction_config.get("alert_threshold_packet_loss", 5.0)
 
         # Historical metrics storage
-        self.metrics_history: Dict[str, List[NetworkMetrics]] = {}
+        self.metrics_history: dict[str, list[NetworkMetrics]] = {}
         self.max_history_per_endpoint = 1000
 
         # Predictions
-        self.active_predictions: Dict[str, Dict] = {}
+        self.active_predictions: dict[str, Dict] = {}
 
         # Statistics
         self.total_predictions = 0
@@ -299,7 +298,7 @@ class CallQualityPrediction:
 
         return prediction
 
-    def _calculate_trend(self, values: List[float]) -> float:
+    def _calculate_trend(self, values: list[float]) -> float:
         """
         Calculate trend direction and magnitude
 
@@ -354,7 +353,7 @@ class CallQualityPrediction:
 
     def _generate_recommendations(
         self, predicted_mos: float, predicted_packet_loss: float
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate recommendations based on predictions
 
@@ -363,7 +362,7 @@ class CallQualityPrediction:
             predicted_packet_loss: Predicted packet loss percentage
 
         Returns:
-            List[str]: Recommendations
+            list[str]: Recommendations
         """
         recommendations = []
 
@@ -381,7 +380,7 @@ class CallQualityPrediction:
 
         return recommendations
 
-    def get_prediction(self, call_id: str) -> Optional[Dict]:
+    def get_prediction(self, call_id: str) -> Dict | None:
         """Get current prediction for a call"""
         return self.active_predictions.get(call_id)
 
@@ -392,7 +391,7 @@ class CallQualityPrediction:
         if call_id in self.active_predictions:
             del self.active_predictions[call_id]
 
-    def _extract_features_and_targets(self, historical_data: List[Dict]) -> tuple:
+    def _extract_features_and_targets(self, historical_data: list[Dict]) -> tuple:
         """Extract features and targets from historical data"""
         features = []
         targets = []
@@ -427,7 +426,7 @@ class CallQualityPrediction:
 
         return np.array(features), np.array(targets)
 
-    def train_model(self, historical_data: List[Dict]):
+    def train_model(self, historical_data: list[Dict]):
         """
         Train ML model with historical data using RandomForest
 

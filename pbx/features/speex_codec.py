@@ -19,7 +19,7 @@ Note: Speex is being gradually superseded by Opus for new applications,
 but it remains widely deployed and supported.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -76,7 +76,7 @@ class SpeexCodec:
     # Frame sizes (20ms is standard)
     FRAME_DURATION_MS = 20
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Speex codec handler
 
@@ -153,7 +153,7 @@ class SpeexCodec:
         """
         return self.speex_available
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> dict[str, Any]:
         """
         Get codec information
 
@@ -201,7 +201,7 @@ class SpeexCodec:
         # Speex SDP format: rtpmap:<pt> SPEEX/<sample_rate>
         return f"rtpmap:{self.payload_type} SPEEX/{self.sample_rate}"
 
-    def get_fmtp(self) -> Optional[str]:
+    def get_fmtp(self) -> str | None:
         """
         Get SDP fmtp (format parameters) for Speex
 
@@ -224,7 +224,7 @@ class SpeexCodec:
             return f"fmtp:{self.payload_type} {';'.join(params)}"
         return None
 
-    def get_sdp_parameters(self) -> Dict[str, Any]:
+    def get_sdp_parameters(self) -> dict[str, Any]:
         """
         Get complete SDP parameters
 
@@ -310,7 +310,7 @@ class SpeexCodec:
             self.logger.error(f"Failed to create Speex decoder: {e}")
             self.decoder = None
 
-    def encode(self, pcm_data: bytes) -> Optional[bytes]:
+    def encode(self, pcm_data: bytes) -> bytes | None:
         """
         Encode PCM audio to Speex
 
@@ -341,7 +341,7 @@ class SpeexCodec:
             self.logger.error(f"Speex encoding failed: {e}")
             return None
 
-    def decode(self, speex_data: bytes) -> Optional[bytes]:
+    def decode(self, speex_data: bytes) -> bytes | None:
         """
         Decode Speex audio to PCM
 
@@ -400,7 +400,7 @@ class SpeexCodecManager:
 
         self.logger.info("Speex codec manager initialized")
 
-    def create_codec(self, call_id: str, config: Optional[Dict[str, Any]] = None) -> SpeexCodec:
+    def create_codec(self, call_id: str, config: dict[str, Any] | None = None) -> SpeexCodec:
         """
         Create Speex codec instance for a call
 
@@ -421,7 +421,7 @@ class SpeexCodecManager:
         self.logger.debug(f"Created Speex codec for call {call_id}")
         return codec
 
-    def get_codec(self, call_id: str) -> Optional[SpeexCodec]:
+    def get_codec(self, call_id: str) -> SpeexCodec | None:
         """
         Get codec instance for a call
 
@@ -444,7 +444,7 @@ class SpeexCodecManager:
             del self.codecs[call_id]
             self.logger.debug(f"Removed Speex codec for call {call_id}")
 
-    def get_all_codecs(self) -> Dict[str, SpeexCodec]:
+    def get_all_codecs(self) -> dict[str, SpeexCodec]:
         """
         Get all codec instances
 

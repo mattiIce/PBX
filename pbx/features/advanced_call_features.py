@@ -4,7 +4,6 @@ Call whisper, barge-in, and supervisor monitoring
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -152,11 +151,11 @@ class AdvancedCallFeatures:
             return True
         return False
 
-    def get_monitoring_info(self, call_id: str) -> Optional[Dict]:
+    def get_monitoring_info(self, call_id: str) -> Dict | None:
         """Get monitoring information for a call"""
         return self.monitored_calls.get(call_id)
 
-    def list_monitored_calls(self, supervisor_id: Optional[str] = None) -> List[Dict]:
+    def list_monitored_calls(self, supervisor_id: str | None = None) -> list[Dict]:
         """List all monitored calls, optionally filtered by supervisor"""
         calls = []
         for call_id, info in self.monitored_calls.items():
@@ -172,7 +171,7 @@ class AdvancedCallFeatures:
                 )
         return calls
 
-    def add_supervisor_permission(self, supervisor_id: str, extensions: List[str]):
+    def add_supervisor_permission(self, supervisor_id: str, extensions: list[str]):
         """Add monitoring permissions for a supervisor"""
         if not self.enabled:
             self.logger.error(
@@ -186,7 +185,7 @@ class AdvancedCallFeatures:
         self.logger.info(f"Added monitoring permissions for {supervisor_id}: {extensions}")
         return True
 
-    def remove_supervisor_permission(self, supervisor_id: str, extensions: List[str]):
+    def remove_supervisor_permission(self, supervisor_id: str, extensions: list[str]):
         """Remove monitoring permissions for a supervisor"""
         if not self.enabled:
             self.logger.error(

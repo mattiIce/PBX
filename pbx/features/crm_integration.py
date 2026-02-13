@@ -6,7 +6,7 @@ Provides caller information lookup and CRM integration capabilities
 import json
 import threading
 from datetime import datetime
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -94,7 +94,7 @@ class CRMLookupProvider:
         self.enabled = config.get("enabled", False)
         self.name = config.get("name", "Unknown")
 
-    def lookup(self, phone_number: str) -> Optional[CallerInfo]:
+    def lookup(self, phone_number: str) -> CallerInfo | None:
         """
         Look up caller information
 
@@ -122,7 +122,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
         self.phone_book = phone_book
         self.name = "PhoneBook"
 
-    def lookup(self, phone_number: str) -> Optional[CallerInfo]:
+    def lookup(self, phone_number: str) -> CallerInfo | None:
         """Look up caller in phone book"""
         if not self.enabled or not self.phone_book:
             return None
@@ -161,7 +161,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
         self.ad_integration = ad_integration
         self.name = "ActiveDirectory"
 
-    def lookup(self, phone_number: str) -> Optional[CallerInfo]:
+    def lookup(self, phone_number: str) -> CallerInfo | None:
         """Look up caller in Active Directory"""
         if not self.enabled or not self.ad_integration:
             return None
@@ -200,7 +200,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
         self.timeout = config.get("timeout", 5)
         self.name = config.get("name", "ExternalCRM")
 
-    def lookup(self, phone_number: str) -> Optional[CallerInfo]:
+    def lookup(self, phone_number: str) -> CallerInfo | None:
         """Look up caller via external CRM API"""
         if not self.enabled or not self.url:
             return None
@@ -283,15 +283,15 @@ class CRMIntegration:
         )  # 1 hour
 
         # Lookup providers
-        self.providers: List[CRMLookupProvider] = []
+        self.providers: list[CRMLookupProvider] = []
 
         # Lookup cache
         # phone_number -> (CallerInfo, timestamp)
-        self.cache: Dict[str, tuple] = {}
+        self.cache: dict[str, tuple] = {}
         self.cache_lock = threading.Lock()
 
         # Callbacks
-        self.on_caller_identified: Optional[Callable] = None
+        self.on_caller_identified: Callable | None = None
 
         if self.enabled:
             self._initialize_providers()
@@ -336,7 +336,7 @@ class CRMIntegration:
                 self.providers.append(provider)
                 self.logger.info(f"Loaded CRM provider: {provider.name}")
 
-    def lookup_caller(self, phone_number: str, use_cache: bool = True) -> Optional[CallerInfo]:
+    def lookup_caller(self, phone_number: str, use_cache: bool = True) -> CallerInfo | None:
         """
         Look up caller information from all available sources
 
@@ -400,7 +400,7 @@ class CRMIntegration:
             normalized = normalized[1:]
         return normalized
 
-    def _get_from_cache(self, phone_number: str) -> Optional[CallerInfo]:
+    def _get_from_cache(self, phone_number: str) -> CallerInfo | None:
         """Get caller info from cache"""
         with self.cache_lock:
             if phone_number in self.cache:
@@ -456,7 +456,7 @@ class CRMIntegration:
 
         self.logger.info(f"Screen pop triggered for call {call_id}: {phone_number} -> {extension}")
 
-    def get_provider_status(self) -> List[Dict]:
+    def get_provider_status(self) -> list[Dict]:
         """Get status of all providers"""
         return [
             {"name": provider.name, "enabled": provider.enabled, "type": type(provider).__name__}

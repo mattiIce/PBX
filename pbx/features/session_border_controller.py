@@ -9,7 +9,6 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -67,17 +66,17 @@ class SessionBorderController:
         self.whitelist: set = set()
 
         # Rate limiting tracking
-        self.request_counts: Dict[str, List[float]] = defaultdict(list)
+        self.request_counts: dict[str, list[float]] = defaultdict(list)
         self.rate_limit_window = 1.0  # 1 second window
 
         # Media relay sessions
-        self.relay_sessions: Dict[str, Dict] = {}
+        self.relay_sessions: dict[str, Dict] = {}
         self.next_relay_port = 10000
         self.relay_port_pool: set = set(range(10000, 20000, 2))  # RTP uses even ports
 
         # Bandwidth tracking
         self.current_bandwidth = 0  # kbps
-        self.bandwidth_by_call: Dict[str, int] = {}
+        self.bandwidth_by_call: dict[str, int] = {}
 
         # Statistics
         self.total_sessions = 0

@@ -5,7 +5,6 @@ Call and voicemail alerts using FCM (Firebase Cloud Messaging - free)
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -381,7 +380,7 @@ class MobilePushNotifications:
         return False
 
     def send_call_notification(
-        self, user_id: str, caller_id: str, caller_name: Optional[str] = None
+        self, user_id: str, caller_id: str, caller_name: str | None = None
     ) -> Dict:
         """
         Send incoming call notification
@@ -448,7 +447,7 @@ class MobilePushNotifications:
         return result
 
     def send_missed_call_notification(
-        self, user_id: str, caller_id: str, call_time: Optional[datetime] = None
+        self, user_id: str, caller_id: str, call_time: datetime | None = None
     ) -> Dict:
         """Send missed call notification"""
         if not self.enabled or not self.firebase_app:
@@ -475,7 +474,7 @@ class MobilePushNotifications:
         return result
 
     def _send_notification(
-        self, user_id: str, title: str, body: str, data: Optional[Dict] = None
+        self, user_id: str, title: str, body: str, data: Dict | None = None
     ) -> Dict:
         """Send push notification to all user's devices"""
         if not FIREBASE_AVAILABLE or not self.firebase_app:
@@ -531,7 +530,7 @@ class MobilePushNotifications:
 
             return {"error": str(e)}
 
-    def get_user_devices(self, user_id: str) -> List[Dict]:
+    def get_user_devices(self, user_id: str) -> list[Dict]:
         """Get list of registered devices for a user"""
         devices = self.device_tokens.get(user_id, [])
         return [

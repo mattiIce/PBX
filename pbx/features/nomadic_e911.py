@@ -4,7 +4,6 @@ Location-based emergency routing for remote workers
 """
 
 import ipaddress
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -104,7 +103,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to update E911 location: {e}")
             return False
 
-    def get_location(self, extension: str) -> Optional[Dict]:
+    def get_location(self, extension: str) -> Dict | None:
         """
         Get current emergency location for extension
 
@@ -154,7 +153,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to get E911 location: {e}")
             return None
 
-    def detect_location_by_ip(self, extension: str, ip_address: str) -> Optional[Dict]:
+    def detect_location_by_ip(self, extension: str, ip_address: str) -> Dict | None:
         """
         Automatically detect location by IP address
         Uses internal network mapping (multi-site configs)
@@ -205,7 +204,7 @@ class NomadicE911Engine:
 
         return None
 
-    def find_site_by_ip(self, ip_address: str) -> Optional[Dict]:
+    def find_site_by_ip(self, ip_address: str) -> Dict | None:
         """
         Find site configuration by IP address (Public API)
 
@@ -217,7 +216,7 @@ class NomadicE911Engine:
         """
         return self._find_site_by_ip(ip_address)
 
-    def _find_site_by_ip(self, ip_address: str) -> Optional[Dict]:
+    def _find_site_by_ip(self, ip_address: str) -> Dict | None:
         """
         Find site configuration by IP address
 
@@ -344,7 +343,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to create site config: {e}")
             return False
 
-    def get_all_sites(self) -> List[Dict]:
+    def get_all_sites(self) -> list[Dict]:
         """
         Get all E911 site configurations
 
@@ -382,7 +381,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to get E911 sites: {e}")
             return []
 
-    def get_location_history(self, extension: str, limit: int = 10) -> List[Dict]:
+    def get_location_history(self, extension: str, limit: int = 10) -> list[Dict]:
         """
         Get location update history for extension
 

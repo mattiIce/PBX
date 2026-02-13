@@ -3,7 +3,6 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -29,7 +28,7 @@ class TeamMessagingEngine:
 
         self.logger.info("Team Messaging Framework initialized")
 
-    def create_channel(self, channel_data: Dict) -> Optional[int]:
+    def create_channel(self, channel_data: Dict) -> int | None:
         """
         Create messaging channel
 
@@ -117,7 +116,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to add member to channel: {e}")
             return False
 
-    def send_message(self, message_data: Dict) -> Optional[int]:
+    def send_message(self, message_data: Dict) -> int | None:
         """
         Send message to channel
 
@@ -169,7 +168,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to send message: {e}")
             return None
 
-    def get_channel_messages(self, channel_id: int, limit: int = 100) -> List[Dict]:
+    def get_channel_messages(self, channel_id: int, limit: int = 100) -> list[Dict]:
         """
         Get messages from channel
 
@@ -212,7 +211,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to get channel messages: {e}")
             return []
 
-    def get_user_channels(self, extension: str) -> List[Dict]:
+    def get_user_channels(self, extension: str) -> list[Dict]:
         """
         Get channels for user
 
@@ -257,7 +256,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to get user channels: {e}")
             return []
 
-    def get_all_channels(self) -> List[Dict]:
+    def get_all_channels(self) -> list[Dict]:
         """
         Get all public channels
 
@@ -316,7 +315,7 @@ class FileShareEngine:
 
         self.logger.info("File Sharing Framework initialized")
 
-    def upload_file(self, file_data: Dict) -> Optional[int]:
+    def upload_file(self, file_data: Dict) -> int | None:
         """
         Upload and share file
         Framework method - handles file storage
@@ -374,7 +373,7 @@ class FileShareEngine:
             self.logger.error(f"Failed to upload file: {e}")
             return None
 
-    def get_shared_files(self, extension: str) -> List[Dict]:
+    def get_shared_files(self, extension: str) -> list[Dict]:
         """
         Get files shared with user
 

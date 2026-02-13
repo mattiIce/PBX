@@ -4,7 +4,7 @@ import json
 from collections.abc import Callable
 from datetime import date, datetime
 from functools import wraps
-from typing import Any, Optional
+from typing import Any
 
 from flask import Response, current_app, jsonify, request
 
@@ -37,7 +37,7 @@ def send_json(data: Any, status: int = 200) -> Response:
     return response
 
 
-def get_auth_token() -> Optional[str]:
+def get_auth_token() -> str | None:
     """Extract authentication token from request headers."""
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
@@ -45,7 +45,7 @@ def get_auth_token() -> Optional[str]:
     return None
 
 
-def verify_authentication() -> tuple[bool, Optional[dict]]:
+def verify_authentication() -> tuple[bool, dict | None]:
     """Verify authentication token and return payload.
 
     Returns:
@@ -101,7 +101,7 @@ def get_query_params() -> dict:
     return request.args
 
 
-def validate_limit_param(default: int = 50, max_value: int = 1000) -> Optional[int]:
+def validate_limit_param(default: int = 50, max_value: int = 1000) -> int | None:
     """Validate a 'limit' query parameter.
 
     Returns:

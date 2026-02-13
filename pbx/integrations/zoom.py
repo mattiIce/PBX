@@ -4,7 +4,6 @@ Enables Zoom Phone, video meetings, and collaboration features
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -37,8 +36,8 @@ class ZoomIntegration:
         self.client_secret = config.get("integrations.zoom.client_secret")
         self.phone_enabled = config.get("integrations.zoom.phone_enabled", False)
         self.api_base_url = config.get("integrations.zoom.api_base_url", "https://api.zoom.us/v2")
-        self.access_token: Optional[str] = None
-        self.token_expiry: Optional[datetime] = None
+        self.access_token: str | None = None
+        self.token_expiry: datetime | None = None
 
         if self.enabled:
             if not REQUESTS_AVAILABLE:
@@ -100,7 +99,7 @@ class ZoomIntegration:
 
     def create_meeting(
         self, topic: str, start_time: str = None, duration_minutes: int = 60, **kwargs
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Create a Zoom meeting
 
@@ -174,7 +173,7 @@ class ZoomIntegration:
             self.logger.error(f"Error creating Zoom meeting: {e}")
             return None
 
-    def start_instant_meeting(self, host_extension: str) -> Optional[Dict]:
+    def start_instant_meeting(self, host_extension: str) -> Dict | None:
         """
         Start an instant Zoom meeting from desk phone
 

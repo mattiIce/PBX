@@ -4,7 +4,6 @@ Route calls based on business hours and schedules
 """
 
 from datetime import datetime, time
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -69,7 +68,7 @@ class TimeBasedRouting:
         return rule_id
 
     def get_routing_destination(
-        self, destination: str, call_time: Optional[datetime] = None
+        self, destination: str, call_time: datetime | None = None
     ) -> Dict:
         """
         Get routing destination based on time rules
@@ -257,7 +256,7 @@ class TimeBasedRouting:
             return True
         return False
 
-    def list_rules(self, destination: Optional[str] = None) -> List[Dict]:
+    def list_rules(self, destination: str | None = None) -> list[Dict]:
         """List routing rules"""
         if destination:
             rule_ids = self.destination_rules.get(destination, [])

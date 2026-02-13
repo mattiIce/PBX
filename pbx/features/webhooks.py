@@ -10,7 +10,6 @@ import queue
 import threading
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -78,9 +77,9 @@ class WebhookSubscription:
     def __init__(
         self,
         url: str,
-        events: List[str],
-        secret: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
+        events: list[str],
+        secret: str | None = None,
+        headers: dict[str, str] | None = None,
         enabled: bool = True,
     ):
         """
@@ -130,7 +129,7 @@ class WebhookDeliveryQueue:
         except queue.Full:
             self.logger.warning("Webhook delivery queue is full, dropping event")
 
-    def dequeue(self, timeout: float = 1.0) -> Optional[tuple]:
+    def dequeue(self, timeout: float = 1.0) -> tuple | None:
         """Get next event from queue"""
         try:
             return self.queue.get(timeout=timeout)
@@ -341,9 +340,9 @@ class WebhookSystem:
     def add_subscription(
         self,
         url: str,
-        events: List[str],
-        secret: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
+        events: list[str],
+        secret: str | None = None,
+        headers: dict[str, str] | None = None,
     ) -> WebhookSubscription:
         """
         Add a webhook subscription
@@ -381,7 +380,7 @@ class WebhookSystem:
                     return True
         return False
 
-    def get_subscriptions(self) -> List[Dict]:
+    def get_subscriptions(self) -> list[Dict]:
         """Get all webhook subscriptions"""
         with self.subscriptions_lock:
             return [

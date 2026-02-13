@@ -5,7 +5,6 @@ Provides persistence for quality metrics, predictions, and alerts
 
 import json
 from datetime import datetime
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -295,7 +294,7 @@ class CallQualityPredictionDatabase:
         except Exception as e:
             self.logger.error(f"Error saving alert: {e}")
 
-    def get_recent_predictions(self, limit: int = 100) -> List[Dict]:
+    def get_recent_predictions(self, limit: int = 100) -> list[Dict]:
         """Get recent predictions"""
         try:
             cursor = self.db.connection.cursor()
@@ -322,7 +321,7 @@ class CallQualityPredictionDatabase:
             self.logger.error(f"Error getting predictions: {e}")
             return []
 
-    def get_active_alerts(self) -> List[Dict]:
+    def get_active_alerts(self) -> list[Dict]:
         """Get active (unacknowledged) alerts"""
         try:
             cursor = self.db.connection.cursor()

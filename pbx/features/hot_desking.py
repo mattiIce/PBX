@@ -5,7 +5,6 @@ Allows users to log in from any phone and retain their settings
 
 import threading
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -80,9 +79,9 @@ class HotDeskingSystem:
         )
 
         # Active sessions
-        self.sessions: Dict[str, HotDeskSession] = {}  # device_id -> session
+        self.sessions: dict[str, HotDeskSession] = {}  # device_id -> session
         # extension -> list of device_ids
-        self.extension_devices: Dict[str, List[str]] = {}
+        self.extension_devices: dict[str, list[str]] = {}
         self.lock = threading.Lock()
 
         # Cleanup thread
@@ -150,7 +149,7 @@ class HotDeskingSystem:
                     self._logout_internal(device_id)
 
     def login(
-        self, extension: str, device_id: str, ip_address: str, pin: Optional[str] = None
+        self, extension: str, device_id: str, ip_address: str, pin: str | None = None
     ) -> bool:
         """
         Log in extension to device
@@ -311,12 +310,12 @@ class HotDeskingSystem:
 
             return count
 
-    def get_session(self, device_id: str) -> Optional[HotDeskSession]:
+    def get_session(self, device_id: str) -> HotDeskSession | None:
         """Get session for device"""
         with self.lock:
             return self.sessions.get(device_id)
 
-    def get_extension_session(self, extension: str) -> Optional[HotDeskSession]:
+    def get_extension_session(self, extension: str) -> HotDeskSession | None:
         """Get session for extension (first device if multiple)"""
         with self.lock:
             devices = self.extension_devices.get(extension, [])
@@ -324,7 +323,7 @@ class HotDeskingSystem:
                 return self.sessions.get(devices[0])
             return None
 
-    def get_extension_devices(self, extension: str) -> List[str]:
+    def get_extension_devices(self, extension: str) -> list[str]:
         """Get all devices where extension is logged in"""
         with self.lock:
             return self.extension_devices.get(extension, []).copy()
@@ -352,7 +351,7 @@ class HotDeskingSystem:
                 return True
             return False
 
-    def get_active_sessions(self) -> List[Dict]:
+    def get_active_sessions(self) -> list[Dict]:
         """Get all active sessions"""
         with self.lock:
             return [session.to_dict() for session in self.sessions.values()]
@@ -362,7 +361,7 @@ class HotDeskingSystem:
         with self.lock:
             return len(self.sessions)
 
-    def get_extension_profile(self, extension: str) -> Optional[Dict]:
+    def get_extension_profile(self, extension: str) -> Dict | None:
         """
         Get extension profile for migration to device
 

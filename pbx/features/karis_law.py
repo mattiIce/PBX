@@ -17,7 +17,6 @@ References:
 
 import re
 from datetime import datetime
-from typing import Dict, Optional, Tuple
 
 from pbx.utils.logger import get_logger
 
@@ -156,7 +155,7 @@ class KarisLawCompliance:
 
     def handle_emergency_call(
         self, caller_extension: str, dialed_number: str, call_id: str, from_addr: tuple
-    ) -> Tuple[bool, Dict]:
+    ) -> tuple[bool, Dict]:
         """
         Handle emergency call according to Kari's Law
 
@@ -245,7 +244,7 @@ class KarisLawCompliance:
 
         return True, routing_info
 
-    def _get_nomadic_e911_engine(self) -> Optional["NomadicE911Engine"]:
+    def _get_nomadic_e911_engine(self) -> "NomadicE911Engine" | None:
         """
         Get or create nomadic E911 engine instance
 
@@ -283,7 +282,7 @@ class KarisLawCompliance:
             parts.append(location["postal_code"])
         return ", ".join(parts) if parts else "Location on file"
 
-    def _get_location_info(self, extension: str) -> Optional[Dict]:
+    def _get_location_info(self, extension: str) -> Dict | None:
         """
         Get location information for extension (Ray Baum's Act)
 
@@ -347,9 +346,9 @@ class KarisLawCompliance:
         caller_extension: str,
         normalized_number: str,
         call_id: str,
-        location_info: Optional[Dict],
+        location_info: Dict | None,
         caller_info: Dict,
-        nomadic_e911_engine: Optional["NomadicE911Engine"] = None,
+        nomadic_e911_engine: "NomadicE911Engine" | None = None,
     ) -> Dict:
         """
         Route emergency call to appropriate trunk
@@ -446,9 +445,9 @@ class KarisLawCompliance:
     def _get_site_emergency_trunk(
         self,
         extension: str,
-        location_info: Optional[Dict] = None,
-        nomadic_e911_engine: Optional["NomadicE911Engine"] = None,
-    ) -> Optional[str]:
+        location_info: Dict | None = None,
+        nomadic_e911_engine: "NomadicE911Engine" | None = None,
+    ) -> str | None:
         """
         Get site-specific emergency trunk for extension (Multi-Site E911)
 
@@ -488,8 +487,8 @@ class KarisLawCompliance:
             return None
 
     def _get_site_info(
-        self, extension: str, nomadic_e911_engine: Optional["NomadicE911Engine"] = None
-    ) -> Optional[Dict]:
+        self, extension: str, nomadic_e911_engine: "NomadicE911Engine" | None = None
+    ) -> Dict | None:
         """
         Get site information for extension (PSAP, ELIN, etc.)
 
@@ -519,7 +518,7 @@ class KarisLawCompliance:
             return None
 
     def _trigger_emergency_notification(
-        self, caller_extension: str, caller_info: Dict, location_info: Optional[Dict], call_id: str
+        self, caller_extension: str, caller_info: Dict, location_info: Dict | None, call_id: str
     ):
         """
         Trigger automatic notification to designated contacts (Kari's Law requirement)
@@ -570,7 +569,7 @@ class KarisLawCompliance:
             location=details.get("location", "Unknown"),
         )
 
-    def get_emergency_call_history(self, extension: Optional[str] = None, limit: int = 50) -> list:
+    def get_emergency_call_history(self, extension: str | None = None, limit: int = 50) -> list:
         """
         Get emergency call history
 

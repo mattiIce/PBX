@@ -3,7 +3,6 @@ Advanced Audio Processing
 Noise suppression and echo cancellation using free libraries
 """
 
-from typing import Dict
 
 import numpy as np
 

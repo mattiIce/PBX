@@ -3,7 +3,6 @@ CRM Integration Framework
 HubSpot and Zendesk integration for marketing and support
 """
 
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -29,7 +28,7 @@ class HubSpotIntegration:
 
         self.logger.info("HubSpot Integration Framework initialized")
 
-    def get_config(self) -> Optional[Dict]:
+    def get_config(self) -> Dict | None:
         """
         Get HubSpot integration configuration
 
@@ -355,7 +354,7 @@ class ZendeskIntegration:
 
         self.logger.info("Zendesk Integration Framework initialized")
 
-    def get_config(self) -> Optional[Dict]:
+    def get_config(self) -> Dict | None:
         """
         Get Zendesk integration configuration
 
@@ -452,7 +451,7 @@ class ZendeskIntegration:
             self.logger.error(f"Failed to update Zendesk config: {e}")
             return False
 
-    def create_ticket(self, ticket_data: Dict) -> Optional[str]:
+    def create_ticket(self, ticket_data: Dict) -> str | None:
         """
         Create ticket in Zendesk
         Uses webhook or Zendesk API
@@ -654,7 +653,7 @@ class ZendeskIntegration:
         except Exception as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
-    def get_activity_log(self, limit: int = 100) -> List[Dict]:
+    def get_activity_log(self, limit: int = 100) -> list[Dict]:
         """
         Get integration activity log
 

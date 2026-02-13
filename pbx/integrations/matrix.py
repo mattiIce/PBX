@@ -7,7 +7,7 @@ import os
 import re
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -101,7 +101,7 @@ class MatrixIntegration:
 
     def _make_request(
         self, method: str, endpoint: str, data: Dict = None, params: Dict = None
-    ) -> Optional[Dict]:
+    ) -> Dict | None:
         """
         Make authenticated API request to Matrix
 
@@ -139,7 +139,7 @@ class MatrixIntegration:
             self.logger.error(f"Matrix API request failed: {e}")
             return None
 
-    def send_message(self, room_id: str, message: str, msg_type: str = "m.text") -> Optional[str]:
+    def send_message(self, room_id: str, message: str, msg_type: str = "m.text") -> str | None:
         """
         Send message to Matrix room
 
@@ -258,8 +258,8 @@ class MatrixIntegration:
         return self.send_notification(message, room_id=room)
 
     def create_room(
-        self, name: str, topic: str = None, invite_users: List[str] = None
-    ) -> Optional[str]:
+        self, name: str, topic: str = None, invite_users: list[str] = None
+    ) -> str | None:
         """
         Create new Matrix room
 
@@ -275,7 +275,7 @@ class MatrixIntegration:
             return None
 
         try:
-            data: Dict[str, Any] = {"name": name, "preset": "private_chat", "visibility": "private"}
+            data: dict[str, Any] = {"name": name, "preset": "private_chat", "visibility": "private"}
 
             if topic:
                 data["topic"] = topic
@@ -323,7 +323,7 @@ class MatrixIntegration:
 
     def upload_file(
         self, file_path: str, content_type: str = "application/octet-stream"
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Upload file to Matrix homeserver
 
@@ -370,7 +370,7 @@ class MatrixIntegration:
         file_path: str,
         filename: str = None,
         content_type: str = "application/octet-stream",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Send file to room
 
@@ -445,7 +445,7 @@ class MatrixIntegration:
 
         return html
 
-    def get_room_members(self, room_id: str) -> List[str]:
+    def get_room_members(self, room_id: str) -> list[str]:
         """
         Get list of room members
 

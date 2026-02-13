@@ -5,7 +5,6 @@ Ring multiple devices sequentially or simultaneously
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -252,7 +251,7 @@ class FindMeFollowMe:
         )
         return True
 
-    def get_config(self, extension: str) -> Optional[Dict]:
+    def get_config(self, extension: str) -> Dict | None:
         """Get FMFM configuration for an extension"""
         return self.user_configs.get(extension)
 
@@ -424,7 +423,7 @@ class FindMeFollowMe:
             return True
         return False
 
-    def list_extensions_with_fmfm(self) -> List[str]:
+    def list_extensions_with_fmfm(self) -> list[str]:
         """List extensions with FMFM configured"""
         return [ext for ext, cfg in self.user_configs.items() if cfg.get("enabled", True)]
 

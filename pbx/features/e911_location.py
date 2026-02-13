@@ -4,7 +4,6 @@ Simplified location-based emergency routing for one site with 3 buildings
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -50,8 +49,8 @@ class E911LocationService:
         self,
         device_id: str,
         building_id: str,
-        floor: Optional[str] = None,
-        room: Optional[str] = None,
+        floor: str | None = None,
+        room: str | None = None,
     ) -> bool:
         """
         Register a location for a device/extension (simplified for single site)
@@ -87,11 +86,11 @@ class E911LocationService:
         )
         return True
 
-    def get_location(self, device_id: str) -> Optional[Dict]:
+    def get_location(self, device_id: str) -> Dict | None:
         """Get registered location for a device"""
         return self.device_locations.get(device_id)
 
-    def list_buildings(self) -> List[Dict]:
+    def list_buildings(self) -> list[Dict]:
         """List all buildings"""
         return [
             {"id": bid, "name": binfo["name"], "floors": binfo.get("floors", 1)}
@@ -184,7 +183,7 @@ class E911LocationService:
 
         return ", ".join(parts)
 
-    def get_emergency_call_history(self, device_id: Optional[str] = None) -> List[Dict]:
+    def get_emergency_call_history(self, device_id: str | None = None) -> list[Dict]:
         """Get history of emergency calls"""
         if device_id:
             return [call for call in self.emergency_calls if call["device_id"] == device_id]

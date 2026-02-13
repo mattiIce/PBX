@@ -4,7 +4,6 @@ Routes calls to agents based on their skills and expertise
 """
 
 from datetime import datetime
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -112,7 +111,7 @@ class SkillsBasedRouter:
         # In-memory storage
         self.skills = {}  # skill_id -> Skill
         self.agent_skills = {}  # agent_extension -> {skill_id -> AgentSkill}
-        self.queue_requirements = {}  # queue_number -> List[SkillRequirement]
+        self.queue_requirements = {}  # queue_number -> list[SkillRequirement]
 
         # Initialize database schema
         if self.database and self.database.enabled:
@@ -348,7 +347,7 @@ class SkillsBasedRouter:
 
         return False
 
-    def set_queue_requirements(self, queue_number: str, requirements: List[Dict]) -> bool:
+    def set_queue_requirements(self, queue_number: str, requirements: list[Dict]) -> bool:
         """
         Set skill requirements for a queue
 
@@ -414,8 +413,8 @@ class SkillsBasedRouter:
         return True
 
     def find_best_agents(
-        self, queue_number: str, available_agents: List[str], max_results: int = 5
-    ) -> List[Dict]:
+        self, queue_number: str, available_agents: list[str], max_results: int = 5
+    ) -> list[Dict]:
         """
         Find best agents for a queue based on skill requirements
 
@@ -462,7 +461,7 @@ class SkillsBasedRouter:
         return scored_agents[:max_results]
 
     def _calculate_agent_score(
-        self, agent_extension: str, requirements: List[SkillRequirement]
+        self, agent_extension: str, requirements: list[SkillRequirement]
     ) -> tuple:
         """
         Calculate agent score based on skill requirements
@@ -515,7 +514,7 @@ class SkillsBasedRouter:
 
         return (total_score, matching_skills)
 
-    def get_agent_skills(self, agent_extension: str) -> List[Dict]:
+    def get_agent_skills(self, agent_extension: str) -> list[Dict]:
         """
         Get all skills for an agent
 
@@ -538,11 +537,11 @@ class SkillsBasedRouter:
 
         return skills
 
-    def get_all_skills(self) -> List[Dict]:
+    def get_all_skills(self) -> list[Dict]:
         """Get all available skills"""
         return [skill.to_dict() for skill in self.skills.values()]
 
-    def get_queue_requirements(self, queue_number: str) -> List[Dict]:
+    def get_queue_requirements(self, queue_number: str) -> list[Dict]:
         """
         Get skill requirements for a queue
 

@@ -5,7 +5,6 @@ Geographic data storage options for compliance
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict
 
 from pbx.utils.logger import get_logger
 
@@ -58,11 +57,11 @@ class DataResidencyControls:
         self.strict_mode = residency_config.get("strict_mode", False)
 
         # Region configurations
-        self.region_configs: Dict[str, Dict] = {}
+        self.region_configs: dict[str, Dict] = {}
         self._initialize_default_regions()
 
         # Data category mappings
-        self.category_regions: Dict[DataCategory, StorageRegion] = {}
+        self.category_regions: dict[DataCategory, StorageRegion] = {}
 
         # Statistics
         self.total_storage_operations = 0

@@ -7,7 +7,6 @@ import threading
 import time
 from collections import deque
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -310,7 +309,7 @@ class QoSMonitor:
             self.logger.info(f"Started QoS monitoring for call {call_id}")
             return metrics
 
-    def stop_monitoring(self, call_id: str) -> Optional[Dict]:
+    def stop_monitoring(self, call_id: str) -> Dict | None:
         """
         Stop monitoring QoS for a call and return final metrics
 
@@ -349,7 +348,7 @@ class QoSMonitor:
 
             return summary
 
-    def get_metrics(self, call_id: str) -> Optional[Dict]:
+    def get_metrics(self, call_id: str) -> Dict | None:
         """
         Get current QoS metrics for an active call
 
@@ -365,7 +364,7 @@ class QoSMonitor:
 
             return self.active_calls[call_id].get_summary()
 
-    def get_all_active_metrics(self) -> List[Dict]:
+    def get_all_active_metrics(self) -> list[Dict]:
         """
         Get QoS metrics for all active calls
 
@@ -376,8 +375,8 @@ class QoSMonitor:
             return [metrics.get_summary() for metrics in self.active_calls.values()]
 
     def get_historical_metrics(
-        self, limit: int = 100, min_mos: Optional[float] = None
-    ) -> List[Dict]:
+        self, limit: int = 100, min_mos: float | None = None
+    ) -> list[Dict]:
         """
         Get historical QoS metrics
 
@@ -396,7 +395,7 @@ class QoSMonitor:
 
             return data
 
-    def get_alerts(self, limit: int = 50) -> List[Dict]:
+    def get_alerts(self, limit: int = 50) -> list[Dict]:
         """
         Get recent quality alerts
 
