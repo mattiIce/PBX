@@ -130,7 +130,7 @@ class CallParkingSystem:
         Check for timed out parked calls
 
         Returns:
-            List of timed out ParkedCall objects
+            list of timed out ParkedCall objects
         """
         timed_out = []
 
@@ -147,7 +147,7 @@ class CallParkingSystem:
         Get all parked calls
 
         Returns:
-            List of ParkedCall dictionaries
+            list of ParkedCall dictionaries
         """
         return [call.to_dict() for call in self.parked_calls.values()]
 

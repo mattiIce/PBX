@@ -3,8 +3,8 @@
  * Handles dashboard stats, AD integration status, and global refresh.
  */
 
-import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 interface DashboardStatus {
     registered_extensions?: number;
@@ -158,8 +158,8 @@ export async function syncADUsers(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadDashboard = loadDashboard;
-(window as any).refreshDashboard = refreshDashboard;
-(window as any).loadADStatus = loadADStatus;
-(window as any).refreshADStatus = refreshADStatus;
-(window as any).syncADUsers = syncADUsers;
+window.loadDashboard = loadDashboard;
+window.refreshDashboard = refreshDashboard;
+window.loadADStatus = loadADStatus;
+window.refreshADStatus = refreshADStatus;
+window.syncADUsers = syncADUsers;

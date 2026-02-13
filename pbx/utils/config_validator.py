@@ -8,7 +8,7 @@ to catch issues before the PBX starts, preventing runtime errors.
 import logging
 import os
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class ConfigValidator:
     Validates PBX configuration for production readiness.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """
         Initialize validator with configuration.
 
@@ -29,12 +29,12 @@ class ConfigValidator:
         self.errors = []
         self.warnings = []
 
-    def validate_all(self) -> Tuple[bool, List[str], List[str]]:
+    def validate_all(self) -> tuple[bool, list[str], list[str]]:
         """
         Run all validation checks.
 
         Returns:
-            Tuple of (is_valid, errors_list, warnings_list)
+            tuple of (is_valid, errors_list, warnings_list)
         """
         self.errors = []
         self.warnings = []
@@ -257,7 +257,7 @@ class ConfigValidator:
             self.warnings.append("Logging level is DEBUG. Use INFO or WARNING for production.")
 
 
-def validate_config_on_startup(config: Dict[str, Any]) -> bool:
+def validate_config_on_startup(config: dict[str, Any]) -> bool:
     """
     Validate configuration on startup and log results.
 

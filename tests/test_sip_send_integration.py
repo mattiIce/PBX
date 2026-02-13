@@ -3,15 +3,14 @@ Integration test for SIP Send Line and Send MAC in PBX Core
 Tests that headers are properly added during call routing
 """
 
-import unittest
 
 from pbx.sip.message import SIPMessage
 
 
-class TestSIPSendLineIntegration(unittest.TestCase):
+class TestSIPSendLineIntegration:
     """Integration tests for SIP send line and MAC in call routing"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test environment"""
         import tempfile
 
@@ -50,7 +49,7 @@ logging:
 """)
         self.temp_config.close()
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test environment"""
         import os
 
@@ -81,17 +80,15 @@ logging:
         )
 
         # Verify headers are present
-        self.assertIsNotNone(invite.get_header("P-Asserted-Identity"))
-        self.assertIsNotNone(invite.get_header("Remote-Party-ID"))
-
+        assert invite.get_header("P-Asserted-Identity") is not None
+        assert invite.get_header("Remote-Party-ID") is not None
         # Verify header content
         pai = invite.get_header("P-Asserted-Identity")
-        self.assertIn("John Doe", pai)
-        self.assertIn("sip:1001@192.168.1.100", pai)
-
+        assert "John Doe" in pai
+        assert "sip:1001@192.168.1.100" in pai
         rpid = invite.get_header("Remote-Party-ID")
-        self.assertIn("John Doe", rpid)
-        self.assertIn("party=calling", rpid)
+        assert "John Doe" in rpid
+        assert "party=calling" in rpid
 
     def test_invite_includes_mac_address_header(self) -> None:
         """Test that INVITE messages include X-MAC-Address when available"""
@@ -111,8 +108,8 @@ logging:
         SIPMessageBuilder.add_mac_address_header(invite, mac_address="00:11:22:33:44:55")
 
         # Verify header is present
-        self.assertIsNotNone(invite.get_header("X-MAC-Address"))
-        self.assertEqual(invite.get_header("X-MAC-Address"), "00:11:22:33:44:55")
+        assert invite.get_header("X-MAC-Address") is not None
+        assert invite.get_header("X-MAC-Address") == "00:11:22:33:44:55"
 
     def test_config_defaults_enable_features(self) -> None:
         """Test that features are enabled by default"""
@@ -121,10 +118,10 @@ logging:
         config = Config(self.temp_config_path)
 
         # Verify defaults
-        self.assertTrue(config.get("sip.caller_id.send_p_asserted_identity", True))
-        self.assertTrue(config.get("sip.caller_id.send_remote_party_id", True))
-        self.assertTrue(config.get("sip.device.send_mac_address", True))
-        self.assertTrue(config.get("sip.device.accept_mac_in_invite", True))
+        assert config.get("sip.caller_id.send_p_asserted_identity", True)
+        assert config.get("sip.caller_id.send_remote_party_id", True)
+        assert config.get("sip.device.send_mac_address", True)
+        assert config.get("sip.device.accept_mac_in_invite", True)
 
     def test_mac_address_accepted_from_invite(self) -> None:
         """Test that MAC address can be read from incoming INVITE"""
@@ -143,7 +140,7 @@ logging:
 
         # Verify MAC can be extracted
         mac = message.get_header("X-MAC-Address")
-        self.assertEqual(mac, "aa:bb:cc:dd:ee:ff")
+        assert mac == "aa:bb:cc:dd:ee:ff"
 
     def test_complete_invite_with_all_headers(self) -> None:
         """Test building a complete INVITE with all SIP send line/MAC headers"""
@@ -177,12 +174,8 @@ logging:
         # Parse it back to verify all headers survive round-trip
         parsed = SIPMessage(raw_message)
 
-        self.assertEqual(parsed.method, "INVITE")
-        self.assertIsNotNone(parsed.get_header("P-Asserted-Identity"))
-        self.assertIsNotNone(parsed.get_header("Remote-Party-ID"))
-        self.assertIsNotNone(parsed.get_header("X-MAC-Address"))
-        self.assertEqual(parsed.get_header("X-MAC-Address"), "de:ad:be:ef:ca:fe")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert parsed.method == "INVITE"
+        assert parsed.get_header("P-Asserted-Identity") is not None
+        assert parsed.get_header("Remote-Party-ID") is not None
+        assert parsed.get_header("X-MAC-Address") is not None
+        assert parsed.get_header("X-MAC-Address") == "de:ad:be:ef:ca:fe"

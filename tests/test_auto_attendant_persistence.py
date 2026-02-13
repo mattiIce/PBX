@@ -5,13 +5,9 @@ Ensures configuration and menu options persist across restarts
 
 import os
 import sqlite3
-import sys
 import tempfile
-import unittest
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.auto_attendant import AutoAttendant
 
@@ -40,16 +36,16 @@ class MockConfig:
         return default
 
 
-class TestAutoAttendantPersistence(unittest.TestCase):
+class TestAutoAttendantPersistence:
     """Test auto attendant database persistence"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test environment"""
         # Create temporary database
         self.db_fd, self.db_path = tempfile.mkstemp(suffix=".db")
         self.config = MockConfig(self.db_path)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test environment"""
         # Close and remove temporary database
         os.close(self.db_fd)
@@ -69,11 +65,11 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         row = cursor.fetchone()
         conn.close()
 
-        self.assertIsNotNone(row)
-        self.assertEqual(row[0], 1)  # enabled
-        self.assertEqual(row[1], "0")  # extension
-        self.assertEqual(row[2], 10)  # timeout
-        self.assertEqual(row[3], 3)  # max_retries
+        assert row is not None
+        assert row[0] == 1  # enabled
+        assert row[1] == "0"  # extension
+        assert row[2] == 10  # timeout
+        assert row[3] == 3  # max_retries
 
     def test_initial_menu_options_saved_to_db(self) -> None:
         """Test that initial menu options are saved to database"""
@@ -89,13 +85,13 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         rows = cursor.fetchall()
         conn.close()
 
-        self.assertEqual(len(rows), 2)
-        self.assertEqual(rows[0][0], "1")
-        self.assertEqual(rows[0][1], "1001")
-        self.assertEqual(rows[0][2], "Sales")
-        self.assertEqual(rows[1][0], "2")
-        self.assertEqual(rows[1][1], "1002")
-        self.assertEqual(rows[1][2], "Support")
+        assert len(rows) == 2
+        assert rows[0][0] == "1"
+        assert rows[0][1] == "1001"
+        assert rows[0][2] == "Sales"
+        assert rows[1][0] == "2"
+        assert rows[1][1] == "1002"
+        assert rows[1][2] == "Support"
 
     def test_config_persists_across_restarts(self) -> None:
         """Test that configuration persists across restarts"""
@@ -107,10 +103,10 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         aa2 = AutoAttendant(config=self.config)
 
         # Verify configuration persisted
-        self.assertEqual(aa2.enabled, False)
-        self.assertEqual(aa2.extension, "9")
-        self.assertEqual(aa2.timeout, 20)
-        self.assertEqual(aa2.max_retries, 5)
+        assert aa2.enabled == False
+        assert aa2.extension == "9"
+        assert aa2.timeout == 20
+        assert aa2.max_retries == 5
 
     def test_menu_options_persist_across_restarts(self) -> None:
         """Test that menu options persist across restarts"""
@@ -122,9 +118,9 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         aa2 = AutoAttendant(config=self.config)
 
         # Verify menu option persisted
-        self.assertIn("3", aa2.menu_options)
-        self.assertEqual(aa2.menu_options["3"]["destination"], "1003")
-        self.assertEqual(aa2.menu_options["3"]["description"], "Billing")
+        assert "3" in aa2.menu_options
+        assert aa2.menu_options["3"]["destination"] == "1003"
+        assert aa2.menu_options["3"]["description"] == "Billing"
 
     def test_menu_option_update_persists(self) -> None:
         """Test that menu option updates persist"""
@@ -138,8 +134,8 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         aa2 = AutoAttendant(config=self.config)
 
         # Verify update persisted
-        self.assertEqual(aa2.menu_options["1"]["destination"], "1005")
-        self.assertEqual(aa2.menu_options["1"]["description"], "New Sales")
+        assert aa2.menu_options["1"]["destination"] == "1005"
+        assert aa2.menu_options["1"]["description"] == "New Sales"
 
     def test_menu_option_deletion_persists(self) -> None:
         """Test that menu option deletion persists"""
@@ -153,8 +149,8 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         aa2 = AutoAttendant(config=self.config)
 
         # Verify deletion persisted
-        self.assertNotIn("1", aa2.menu_options)
-        self.assertIn("2", aa2.menu_options)  # Other option still exists
+        assert "1" not in aa2.menu_options
+        assert "2" in aa2.menu_options  # Other option still exists
 
     def test_database_tables_created(self) -> None:
         """Test that database tables are created"""
@@ -169,14 +165,12 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_config'"
         )
-        self.assertIsNotNone(cursor.fetchone())
-
+        assert cursor.fetchone() is not None
         # Check menu options table
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menu_options'"
         )
-        self.assertIsNotNone(cursor.fetchone())
-
+        assert cursor.fetchone() is not None
         conn.close()
 
     def test_multiple_updates_persist(self) -> None:
@@ -195,13 +189,9 @@ class TestAutoAttendantPersistence(unittest.TestCase):
         aa2 = AutoAttendant(config=self.config)
 
         # Verify all changes persisted
-        self.assertEqual(aa2.timeout, 15)
-        self.assertEqual(aa2.max_retries, 7)
-        self.assertIn("1", aa2.menu_options)
-        self.assertNotIn("2", aa2.menu_options)
-        self.assertIn("3", aa2.menu_options)
-        self.assertIn("4", aa2.menu_options)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert aa2.timeout == 15
+        assert aa2.max_retries == 7
+        assert "1" in aa2.menu_options
+        assert "2" not in aa2.menu_options
+        assert "3" in aa2.menu_options
+        assert "4" in aa2.menu_options

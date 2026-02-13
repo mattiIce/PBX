@@ -3,7 +3,6 @@ Advanced Audio Processing
 Noise suppression and echo cancellation using free libraries
 """
 
-from typing import Dict
 
 import numpy as np
 
@@ -157,7 +156,7 @@ class AudioProcessor:
         self.frames_processed = 0
         self.noise_level_history = []
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get audio processing statistics"""
         return {
             "frames_processed": self.frames_processed,

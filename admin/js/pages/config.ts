@@ -3,8 +3,8 @@
  * Handles system configuration, feature toggles, and SSL management.
  */
 
-import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 interface VoicemailConfig {
     max_duration?: number;
@@ -170,8 +170,8 @@ export async function generateSSLCertificate(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadConfig = loadConfig;
-(window as any).loadFeaturesStatus = loadFeaturesStatus;
-(window as any).saveConfigSection = saveConfigSection;
-(window as any).loadSSLStatus = loadSSLStatus;
-(window as any).generateSSLCertificate = generateSSLCertificate;
+window.loadConfig = loadConfig;
+window.loadFeaturesStatus = loadFeaturesStatus;
+window.saveConfigSection = saveConfigSection;
+window.loadSSLStatus = loadSSLStatus;
+window.generateSSLCertificate = generateSSLCertificate;

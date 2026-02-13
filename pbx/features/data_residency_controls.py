@@ -5,7 +5,6 @@ Geographic data storage options for compliance
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict
 
 from pbx.utils.logger import get_logger
 
@@ -58,11 +57,11 @@ class DataResidencyControls:
         self.strict_mode = residency_config.get("strict_mode", False)
 
         # Region configurations
-        self.region_configs: Dict[str, Dict] = {}
+        self.region_configs: dict[str, dict] = {}
         self._initialize_default_regions()
 
         # Data category mappings
-        self.category_regions: Dict[DataCategory, StorageRegion] = {}
+        self.category_regions: dict[DataCategory, StorageRegion] = {}
 
         # Statistics
         self.total_storage_operations = 0
@@ -91,7 +90,7 @@ class DataResidencyControls:
                 "compliance_tags": [],
             }
 
-    def configure_region(self, region: str, config: Dict):
+    def configure_region(self, region: str, config: dict):
         """
         Configure storage region
 
@@ -114,7 +113,7 @@ class DataResidencyControls:
 
     def set_category_region(self, category: DataCategory, region: StorageRegion):
         """
-        Set storage region for data category
+        set storage region for data category
 
         Args:
             category: Data category
@@ -128,10 +127,10 @@ class DataResidencyControls:
 
         self.category_regions[category] = region
 
-        self.logger.info(f"Set {category.value} to store in {region.value}")
+        self.logger.info(f"set {category.value} to store in {region.value}")
         return True
 
-    def get_storage_location(self, category: str, user_region: str = None) -> Dict:
+    def get_storage_location(self, category: str, user_region: str = None) -> dict:
         """
         Get storage location for data
 
@@ -140,7 +139,7 @@ class DataResidencyControls:
             user_region: User's region (for user-specific data)
 
         Returns:
-            Dict: Storage location information
+            dict: Storage location information
         """
         data_category = DataCategory(category)
 
@@ -163,7 +162,7 @@ class DataResidencyControls:
 
     def validate_storage_operation(
         self, category: str, target_region: str, user_region: str = None
-    ) -> Dict:
+    ) -> dict:
         """
         Validate if storage operation is allowed
 
@@ -173,7 +172,7 @@ class DataResidencyControls:
             user_region: User's region
 
         Returns:
-            Dict: Validation result
+            dict: Validation result
         """
         self.total_storage_operations += 1
 
@@ -201,7 +200,7 @@ class DataResidencyControls:
         from_region: str,
         to_region: str,
         justification: str = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Transfer data between regions
 
@@ -213,7 +212,7 @@ class DataResidencyControls:
             justification: Transfer justification
 
         Returns:
-            Dict: Transfer result
+            dict: Transfer result
         """
         # Validate transfer
         validation = self.validate_storage_operation(category, to_region)
@@ -276,7 +275,7 @@ class DataResidencyControls:
 
         return {"success": True, "transfer_log": transfer_log}
 
-    def get_compliance_report(self, start_date: datetime, end_date: datetime) -> Dict:
+    def get_compliance_report(self, start_date: datetime, end_date: datetime) -> dict:
         """
         Generate compliance report
 
@@ -285,7 +284,7 @@ class DataResidencyControls:
             end_date: Report end date
 
         Returns:
-            Dict: Compliance report
+            dict: Compliance report
         """
         # Query actual storage operations and transfers from history
 
@@ -336,7 +335,7 @@ class DataResidencyControls:
 
         return report
 
-    def get_data_location_map(self) -> Dict:
+    def get_data_location_map(self) -> dict:
         """Get map of where data is stored"""
         location_map = {}
 
@@ -348,7 +347,7 @@ class DataResidencyControls:
 
         return location_map
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get data residency statistics"""
         return {
             "enabled": self.enabled,

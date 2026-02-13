@@ -7,7 +7,7 @@ import os
 import re
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -100,8 +100,8 @@ class MatrixIntegration:
             return False
 
     def _make_request(
-        self, method: str, endpoint: str, data: Dict = None, params: Dict = None
-    ) -> Optional[Dict]:
+        self, method: str, endpoint: str, data: dict = None, params: dict = None
+    ) -> dict | None:
         """
         Make authenticated API request to Matrix
 
@@ -122,7 +122,7 @@ class MatrixIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.bot_access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             response = requests.request(
@@ -139,7 +139,7 @@ class MatrixIntegration:
             self.logger.error(f"Matrix API request failed: {e}")
             return None
 
-    def send_message(self, room_id: str, message: str, msg_type: str = "m.text") -> Optional[str]:
+    def send_message(self, room_id: str, message: str, msg_type: str = "m.text") -> str | None:
         """
         Send message to Matrix room
 
@@ -258,15 +258,15 @@ class MatrixIntegration:
         return self.send_notification(message, room_id=room)
 
     def create_room(
-        self, name: str, topic: str = None, invite_users: List[str] = None
-    ) -> Optional[str]:
+        self, name: str, topic: str = None, invite_users: list[str] = None
+    ) -> str | None:
         """
         Create new Matrix room
 
         Args:
             name: Room name
             topic: Room topic/description
-            invite_users: List of user IDs to invite
+            invite_users: list of user IDs to invite
 
         Returns:
             Room ID or None on error
@@ -275,7 +275,7 @@ class MatrixIntegration:
             return None
 
         try:
-            data: Dict[str, Any] = {"name": name, "preset": "private_chat", "visibility": "private"}
+            data: dict[str, Any] = {"name": name, "preset": "private_chat", "visibility": "private"}
 
             if topic:
                 data["topic"] = topic
@@ -323,7 +323,7 @@ class MatrixIntegration:
 
     def upload_file(
         self, file_path: str, content_type: str = "application/octet-stream"
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Upload file to Matrix homeserver
 
@@ -347,7 +347,7 @@ class MatrixIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.bot_access_token}",
-                "Content-Type": content_type,
+                "Content-type": content_type,
             }
 
             with open(file_path, "rb") as f:
@@ -370,7 +370,7 @@ class MatrixIntegration:
         file_path: str,
         filename: str = None,
         content_type: str = "application/octet-stream",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Send file to room
 
@@ -445,7 +445,7 @@ class MatrixIntegration:
 
         return html
 
-    def get_room_members(self, room_id: str) -> List[str]:
+    def get_room_members(self, room_id: str) -> list[str]:
         """
         Get list of room members
 
@@ -453,7 +453,7 @@ class MatrixIntegration:
             room_id: Matrix room ID
 
         Returns:
-            List of user IDs
+            list of user IDs
         """
         if not self.enabled:
             return []

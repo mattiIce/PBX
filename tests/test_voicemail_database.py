@@ -4,11 +4,8 @@ Tests for voicemail database integration
 """
 import os
 import shutil
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
@@ -17,7 +14,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_database_configuration() -> None:
     """Test database configuration loading"""
-    print("Testing database configuration...")
 
     config = Config("config.yml")
 
@@ -32,12 +28,9 @@ def test_database_configuration() -> None:
     assert config.get("database.name") is not None, "Database name should be set"
     assert config.get("database.user") is not None, "Database user should be set"
 
-    print("✓ Database configuration loads correctly")
-
 
 def test_database_backend_initialization() -> None:
     """Test database backend initialization with SQLite fallback"""
-    print("Testing database backend initialization...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -64,7 +57,6 @@ def test_database_backend_initialization() -> None:
         assert "vip_callers" in table_names
 
         db.disconnect()
-        print("✓ Database backend initializes correctly")
 
     finally:
         # Cleanup
@@ -74,7 +66,6 @@ def test_database_backend_initialization() -> None:
 
 def test_voicemail_database_integration() -> None:
     """Test voicemail saving to database"""
-    print("Testing voicemail database integration...")
 
     # Create temporary directories for test
     temp_dir = tempfile.mkdtemp()
@@ -128,7 +119,6 @@ def test_voicemail_database_integration() -> None:
         assert result is None
 
         db.disconnect()
-        print("✓ Voicemail database integration works correctly")
 
     finally:
         # Cleanup
@@ -139,7 +129,6 @@ def test_voicemail_database_integration() -> None:
 
 def test_voicemail_without_database() -> None:
     """Test voicemail system works without database"""
-    print("Testing voicemail system without database...")
 
     temp_dir = tempfile.mkdtemp()
 
@@ -158,49 +147,7 @@ def test_voicemail_without_database() -> None:
         assert message_id is not None
         assert len(vm_system.get_mailbox("1001").messages) == 1
 
-        print("✓ Voicemail system works without database")
 
     finally:
         # Cleanup
         shutil.rmtree(temp_dir)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail Database Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_database_configuration,
-        test_database_backend_initialization,
-        test_voicemail_database_integration,
-        test_voicemail_without_database,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

@@ -1185,7 +1185,7 @@ P2351 = 1
         Get all registered devices
 
         Returns:
-            List of ProvisioningDevice objects
+            list of ProvisioningDevice objects
         """
         return list(self.devices.values())
 
@@ -1194,7 +1194,7 @@ P2351 = 1
         Get all registered ATA devices
 
         Returns:
-            List of ProvisioningDevice objects (ATAs only)
+            list of ProvisioningDevice objects (ATAs only)
         """
         return [device for device in self.devices.values() if device.is_ata()]
 
@@ -1203,7 +1203,7 @@ P2351 = 1
         Get all registered phone devices (excluding ATAs)
 
         Returns:
-            List of ProvisioningDevice objects (phones only)
+            list of ProvisioningDevice objects (phones only)
         """
         return [device for device in self.devices.values() if not device.is_ata()]
 
@@ -1385,7 +1385,7 @@ P2351 = 1
             self.logger.warning(
                 f"     curl -X POST {api_protocol}://{server_ip}:{api_port}/api/provisioning/devices \\"
             )
-            self.logger.warning("       -H 'Content-Type: application/json' \\")
+            self.logger.warning("       -H 'Content-type: application/json' \\")
             self.logger.warning(
                 '       -d \'{{"mac_address":"{mac_address}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
             )
@@ -1480,7 +1480,7 @@ P2351 = 1
 
         self.logger.info(f"✓ Successfully generated config for device {mac_address}")
         self.logger.info(
-            f"  Config size: {len(config_content)} bytes, Content-Type: {content_type}"
+            f"  Config size: {len(config_content)} bytes, Content-type: {content_type}"
         )
 
         request_log["success"] = True
@@ -1507,7 +1507,7 @@ P2351 = 1
             limit: Optional limit on number of requests to return
 
         Returns:
-            List of request log dicts
+            list of request log dicts
         """
         if limit:
             return self.provision_requests[-limit:]
@@ -1550,7 +1550,7 @@ P2351 = 1
         Get list of supported vendors
 
         Returns:
-            List of vendor names
+            list of vendor names
         """
         vendors = set()
         for vendor, model in self.templates.keys():
@@ -1565,7 +1565,7 @@ P2351 = 1
             vendor: Optional vendor filter
 
         Returns:
-            List of models or dict of vendor -> models
+            list of models or dict of vendor -> models
         """
         if vendor:
             models = []
@@ -1668,10 +1668,10 @@ P2351 = 1
 
     def list_all_templates(self):
         """
-        List all available templates (both built-in and custom)
+        list all available templates (both built-in and custom)
 
         Returns:
-            List of dicts with template information
+            list of dicts with template information
         """
         templates_list = []
         for (vendor, model), template in self.templates.items():
@@ -1818,7 +1818,7 @@ P2351 = 1
 
     def set_static_ip(self, mac_address, static_ip):
         """
-        Set static IP address for a device
+        set static IP address for a device
 
         Args:
             mac_address: Device MAC address
@@ -1839,7 +1839,7 @@ P2351 = 1
             try:
                 success = self.devices_db.set_static_ip(normalized_mac, static_ip)
                 if success:
-                    self.logger.info(f"Set static IP {static_ip} for device {mac_address}")
+                    self.logger.info(f"set static IP {static_ip} for device {mac_address}")
                     return True, f"Static IP {static_ip} set for device {mac_address}"
                 else:
                     return False, "Failed to update static IP in database"

@@ -197,6 +197,6 @@ class CallRecordingSystem:
             limit: Maximum number of recordings to return
 
         Returns:
-            List of recording metadata
+            list of recording metadata
         """
         return self.recording_metadata[-limit:]

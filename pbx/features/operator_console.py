@@ -6,7 +6,6 @@ Provides advanced call handling for receptionists and front desk staff
 import json
 import os
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
@@ -40,7 +39,7 @@ class OperatorConsole:
         self.blf_status = {}  # {extension: status}
 
         # Call screening queue
-        self.screening_queue = []  # List of calls waiting for screening
+        self.screening_queue = []  # list of calls waiting for screening
 
         # VIP caller database
         self.vip_db_path = config.get("features.operator_console.vip_db_path", "vip_callers.json")
@@ -103,7 +102,7 @@ class OperatorConsole:
 
         return "available"
 
-    def get_all_blf_status(self) -> Dict[str, str]:
+    def get_all_blf_status(self) -> dict[str, str]:
         """
         Get BLF status for all extensions
 
@@ -245,7 +244,7 @@ class OperatorConsole:
 
     def park_and_page(
         self, call_id: str, page_message: str, page_method: str = "log"
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Park call and page staff member
 
@@ -329,7 +328,7 @@ class OperatorConsole:
             }
         )
 
-    def get_directory(self, search_query: str = None) -> List[Dict]:
+    def get_directory(self, search_query: str = None) -> list[dict]:
         """
         Get company directory for quick lookup
 
@@ -337,7 +336,7 @@ class OperatorConsole:
             search_query: Optional search query
 
         Returns:
-            list: List of directory entries
+            list: list of directory entries
         """
         extensions = self.pbx_core.extension_registry.get_all()
         directory = []
@@ -364,7 +363,7 @@ class OperatorConsole:
 
         return sorted(directory, key=lambda x: x["name"])
 
-    def _load_vip_database(self) -> Dict:
+    def _load_vip_database(self) -> dict:
         """
         Load VIP caller database from JSON file
 
@@ -445,7 +444,7 @@ class OperatorConsole:
             return True
         return False
 
-    def get_vip_caller(self, caller_id: str) -> Optional[Dict]:
+    def get_vip_caller(self, caller_id: str) -> dict | None:
         """
         Get VIP caller information
 
@@ -470,16 +469,16 @@ class OperatorConsole:
         """
         return self.get_vip_caller(caller_id) is not None
 
-    def list_vip_callers(self) -> List[Dict]:
+    def list_vip_callers(self) -> list[dict]:
         """
-        List all VIP callers
+        list all VIP callers
 
         Returns:
-            list: List of VIP caller entries
+            list: list of VIP caller entries
         """
         return list(self.vip_callers.values())
 
-    def get_call_queue_status(self) -> Dict:
+    def get_call_queue_status(self) -> dict:
         """
         Get status of all call queues for operator dashboard
 

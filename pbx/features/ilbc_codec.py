@@ -14,7 +14,7 @@ Key Features:
 - Sample rate: 8 kHz (narrowband)
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -53,7 +53,7 @@ class ILBCCodec:
     ENCODED_SIZE_20MS = 38  # bytes per 20ms frame
     ENCODED_SIZE_30MS = 50  # bytes per 30ms frame
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize iLBC codec handler
 
@@ -73,7 +73,7 @@ class ILBCCodec:
             )
             self.mode = self.DEFAULT_MODE
 
-        # Set parameters based on mode
+        # set parameters based on mode
         if self.mode == self.MODE_20MS:
             self.bitrate = self.BITRATE_20MS
             self.frame_size = self.FRAME_SIZE_20MS
@@ -117,12 +117,12 @@ class ILBCCodec:
         """
         return self.ilbc_available
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> dict[str, Any]:
         """
         Get codec information
 
         Returns:
-            Dict with codec details
+            dict with codec details
         """
         return {
             "name": "iLBC",
@@ -162,12 +162,12 @@ class ILBCCodec:
         """
         return f"fmtp:{self.payload_type} mode={self.mode}"
 
-    def get_sdp_parameters(self) -> Dict[str, Any]:
+    def get_sdp_parameters(self) -> dict[str, Any]:
         """
         Get complete SDP parameters
 
         Returns:
-            Dict with SDP negotiation parameters
+            dict with SDP negotiation parameters
         """
         return {
             "payload_type": self.payload_type,
@@ -217,7 +217,7 @@ class ILBCCodec:
             self.logger.error(f"Failed to create iLBC decoder: {e}")
             self.decoder = None
 
-    def encode(self, pcm_data: bytes) -> Optional[bytes]:
+    def encode(self, pcm_data: bytes) -> bytes | None:
         """
         Encode PCM audio to iLBC
 
@@ -248,7 +248,7 @@ class ILBCCodec:
             self.logger.error(f"iLBC encoding failed: {e}")
             return None
 
-    def decode(self, ilbc_data: bytes) -> Optional[bytes]:
+    def decode(self, ilbc_data: bytes) -> bytes | None:
         """
         Decode iLBC audio to PCM
 
@@ -278,7 +278,7 @@ class ILBCCodec:
             self.logger.error(f"iLBC decoding failed: {e}")
             return None
 
-    def handle_packet_loss(self) -> Optional[bytes]:
+    def handle_packet_loss(self) -> bytes | None:
         """
         Generate concealment audio for lost packet
 
@@ -337,7 +337,7 @@ class ILBCCodecManager:
 
         self.logger.info("iLBC codec manager initialized")
 
-    def create_codec(self, call_id: str, config: Optional[Dict[str, Any]] = None) -> ILBCCodec:
+    def create_codec(self, call_id: str, config: dict[str, Any] | None = None) -> ILBCCodec:
         """
         Create iLBC codec instance for a call
 
@@ -358,7 +358,7 @@ class ILBCCodecManager:
         self.logger.debug(f"Created iLBC codec for call {call_id}")
         return codec
 
-    def get_codec(self, call_id: str) -> Optional[ILBCCodec]:
+    def get_codec(self, call_id: str) -> ILBCCodec | None:
         """
         Get codec instance for a call
 
@@ -381,12 +381,12 @@ class ILBCCodecManager:
             del self.codecs[call_id]
             self.logger.debug(f"Removed iLBC codec for call {call_id}")
 
-    def get_all_codecs(self) -> Dict[str, ILBCCodec]:
+    def get_all_codecs(self) -> dict[str, ILBCCodec]:
         """
         Get all codec instances
 
         Returns:
-            Dict mapping call_id to ILBCCodec
+            dict mapping call_id to ILBCCodec
         """
         return self.codecs.copy()
 

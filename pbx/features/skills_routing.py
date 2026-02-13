@@ -4,7 +4,6 @@ Routes calls to agents based on their skills and expertise
 """
 
 from datetime import datetime
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -112,7 +111,7 @@ class SkillsBasedRouter:
         # In-memory storage
         self.skills = {}  # skill_id -> Skill
         self.agent_skills = {}  # agent_extension -> {skill_id -> AgentSkill}
-        self.queue_requirements = {}  # queue_number -> List[SkillRequirement]
+        self.queue_requirements = {}  # queue_number -> list[SkillRequirement]
 
         # Initialize database schema
         if self.database and self.database.enabled:
@@ -348,13 +347,13 @@ class SkillsBasedRouter:
 
         return False
 
-    def set_queue_requirements(self, queue_number: str, requirements: List[Dict]) -> bool:
+    def set_queue_requirements(self, queue_number: str, requirements: list[dict]) -> bool:
         """
-        Set skill requirements for a queue
+        set skill requirements for a queue
 
         Args:
             queue_number: Queue number
-            requirements: List of skill requirement dicts with 'skill_id', 'min_proficiency', 'required'
+            requirements: list of skill requirement dicts with 'skill_id', 'min_proficiency', 'required'
 
         Returns:
             True if requirements were set
@@ -409,23 +408,23 @@ class SkillsBasedRouter:
                 self.logger.error(f"Failed to store queue requirements in database: {e}")
 
         self.logger.info(
-            f"Set {len(skill_reqs)} skill requirements for queue {queue_number}"
+            f"set {len(skill_reqs)} skill requirements for queue {queue_number}"
         )
         return True
 
     def find_best_agents(
-        self, queue_number: str, available_agents: List[str], max_results: int = 5
-    ) -> List[Dict]:
+        self, queue_number: str, available_agents: list[str], max_results: int = 5
+    ) -> list[dict]:
         """
         Find best agents for a queue based on skill requirements
 
         Args:
             queue_number: Queue number
-            available_agents: List of available agent extensions
+            available_agents: list of available agent extensions
             max_results: Maximum number of agents to return
 
         Returns:
-            List of agent dicts with 'extension', 'score', 'matching_skills'
+            list of agent dicts with 'extension', 'score', 'matching_skills'
         """
         if queue_number not in self.queue_requirements:
             # No requirements, return all available agents
@@ -462,13 +461,13 @@ class SkillsBasedRouter:
         return scored_agents[:max_results]
 
     def _calculate_agent_score(
-        self, agent_extension: str, requirements: List[SkillRequirement]
+        self, agent_extension: str, requirements: list[SkillRequirement]
     ) -> tuple:
         """
         Calculate agent score based on skill requirements
 
         Returns:
-            Tuple of (score, matching_skills)
+            tuple of (score, matching_skills)
         """
         if agent_extension not in self.agent_skills:
             return (0.0, [])
@@ -515,7 +514,7 @@ class SkillsBasedRouter:
 
         return (total_score, matching_skills)
 
-    def get_agent_skills(self, agent_extension: str) -> List[Dict]:
+    def get_agent_skills(self, agent_extension: str) -> list[dict]:
         """
         Get all skills for an agent
 
@@ -523,7 +522,7 @@ class SkillsBasedRouter:
             agent_extension: Agent's extension number
 
         Returns:
-            List of skill dicts
+            list of skill dicts
         """
         if agent_extension not in self.agent_skills:
             return []
@@ -538,11 +537,11 @@ class SkillsBasedRouter:
 
         return skills
 
-    def get_all_skills(self) -> List[Dict]:
+    def get_all_skills(self) -> list[dict]:
         """Get all available skills"""
         return [skill.to_dict() for skill in self.skills.values()]
 
-    def get_queue_requirements(self, queue_number: str) -> List[Dict]:
+    def get_queue_requirements(self, queue_number: str) -> list[dict]:
         """
         Get skill requirements for a queue
 
@@ -550,7 +549,7 @@ class SkillsBasedRouter:
             queue_number: Queue number
 
         Returns:
-            List of requirement dicts
+            list of requirement dicts
         """
         if queue_number not in self.queue_requirements:
             return []

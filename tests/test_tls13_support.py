@@ -6,22 +6,18 @@ Verifies that the PBX system supports TLS 1.3 for secure communications
 
 import os
 import ssl
-import sys
 import tempfile
 import time
 import traceback
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 from pbx.utils.tls_support import TLSManager
 
 
-def generate_test_certificate() -> tuple[Optional[str], Optional[str]]:
+def generate_test_certificate() -> tuple[str | None, str | None]:
     """Generate a test certificate for TLS testing"""
     try:
         from datetime import datetime, timedelta, timezone
@@ -32,7 +28,6 @@ def generate_test_certificate() -> tuple[Optional[str], Optional[str]]:
         from cryptography.hazmat.primitives.asymmetric import rsa
         from cryptography.x509.oid import NameOID
     except ImportError:
-        print("cryptography module not available, skipping certificate generation")
         return None, None
 
     # Generate private key
@@ -87,87 +82,59 @@ def generate_test_certificate() -> tuple[Optional[str], Optional[str]]:
 
 def test_tls_version_availability() -> bool:
     """Test that TLS 1.3 is available in Python ssl module"""
-    print("=" * 60)
-    print("Test 1: TLS 1.3 Availability")
-    print("=" * 60)
 
     # Check if TLS 1.3 is available
     has_tls13 = hasattr(ssl.TLSVersion, "TLSv1_3")
-    print(f"  TLS 1.3 available in ssl module: {has_tls13}")
 
-    if has_tls13:
-        print("  ✓ TLS 1.3 is supported (ssl.TLSVersion.TLSv1_3)")
-    else:
-        print("  ✗ TLS 1.3 is not supported")
+    if not has_tls13:
         return False
 
     # List all available TLS versions
     tls_versions = [attr for attr in dir(ssl.TLSVersion) if attr.startswith("TLS")]
-    print(f"  Available TLS versions: {', '.join(tls_versions)}")
 
-    print()
     return True
 
 
 def test_tls_manager_context() -> bool:
     """Test TLSManager creates context that supports TLS 1.3"""
-    print("=" * 60)
-    print("Test 2: TLSManager TLS 1.3 Support")
-    print("=" * 60)
 
     # Generate test certificate
     cert_file, key_file = generate_test_certificate()
     if not cert_file or not key_file:
-        print("  ⚠ Could not generate test certificate, skipping test")
         return True
 
     try:
         # Test with FIPS mode disabled
-        print("  Testing TLSManager (FIPS mode: disabled)...")
         tls_manager = TLSManager(cert_file=cert_file, key_file=key_file, fips_mode=False)
 
         if not tls_manager.is_available():
-            print("  ✗ TLS context not created")
             return False
 
         # Check SSL context configuration
         ctx = tls_manager.ssl_context
-        print("  ✓ SSL context created")
-        print(f"  Minimum TLS version: {ctx.minimum_version}")
 
         # Verify minimum version is at least TLS 1.2
         if ctx.minimum_version < ssl.TLSVersion.TLSv1_2:
-            print("  ✗ Minimum TLS version should be at least 1.2")
             return False
 
-        print(f"  ✓ Minimum TLS version is {ctx.minimum_version.name}")
 
         # Check that no maximum version is set (allows TLS 1.3)
         max_version = getattr(ctx, "maximum_version", ssl.TLSVersion.MAXIMUM_SUPPORTED)
-        print(f"  Maximum TLS version: {max_version}")
 
-        if max_version == ssl.TLSVersion.MAXIMUM_SUPPORTED:
-            print("  ✓ TLS 1.3 is allowed (no maximum version restriction)")
-        else:
-            print(f"  ⚠ Maximum TLS version is restricted to {max_version.name}")
+        if max_version != ssl.TLSVersion.MAXIMUM_SUPPORTED:
+            pass
 
         # Test with FIPS mode enabled
-        print("\n  Testing TLSManager (FIPS mode: enabled)...")
         tls_manager_fips = TLSManager(cert_file=cert_file, key_file=key_file, fips_mode=True)
 
         if not tls_manager_fips.is_available():
-            print("  ✗ TLS context not created with FIPS mode")
             return False
 
         ctx_fips = tls_manager_fips.ssl_context
-        print("  ✓ SSL context created with FIPS mode")
-        print(f"  Minimum TLS version: {ctx_fips.minimum_version}")
 
         if ctx_fips.minimum_version < ssl.TLSVersion.TLSv1_2:
-            print("  ✗ Minimum TLS version should be at least 1.2 in FIPS mode")
             return False
 
-        print(f"  ✓ FIPS mode minimum TLS version is {ctx_fips.minimum_version.name}")
 
     finally:
         # Clean up temporary files
@@ -176,20 +143,15 @@ def test_tls_manager_context() -> bool:
         if key_file:
             os.unlink(key_file)
 
-    print()
     return True
 
 
 def test_api_server_tls13_support() -> bool:
     """Test that API server supports TLS 1.3"""
-    print("=" * 60)
-    print("Test 3: API Server TLS 1.3 Support")
-    print("=" * 60)
 
     # Generate test certificate
     cert_file, key_file = generate_test_certificate()
     if not cert_file or not key_file:
-        print("  ⚠ Could not generate test certificate, skipping test")
         return True
 
     try:
@@ -219,39 +181,28 @@ def test_api_server_tls13_support() -> bool:
         mock_pbx = MockPBXCore()
 
         # Create API server
-        print("  Creating API server with SSL...")
         api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=9999)
 
         if not api_server.ssl_enabled:
-            print("  ✗ SSL should be enabled")
             return False
 
         if api_server.ssl_context is None:
-            print("  ✗ SSL context should be created")
             return False
 
-        print("  ✓ API server created with SSL enabled")
 
         # Check SSL context configuration
         ctx = api_server.ssl_context
-        print(f"  Minimum TLS version: {ctx.minimum_version}")
 
         if ctx.minimum_version < ssl.TLSVersion.TLSv1_2:
-            print("  ✗ Minimum TLS version should be at least 1.2")
             return False
 
-        print(f"  ✓ Minimum TLS version is {ctx.minimum_version.name}")
 
         # Check that TLS 1.3 is allowed
         max_version = getattr(ctx, "maximum_version", ssl.TLSVersion.MAXIMUM_SUPPORTED)
-        print(f"  Maximum TLS version: {max_version}")
 
-        if max_version == ssl.TLSVersion.MAXIMUM_SUPPORTED:
-            print("  ✓ TLS 1.3 is allowed (no maximum version restriction)")
-        else:
-            print(f"  ⚠ Maximum TLS version is restricted to {max_version.name}")
+        if max_version != ssl.TLSVersion.MAXIMUM_SUPPORTED:
+            pass
 
-        print("  ✓ API server SSL context supports TLS 1.2-1.3")
 
     finally:
         # Clean up temporary files
@@ -260,27 +211,21 @@ def test_api_server_tls13_support() -> bool:
         if key_file:
             os.unlink(key_file)
 
-    print()
     return True
 
 
 def test_ssl_context_security_options() -> bool:
     """Test that SSL context has proper security options set"""
-    print("=" * 60)
-    print("Test 4: SSL Context Security Options")
-    print("=" * 60)
 
     # Generate test certificate
     cert_file, key_file = generate_test_certificate()
     if not cert_file or not key_file:
-        print("  ⚠ Could not generate test certificate, skipping test")
         return True
 
     try:
         tls_manager = TLSManager(cert_file=cert_file, key_file=key_file, fips_mode=False)
 
         if not tls_manager.is_available():
-            print("  ✗ TLS context not created")
             return False
 
         ctx = tls_manager.ssl_context
@@ -299,24 +244,17 @@ def test_ssl_context_security_options() -> bool:
 
         all_set = True
         for option, name in required_options:
-            if options & option:
-                print(f"  ✓ {name} is set (insecure protocol disabled)")
-            else:
-                print(f"  ✗ {name} is not set")
+            if not options & option:
                 all_set = False
 
         # Check OP_NO_SSLv2 separately as it may not be set in modern OpenSSL
         if hasattr(ssl, "OP_NO_SSLv2"):
-            if options & ssl.OP_NO_SSLv2:
-                print("  ✓ OP_NO_SSLv2 is set (insecure protocol disabled)")
-            else:
-                # This is not a failure - modern OpenSSL may not have SSLv2 at all
-                print("  ℹ OP_NO_SSLv2 not set (likely SSLv2 is not compiled in OpenSSL)")
+            if not options & ssl.OP_NO_SSLv2:
+                pass  # Not a failure - modern OpenSSL may not have SSLv2
 
         if not all_set:
             return False
 
-        print("  ✓ All critical insecure protocols (SSLv3, TLSv1, TLSv1.1) are disabled")
 
     finally:
         # Clean up temporary files
@@ -325,16 +263,11 @@ def test_ssl_context_security_options() -> bool:
         if key_file:
             os.unlink(key_file)
 
-    print()
     return True
 
 
 def main() -> bool:
     """Run all TLS 1.3 support tests"""
-    print("\n" + "=" * 60)
-    print("TLS 1.3 Support Tests")
-    print("=" * 60)
-    print()
 
     tests = [
         ("TLS 1.3 Availability", test_tls_version_availability),
@@ -350,22 +283,11 @@ def main() -> bool:
         try:
             if test_func():
                 passed += 1
-                print(f"✓ {test_name} passed\n")
             else:
                 failed += 1
-                print(f"✗ {test_name} failed\n")
         except Exception as e:
             failed += 1
-            print(f"✗ {test_name} error: {e}\n")
             traceback.print_exc()
 
-    print("=" * 60)
-    print(f"Tests completed: {passed} passed, {failed} failed")
-    print("=" * 60)
 
     return failed == 0
-
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)

@@ -4,7 +4,6 @@ Provides persistence for conversations, intents, and statistics
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -148,7 +147,7 @@ class ConversationalAIDatabase:
 
     def save_conversation(
         self, call_id: str, caller_id: str, started_at: datetime
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Save a new conversation
 
@@ -218,7 +217,7 @@ class ConversationalAIDatabase:
         conversation_id: int,
         intent: str,
         confidence: float,
-        entities: Dict,
+        entities: dict,
         timestamp: datetime,
     ):
         """Save detected intent"""
@@ -285,7 +284,7 @@ class ConversationalAIDatabase:
         except Exception as e:
             self.logger.error(f"Error ending conversation: {e}")
 
-    def get_conversation_history(self, limit: int = 100) -> List[Dict]:
+    def get_conversation_history(self, limit: int = 100) -> list[dict]:
         """Get recent conversation history"""
         try:
             cursor = self.db.connection.cursor()
@@ -324,7 +323,7 @@ class ConversationalAIDatabase:
             self.logger.error(f"Error getting conversation history: {e}")
             return []
 
-    def get_intent_statistics(self) -> Dict:
+    def get_intent_statistics(self) -> dict:
         """Get intent usage statistics"""
         try:
             cursor = self.db.connection.cursor()

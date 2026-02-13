@@ -3,11 +3,6 @@
 Tests for phone MAC-to-IP correlation feature
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.phone_provisioning import PhoneProvisioning, normalize_mac_address
 from pbx.utils.config import Config
@@ -16,7 +11,6 @@ from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 def test_mac_normalization() -> None:
     """Test MAC address normalization used in lookups"""
-    print("Testing MAC address normalization...")
 
     test_cases = [
         ("00:15:65:12:34:56", "001565123456"),
@@ -30,12 +24,9 @@ def test_mac_normalization() -> None:
         result = normalize_mac_address(input_mac)
         assert result == expected, f"MAC {input_mac} normalized to {result}, expected {expected}"
 
-    print("✓ MAC address normalization works correctly")
-
 
 def test_provisioned_device_structure() -> None:
     """Test that provisioned devices have required fields for correlation"""
-    print("Testing provisioned device data structure...")
 
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
@@ -56,19 +47,15 @@ def test_provisioned_device_structure() -> None:
     assert "vendor" in device_dict, "Device dict should have vendor"
     assert "model" in device_dict, "Device dict should have model"
 
-    print("✓ Provisioned device structure is correct")
-
 
 def test_registered_phone_lookup_methods() -> None:
     """Test RegisteredPhonesDB lookup methods"""
-    print("Testing registered phone lookup methods...")
 
     # Create in-memory SQLite database for testing
     config = {"database.type": "sqlite", "database.path": ":memory:"}
 
     db = DatabaseBackend(config)
     if not db.connect():
-        print("⚠ Skipping test - could not connect to test database")
         return
 
     db.create_tables()
@@ -103,12 +90,9 @@ def test_registered_phone_lookup_methods() -> None:
     assert phones_by_ext[0]["mac_address"] == "001565123456", "MAC should match"
     assert phones_by_ext[0]["ip_address"] == "192.168.1.100", "IP should match"
 
-    print("✓ Registered phone lookup methods work correctly")
-
 
 def test_correlation_scenario_mac_to_ip() -> None:
     """Test correlation: Given MAC, find IP"""
-    print("Testing MAC-to-IP correlation scenario...")
 
     # Setup
     config = Config("config.yml")
@@ -118,7 +102,6 @@ def test_correlation_scenario_mac_to_ip() -> None:
     db_config = {"database.type": "sqlite", "database.path": ":memory:"}
     db = DatabaseBackend(db_config)
     if not db.connect():
-        print("⚠ Skipping test - could not connect to test database")
         return
     db.create_tables()
     registered_phones_db = RegisteredPhonesDB(db)
@@ -149,12 +132,9 @@ def test_correlation_scenario_mac_to_ip() -> None:
     assert len(phones) > 0, "Should find phones by extension"
     assert phones[0]["ip_address"] == "192.168.1.100", "Should get correct IP"
 
-    print("✓ MAC-to-IP correlation works")
-
 
 def test_correlation_scenario_ip_to_mac() -> None:
     """Test correlation: Given IP, find MAC"""
-    print("Testing IP-to-MAC correlation scenario...")
 
     # Setup
     config = Config("config.yml")
@@ -164,7 +144,6 @@ def test_correlation_scenario_ip_to_mac() -> None:
     db_config = {"database.type": "sqlite", "database.path": ":memory:"}
     db = DatabaseBackend(db_config)
     if not db.connect():
-        print("⚠ Skipping test - could not connect to test database")
         return
     db.create_tables()
     registered_phones_db = RegisteredPhonesDB(db)
@@ -200,18 +179,14 @@ def test_correlation_scenario_ip_to_mac() -> None:
     assert device_with_mac.vendor == "polycom", "Should get correct vendor"
     assert device_with_mac.model == "vvx450", "Should get correct model"
 
-    print("✓ IP-to-MAC correlation works")
-
 
 def test_no_mac_in_sip_registration() -> None:
     """Test scenario where phone doesn't provide MAC in SIP REGISTER"""
-    print("Testing scenario with no MAC in SIP registration...")
 
     # Create in-memory database
     db_config = {"database.type": "sqlite", "database.path": ":memory:"}
     db = DatabaseBackend(db_config)
     if not db.connect():
-        print("⚠ Skipping test - could not connect to test database")
         return
     db.create_tables()
     registered_phones_db = RegisteredPhonesDB(db)
@@ -231,53 +206,3 @@ def test_no_mac_in_sip_registration() -> None:
     assert phone is not None, "Should find phone by IP"
     assert phone["mac_address"] is None, "MAC should be None"
     assert phone["ip_address"] == "192.168.1.102", "IP should be correct"
-
-    print("✓ Phone registration without MAC works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all tests"""
-    print("=" * 60)
-    print("Phone MAC-to-IP Correlation Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_mac_normalization,
-        test_provisioned_device_structure,
-        test_registered_phone_lookup_methods,
-        test_correlation_scenario_mac_to_ip,
-        test_correlation_scenario_ip_to_mac,
-        test_no_mac_in_sip_registration,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-            print()
-        except AssertionError as e:
-            print(f"✗ Test failed: {e}")
-            failed += 1
-            print()
-        except Exception as e:
-            print(f"✗ Test error: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-            print()
-
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

@@ -1,11 +1,10 @@
 """
 Compliance Framework
-SOC 2 Type 2 compliance features
+SOC 2 type 2 compliance features
 Note: GDPR and PCI DSS engines are commented out as they are not required for US-based operations
 """
 
 from datetime import datetime
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -35,7 +34,7 @@ from pbx.utils.logger import get_logger
 #
 #         self.logger.info("GDPR Compliance Framework initialized")
 #
-#     def record_consent(self, consent_data: Dict) -> bool:
+#     def record_consent(self, consent_data: dict) -> bool:
 #         \"\"\"
 #         Record user consent
 #
@@ -83,7 +82,7 @@ from pbx.utils.logger import get_logger
 #
 #         Args:
 #             extension: Extension number
-#             consent_type: Type of consent
+#             consent_type: type of consent
 #
 #         Returns:
 #             bool: True if successful
@@ -107,7 +106,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.error(f"Failed to withdraw consent: {e}")
 #             return False
 #
-#     def get_consent_status(self, extension: str) -> List[Dict]:
+#     def get_consent_status(self, extension: str) -> list[dict]:
 #         \"\"\"
 #         Get consent status for extension
 #
@@ -115,7 +114,7 @@ from pbx.utils.logger import get_logger
 #             extension: Extension number
 #
 #         Returns:
-#             List of consent records
+#             list of consent records
 #         \"\"\"
 #         try:
 #             result = self.db.execute(
@@ -145,7 +144,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.error(f"Failed to get consent status: {e}")
 #             return []
 #
-#     def create_data_request(self, request_data: Dict) -> Optional[int]:
+#     def create_data_request(self, request_data: dict) -> int | None:
 #         \"\"\"
 #         Create GDPR data request (access, portability, erasure)
 #
@@ -225,12 +224,12 @@ from pbx.utils.logger import get_logger
 #             self.logger.error(f"Failed to complete data request: {e}")
 #             return False
 #
-#     def get_pending_requests(self) -> List[Dict]:
+#     def get_pending_requests(self) -> list[dict]:
 #         \"\"\"
 #         Get all pending GDPR data requests
 #
 #         Returns:
-#             List of request dictionaries
+#             list of request dictionaries
 #         \"\"\"
 #         try:
 #             result = self.db.execute(
@@ -265,7 +264,7 @@ from pbx.utils.logger import get_logger
 
 class SOC2ComplianceEngine:
     """
-    SOC 2 Type II compliance framework
+    SOC 2 type II compliance framework
     Fully implemented security and compliance controls
     Covers Trust Services Criteria: Security, Availability, Processing Integrity,
     Confidentiality, and Privacy
@@ -273,7 +272,7 @@ class SOC2ComplianceEngine:
 
     def __init__(self, db_backend, config: dict):
         """
-        Initialize SOC 2 Type II compliance engine
+        Initialize SOC 2 type II compliance engine
 
         Args:
             db_backend: DatabaseBackend instance
@@ -284,13 +283,13 @@ class SOC2ComplianceEngine:
         self.config = config
         self.enabled = config.get("soc2.enabled", True)
 
-        self.logger.info("SOC 2 Type II Compliance Framework initialized")
+        self.logger.info("SOC 2 type II Compliance Framework initialized")
 
-        # Initialize default SOC 2 Type 2 controls
+        # Initialize default SOC 2 type 2 controls
         self._initialize_default_controls()
 
     def _initialize_default_controls(self):
-        """Initialize default SOC 2 Type 2 controls"""
+        """Initialize default SOC 2 type 2 controls"""
         default_controls = [
             # Security (Common Criteria)
             {
@@ -400,7 +399,7 @@ class SOC2ComplianceEngine:
             except Exception as e:
                 self.logger.debug(f"Control {control['control_id']} may already exist: {e}")
 
-    def register_control(self, control_data: Dict) -> bool:
+    def register_control(self, control_data: dict) -> bool:
         """
         Register SOC 2 control
 
@@ -502,12 +501,12 @@ class SOC2ComplianceEngine:
             self.logger.error(f"Failed to update control test: {e}")
             return False
 
-    def get_all_controls(self) -> List[Dict]:
+    def get_all_controls(self) -> list[dict]:
         """
         Get all SOC 2 controls
 
         Returns:
-            List of control dictionaries
+            list of control dictionaries
         """
         try:
             result = self.db.fetch_all("SELECT * FROM soc2_controls ORDER BY control_id")
@@ -531,7 +530,7 @@ class SOC2ComplianceEngine:
             self.logger.error(f"Failed to get controls: {e}")
             return []
 
-    def get_controls_by_category(self, category: str) -> List[Dict]:
+    def get_controls_by_category(self, category: str) -> list[dict]:
         """
         Get SOC 2 controls by category
 
@@ -539,7 +538,7 @@ class SOC2ComplianceEngine:
             category: Control category (Security, Availability, Processing Integrity, etc.)
 
         Returns:
-            List of control dictionaries
+            list of control dictionaries
         """
         try:
             result = self.db.fetch_all(
@@ -574,7 +573,7 @@ class SOC2ComplianceEngine:
             self.logger.error(f"Failed to get controls by category: {e}")
             return []
 
-    def get_compliance_summary(self) -> Dict:
+    def get_compliance_summary(self) -> dict:
         """
         Get SOC 2 compliance summary
 
@@ -638,7 +637,7 @@ class SOC2ComplianceEngine:
 #
 #         self.logger.info("PCI DSS Compliance Framework initialized")
 #
-#     def log_audit_event(self, event_data: Dict) -> bool:
+#     def log_audit_event(self, event_data: dict) -> bool:
 #         \"\"\"
 #         Log PCI DSS audit event
 #
@@ -672,7 +671,7 @@ class SOC2ComplianceEngine:
 #             self.logger.error(f"Failed to log audit event: {e}")
 #             return False
 #
-#     def get_audit_log(self, limit: int = 1000, event_type: Optional[str] = None) -> List[Dict]:
+#     def get_audit_log(self, limit: int = 1000, event_type: str | None = None) -> list[dict]:
 #         \"\"\"
 #         Get PCI DSS audit log
 #
@@ -681,7 +680,7 @@ class SOC2ComplianceEngine:
 #             event_type: Filter by event type
 #
 #         Returns:
-#             List of audit log dictionaries
+#             list of audit log dictionaries
 #         \"\"\"
 #         try:
 #             if event_type:

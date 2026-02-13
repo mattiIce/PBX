@@ -7,7 +7,6 @@ import json
 import os
 import traceback
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
@@ -303,7 +302,7 @@ class DatabaseBackend:
                 self.connection.rollback()
             return False
 
-    def fetch_one(self, query: str, params: tuple = None) -> Optional[Dict]:
+    def fetch_one(self, query: str, params: tuple = None) -> dict | None:
         """
         Fetch single row
 
@@ -346,7 +345,7 @@ class DatabaseBackend:
                 self.connection.rollback()
             return None
 
-    def fetch_all(self, query: str, params: tuple = None) -> List[Dict]:
+    def fetch_all(self, query: str, params: tuple = None) -> list[dict]:
         """
         Fetch all rows
 
@@ -355,7 +354,7 @@ class DatabaseBackend:
             params: Query parameters
 
         Returns:
-            list: List of row dictionaries
+            list: list of row dictionaries
         """
         if not self.enabled or not self.connection:
             return []
@@ -874,7 +873,7 @@ class VIPCallerDB:
         )
         return self.db.execute(query, (caller_id,))
 
-    def get_vip(self, caller_id: str) -> Optional[Dict]:
+    def get_vip(self, caller_id: str) -> dict | None:
         """Get VIP caller information"""
         query = (
             "SELECT * FROM vip_callers WHERE caller_id = %s"
@@ -883,8 +882,8 @@ class VIPCallerDB:
         )
         return self.db.fetch_one(query, (caller_id,))
 
-    def list_vips(self, priority_level: int = None) -> List[Dict]:
-        """List all VIP callers"""
+    def list_vips(self, priority_level: int = None) -> list[dict]:
+        """list all VIP callers"""
         if priority_level:
             query = (
                 "SELECT * FROM vip_callers WHERE priority_level = %s ORDER BY name"
@@ -921,7 +920,7 @@ class RegisteredPhonesDB:
         mac_address: str = None,
         user_agent: str = None,
         contact_uri: str = None,
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Register or update a phone registration
 
@@ -933,7 +932,7 @@ class RegisteredPhonesDB:
             contact_uri: Contact URI from SIP message
 
         Returns:
-            tuple[bool, Optional[str]]: Success status and the actual MAC address stored (or None)
+            tuple[bool, str | None]: Success status and the actual MAC address stored (or None)
         """
         # First, check if this MAC or IP is registered to a DIFFERENT extension
         # This handles reprovisioning: when a phone is moved from one extension
@@ -1043,7 +1042,7 @@ class RegisteredPhonesDB:
             success = self.db.execute(query, params)
             return (success, mac_address)
 
-    def get_by_mac(self, mac_address: str, extension_number: str = None) -> Optional[Dict]:
+    def get_by_mac(self, mac_address: str, extension_number: str = None) -> dict | None:
         """
         Get phone registration by MAC address
 
@@ -1079,7 +1078,7 @@ class RegisteredPhonesDB:
             )
             return self.db.fetch_one(query, (mac_address,))
 
-    def get_by_ip(self, ip_address: str, extension_number: str = None) -> Optional[Dict]:
+    def get_by_ip(self, ip_address: str, extension_number: str = None) -> dict | None:
         """
         Get phone registration by IP address
 
@@ -1115,7 +1114,7 @@ class RegisteredPhonesDB:
             )
             return self.db.fetch_one(query, (ip_address,))
 
-    def get_by_extension(self, extension_number: str) -> List[Dict]:
+    def get_by_extension(self, extension_number: str) -> list[dict]:
         """
         Get all phone registrations for an extension
 
@@ -1123,7 +1122,7 @@ class RegisteredPhonesDB:
             extension_number: Extension number
 
         Returns:
-            list: List of phone registration data
+            list: list of phone registration data
         """
         query = (
             """
@@ -1140,12 +1139,12 @@ class RegisteredPhonesDB:
         )
         return self.db.fetch_all(query, (extension_number,))
 
-    def list_all(self) -> List[Dict]:
+    def list_all(self) -> list[dict]:
         """
-        List all registered phones
+        list all registered phones
 
         Returns:
-            list: List of all phone registrations
+            list: list of all phone registrations
         """
         query = """
         SELECT * FROM registered_phones
@@ -1378,7 +1377,7 @@ class ExtensionDB:
             ),
         )
 
-    def get(self, number: str) -> Optional[Dict]:
+    def get(self, number: str) -> dict | None:
         """
         Get extension by number
 
@@ -1399,24 +1398,24 @@ class ExtensionDB:
         )
         return self.db.fetch_one(query, (number,))
 
-    def get_all(self) -> List[Dict]:
+    def get_all(self) -> list[dict]:
         """
         Get all extensions
 
         Returns:
-            list: List of all extensions
+            list: list of all extensions
         """
         query = """
         SELECT * FROM extensions ORDER BY number
         """
         return self.db.fetch_all(query)
 
-    def get_ad_synced(self) -> List[Dict]:
+    def get_ad_synced(self) -> list[dict]:
         """
         Get all AD-synced extensions
 
         Returns:
-            list: List of AD-synced extensions
+            list: list of AD-synced extensions
         """
         query = (
             """
@@ -1560,7 +1559,7 @@ class ExtensionDB:
         )
         return self.db.execute(query, (number,))
 
-    def search(self, query_str: str) -> List[Dict]:
+    def search(self, query_str: str) -> list[dict]:
         """
         Search extensions by number, name, or email
 
@@ -1568,7 +1567,7 @@ class ExtensionDB:
             query_str: Search query
 
         Returns:
-            list: List of matching extensions
+            list: list of matching extensions
         """
         search_pattern = f"%{query_str}%"
         query = (
@@ -1629,12 +1628,12 @@ class ExtensionDB:
 
     def set_config(self, key: str, value, config_type: str = "string", updated_by: str = None):
         """
-        Set a configuration value
+        set a configuration value
 
         Args:
             key: Configuration key
             value: Configuration value
-            config_type: Type of value (string, int, bool, json)
+            config_type: type of value (string, int, bool, json)
             updated_by: User who updated the config
 
         Returns:
@@ -1797,7 +1796,7 @@ class ProvisionedDevicesDB:
 
         return self.db.execute(query, params)
 
-    def get_device(self, mac_address: str) -> Optional[Dict]:
+    def get_device(self, mac_address: str) -> dict | None:
         """
         Get provisioned device by MAC address
 
@@ -1818,7 +1817,7 @@ class ProvisionedDevicesDB:
         )
         return self.db.fetch_one(query, (mac_address,))
 
-    def get_device_by_extension(self, extension_number: str) -> Optional[Dict]:
+    def get_device_by_extension(self, extension_number: str) -> dict | None:
         """
         Get provisioned device by extension number
 
@@ -1839,7 +1838,7 @@ class ProvisionedDevicesDB:
         )
         return self.db.fetch_one(query, (extension_number,))
 
-    def get_device_by_ip(self, static_ip: str) -> Optional[Dict]:
+    def get_device_by_ip(self, static_ip: str) -> dict | None:
         """
         Get provisioned device by static IP address
 
@@ -1860,12 +1859,12 @@ class ProvisionedDevicesDB:
         )
         return self.db.fetch_one(query, (static_ip,))
 
-    def list_all(self) -> List[Dict]:
+    def list_all(self) -> list[dict]:
         """
-        List all provisioned devices
+        list all provisioned devices
 
         Returns:
-            list: List of all provisioned devices
+            list: list of all provisioned devices
         """
         query = """
         SELECT * FROM provisioned_devices
@@ -1873,15 +1872,15 @@ class ProvisionedDevicesDB:
         """
         return self.db.fetch_all(query)
 
-    def list_by_type(self, device_type: str) -> List[Dict]:
+    def list_by_type(self, device_type: str) -> list[dict]:
         """
-        List provisioned devices by type
+        list provisioned devices by type
 
         Args:
             device_type: Device type ('phone' or 'ata')
 
         Returns:
-            list: List of provisioned devices of specified type
+            list: list of provisioned devices of specified type
         """
         query = (
             """
@@ -1898,21 +1897,21 @@ class ProvisionedDevicesDB:
         )
         return self.db.fetch_all(query, (device_type,))
 
-    def list_atas(self) -> List[Dict]:
+    def list_atas(self) -> list[dict]:
         """
-        List all provisioned ATAs
+        list all provisioned ATAs
 
         Returns:
-            list: List of all provisioned ATA devices
+            list: list of all provisioned ATA devices
         """
         return self.list_by_type("ata")
 
-    def list_phones(self) -> List[Dict]:
+    def list_phones(self) -> list[dict]:
         """
-        List all provisioned phones (excluding ATAs)
+        list all provisioned phones (excluding ATAs)
 
         Returns:
-            list: List of all provisioned phone devices
+            list: list of all provisioned phone devices
         """
         return self.list_by_type("phone")
 
@@ -1977,7 +1976,7 @@ class ProvisionedDevicesDB:
 
     def set_static_ip(self, mac_address: str, static_ip: str) -> bool:
         """
-        Set or update static IP for a device
+        set or update static IP for a device
 
         Args:
             mac_address: MAC address

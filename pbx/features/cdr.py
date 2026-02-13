@@ -149,7 +149,7 @@ class CDRSystem:
 
     def set_recording(self, call_id, recording_file):
         """
-        Set recording file for call
+        set recording file for call
 
         Args:
             call_id: Call identifier
@@ -186,7 +186,7 @@ class CDRSystem:
             limit: Maximum number of records
 
         Returns:
-            List of CDR dictionaries
+            list of CDR dictionaries
         """
         if date is None:
             date = datetime.now().strftime("%Y-%m-%d")

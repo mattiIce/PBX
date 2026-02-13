@@ -5,7 +5,6 @@ Call and voicemail alerts using FCM (Firebase Cloud Messaging - free)
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -381,8 +380,8 @@ class MobilePushNotifications:
         return False
 
     def send_call_notification(
-        self, user_id: str, caller_id: str, caller_name: Optional[str] = None
-    ) -> Dict:
+        self, user_id: str, caller_id: str, caller_name: str | None = None
+    ) -> dict:
         """
         Send incoming call notification
 
@@ -420,7 +419,7 @@ class MobilePushNotifications:
 
     def send_voicemail_notification(
         self, user_id: str, message_id: str, caller_id: str, duration: int
-    ) -> Dict:
+    ) -> dict:
         """Send new voicemail notification"""
         if not self.enabled or not self.firebase_app:
             return {"error": "Push notifications not available"}
@@ -448,8 +447,8 @@ class MobilePushNotifications:
         return result
 
     def send_missed_call_notification(
-        self, user_id: str, caller_id: str, call_time: Optional[datetime] = None
-    ) -> Dict:
+        self, user_id: str, caller_id: str, call_time: datetime | None = None
+    ) -> dict:
         """Send missed call notification"""
         if not self.enabled or not self.firebase_app:
             return {"error": "Push notifications not available"}
@@ -475,8 +474,8 @@ class MobilePushNotifications:
         return result
 
     def _send_notification(
-        self, user_id: str, title: str, body: str, data: Optional[Dict] = None
-    ) -> Dict:
+        self, user_id: str, title: str, body: str, data: dict | None = None
+    ) -> dict:
         """Send push notification to all user's devices"""
         if not FIREBASE_AVAILABLE or not self.firebase_app:
             # Stub mode - log notification
@@ -531,7 +530,7 @@ class MobilePushNotifications:
 
             return {"error": str(e)}
 
-    def get_user_devices(self, user_id: str) -> List[Dict]:
+    def get_user_devices(self, user_id: str) -> list[dict]:
         """Get list of registered devices for a user"""
         devices = self.device_tokens.get(user_id, [])
         return [
@@ -564,7 +563,7 @@ class MobilePushNotifications:
         if removed_count > 0:
             self.logger.info(f"Cleaned up {removed_count} stale devices")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get push notification statistics"""
         total_devices = sum(len(tokens) for tokens in self.device_tokens.values())
         recent_notifications = len(
@@ -583,7 +582,7 @@ class MobilePushNotifications:
             "notifications_24h": recent_notifications,
         }
 
-    def send_test_notification(self, user_id: str) -> Dict:
+    def send_test_notification(self, user_id: str) -> dict:
         """
         Send a test push notification to a user
 

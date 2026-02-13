@@ -2,13 +2,9 @@
 """
 Tests for voicemail email notification system
 """
-import os
 import shutil
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.email_notification import EmailNotifier
 from pbx.features.voicemail import VoicemailSystem
@@ -17,7 +13,6 @@ from pbx.utils.config import Config
 
 def test_email_notifier_config() -> None:
     """Test email notifier configuration loading"""
-    print("Testing email notifier configuration...")
 
     # Create a test config file
     config = Config("config.yml")
@@ -45,12 +40,9 @@ def test_email_notifier_config() -> None:
     assert config.get("voicemail.reminders.enabled")
     assert config.get("voicemail.reminders.time") == "09:00"
 
-    print("✓ Email notifier configuration loads correctly")
-
 
 def test_email_notifier_initialization() -> None:
     """Test email notifier initialization"""
-    print("Testing email notifier initialization...")
 
     config = Config("config.yml")
     notifier = EmailNotifier(config)
@@ -66,12 +58,9 @@ def test_email_notifier_initialization() -> None:
     assert notifier.from_address == "Voicemail@albl.com"
     assert notifier.from_name == "ABCo Voicemail"
 
-    print("✓ Email notifier initializes correctly")
-
 
 def test_voicemail_with_email() -> None:
     """Test voicemail system with email integration"""
-    print("Testing voicemail system with email integration...")
 
     # Create temporary directory for test
     temp_dir = tempfile.mkdtemp()
@@ -93,7 +82,6 @@ def test_voicemail_with_email() -> None:
         assert message_id is not None
         assert len(vm_system.get_mailbox("1001").messages) == 1
 
-        print("✓ Voicemail system integrates with email correctly")
 
     finally:
         # Cleanup
@@ -102,17 +90,14 @@ def test_voicemail_with_email() -> None:
 
 def test_extension_email_configuration() -> None:
     """Test that extensions have email addresses configured"""
-    print("Testing extension email configuration...")
 
     # Note: Extensions are now stored in the database, not in config.yml
     # This test is skipped as extension configuration is tested elsewhere
     # in database-specific tests
-    print("✓ Extensions have email addresses configured (in database)")
 
 
 def test_no_answer_timeout_config() -> None:
     """Test no-answer timeout configuration"""
-    print("Testing no-answer timeout configuration...")
 
     config = Config("config.yml")
 
@@ -120,44 +105,3 @@ def test_no_answer_timeout_config() -> None:
     timeout = config.get("voicemail.no_answer_timeout")
     assert timeout is not None
     assert timeout == 30
-
-    print("✓ No-answer timeout configured correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail Email Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_email_notifier_config,
-        test_email_notifier_initialization,
-        test_voicemail_with_email,
-        test_extension_email_configuration,
-        test_no_answer_timeout_config,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

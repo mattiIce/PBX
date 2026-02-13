@@ -10,7 +10,7 @@ import logging
 import os
 import socket
 import time
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import psutil
 
@@ -37,7 +37,7 @@ class ProductionHealthChecker:
         self.config = config or {}
         self.start_time = time.time()
 
-    def check_liveness(self) -> Tuple[bool, Dict[str, Any]]:
+    def check_liveness(self) -> tuple[bool, dict[str, Any]]:
         """
         Check if the application is alive (lightweight check).
 
@@ -45,7 +45,7 @@ class ProductionHealthChecker:
         Used by orchestration systems to determine if the container should be restarted.
 
         Returns:
-            Tuple of (is_alive, details_dict)
+            tuple of (is_alive, details_dict)
         """
         try:
             uptime = time.time() - self.start_time
@@ -59,7 +59,7 @@ class ProductionHealthChecker:
             logger.error(f"Liveness check failed: {e}")
             return False, {"status": "dead", "error": str(e), "timestamp": time.time()}
 
-    def check_readiness(self) -> Tuple[bool, Dict[str, Any]]:
+    def check_readiness(self) -> tuple[bool, dict[str, Any]]:
         """
         Check if the application is ready to serve traffic.
 
@@ -67,7 +67,7 @@ class ProductionHealthChecker:
         Used by load balancers to determine if traffic should be routed here.
 
         Returns:
-            Tuple of (is_ready, details_dict)
+            tuple of (is_ready, details_dict)
         """
         checks = {}
         is_ready = True
@@ -98,7 +98,7 @@ class ProductionHealthChecker:
             "timestamp": time.time(),
         }
 
-    def get_detailed_status(self) -> Dict[str, Any]:
+    def get_detailed_status(self) -> dict[str, Any]:
         """
         Get comprehensive system status for monitoring dashboards.
 
@@ -117,7 +117,7 @@ class ProductionHealthChecker:
             "server_name": self.config.get("server", {}).get("server_name", "Warden Voip"),
         }
 
-    def _check_pbx_core(self) -> Tuple[bool, Dict[str, Any]]:
+    def _check_pbx_core(self) -> tuple[bool, dict[str, Any]]:
         """Check PBX core status."""
         try:
             if not self.pbx_core:
@@ -156,7 +156,7 @@ class ProductionHealthChecker:
             logger.error(f"PBX core check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 
-    def _check_database(self) -> Tuple[bool, Dict[str, Any]]:
+    def _check_database(self) -> tuple[bool, dict[str, Any]]:
         """Check database connectivity."""
         try:
             from pbx.utils.database import get_database_connection
@@ -189,7 +189,7 @@ class ProductionHealthChecker:
             logger.error(f"Database check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 
-    def _check_sip_server(self) -> Tuple[bool, Dict[str, Any]]:
+    def _check_sip_server(self) -> tuple[bool, dict[str, Any]]:
         """Check if SIP server port is listening."""
         try:
             sip_config = self.config.get("server", {})
@@ -226,7 +226,7 @@ class ProductionHealthChecker:
             logger.error(f"SIP server check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 
-    def _check_system_resources(self) -> Tuple[bool, Dict[str, Any]]:
+    def _check_system_resources(self) -> tuple[bool, dict[str, Any]]:
         """Check system resource availability."""
         try:
             cpu_percent = psutil.cpu_percent(interval=0.1)
@@ -265,7 +265,7 @@ class ProductionHealthChecker:
             # Don't fail readiness on resource check errors
             return True, {"status": "unavailable", "error": str(e)}
 
-    def _get_metrics(self) -> Dict[str, Any]:
+    def _get_metrics(self) -> dict[str, Any]:
         """Get Prometheus-style metrics."""
         try:
             metrics = {
@@ -297,8 +297,8 @@ class ProductionHealthChecker:
 
 
 def format_health_check_response(
-    is_healthy: bool, details: Dict[str, Any], format_type: str = "json"
-) -> Tuple[int, str]:
+    is_healthy: bool, details: dict[str, Any], format_type: str = "json"
+) -> tuple[int, str]:
     """
     Format health check response for different consumers.
 
@@ -308,7 +308,7 @@ def format_health_check_response(
         format_type: "json", "prometheus", or "plain"
 
     Returns:
-        Tuple of (http_status_code, formatted_response)
+        tuple of (http_status_code, formatted_response)
     """
     import json
 

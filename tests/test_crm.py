@@ -4,13 +4,8 @@ Comprehensive CRM Integration Tests
 Tests CRM integration framework, screen pop support, and specific integrations (HubSpot, Zendesk)
 """
 
-import os
-import sys
-import unittest
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.crm_integration import (
     ActiveDirectoryLookupProvider,
@@ -28,7 +23,6 @@ from pbx.features.crm_integrations import HubSpotIntegration, ZendeskIntegration
 
 def test_caller_info_creation() -> bool:
     """Test CallerInfo creation and conversion"""
-    print("Testing CallerInfo creation...")
 
     caller_info = CallerInfo("555-1234")
     caller_info.name = "John Doe"
@@ -52,13 +46,11 @@ def test_caller_info_creation() -> bool:
     assert caller_info2.name == caller_info.name, "Name should match"
     assert caller_info2.company == caller_info.company, "Company should match"
 
-    print("✓ CallerInfo creation and conversion works")
     return True
 
 
 def test_phone_book_lookup_provider() -> bool:
     """Test phone book lookup provider"""
-    print("\nTesting PhoneBookLookupProvider...")
 
     # Mock phone book
     class MockPhoneBook:
@@ -88,13 +80,11 @@ def test_phone_book_lookup_provider() -> bool:
     result = provider.lookup("999-9999")
     assert result is None, "Should not find caller"
 
-    print("✓ PhoneBookLookupProvider works")
     return True
 
 
 def test_active_directory_lookup_provider() -> bool:
     """Test Active Directory lookup provider"""
-    print("\nTesting ActiveDirectoryLookupProvider...")
 
     # Mock AD integration
     class MockADIntegration:
@@ -124,13 +114,11 @@ def test_active_directory_lookup_provider() -> bool:
     result = provider.lookup("999-9999")
     assert result is None, "Should not find user"
 
-    print("✓ ActiveDirectoryLookupProvider works")
     return True
 
 
 def test_crm_integration_initialization() -> bool:
     """Test CRM integration initialization"""
-    print("\nTesting CRM integration initialization...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -149,13 +137,11 @@ def test_crm_integration_initialization() -> bool:
     assert crm.cache_enabled, "Cache should be enabled"
     assert crm.cache_timeout == 3600, "Cache timeout should be 3600"
 
-    print("✓ CRM integration initialization works")
     return True
 
 
 def test_crm_integration_lookup() -> bool:
     """Test CRM integration lookup with multiple providers"""
-    print("\nTesting CRM integration lookup...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -198,13 +184,11 @@ def test_crm_integration_lookup() -> bool:
     result = crm.lookup_caller("999-9999")
     assert result is None, "Should not find caller"
 
-    print("✓ CRM integration lookup works")
     return True
 
 
 def test_crm_integration_cache() -> bool:
     """Test CRM integration caching"""
-    print("\nTesting CRM integration cache...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -255,13 +239,11 @@ def test_crm_integration_cache() -> bool:
     assert result3 is not None, "Should find caller"
     assert provider.lookup_count == 2, "Should call provider again after cache clear"
 
-    print("✓ CRM integration cache works")
     return True
 
 
 def test_screen_pop_trigger() -> bool:
     """Test screen pop triggering"""
-    print("\nTesting screen pop trigger...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -311,13 +293,11 @@ def test_screen_pop_trigger() -> bool:
     assert pbx_core.webhook_system.last_data["extension"] == "1001", "Extension should match"
     assert pbx_core.webhook_system.last_data["caller_info"] is not None, "Should have caller info"
 
-    print("✓ Screen pop trigger works")
     return True
 
 
 def test_phone_number_normalization() -> bool:
     """Test phone number normalization"""
-    print("\nTesting phone number normalization...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -335,13 +315,11 @@ def test_phone_number_normalization() -> bool:
     ), "Should remove plus and dashes"
     assert crm._normalize_phone_number("555 123 4567") == "5551234567", "Should remove spaces"
 
-    print("✓ Phone number normalization works")
     return True
 
 
 def test_provider_status() -> bool:
     """Test getting provider status"""
-    print("\nTesting provider status...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -379,7 +357,6 @@ def test_provider_status() -> bool:
     assert status[0]["enabled"], "First provider should be enabled"
     assert status[1]["name"] == "Provider2", "Second provider name should match"
 
-    print("✓ Provider status works")
     return True
 
 
@@ -388,10 +365,10 @@ def test_provider_status() -> bool:
 # ============================================================================
 
 
-class TestHubSpotIntegration(unittest.TestCase):
+class TestHubSpotIntegration:
     """Test HubSpot integration functionality"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test database"""
         import sqlite3
 
@@ -444,14 +421,14 @@ class TestHubSpotIntegration(unittest.TestCase):
         self.config = {}
         self.integration = HubSpotIntegration(self.db, self.config)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test database"""
         self.db.disconnect()
 
     def test_initialization(self) -> None:
         """Test integration initialization"""
-        self.assertIsNotNone(self.integration)
-        self.assertFalse(self.integration.enabled)
+        assert self.integration is not None
+        assert not self.integration.enabled
 
     def test_update_config(self) -> None:
         """Test updating configuration"""
@@ -463,7 +440,7 @@ class TestHubSpotIntegration(unittest.TestCase):
         }
 
         result = self.integration.update_config(config)
-        self.assertTrue(result)
+        assert result
 
     def test_get_config(self) -> None:
         """Test retrieving configuration"""
@@ -473,29 +450,28 @@ class TestHubSpotIntegration(unittest.TestCase):
 
         # Now retrieve it
         retrieved = self.integration.get_config()
-        self.assertIsNotNone(retrieved)
-        self.assertTrue(retrieved["enabled"])
-        self.assertEqual(retrieved["portal_id"], "67890")
+        assert retrieved is not None
+        assert retrieved["enabled"]
+        assert retrieved["portal_id"] == "67890"
 
     def test_sync_contact_disabled(self) -> None:
         """Test sync contact when integration is disabled"""
         contact = {"email": "test@example.com", "first_name": "John", "last_name": "Doe"}
 
         result = self.integration.sync_contact(contact)
-        self.assertFalse(result)
+        assert not result
 
     def test_create_deal_disabled(self) -> None:
         """Test create deal when integration is disabled"""
         deal = {"dealname": "Test Deal", "amount": 1000}
 
         result = self.integration.create_deal(deal)
-        self.assertFalse(result)
+        assert not result
 
-
-class TestZendeskIntegration(unittest.TestCase):
+class TestZendeskIntegration:
     """Test Zendesk integration functionality"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test database"""
         import sqlite3
 
@@ -548,14 +524,14 @@ class TestZendeskIntegration(unittest.TestCase):
         self.config = {}
         self.integration = ZendeskIntegration(self.db, self.config)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test database"""
         self.db.disconnect()
 
     def test_initialization(self) -> None:
         """Test integration initialization"""
-        self.assertIsNotNone(self.integration)
-        self.assertFalse(self.integration.enabled)
+        assert self.integration is not None
+        assert not self.integration.enabled
 
     def test_update_config(self) -> None:
         """Test updating configuration"""
@@ -569,7 +545,7 @@ class TestZendeskIntegration(unittest.TestCase):
         }
 
         result = self.integration.update_config(config)
-        self.assertTrue(result)
+        assert result
 
     def test_get_config(self) -> None:
         """Test retrieving configuration"""
@@ -584,9 +560,9 @@ class TestZendeskIntegration(unittest.TestCase):
 
         # Now retrieve it
         retrieved = self.integration.get_config()
-        self.assertIsNotNone(retrieved)
-        self.assertTrue(retrieved["enabled"])
-        self.assertEqual(retrieved["subdomain"], "mycompany")
+        assert retrieved is not None
+        assert retrieved["enabled"]
+        assert retrieved["subdomain"] == "mycompany"
 
     def test_create_ticket_disabled(self) -> None:
         """Test create ticket when integration is disabled"""
@@ -597,12 +573,12 @@ class TestZendeskIntegration(unittest.TestCase):
         }
 
         result = self.integration.create_ticket(ticket)
-        self.assertIsNone(result)
+        assert result is None
 
     def test_update_ticket_disabled(self) -> None:
         """Test update ticket when integration is disabled"""
         result = self.integration.update_ticket("123", {"status": "solved"})
-        self.assertFalse(result)
+        assert not result
 
     def test_activity_logging(self) -> None:
         """Test that integration activity is logged"""
@@ -621,9 +597,7 @@ class TestZendeskIntegration(unittest.TestCase):
 
         # Check activity log
         logs = self.db.execute("SELECT * FROM integration_activity_log")
-        self.assertGreater(len(logs), 0)
-
-
+        assert len(logs) > 0
 # ============================================================================
 # Test Runner
 # ============================================================================
@@ -631,9 +605,6 @@ class TestZendeskIntegration(unittest.TestCase):
 
 def run_framework_tests() -> bool:
     """Run CRM framework tests"""
-    print("=" * 70)
-    print("Testing CRM Integration Framework")
-    print("=" * 70)
 
     results = []
     results.append(test_caller_info_creation())
@@ -646,40 +617,7 @@ def run_framework_tests() -> bool:
     results.append(test_phone_number_normalization())
     results.append(test_provider_status())
 
-    print("\n" + "=" * 70)
     if all(results):
-        print(f"✅ All CRM framework tests passed! ({len(results)}/{len(results)})")
         return True
     else:
-        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
         return False
-
-
-def run_integration_tests() -> bool:
-    """Run specific CRM integration tests (HubSpot, Zendesk)"""
-    print("\n" + "=" * 70)
-    print("Testing Specific CRM Integrations (HubSpot, Zendesk)")
-    print("=" * 70 + "\n")
-
-    # Create test suite
-    suite = unittest.TestSuite()
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestHubSpotIntegration))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestZendeskIntegration))
-
-    # Run tests
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-
-    return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    # Run framework tests
-    framework_success = run_framework_tests()
-
-    # Run integration tests
-    integration_success = run_integration_tests()
-
-    # Exit with appropriate code
-    success = framework_success and integration_success
-    sys.exit(0 if success else 1)

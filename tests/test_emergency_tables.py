@@ -4,11 +4,8 @@ Tests for emergency tables in database
 """
 
 import os
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
@@ -16,7 +13,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_emergency_contacts_table_creation() -> None:
     """Test that emergency_contacts table is created"""
-    print("Testing emergency_contacts table creation...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -60,7 +56,6 @@ def test_emergency_contacts_table_creation() -> None:
 
         cursor.close()
         db.disconnect()
-        print("✓ emergency_contacts table created successfully")
 
     finally:
         # Cleanup
@@ -70,7 +65,6 @@ def test_emergency_contacts_table_creation() -> None:
 
 def test_emergency_notifications_table_creation() -> None:
     """Test that emergency_notifications table is created"""
-    print("Testing emergency_notifications table creation...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -112,7 +106,6 @@ def test_emergency_notifications_table_creation() -> None:
 
         cursor.close()
         db.disconnect()
-        print("✓ emergency_notifications table created successfully")
 
     finally:
         # Cleanup
@@ -122,7 +115,6 @@ def test_emergency_notifications_table_creation() -> None:
 
 def test_emergency_indexes_creation() -> None:
     """Test that emergency table indexes are created"""
-    print("Testing emergency table indexes creation...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -156,49 +148,8 @@ def test_emergency_indexes_creation() -> None:
 
         cursor.close()
         db.disconnect()
-        print("✓ Emergency table indexes created successfully")
 
     finally:
         # Cleanup
         if os.path.exists(temp_db.name):
             os.unlink(temp_db.name)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Running Emergency Tables Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_emergency_contacts_table_creation,
-        test_emergency_notifications_table_creation,
-        test_emergency_indexes_creation,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

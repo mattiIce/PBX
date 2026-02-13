@@ -3,8 +3,8 @@
  * Handles call analytics, charts, and QoS metrics.
  */
 
-import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 declare const Chart: any;
 
@@ -147,5 +147,5 @@ export async function loadQoSMetrics(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadAnalytics = loadAnalytics;
-(window as any).loadQoSMetrics = loadQoSMetrics;
+window.loadAnalytics = loadAnalytics;
+window.loadQoSMetrics = loadQoSMetrics;

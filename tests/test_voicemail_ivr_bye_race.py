@@ -7,11 +7,6 @@ This test validates that when a BYE request is received during voicemail IVR
 call termination without continuing to play audio.
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
@@ -32,7 +27,6 @@ def test_ivr_handles_early_call_termination() -> None:
     3. BYE request terminates the call
     4. IVR should not play audio after call ends
     """
-    print("Testing IVR handles early call termination...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -74,14 +68,11 @@ def test_ivr_handles_early_call_termination() -> None:
 
     assert call.state == CallState.ENDED, "Call should be ended"
 
-    print("✓ IVR properly handles early call termination")
-
 
 def test_ivr_handles_call_termination_during_message_playback() -> None:
     """
     Test that IVR handles call termination while playing a voicemail message
     """
-    print("Testing IVR handles call termination during message playback...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -111,14 +102,11 @@ def test_ivr_handles_call_termination_during_message_playback() -> None:
     # The IVR session should detect this and stop playing
     assert call.state == CallState.ENDED
 
-    print("✓ IVR handles call termination during message playback")
-
 
 def test_ivr_handles_hangup_action_with_ended_call() -> None:
     """
     Test that IVR handles hangup action when call is already ended
     """
-    print("Testing IVR handles hangup action with ended call...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -145,14 +133,11 @@ def test_ivr_handles_hangup_action_with_ended_call() -> None:
     # The IVR session should skip goodbye prompt if call is already ended
     assert call.state == CallState.ENDED
 
-    print("✓ IVR handles hangup action with ended call")
-
 
 def test_pin_entry_clears_after_processing() -> None:
     """
     Test that PIN is cleared after verification for security
     """
-    print("Testing PIN is cleared after verification...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -180,46 +165,3 @@ def test_pin_entry_clears_after_processing() -> None:
     # Verify PIN was cleared after verification (security)
     assert ivr.entered_pin == "", "PIN should be cleared after verification"
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU, "Should transition to main menu"
-
-    print("✓ PIN is properly cleared after verification")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail IVR BYE Race Condition Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_ivr_handles_early_call_termination,
-        test_ivr_handles_call_termination_during_message_playback,
-        test_ivr_handles_hangup_action_with_ended_call,
-        test_pin_entry_clears_after_processing,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

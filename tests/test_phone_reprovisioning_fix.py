@@ -8,11 +8,7 @@ the old extension-IP-MAC mapping is properly removed from the registered_phones 
 Bug: If an IP/MAC has been reprovisioned to a different extension, the old extension,
 IP and MAC mapping persists in the table, causing duplicate entries.
 """
-import os
-import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
@@ -28,7 +24,6 @@ def test_phone_reprovisioning_removes_old_mapping() -> None:
     3. Old mapping (ext 1001 -> MAC/IP) should be deleted
     4. Only new mapping (ext 1002 -> MAC/IP) should exist
     """
-    print("Testing phone reprovisioning removes old mapping...")
 
     # Create database backend (using SQLite for tests)
     config = Config("config.yml")
@@ -88,14 +83,11 @@ def test_phone_reprovisioning_removes_old_mapping() -> None:
     ip_count = sum(1 for p in all_phones if p["ip_address"] == "192.168.1.100")
     assert ip_count == 1, f"Expected 1 entry for IP, found {ip_count} (duplicate entries exist!)"
 
-    print("✓ Phone reprovisioning correctly removes old mapping")
-
 
 def test_phone_reprovisioning_by_ip_only() -> None:
     """
     Test reprovisioning when phone has no MAC address (IP-based tracking)
     """
-    print("Testing phone reprovisioning by IP only (no MAC)...")
 
     config = Config("config.yml")
     config.config["database"] = {"type": "sqlite", "path": ":memory:"}
@@ -142,14 +134,11 @@ def test_phone_reprovisioning_by_ip_only() -> None:
     ip_count = sum(1 for p in all_phones if p["ip_address"] == "192.168.1.103")
     assert ip_count == 1, f"Expected 1 entry for IP, found {ip_count}"
 
-    print("✓ Phone reprovisioning by IP only works correctly")
-
 
 def test_phone_reprovisioning_with_mac_then_ip() -> None:
     """
     Test reprovisioning when phone has MAC initially but then registers with IP only
     """
-    print("Testing phone reprovisioning with MAC then IP...")
 
     config = Config("config.yml")
     config.config["database"] = {"type": "sqlite", "path": ":memory:"}
@@ -192,14 +181,11 @@ def test_phone_reprovisioning_with_mac_then_ip() -> None:
     ip_count = sum(1 for p in all_phones if p["ip_address"] == "192.168.1.105")
     assert ip_count == 1, f"Expected 1 entry for IP, found {ip_count}"
 
-    print("✓ Phone reprovisioning with MAC then IP works correctly")
-
 
 def test_multiple_phones_different_extensions() -> None:
     """
     Test that different phones can still register to different extensions (normal case)
     """
-    print("Testing multiple phones to different extensions (normal operation)...")
 
     config = Config("config.yml")
     config.config["database"] = {"type": "sqlite", "path": ":memory:"}
@@ -223,40 +209,3 @@ def test_multiple_phones_different_extensions() -> None:
     assert len(phones_db.get_by_extension("2001")) == 1, "Extension 2001 should have 1 phone"
     assert len(phones_db.get_by_extension("2002")) == 1, "Extension 2002 should have 1 phone"
     assert len(phones_db.get_by_extension("2003")) == 1, "Extension 2003 should have 1 phone"
-
-    print("✓ Multiple phones to different extensions works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Phone Reprovisioning Bug Fix Tests")
-    print("=" * 60)
-
-    try:
-        test_phone_reprovisioning_removes_old_mapping()
-        test_phone_reprovisioning_by_ip_only()
-        test_phone_reprovisioning_with_mac_then_ip()
-        test_multiple_phones_different_extensions()
-
-        print("=" * 60)
-        print("Results: 4 passed, 0 failed")
-        print("=" * 60)
-        return True
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

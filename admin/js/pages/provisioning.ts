@@ -3,9 +3,9 @@
  * Handles device provisioning, templates, and phonebook settings.
  */
 
-import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
-import { escapeHtml } from '../utils/html.js';
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 
 interface ProvisioningDevice {
     mac_address?: string;
@@ -205,11 +205,11 @@ export function viewTemplate(name: string): void {
 }
 
 // Backward compatibility
-(window as any).loadProvisioning = loadProvisioning;
-(window as any).loadSupportedVendors = loadSupportedVendors;
-(window as any).loadProvisioningDevices = loadProvisioningDevices;
-(window as any).loadProvisioningTemplates = loadProvisioningTemplates;
-(window as any).loadProvisioningSettings = loadProvisioningSettings;
-(window as any).loadPhonebookSettings = loadPhonebookSettings;
-(window as any).deleteDevice = deleteDevice;
-(window as any).viewTemplate = viewTemplate;
+window.loadProvisioning = loadProvisioning;
+window.loadSupportedVendors = loadSupportedVendors;
+window.loadProvisioningDevices = loadProvisioningDevices;
+window.loadProvisioningTemplates = loadProvisioningTemplates;
+window.loadProvisioningSettings = loadProvisioningSettings;
+window.loadPhonebookSettings = loadPhonebookSettings;
+window.deleteDevice = deleteDevice;
+window.viewTemplate = viewTemplate;

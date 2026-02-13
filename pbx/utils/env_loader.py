@@ -107,7 +107,7 @@ class EnvironmentLoader:
 
         Args:
             value: Original value string
-            matches: List of regex matches
+            matches: list of regex matches
 
         Returns:
             True if value is a complete substitution
@@ -189,7 +189,7 @@ class EnvironmentLoader:
         Get list of environment variables that were loaded
 
         Returns:
-            List of environment variable names (values are masked)
+            list of environment variable names (values are masked)
         """
         return list(self.loaded_vars.keys())
 
@@ -198,10 +198,10 @@ class EnvironmentLoader:
         Validate that required environment variables are set
 
         Args:
-            required_vars: List of required environment variable names
+            required_vars: list of required environment variable names
 
         Returns:
-            Tuple of (all_present, missing_vars)
+            tuple of (all_present, missing_vars)
         """
         missing = []
 

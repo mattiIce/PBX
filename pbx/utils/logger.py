@@ -84,7 +84,7 @@ class PBXLogger:
         # Create sub-logger
         logger = logging.getLogger(f"PBX.{name}")
 
-        # Set log level (inherit from parent if not specified)
+        # set log level (inherit from parent if not specified)
         if log_level:
             logger.setLevel(getattr(logging, log_level))
         elif self.logger:

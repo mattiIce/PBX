@@ -1,6 +1,5 @@
 """Provisioning and phone registration schemas."""
 
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -11,8 +10,8 @@ class ProvisionDevice(BaseModel):
     mac_address: str = Field(min_length=12, max_length=17, description="Device MAC address")
     model: str = Field(min_length=1, max_length=100, description="Phone model")
     extension: str = Field(min_length=1, max_length=20, description="Assigned extension")
-    template: Optional[str] = Field(default=None, description="Provisioning template name")
-    label: Optional[str] = Field(default=None, max_length=100)
+    template: str | None = Field(default=None, description="Provisioning template name")
+    label: str | None = Field(default=None, max_length=100)
 
     @field_validator("mac_address")
     @classmethod
@@ -30,8 +29,8 @@ class RegisterPhone(BaseModel):
     mac_address: str = Field(min_length=12, max_length=17)
     ip_address: str = Field(description="Phone IP address")
     extension: str = Field(min_length=1, max_length=20)
-    model: Optional[str] = Field(default=None, max_length=100)
-    firmware: Optional[str] = Field(default=None, max_length=50)
+    model: str | None = Field(default=None, max_length=100)
+    firmware: str | None = Field(default=None, max_length=50)
 
 
 class ProvisioningTemplate(BaseModel):
@@ -39,6 +38,6 @@ class ProvisioningTemplate(BaseModel):
 
     name: str = Field(min_length=1, max_length=100)
     manufacturer: str = Field(min_length=1, max_length=100)
-    model_pattern: Optional[str] = Field(default=None, max_length=100)
+    model_pattern: str | None = Field(default=None, max_length=100)
     template_content: str = Field(description="Template body (supports variables)")
     content_type: str = Field(default="text/xml", max_length=50)

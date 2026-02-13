@@ -558,10 +558,10 @@ class AutoAttendant:
 
     def list_menus(self):
         """
-        List all menus
+        list all menus
 
         Returns:
-            list: List of menu dictionaries
+            list: list of menu dictionaries
         """
         try:
             conn = sqlite3.connect(self.db_path)
@@ -596,7 +596,7 @@ class AutoAttendant:
         Args:
             menu_id: Menu to add item to
             digit: DTMF digit (0-9, *, #)
-            destination_type: Type from DestinationType enum
+            destination_type: type from DestinationType enum
             destination_value: Extension, menu_id, etc.
             description: Human-readable description
 
@@ -670,7 +670,7 @@ class AutoAttendant:
             menu_id: Menu identifier
 
         Returns:
-            list: List of menu item dictionaries
+            list: list of menu item dictionaries
         """
         try:
             conn = sqlite3.connect(self.db_path)
@@ -1079,7 +1079,7 @@ class AutoAttendant:
         Get path to audio file for prompt
 
         Args:
-            prompt_type: Type of prompt (welcome, main_menu, invalid, menu_id, etc.)
+            prompt_type: type of prompt (welcome, main_menu, invalid, menu_id, etc.)
 
         Returns:
             str: Path to audio file, or None if not found

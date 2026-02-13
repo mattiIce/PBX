@@ -8,7 +8,6 @@ This account has exclusive access to license management functionality.
 import hashlib
 import hmac
 import logging
-from typing import Optional, Tuple
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -207,7 +206,7 @@ def create_license_admin_extension() -> dict:
     }
 
 
-def verify_license_admin_session(request) -> Tuple[bool, Optional[str]]:
+def verify_license_admin_session(request) -> tuple[bool, str | None]:
     """
     Verify that the current session belongs to the license administrator.
 
@@ -218,7 +217,7 @@ def verify_license_admin_session(request) -> Tuple[bool, Optional[str]]:
         request: Flask request object
 
     Returns:
-        Tuple of (is_authorized, error_message)
+        tuple of (is_authorized, error_message)
     """
     try:
         # Check for session token

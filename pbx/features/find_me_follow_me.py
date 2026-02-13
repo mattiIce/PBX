@@ -5,7 +5,6 @@ Ring multiple devices sequentially or simultaneously
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -203,9 +202,9 @@ class FindMeFollowMe:
             self.logger.error(f"Error deleting FMFM config from database: {e}")
             return False
 
-    def set_config(self, extension: str, config: Dict) -> bool:
+    def set_config(self, extension: str, config: dict) -> bool:
         """
-        Set Find Me/Follow Me configuration for an extension
+        set Find Me/Follow Me configuration for an extension
 
         Args:
             extension: Extension number
@@ -248,15 +247,15 @@ class FindMeFollowMe:
                 return False
 
         self.logger.info(
-            f"Set FMFM config for {extension}: {config['mode']} mode with {len(config['destinations'])} destinations"
+            f"set FMFM config for {extension}: {config['mode']} mode with {len(config['destinations'])} destinations"
         )
         return True
 
-    def get_config(self, extension: str) -> Optional[Dict]:
+    def get_config(self, extension: str) -> dict | None:
         """Get FMFM configuration for an extension"""
         return self.user_configs.get(extension)
 
-    def get_ring_strategy(self, extension: str, call_id: str) -> Dict:
+    def get_ring_strategy(self, extension: str, call_id: str) -> dict:
         """
         Get ringing strategy for a call
 
@@ -424,11 +423,11 @@ class FindMeFollowMe:
             return True
         return False
 
-    def list_extensions_with_fmfm(self) -> List[str]:
-        """List extensions with FMFM configured"""
+    def list_extensions_with_fmfm(self) -> list[str]:
+        """list extensions with FMFM configured"""
         return [ext for ext, cfg in self.user_configs.items() if cfg.get("enabled", True)]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get FMFM statistics"""
         sequential_count = sum(
             1

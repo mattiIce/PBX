@@ -9,7 +9,6 @@ import socket
 import threading
 import time
 import traceback
-from typing import Optional
 
 from pbx.api.app import create_app
 from pbx.utils.logger import get_logger
@@ -36,10 +35,10 @@ class PBXFlaskServer:
         self.pbx_core = pbx_core
         self.host = host
         self.port = port
-        self.server_thread: Optional[threading.Thread] = None
+        self.server_thread: threading.Thread | None = None
         self.running = False
         self.ssl_enabled = False
-        self.ssl_context: Optional[ssl.SSLContext] = None
+        self.ssl_context: ssl.SSLContext | None = None
 
         # Create Flask app
         self.app = create_app(pbx_core)
@@ -68,7 +67,7 @@ class PBXFlaskServer:
 
         if not cert_file or not key_file:
             logger.error("SSL is enabled but cert_file or key_file not configured")
-            logger.error("Set api.ssl.enabled: false in config.yml to disable SSL")
+            logger.error("set api.ssl.enabled: false in config.yml to disable SSL")
             return
 
         if not os.path.exists(cert_file):

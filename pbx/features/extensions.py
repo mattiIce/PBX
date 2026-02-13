@@ -239,7 +239,7 @@ class ExtensionRegistry:
         Get all registered extensions
 
         Returns:
-            List of registered Extension objects
+            list of registered Extension objects
         """
         return [ext for ext in self.extensions.values() if ext.registered]
 

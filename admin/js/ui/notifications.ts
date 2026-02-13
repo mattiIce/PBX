@@ -1,4 +1,4 @@
-import { escapeHtml } from '../utils/html.js';
+import { escapeHtml } from '../utils/html.ts';
 
 type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -48,8 +48,6 @@ export function showNotification(message: string, type: NotificationType = 'info
         return; // Don't show error notifications during bulk operations
     }
 
-    console.log(`[${type.toUpperCase()}] ${message}`);
-
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -87,7 +85,7 @@ export function showNotification(message: string, type: NotificationType = 'info
 export function displayError(error: Error | { message?: string; stack?: string; toString(): string }, context: string = ''): void {
     if (!ERROR_DISPLAY_CONFIG.enabled) return;
 
-    const errorId = 'error-' + Date.now();
+    const errorId = `error-${Date.now()}`;
     const errorMessage = error.message || error.toString();
     const errorStack = error.stack || '';
 

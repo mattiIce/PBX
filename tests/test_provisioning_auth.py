@@ -4,13 +4,10 @@ Tests for provisioning API authentication
 """
 
 import json
-import sys
 import time
 from http.client import HTTPConnection
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.features.extensions import Extension, ExtensionRegistry
@@ -32,7 +29,6 @@ class MockPBXCore:
 
 def test_provisioning_endpoints_require_auth() -> bool:
     """Test that provisioning endpoints require authentication"""
-    print("Testing provisioning endpoints authentication...")
 
     # Load test config using relative path from test file
     config_path = str(Path(__file__).parent.parent / "test_config.yml")
@@ -47,7 +43,6 @@ def test_provisioning_endpoints_require_auth() -> bool:
 
     # Start server
     if not api_server.start():
-        print("  ✗ Failed to start API server")
         return False
 
     # Wait for server to start
@@ -66,7 +61,6 @@ def test_provisioning_endpoints_require_auth() -> bool:
         conn = HTTPConnection("localhost", test_port, timeout=5)
 
         for endpoint in endpoints:
-            print(f"  Testing {endpoint}...")
 
             # Test without authentication - should return 401
             conn.request("GET", endpoint)
@@ -76,9 +70,7 @@ def test_provisioning_endpoints_require_auth() -> bool:
             assert (
                 response.status == 401
             ), f"{endpoint} should require authentication but returned {response.status}"
-            print(f"  ✓ {endpoint} requires authentication (401)")
 
-        print("✓ All provisioning endpoints require authentication")
         return True
 
     finally:
@@ -88,7 +80,6 @@ def test_provisioning_endpoints_require_auth() -> bool:
 
 def test_provisioning_endpoints_with_auth() -> bool:
     """Test that provisioning endpoints work with valid authentication"""
-    print("Testing provisioning endpoints with authentication...")
 
     # Load test config using relative path from test file
     config_path = str(Path(__file__).parent.parent / "test_config.yml")
@@ -115,7 +106,6 @@ def test_provisioning_endpoints_with_auth() -> bool:
 
     # Start server
     if not api_server.start():
-        print("  ✗ Failed to start API server")
         return False
 
     # Wait for server to start
@@ -132,11 +122,8 @@ def test_provisioning_endpoints_with_auth() -> bool:
         response = conn.getresponse()
         login_result = json.loads(response.read().decode())
 
-        print(f"  Login result: {login_result}")
-        print(f"  Login status: {response.status}")
         assert "token" in login_result, f"Login should return a token but got: {login_result}"
         token = login_result["token"]
-        print("  ✓ Successfully obtained authentication token")
 
         # Now test endpoints with authentication
         auth_headers = {
@@ -152,8 +139,6 @@ def test_provisioning_endpoints_with_auth() -> bool:
         assert response.status == 200, f"Should return 200 with auth but got {response.status}"
         assert "vendors" in vendors_data, "Response should contain vendors"
         assert "models" in vendors_data, "Response should contain models"
-        print("  ✓ /api/provisioning/vendors works with authentication")
-        print(f"    Found {len(vendors_data.get('vendors', []))} vendors")
 
         # Test /api/provisioning/devices
         conn.request("GET", "/api/provisioning/devices", headers=auth_headers)
@@ -162,32 +147,9 @@ def test_provisioning_endpoints_with_auth() -> bool:
 
         assert response.status == 200, f"Should return 200 with auth but got {response.status}"
         assert isinstance(devices_data, list), "Response should be a list"
-        print("  ✓ /api/provisioning/devices works with authentication")
-        print(f"    Found {len(devices_data)} devices")
 
-        print("✓ All provisioning endpoints work with valid authentication")
         return True
 
     finally:
         conn.close()
         api_server.stop()
-
-
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Provisioning API Authentication Tests")
-    print("=" * 60)
-
-    success = True
-    success = test_provisioning_endpoints_require_auth() and success
-    print()
-    success = test_provisioning_endpoints_with_auth() and success
-
-    print()
-    print("=" * 60)
-    if success:
-        print("All tests passed!")
-    else:
-        print("Some tests failed!")
-        sys.exit(1)
-    print("=" * 60)

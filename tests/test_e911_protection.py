@@ -5,10 +5,7 @@ Ensures that emergency (911) calls are never placed during testing
 """
 
 import os
-import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.sip_trunk import OutboundRule, SIPTrunk, SIPTrunkSystem
 from pbx.utils.e911_protection import E911Protection
@@ -16,7 +13,6 @@ from pbx.utils.e911_protection import E911Protection
 
 def test_e911_pattern_detection() -> None:
     """Test that E911 patterns are correctly detected"""
-    print("Testing E911 pattern detection...")
 
     protection = E911Protection()
 
@@ -33,12 +29,9 @@ def test_e911_pattern_detection() -> None:
     assert not protection.is_e911_number("9111"), "Should not detect 9111"
     assert not protection.is_e911_number("811"), "Should not detect 811"
 
-    print("✓ E911 pattern detection works correctly")
-
 
 def test_e911_blocking_in_test_mode() -> None:
     """Test that E911 calls are blocked when in test mode"""
-    print("Testing E911 blocking in test mode...")
 
     # Set test mode environment variable
     os.environ["TEST_MODE"] = "1"
@@ -65,12 +58,9 @@ def test_e911_blocking_in_test_mode() -> None:
     # Clean up
     del os.environ["TEST_MODE"]
 
-    print("✓ E911 blocking in test mode works correctly")
-
 
 def test_e911_warning_in_production_mode() -> None:
     """Test that E911 calls generate warnings but are not blocked in production"""
-    print("Testing E911 warning in production mode...")
 
     # Ensure we're not in test mode
     for var in ["TEST_MODE", "TESTING", "PYTEST_CURRENT_TEST", "PBX_TEST_MODE"]:
@@ -90,12 +80,9 @@ def test_e911_warning_in_production_mode() -> None:
         "1911", "production context"
     ), "Should NOT block enhanced 911 in production"
 
-    print("✓ E911 warning in production mode works correctly")
-
 
 def test_sip_trunk_e911_blocking() -> None:
     """Test that SIP trunk system blocks E911 calls in test mode"""
-    print("Testing SIP trunk E911 blocking...")
 
     # Set test mode
     os.environ["TEST_MODE"] = "1"
@@ -142,12 +129,9 @@ def test_sip_trunk_e911_blocking() -> None:
     # Clean up
     del os.environ["TEST_MODE"]
 
-    print("✓ SIP trunk E911 blocking works correctly")
-
 
 def test_test_mode_detection() -> None:
     """Test various methods of test mode detection"""
-    print("Testing test mode detection...")
 
     # Clean environment first
     for var in ["TEST_MODE", "TESTING", "PYTEST_CURRENT_TEST", "PBX_TEST_MODE"]:
@@ -181,52 +165,3 @@ def test_test_mode_detection() -> None:
     protection = E911Protection()
     assert protection.is_test_mode(), "Should detect PBX_TEST_MODE"
     del os.environ["PBX_TEST_MODE"]
-
-    print("✓ Test mode detection works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all E911 protection tests"""
-    print("=" * 60)
-    print("E911 Protection Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_e911_pattern_detection,
-        test_test_mode_detection,
-        test_e911_blocking_in_test_mode,
-        test_e911_warning_in_production_mode,
-        test_sip_trunk_e911_blocking,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-        print()
-
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

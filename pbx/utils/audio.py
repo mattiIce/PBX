@@ -18,73 +18,60 @@ WAV_FORMAT_ULAW = 7  # μ-law (G.711)
 WAV_FORMAT_ALAW = 6  # A-law (G.711)
 WAV_FORMAT_G722 = 0x0067  # G.722 (HD Audio)
 
+# μ-law encoding constants
+_ULAW_BIAS = 0x84
+_ULAW_CLIP = 32635
 
-def pcm16_to_ulaw(pcm_data):
+
+def pcm16_to_ulaw(pcm_data: bytes) -> bytes:
     """
-    Convert 16-bit PCM audio data to G.711 μ-law format
+    Convert 16-bit PCM audio data to G.711 μ-law format.
+
+    Implements the ITU-T G.711 μ-law companding algorithm directly in pure
+    Python. Each 16-bit linear PCM sample is compressed to an 8-bit μ-law
+    code word consisting of a sign bit, a 3-bit exponent, and a 4-bit
+    mantissa.
 
     Args:
-        pcm_data: Raw 16-bit PCM audio data (little-endian signed)
+        pcm_data: Raw 16-bit PCM audio data (little-endian signed).
 
     Returns:
-        bytes: G.711 μ-law encoded audio data (8-bit per sample)
-
-    Note:
-        This function uses Python's audioop module which is deprecated in Python 3.11+
-        and will be removed in Python 3.13. For production use, consider using an
-        alternative library like 'pydub' or implementing the conversion algorithm directly.
+        G.711 μ-law encoded audio data (8-bit per sample).
     """
-    try:
-        import audioop
+    ulaw_data = bytearray()
 
-        # Suppress deprecation warning for audioop
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            # Convert 16-bit linear PCM to μ-law (1 = mono, 2 bytes per sample
-            # for 16-bit)
-            ulaw_data = audioop.lin2ulaw(pcm_data, 2)
-        return ulaw_data
-    except ImportError:
-        # Fallback: implement μ-law encoding manually if audioop is not available
-        # This is a simplified implementation of μ-law encoding
-        ulaw_data = bytearray()
+    for i in range(0, len(pcm_data), 2):
+        # Read 16-bit little-endian sample
+        if i + 1 >= len(pcm_data):
+            break
+        sample = struct.unpack("<h", pcm_data[i : i + 2])[0]
 
-        # μ-law constants
-        BIAS = 0x84
-        CLIP = 32635
+        # Get sign and magnitude
+        sign = 0x80 if sample < 0 else 0x00
+        sample = abs(sample)
 
-        for i in range(0, len(pcm_data), 2):
-            # Read 16-bit little-endian sample
-            if i + 1 >= len(pcm_data):
+        # Clip the sample
+        if sample > _ULAW_CLIP:
+            sample = _ULAW_CLIP
+
+        # Add bias
+        sample = sample + _ULAW_BIAS
+
+        # Find exponent (position of highest set bit in range)
+        # Start from highest exponent and work down
+        exponent = 0
+        for exp in range(7, -1, -1):
+            if sample & (1 << (exp + 3)):
+                exponent = exp
                 break
-            sample = struct.unpack("<h", pcm_data[i : i + 2])[0]
 
-            # Get sign and magnitude
-            sign = 0x80 if sample < 0 else 0x00
-            sample = abs(sample)
+        mantissa = (sample >> (exponent + 3)) & 0x0F
 
-            # Clip the sample
-            if sample > CLIP:
-                sample = CLIP
+        # Compose μ-law byte (ones-complement)
+        ulaw_byte = ~(sign | (exponent << 4) | mantissa) & 0xFF
+        ulaw_data.append(ulaw_byte)
 
-            # Add bias
-            sample = sample + BIAS
-
-            # Find exponent (position of highest set bit in range)
-            # Start from highest exponent and work down
-            exponent = 0
-            for exp in range(7, -1, -1):
-                if sample & (1 << (exp + 3)):
-                    exponent = exp
-                    break
-
-            mantissa = (sample >> (exponent + 3)) & 0x0F
-
-            # Compose μ-law byte
-            ulaw_byte = ~(sign | (exponent << 4) | mantissa) & 0xFF
-            ulaw_data.append(ulaw_byte)
-
-        return bytes(ulaw_data)
+    return bytes(ulaw_data)
 
 
 def pcm16_to_g722(pcm_data, sample_rate=8000):
@@ -402,7 +389,7 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
     These tones are designed to be recognizable and indicate specific messages.
 
     Args:
-        prompt_type: Type of prompt to generate:
+        prompt_type: type of prompt to generate:
             - 'leave_message': "Please leave a message after the tone"
             - 'enter_pin': "Please enter your PIN"
             - 'main_menu': "Main menu. Press 1 to listen to messages..."
@@ -560,7 +547,7 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
     Load a voice prompt WAV file from disk
 
     Args:
-        prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
+        prompt_type: type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
         prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
 
     Returns:
@@ -597,7 +584,7 @@ def get_prompt_audio(prompt_type, prompt_dir="voicemail_prompts", sample_rate=80
     It first attempts to load a recorded WAV file, and if that fails, generates tone-based prompts.
 
     Args:
-        prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
+        prompt_type: type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
         prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
         sample_rate: Sample rate for generated prompts if file not found
 

@@ -8,7 +8,6 @@ call setup, RTP media exchange, and teardown.
 
 import asyncio
 import time
-from typing import Optional
 
 import pytest
 
@@ -256,7 +255,7 @@ class TestSIPCallFlow:
         await asyncio.sleep(0.1)
         return True
 
-    async def _simulate_invite(self, from_ext: str, to_ext: str, config: dict) -> Optional[str]:
+    async def _simulate_invite(self, from_ext: str, to_ext: str, config: dict) -> str | None:
         """Simulate SIP INVITE."""
         await asyncio.sleep(0.1)
         return f"call-{from_ext}-{to_ext}-{int(time.time())}"
@@ -283,7 +282,7 @@ class TestSIPCallFlow:
         await asyncio.sleep(0.1)
         return True
 
-    async def _verify_transfer_received(self, extension: str, config: dict) -> Optional[str]:
+    async def _verify_transfer_received(self, extension: str, config: dict) -> str | None:
         """Verify transfer was received."""
         await asyncio.sleep(0.1)
         return f"transferred-call-{extension}"
@@ -298,17 +297,17 @@ class TestSIPCallFlow:
         await asyncio.sleep(0.1)
         return True
 
-    async def _verify_forwarded_to(self, extension: str, config: dict) -> Optional[str]:
+    async def _verify_forwarded_to(self, extension: str, config: dict) -> str | None:
         """Verify call was forwarded."""
         await asyncio.sleep(0.1)
         return f"forwarded-call-{extension}"
 
-    async def _create_conference(self, conf_number: str, config: dict) -> Optional[str]:
+    async def _create_conference(self, conf_number: str, config: dict) -> str | None:
         """Create conference room."""
         await asyncio.sleep(0.1)
         return f"conf-{conf_number}"
 
-    async def _join_conference(self, extension: str, conf_id: str, config: dict) -> Optional[str]:
+    async def _join_conference(self, extension: str, conf_id: str, config: dict) -> str | None:
         """Join conference."""
         await asyncio.sleep(0.1)
         return f"conf-participant-{extension}"
@@ -332,7 +331,7 @@ class TestSIPCallFlow:
 
     async def _simulate_invite_with_codecs(
         self, from_ext: str, to_ext: str, codecs: list, config: dict
-    ) -> Optional[str]:
+    ) -> str | None:
         """Simulate INVITE with codec preferences."""
         await asyncio.sleep(0.1)
         return f"call-with-codecs-{from_ext}-{to_ext}"
@@ -341,7 +340,3 @@ class TestSIPCallFlow:
         """Get negotiated codec for call."""
         await asyncio.sleep(0.1)
         return "G722"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-m", "integration"])

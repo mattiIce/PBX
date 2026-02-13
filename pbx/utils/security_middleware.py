@@ -5,7 +5,6 @@ Provides security headers, rate limiting, and request validation.
 
 import threading
 import time
-from typing import Dict, Optional, Tuple
 
 
 class SecurityHeaders:
@@ -16,7 +15,7 @@ class SecurityHeaders:
         # Prevent clickjacking
         "X-Frame-Options": "DENY",
         # Prevent MIME type sniffing
-        "X-Content-Type-Options": "nosniff",
+        "X-Content-type-Options": "nosniff",
         # Enable XSS protection
         "X-XSS-Protection": "1; mode=block",
         # Referrer policy
@@ -86,13 +85,13 @@ class RateLimiter:
         self.max_tracked_ips = max_tracked_ips
 
         # Store buckets per client IP
-        self.buckets: Dict[str, Dict] = {}
+        self.buckets: dict[str, dict] = {}
         self.last_cleanup = time.time()
 
         # Thread lock for concurrent access
         self._lock = threading.Lock()
 
-    def _refill_tokens(self, bucket: Dict) -> None:
+    def _refill_tokens(self, bucket: dict) -> None:
         """Refill tokens based on time elapsed."""
         now = time.time()
         elapsed = now - bucket["last_update"]
@@ -116,14 +115,14 @@ class RateLimiter:
         }
         self.last_cleanup = now
 
-    def is_allowed(self, client_ip: str) -> Tuple[bool, Optional[int]]:
+    def is_allowed(self, client_ip: str) -> tuple[bool, int | None]:
         """Check if request is allowed.
 
         Args:
             client_ip: Client IP address
 
         Returns:
-            Tuple of (allowed, retry_after_seconds)
+            tuple of (allowed, retry_after_seconds)
         """
         with self._lock:
             # Check if we've hit the maximum tracked IPs
@@ -163,7 +162,7 @@ class RateLimiter:
 
             return False, retry_after
 
-    def get_stats(self, client_ip: str) -> Dict:
+    def get_stats(self, client_ip: str) -> dict:
         """Get rate limit stats for client.
 
         Args:
@@ -205,14 +204,14 @@ class RequestValidator:
     ]
 
     @staticmethod
-    def validate_path(path: str) -> Tuple[bool, Optional[str]]:
+    def validate_path(path: str) -> tuple[bool, str | None]:
         """Validate request path.
 
         Args:
             path: Request path
 
         Returns:
-            Tuple of (valid, error_message)
+            tuple of (valid, error_message)
         """
         # Check for suspicious patterns
         path_lower = path.lower()
@@ -223,14 +222,14 @@ class RequestValidator:
         return True, None
 
     @staticmethod
-    def validate_content_length(content_length: Optional[int]) -> Tuple[bool, Optional[str]]:
+    def validate_content_length(content_length: int | None) -> tuple[bool, str | None]:
         """Validate content length.
 
         Args:
             content_length: Content length from request
 
         Returns:
-            Tuple of (valid, error_message)
+            tuple of (valid, error_message)
         """
         if content_length is None:
             return True, None
@@ -278,14 +277,14 @@ class SecretValidator:
     ]
 
     @staticmethod
-    def validate_secrets(config: dict) -> Tuple[bool, list]:
+    def validate_secrets(config: dict) -> tuple[bool, list]:
         """Validate secrets configuration.
 
         Args:
             config: Configuration dictionary
 
         Returns:
-            Tuple of (all_valid, missing_secrets)
+            tuple of (all_valid, missing_secrets)
         """
         import os
 
@@ -306,7 +305,7 @@ class SecretValidator:
             config: Configuration dictionary
 
         Returns:
-            List of weak secrets found
+            list of weak secrets found
         """
         import os
 

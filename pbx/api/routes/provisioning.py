@@ -563,7 +563,7 @@ def handle_provisioning_request(path: str) -> Response:
 
             logger.warning("  To register this device:")
             logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
-            logger.warning("      -H 'Content-Type: application/json' \\")
+            logger.warning("      -H 'Content-type: application/json' \\")
             logger.warning(
                 '      -d \'{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}\''
             )
@@ -690,7 +690,7 @@ def handle_reload_templates() -> Response:
 @provisioning_bp.route("/api/provisioning/devices/<mac>/static-ip", methods=["POST"])
 @require_admin
 def handle_set_static_ip(mac: str) -> Response:
-    """Set static IP for a device."""
+    """set static IP for a device."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
         return send_json({"error": "Phone provisioning not enabled"}, 500)

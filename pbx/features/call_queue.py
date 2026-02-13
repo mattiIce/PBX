@@ -70,20 +70,20 @@ class Agent:
         self.current_call_id = None
 
     def set_available(self):
-        """Set agent as available"""
+        """set agent as available"""
         self.status = AgentStatus.AVAILABLE
 
     def set_busy(self, call_id=None):
-        """Set agent as busy"""
+        """set agent as busy"""
         self.status = AgentStatus.BUSY
         self.current_call_id = call_id
 
     def set_break(self):
-        """Set agent on break"""
+        """set agent on break"""
         self.status = AgentStatus.ON_BREAK
 
     def set_offline(self):
-        """Set agent offline"""
+        """set agent offline"""
         self.status = AgentStatus.OFFLINE
 
     def complete_call(self):
@@ -228,7 +228,7 @@ class CallQueue:
         Process queued calls and assign to agents
 
         Returns:
-            List of (call, agent) tuples that were assigned
+            list of (call, agent) tuples that were assigned
         """
         assignments = []
 

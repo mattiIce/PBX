@@ -5,7 +5,6 @@ AI-powered call classification and tagging
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -88,13 +87,13 @@ class CallTagging:
         self.max_tags_per_call = tagging_config.get("max_tags", 10)
 
         # Tags storage
-        self.call_tags: Dict[str, List[CallTag]] = {}
+        self.call_tags: dict[str, list[CallTag]] = {}
 
         # Custom tags
         self.custom_tags: set = set()
 
         # Tagging rules
-        self.tagging_rules: List[Dict] = []
+        self.tagging_rules: list[dict] = []
         self._initialize_default_rules()
 
         # Statistics
@@ -337,8 +336,8 @@ class CallTagging:
         return True
 
     def auto_tag_call(
-        self, call_id: str, transcript: str = None, metadata: Dict = None
-    ) -> List[str]:
+        self, call_id: str, transcript: str = None, metadata: dict = None
+    ) -> list[str]:
         """
         Automatically tag a call based on content
 
@@ -348,7 +347,7 @@ class CallTagging:
             metadata: Call metadata (optional)
 
         Returns:
-            List[str]: Tags added
+            list[str]: Tags added
         """
         if not self.auto_tag_enabled:
             return []
@@ -379,7 +378,7 @@ class CallTagging:
 
         return tags_added
 
-    def _apply_rules(self, call_id: str, transcript: str) -> List[str]:
+    def _apply_rules(self, call_id: str, transcript: str) -> list[str]:
         """Apply rule-based tagging"""
         tags_added = []
         transcript_lower = transcript.lower()
@@ -395,7 +394,7 @@ class CallTagging:
 
         return tags_added
 
-    def _classify_with_spacy(self, transcript: str) -> List[tuple]:
+    def _classify_with_spacy(self, transcript: str) -> list[tuple]:
         """Classify using spaCy NLP model"""
         results = []
 
@@ -429,7 +428,7 @@ class CallTagging:
 
         return results
 
-    def _classify_with_ml(self, transcript: str) -> List[tuple]:
+    def _classify_with_ml(self, transcript: str) -> list[tuple]:
         """Classify using ML classifier"""
         results = []
 
@@ -461,7 +460,7 @@ class CallTagging:
             self.logger.warning(f"ML classification failed: {e}, falling back to rule-based")
             return []
 
-    def _classify_with_ai(self, transcript: str) -> List[tuple]:
+    def _classify_with_ai(self, transcript: str) -> list[tuple]:
         """
         Classify call using AI/ML with scikit-learn and spaCy
 
@@ -469,7 +468,7 @@ class CallTagging:
             transcript: Call transcript
 
         Returns:
-            List[tuple]: List of (tag, confidence) tuples
+            list[tuple]: list of (tag, confidence) tuples
         """
         results = []
 
@@ -614,7 +613,7 @@ class CallTagging:
 
         return results
 
-    def _tag_from_metadata(self, metadata: Dict) -> List[str]:
+    def _tag_from_metadata(self, metadata: dict) -> list[str]:
         """Extract tags from call metadata"""
         tags = []
 
@@ -646,7 +645,7 @@ class CallTagging:
 
         return tags
 
-    def get_call_tags(self, call_id: str) -> List[Dict]:
+    def get_call_tags(self, call_id: str) -> list[dict]:
         """Get all tags for a call"""
         if call_id not in self.call_tags:
             return []
@@ -672,7 +671,7 @@ class CallTagging:
         return True
 
     def add_tagging_rule(
-        self, name: str, keywords: List[str], tag: str, category: CallCategory = None
+        self, name: str, keywords: list[str], tag: str, category: CallCategory = None
     ):
         """
         Add custom tagging rule
@@ -693,7 +692,7 @@ class CallTagging:
         self.logger.info(f"Added tagging rule: {name}")
         return True
 
-    def get_tag_statistics(self) -> Dict:
+    def get_tag_statistics(self) -> dict:
         """Get tag usage statistics"""
         tag_counts = {}
 
@@ -707,7 +706,7 @@ class CallTagging:
             "most_common": sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10],
         }
 
-    def search_by_tag(self, tag: str) -> List[str]:
+    def search_by_tag(self, tag: str) -> list[str]:
         """
         Find all calls with a specific tag
 
@@ -715,7 +714,7 @@ class CallTagging:
             tag: Tag to search for
 
         Returns:
-            List[str]: Call IDs with the tag
+            list[str]: Call IDs with the tag
         """
         matching_calls = []
 
@@ -725,7 +724,7 @@ class CallTagging:
 
         return matching_calls
 
-    def get_all_tags(self) -> List[Dict]:
+    def get_all_tags(self) -> list[dict]:
         """Get all unique tags"""
         all_tags = set()
         for tags_list in self.call_tags.values():
@@ -737,7 +736,7 @@ class CallTagging:
 
         return [{"tag": tag} for tag in sorted(all_tags)]
 
-    def get_all_rules(self) -> List[Dict]:
+    def get_all_rules(self) -> list[dict]:
         """Get all tagging rules"""
         return self.tagging_rules.copy()
 
@@ -757,13 +756,13 @@ class CallTagging:
         self.logger.info(f"Created custom tag: {name}")
         return name
 
-    def create_rule(self, name: str, conditions: List, tag_id: str, priority: int = 100) -> str:
+    def create_rule(self, name: str, conditions: list, tag_id: str, priority: int = 100) -> str:
         """
         Create a new tagging rule
 
         Args:
             name: Rule name
-            conditions: List of conditions
+            conditions: list of conditions
             tag_id: Tag to apply
             priority: Rule priority
 
@@ -783,8 +782,8 @@ class CallTagging:
         return rule_id
 
     def classify_call(
-        self, call_id: str, transcript: str = None, metadata: Dict = None
-    ) -> List[str]:
+        self, call_id: str, transcript: str = None, metadata: dict = None
+    ) -> list[str]:
         """
         Classify a call and return applicable tags
 
@@ -799,7 +798,7 @@ class CallTagging:
             metadata: Optional call metadata (queue, duration, disposition, etc.)
 
         Returns:
-            List[str]: List of tags
+            list[str]: list of tags
         """
         tags = []
         transcript_lower = (transcript or "").lower()
@@ -838,7 +837,7 @@ class CallTagging:
 
         return unique_tags
 
-    def _evaluate_rule(self, rule: Dict, transcript: str, metadata: Dict) -> bool:
+    def _evaluate_rule(self, rule: dict, transcript: str, metadata: dict) -> bool:
         """
         Evaluate a tagging rule against call data
 
@@ -883,7 +882,7 @@ class CallTagging:
 
         return False
 
-    def extract_entities_with_spacy(self, text: str) -> Dict[str, List[str]]:
+    def extract_entities_with_spacy(self, text: str) -> dict[str, list[str]]:
         """
         Extract named entities using spaCy
 
@@ -891,7 +890,7 @@ class CallTagging:
             text: Text to analyze
 
         Returns:
-            Dict mapping entity types to lists of entities
+            dict mapping entity types to lists of entities
         """
         if not self.nlp_model:
             return {}
@@ -910,7 +909,7 @@ class CallTagging:
             self.logger.error(f"Entity extraction error: {e}")
             return {}
 
-    def analyze_sentiment_with_spacy(self, text: str) -> Dict:
+    def analyze_sentiment_with_spacy(self, text: str) -> dict:
         """
         Analyze sentiment using spaCy and rule-based approach
 
@@ -918,7 +917,7 @@ class CallTagging:
             text: Text to analyze
 
         Returns:
-            Dict with sentiment, score, and confidence
+            dict with sentiment, score, and confidence
         """
         if not self.nlp_model:
             return {"sentiment": "neutral", "score": 0.0, "confidence": 0.0}
@@ -986,7 +985,7 @@ class CallTagging:
             self.logger.error(f"Sentiment analysis error: {e}")
             return {"sentiment": "neutral", "score": 0.0, "confidence": 0.0}
 
-    def extract_key_phrases_with_spacy(self, text: str, max_phrases: int = 10) -> List[str]:
+    def extract_key_phrases_with_spacy(self, text: str, max_phrases: int = 10) -> list[str]:
         """
         Extract key phrases using spaCy noun chunks
 
@@ -995,7 +994,7 @@ class CallTagging:
             max_phrases: Maximum number of phrases to return
 
         Returns:
-            List of key phrases
+            list of key phrases
         """
         if not self.nlp_model:
             return []
@@ -1022,7 +1021,7 @@ class CallTagging:
             self.logger.error(f"Key phrase extraction error: {e}")
             return []
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get overall tagging statistics"""
         return {
             "enabled": self.enabled,

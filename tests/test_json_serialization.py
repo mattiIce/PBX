@@ -4,12 +4,8 @@ Tests for JSON serialization of datetime objects in API responses
 """
 
 import json
-import os
-import sys
 from datetime import datetime
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.api.rest_api import DateTimeEncoder
 from pbx.utils.config import Config
@@ -18,7 +14,6 @@ from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 def test_datetime_encoder() -> None:
     """Test that DateTimeEncoder correctly serializes datetime objects"""
-    print("Testing DateTimeEncoder...")
 
     # Create test data with datetime objects
     test_data = {
@@ -30,7 +25,6 @@ def test_datetime_encoder() -> None:
 
     # Serialize with custom encoder
     json_str = json.dumps(test_data, cls=DateTimeEncoder)
-    print(f"  Serialized JSON: {json_str}")
 
     # Verify it's valid JSON
     parsed = json.loads(json_str)
@@ -39,12 +33,9 @@ def test_datetime_encoder() -> None:
     assert parsed["created_at"] == "2025-12-05T14:30:00", "Created timestamp should be ISO format"
     assert parsed["updated_at"] == "2025-12-05T15:45:30", "Updated timestamp should be ISO format"
 
-    print("✓ DateTimeEncoder works correctly")
-
 
 def test_registered_phones_json_serialization() -> None:
     """Test JSON serialization of registered phones with datetime objects"""
-    print("Testing registered phones JSON serialization...")
 
     # Simulate what PostgreSQL returns with datetime objects
     phones = [
@@ -72,7 +63,6 @@ def test_registered_phones_json_serialization() -> None:
 
     # Serialize with custom encoder
     json_str = json.dumps(phones, cls=DateTimeEncoder)
-    print(f"  Serialized {len(phones)} phones successfully")
 
     # Verify it's valid JSON
     parsed = json.loads(json_str)
@@ -83,12 +73,9 @@ def test_registered_phones_json_serialization() -> None:
     ), "First phone timestamp should be ISO format"
     assert parsed[1]["extension_number"] == "1002", "Second phone extension should match"
 
-    print("✓ Registered phones JSON serialization works correctly")
-
 
 def test_registered_phones_db_with_encoder() -> None:
     """Test that registered phones from database can be serialized"""
-    print("Testing registered phones from database with JSON encoder...")
 
     # Create database backend (using SQLite for tests)
     config = Config("config.yml")
@@ -115,35 +102,3 @@ def test_registered_phones_db_with_encoder() -> None:
     # Verify it's valid JSON
     parsed = json.loads(json_str)
     assert len(parsed) >= 2, "Should have at least 2 phones"
-
-    print("✓ Database registered phones can be serialized to JSON")
-
-
-def run_all_tests() -> bool | None:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running JSON Serialization Tests")
-    print("=" * 60)
-
-    try:
-        test_datetime_encoder()
-        test_registered_phones_json_serialization()
-        test_registered_phones_db_with_encoder()
-
-        print("=" * 60)
-        print("Results: 3 passed, 0 failed")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        return False
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

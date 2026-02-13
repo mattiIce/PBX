@@ -16,6 +16,7 @@ from pbx.core.call_router import CallRouter
 
 
 @pytest.mark.integration
+
 class TestCallRouterInternalRouting:
     """Test that CallRouter correctly routes internal calls."""
 
@@ -151,10 +152,12 @@ class TestCallRouterInternalRouting:
 
 
 @pytest.mark.integration
+
 class TestDialplanMatching:
     """Test that the dialplan checker accepts and rejects patterns correctly."""
 
     @pytest.fixture
+
     def router(self, mock_config: MagicMock) -> CallRouter:
         """Create a CallRouter with default dialplan config."""
         pbx = MagicMock()
@@ -179,6 +182,7 @@ class TestDialplanMatching:
             ("12", False),    # too short for internal
         ],
     )
+
     def test_dialplan_patterns(self, router: CallRouter, extension: str, expected: bool) -> None:
         """Verify dialplan matching for various extension patterns."""
         result = router._check_dialplan(extension)
@@ -199,6 +203,7 @@ class TestDialplanMatching:
 
 
 @pytest.mark.integration
+
 class TestNoAnswerHandling:
     """Test that the no-answer timer fires and routes to voicemail."""
 

@@ -539,7 +539,7 @@ class PBXCore:
             default_codecs: Default codecs to use if no specific requirement
 
         Returns:
-            List of codec payload types as strings
+            list of codec payload types as strings
         """
         # Get DTMF payload type from config (default 101)
         dtmf_payload_type = self.config.get("features.dtmf.payload_type", 101)
@@ -703,7 +703,7 @@ class PBXCore:
             caller_endpoint = (call.caller_rtp["address"], call.caller_rtp["port"])
             callee_endpoint = (call.callee_rtp["address"], call.callee_rtp["port"])
 
-            # Set both endpoints (caller was already set, but setting again is safe)
+            # set both endpoints (caller was already set, but setting again is safe)
             # This ensures callee endpoint (B) is now known for bidirectional
             # relay
             self.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
@@ -764,7 +764,7 @@ class PBXCore:
                 ok_response = SIPMessageBuilder.build_response(
                     200, "OK", call.original_invite, body=caller_response_sdp
                 )
-                ok_response.set_header("Content-Type", "application/sdp")
+                ok_response.set_header("Content-type", "application/sdp")
 
                 # Build Contact header
                 sip_port = self.config.get("server.sip_port", 5060)

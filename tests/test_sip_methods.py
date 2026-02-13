@@ -2,13 +2,8 @@
 Test suite for all SIP methods including MESSAGE, PRACK, UPDATE, and PUBLISH
 """
 
-import os
-import sys
-import unittest
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.sip.message import SIPMessage
 from pbx.sip.server import SIPServer
@@ -47,10 +42,10 @@ class MockPBXCore:
         """Mock end call"""
 
 
-class TestSIPMethods(unittest.TestCase):
+class TestSIPMethods:
     """Test all SIP methods"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         self.mock_pbx = MockPBXCore()
         self.sip_server = SIPServer(host="127.0.0.1", port=5060, pbx_core=self.mock_pbx)
@@ -72,10 +67,9 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "MESSAGE")
-        self.assertEqual(message.get_header("Content-Type"), "text/plain")
-        self.assertEqual(message.body, "Hello World")
-
+        assert message.method == "MESSAGE"
+        assert message.get_header("Content-Type") == "text/plain"
+        assert message.body == "Hello World"
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_sip_message_method(message, addr)
@@ -96,9 +90,8 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "MESSAGE")
-        self.assertEqual(message.body, "")
-
+        assert message.method == "MESSAGE"
+        assert message.body == ""
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_sip_message_method(message, addr)
@@ -125,9 +118,8 @@ class TestSIPMethods(unittest.TestCase):
             message = SIPMessage(sip_message)
 
             # Verify message parsing
-            self.assertEqual(message.method, "MESSAGE")
-            self.assertEqual(message.get_header("Content-Type"), content_type)
-
+            assert message.method == "MESSAGE"
+            assert message.get_header("Content-Type") == content_type
             # Test handling
             addr = ("192.168.1.101", 5060)
             self.sip_server._handle_sip_message_method(message, addr)
@@ -149,10 +141,9 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "PRACK")
-        self.assertEqual(message.get_header("RAck"), "1 1 INVITE")
-        self.assertEqual(message.get_header("Call-ID"), "prack-call-123")
-
+        assert message.method == "PRACK"
+        assert message.get_header("RAck") == "1 1 INVITE"
+        assert message.get_header("Call-ID") == "prack-call-123"
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_prack(message, addr)
@@ -173,9 +164,8 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "PRACK")
-        self.assertIsNone(message.get_header("RAck"))
-
+        assert message.method == "PRACK"
+        assert message.get_header("RAck") is None
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_prack(message, addr)
@@ -208,10 +198,9 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "UPDATE")
-        self.assertEqual(message.get_header("Content-Type"), "application/sdp")
-        self.assertIn("m=audio", message.body)
-
+        assert message.method == "UPDATE"
+        assert message.get_header("Content-Type") == "application/sdp"
+        assert "m=audio" in message.body
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_update(message, addr)
@@ -232,9 +221,8 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "UPDATE")
-        self.assertEqual(message.body, "")
-
+        assert message.method == "UPDATE"
+        assert message.body == ""
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_update(message, addr)
@@ -259,10 +247,9 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "PUBLISH")
-        self.assertEqual(message.get_header("Event"), "presence")
-        self.assertEqual(message.get_header("Expires"), "3600")
-
+        assert message.method == "PUBLISH"
+        assert message.get_header("Event") == "presence"
+        assert message.get_header("Expires") == "3600"
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_publish(message, addr)
@@ -288,9 +275,8 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "PUBLISH")
-        self.assertEqual(message.get_header("SIP-If-Match"), "entity-tag-12345")
-
+        assert message.method == "PUBLISH"
+        assert message.get_header("SIP-If-Match") == "entity-tag-12345"
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_publish(message, addr)
@@ -314,10 +300,9 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "PUBLISH")
-        self.assertEqual(message.get_header("Expires"), "0")
-        self.assertEqual(message.body, "")
-
+        assert message.method == "PUBLISH"
+        assert message.get_header("Expires") == "0"
+        assert message.body == ""
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_publish(message, addr)
@@ -338,8 +323,7 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "OPTIONS")
-
+        assert message.method == "OPTIONS"
         # Test handling (just verify no exception)
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_options(message, addr)
@@ -378,8 +362,7 @@ class TestSIPMethods(unittest.TestCase):
             message = SIPMessage(sip_message)
 
             # Verify message parsing
-            self.assertEqual(message.method, method)
-
+            assert message.method == method
             # Test handling via _handle_request
             addr = ("192.168.1.101", 5060)
             self.sip_server._handle_request(message, addr)
@@ -400,13 +383,8 @@ class TestSIPMethods(unittest.TestCase):
         message = SIPMessage(sip_message)
 
         # Verify message parsing
-        self.assertEqual(message.method, "UNSUPPORTED")
-
+        assert message.method == "UNSUPPORTED"
         # Test handling
         addr = ("192.168.1.101", 5060)
         self.sip_server._handle_request(message, addr)
         # Should handle gracefully and send 405 response
-
-
-if __name__ == "__main__":
-    unittest.main()

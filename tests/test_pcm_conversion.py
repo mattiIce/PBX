@@ -4,11 +4,7 @@ Test PCM to G.722 conversion functionality
 
 import os
 import struct
-import sys
 import tempfile
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 def test_pcm16_to_g722_conversion() -> None:
@@ -32,11 +28,6 @@ def test_pcm16_to_g722_conversion() -> None:
     # G.722 compresses approximately 2:1 (but after upsampling 8kHz->16kHz)
     # After upsampling, PCM data doubles, then G.722 compresses by ~2x
     # So final size should be similar to original
-
-    print(f"✓ Successfully converted {len(test_samples)} PCM samples to G.722")
-    print(f"  PCM data size: {len(pcm_data)} bytes")
-    print(f"  G.722 data size: {len(g722_data)} bytes")
-    print(f"  Compression ratio: {len(pcm_data) / len(g722_data):.1f}x")
 
 
 def test_pcm_wav_to_g722_with_rtp() -> None:
@@ -81,7 +72,6 @@ def test_pcm_wav_to_g722_with_rtp() -> None:
         # The conversion should succeed
         assert result is True, "Playing PCM WAV file should succeed after conversion to G.722"
 
-        print("✓ Successfully played PCM WAV file with automatic conversion to G.722")
 
     finally:
         # Clean up temporary file
@@ -147,28 +137,8 @@ def test_ulaw_wav_still_works() -> None:
         # Should succeed without conversion
         assert result is True, "Playing μ-law WAV file should succeed without conversion"
 
-        print("✓ Successfully played μ-law WAV file (no conversion needed)")
 
     finally:
         # Clean up temporary file
         if os.path.exists(temp_path):
             os.remove(temp_path)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("Testing PCM to G.722 conversion...")
-    print("-" * 60)
-    test_pcm16_to_g722_conversion()
-    print()
-    test_pcm_wav_to_g722_with_rtp()
-    print()
-    test_ulaw_wav_still_works()
-    print("-" * 60)
-    print("All tests passed! ✓")
-    return True
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

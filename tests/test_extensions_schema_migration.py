@@ -6,11 +6,8 @@ Tests that voicemail_pin_hash and voicemail_pin_salt columns are added during mi
 
 import os
 import sqlite3
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
@@ -18,7 +15,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_extensions_columns_migration() -> None:
     """Test that missing voicemail PIN columns are added during migration"""
-    print("Testing extensions table schema migration...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -58,11 +54,9 @@ def test_extensions_columns_migration() -> None:
         columns = [row[1] for row in cursor.fetchall()]
         conn.close()
 
-        print(f"  Initial columns: {columns}")
         assert "voicemail_pin_hash" not in columns, "voicemail_pin_hash should not exist initially"
         assert "voicemail_pin_salt" not in columns, "voicemail_pin_salt should not exist initially"
         assert "password_salt" not in columns, "password_salt should not exist initially"
-        print("  ✓ Old schema confirmed (missing voicemail PIN columns)")
 
         # Now connect with DatabaseBackend which should trigger migration
         test_config = Config("config.yml")
@@ -70,11 +64,9 @@ def test_extensions_columns_migration() -> None:
 
         db = DatabaseBackend(test_config)
         assert db.connect() is True
-        print("  ✓ Connected to database")
 
         # Create tables (this will run migrations)
         assert db.create_tables() is True
-        print("  ✓ Tables created/migrated")
 
         db.disconnect()
 
@@ -85,7 +77,6 @@ def test_extensions_columns_migration() -> None:
         columns_after = [row[1] for row in cursor.fetchall()]
         conn.close()
 
-        print(f"  Columns after migration: {columns_after}")
         assert (
             "voicemail_pin_hash" in columns_after
         ), "voicemail_pin_hash should exist after migration"
@@ -93,9 +84,7 @@ def test_extensions_columns_migration() -> None:
             "voicemail_pin_salt" in columns_after
         ), "voicemail_pin_salt should exist after migration"
         assert "password_salt" in columns_after, "password_salt should exist after migration"
-        print("  ✓ Migration added missing columns")
 
-        print("✓ Extensions table schema migration test passed")
 
     finally:
         # Cleanup
@@ -105,7 +94,6 @@ def test_extensions_columns_migration() -> None:
 
 def test_extensions_columns_already_exist() -> None:
     """Test that migration handles existing columns gracefully"""
-    print("Testing extensions migration with existing columns...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -121,7 +109,6 @@ def test_extensions_columns_already_exist() -> None:
 
         # Create tables with all columns
         assert db.create_tables() is True
-        print("  ✓ Tables created with all columns")
 
         # Verify columns exist
         conn = sqlite3.connect(temp_db.name)
@@ -133,15 +120,12 @@ def test_extensions_columns_already_exist() -> None:
         assert "voicemail_pin_hash" in columns
         assert "voicemail_pin_salt" in columns
         assert "password_salt" in columns
-        print(f"  Columns present: {columns}")
 
         # Run create_tables again - should not fail (migration runs internally)
         result = db.create_tables()
         assert result is True
-        print("  ✓ Migration ran without errors on existing schema")
 
         db.disconnect()
-        print("✓ Migration handles existing columns gracefully")
 
     finally:
         # Cleanup
@@ -151,7 +135,6 @@ def test_extensions_columns_already_exist() -> None:
 
 def test_insert_with_voicemail_pin() -> None:
     """Test that we can insert extensions with voicemail PIN after migration"""
-    print("Testing extension insertion with voicemail PIN...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -185,7 +168,6 @@ def test_insert_with_voicemail_pin() -> None:
         db = DatabaseBackend(test_config)
         assert db.connect() is True
         assert db.create_tables() is True
-        print("  ✓ Migration completed")
 
         # Now try to insert an extension with voicemail PIN columns
         query = """
@@ -207,7 +189,6 @@ def test_insert_with_voicemail_pin() -> None:
 
         result = db.execute(query, params)
         assert result is True, "Should be able to insert with voicemail PIN columns"
-        print("  ✓ Successfully inserted extension with voicemail PIN")
 
         # Verify the data was inserted
         verify_query = "SELECT number, name, voicemail_pin_hash, voicemail_pin_salt FROM extensions WHERE number = ?"
@@ -216,53 +197,10 @@ def test_insert_with_voicemail_pin() -> None:
         assert row["number"] == "1001"
         assert row["voicemail_pin_hash"] == "pin_hash"
         assert row["voicemail_pin_salt"] == "pin_salt"
-        print("  ✓ Data verified in database")
 
         db.disconnect()
-        print("✓ Extension insertion test passed")
 
     finally:
         # Cleanup
         if os.path.exists(temp_db.name):
             os.unlink(temp_db.name)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Running Extensions Table Schema Migration Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_extensions_columns_migration,
-        test_extensions_columns_already_exist,
-        test_insert_with_voicemail_pin,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-            print()
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-            print()
-
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

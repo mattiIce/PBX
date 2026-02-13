@@ -9,7 +9,6 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -67,17 +66,17 @@ class SessionBorderController:
         self.whitelist: set = set()
 
         # Rate limiting tracking
-        self.request_counts: Dict[str, List[float]] = defaultdict(list)
+        self.request_counts: dict[str, list[float]] = defaultdict(list)
         self.rate_limit_window = 1.0  # 1 second window
 
         # Media relay sessions
-        self.relay_sessions: Dict[str, Dict] = {}
+        self.relay_sessions: dict[str, dict] = {}
         self.next_relay_port = 10000
         self.relay_port_pool: set = set(range(10000, 20000, 2))  # RTP uses even ports
 
         # Bandwidth tracking
         self.current_bandwidth = 0  # kbps
-        self.bandwidth_by_call: Dict[str, int] = {}
+        self.bandwidth_by_call: dict[str, int] = {}
 
         # Statistics
         self.total_sessions = 0
@@ -91,7 +90,7 @@ class SessionBorderController:
         self.logger.info(f"  NAT traversal: STUN={self.stun_enabled}, TURN={self.turn_enabled}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def process_inbound_sip(self, message: Dict, source_ip: str) -> Dict:
+    def process_inbound_sip(self, message: dict, source_ip: str) -> dict:
         """
         Process inbound SIP message
 
@@ -100,7 +99,7 @@ class SessionBorderController:
             source_ip: Source IP address
 
         Returns:
-            Dict: Processing result
+            dict: Processing result
         """
         # Security checks
         if self._is_blacklisted(source_ip):
@@ -121,7 +120,7 @@ class SessionBorderController:
 
         return {"action": "forward", "message": message}
 
-    def process_outbound_sip(self, message: Dict) -> Dict:
+    def process_outbound_sip(self, message: dict) -> dict:
         """Process outbound SIP message"""
         # Topology hiding
         if self.topology_hiding:
@@ -129,7 +128,7 @@ class SessionBorderController:
 
         return {"action": "forward", "message": message}
 
-    def _hide_topology(self, message: Dict, direction: str) -> Dict:
+    def _hide_topology(self, message: dict, direction: str) -> dict:
         """
         Hide internal topology in SIP headers
 
@@ -138,7 +137,7 @@ class SessionBorderController:
             direction: Direction (inbound/outbound)
 
         Returns:
-            Dict: Modified message
+            dict: Modified message
         """
         if not isinstance(message, dict):
             return message
@@ -210,7 +209,7 @@ class SessionBorderController:
         sdp_pattern = r"(c=IN IP4 )" + self.IP_PATTERN
         return re.sub(sdp_pattern, r"\g<1>" + public_ip, sdp)
 
-    def _normalize_sip_message(self, message: Dict) -> Dict:
+    def _normalize_sip_message(self, message: dict) -> dict:
         """Normalize SIP message format"""
         if not isinstance(message, dict):
             return message
@@ -333,7 +332,7 @@ class SessionBorderController:
         except (ValueError, IndexError):
             return False
 
-    def allocate_relay(self, call_id: str, codec: str) -> Dict:
+    def allocate_relay(self, call_id: str, codec: str) -> dict:
         """
         Allocate media relay for NAT traversal
 
@@ -342,7 +341,7 @@ class SessionBorderController:
             codec: Media codec
 
         Returns:
-            Dict: Relay allocation
+            dict: Relay allocation
         """
         if not self.media_relay:
             return {"success": False, "reason": "Media relay disabled"}
@@ -431,7 +430,7 @@ class SessionBorderController:
 
         return True
 
-    def perform_call_admission_control(self, call_request: Dict) -> Dict:
+    def perform_call_admission_control(self, call_request: dict) -> dict:
         """
         Perform call admission control
 
@@ -439,7 +438,7 @@ class SessionBorderController:
             call_request: Call request information
 
         Returns:
-            Dict: Admission decision
+            dict: Admission decision
         """
         # Check current load
         if self.active_sessions >= self.max_calls:
@@ -541,7 +540,7 @@ class SessionBorderController:
         self.logger.info(f"Added {ip} to whitelist")
         return True
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get SBC statistics"""
         return {
             "enabled": self.enabled,

@@ -220,7 +220,7 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
     Generate multiple voice prompts from text
 
     Args:
-        prompts: Dict of {filename: text} to generate
+        prompts: dict of {filename: text} to generate
         output_dir: Directory to save audio files
         company_name: Optional company name to substitute in text
         sample_rate: Sample rate in Hz (default 8000 Hz for PCMU/G.711 audio)

@@ -4,21 +4,17 @@ Test suite for Auto Attendant Submenu functionality
 
 import os
 import shutil
-import sys
 import tempfile
-import unittest
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.features.auto_attendant import AAState, AutoAttendant, DestinationType
 
 
-class TestAutoAttendantSubmenu(unittest.TestCase):
+class TestAutoAttendantSubmenu:
     """Test Auto Attendant Submenu functionality"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         # Create a temporary directory for test database
         self.test_dir = tempfile.mkdtemp()
@@ -43,7 +39,7 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Initialize auto attendant
         self.aa = AutoAttendant(self.config)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test fixtures"""
         # Remove temporary directory
         if os.path.exists(self.test_dir):
@@ -60,18 +56,15 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menus'"
         )
-        self.assertIsNotNone(cursor.fetchone())
-
+        assert cursor.fetchone() is not None
         # Check that auto_attendant_menu_items table exists
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='auto_attendant_menu_items'"
         )
-        self.assertIsNotNone(cursor.fetchone())
-
+        assert cursor.fetchone() is not None
         # Check that main menu was created
         cursor.execute("SELECT COUNT(*) FROM auto_attendant_menus WHERE menu_id = 'main'")
-        self.assertEqual(cursor.fetchone()[0], 1)
-
+        assert cursor.fetchone()[0] == 1
         conn.close()
 
     def test_create_submenu(self) -> None:
@@ -83,14 +76,13 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
             prompt_text="For directions, press 1. For shipping, press 2.",
         )
 
-        self.assertTrue(success)
-
+        assert success
         # Verify menu was created
         menu = self.aa.get_menu("shipping-submenu")
-        self.assertIsNotNone(menu)
-        self.assertEqual(menu["menu_id"], "shipping-submenu")
-        self.assertEqual(menu["parent_menu_id"], "main")
-        self.assertEqual(menu["menu_name"], "Shipping and Receiving")
+        assert menu is not None
+        assert menu["menu_id"] == "shipping-submenu"
+        assert menu["parent_menu_id"] == "main"
+        assert menu["menu_name"] == "Shipping and Receiving"
 
     def test_circular_reference_prevention(self) -> None:
         """Test that circular references are prevented"""
@@ -100,13 +92,12 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
 
         # Try to create circular reference: menu1 -> menu2 -> menu1
         success = self.aa.create_menu("menu3", "menu2", "Menu 3", "Menu 3 prompt")
-        self.assertTrue(success)
-
+        assert success
         # Now try to make menu1 a child of menu3 (would create a circle)
         # This should be prevented when we try to update parent_menu_id
         # For now, test that the check function works
         would_create_circle = self.aa._would_create_circular_reference("menu1", "menu3")
-        self.assertTrue(would_create_circle)
+        assert would_create_circle
 
     def test_menu_depth_validation(self) -> None:
         """Test that menu depth is limited to 5 levels total (main + 4 sublevels)"""
@@ -115,25 +106,24 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         for i in range(1, 5):  # Create 4 levels after main
             menu_id = f"level{i}"
             success = self.aa.create_menu(menu_id, parent, f"Level {i}", f"Level {i} prompt")
-            self.assertTrue(success, f"Failed to create level{i}")
+            assert success, f"Failed to create level{i}"
             parent = menu_id
 
         # Try to create a 5th level after main (would be depth 5, should fail)
         success = self.aa.create_menu("level5", "level4", "Level 5", "Level 5 prompt")
-        self.assertFalse(success, "Should not allow depth 5")
+        assert not success, "Should not allow depth 5"
 
     def test_add_menu_item_extension(self) -> None:
         """Test adding extension-type menu item"""
         success = self.aa.add_menu_item("main", "1", "extension", "1001", "Sales Department")
 
-        self.assertTrue(success)
-
+        assert success
         # Verify item was added
         items = self.aa.get_menu_items("main")
-        self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]["digit"], "1")
-        self.assertEqual(items[0]["destination_type"], "extension")
-        self.assertEqual(items[0]["destination_value"], "1001")
+        assert len(items) == 1
+        assert items[0]["digit"] == "1"
+        assert items[0]["destination_type"] == "extension"
+        assert items[0]["destination_value"] == "1001"
 
     def test_add_menu_item_submenu(self) -> None:
         """Test adding submenu-type menu item"""
@@ -143,19 +133,18 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Add menu item pointing to submenu
         success = self.aa.add_menu_item("main", "1", "submenu", "sales-submenu", "Sales Department")
 
-        self.assertTrue(success)
-
+        assert success
         # Verify item was added
         items = self.aa.get_menu_items("main")
-        self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]["destination_type"], "submenu")
-        self.assertEqual(items[0]["destination_value"], "sales-submenu")
+        assert len(items) == 1
+        assert items[0]["destination_type"] == "submenu"
+        assert items[0]["destination_value"] == "sales-submenu"
 
     def test_add_menu_item_invalid_submenu(self) -> None:
         """Test that adding menu item with non-existent submenu fails"""
         success = self.aa.add_menu_item("main", "1", "submenu", "nonexistent", "Invalid")
 
-        self.assertFalse(success)
+        assert not success
 
     def test_get_menu_tree(self) -> None:
         """Test getting complete menu tree"""
@@ -173,15 +162,14 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Get menu tree
         tree = self.aa.get_menu_tree("main")
 
-        self.assertIsNotNone(tree)
-        self.assertEqual(tree["menu_id"], "main")
-        self.assertEqual(len(tree["items"]), 2)
-
+        assert tree is not None
+        assert tree["menu_id"] == "main"
+        assert len(tree["items"]) == 2
         # Check first item (sales submenu)
         sales_item = tree["items"][0]
-        self.assertEqual(sales_item["destination_type"], "submenu")
-        self.assertIn("submenu", sales_item)
-        self.assertEqual(len(sales_item["submenu"]["items"]), 2)
+        assert sales_item["destination_type"] == "submenu"
+        assert "submenu" in sales_item
+        assert len(sales_item["submenu"]["items"]) == 2
 
     def test_delete_menu(self) -> None:
         """Test deleting a menu"""
@@ -190,16 +178,15 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
 
         # Delete it
         success = self.aa.delete_menu("test-menu")
-        self.assertTrue(success)
-
+        assert success
         # Verify it's gone
         menu = self.aa.get_menu("test-menu")
-        self.assertIsNone(menu)
+        assert menu is None
 
     def test_delete_main_menu_fails(self) -> None:
         """Test that main menu cannot be deleted"""
         success = self.aa.delete_menu("main")
-        self.assertFalse(success)
+        assert not success
 
     def test_delete_referenced_menu_fails(self) -> None:
         """Test that a menu referenced by items cannot be deleted"""
@@ -209,7 +196,7 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
 
         # Try to delete (should fail)
         success = self.aa.delete_menu("referenced")
-        self.assertFalse(success)
+        assert not success
 
     def test_submenu_navigation(self) -> None:
         """Test navigating to a submenu"""
@@ -225,11 +212,11 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Navigate to sales submenu
         result = self.aa.handle_dtmf(session, "1")
 
-        self.assertEqual(result["action"], "play")
-        self.assertEqual(session["state"], AAState.SUBMENU)
-        self.assertEqual(session["current_menu_id"], "sales")
-        self.assertEqual(len(session["menu_stack"]), 1)
-        self.assertEqual(session["menu_stack"][0], "main")
+        assert result["action"] == "play"
+        assert session["state"] == AAState.SUBMENU
+        assert session["current_menu_id"] == "sales"
+        assert len(session["menu_stack"]) == 1
+        assert session["menu_stack"][0] == "main"
 
     def test_go_back_navigation(self) -> None:
         """Test going back to previous menu with * key"""
@@ -245,10 +232,10 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Go back with *
         result = self.aa.handle_dtmf(session, "*")
 
-        self.assertEqual(result["action"], "play")
-        self.assertEqual(session["current_menu_id"], "main")
-        self.assertEqual(session["state"], AAState.MAIN_MENU)
-        self.assertEqual(len(session["menu_stack"]), 0)
+        assert result["action"] == "play"
+        assert session["current_menu_id"] == "main"
+        assert session["state"] == AAState.MAIN_MENU
+        assert len(session["menu_stack"]) == 0
 
     def test_repeat_menu(self) -> None:
         """Test repeating current menu with # key"""
@@ -259,8 +246,8 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Press # to repeat
         result = self.aa.handle_dtmf(session, "#")
 
-        self.assertEqual(result["action"], "play")
-        self.assertEqual(session["current_menu_id"], "main")
+        assert result["action"] == "play"
+        assert session["current_menu_id"] == "main"
 
     def test_transfer_from_submenu(self) -> None:
         """Test transferring from a submenu"""
@@ -278,9 +265,9 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # Transfer to extension
         result = self.aa.handle_dtmf(session, "1")
 
-        self.assertEqual(result["action"], "transfer")
-        self.assertEqual(result["destination"], "1001")
-        self.assertEqual(session["state"], AAState.TRANSFERRING)
+        assert result["action"] == "transfer"
+        assert result["destination"] == "1001"
+        assert session["state"] == AAState.TRANSFERRING
 
     def test_list_menus(self) -> None:
         """Test listing all menus"""
@@ -291,11 +278,11 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         # List menus
         menus = self.aa.list_menus()
 
-        self.assertGreaterEqual(len(menus), 3)  # main + sales + support
+        assert len(menus) >= 3  # main + sales + support
         menu_ids = [m["menu_id"] for m in menus]
-        self.assertIn("main", menu_ids)
-        self.assertIn("sales", menu_ids)
-        self.assertIn("support", menu_ids)
+        assert "main" in menu_ids
+        assert "sales" in menu_ids
+        assert "support" in menu_ids
 
     def test_update_menu(self) -> None:
         """Test updating a menu"""
@@ -304,20 +291,19 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
 
         # Update it
         success = self.aa.update_menu("test", menu_name="Updated Test", prompt_text="New prompt")
-        self.assertTrue(success)
-
+        assert success
         # Verify changes
         menu = self.aa.get_menu("test")
-        self.assertEqual(menu["menu_name"], "Updated Test")
-        self.assertEqual(menu["prompt_text"], "New prompt")
+        assert menu["menu_name"] == "Updated Test"
+        assert menu["prompt_text"] == "New prompt"
 
     def test_destination_type_enum(self) -> None:
         """Test DestinationType enum"""
-        self.assertEqual(DestinationType.EXTENSION.value, "extension")
-        self.assertEqual(DestinationType.SUBMENU.value, "submenu")
-        self.assertEqual(DestinationType.QUEUE.value, "queue")
-        self.assertEqual(DestinationType.VOICEMAIL.value, "voicemail")
-        self.assertEqual(DestinationType.OPERATOR.value, "operator")
+        assert DestinationType.EXTENSION.value == "extension"
+        assert DestinationType.SUBMENU.value == "submenu"
+        assert DestinationType.QUEUE.value == "queue"
+        assert DestinationType.VOICEMAIL.value == "voicemail"
+        assert DestinationType.OPERATOR.value == "operator"
 
     def test_backward_compatibility_with_legacy_menu(self) -> None:
         """Test that legacy menu_options still work"""
@@ -337,17 +323,15 @@ class TestAutoAttendantSubmenu(unittest.TestCase):
         self.aa._load_menu_options_from_db()
 
         # Verify it's in the legacy menu_options
-        self.assertIn("5", self.aa.menu_options)
-        self.assertEqual(self.aa.menu_options["5"]["destination"], "1005")
-
+        assert "5" in self.aa.menu_options
+        assert self.aa.menu_options["5"]["destination"] == "1005"
         # Test that it still works in navigation
         result = self.aa.start_session("test-call", "1001")
         session = result["session"]
         result = self.aa.handle_dtmf(session, "5")
 
-        self.assertEqual(result["action"], "transfer")
-        self.assertEqual(result["destination"], "1005")
-
+        assert result["action"] == "transfer"
+        assert result["destination"] == "1005"
 
 class MockConfig:
     """Mock configuration object for testing"""
@@ -369,7 +353,3 @@ class MockConfig:
                 return default
 
         return value if value is not None else default
-
-
-if __name__ == "__main__":
-    unittest.main()

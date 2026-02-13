@@ -6,7 +6,6 @@ Enables video conferencing, screen sharing, and recording
 import re
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -79,10 +78,10 @@ class JitsiIntegration:
         room_name: str = None,
         subject: str = None,
         moderator_name: str = None,
-        participant_names: List[str] = None,
+        participant_names: list[str] = None,
         scheduled_time: datetime = None,
         duration_minutes: int = 60,
-    ) -> Dict:
+    ) -> dict:
         """
         Create a Jitsi meeting room
 
@@ -90,7 +89,7 @@ class JitsiIntegration:
             room_name: Custom room name (auto-generated if not provided)
             subject: Meeting subject/title
             moderator_name: Name of meeting moderator
-            participant_names: List of participant names (optional)
+            participant_names: list of participant names (optional)
             scheduled_time: When meeting is scheduled (None = instant)
             duration_minutes: Expected duration in minutes
 
@@ -181,7 +180,7 @@ class JitsiIntegration:
 
         return url
 
-    def create_instant_meeting(self, extension: str, contact_name: str = None) -> Dict:
+    def create_instant_meeting(self, extension: str, contact_name: str = None) -> dict:
         """
         Create instant meeting for call escalation
 
@@ -208,8 +207,8 @@ class JitsiIntegration:
         scheduled_time: datetime,
         duration_minutes: int = 60,
         subject: str = None,
-        participants: List[str] = None,
-    ) -> Dict:
+        participants: list[str] = None,
+    ) -> dict:
         """
         Create scheduled meeting for future time
 
@@ -218,7 +217,7 @@ class JitsiIntegration:
             scheduled_time: When meeting should start
             duration_minutes: Meeting duration
             subject: Meeting topic
-            participants: List of participant names/extensions
+            participants: list of participant names/extensions
 
         Returns:
             Meeting details dictionary
@@ -301,7 +300,7 @@ class JitsiIntegration:
             self.logger.error(f"Failed to generate JWT token: {e}")
             return ""
 
-    def get_meeting_info(self, room_name: str) -> Optional[Dict]:
+    def get_meeting_info(self, room_name: str) -> dict | None:
         """
         Get information about a meeting room
 
@@ -341,7 +340,7 @@ class JitsiIntegration:
         # Would need Jitsi Videobridge API for programmatic control
         return True
 
-    def get_active_participants(self, room_name: str) -> List[str]:
+    def get_active_participants(self, room_name: str) -> list[str]:
         """
         Get list of active participants in a room
 
@@ -351,7 +350,7 @@ class JitsiIntegration:
             room_name: Room identifier
 
         Returns:
-            List of participant names
+            list of participant names
         """
         # Would need Jitsi Videobridge API or Prosody query
         self.logger.debug(
@@ -359,13 +358,13 @@ class JitsiIntegration:
         )
         return []
 
-    def create_conference_bridge(self, conference_id: str, participants: List[str]) -> Dict:
+    def create_conference_bridge(self, conference_id: str, participants: list[str]) -> dict:
         """
         Create a Jitsi room for PBX conference bridge
 
         Args:
             conference_id: Conference/bridge number
-            participants: List of extension numbers
+            participants: list of extension numbers
 
         Returns:
             Meeting details with dial-in info

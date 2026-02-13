@@ -394,7 +394,7 @@ class PBXMetricsExporter:
         Record an error.
 
         Args:
-            error_type: Type of error
+            error_type: type of error
             component: Component where error occurred
         """
         self.errors_total.labels(error_type=error_type, component=component).inc()
@@ -430,7 +430,7 @@ class PBXMetricsExporter:
 
     def set_system_info(self, version: str, **kwargs):
         """
-        Set system information.
+        set system information.
 
         Args:
             version: PBX version

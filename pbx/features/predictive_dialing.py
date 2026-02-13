@@ -5,7 +5,6 @@ AI-optimized outbound campaign management
 
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -32,7 +31,7 @@ class DialingMode(Enum):
 class Contact:
     """Represents a contact in a campaign"""
 
-    def __init__(self, contact_id: str, phone_number: str, data: Dict = None):
+    def __init__(self, contact_id: str, phone_number: str, data: dict = None):
         """Initialize contact"""
         self.contact_id = contact_id
         self.phone_number = phone_number
@@ -55,7 +54,7 @@ class Campaign:
         self.created_at = datetime.now()
         self.started_at = None
         self.ended_at = None
-        self.contacts: List[Contact] = []
+        self.contacts: list[Contact] = []
         self.max_attempts = 3
         self.retry_interval = 3600  # seconds
 
@@ -95,7 +94,7 @@ class PredictiveDialer:
         self.answer_delay = dialer_config.get("answer_delay", 2)  # seconds
 
         # Campaigns
-        self.campaigns: Dict[str, Campaign] = {}
+        self.campaigns: dict[str, Campaign] = {}
 
         # Statistics
         self.total_campaigns = 0
@@ -156,13 +155,13 @@ class PredictiveDialer:
 
         return campaign
 
-    def add_contacts(self, campaign_id: str, contacts: List[Dict]) -> int:
+    def add_contacts(self, campaign_id: str, contacts: list[dict]) -> int:
         """
         Add contacts to a campaign
 
         Args:
             campaign_id: Campaign identifier
-            contacts: List of contact dictionaries
+            contacts: list of contact dictionaries
 
         Returns:
             int: Number of contacts added
@@ -367,7 +366,7 @@ class PredictiveDialer:
 
         return abandon_rate
 
-    def get_next_contact(self, campaign_id: str) -> Optional[Contact]:
+    def get_next_contact(self, campaign_id: str) -> Contact | None:
         """
         Get next contact to dial
 
@@ -375,7 +374,7 @@ class PredictiveDialer:
             campaign_id: Campaign identifier
 
         Returns:
-            Optional[Contact]: Next contact to dial or None
+            Contact | None: Next contact to dial or None
         """
         if campaign_id not in self.campaigns:
             return None
@@ -394,7 +393,7 @@ class PredictiveDialer:
 
         return None
 
-    def dial_contact(self, campaign_id: str, contact: Contact) -> Dict:
+    def dial_contact(self, campaign_id: str, contact: Contact) -> dict:
         """
         Initiate a call to a contact
 
@@ -403,7 +402,7 @@ class PredictiveDialer:
             contact: Contact to dial
 
         Returns:
-            Dict: Call initiation result
+            dict: Call initiation result
         """
         if campaign_id not in self.campaigns:
             return {"success": False, "error": "Campaign not found"}
@@ -454,7 +453,7 @@ class PredictiveDialer:
             "attempt": contact.attempts,
         }
 
-    def get_campaign_statistics(self, campaign_id: str) -> Optional[Dict]:
+    def get_campaign_statistics(self, campaign_id: str) -> dict | None:
         """Get statistics for a campaign"""
         if campaign_id not in self.campaigns:
             return None
@@ -476,7 +475,7 @@ class PredictiveDialer:
             "ended_at": campaign.ended_at.isoformat() if campaign.ended_at else None,
         }
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get overall dialer statistics"""
         return {
             "total_campaigns": self.total_campaigns,

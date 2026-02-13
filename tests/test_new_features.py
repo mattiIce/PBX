@@ -5,18 +5,14 @@ Test newly implemented PBX features
 
 import os
 import struct
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.rtp.handler import RTPPlayer
 
 
 def test_wav_file_playback() -> bool:
     """Test WAV file playback functionality"""
-    print("Testing WAV file playback...")
 
     # Create a minimal valid WAV file for testing
     # G.711 μ-law format, 8kHz, mono
@@ -53,26 +49,21 @@ def test_wav_file_playback() -> bool:
 
         # Start player
         assert player.start(), "Player should start successfully"
-        print("✓ RTP player started")
 
         # Note: This will log a warning about play_file not working because
         # we're not actually connected to anything, but it tests the parsing
         # The actual RTP sending will fail gracefully
         result = player.play_file(wav_file)
-        print(f"✓ WAV file parsing and playback attempted (result: {result})")
 
         # Stop player
         player.stop()
-        print("✓ RTP player stopped")
 
         # Clean up
         os.unlink(wav_file)
-        print("✓ WAV file playback test passed")
 
         return True
 
     except Exception as e:
-        print(f"✗ Test failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -83,7 +74,6 @@ def test_wav_file_playback() -> bool:
 
 def test_call_transfer_message_building() -> bool:
     """Test that call transfer REFER messages can be built"""
-    print("\nTesting call transfer message building...")
 
     from pbx.sip.message import SIPMessageBuilder
 
@@ -112,39 +102,11 @@ def test_call_transfer_message_building() -> bool:
         assert "Referred-By" in message_text, "Should contain Referred-By header"
         assert "sip:1003@192.168.1.1" in message_text, "Should contain transfer destination"
 
-        print("✓ REFER message built successfully")
-        print(f"  Message preview: {message_text[:100]}...")
-        print("✓ Call transfer message test passed")
 
         return True
 
     except Exception as e:
-        print(f"✗ Test failed: {e}")
         import traceback
 
         traceback.print_exc()
         return False
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Testing New PBX Features")
-    print("=" * 70)
-
-    results: list[bool] = []
-    results.append(test_wav_file_playback())
-    results.append(test_call_transfer_message_building())
-
-    print("\n" + "=" * 70)
-    if all(results):
-        print("✅ All feature tests passed!")
-        return True
-    else:
-        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)
