@@ -10,10 +10,10 @@
 #   pip install -c constraints.txt -r requirements-dev.txt
 #
 # To update versions: Review and update version numbers based on the latest stable
-# releases compatible with Python 3.12+. Test thoroughly after updating.
+# releases compatible with Python 3.13+. Test thoroughly after updating.
 #
 # Generated from: pyproject.toml and requirements-dev.txt
-# Python Version: 3.12
+# Python Version: 3.13
 # Last Updated: 2026-02-12
 
 # ============================================================================
@@ -43,6 +43,7 @@ pyttsx3==2.99
 # Database Backend
 sqlalchemy==2.0.46
 psycopg2-binary==2.9.11
+alembic==1.15.0
 
 # Enterprise Integrations
 requests==2.32.5
@@ -92,11 +93,8 @@ pytest-timeout==2.4.0
 pytest-mock==3.15.1
 
 # Code Quality
-pylint==4.0.4
-flake8==7.3.0
-black==26.1.0
+ruff==0.9.10
 mypy==1.19.1
-isort==7.0.0
 
 # Pre-commit Hooks
 pre-commit==4.5.1

@@ -22,7 +22,7 @@ import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -60,8 +60,8 @@ class LoadTestResults:
     p99_response_time: float
     requests_per_second: float
     concurrent_peak: int
-    errors: Dict[str, int]
-    system_metrics: Dict[str, Any]
+    errors: dict[str, int]
+    system_metrics: dict[str, Any]
 
 
 class SIPLoadTester:

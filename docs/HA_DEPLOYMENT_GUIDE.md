@@ -213,7 +213,7 @@ sudo -u postgres psql -c "SELECT * FROM pg_stat_replication;"
 
 ```bash
 # Install dependencies
-sudo apt-get install -y python3-pip python3-psycopg2 etcd
+sudo apt-get install -y python3-psycopg2 etcd
 
 # Install Patroni
 uv pip install patroni[etcd]

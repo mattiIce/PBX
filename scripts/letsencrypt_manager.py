@@ -11,7 +11,6 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -120,7 +119,7 @@ class CertificateManager:
             logger.error(f"Failed to install certbot: {e}")
             return False
 
-    def get_certificate_expiry(self) -> Optional[datetime]:
+    def get_certificate_expiry(self) -> datetime | None:
         """
         Get certificate expiration date.
 

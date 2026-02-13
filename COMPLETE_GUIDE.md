@@ -37,7 +37,7 @@ Warden VoIP PBX is a comprehensive VoIP system built in Python. Choose your inst
 ### 1.2 Quick Development Setup
 
 #### Prerequisites
-- Python 3.12+
+- Python 3.13+
 - [uv](https://docs.astral.sh/uv/) package manager
 - Node.js (for frontend TypeScript compilation)
 - Ubuntu/Debian Linux (recommended)
@@ -2300,7 +2300,7 @@ blueprints = [..., your_bp]
 ### 9.3 Development Setup
 
 **Prerequisites:**
-- Python 3.12+
+- Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (fast Python package manager)
 - Node.js 18+ and npm
 
@@ -2333,13 +2333,13 @@ make run
 
 **Code Quality:**
 ```bash
-# Auto-format code (black + isort)
+# Auto-format code (ruff)
 make format
 
 # Check formatting without changes
 make format-check
 
-# Run all linters (pylint, flake8, mypy)
+# Run all linters (ruff, mypy)
 make lint
 
 # Type checking only

@@ -24,7 +24,7 @@ pbx = None
 shutdown_handler = None
 
 
-def signal_handler(sig, frame):  # pylint: disable=unused-argument
+def signal_handler(sig, frame):  # noqa: ARG001
     """Handle shutdown signal"""
     global running
     print("\nShutting down PBX system...")

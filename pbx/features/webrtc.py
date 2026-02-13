@@ -8,7 +8,7 @@ import threading
 import time
 import uuid
 from datetime import datetime
-from typing import Callable
+from collections.abc import Callable
 
 from pbx.utils.logger import get_logger
 

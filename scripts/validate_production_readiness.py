@@ -91,7 +91,7 @@ class ProductionValidator:
         else:
             self.log(
                 f"Python {python_version.major}.{python_version.minor} detected. "
-                "Python 3.12+ required",
+                "Python 3.13+ required",
                 "fail",
             )
 

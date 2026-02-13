@@ -10,9 +10,9 @@ if ! command -v pip3 &> /dev/null; then
     exit 1
 fi
 
-# Check Python version (requires 3.12+)
+# Check Python version (requires 3.13+)
 python_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-min_version="3.12"
+min_version="3.13"
 if [ "$(printf '%s\n' "$min_version" "$python_version" | sort -V | head -n1)" != "$min_version" ]; then
     echo "Error: Python $min_version or higher is required. Current version: $python_version"
     exit 1
@@ -34,4 +34,4 @@ echo ""
 echo "Installation complete!"
 echo ""
 echo "Note: The system-provided typing_extensions (4.10.0) will be used."
-echo "This is compatible with Python 3.12 and all required packages."
+echo "This is compatible with Python 3.13+ and all required packages."

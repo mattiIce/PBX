@@ -25,7 +25,7 @@ apt-get upgrade -y
 
 # Install required packages
 apt-get install -y \
-    python3.12 \
+    python3 \
     python3-pip \
     python3-venv \
     git \

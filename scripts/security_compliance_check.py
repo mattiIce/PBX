@@ -16,7 +16,6 @@ import os
 import subprocess
 import sys
 from datetime import datetime
-from typing import Dict, Tuple
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -410,7 +409,7 @@ class SecurityComplianceChecker:
         self.results["security"] = security_results
         return security_results
 
-    def generate_compliance_report(self) -> Tuple[Dict, int]:
+    def generate_compliance_report(self) -> tuple[dict, int]:
         """Generate comprehensive compliance report"""
 
         # Run all checks

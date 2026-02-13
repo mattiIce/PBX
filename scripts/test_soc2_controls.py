@@ -17,7 +17,6 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Tuple
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -103,7 +102,7 @@ class SOC2ControlTester:
 
         print(f"{color}{status_symbol} {message}{reset}")
 
-    def test_control_cc1_1(self) -> Tuple[bool, str]:
+    def test_control_cc1_1(self) -> tuple[bool, str]:
         """
         Test CC1.1: Demonstrates commitment to integrity and ethical values
 
@@ -121,7 +120,7 @@ class SOC2ControlTester:
         else:
             return False, "Authentication not required - integrity controls not enforced"
 
-    def test_control_cc1_2(self) -> Tuple[bool, str]:
+    def test_control_cc1_2(self) -> tuple[bool, str]:
         """
         Test CC1.2: Board independence and oversight responsibilities
 
@@ -136,7 +135,7 @@ class SOC2ControlTester:
         else:
             return True, "Basic oversight controls in place via configuration management"
 
-    def test_control_cc2_1(self) -> Tuple[bool, str]:
+    def test_control_cc2_1(self) -> tuple[bool, str]:
         """
         Test CC2.1: Demonstrates commitment to competence
 
@@ -154,7 +153,7 @@ class SOC2ControlTester:
         else:
             return False, f"Weak password policy ({min_password_length} chars) - should be >= 12"
 
-    def test_control_cc3_1(self) -> Tuple[bool, str]:
+    def test_control_cc3_1(self) -> tuple[bool, str]:
         """
         Test CC3.1: Specifies suitable objectives
 
@@ -170,7 +169,7 @@ class SOC2ControlTester:
         else:
             return True, "Basic security objectives specified in configuration"
 
-    def test_control_cc5_1(self) -> Tuple[bool, str]:
+    def test_control_cc5_1(self) -> tuple[bool, str]:
         """
         Test CC5.1: Selects and develops control activities
 
@@ -185,7 +184,7 @@ class SOC2ControlTester:
         else:
             return True, "Basic security controls configured"
 
-    def test_control_cc6_1(self) -> Tuple[bool, str]:
+    def test_control_cc6_1(self) -> tuple[bool, str]:
         """
         Test CC6.1: Logical and physical access controls
 
@@ -203,7 +202,7 @@ class SOC2ControlTester:
         else:
             return False, "Access controls not enforced - security risk"
 
-    def test_control_cc6_2(self) -> Tuple[bool, str]:
+    def test_control_cc6_2(self) -> tuple[bool, str]:
         """
         Test CC6.2: System access authorization and authentication
 
@@ -221,7 +220,7 @@ class SOC2ControlTester:
         else:
             return False, "Authentication not required"
 
-    def test_control_cc6_6(self) -> Tuple[bool, str]:
+    def test_control_cc6_6(self) -> tuple[bool, str]:
         """
         Test CC6.6: Encryption of data in transit and at rest
 
@@ -248,7 +247,7 @@ class SOC2ControlTester:
         else:
             return False, "No encryption configured - data not protected"
 
-    def test_control_cc7_1(self) -> Tuple[bool, str]:
+    def test_control_cc7_1(self) -> tuple[bool, str]:
         """
         Test CC7.1: Detection of security incidents
 
@@ -263,7 +262,7 @@ class SOC2ControlTester:
         else:
             return True, "Basic logging capabilities enable incident detection"
 
-    def test_control_cc7_2(self) -> Tuple[bool, str]:
+    def test_control_cc7_2(self) -> tuple[bool, str]:
         """
         Test CC7.2: Response to security incidents
 
@@ -281,7 +280,7 @@ class SOC2ControlTester:
         else:
             return True, "Manual incident response procedures in place"
 
-    def test_control_a1_1(self) -> Tuple[bool, str]:
+    def test_control_a1_1(self) -> tuple[bool, str]:
         """
         Test A1.1: System availability and performance monitoring
 
@@ -299,7 +298,7 @@ class SOC2ControlTester:
         else:
             return True, "Basic monitoring capabilities via system logs"
 
-    def test_control_a1_2(self) -> Tuple[bool, str]:
+    def test_control_a1_2(self) -> tuple[bool, str]:
         """
         Test A1.2: Backup and disaster recovery procedures
 
@@ -316,7 +315,7 @@ class SOC2ControlTester:
         else:
             return True, "Database backend supports backup operations"
 
-    def test_control_pi1_1(self) -> Tuple[bool, str]:
+    def test_control_pi1_1(self) -> tuple[bool, str]:
         """
         Test PI1.1: Data processing quality and integrity controls
 
@@ -331,7 +330,7 @@ class SOC2ControlTester:
         else:
             return True, "Database constraints and validation ensure data integrity"
 
-    def test_control_pi1_2(self) -> Tuple[bool, str]:
+    def test_control_pi1_2(self) -> tuple[bool, str]:
         """
         Test PI1.2: System processing accuracy monitoring
 
@@ -344,7 +343,7 @@ class SOC2ControlTester:
 
         return True, f"Transaction integrity enforced by {db_type} database"
 
-    def test_control_c1_1(self) -> Tuple[bool, str]:
+    def test_control_c1_1(self) -> tuple[bool, str]:
         """
         Test C1.1: Confidential information identification and classification
 
@@ -359,7 +358,7 @@ class SOC2ControlTester:
         else:
             return False, "No authentication - confidential data not protected"
 
-    def test_control_c1_2(self) -> Tuple[bool, str]:
+    def test_control_c1_2(self) -> tuple[bool, str]:
         """
         Test C1.2: Confidential information disposal procedures
 
@@ -374,7 +373,7 @@ class SOC2ControlTester:
         else:
             return True, "Database deletion procedures support secure information disposal"
 
-    def test_control(self, control_id: str) -> Tuple[bool, str]:
+    def test_control(self, control_id: str) -> tuple[bool, str]:
         """
         Test a specific control
 

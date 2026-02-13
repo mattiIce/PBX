@@ -9,6 +9,7 @@ validates their format, and checks for security issues.
 import os
 import re
 import secrets
+import subprocess
 import sys
 from pathlib import Path
 
@@ -303,7 +304,7 @@ class EnvSetup:
 
         with open(self.env_file, "w") as f:
             f.write("# PBX Environment Configuration\n")
-            f.write(f"# Generated on: {os.popen('date').read().strip()}\n")
+            f.write(f"# Generated on: {subprocess.run(['date'], capture_output=True, text=True, check=False).stdout.strip()}\n")
             f.write("#\n")
             f.write("# SECURITY: Keep this file secure!\n")
             f.write("# - Never commit to version control\n")

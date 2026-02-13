@@ -20,6 +20,7 @@ pyttsx3>=2.99  # Offline TTS (uses espeak)
 # Database backend (FREE, open source)
 sqlalchemy>=2.0.46  # ORM
 psycopg2-binary>=2.9.11  # PostgreSQL adapter for Python
+alembic>=1.15.0  # Database migrations
 
 # For enterprise integrations (Teams, Outlook, Zoom):
 # Note: requests version compatible with current docker-compose

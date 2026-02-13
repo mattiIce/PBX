@@ -15,8 +15,6 @@ Supports all G.726 bitrate variants:
 - G.726-40: 40 kbit/s (5 bits per sample)
 """
 
-from __future__ import annotations
-
 import struct
 
 from pbx.utils.logger import get_logger

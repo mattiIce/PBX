@@ -564,7 +564,7 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
         try:
             with open(prompt_file, "rb") as f:
                 return f.read()
-        except (IOError, OSError) as e:
+        except OSError as e:
             # If we can't read the file (permission issues, disk errors, etc.),
             # return None so caller can use fallback tone generation
             # In production, consider logging this error for debugging

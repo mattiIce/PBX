@@ -14,7 +14,6 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 
 class ComplianceReporter:
@@ -90,7 +89,7 @@ class ComplianceReporter:
                 }
             )
 
-    def _count_event_types(self, events: List[Dict]) -> Dict:
+    def _count_event_types(self, events: list[dict]) -> dict:
         """Count events by type."""
         counts = {}
         for event in events:
@@ -98,7 +97,7 @@ class ComplianceReporter:
             counts[action] = counts.get(action, 0) + 1
         return counts
 
-    def _count_unique_users(self, events: List[Dict]) -> int:
+    def _count_unique_users(self, events: list[dict]) -> int:
         """Count unique users."""
         users = set()
         for event in events:
@@ -107,16 +106,16 @@ class ComplianceReporter:
                 users.add(user)
         return len(users)
 
-    def _count_failed_actions(self, events: List[Dict]) -> int:
+    def _count_failed_actions(self, events: list[dict]) -> int:
         """Count failed actions."""
         return sum(1 for event in events if not event.get("success", True))
 
-    def _count_security_events(self, events: List[Dict]) -> int:
+    def _count_security_events(self, events: list[dict]) -> int:
         """Count security-related events."""
         security_actions = ["login", "logout", "password_change", "permission_change"]
         return sum(1 for event in events if event.get("action") in security_actions)
 
-    def _check_suspicious_activity(self, events: List[Dict]):
+    def _check_suspicious_activity(self, events: list[dict]):
         """Check for suspicious activity in audit logs."""
         # Check for multiple failed logins
         failed_logins = [

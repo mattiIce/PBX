@@ -3,7 +3,7 @@
 # See README.md for usage instructions
 
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.9.0"
 
   required_providers {
     aws = {
@@ -72,9 +72,14 @@ variable "ssh_key_name" {
 }
 
 variable "allowed_ssh_cidr" {
-  description = "CIDR blocks allowed to SSH (CHANGE THIS for production!)"
+  description = "CIDR blocks allowed to SSH - MUST be set for production"
   type        = list(string)
-  default     = ["0.0.0.0/0"]  # SECURITY: Restrict to your IP in production
+  # No default - forces explicit configuration to prevent accidental open SSH access
+
+  validation {
+    condition     = alltrue([for cidr in var.allowed_ssh_cidr : cidr != "0.0.0.0/0"])
+    error_message = "SSH access must not be open to 0.0.0.0/0. Restrict to specific CIDR blocks."
+  }
 }
 
 # Outputs

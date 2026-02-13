@@ -16,7 +16,6 @@ import subprocess
 import sys
 import urllib.request
 from pathlib import Path
-from typing import List, Tuple
 
 # Color codes
 GREEN = "\033[92m"
@@ -53,7 +52,7 @@ class ProductionValidator:
         if level in ["pass", "fail", "skip"]:
             self.results["tests"].append({"name": message, "status": level})
 
-    def run_command(self, cmd: List[str], timeout: int = 30) -> Tuple[bool, str]:
+    def run_command(self, cmd: list[str], timeout: int = 30) -> tuple[bool, str]:
         """Run a command and return success status and output."""
         try:
             result = subprocess.run(
