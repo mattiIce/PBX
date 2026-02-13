@@ -4,39 +4,19 @@ This directory contains voice prompt files for the auto attendant system.
 
 ## Generate Voice Files
 
-Voice files are **not included** in the repository to keep it clean. You need to generate them:
-
-### Option 1: Google TTS (RECOMMENDED - Best Quality)
-
-**Requirements:** Internet connection
+Voice files are **not included** in the repository. Generate them using gTTS (Google Text-to-Speech):
 
 ```bash
-pip3 install gTTS pydub
-python3 scripts/generate_tts_prompts.py --company "Your Company Name"
+uv pip install gTTS pydub
+python3 scripts/generate_espeak_voices.py --company "Your Company Name"
+
+# Or generate only auto attendant prompts
+python3 scripts/generate_espeak_voices.py --aa-only
 ```
 
-**Result:** Natural, human-sounding voices (FREE)
+You can also regenerate prompts directly from the **Admin Panel** under the Auto Attendant tab > Voice Prompts Configuration.
 
-### Option 2: Festival (Good Quality, Offline)
-
-**Requirements:** No internet needed
-
-```bash
-sudo apt-get install festival festvox-us-slt-hts
-python3 scripts/generate_espeak_voices.py --engine festival
-```
-
-**Result:** Better than eSpeak, works offline
-
-### Option 3: eSpeak (Basic Quality, Offline)
-
-**Requirements:** No internet needed
-
-```bash
-python3 scripts/generate_espeak_voices.py --company "Your Company"
-```
-
-**Result:** Robotic but functional
+See [scripts/README_VOICE_GENERATION.md](../scripts/README_VOICE_GENERATION.md) for full voice generation documentation.
 
 ## Required Files
 
@@ -51,14 +31,7 @@ This directory needs these 5 voice files:
 ## File Format
 
 All files must be:
-- Format: WAV
-- Sample Rate: 16000 Hz (for G.722 HD audio support)
-- Bit Depth: 16-bit
-- Channels: Mono
-
-**Note**: Files are generated at 16kHz to support the G.722 HD audio codec. 
-The system will automatically handle conversion if needed for G.711 codecs.
-
-## More Info
-
-See `RUN_THIS_ON_SERVER.txt` in the root directory for simple instructions.
+- **Format:** WAV
+- **Sample Rate:** 8000 Hz
+- **Bit Depth:** 16-bit
+- **Channels:** Mono

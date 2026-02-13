@@ -220,7 +220,7 @@ sudo -u postgres psql -c "SELECT * FROM pg_stat_replication;"
 sudo apt-get install -y python3-pip python3-psycopg2 etcd
 
 # Install Patroni
-sudo pip3 install patroni[etcd]
+uv pip install patroni[etcd]
 
 # Create Patroni configuration
 sudo tee /etc/patroni.yml << EOF
