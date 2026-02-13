@@ -7,7 +7,7 @@ Uses current_app.config['ADMIN_DIR'] for the admin directory path.
 import mimetypes
 import os
 
-from flask import Blueprint, current_app, redirect
+from flask import Blueprint, Response, current_app, redirect
 
 from pbx.api.utils import send_json
 from pbx.utils.logger import get_logger
@@ -18,13 +18,13 @@ static_bp = Blueprint("static_files", __name__)
 
 
 @static_bp.route("/admin")
-def handle_admin_redirect():
+def handle_admin_redirect() -> Response:
     """Redirect to admin panel."""
     return redirect("/admin/index.html", code=302)
 
 
 @static_bp.route("/admin/<path:path>")
-def handle_static_file(path):
+def handle_static_file(path: str) -> Response:
     """Serve static files from admin directory.
 
     Includes directory traversal protection to ensure paths stay

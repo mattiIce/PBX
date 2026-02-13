@@ -10,7 +10,7 @@ import tempfile
 import zipfile
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,

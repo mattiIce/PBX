@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -22,7 +22,7 @@ logger = get_logger()
 license_bp = Blueprint("license", __name__)
 
 
-def _require_license_admin():
+def _require_license_admin() -> tuple[bool, dict]:
     """Check if current user is the license administrator (extension 9322).
 
     Returns:
@@ -52,7 +52,7 @@ def _require_license_admin():
 
 @license_bp.route("/api/license/status", methods=["GET"])
 @require_auth
-def handle_license_status():
+def handle_license_status() -> tuple[Response, int]:
     """Get current license status and information."""
     try:
         from pbx.utils.licensing import get_license_manager
@@ -68,7 +68,7 @@ def handle_license_status():
 
 @license_bp.route("/api/license/features", methods=["GET"])
 @require_auth
-def handle_license_features():
+def handle_license_features() -> tuple[Response, int]:
     """List all available features for current license."""
     try:
         from pbx.utils.licensing import get_license_manager
@@ -135,7 +135,7 @@ def handle_license_features():
 
 
 @license_bp.route("/api/license/generate", methods=["POST"])
-def handle_license_generate():
+def handle_license_generate() -> tuple[Response, int]:
     """Generate a new license key (license admin only)."""
     # Check license admin authorization
     is_authorized, payload = _require_license_admin()

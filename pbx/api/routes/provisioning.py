@@ -7,7 +7,7 @@ and serving provisioning configuration files to phones.
 import re
 import traceback
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request
 
 from pbx.api.utils import (
     DateTimeEncoder,

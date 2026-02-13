@@ -4,6 +4,8 @@ Handles phone book CRUD operations, search, sync with Active Directory,
 and export in multiple formats (Yealink XML, Cisco XML, JSON).
 """
 
+from typing import Any
+
 from flask import Blueprint, Response, request
 
 from pbx.api.utils import (

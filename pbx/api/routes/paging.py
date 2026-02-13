@@ -4,7 +4,9 @@ Handles paging zone management, DAC device configuration,
 and active page session queries.
 """
 
-from flask import Blueprint
+from typing import Any
+
+from flask import Blueprint, Response
 
 from pbx.api.utils import (
     get_pbx_core,

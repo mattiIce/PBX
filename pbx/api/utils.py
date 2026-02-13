@@ -1,11 +1,12 @@
 """Shared utilities for Flask API routes."""
 
 import json
+from collections.abc import Callable
 from datetime import date, datetime
 from functools import wraps
 from typing import Any, Optional
 
-from flask import current_app, jsonify, request
+from flask import Response, current_app, jsonify, request
 
 from pbx.utils.logger import get_logger
 
@@ -21,12 +22,12 @@ class DateTimeEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def get_pbx_core():
+def get_pbx_core() -> Any:
     """Get PBX core instance from Flask app config."""
     return current_app.config.get("PBX_CORE")
 
 
-def send_json(data: Any, status: int = 200):
+def send_json(data: Any, status: int = 200) -> Response:
     """Send JSON response with DateTimeEncoder support."""
     response = current_app.response_class(
         response=json.dumps(data, cls=DateTimeEncoder),
@@ -60,11 +61,11 @@ def verify_authentication() -> tuple[bool, Optional[dict]]:
     return token_manager.verify_token(token)
 
 
-def require_auth(f):
+def require_auth(f: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator that requires authentication."""
 
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*args: Any, **kwargs: Any) -> Any:
         is_authenticated, payload = verify_authentication()
         if not is_authenticated:
             return jsonify({"error": "Authentication required"}), 401
@@ -74,11 +75,11 @@ def require_auth(f):
     return decorated
 
 
-def require_admin(f):
+def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator that requires admin privileges."""
 
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*args: Any, **kwargs: Any) -> Any:
         is_authenticated, payload = verify_authentication()
         if not is_authenticated:
             return jsonify({"error": "Authentication required"}), 401

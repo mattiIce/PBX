@@ -1,12 +1,16 @@
 """Shared pytest fixtures for PBX test suite."""
 
 import os
+from collections.abc import Callable, Generator
+from typing import Any
+
 import pytest
+from flask.testing import FlaskClient
 from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
-def mock_config():
+def mock_config() -> MagicMock:
     """Provide a mock Config object for testing."""
     config = MagicMock()
     config.get.return_value = None
@@ -28,7 +32,7 @@ def mock_config():
         },
     }
 
-    def config_get_side_effect(key, default=None):
+    def config_get_side_effect(key: str, default: Any = None) -> Any:
         keys = key.split(".")
         value = config.config
         for k in keys:
@@ -43,7 +47,7 @@ def mock_config():
 
 
 @pytest.fixture
-def mock_database():
+def mock_database() -> MagicMock:
     """Provide a mock database for testing."""
     db = MagicMock()
     db.get_all.return_value = []
@@ -52,7 +56,7 @@ def mock_database():
 
 
 @pytest.fixture
-def mock_extension():
+def mock_extension() -> MagicMock:
     """Provide a mock extension for testing."""
     ext = MagicMock()
     ext.number = "1001"
@@ -68,7 +72,7 @@ def mock_extension():
 
 
 @pytest.fixture
-def mock_pbx_core(mock_config, mock_database):
+def mock_pbx_core(mock_config: MagicMock, mock_database: MagicMock) -> MagicMock:
     """Provide a mock PBXCore for testing."""
     pbx_core = MagicMock()
     pbx_core.config = mock_config
@@ -81,7 +85,7 @@ def mock_pbx_core(mock_config, mock_database):
 
 
 @pytest.fixture
-def api_client(mock_pbx_core):
+def api_client(mock_pbx_core: MagicMock) -> Generator[FlaskClient, None, None]:
     """Provide a Flask test client for API testing."""
     from pbx.api.app import create_app
 
@@ -93,10 +97,10 @@ def api_client(mock_pbx_core):
 
 
 @pytest.fixture
-def sip_message_factory():
+def sip_message_factory() -> Callable[..., str]:
     """Factory fixture to create SIP messages for testing."""
-    def make_sip_message(method="INVITE", uri="sip:1002@pbx.local",
-                          from_ext="1001", to_ext="1002"):
+    def make_sip_message(method: str = "INVITE", uri: str = "sip:1002@pbx.local",
+                          from_ext: str = "1001", to_ext: str = "1002") -> str:
         return (
             f"{method} {uri} SIP/2.0\r\n"
             f"Via: SIP/2.0/UDP 192.168.1.100:5060;branch=z9hG4bK776asdhds\r\n"

@@ -8,7 +8,7 @@ admin extension.
 import secrets
 import traceback
 
-from flask import Blueprint, request
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import get_pbx_core, get_request_body, send_json
 from pbx.utils.logger import get_logger
@@ -19,7 +19,7 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
 @auth_bp.route("/login", methods=["POST"])
-def handle_login():
+def handle_login() -> Response:
     """Authenticate extension and return session token."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -142,7 +142,7 @@ def handle_login():
 
 
 @auth_bp.route("/logout", methods=["POST"])
-def handle_logout():
+def handle_logout() -> Response:
     """Handle logout (client-side token removal).
 
     Logout is primarily handled client-side by removing the token.

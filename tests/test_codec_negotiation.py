@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
-def test_codec_extraction_from_sdp():
+def test_codec_extraction_from_sdp() -> None:
     """Test extracting codecs from caller's SDP"""
     print("Testing codec extraction from SDP...")
 
