@@ -71,13 +71,13 @@ decorator==5.2.1
     # via librosa
 dnspython==2.8.0
     # via aioice
-fido2==2.1.0
+fido2==2.1.1
     # via -r requirements.txt
 flask==3.1.2
     # via -r requirements.txt
 google-crc32c==1.8.0
     # via aiortc
-greenlet==3.3.0
+greenlet==3.3.1
     # via sqlalchemy
 gtts==2.5.4
     # via -r requirements.txt
@@ -129,7 +129,7 @@ nltk==3.9.2
     # via -r requirements.txt
 numba==0.63.1
     # via librosa
-numpy==2.4.1
+numpy==2.4.2
     # via
     #   -r requirements.txt
     #   blis
@@ -151,9 +151,9 @@ packaging==25.0
     #   spacy
     #   thinc
     #   weasel
-platformdirs==4.5.1
+platformdirs==4.7.0
     # via pooch
-pooch==1.8.2
+pooch==1.9.0
     # via librosa
 preshed==3.0.12
     # via
@@ -161,7 +161,7 @@ preshed==3.0.12
     #   thinc
 prometheus-client==0.24.1
     # via -r requirements.txt
-psutil==7.2.1
+psutil==7.2.2
     # via -r requirements.txt
 psycopg2-binary==2.9.11
     # via -r requirements.txt
@@ -181,7 +181,7 @@ pydub==0.25.1
     # via -r requirements.txt
 pyee==13.0.0
     # via aiortc
-pyjwt[crypto]==2.10.1
+pyjwt[crypto]==2.11.0
     # via
     #   msal
     #   pyjwt
@@ -193,7 +193,7 @@ pyttsx3==2.99
     # via -r requirements.txt
 pyyaml==6.0.3
     # via -r requirements.txt
-redis==7.1.0
+redis==7.1.1
     # via -r requirements.txt
 regex==2026.1.15
     # via nltk
@@ -217,7 +217,7 @@ scipy==1.17.0
     #   scikit-learn
 smart-open==7.5.0
     # via weasel
-sounddevice==0.5.3
+sounddevice==0.5.5
     # via -r requirements.txt
 soundfile==0.13.1
     # via
@@ -231,7 +231,7 @@ spacy-legacy==3.0.12
     # via spacy
 spacy-loggers==1.0.5
     # via spacy
-sqlalchemy==2.0.45
+sqlalchemy==2.0.46
     # via -r requirements.txt
 srsly==2.5.2
     # via
@@ -245,14 +245,14 @@ thinc==9.1.1
     # via spacy
 threadpoolctl==3.6.0
     # via scikit-learn
-tqdm==4.67.1
+tqdm==4.67.3
     # via
     #   nltk
     #   spacy
     #   vosk
 twisted==25.5.0
     # via -r requirements.txt
-typer-slim==0.21.1
+typer-slim==0.23.1
     # via
     #   spacy
     #   weasel
@@ -288,7 +288,7 @@ werkzeug==3.1.5
     # via
     #   -r requirements.txt
     #   flask
-wrapt==2.0.1
+wrapt==2.1.1
     # via smart-open
 zope-interface==8.2
     # via twisted
