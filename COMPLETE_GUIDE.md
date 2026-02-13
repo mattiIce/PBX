@@ -2333,13 +2333,13 @@ make run
 
 **Code Quality:**
 ```bash
-# Auto-format code (black + isort)
+# Auto-format code (ruff)
 make format
 
 # Check formatting without changes
 make format-check
 
-# Run all linters (pylint, flake8, mypy)
+# Run all linters (ruff, mypy)
 make lint
 
 # Type checking only

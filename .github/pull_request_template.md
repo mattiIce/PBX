@@ -51,7 +51,7 @@ Related to #
 <!-- Mark completed items with an "x" -->
 
 - [ ] My code follows the project's style guidelines
-- [ ] I have run `black` and `isort` on my code
+- [ ] I have run `ruff check` and `ruff format` on my code
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation

@@ -23,11 +23,8 @@ updates:
         exclude-patterns:
           - "*-dev"
           - "pytest*"
-          - "black"
-          - "flake8"
-          - "pylint"
+          - "ruff"
           - "mypy"
-          - "isort"
     # Limit the number of open Dependabot PRs for Python dependencies
     open-pull-requests-limit: 10
     labels:

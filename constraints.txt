@@ -10,10 +10,10 @@
 #   pip install -c constraints.txt -r requirements-dev.txt
 #
 # To update versions: Review and update version numbers based on the latest stable
-# releases compatible with Python 3.12+. Test thoroughly after updating.
+# releases compatible with Python 3.13+. Test thoroughly after updating.
 #
 # Generated from: pyproject.toml and requirements-dev.txt
-# Python Version: 3.12
+# Python Version: 3.13
 # Last Updated: 2026-02-12
 
 # ============================================================================
