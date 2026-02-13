@@ -623,7 +623,6 @@ sudo systemctl restart apache2
 ```
 
 **Detailed Documentation:**
-- Quick fix guide: `docs/APACHE_404_FIX.md`
 - Complete setup: `docs/APACHE_REVERSE_PROXY_SETUP.md`
 - Configuration example: `apache-pbx.conf.example`
 
@@ -952,6 +951,44 @@ curl http://localhost:8888/provision/1001?debug=true
 ```bash
 # cfg + cfgMAC format
 # HTTP provisioning on port 8888
+```
+
+### Provisioning Connection Error After Port Change
+
+**Symptoms:**
+- Phones show "Connection error" for provisioning
+- Provisioning URL points to wrong port (e.g., 8080 instead of 9000)
+- Direct access to PBX on the correct port works fine
+
+**Root Cause:**
+When `api.port` in `config.yml` is changed from the default (8080), previously registered devices may have cached provisioning URLs with the old port. The phone requests `http://server:8080/provision/...` but the server now listens on port 9000.
+
+**Solution:**
+1. **Restart the PBX service** - URLs are automatically regenerated from current config on startup:
+   ```bash
+   sudo systemctl restart pbx
+   ```
+
+2. **Verify the fix:**
+   ```bash
+   # Check the API port in logs
+   sudo journalctl -u pbx -n 50 | grep "API port"
+
+   # Verify provisioning works
+   curl -H "Authorization: Bearer YOUR_TOKEN" \
+        http://localhost:9000/api/provisioning/devices | jq
+   ```
+
+3. **If phones still fail**, they may have cached the old URL:
+   - Power cycle the phone to trigger re-provisioning
+   - Or factory reset and re-provision
+
+**Prevention:**
+Use template variables in `config.yml` provisioning URL format:
+```yaml
+provisioning:
+  enabled: true
+  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
 ```
 
 ---

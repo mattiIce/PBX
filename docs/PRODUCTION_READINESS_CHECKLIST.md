@@ -86,8 +86,7 @@ This checklist ensures that all critical systems, security measures, monitoring,
 - [ ] **Code Deployment**
   - [ ] Repository cloned from stable branch/tag
   - [ ] Python 3.12 installed
-  - [ ] Virtual environment created
-  - [ ] Production dependencies installed (`requirements.txt`)
+  - [ ] Production dependencies installed (`make install-prod`)
   - [ ] System dependencies installed (espeak, ffmpeg, etc.)
   - [ ] Application user created (`pbx` user)
   - [ ] Directory permissions configured

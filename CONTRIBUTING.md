@@ -47,21 +47,15 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
    sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev
    ```
 
-2. Create a virtual environment:
+2. Install dependencies (requires [uv](https://docs.astral.sh/uv/)):
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   make install        # Python dependencies (dev mode)
+   npm install         # Frontend dependencies
    ```
 
-3. Install Python dependencies:
+3. Install pre-commit hooks:
    ```bash
-   pip install -r requirements.txt
-   pip install -r requirements-dev.txt
-   ```
-
-4. Install pre-commit hooks:
-   ```bash
-   pre-commit install
+   make pre-commit-install
    ```
 
 ### Configuration

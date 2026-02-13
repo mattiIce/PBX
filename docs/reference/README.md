@@ -20,6 +20,9 @@ This directory contains detailed technical reference documents that are used les
 - **[OPEN_SOURCE_AI_INTEGRATION_COMPLETE.md](OPEN_SOURCE_AI_INTEGRATION_COMPLETE.md)** - AI integration reference
 - **[GEOGRAPHIC_REDUNDANCY_GUIDE.md](GEOGRAPHIC_REDUNDANCY_GUIDE.md)** - Geographic redundancy setup
 
+### Developer Reference
+- **[DROPDOWN_DATABASE_INTEGRATION.md](DROPDOWN_DATABASE_INTEGRATION.md)** - Form dropdown database integration
+
 ## When to Use These References
 
 These documents provide detailed technical information for:
@@ -40,5 +43,5 @@ Reference documents are kept separate from the main guide because they:
 
 ---
 
-**Primary Documentation**: [COMPLETE_GUIDE.md](/COMPLETE_GUIDE.md)  
-**Archive Documentation**: [docs/archive/](/docs/archive/)
+**Primary Documentation**: [COMPLETE_GUIDE.md](/COMPLETE_GUIDE.md)
+**Documentation Index**: [DOCUMENTATION_INDEX.md](/DOCUMENTATION_INDEX.md)

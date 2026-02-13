@@ -552,10 +552,9 @@ deploy:
 ## Support and Documentation
 
 For issues or questions:
-- Review **[LICENSING_GUIDE.md](LICENSING_GUIDE.md)** for detailed licensing information
+- See **[COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md)** for comprehensive documentation
 - Check logs in `logs/pbx.log` for authentication errors
-- Ensure all dependencies are installed: `pip install -r requirements.txt`
-- See **[ADMIN_PANEL_GUIDE.md](ADMIN_PANEL_GUIDE.md)** for general admin panel usage
+- Ensure all dependencies are installed: `make install-prod`
 
 ---
 
