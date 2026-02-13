@@ -87,7 +87,7 @@ export function showNotification(message: string, type: NotificationType = 'info
 export function displayError(error: Error | { message?: string; stack?: string; toString(): string }, context: string = ''): void {
     if (!ERROR_DISPLAY_CONFIG.enabled) return;
 
-    const errorId = 'error-' + Date.now();
+    const errorId = `error-${Date.now()}`;
     const errorMessage = error.message || error.toString();
     const errorStack = error.stack || '';
 

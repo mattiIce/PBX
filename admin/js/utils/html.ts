@@ -1,4 +1,4 @@
-import { showNotification } from '../ui/notifications.js';
+import { showNotification } from '../ui/notifications.ts';
 
 /**
  * Escape a string for safe insertion into HTML (prevents XSS).

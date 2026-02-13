@@ -99,5 +99,5 @@ export async function loadRegisteredATAs(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadRegisteredPhones = loadRegisteredPhones;
-(window as any).loadRegisteredATAs = loadRegisteredATAs;
+window.loadRegisteredPhones = loadRegisteredPhones;
+window.loadRegisteredATAs = loadRegisteredATAs;

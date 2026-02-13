@@ -37,7 +37,7 @@ export async function loadExtensions(): Promise<void> {
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const extensions: Extension[] = await response.json();
-        (window as any).currentExtensions = extensions;
+        window.currentExtensions = extensions;
 
         if (extensions.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="loading">No extensions found.</td></tr>';
@@ -91,7 +91,7 @@ export function closeAddExtensionModal(): void {
 }
 
 export function editExtension(number: string): void {
-    const ext = ((window as any).currentExtensions || []).find((e: Extension) => e.number === number);
+    const ext = (window.currentExtensions || []).find((e: Extension) => e.number === number);
     if (!ext) return;
 
     const el = (id: string): HTMLElement | null => document.getElementById(id);
@@ -177,11 +177,11 @@ export async function rebootAllPhones(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadExtensions = loadExtensions;
-(window as any).showAddExtensionModal = showAddExtensionModal;
-(window as any).closeAddExtensionModal = closeAddExtensionModal;
-(window as any).editExtension = editExtension;
-(window as any).closeEditExtensionModal = closeEditExtensionModal;
-(window as any).deleteExtension = deleteExtension;
-(window as any).rebootPhone = rebootPhone;
-(window as any).rebootAllPhones = rebootAllPhones;
+window.loadExtensions = loadExtensions;
+window.showAddExtensionModal = showAddExtensionModal;
+window.closeAddExtensionModal = closeAddExtensionModal;
+window.editExtension = editExtension;
+window.closeEditExtensionModal = closeEditExtensionModal;
+window.deleteExtension = deleteExtension;
+window.rebootPhone = rebootPhone;
+window.rebootAllPhones = rebootAllPhones;

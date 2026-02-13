@@ -112,7 +112,7 @@ export async function saveDTMFConfig(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadCalls = loadCalls;
-(window as any).loadCodecStatus = loadCodecStatus;
-(window as any).loadDTMFConfig = loadDTMFConfig;
-(window as any).saveDTMFConfig = saveDTMFConfig;
+window.loadCalls = loadCalls;
+window.loadCodecStatus = loadCodecStatus;
+window.loadDTMFConfig = loadDTMFConfig;
+window.saveDTMFConfig = saveDTMFConfig;
