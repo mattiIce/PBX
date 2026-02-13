@@ -93,7 +93,7 @@ pytest-timeout==2.4.0
 pytest-mock==3.15.1
 
 # Code Quality
-ruff==0.9.10
+ruff==0.15.1
 mypy==1.19.1
 
 # Pre-commit Hooks
