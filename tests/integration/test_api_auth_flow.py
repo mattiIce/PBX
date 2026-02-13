@@ -6,9 +6,12 @@ provided by the ``api_client`` fixture in conftest.py.
 """
 
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from flask.testing import FlaskClient
+from werkzeug.test import TestResponse
 
 from pbx.utils.session_token import SessionToken
 
@@ -17,7 +20,7 @@ from pbx.utils.session_token import SessionToken
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _post_json(client, url, data, headers=None):
+def _post_json(client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None) -> TestResponse:
     """POST JSON to the test client and return the parsed response."""
     all_headers = {"Content-Type": "application/json"}
     if headers:
@@ -26,7 +29,7 @@ def _post_json(client, url, data, headers=None):
     return resp
 
 
-def _auth_header(token):
+def _auth_header(token: str) -> dict[str, str]:
     """Return an Authorization header dict for the given token."""
     return {"Authorization": f"Bearer {token}"}
 
@@ -39,7 +42,7 @@ def _auth_header(token):
 class TestLoginEndpoint:
     """Test that the /api/auth/login endpoint returns a token."""
 
-    def test_login_returns_token_for_valid_credentials(self, api_client, mock_pbx_core):
+    def test_login_returns_token_for_valid_credentials(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """A valid extension + password should yield a token."""
         # Set up extension_db to return a known extension record
         mock_pbx_core.extension_db.get.return_value = {
@@ -62,7 +65,7 @@ class TestLoginEndpoint:
         assert "token" in data
         assert data["extension"] == "1001"
 
-    def test_login_rejects_wrong_password(self, api_client, mock_pbx_core):
+    def test_login_rejects_wrong_password(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """An incorrect password should return 401."""
         mock_pbx_core.extension_db.get.return_value = {
             "number": "1001",
@@ -80,7 +83,7 @@ class TestLoginEndpoint:
 
         assert resp.status_code == 401
 
-    def test_login_rejects_missing_fields(self, api_client, mock_pbx_core):
+    def test_login_rejects_missing_fields(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """Omitting extension or password should return 400."""
         resp = _post_json(api_client, "/api/auth/login", {
             "extension": "1001",
@@ -89,7 +92,7 @@ class TestLoginEndpoint:
 
         assert resp.status_code == 400
 
-    def test_login_rejects_unknown_extension(self, api_client, mock_pbx_core):
+    def test_login_rejects_unknown_extension(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """An extension not in the database should return 401."""
         mock_pbx_core.extension_db.get.return_value = None
 
@@ -105,12 +108,12 @@ class TestLoginEndpoint:
 class TestProtectedEndpoints:
     """Test that protected endpoints reject unauthenticated requests."""
 
-    def test_extensions_rejects_no_token(self, api_client):
+    def test_extensions_rejects_no_token(self, api_client: FlaskClient) -> None:
         """GET /api/extensions without a token should return 401."""
         resp = api_client.get("/api/extensions")
         assert resp.status_code == 401
 
-    def test_extensions_rejects_invalid_token(self, api_client):
+    def test_extensions_rejects_invalid_token(self, api_client: FlaskClient) -> None:
         """A garbage token should be rejected with 401."""
         resp = api_client.get(
             "/api/extensions",
@@ -118,7 +121,7 @@ class TestProtectedEndpoints:
         )
         assert resp.status_code == 401
 
-    def test_extensions_accepts_valid_token(self, api_client, mock_pbx_core):
+    def test_extensions_accepts_valid_token(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """A valid token should grant access to /api/extensions."""
         # First, obtain a real token through the login flow
         mock_pbx_core.extension_db.get.return_value = {
@@ -149,7 +152,7 @@ class TestProtectedEndpoints:
 class TestAdminOnlyEndpoints:
     """Test that admin-only endpoints reject non-admin users."""
 
-    def _login_as(self, client, mock_pbx_core, extension, pin, is_admin):
+    def _login_as(self, client: FlaskClient, mock_pbx_core: MagicMock, extension: str, pin: str, is_admin: bool) -> str:
         """Helper: log in and return the token string."""
         mock_pbx_core.extension_db.get.return_value = {
             "number": extension,
@@ -165,7 +168,7 @@ class TestAdminOnlyEndpoints:
         })
         return json.loads(resp.data)["token"]
 
-    def test_admin_endpoint_rejects_non_admin(self, api_client, mock_pbx_core):
+    def test_admin_endpoint_rejects_non_admin(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """POST /api/extensions (admin-only) should return 403 for non-admin."""
         token = self._login_as(api_client, mock_pbx_core, "1001", "pin1", is_admin=False)
 
@@ -178,7 +181,7 @@ class TestAdminOnlyEndpoints:
 
         assert resp.status_code == 403
 
-    def test_admin_endpoint_accepts_admin(self, api_client, mock_pbx_core):
+    def test_admin_endpoint_accepts_admin(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """POST /api/extensions should succeed for an admin user."""
         token = self._login_as(api_client, mock_pbx_core, "1001", "admin-pin", is_admin=True)
 
@@ -195,7 +198,7 @@ class TestAdminOnlyEndpoints:
         # is that authentication and authorization passed.
         assert resp.status_code not in (401, 403)
 
-    def test_provisioning_devices_rejects_non_admin(self, api_client, mock_pbx_core):
+    def test_provisioning_devices_rejects_non_admin(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """GET /api/provisioning/devices (admin-only) returns 403 for regular user."""
         token = self._login_as(api_client, mock_pbx_core, "1002", "pin2", is_admin=False)
 

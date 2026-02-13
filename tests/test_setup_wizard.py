@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from setup_ubuntu import SetupWizard
 
 
-def test_setup_wizard_initialization():
+def test_setup_wizard_initialization() -> None:
     """Test that SetupWizard initializes correctly"""
     print("Testing SetupWizard initialization...")
 
@@ -37,7 +37,7 @@ def test_setup_wizard_initialization():
     print("✓ SetupWizard initialization works")
 
 
-def test_check_python_version():
+def test_check_python_version() -> None:
     """Test Python version checking"""
     print("Testing Python version checking...")
 
@@ -53,7 +53,7 @@ def test_check_python_version():
     print("✓ Python version checking works")
 
 
-def test_check_root_non_root():
+def test_check_root_non_root() -> None:
     """Test root checking when not running as root"""
     print("Testing root checking (non-root)...")
 
@@ -68,7 +68,7 @@ def test_check_root_non_root():
     print("✓ Root checking works (non-root)")
 
 
-def test_check_root_as_root():
+def test_check_root_as_root() -> None:
     """Test root checking when running as root"""
     print("Testing root checking (as root)...")
 
@@ -82,7 +82,7 @@ def test_check_root_as_root():
     print("✓ Root checking works (as root)")
 
 
-def test_print_methods():
+def test_print_methods() -> None:
     """Test print methods for colored output"""
     print("Testing print methods...")
 
@@ -110,7 +110,7 @@ def test_print_methods():
     print("✓ Print methods work")
 
 
-def test_run_command_success():
+def test_run_command_success() -> None:
     """Test run_command with successful execution"""
     print("Testing run_command (success)...")
 
@@ -133,7 +133,7 @@ def test_run_command_success():
     print("✓ run_command works (success)")
 
 
-def test_run_command_failure():
+def test_run_command_failure() -> None:
     """Test run_command with failed execution"""
     print("Testing run_command (failure)...")
 
@@ -155,7 +155,7 @@ def test_run_command_failure():
     print("✓ run_command works (failure)")
 
 
-def test_setup_environment_file():
+def test_setup_environment_file() -> None:
     """Test environment file creation"""
     print("Testing environment file creation...")
 
@@ -201,7 +201,7 @@ def test_setup_environment_file():
     print("✓ Environment file creation works")
 
 
-def test_check_ubuntu_version_with_mock():
+def test_check_ubuntu_version_with_mock() -> None:
     """Test Ubuntu version checking with mocked file"""
     print("Testing Ubuntu version checking (mocked)...")
 
@@ -240,7 +240,7 @@ VERSION_ID="22.04"
     print("✓ Ubuntu version checking works (mocked)")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests"""
     tests = [
         test_setup_wizard_initialization,

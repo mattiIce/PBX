@@ -1,8 +1,4 @@
-# Apache Reverse Proxy Setup Guide for Warden VoIP PBX
-
-**Last Updated:** 2025-12-30  
-**Priority:** HIGH - Production Deployment  
-**Purpose:** Configure Apache as a reverse proxy for the PBX system
+# Apache Reverse Proxy Setup Guide
 
 ## Overview
 
@@ -50,7 +46,7 @@ The script will:
 ### What You'll Need to Provide
 
 The script will ask for:
-- **Domain name** (e.g., `pbx.yourcompany.com` or `abps.albl.com`)
+- **Domain name** (e.g., `pbx.yourcompany.com`)
 - **Email address** (for SSL certificate notifications)
 - **Backend port** (default: 8080, or 9000 if using the alternative port)
 
@@ -384,7 +380,7 @@ Both Apache and Nginx are excellent choices for reverse proxying. Here's a quick
 
 Both work perfectly well for the PBX reverse proxy setup.
 
-## Additional Resources
+## Related Documentation
 
 - [Official Apache Documentation](https://httpd.apache.org/docs/)
 - [Let's Encrypt Documentation](https://letsencrypt.org/docs/)

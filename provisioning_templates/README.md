@@ -210,5 +210,5 @@ If a phone isn't provisioning correctly:
 ## Documentation
 
 For more information, see:
-- [PHONE_PROVISIONING.md](../PHONE_PROVISIONING.md) - Complete provisioning guide
-- [TROUBLESHOOTING_PROVISIONING.md](../TROUBLESHOOTING_PROVISIONING.md) - Troubleshooting guide
+- [COMPLETE_GUIDE.md - Section 4.3: Phone Provisioning](../COMPLETE_GUIDE.md#43-phone-provisioning) - Complete provisioning guide
+- [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide

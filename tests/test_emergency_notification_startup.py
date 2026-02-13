@@ -16,7 +16,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_emergency_notification_system_initialization():
+def test_emergency_notification_system_initialization() -> None:
     """Test that emergency notification system initializes without database errors"""
     print("Testing emergency notification system initialization...")
 
@@ -72,7 +72,7 @@ def test_emergency_notification_system_initialization():
             shutil.rmtree(temp_dir)
 
 
-def test_emergency_notification_database_operations():
+def test_emergency_notification_database_operations() -> None:
     """Test that emergency notification system can perform database operations"""
     print("Testing emergency notification database operations...")
 
@@ -136,7 +136,7 @@ def test_emergency_notification_database_operations():
             shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Emergency Notification Startup Tests")

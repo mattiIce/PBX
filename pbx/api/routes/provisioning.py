@@ -6,8 +6,9 @@ and serving provisioning configuration files to phones.
 
 import re
 import traceback
+from typing import Any
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request
 
 from pbx.api.utils import (
     DateTimeEncoder,
@@ -29,7 +30,7 @@ provisioning_bp = Blueprint("provisioning", __name__)
 MAC_ADDRESS_PLACEHOLDERS = ["{mac}", "{MAC}", "{Ma}"]
 
 
-def _get_provisioning_url_info():
+def _get_provisioning_url_info() -> tuple[str, str, Any, str]:
     """Get provisioning URL information (protocol, server IP, port).
 
     Returns:
@@ -55,7 +56,7 @@ def _get_provisioning_url_info():
 
 @provisioning_bp.route("/api/provisioning/devices", methods=["GET"])
 @require_admin
-def handle_get_provisioning_devices():
+def handle_get_provisioning_devices() -> Response:
     """Get all provisioned devices."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "phone_provisioning"):
@@ -68,7 +69,7 @@ def handle_get_provisioning_devices():
 
 @provisioning_bp.route("/api/provisioning/atas", methods=["GET"])
 @require_admin
-def handle_get_provisioning_atas():
+def handle_get_provisioning_atas() -> Response:
     """Get all provisioned ATA devices."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "phone_provisioning"):
@@ -81,7 +82,7 @@ def handle_get_provisioning_atas():
 
 @provisioning_bp.route("/api/provisioning/phones", methods=["GET"])
 @require_admin
-def handle_get_provisioning_phones():
+def handle_get_provisioning_phones() -> Response:
     """Get all provisioned phone devices (excluding ATAs)."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "phone_provisioning"):
@@ -94,7 +95,7 @@ def handle_get_provisioning_phones():
 
 @provisioning_bp.route("/api/registered-atas", methods=["GET"])
 @require_admin
-def handle_get_registered_atas():
+def handle_get_registered_atas() -> Response:
     """Get all registered ATA devices from database."""
     pbx_core = get_pbx_core()
     if (
@@ -136,7 +137,7 @@ def handle_get_registered_atas():
 
 @provisioning_bp.route("/api/provisioning/vendors", methods=["GET"])
 @require_auth
-def handle_get_provisioning_vendors():
+def handle_get_provisioning_vendors() -> Response:
     """Get supported vendors and models."""
     try:
         pbx_core = get_pbx_core()
@@ -154,7 +155,7 @@ def handle_get_provisioning_vendors():
 
 @provisioning_bp.route("/api/provisioning/templates", methods=["GET"])
 @require_auth
-def handle_get_provisioning_templates():
+def handle_get_provisioning_templates() -> Response:
     """Get list of all provisioning templates."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -166,7 +167,7 @@ def handle_get_provisioning_templates():
 
 @provisioning_bp.route("/api/provisioning/templates/<vendor>/<model>", methods=["GET"])
 @require_admin
-def handle_get_template_content(vendor, model):
+def handle_get_template_content(vendor: str, model: str) -> Response:
     """Get content of a specific template."""
     # Validate vendor/model to prevent path traversal
     if not re.match(r"^[a-z0-9_-]+$", vendor) or not re.match(r"^[a-z0-9_-]+$", model):
@@ -199,7 +200,7 @@ def handle_get_template_content(vendor, model):
 
 @provisioning_bp.route("/api/provisioning/diagnostics", methods=["GET"])
 @require_admin
-def handle_get_provisioning_diagnostics():
+def handle_get_provisioning_diagnostics() -> Response:
     """Get provisioning system diagnostics."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -259,7 +260,7 @@ def handle_get_provisioning_diagnostics():
 
 @provisioning_bp.route("/api/provisioning/requests", methods=["GET"])
 @require_admin
-def handle_get_provisioning_requests():
+def handle_get_provisioning_requests() -> Response:
     """Get provisioning request history."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -279,7 +280,7 @@ def handle_get_provisioning_requests():
 
 
 @provisioning_bp.route("/api/registered-phones", methods=["GET"])
-def handle_get_registered_phones():
+def handle_get_registered_phones() -> Response:
     """Get all registered phones from database."""
     pbx_core = get_pbx_core()
     if (
@@ -318,7 +319,7 @@ def handle_get_registered_phones():
 
 
 @provisioning_bp.route("/api/registered-phones/with-mac", methods=["GET"])
-def handle_get_registered_phones_with_mac():
+def handle_get_registered_phones_with_mac() -> Response:
     """Get registered phones with MAC addresses from provisioning system."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -366,7 +367,7 @@ def handle_get_registered_phones_with_mac():
 
 
 @provisioning_bp.route("/api/registered-phones/extension/<number>", methods=["GET"])
-def handle_get_registered_phones_by_extension(number):
+def handle_get_registered_phones_by_extension(number: str) -> Response:
     """Get registered phones for a specific extension."""
     pbx_core = get_pbx_core()
     if (
@@ -410,7 +411,7 @@ def handle_get_registered_phones_by_extension(number):
 
 
 @provisioning_bp.route("/provision/<path:path>.cfg", methods=["GET"])
-def handle_provisioning_request(path):
+def handle_provisioning_request(path: str) -> Response:
     """Handle phone provisioning config request."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -581,7 +582,7 @@ def handle_provisioning_request(path):
 
 @provisioning_bp.route("/api/provisioning/devices", methods=["POST"])
 @require_admin
-def handle_register_device():
+def handle_register_device() -> Response:
     """Register a device for provisioning."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -644,7 +645,7 @@ def handle_register_device():
 
 @provisioning_bp.route("/api/provisioning/templates/<vendor>/<model>/export", methods=["POST"])
 @require_admin
-def handle_export_template(vendor, model):
+def handle_export_template(vendor: str, model: str) -> Response:
     """Export template to file."""
     # Validate vendor/model to prevent path traversal
     if not re.match(r"^[a-z0-9_-]+$", vendor) or not re.match(r"^[a-z0-9_-]+$", model):
@@ -673,7 +674,7 @@ def handle_export_template(vendor, model):
 
 @provisioning_bp.route("/api/provisioning/reload-templates", methods=["POST"])
 @require_admin
-def handle_reload_templates():
+def handle_reload_templates() -> Response:
     """Reload all templates from disk."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -688,7 +689,7 @@ def handle_reload_templates():
 
 @provisioning_bp.route("/api/provisioning/devices/<mac>/static-ip", methods=["POST"])
 @require_admin
-def handle_set_static_ip(mac):
+def handle_set_static_ip(mac: str) -> Response:
     """Set static IP for a device."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
@@ -717,7 +718,7 @@ def handle_set_static_ip(mac):
 
 @provisioning_bp.route("/api/provisioning/templates/<vendor>/<model>", methods=["PUT"])
 @require_admin
-def handle_update_template(vendor, model):
+def handle_update_template(vendor: str, model: str) -> Response:
     """Update template content."""
     # Validate vendor/model to prevent path traversal
     if not re.match(r"^[a-z0-9_-]+$", vendor) or not re.match(r"^[a-z0-9_-]+$", model):
@@ -754,7 +755,7 @@ def handle_update_template(vendor, model):
 
 @provisioning_bp.route("/api/provisioning/devices/<mac>", methods=["DELETE"])
 @require_admin
-def handle_unregister_device(mac):
+def handle_unregister_device(mac: str) -> Response:
     """Unregister a device."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):

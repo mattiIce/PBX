@@ -19,7 +19,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
-def test_periodic_reregistration_preserves_data():
+def test_periodic_reregistration_preserves_data() -> None:
     """
     Test that periodic re-registration preserves data
 
@@ -121,7 +121,7 @@ def test_periodic_reregistration_preserves_data():
     print("✓ Periodic re-registration preserves all data correctly")
 
 
-def test_multiple_phones_reregistering():
+def test_multiple_phones_reregistering() -> None:
     """
     Test multiple phones re-registering with varying MAC availability
     """
@@ -166,7 +166,7 @@ def test_multiple_phones_reregistering():
     print("✓ Multiple phones re-registering works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("=" * 60)
     print("Periodic Re-registration Test")

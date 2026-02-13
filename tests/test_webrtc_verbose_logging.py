@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from io import StringIO
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -14,12 +15,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.features.webrtc import WebRTCGateway, WebRTCSignalingServer
 
 
-def test_verbose_logging_disabled():
+def test_verbose_logging_disabled() -> bool:
     """Test that verbose logging is disabled by default"""
     print("\nTesting verbose logging disabled by default...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.webrtc.enabled": True,
                 "features.webrtc.verbose_logging": False,  # Disabled
@@ -39,12 +40,12 @@ def test_verbose_logging_disabled():
     return True
 
 
-def test_verbose_logging_enabled():
+def test_verbose_logging_enabled() -> bool:
     """Test that verbose logging can be enabled"""
     print("\nTesting verbose logging enabled...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.webrtc.enabled": True,
                 "features.webrtc.verbose_logging": True,  # Enabled
@@ -89,12 +90,12 @@ def test_verbose_logging_enabled():
     return True
 
 
-def test_verbose_logging_in_offer_handling():
+def test_verbose_logging_in_offer_handling() -> bool:
     """Test verbose logging in SDP offer handling"""
     print("\nTesting verbose logging in offer handling...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.webrtc.enabled": True,
                 "features.webrtc.verbose_logging": True,
@@ -147,12 +148,12 @@ a=rtpmap:0 PCMU/8000
     return True
 
 
-def test_gateway_verbose_logging():
+def test_gateway_verbose_logging() -> bool:
     """Test that gateway inherits verbose logging from signaling server"""
     print("\nTesting gateway verbose logging...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webrtc.enabled": True, "features.webrtc.verbose_logging": True}
             return config_map.get(key, default)
 
@@ -161,7 +162,7 @@ def test_gateway_verbose_logging():
 
     # Create mock PBX core
     class MockPBXCore:
-        def __init__(self):
+        def __init__(self) -> None:
             self.webrtc_signaling = signaling
 
     pbx_core = MockPBXCore()

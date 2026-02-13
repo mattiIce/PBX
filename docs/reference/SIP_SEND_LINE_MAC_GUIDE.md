@@ -282,19 +282,18 @@ MAC addresses are considered sensitive device identifiers:
 
 ## Related Documentation
 
-- [PHONE_PROVISIONING.md](PHONE_PROVISIONING.md) - Phone provisioning guide
-- [PHONE_REGISTRATION_TRACKING.md](PHONE_REGISTRATION_TRACKING.md) - Device registration tracking
+- [COMPLETE_GUIDE.md - Section 4.3: Phone Provisioning](../../COMPLETE_GUIDE.md#43-phone-provisioning) - Phone provisioning guide
 - [SIP_METHODS_IMPLEMENTATION.md](SIP_METHODS_IMPLEMENTATION.md) - SIP methods reference
-- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - REST API reference
+- [COMPLETE_GUIDE.md - Section 9.2: REST API](../../COMPLETE_GUIDE.md#92-rest-api-reference) - REST API reference
 
 ## Summary
 
 SIP Send Line and Send MAC features are **enabled by default** and require no configuration for basic operation. The PBX automatically:
 
-✅ Adds P-Asserted-Identity headers for caller identification  
-✅ Adds Remote-Party-ID headers for backward compatibility  
-✅ Adds X-MAC-Address headers for device tracking  
-✅ Extracts MAC addresses from REGISTER messages  
-✅ Configures phones via provisioning templates  
+- Adds P-Asserted-Identity headers for caller identification
+- Adds Remote-Party-ID headers for backward compatibility
+- Adds X-MAC-Address headers for device tracking
+- Extracts MAC addresses from REGISTER messages
+- Configures phones via provisioning templates  
 
 These features enhance call quality, troubleshooting, and device management without requiring manual intervention.

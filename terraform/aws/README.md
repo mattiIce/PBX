@@ -432,7 +432,3 @@ terraform destroy -target=aws_lb.pbx_nlb
 MIT License - See LICENSE file in repository root
 
 ---
-
-**Version**: 1.0.0  
-**Last Updated**: January 2, 2026  
-**Maintained By**: PBX Development Team

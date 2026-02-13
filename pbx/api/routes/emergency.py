@@ -4,7 +4,9 @@ Handles emergency contact management, notification triggering,
 notification history, and testing of the emergency notification system.
 """
 
-from flask import Blueprint, request
+from typing import Any
+
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -20,7 +22,7 @@ logger = get_logger()
 emergency_bp = Blueprint("emergency", __name__, url_prefix="/api/emergency")
 
 
-def _get_emergency_system():
+def _get_emergency_system() -> tuple[Any, Response | None]:
     """Get emergency notification system instance or return error response."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "emergency_notification"):
@@ -31,7 +33,7 @@ def _get_emergency_system():
 
 @emergency_bp.route("/contacts", methods=["GET"])
 @require_auth
-def handle_get_emergency_contacts():
+def handle_get_emergency_contacts() -> Response:
     """Get emergency contacts."""
     emergency_system, error = _get_emergency_system()
     if error:
@@ -53,7 +55,7 @@ def handle_get_emergency_contacts():
 
 @emergency_bp.route("/history", methods=["GET"])
 @require_auth
-def handle_get_emergency_history():
+def handle_get_emergency_history() -> Response:
     """Get emergency notification history."""
     emergency_system, error = _get_emergency_system()
     if error:
@@ -74,7 +76,7 @@ def handle_get_emergency_history():
 
 @emergency_bp.route("/test", methods=["GET"])
 @require_auth
-def handle_test_emergency_notification():
+def handle_test_emergency_notification() -> Response:
     """Test emergency notification system."""
     emergency_system, error = _get_emergency_system()
     if error:
@@ -91,7 +93,7 @@ def handle_test_emergency_notification():
 
 @emergency_bp.route("/contacts", methods=["POST"])
 @require_admin
-def handle_add_emergency_contact():
+def handle_add_emergency_contact() -> Response:
     """Add emergency contact. Requires admin privileges."""
     emergency_system, error = _get_emergency_system()
     if error:
@@ -124,7 +126,7 @@ def handle_add_emergency_contact():
 
 @emergency_bp.route("/trigger", methods=["POST"])
 @require_auth
-def handle_trigger_emergency_notification():
+def handle_trigger_emergency_notification() -> Response:
     """Manually trigger emergency notification."""
     emergency_system, error = _get_emergency_system()
     if error:
@@ -149,7 +151,7 @@ def handle_trigger_emergency_notification():
 
 @emergency_bp.route("/contacts/<contact_id>", methods=["DELETE"])
 @require_auth
-def handle_delete_emergency_contact(contact_id):
+def handle_delete_emergency_contact(contact_id: str) -> Response:
     """Delete emergency contact."""
     emergency_system, error = _get_emergency_system()
     if error:

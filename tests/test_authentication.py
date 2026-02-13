@@ -5,7 +5,7 @@ Test Phase 3 Authentication and Authorization
 import os
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -16,11 +16,11 @@ from pbx.utils.session_token import SessionToken, get_session_token_manager
 class TestSessionToken(unittest.TestCase):
     """Test session token generation and verification"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test session token manager"""
         self.token_manager = SessionToken(secret_key="test_secret_key_32_bytes_long!")
 
-    def test_generate_token(self):
+    def test_generate_token(self) -> None:
         """Test token generation"""
         token = self.token_manager.generate_token(
             extension="1001", is_admin=True, name="Admin User", email="admin@example.com"
@@ -31,7 +31,7 @@ class TestSessionToken(unittest.TestCase):
         # Token should have 3 parts separated by dots (header.payload.signature)
         self.assertEqual(len(token.split(".")), 3)
 
-    def test_verify_valid_token(self):
+    def test_verify_valid_token(self) -> None:
         """Test verification of valid token"""
         token = self.token_manager.generate_token(
             extension="1001", is_admin=True, name="Admin User"
@@ -45,7 +45,7 @@ class TestSessionToken(unittest.TestCase):
         self.assertTrue(payload["is_admin"])
         self.assertEqual(payload["name"], "Admin User")
 
-    def test_verify_invalid_signature(self):
+    def test_verify_invalid_signature(self) -> None:
         """Test verification fails with tampered token"""
         token = self.token_manager.generate_token(
             extension="1001", is_admin=False, name="Regular User"
@@ -60,14 +60,14 @@ class TestSessionToken(unittest.TestCase):
         self.assertFalse(is_valid)
         self.assertIsNone(payload)
 
-    def test_verify_malformed_token(self):
+    def test_verify_malformed_token(self) -> None:
         """Test verification fails with malformed token"""
         is_valid, payload = self.token_manager.verify_token("not.a.valid.token.format")
 
         self.assertFalse(is_valid)
         self.assertIsNone(payload)
 
-    def test_admin_vs_regular_user(self):
+    def test_admin_vs_regular_user(self) -> None:
         """Test distinguishing admin from regular user"""
         admin_token = self.token_manager.generate_token(
             extension="1001", is_admin=True, name="Admin"
@@ -83,14 +83,14 @@ class TestSessionToken(unittest.TestCase):
         self.assertTrue(admin_payload["is_admin"])
         self.assertFalse(user_payload["is_admin"])
 
-    def test_extract_extension(self):
+    def test_extract_extension(self) -> None:
         """Test extracting extension from token"""
         token = self.token_manager.generate_token(extension="1001", is_admin=True)
 
         extension = self.token_manager.extract_extension(token)
         self.assertEqual(extension, "1001")
 
-    def test_global_token_manager(self):
+    def test_global_token_manager(self) -> None:
         """Test global token manager singleton"""
         manager1 = get_session_token_manager()
         manager2 = get_session_token_manager()
@@ -98,7 +98,7 @@ class TestSessionToken(unittest.TestCase):
         # Should be the same instance
         self.assertIs(manager1, manager2)
 
-    def test_auto_generated_key_entropy(self):
+    def test_auto_generated_key_entropy(self) -> None:
         """Test that auto-generated secret keys have sufficient entropy"""
         # Create a token manager with auto-generated key
         manager = SessionToken()
@@ -115,7 +115,7 @@ class TestAuthenticationEndpoint(unittest.TestCase):
     """Test authentication API endpoint"""
 
     @patch("pbx.api.rest_api.PBXAPIHandler")
-    def test_login_success(self, mock_handler):
+    def test_login_success(self, mock_handler: MagicMock) -> None:
         """Test successful login"""
         # This is a placeholder - actual integration test would require
         # full PBX initialization and database
@@ -132,7 +132,7 @@ class TestAuthenticationEndpoint(unittest.TestCase):
         self.assertEqual(payload["extension"], "1001")
         self.assertTrue(payload["is_admin"])
 
-    def test_authorization_levels(self):
+    def test_authorization_levels(self) -> None:
         """Test different authorization levels"""
         token_manager = SessionToken(secret_key="test_key")
 

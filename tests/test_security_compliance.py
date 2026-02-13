@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-def test_compliance_checker_exists():
+def test_compliance_checker_exists() -> None:
     """Test that compliance checker script exists and is executable"""
     print("Testing compliance checker script exists...")
 
@@ -26,7 +26,7 @@ def test_compliance_checker_exists():
     print("✓ Compliance checker script exists and is executable")
 
 
-def test_compliance_checker_help():
+def test_compliance_checker_help() -> None:
     """Test that compliance checker shows help"""
     print("Testing compliance checker help...")
 
@@ -46,7 +46,7 @@ def test_compliance_checker_help():
     print("✓ Compliance checker shows help correctly")
 
 
-def test_compliance_checker_json_output():
+def test_compliance_checker_json_output() -> None:
     """Test that compliance checker produces valid JSON"""
     print("Testing compliance checker JSON output...")
 
@@ -109,7 +109,7 @@ def test_compliance_checker_json_output():
     print(f"  SOC2 Compliant: {data['overall']['soc2_compliant']}")
 
 
-def test_fips_algorithm_checks():
+def test_fips_algorithm_checks() -> None:
     """Test that FIPS algorithms are validated"""
     print("Testing FIPS algorithm validation...")
 
@@ -150,7 +150,7 @@ def test_fips_algorithm_checks():
     print("  AES-256-GCM: ✓")
 
 
-def test_wrapper_script_exists():
+def test_wrapper_script_exists() -> None:
     """Test that wrapper script exists"""
     print("Testing wrapper script exists...")
 
@@ -164,7 +164,7 @@ def test_wrapper_script_exists():
     print("✓ Wrapper script exists and is executable")
 
 
-def test_soc2_testing_script_exists():
+def test_soc2_testing_script_exists() -> None:
     """Test that SOC 2 testing script exists and is executable"""
     print("Testing SOC 2 testing script exists...")
 
@@ -176,7 +176,7 @@ def test_soc2_testing_script_exists():
     print("✓ SOC 2 testing script exists and is executable")
 
 
-def test_soc2_testing_script_help():
+def test_soc2_testing_script_help() -> None:
     """Test that SOC 2 testing script shows help"""
     print("Testing SOC 2 testing script help...")
 
@@ -193,7 +193,7 @@ def test_soc2_testing_script_help():
     print("✓ SOC 2 testing script shows help correctly")
 
 
-def main():
+def main() -> None:
     """Run all tests"""
     print("\n" + "=" * 70)
     print("Security Compliance Checker Tests")

@@ -16,7 +16,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_extensions_columns_migration():
+def test_extensions_columns_migration() -> None:
     """Test that missing voicemail PIN columns are added during migration"""
     print("Testing extensions table schema migration...")
 
@@ -103,7 +103,7 @@ def test_extensions_columns_migration():
             os.unlink(temp_db.name)
 
 
-def test_extensions_columns_already_exist():
+def test_extensions_columns_already_exist() -> None:
     """Test that migration handles existing columns gracefully"""
     print("Testing extensions migration with existing columns...")
 
@@ -149,7 +149,7 @@ def test_extensions_columns_already_exist():
             os.unlink(temp_db.name)
 
 
-def test_insert_with_voicemail_pin():
+def test_insert_with_voicemail_pin() -> None:
     """Test that we can insert extensions with voicemail PIN after migration"""
     print("Testing extension insertion with voicemail PIN...")
 
@@ -227,7 +227,7 @@ def test_insert_with_voicemail_pin():
             os.unlink(temp_db.name)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Extensions Table Schema Migration Tests")

@@ -15,7 +15,7 @@ from pbx.utils.config import Config
 from pbx.utils.security_monitor import SecurityMonitor, get_security_monitor
 
 
-def test_security_monitor_initialization():
+def test_security_monitor_initialization() -> None:
     """Test security monitor initialization"""
     print("\nTesting security monitor initialization...")
 
@@ -45,7 +45,7 @@ def test_security_monitor_initialization():
     print("  ✓ Security monitor initialization works")
 
 
-def test_fips_compliance_check():
+def test_fips_compliance_check() -> None:
     """Test FIPS compliance checking"""
     print("\nTesting FIPS compliance check...")
 
@@ -70,7 +70,7 @@ def test_fips_compliance_check():
         print("  ✓ FIPS compliance check works (cryptography unavailable)")
 
 
-def test_password_policy_check():
+def test_password_policy_check() -> None:
     """Test password policy checking"""
     print("\nTesting password policy check...")
 
@@ -104,7 +104,7 @@ def test_password_policy_check():
     print("  ✓ Password policy check works (weak policy detected)")
 
 
-def test_rate_limiting_check():
+def test_rate_limiting_check() -> None:
     """Test rate limiting check"""
     print("\nTesting rate limiting check...")
 
@@ -122,7 +122,7 @@ def test_rate_limiting_check():
     print("  ✓ Rate limiting check works")
 
 
-def test_audit_logging_check():
+def test_audit_logging_check() -> None:
     """Test audit logging check"""
     print("\nTesting audit logging check...")
 
@@ -136,7 +136,7 @@ def test_audit_logging_check():
     print("  ✓ Audit logging check works")
 
 
-def test_threat_detection_check():
+def test_threat_detection_check() -> None:
     """Test threat detection check"""
     print("\nTesting threat detection check...")
 
@@ -149,7 +149,7 @@ def test_threat_detection_check():
     print("  ✓ Threat detection check works")
 
 
-def test_comprehensive_security_check():
+def test_comprehensive_security_check() -> None:
     """Test comprehensive security check"""
     print("\nTesting comprehensive security check...")
 
@@ -182,7 +182,7 @@ def test_comprehensive_security_check():
     print(f"    Violations found: {len(results['violations'])}")
 
 
-def test_compliance_status():
+def test_compliance_status() -> None:
     """Test compliance status tracking"""
     print("\nTesting compliance status tracking...")
 
@@ -218,7 +218,7 @@ def test_compliance_status():
     print(f"    Password policy active: {status['status']['password_policy_active']}")
 
 
-def test_security_enforcement():
+def test_security_enforcement() -> None:
     """Test security enforcement"""
     print("\nTesting security enforcement...")
 
@@ -237,7 +237,7 @@ def test_security_enforcement():
         print("  ✓ Security enforcement blocks system (critical violations)")
 
 
-def test_monitor_lifecycle():
+def test_monitor_lifecycle() -> None:
     """Test monitor start/stop lifecycle"""
     print("\nTesting monitor lifecycle...")
 
@@ -259,7 +259,7 @@ def test_monitor_lifecycle():
     print("  ✓ Monitor stops successfully")
 
 
-def test_get_security_monitor():
+def test_get_security_monitor() -> None:
     """Test factory function"""
     print("\nTesting security monitor factory function...")
 
@@ -272,7 +272,7 @@ def test_get_security_monitor():
     print("  ✓ Factory function works")
 
 
-def run_all_tests():
+def run_all_tests() -> tuple[int, int]:
     """Run all security monitor tests"""
     print("=" * 60)
     print("Running Security Monitor Tests")

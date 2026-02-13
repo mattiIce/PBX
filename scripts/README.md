@@ -89,13 +89,13 @@ Configuration Instructions
    - Enter PIN and verify it's recognized
    - Test auto-attendant navigation
 
-✓ See DTMF_PAYLOAD_TYPE_CONFIGURATION.md for detailed guide
+✓ See COMPLETE_GUIDE.md for detailed guide
 ═══════════════════════════════════════════════════════════
 ```
 
 **Related Documentation:**
-- [DTMF_PAYLOAD_TYPE_CONFIGURATION.md](../DTMF_PAYLOAD_TYPE_CONFIGURATION.md) - Complete configuration guide
-- [ZIP33G_DTMF_PAYLOAD_TYPE_RESOLUTION.md](../ZIP33G_DTMF_PAYLOAD_TYPE_RESOLUTION.md) - Resolution summary
+- [COMPLETE_GUIDE.md - Section 3: Core Features](../COMPLETE_GUIDE.md#3-core-features--configuration) - DTMF configuration
+- [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide
 
 ---
 

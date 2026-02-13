@@ -6,6 +6,7 @@ Quick validation of critical functionality
 
 import sys
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 
 # Add project root to path
@@ -15,12 +16,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 class SmokeTestRunner:
     """Run smoke tests for critical PBX functionality"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.passed = 0
         self.failed = 0
-        self.errors = []
+        self.errors: list[tuple[str, str]] = []
 
-    def test(self, name, func):
+    def test(self, name: str, func: Callable[[], None]) -> bool:
         """Run a single test"""
         try:
             print(f"  Testing {name}...", end=" ")
@@ -34,31 +35,31 @@ class SmokeTestRunner:
             self.errors.append((name, str(e)))
             return False
 
-    def test_imports(self):
+    def test_imports(self) -> None:
         """Test that core modules can be imported"""
 
-    def test_config_loading(self):
+    def test_config_loading(self) -> None:
         """Test configuration loading"""
         from pbx.utils.config import Config
 
         config = Config()
         assert config.config is not None, "Config not loaded"
 
-    def test_logger(self):
+    def test_logger(self) -> None:
         """Test logging system"""
         from pbx.utils.logger import get_logger
 
         logger = get_logger()
         logger.info("Smoke test log message")
 
-    def test_database_schema(self):
+    def test_database_schema(self) -> None:
         """Test database utilities can be imported"""
         from pbx.utils import database
 
         # Just verify the module can be imported
         assert database is not None
 
-    def test_encryption(self):
+    def test_encryption(self) -> None:
         """Test encryption utilities"""
         from pbx.utils.encryption import FIPSEncryption
 
@@ -71,28 +72,28 @@ class SmokeTestRunner:
         decrypted = encryption.decrypt_data(encrypted_data, nonce, tag, key)
         assert decrypted == test_data, "Encryption/decryption failed"
 
-    def test_sip_message_parsing(self):
+    def test_sip_message_parsing(self) -> None:
         """Test SIP message parsing"""
         from pbx.sip.message import SIPMessage
 
         # Just verify the class can be imported
         assert SIPMessage is not None
 
-    def test_audio_utils(self):
+    def test_audio_utils(self) -> None:
         """Test audio utilities"""
         from pbx.utils import audio
 
         # Just verify the module exists
         assert audio is not None
 
-    def test_dtmf_detection(self):
+    def test_dtmf_detection(self) -> None:
         """Test DTMF detection"""
         from pbx.utils import dtmf
 
         # Just verify the module exists
         assert dtmf is not None
 
-    def test_security_functions(self):
+    def test_security_functions(self) -> None:
         """Test security utilities"""
         from pbx.utils.security import SecurePasswordManager
 
@@ -103,7 +104,7 @@ class SmokeTestRunner:
         assert pm.verify_password(password, hashed, salt), "Password verification failed"
         assert not pm.verify_password("wrong", hashed, salt), "Wrong password verified"
 
-    def test_health_endpoint_available(self):
+    def test_health_endpoint_available(self) -> None:
         """Test if health endpoint is reachable (if server is running)"""
         # This test only runs if we can detect a server running
         try:
@@ -114,7 +115,7 @@ class SmokeTestRunner:
             # Server not running, skip this test
             print("(server not running, skipped)", end=" ")
 
-    def run_all(self):
+    def run_all(self) -> bool:
         """Run all smoke tests"""
         print("\n" + "=" * 70)
         print("PBX SYSTEM SMOKE TESTS")
@@ -156,7 +157,7 @@ class SmokeTestRunner:
         return self.failed == 0
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     runner = SmokeTestRunner()
     success = runner.run_all()

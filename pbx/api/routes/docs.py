@@ -12,14 +12,14 @@ docs_bp = Blueprint("docs", __name__)
 
 
 @docs_bp.route("/api/docs/openapi.json")
-def openapi_json():
+def openapi_json() -> Response:
     """Return the OpenAPI specification as JSON."""
     spec = get_openapi_spec()
     return jsonify(spec)
 
 
 @docs_bp.route("/api/docs")
-def swagger_ui():
+def swagger_ui() -> Response:
     """Serve a Swagger UI page using the CDN-hosted swagger-ui-dist."""
     html = """<!DOCTYPE html>
 <html lang="en">

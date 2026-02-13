@@ -22,7 +22,7 @@ TEST_AUDIO_DATA = b"test audio data"
 TEST_MESSAGE_DURATION = 10
 
 
-def test_ivr_handles_early_call_termination():
+def test_ivr_handles_early_call_termination() -> None:
     """
     Test that IVR properly handles call termination during PIN entry
 
@@ -77,7 +77,7 @@ def test_ivr_handles_early_call_termination():
     print("✓ IVR properly handles early call termination")
 
 
-def test_ivr_handles_call_termination_during_message_playback():
+def test_ivr_handles_call_termination_during_message_playback() -> None:
     """
     Test that IVR handles call termination while playing a voicemail message
     """
@@ -114,7 +114,7 @@ def test_ivr_handles_call_termination_during_message_playback():
     print("✓ IVR handles call termination during message playback")
 
 
-def test_ivr_handles_hangup_action_with_ended_call():
+def test_ivr_handles_hangup_action_with_ended_call() -> None:
     """
     Test that IVR handles hangup action when call is already ended
     """
@@ -148,7 +148,7 @@ def test_ivr_handles_hangup_action_with_ended_call():
     print("✓ IVR handles hangup action with ended call")
 
 
-def test_pin_entry_clears_after_processing():
+def test_pin_entry_clears_after_processing() -> None:
     """
     Test that PIN is cleared after verification for security
     """
@@ -184,7 +184,7 @@ def test_pin_entry_clears_after_processing():
     print("✓ PIN is properly cleared after verification")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail IVR BYE Race Condition Tests")

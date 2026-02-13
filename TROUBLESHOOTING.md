@@ -1,10 +1,6 @@
-# PBX System - Comprehensive Troubleshooting Guide
+# PBX System - Troubleshooting Guide
 
-**Version:** 1.0.0  
-**Last Updated:** 2025-12-29  
-**For Administrators and Support Staff**
-
-This comprehensive guide covers all known issues, solutions, and troubleshooting procedures for the Warden VoIP PBX system.
+This guide covers all known issues, solutions, and troubleshooting procedures for the Warden VoIP PBX system.
 
 ---
 
@@ -109,7 +105,7 @@ external_ip: "YOUR_PUBLIC_IP"
 
 ### Distorted or Garbled Audio
 
-**Status:** ✅ **FIXED** (December 19, 2025)
+**Status:** FIXED (December 19, 2025)
 
 **Symptoms:**
 - Audio plays but sounds distorted, robotic, or garbled
@@ -393,7 +389,7 @@ sudo tail -f /var/log/nginx/error.log
 
 ### ERR_SSL_PROTOCOL_ERROR with Reverse Proxy
 
-**Status:** ✅ **DOCUMENTED** (December 30, 2025)
+**Status:** DOCUMENTED (December 30, 2025)
 
 **Symptoms:**
 - Browser shows "This site can't provide a secure connection"
@@ -407,13 +403,13 @@ Backend API configured with SSL enabled (`api.ssl.enabled: true`) when it should
 
 **Architecture Overview:**
 
-✅ **Correct Setup:**
+**Correct Setup:**
 ```
 Browser ──HTTPS──> Apache (port 443) ──HTTP──> PBX Backend (port 9000)
          SSL/TLS    ↑ SSL Termination      ↑ Plain HTTP (internal)
 ```
 
-❌ **Incorrect Setup (Causes Error):**
+**Incorrect Setup (Causes Error):**
 ```
 Browser ──HTTPS──> Apache (port 443) ──HTTPS──> PBX Backend (port 9000)
          SSL/TLS                         SSL/TLS (conflict!)
@@ -492,7 +488,7 @@ Only enable `api.ssl.enabled: true` when:
 
 ### Admin Panel Display Issues (Broken UI)
 
-**Status:** ✅ **FIXED** (December 23, 2025)
+**Status:** FIXED (December 23, 2025)
 
 **Symptoms:**
 - Admin panel displays incorrectly after updates
@@ -623,7 +619,6 @@ sudo systemctl restart apache2
 ```
 
 **Detailed Documentation:**
-- Quick fix guide: `docs/APACHE_404_FIX.md`
 - Complete setup: `docs/APACHE_REVERSE_PROXY_SETUP.md`
 - Configuration example: `apache-pbx.conf.example`
 
@@ -954,6 +949,44 @@ curl http://localhost:8888/provision/1001?debug=true
 # HTTP provisioning on port 8888
 ```
 
+### Provisioning Connection Error After Port Change
+
+**Symptoms:**
+- Phones show "Connection error" for provisioning
+- Provisioning URL points to wrong port (e.g., 8080 instead of 9000)
+- Direct access to PBX on the correct port works fine
+
+**Root Cause:**
+When `api.port` in `config.yml` is changed from the default (8080), previously registered devices may have cached provisioning URLs with the old port. The phone requests `http://server:8080/provision/...` but the server now listens on port 9000.
+
+**Solution:**
+1. **Restart the PBX service** - URLs are automatically regenerated from current config on startup:
+   ```bash
+   sudo systemctl restart pbx
+   ```
+
+2. **Verify the fix:**
+   ```bash
+   # Check the API port in logs
+   sudo journalctl -u pbx -n 50 | grep "API port"
+
+   # Verify provisioning works
+   curl -H "Authorization: Bearer YOUR_TOKEN" \
+        http://localhost:9000/api/provisioning/devices | jq
+   ```
+
+3. **If phones still fail**, they may have cached the old URL:
+   - Power cycle the phone to trigger re-provisioning
+   - Or factory reset and re-provision
+
+**Prevention:**
+Use template variables in `config.yml` provisioning URL format:
+```yaml
+provisioning:
+  enabled: true
+  url_format: http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg
+```
+
 ---
 
 ## Database Issues
@@ -1134,10 +1167,10 @@ python -c "import yaml; yaml.safe_load(open('config.yml'))"
 **4. Verify Python Dependencies:**
 ```bash
 pip list | grep -i twisted
-pip list | grep -i yaml
+uv pip list | grep -i yaml
 
 # Reinstall if missing
-pip install -r requirements.txt
+make install-prod
 ```
 
 **5. Check File Permissions:**
@@ -1556,7 +1589,7 @@ This section documents significant bugs that have been fixed. Included for refer
 ### Admin Panel Display Issues (Browser Cache)
 
 **Date Fixed:** December 23, 2025  
-**Status:** ✅ RESOLVED
+**Status:** RESOLVED
 
 **Problem:**
 After server updates, admin panel displayed incorrectly with non-functional buttons.
@@ -1575,7 +1608,7 @@ After server updates, admin panel displayed incorrectly with non-functional butt
 ### API Connection Timeout (Reverse Proxy)
 
 **Date Fixed:** December 23, 2025  
-**Status:** ✅ RESOLVED
+**Status:** RESOLVED
 
 **Problem:**
 Admin panel API requests timing out through nginx reverse proxy.
@@ -1591,7 +1624,7 @@ proxy_read_timeout 60s;
 ### Audio Sample Rate Mismatch
 
 **Date Fixed:** December 19, 2025  
-**Status:** ✅ RESOLVED
+**Status:** RESOLVED
 
 **Problem:**
 Voicemail prompts sounded distorted and garbled.
@@ -1611,7 +1644,7 @@ file voicemail_prompts/*.wav
 ### RTP One-Way Audio
 
 **Date Fixed:** December 2025  
-**Status:** ✅ RESOLVED
+**Status:** RESOLVED
 
 **Problem:**
 RTP relay had race condition causing one-way or no audio.
@@ -1628,7 +1661,7 @@ Modified RTP relay to:
 ### G.722 Codec Quantization
 
 **Date Fixed:** December 2025  
-**Status:** ✅ RESOLVED
+**Status:** RESOLVED
 
 **Problem:**
 G.722 audio severely distorted.
@@ -1644,12 +1677,12 @@ MAX_QUANTIZATION_RANGE = 32768  # Corrected
 
 ---
 
-## Additional Resources
+## Related Documentation
 
 ### Documentation
 - [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md) - Comprehensive PBX guide
 - [README.md](README.md) - Project overview
-- [API_DOCUMENTATION.md](docs/archive/API_DOCUMENTATION.md) - REST API reference (if available)
+- [COMPLETE_GUIDE.md - Section 9.2: REST API](COMPLETE_GUIDE.md#92-rest-api-reference) - REST API reference
 
 ### Support
 - GitHub Issues: https://github.com/mattiIce/PBX/issues
@@ -1659,12 +1692,6 @@ MAX_QUANTIZATION_RANGE = 32768  # Corrected
 - SIP Protocol: RFC 3261
 - RTP Protocol: RFC 3550
 - VoIP Troubleshooting: https://www.voip-info.org/
-
----
-
-**Document Version:** 1.0.0  
-**Last Updated:** 2025-12-29  
-**Maintained by:** PBX Development Team
 
 ---
 

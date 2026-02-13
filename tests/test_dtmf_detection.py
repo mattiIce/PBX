@@ -17,12 +17,12 @@ from pbx.utils.dtmf import DTMF_FREQUENCIES, DTMFDetector, DTMFGenerator
 class TestDTMFDetection(unittest.TestCase):
     """Test DTMF tone detection"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.detector = DTMFDetector(sample_rate=8000, samples_per_frame=205)
         self.generator = DTMFGenerator(sample_rate=8000)
 
-    def test_detect_valid_tone_1(self):
+    def test_detect_valid_tone_1(self) -> None:
         """Test detection of valid DTMF tone '1'"""
         # Generate a clean DTMF tone for '1'
         samples = self.generator.generate_tone("1", duration_ms=100)
@@ -31,25 +31,25 @@ class TestDTMFDetection(unittest.TestCase):
         digit = self.detector.detect_tone(samples)
         self.assertEqual(digit, "1")
 
-    def test_detect_valid_tone_5(self):
+    def test_detect_valid_tone_5(self) -> None:
         """Test detection of valid DTMF tone '5'"""
         samples = self.generator.generate_tone("5", duration_ms=100)
         digit = self.detector.detect_tone(samples)
         self.assertEqual(digit, "5")
 
-    def test_detect_valid_tone_star(self):
+    def test_detect_valid_tone_star(self) -> None:
         """Test detection of valid DTMF tone '*'"""
         samples = self.generator.generate_tone("*", duration_ms=100)
         digit = self.detector.detect_tone(samples)
         self.assertEqual(digit, "*")
 
-    def test_detect_valid_tone_pound(self):
+    def test_detect_valid_tone_pound(self) -> None:
         """Test detection of valid DTMF tone '#'"""
         samples = self.generator.generate_tone("#", duration_ms=100)
         digit = self.detector.detect_tone(samples)
         self.assertEqual(digit, "#")
 
-    def test_no_detection_on_silence(self):
+    def test_no_detection_on_silence(self) -> None:
         """Test that silence does not trigger false DTMF detection"""
         # Create silence (all zeros)
         samples = [0.0] * 205
@@ -58,7 +58,7 @@ class TestDTMFDetection(unittest.TestCase):
         digit = self.detector.detect_tone(samples)
         self.assertIsNone(digit, "Silence should not be detected as DTMF tone")
 
-    def test_no_detection_on_white_noise(self):
+    def test_no_detection_on_white_noise(self) -> None:
         """Test that white noise does not trigger false DTMF detection"""
         import random
 
@@ -69,7 +69,7 @@ class TestDTMFDetection(unittest.TestCase):
         digit = self.detector.detect_tone(samples)
         self.assertIsNone(digit, "White noise should not be detected as DTMF tone")
 
-    def test_no_detection_on_single_frequency(self):
+    def test_no_detection_on_single_frequency(self) -> None:
         """Test that a single frequency tone is not detected as DTMF"""
         # DTMF requires TWO frequencies (low + high)
         # Generate a single frequency tone at 697 Hz (DTMF low freq)
@@ -83,7 +83,7 @@ class TestDTMFDetection(unittest.TestCase):
         digit = self.detector.detect_tone(samples)
         self.assertIsNone(digit, "Single frequency should not be detected as DTMF tone")
 
-    def test_no_detection_on_weak_tone(self):
+    def test_no_detection_on_weak_tone(self) -> None:
         """Test that very weak tones are not detected"""
         # Generate a very weak DTMF tone (amplitude 0.005, below 0.01
         # threshold)
@@ -103,7 +103,7 @@ class TestDTMFDetection(unittest.TestCase):
         digit = self.detector.detect_tone(samples)
         self.assertIsNone(digit, "Very weak tones (below energy threshold) should not be detected")
 
-    def test_detect_sequence(self):
+    def test_detect_sequence(self) -> None:
         """Test detection of a sequence of DTMF tones"""
         # Generate a sequence "123"
         samples = self.generator.generate_sequence("123", tone_ms=100, gap_ms=50)
@@ -114,7 +114,7 @@ class TestDTMFDetection(unittest.TestCase):
         # Should detect the full sequence
         self.assertEqual(sequence, "123")
 
-    def test_threshold_parameter(self):
+    def test_threshold_parameter(self) -> None:
         """Test that threshold parameter works correctly"""
         # Generate a medium-strength tone
         samples = self.generator.generate_tone("5", duration_ms=100)
@@ -131,7 +131,7 @@ class TestDTMFDetection(unittest.TestCase):
         # the Goertzel algorithm produces high magnitudes for matching
         # frequencies
 
-    def test_noise_rejection_ratio(self):
+    def test_noise_rejection_ratio(self) -> None:
         """Test that detector properly handles noisy signals"""
         # Create a signal with DTMF tone mixed with noise at other frequencies
         low_freq, high_freq = DTMF_FREQUENCIES["1"]
@@ -156,11 +156,11 @@ class TestDTMFDetection(unittest.TestCase):
 class TestDTMFGenerator(unittest.TestCase):
     """Test DTMF tone generation"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.generator = DTMFGenerator(sample_rate=8000)
 
-    def test_generate_tone(self):
+    def test_generate_tone(self) -> None:
         """Test generating a single DTMF tone"""
         samples = self.generator.generate_tone("1", duration_ms=100)
 
@@ -170,14 +170,14 @@ class TestDTMFGenerator(unittest.TestCase):
         # Samples should be in valid range [-1, 1]
         self.assertTrue(all(-1.0 <= s <= 1.0 for s in samples))
 
-    def test_generate_invalid_digit(self):
+    def test_generate_invalid_digit(self) -> None:
         """Test generating tone for invalid digit"""
         samples = self.generator.generate_tone("X", duration_ms=100)
 
         # Should return empty list
         self.assertEqual(samples, [])
 
-    def test_generate_sequence(self):
+    def test_generate_sequence(self) -> None:
         """Test generating a sequence of tones"""
         samples = self.generator.generate_sequence("123", tone_ms=100, gap_ms=50)
 
@@ -188,7 +188,7 @@ class TestDTMFGenerator(unittest.TestCase):
         self.assertAlmostEqual(len(samples), expected_samples, delta=50)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(sys.modules[__name__])

@@ -18,11 +18,11 @@ from pbx.sip.server import VALID_DTMF_DIGITS, SIPServer
 class MockPBXCore:
     """Mock PBX Core for testing SIP INFO handling"""
 
-    def __init__(self):
-        self.dtmf_calls = []
-        self.calls = {}
+    def __init__(self) -> None:
+        self.dtmf_calls: list[tuple[str, str]] = []
+        self.calls: dict[str, Call] = {}
 
-    def handle_dtmf_info(self, call_id, dtmf_digit):
+    def handle_dtmf_info(self, call_id: str, dtmf_digit: str) -> None:
         """Mock handler that records DTMF info calls"""
         self.dtmf_calls.append((call_id, dtmf_digit))
         # Simulate queueing behavior
@@ -36,25 +36,25 @@ class MockPBXCore:
 class MockCallManager:
     """Mock call manager for testing"""
 
-    def __init__(self):
-        self.calls = {}
+    def __init__(self) -> None:
+        self.calls: dict[str, Call] = {}
 
-    def get_call(self, call_id):
+    def get_call(self, call_id: str) -> Call | None:
         return self.calls.get(call_id)
 
-    def add_call(self, call_id, call):
+    def add_call(self, call_id: str, call: Call) -> None:
         self.calls[call_id] = call
 
 
 class TestSIPInfoDTMF(unittest.TestCase):
     """Test SIP INFO DTMF handling"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.mock_pbx = MockPBXCore()
         self.sip_server = SIPServer(host="127.0.0.1", port=5060, pbx_core=self.mock_pbx)
 
-    def test_valid_dtmf_digits_constant(self):
+    def test_valid_dtmf_digits_constant(self) -> None:
         """Test that VALID_DTMF_DIGITS constant is properly defined"""
         expected_digits = [
             "0",
@@ -76,7 +76,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         ]
         self.assertEqual(VALID_DTMF_DIGITS, expected_digits)
 
-    def test_sip_info_message_parsing_dtmf_relay(self):
+    def test_sip_info_message_parsing_dtmf_relay(self) -> None:
         """Test parsing of SIP INFO message with application/dtmf-relay"""
         sip_info_message = (
             "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
@@ -99,7 +99,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertEqual(message.get_header("Content-Type"), "application/dtmf-relay")
         self.assertIn("Signal=5", message.body)
 
-    def test_sip_info_message_parsing_dtmf(self):
+    def test_sip_info_message_parsing_dtmf(self) -> None:
         """Test parsing of SIP INFO message with application/dtmf"""
         sip_info_message = (
             "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
@@ -122,7 +122,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertEqual(message.get_header("Content-Type"), "application/dtmf")
         self.assertIn("Signal=3", message.body)
 
-    def test_handle_info_dtmf_extraction(self):
+    def test_handle_info_dtmf_extraction(self) -> None:
         """Test that _handle_info properly extracts DTMF digits"""
         # Create a SIP INFO message
         sip_info_message = (
@@ -150,7 +150,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertEqual(call_id, "test-call-789")
         self.assertEqual(digit, "7")
 
-    def test_handle_info_all_dtmf_digits(self):
+    def test_handle_info_all_dtmf_digits(self) -> None:
         """Test handling of all valid DTMF digits via SIP INFO"""
         test_digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#"]
 
@@ -180,7 +180,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
             call_id, digit = self.mock_pbx.dtmf_calls[initial_count + idx]
             self.assertEqual(digit, test_digit)
 
-    def test_handle_info_invalid_digit(self):
+    def test_handle_info_invalid_digit(self) -> None:
         """Test that invalid DTMF digits are rejected"""
         sip_info_message = (
             "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
@@ -206,7 +206,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         # Verify that invalid digit was NOT processed
         self.assertEqual(len(self.mock_pbx.dtmf_calls), initial_count)
 
-    def test_handle_info_content_type_with_charset(self):
+    def test_handle_info_content_type_with_charset(self) -> None:
         """Test handling SIP INFO with Content-Type that includes charset parameter"""
         sip_info_message = (
             "INFO sip:1001@192.168.1.100:5060 SIP/2.0\r\n"
@@ -232,7 +232,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         call_id, digit = self.mock_pbx.dtmf_calls[-1]
         self.assertEqual(digit, "9")
 
-    def test_pbx_core_dtmf_queue_creation(self):
+    def test_pbx_core_dtmf_queue_creation(self) -> None:
         """Test that PBX core has DTMF queue initialized"""
         # Create a mock call
         call = Call("test-call-queue", "1001", "1002")
@@ -253,7 +253,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         self.assertTrue(hasattr(call, "dtmf_info_queue"))
         self.assertEqual(call.dtmf_info_queue, ["5"])
 
-    def test_pbx_core_dtmf_queue_multiple_digits(self):
+    def test_pbx_core_dtmf_queue_multiple_digits(self) -> None:
         """Test that multiple DTMF digits are properly queued"""
         # Create a mock call
         call = Call("test-call-multi-queue", "1001", "1002")
@@ -267,7 +267,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
         # Verify all digits were queued in order
         self.assertEqual(call.dtmf_info_queue, test_sequence)
 
-    def test_dtmf_info_queue_processing_order(self):
+    def test_dtmf_info_queue_processing_order(self) -> None:
         """Test that DTMF digits are processed in FIFO order"""
         # Create a mock call
         call = Call("test-call-fifo", "1001", "1002")
@@ -290,7 +290,7 @@ class TestSIPInfoDTMF(unittest.TestCase):
 class TestSIPInfoIntegration(unittest.TestCase):
     """Integration tests for SIP INFO queue operations with IVR systems"""
 
-    def test_voicemail_ivr_queue_operations(self):
+    def test_voicemail_ivr_queue_operations(self) -> None:
         """Test SIP INFO queue creation and FIFO operations for voicemail IVR
 
         Note: This test validates the queue data structure used by the priority system.
@@ -313,7 +313,7 @@ class TestSIPInfoIntegration(unittest.TestCase):
         # detection)
         self.assertEqual(len(call.dtmf_info_queue), 0)
 
-    def test_auto_attendant_queue_operations(self):
+    def test_auto_attendant_queue_operations(self) -> None:
         """Test SIP INFO queue creation and FIFO operations for auto attendant
 
         Note: This test validates the queue data structure used by the priority system.

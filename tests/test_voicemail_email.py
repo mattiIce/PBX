@@ -15,7 +15,7 @@ from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
 
 
-def test_email_notifier_config():
+def test_email_notifier_config() -> None:
     """Test email notifier configuration loading"""
     print("Testing email notifier configuration...")
 
@@ -48,7 +48,7 @@ def test_email_notifier_config():
     print("✓ Email notifier configuration loads correctly")
 
 
-def test_email_notifier_initialization():
+def test_email_notifier_initialization() -> None:
     """Test email notifier initialization"""
     print("Testing email notifier initialization...")
 
@@ -69,7 +69,7 @@ def test_email_notifier_initialization():
     print("✓ Email notifier initializes correctly")
 
 
-def test_voicemail_with_email():
+def test_voicemail_with_email() -> None:
     """Test voicemail system with email integration"""
     print("Testing voicemail system with email integration...")
 
@@ -100,7 +100,7 @@ def test_voicemail_with_email():
         shutil.rmtree(temp_dir)
 
 
-def test_extension_email_configuration():
+def test_extension_email_configuration() -> None:
     """Test that extensions have email addresses configured"""
     print("Testing extension email configuration...")
 
@@ -110,7 +110,7 @@ def test_extension_email_configuration():
     print("✓ Extensions have email addresses configured (in database)")
 
 
-def test_no_answer_timeout_config():
+def test_no_answer_timeout_config() -> None:
     """Test no-answer timeout configuration"""
     print("Testing no-answer timeout configuration...")
 
@@ -124,7 +124,7 @@ def test_no_answer_timeout_config():
     print("✓ No-answer timeout configured correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Email Tests")

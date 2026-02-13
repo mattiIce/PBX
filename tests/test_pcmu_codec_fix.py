@@ -16,7 +16,7 @@ from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import WAV_FORMAT_PCM, pcm16_to_ulaw
 
 
-def create_test_pcm_wav(sample_rate=8000, duration_samples=800):
+def create_test_pcm_wav(sample_rate: int = 8000, duration_samples: int = 800) -> str:
     """
     Create a test PCM WAV file
 
@@ -60,7 +60,7 @@ def create_test_pcm_wav(sample_rate=8000, duration_samples=800):
     return path
 
 
-def test_pcm_to_pcmu_conversion():
+def test_pcm_to_pcmu_conversion() -> bool:
     """Test that PCM files are converted to PCMU, not G.722"""
     print("\n" + "=" * 60)
     print("Testing PCM to PCMU conversion (Fix for G.722 audio issue)")

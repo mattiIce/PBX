@@ -14,7 +14,7 @@ from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
 
 
-def test_ad_search_users_method():
+def test_ad_search_users_method() -> None:
     """Test that the AD search_users method includes telephoneNumber in the search"""
     print("Testing AD search_users method includes telephoneNumber...")
 
@@ -48,7 +48,7 @@ def test_ad_search_users_method():
     print("✓ Method documentation mentions phone/telephone search")
 
 
-def test_search_filter_includes_telephone_number():
+def test_search_filter_includes_telephone_number() -> None:
     """Verify that the search filter includes telephoneNumber attribute"""
     print("Testing that search filter includes telephoneNumber...")
 
@@ -75,7 +75,7 @@ def test_search_filter_includes_telephone_number():
     print("✓ Result attributes include telephoneNumber")
 
 
-def test_api_endpoint_structure():
+def test_api_endpoint_structure() -> None:
     """Test that the REST API has the AD search endpoint defined"""
     print("Testing REST API AD search endpoint structure...")
 
@@ -106,7 +106,7 @@ def test_api_endpoint_structure():
     print("✓ Handler processes query parameter")
 
 
-def test_api_routing():
+def test_api_routing() -> None:
     """Test that the API routing includes the AD search endpoint"""
     print("Testing API routing for AD search endpoint...")
 

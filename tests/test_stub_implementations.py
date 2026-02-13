@@ -6,6 +6,7 @@ Tests for stub feature implementations
 import os
 import sys
 import tempfile
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -19,7 +20,7 @@ from pbx.utils.dtmf import DTMFDetector, DTMFGenerator
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.extension_registry = MockExtensionRegistry()
         self.call_manager = MockCallManager()
         self.parking_system = MockParkingSystem()
@@ -28,13 +29,13 @@ class MockPBXCore:
 class MockExtensionRegistry:
     """Mock extension registry"""
 
-    def get_all(self):
+    def get_all(self) -> list[Any]:
         return [
             MockExtension("1001", "Test User 1", True),
             MockExtension("1002", "Test User 2", False),
         ]
 
-    def get(self, number):
+    def get(self, number: str) -> Any:
         if number == "1001":
             return MockExtension("1001", "Test User 1", True)
         return None
@@ -43,7 +44,7 @@ class MockExtensionRegistry:
 class MockExtension:
     """Mock extension"""
 
-    def __init__(self, number, name, registered):
+    def __init__(self, number: str, name: str, registered: bool) -> None:
         self.number = number
         self.name = name
         self.registered = registered
@@ -53,24 +54,24 @@ class MockExtension:
 class MockCallManager:
     """Mock call manager"""
 
-    def __init__(self):
-        self.active_calls = []
+    def __init__(self) -> None:
+        self.active_calls: list[Any] = []
 
-    def get_active_calls(self):
+    def get_active_calls(self) -> list[Any]:
         return self.active_calls
 
-    def get_call(self, call_id):
+    def get_call(self, call_id: str) -> None:
         return None
 
 
 class MockParkingSystem:
     """Mock parking system"""
 
-    def park_call(self, call_id):
+    def park_call(self, call_id: str) -> str:
         return "70"
 
 
-def test_vip_caller_database():
+def test_vip_caller_database() -> None:
     """Test VIP caller database functionality"""
     print("Testing VIP caller database...")
 
@@ -117,7 +118,7 @@ def test_vip_caller_database():
     print("✓ VIP caller database works")
 
 
-def test_dtmf_detection():
+def test_dtmf_detection() -> None:
     """Test DTMF tone detection"""
     print("Testing DTMF detection...")
 
@@ -141,7 +142,7 @@ def test_dtmf_detection():
     print("✓ DTMF sequence detection works")
 
 
-def test_voicemail_ivr():
+def test_voicemail_ivr() -> None:
     """Test voicemail IVR state machine"""
     print("Testing voicemail IVR...")
 
@@ -186,7 +187,7 @@ def test_voicemail_ivr():
     print("✓ Voicemail IVR works")
 
 
-def test_operator_console_features():
+def test_operator_console_features() -> None:
     """Test operator console features"""
     print("Testing operator console features...")
 
@@ -228,7 +229,7 @@ def test_operator_console_features():
     print("✓ Operator console features work")
 
 
-def test_integration_stubs():
+def test_integration_stubs() -> None:
     """Test that integration stubs are properly structured"""
     print("Testing integration stubs...")
 
@@ -272,7 +273,7 @@ def test_integration_stubs():
     print("✓ Integration stubs properly structured")
 
 
-def test_new_integration_implementations():
+def test_new_integration_implementations() -> None:
     """Test newly implemented integration features"""
     print("Testing newly implemented integration features...")
 
@@ -352,7 +353,7 @@ def test_new_integration_implementations():
     print("✓ New integration implementations work correctly")
 
 
-def test_database_backend():
+def test_database_backend() -> None:
     """Test database backend with SQLite"""
     print("Testing database backend...")
 
@@ -409,7 +410,7 @@ def test_database_backend():
     print("✓ Database backend works")
 
 
-def test_ad_group_permissions_mapping():
+def test_ad_group_permissions_mapping() -> None:
     """Test Active Directory group-based permissions mapping"""
     print("Testing AD group permissions mapping...")
 
@@ -485,7 +486,7 @@ def test_ad_group_permissions_mapping():
     print("✓ AD group permissions mapping works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests"""
     print("=" * 60)
     print("Running Stub Implementation Tests")

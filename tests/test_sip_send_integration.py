@@ -11,7 +11,7 @@ from pbx.sip.message import SIPMessage
 class TestSIPSendLineIntegration(unittest.TestCase):
     """Integration tests for SIP send line and MAC in call routing"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test environment"""
         import tempfile
 
@@ -50,14 +50,14 @@ logging:
 """)
         self.temp_config.close()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test environment"""
         import os
 
         if os.path.exists(self.temp_config_path):
             os.remove(self.temp_config_path)
 
-    def test_invite_includes_caller_id_headers(self):
+    def test_invite_includes_caller_id_headers(self) -> None:
         """Test that INVITE messages include P-Asserted-Identity and Remote-Party-ID"""
         # This is a simplified test that verifies the header generation logic
         # Full integration would require a running PBX instance
@@ -93,7 +93,7 @@ logging:
         self.assertIn("John Doe", rpid)
         self.assertIn("party=calling", rpid)
 
-    def test_invite_includes_mac_address_header(self):
+    def test_invite_includes_mac_address_header(self) -> None:
         """Test that INVITE messages include X-MAC-Address when available"""
         from pbx.sip.message import SIPMessageBuilder
 
@@ -114,7 +114,7 @@ logging:
         self.assertIsNotNone(invite.get_header("X-MAC-Address"))
         self.assertEqual(invite.get_header("X-MAC-Address"), "00:11:22:33:44:55")
 
-    def test_config_defaults_enable_features(self):
+    def test_config_defaults_enable_features(self) -> None:
         """Test that features are enabled by default"""
         from pbx.utils.config import Config
 
@@ -126,7 +126,7 @@ logging:
         self.assertTrue(config.get("sip.device.send_mac_address", True))
         self.assertTrue(config.get("sip.device.accept_mac_in_invite", True))
 
-    def test_mac_address_accepted_from_invite(self):
+    def test_mac_address_accepted_from_invite(self) -> None:
         """Test that MAC address can be read from incoming INVITE"""
         raw_invite = (
             "INVITE sip:1002@192.168.1.100 SIP/2.0\r\n"
@@ -145,7 +145,7 @@ logging:
         mac = message.get_header("X-MAC-Address")
         self.assertEqual(mac, "aa:bb:cc:dd:ee:ff")
 
-    def test_complete_invite_with_all_headers(self):
+    def test_complete_invite_with_all_headers(self) -> None:
         """Test building a complete INVITE with all SIP send line/MAC headers"""
         from pbx.sip.message import SIPMessageBuilder
 

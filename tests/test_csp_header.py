@@ -23,7 +23,7 @@ class TestCSPHeaders(unittest.TestCase):
         "connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
     )
 
-    def test_csp_string_contains_self_not_sel(self):
+    def test_csp_string_contains_self_not_sel(self) -> None:
         """Test that CSP string uses 'self' not 'sel'"""
         # Verify 'self' is present (in quotes)
         self.assertIn("'self'", self.EXPECTED_CSP, "CSP header should contain 'self'")
@@ -31,7 +31,7 @@ class TestCSPHeaders(unittest.TestCase):
         # Verify 'sel' is NOT present (typo check)
         self.assertNotIn("'sel'", self.EXPECTED_CSP, "CSP header should NOT contain typo 'sel'")
 
-    def test_csp_script_src_contains_self(self):
+    def test_csp_script_src_contains_self(self) -> None:
         """Test that script-src directive contains 'self'"""
         # script-src should contain 'self'
         self.assertIn("script-src", self.EXPECTED_CSP)
@@ -44,7 +44,7 @@ class TestCSPHeaders(unittest.TestCase):
         self.assertIn("'self'", script_src[0], "script-src should contain 'self'")
         self.assertNotIn("'sel'", script_src[0], "script-src should NOT contain 'sel' typo")
 
-    def test_csp_style_src_contains_self(self):
+    def test_csp_style_src_contains_self(self) -> None:
         """Test that style-src directive contains 'self'"""
         # style-src should contain 'self'
         self.assertIn("style-src", self.EXPECTED_CSP)
@@ -57,13 +57,13 @@ class TestCSPHeaders(unittest.TestCase):
         self.assertIn("'self'", style_src[0], "style-src should contain 'self'")
         self.assertNotIn("'sel'", style_src[0], "style-src should NOT contain 'sel' typo")
 
-    def test_csp_default_src_contains_self(self):
+    def test_csp_default_src_contains_self(self) -> None:
         """Test that default-src directive contains 'self'"""
         # default-src should contain 'self'
         self.assertIn("default-src", self.EXPECTED_CSP)
         self.assertIn("default-src 'self'", self.EXPECTED_CSP, "default-src should contain 'self'")
 
-    def test_csp_connect_src_allows_api(self):
+    def test_csp_connect_src_allows_api(self) -> None:
         """Test that connect-src directive allows API connections"""
         # connect-src should be present
         self.assertIn("connect-src", self.EXPECTED_CSP, "CSP should have connect-src directive")

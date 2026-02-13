@@ -23,11 +23,11 @@ from pbx.core.call import Call, CallState
 class TestVoicemailIVREarlyTermination(unittest.TestCase):
     """Test cases for voicemail IVR early termination"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.config_file = "config.yml"
 
-    def test_ivr_detects_call_ended_before_start(self):
+    def test_ivr_detects_call_ended_before_start(self) -> None:
         """
         Test that IVR detects when call ends before the main loop starts.
 
@@ -86,7 +86,7 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
             with patch.object(pbx_core, "logger") as mock_logger:
 
                 # Simulate call ending before IVR loop starts
-                def end_call_after_setup():
+                def end_call_after_setup() -> None:
                     """End call after a short delay to simulate BYE during setup"""
                     time.sleep(0.3)  # Less than the 0.5s RTP stabilization sleep
                     call.end()
@@ -130,7 +130,7 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
                 self.assertTrue(ended_before_start, "Should log that call ended before IVR started")
                 self.assertFalse(ivr_started, "Should NOT log 'IVR started' if call ended early")
 
-    def test_ivr_session_ended_message_only_after_loop(self):
+    def test_ivr_session_ended_message_only_after_loop(self) -> None:
         """
         Test that "IVR session ended" log only appears after the IVR loop runs.
 
@@ -196,7 +196,7 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
                 # but it should not appear at the same time as "IVR started"
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail IVR Early Termination Tests")

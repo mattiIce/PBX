@@ -16,7 +16,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_transaction_rollback_on_error():
+def test_transaction_rollback_on_error() -> None:
     """Test that transactions are rolled back after errors"""
     print("Testing transaction rollback after errors...")
 
@@ -61,7 +61,7 @@ def test_transaction_rollback_on_error():
             os.unlink(temp_db.name)
 
 
-def test_fetch_one_rollback_on_error():
+def test_fetch_one_rollback_on_error() -> None:
     """Test that fetch_one rolls back transaction on error"""
     print("Testing fetch_one transaction rollback...")
 
@@ -94,7 +94,7 @@ def test_fetch_one_rollback_on_error():
             os.unlink(temp_db.name)
 
 
-def test_fetch_all_rollback_on_error():
+def test_fetch_all_rollback_on_error() -> None:
     """Test that fetch_all rolls back transaction on error"""
     print("Testing fetch_all transaction rollback...")
 
@@ -127,7 +127,7 @@ def test_fetch_all_rollback_on_error():
             os.unlink(temp_db.name)
 
 
-def test_schema_migration_rollback():
+def test_schema_migration_rollback() -> None:
     """Test that schema migration errors don't leave transactions open"""
     print("Testing schema migration transaction rollback...")
 
@@ -161,7 +161,7 @@ def test_schema_migration_rollback():
             os.unlink(temp_db.name)
 
 
-def test_permission_error_rollback():
+def test_permission_error_rollback() -> None:
     """Test that permission errors properly rollback transactions"""
     print("Testing permission error transaction rollback...")
 
@@ -197,7 +197,7 @@ def test_permission_error_rollback():
             os.unlink(temp_db.name)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Transaction Rollback Tests")

@@ -310,18 +310,18 @@ All tests pass with 100% success rate.
 2. `pbx/features/phone_provisioning.py` - Improved error messages
 3. `tests/test_phone_mac_ip_correlation.py` - Comprehensive tests
 4. `examples/phone_lookup_example.py` - Usage examples
-5. `API_DOCUMENTATION.md` - API documentation
-6. `PHONE_PROVISIONING.md` - Feature documentation
+5. `COMPLETE_GUIDE.md` - API documentation (Section 9.2)
+6. `COMPLETE_GUIDE.md` - Phone provisioning (Section 4.3)
 
 ## Benefits
 
-✓ **Identify phones easily** - Know which MAC corresponds to which IP
-✓ **Better troubleshooting** - Find phone details quickly
-✓ **Asset tracking** - Complete inventory with MAC and IP
-✓ **Network management** - Identify devices on the network
-✓ **No manual correlation** - Automatic via extension number
-✓ **Works with phones that don't provide MAC in SIP** - Most common case
-✓ **Bidirectional lookup** - Find IP from MAC or MAC from IP
+- **Identify phones easily** - Know which MAC corresponds to which IP
+- **Better troubleshooting** - Find phone details quickly
+- **Asset tracking** - Complete inventory with MAC and IP
+- **Network management** - Identify devices on the network
+- **No manual correlation** - Automatic via extension number
+- **Works with phones that don't provide MAC in SIP** - Most common case
+- **Bidirectional lookup** - Find IP from MAC or MAC from IP
 
 ## Limitations
 

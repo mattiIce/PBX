@@ -14,7 +14,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_emergency_contact_persistence_postgresql():
+def test_emergency_contact_persistence_postgresql() -> bool:
     """Test that emergency contacts persist with PostgreSQL database"""
     print("Testing emergency contact persistence with PostgreSQL...")
 
@@ -169,7 +169,7 @@ def test_emergency_contact_persistence_postgresql():
         return False
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running Emergency Contact PostgreSQL Persistence Tests")

@@ -10,7 +10,7 @@ from pathlib import Path
 import yaml
 
 
-def test_config_structure():
+def test_config_structure() -> bool:
     """Test that config.yml has the correct structure for integrations"""
     config_path = Path(__file__).parent.parent / "config.yml"
 
@@ -43,7 +43,7 @@ def test_config_structure():
     return True
 
 
-def test_default_configs():
+def test_default_configs() -> bool:
     """Test that default configurations are valid"""
     defaults = {
         "jitsi": {
@@ -82,7 +82,7 @@ def test_default_configs():
     return True
 
 
-def test_env_example():
+def test_env_example() -> bool:
     """Test that .env.example has the required variables"""
     env_example_path = Path(__file__).parent.parent / ".env.example"
 
@@ -106,7 +106,7 @@ def test_env_example():
     return len(missing) == 0
 
 
-def test_admin_html():
+def test_admin_html() -> bool:
     """Test that admin/index.html has the quick setup elements"""
     admin_html_path = Path(__file__).parent.parent / "admin" / "index.html"
 
@@ -139,7 +139,7 @@ def test_admin_html():
     return len(missing) == 0
 
 
-def test_javascript():
+def test_javascript() -> bool:
     """Test that opensource_integrations.js has the quick setup functions"""
     js_path = Path(__file__).parent.parent / "admin" / "js" / "opensource_integrations.js"
 
@@ -174,7 +174,7 @@ def test_javascript():
     return len(missing) == 0
 
 
-def main():
+def main() -> int:
     """Run all tests"""
     print("=" * 60)
     print("Integration Quick Setup - Functionality Test")

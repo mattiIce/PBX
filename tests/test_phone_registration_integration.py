@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.core.pbx import PBXCore
 
 
-def test_mac_extraction():
+def test_mac_extraction() -> None:
     """Test MAC address extraction from various SIP header formats"""
     print("Testing MAC address extraction from SIP headers...")
 
@@ -51,7 +51,7 @@ def test_mac_extraction():
     print("✓ MAC address extraction works")
 
 
-def test_registration_storage():
+def test_registration_storage() -> None:
     """Test that phone registration is stored in database"""
     print("Testing phone registration storage...")
 
@@ -128,7 +128,7 @@ def test_registration_storage():
     print("✓ Phone registration storage works")
 
 
-def test_ip_based_tracking():
+def test_ip_based_tracking() -> None:
     """Test tracking phones by IP when MAC is not available"""
     print("Testing IP-based tracking (no MAC)...")
 
@@ -181,7 +181,7 @@ def test_ip_based_tracking():
     print("✓ IP-based tracking works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Phone Registration Integration Tests")

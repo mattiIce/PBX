@@ -10,6 +10,7 @@ import time
 import traceback
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pbx.api.server import PBXFlaskServer
 from pbx.core.auto_attendant_handler import AutoAttendantHandler
@@ -31,7 +32,7 @@ from pbx.utils.logger import PBXLogger, get_logger
 class PBXCore:
     """Main PBX system coordinator"""
 
-    def __init__(self, config_file="config.yml"):
+    def __init__(self, config_file: str = "config.yml") -> None:
         """
         Initialize PBX core
 
@@ -137,7 +138,7 @@ class PBXCore:
 
         self.logger.info("PBX Core initialized with all features")
 
-    def _log_startup(self, message: str, level: str = "info"):
+    def _log_startup(self, message: str, level: str = "info") -> None:
         """
         Log a startup message, respecting quiet_startup setting
 
@@ -153,7 +154,7 @@ class PBXCore:
             log_method = getattr(self.logger, level, self.logger.info)
             log_method(message)
 
-    def _auto_seed_critical_extensions(self):
+    def _auto_seed_critical_extensions(self) -> None:
         """
         Auto-seed critical extensions at startup if they don't exist
 
@@ -255,7 +256,7 @@ class PBXCore:
         if seeded_count > 0:
             self.logger.info(f"Auto-seeded {seeded_count} critical extension(s) at startup")
 
-    def _load_provisioning_devices(self):
+    def _load_provisioning_devices(self) -> None:
         """Load provisioning devices from configuration"""
         if not self.phone_provisioning:
             return
@@ -274,7 +275,7 @@ class PBXCore:
                 except Exception as e:
                     self.logger.error(f"Failed to load provisioning device {mac}: {e}")
 
-    def start(self):
+    def start(self) -> bool:
         """Start PBX system"""
         self.logger.info("Starting PBX system...")
 
@@ -311,7 +312,7 @@ class PBXCore:
         self.logger.info("PBX system started successfully")
         return True
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop PBX system"""
         self.logger.info("Stopping PBX system...")
         self.running = False
@@ -341,7 +342,7 @@ class PBXCore:
 
         self.logger.info("PBX system stopped")
 
-    def register_extension(self, from_header, addr, user_agent=None, contact=None):
+    def register_extension(self, from_header: str, addr: tuple[str, int], user_agent: str | None = None, contact: str | None = None) -> bool:
         """
         Register extension and store phone information
 
@@ -455,7 +456,7 @@ class PBXCore:
         self.logger.warning(f"Could not parse extension from {from_header}")
         return False
 
-    def _extract_mac_address(self, contact, user_agent):
+    def _extract_mac_address(self, contact: str | None, user_agent: str | None) -> str | None:
         """
         Extract MAC address from SIP headers
 
@@ -503,7 +504,7 @@ class PBXCore:
 
         return mac_address
 
-    def _detect_phone_model(self, user_agent):
+    def _detect_phone_model(self, user_agent: str | None) -> str | None:
         """
         Detect phone model from User-Agent string
 
@@ -529,7 +530,7 @@ class PBXCore:
 
         return None
 
-    def _get_codecs_for_phone_model(self, phone_model, default_codecs=None):
+    def _get_codecs_for_phone_model(self, phone_model: str | None, default_codecs: list[str] | None = None) -> list[str]:
         """
         Get appropriate codec list for a specific phone model
 
@@ -567,7 +568,7 @@ class PBXCore:
         # Ultimate fallback - standard codec list
         return ["0", "8", "9", "18", "2", dtmf_pt_str]
 
-    def _get_phone_user_agent(self, extension_number):
+    def _get_phone_user_agent(self, extension_number: str) -> str | None:
         """
         Get User-Agent string for a registered phone by extension number
 
@@ -606,7 +607,7 @@ class PBXCore:
 
         return None
 
-    def _get_dtmf_payload_type(self):
+    def _get_dtmf_payload_type(self) -> int:
         """
         Get DTMF payload type from configuration
 
@@ -615,7 +616,7 @@ class PBXCore:
         """
         return self.config.get("features.dtmf.payload_type", 101)
 
-    def _get_ilbc_mode(self):
+    def _get_ilbc_mode(self) -> int:
         """
         Get iLBC mode from configuration
 
@@ -624,7 +625,7 @@ class PBXCore:
         """
         return self.config.get("codecs.ilbc.mode", 30)
 
-    def route_call(self, from_header, to_header, call_id, message, from_addr):
+    def route_call(self, from_header: str, to_header: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
         """
         Route call from one extension to another
 
@@ -640,7 +641,7 @@ class PBXCore:
         """
         return self._call_router.route_call(from_header, to_header, call_id, message, from_addr)
 
-    def _get_server_ip(self):
+    def _get_server_ip(self) -> str:
         """
         Get server's IP address for SDP
 
@@ -665,7 +666,7 @@ class PBXCore:
         except Exception:
             return "127.0.0.1"  # Last resort fallback
 
-    def handle_callee_answer(self, call_id, response_message, callee_addr):
+    def handle_callee_answer(self, call_id: str, response_message: Any, callee_addr: tuple[str, int]) -> None:
         """
         Handle when callee answers the call
 
@@ -774,7 +775,7 @@ class PBXCore:
                 self.sip_server._send_message(ok_response.build(), call.caller_addr)
                 self.logger.info(f"Sent 200 OK to caller for call {call_id}")
 
-    def end_call(self, call_id):
+    def end_call(self, call_id: str) -> None:
         """
         End call
 
@@ -824,7 +825,7 @@ class PBXCore:
             # End CDR record for analytics
             self.cdr_system.end_record(call_id, hangup_cause="normal_clearing")
 
-    def handle_dtmf_info(self, call_id, dtmf_digit):
+    def handle_dtmf_info(self, call_id: str, dtmf_digit: str) -> None:
         """
         Handle DTMF digit received via SIP INFO message
 
@@ -872,7 +873,7 @@ class PBXCore:
         else:
             self.logger.debug(f"Queued DTMF '{dtmf_digit}' from SIP INFO for call {call_id}")
 
-    def transfer_call(self, call_id, new_destination):
+    def transfer_call(self, call_id: str, new_destination: str) -> bool:
         """
         Transfer call to new destination using SIP REFER
 
@@ -942,7 +943,7 @@ class PBXCore:
 
         return True
 
-    def hold_call(self, call_id):
+    def hold_call(self, call_id: str) -> bool:
         """
         Put call on hold
 
@@ -959,7 +960,7 @@ class PBXCore:
             return True
         return False
 
-    def resume_call(self, call_id):
+    def resume_call(self, call_id: str) -> bool:
         """
         Resume call from hold
 
@@ -976,63 +977,63 @@ class PBXCore:
             return True
         return False
 
-    def _check_dialplan(self, extension):
+    def _check_dialplan(self, extension: str) -> bool:
         """Check if extension matches dialplan rules"""
         return self._call_router._check_dialplan(extension)
 
-    def _send_cancel_to_callee(self, call, call_id):
+    def _send_cancel_to_callee(self, call: Any, call_id: str) -> None:
         """Send CANCEL to callee to stop their phone from ringing"""
         return self._call_router._send_cancel_to_callee(call, call_id)
 
-    def _answer_call_for_voicemail(self, call, call_id):
+    def _answer_call_for_voicemail(self, call: Any, call_id: str) -> bool:
         """Answer call for voicemail recording"""
         return self._call_router._answer_call_for_voicemail(call, call_id)
 
-    def _handle_no_answer(self, call_id):
+    def _handle_no_answer(self, call_id: str) -> None:
         """Handle no-answer timeout - route call to voicemail"""
         return self._call_router._handle_no_answer(call_id)
 
-    def _monitor_voicemail_dtmf(self, call_id, call, recorder):
+    def _monitor_voicemail_dtmf(self, call_id: str, call: Any, recorder: Any) -> None:
         """Monitor for DTMF # key press during voicemail recording"""
         return self._voicemail_handler.monitor_voicemail_dtmf(call_id, call, recorder)
 
-    def _complete_voicemail_recording(self, call_id):
+    def _complete_voicemail_recording(self, call_id: str) -> None:
         """Complete voicemail recording and save the message"""
         return self._voicemail_handler.complete_voicemail_recording(call_id)
 
-    def _handle_auto_attendant(self, from_ext, to_ext, call_id, message, from_addr):
+    def _handle_auto_attendant(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
         """Handle auto attendant calls (extension 0)"""
         return self._auto_attendant_handler.handle_auto_attendant(from_ext, to_ext, call_id, message, from_addr)
 
-    def _auto_attendant_session(self, call_id, call, session):
+    def _auto_attendant_session(self, call_id: str, call: Any, session: Any) -> None:
         """Handle auto attendant session with menu and DTMF input"""
         return self._auto_attendant_handler._auto_attendant_session(call_id, call, session)
 
-    def _handle_voicemail_access(self, from_ext, to_ext, call_id, message, from_addr):
+    def _handle_voicemail_access(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
         """Handle voicemail access calls (*xxxx pattern)"""
         return self._voicemail_handler.handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
 
-    def _handle_paging(self, from_ext, to_ext, call_id, message, from_addr):
+    def _handle_paging(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
         """Handle paging system calls (7xx pattern or all-call)"""
         return self._paging_handler.handle_paging(from_ext, to_ext, call_id, message, from_addr)
 
-    def _paging_session(self, call_id, call, dac_device, page_info):
+    def _paging_session(self, call_id: str, call: Any, dac_device: dict[str, Any], page_info: dict[str, Any]) -> None:
         """Handle paging session with audio routing to DAC device"""
         return self._paging_handler._paging_session(call_id, call, dac_device, page_info)
 
-    def _playback_voicemails(self, call_id, call, mailbox, messages):
+    def _playback_voicemails(self, call_id: str, call: Any, mailbox: Any, messages: list[dict[str, Any]]) -> None:
         """Play voicemail messages to caller"""
         return self._voicemail_handler._playback_voicemails(call_id, call, mailbox, messages)
 
-    def _voicemail_ivr_session(self, call_id, call, mailbox, voicemail_ivr):
+    def _voicemail_ivr_session(self, call_id: str, call: Any, mailbox: Any, voicemail_ivr: Any) -> None:
         """Interactive voicemail management session with IVR menu"""
         return self._voicemail_handler._voicemail_ivr_session(call_id, call, mailbox, voicemail_ivr)
 
-    def _handle_emergency_call(self, from_ext, to_ext, call_id, message, from_addr):
+    def _handle_emergency_call(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
         """Handle emergency call (911) according to Kari's Law"""
         return self._emergency_handler.handle_emergency_call(from_ext, to_ext, call_id, message, from_addr)
 
-    def _build_wav_file(self, audio_data):
+    def _build_wav_file(self, audio_data: bytes) -> bytes:
         """
         Build a proper WAV file from raw audio data
         Assumes G.711 μ-law (PCMU) codec at 8kHz
@@ -1085,9 +1086,8 @@ class PBXCore:
 
         # Combine all parts
         return wav_header + fmt_chunk + fmt_extension + data_chunk + audio_data
-        return True
 
-    def get_status(self):
+    def get_status(self) -> dict[str, Any]:
         """
         Get PBX status
 
@@ -1105,7 +1105,7 @@ class PBXCore:
             "queued_calls": sum(len(q.queue) for q in self.queue_system.queues.values()),
         }
 
-    def get_ad_integration_status(self):
+    def get_ad_integration_status(self) -> dict[str, Any]:
         """
         Get Active Directory integration status
 
@@ -1149,7 +1149,7 @@ class PBXCore:
             "error": error,
         }
 
-    def sync_ad_users(self):
+    def sync_ad_users(self) -> dict[str, Any]:
         """
         Manually trigger Active Directory user synchronization
 

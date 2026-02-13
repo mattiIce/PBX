@@ -21,7 +21,7 @@ from pbx.utils.security import (
 )
 
 
-def test_fips_encryption_active():
+def test_fips_encryption_active() -> None:
     """Test that FIPS encryption is active and functional"""
     print("\nTesting FIPS encryption is active...")
 
@@ -54,7 +54,7 @@ def test_fips_encryption_active():
         print("  ⚠ Cryptography library not available (FIPS algorithms unavailable)")
 
 
-def test_password_policy_enforcement():
+def test_password_policy_enforcement() -> None:
     """Test password policy is properly enforced"""
     print("\nTesting password policy enforcement...")
 
@@ -96,7 +96,7 @@ def test_password_policy_enforcement():
     print("  ✓ Strong password generation works")
 
 
-def test_rate_limiting_enforcement():
+def test_rate_limiting_enforcement() -> None:
     """Test rate limiting is properly enforced"""
     print("\nTesting rate limiting enforcement...")
 
@@ -129,7 +129,7 @@ def test_rate_limiting_enforcement():
     print("  ✓ Successful login clears rate limit")
 
 
-def test_audit_logging_functional():
+def test_audit_logging_functional() -> None:
     """Test security audit logging is functional"""
     print("\nTesting security audit logging...")
 
@@ -164,7 +164,7 @@ def test_audit_logging_functional():
     print(f"  ✓ Successfully logged {len(events)} security events")
 
 
-def test_threat_detection_functional():
+def test_threat_detection_functional() -> None:
     """Test threat detection is functional"""
     print("\nTesting threat detection...")
 
@@ -217,7 +217,7 @@ def test_threat_detection_functional():
     print("  ✓ Request pattern analysis functional")
 
 
-def test_password_manager_integration():
+def test_password_manager_integration() -> None:
     """Test secure password manager integration"""
     print("\nTesting password manager integration...")
 
@@ -252,7 +252,7 @@ def test_password_manager_integration():
     print("  ✓ Password generation works")
 
 
-def test_all_security_defaults():
+def test_all_security_defaults() -> None:
     """Test that all security features have secure defaults"""
     print("\nTesting security defaults...")
 
@@ -304,7 +304,7 @@ def test_all_security_defaults():
     print(f"  ✓ Threat detection enabled: {threat_enabled}")
 
 
-def test_security_features_cannot_be_bypassed():
+def test_security_features_cannot_be_bypassed() -> None:
     """Test that security features cannot be easily bypassed"""
     print("\nTesting security enforcement cannot be bypassed...")
 
@@ -342,7 +342,7 @@ def test_security_features_cannot_be_bypassed():
     print("  ✓ Security auditing enforced")
 
 
-def run_all_tests():
+def run_all_tests() -> tuple[int, int]:
     """Run all security feature validation tests"""
     print("=" * 70)
     print("Running Security Feature Validation Tests")

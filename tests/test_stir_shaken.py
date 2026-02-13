@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import tempfile
+from typing import Optional
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -23,7 +24,7 @@ from pbx.features.stir_shaken import (
 from pbx.sip.message import SIPMessage
 
 
-def create_test_manager():
+def create_test_manager() -> Optional[STIRSHAKENManager]:
     """Create STIR/SHAKEN manager with test certificates"""
     if not CRYPTO_AVAILABLE:
         print("⚠ Cryptography library not available, skipping tests")
@@ -49,7 +50,7 @@ def create_test_manager():
     return manager
 
 
-def test_manager_initialization():
+def test_manager_initialization() -> bool:
     """Test manager initializes correctly"""
     print("Testing STIR/SHAKEN manager initialization...")
 
@@ -67,7 +68,7 @@ def test_manager_initialization():
     return True
 
 
-def test_manager_with_config():
+def test_manager_with_config() -> bool:
     """Test manager initialization with config"""
     print("Testing manager with config...")
 
@@ -86,7 +87,7 @@ def test_manager_with_config():
     return True
 
 
-def test_attestation_levels():
+def test_attestation_levels() -> bool:
     """Test attestation level enum"""
     print("Testing attestation levels...")
 
@@ -98,7 +99,7 @@ def test_attestation_levels():
     return True
 
 
-def test_create_passport_full():
+def test_create_passport_full() -> bool:
     """Test creating PASSporT with full attestation"""
     print("Testing PASSporT creation (full attestation)...")
 
@@ -126,7 +127,7 @@ def test_create_passport_full():
     return True
 
 
-def test_create_passport_partial():
+def test_create_passport_partial() -> bool:
     """Test creating PASSporT with partial attestation"""
     print("Testing PASSporT creation (partial attestation)...")
 
@@ -156,7 +157,7 @@ def test_create_passport_partial():
     return True
 
 
-def test_verify_valid_passport():
+def test_verify_valid_passport() -> bool:
     """Test verifying a valid PASSporT"""
     print("Testing PASSporT verification...")
 
@@ -184,7 +185,7 @@ def test_verify_valid_passport():
     return True
 
 
-def test_verify_invalid_signature():
+def test_verify_invalid_signature() -> bool:
     """Test verifying PASSporT with invalid signature"""
     print("Testing invalid signature detection...")
 
@@ -215,7 +216,7 @@ def test_verify_invalid_signature():
     return True
 
 
-def test_create_identity_header():
+def test_create_identity_header() -> bool:
     """Test creating SIP Identity header"""
     print("Testing Identity header creation...")
 
@@ -240,7 +241,7 @@ def test_create_identity_header():
     return True
 
 
-def test_verify_identity_header():
+def test_verify_identity_header() -> bool:
     """Test verifying Identity header"""
     print("Testing Identity header verification...")
 
@@ -265,7 +266,7 @@ def test_verify_identity_header():
     return True
 
 
-def test_sip_integration():
+def test_sip_integration() -> bool:
     """Test integration with SIP messages"""
     print("Testing SIP INVITE integration...")
 
@@ -302,7 +303,7 @@ def test_sip_integration():
     return True
 
 
-def test_normalize_telephone_numbers():
+def test_normalize_telephone_numbers() -> bool:
     """Test telephone number normalization"""
     print("Testing telephone number normalization...")
 
@@ -328,7 +329,7 @@ def test_normalize_telephone_numbers():
     return True
 
 
-def test_verification_status_display():
+def test_verification_status_display() -> bool:
     """Test verification status display info"""
     print("Testing verification status display...")
 
@@ -353,7 +354,7 @@ def test_verification_status_display():
     return True
 
 
-def test_certificate_generation():
+def test_certificate_generation() -> bool:
     """Test test certificate generation"""
     print("Testing certificate generation...")
 
@@ -382,7 +383,7 @@ def test_certificate_generation():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests"""
     tests = [
         test_manager_initialization,

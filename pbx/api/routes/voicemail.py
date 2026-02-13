@@ -10,7 +10,7 @@ import tempfile
 import zipfile
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -33,7 +33,7 @@ voicemail_bp = Blueprint("voicemail", __name__)
 
 @voicemail_bp.route("/api/voicemail/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_voicemail(subpath):
+def handle_get_voicemail(subpath: str) -> Response:
     """Get voicemail messages for an extension."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -114,7 +114,7 @@ def handle_get_voicemail(subpath):
 
 @voicemail_bp.route("/api/voicemail/<path:subpath>", methods=["PUT"])
 @require_auth
-def handle_update_voicemail(subpath):
+def handle_update_voicemail(subpath: str) -> Response:
     """Update voicemail settings (mark as read, update PIN)."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -157,7 +157,7 @@ def handle_update_voicemail(subpath):
 
 @voicemail_bp.route("/api/voicemail/<path:subpath>", methods=["DELETE"])
 @require_auth
-def handle_delete_voicemail(subpath):
+def handle_delete_voicemail(subpath: str) -> Response:
     """Delete voicemail message."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -189,7 +189,7 @@ def handle_delete_voicemail(subpath):
 
 @voicemail_bp.route("/api/voicemail-boxes", methods=["GET"])
 @require_auth
-def handle_get_voicemail_boxes():
+def handle_get_voicemail_boxes() -> Response:
     """Get list of all voicemail boxes."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -220,7 +220,7 @@ def handle_get_voicemail_boxes():
 
 @voicemail_bp.route("/api/voicemail-boxes/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_voicemail_box(subpath):
+def handle_get_voicemail_box(subpath: str) -> Response:
     """Handle GET requests for voicemail boxes.
 
     Routes:
@@ -239,7 +239,7 @@ def handle_get_voicemail_box(subpath):
         return _handle_get_voicemail_box_details(subpath)
 
 
-def _handle_get_voicemail_box_details(subpath):
+def _handle_get_voicemail_box_details(subpath: str) -> Response:
     """Get details of a specific voicemail box."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -287,7 +287,7 @@ def _handle_get_voicemail_box_details(subpath):
         return send_json({"error": str(e)}, 500)
 
 
-def _handle_get_voicemail_greeting(subpath):
+def _handle_get_voicemail_greeting(subpath: str) -> Response:
     """Get custom voicemail greeting."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -328,7 +328,7 @@ def _handle_get_voicemail_greeting(subpath):
 
 @voicemail_bp.route("/api/voicemail-boxes/<path:subpath>/export", methods=["POST"])
 @require_auth
-def handle_export_voicemail_box(subpath):
+def handle_export_voicemail_box(subpath: str) -> Response:
     """Export all voicemails from a mailbox as a ZIP file."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -411,7 +411,7 @@ def handle_export_voicemail_box(subpath):
 
 @voicemail_bp.route("/api/voicemail-boxes/<path:subpath>/greeting", methods=["PUT"])
 @require_auth
-def handle_upload_voicemail_greeting(subpath):
+def handle_upload_voicemail_greeting(subpath: str) -> Response:
     """Upload/update custom voicemail greeting."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -448,7 +448,7 @@ def handle_upload_voicemail_greeting(subpath):
 
 @voicemail_bp.route("/api/voicemail-boxes/<path:subpath>/clear", methods=["DELETE"])
 @require_auth
-def handle_clear_voicemail_box(subpath):
+def handle_clear_voicemail_box(subpath: str) -> Response:
     """Clear all messages from a voicemail box."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
@@ -482,7 +482,7 @@ def handle_clear_voicemail_box(subpath):
 
 @voicemail_bp.route("/api/voicemail-boxes/<path:subpath>/greeting", methods=["DELETE"])
 @require_auth
-def handle_delete_voicemail_greeting(subpath):
+def handle_delete_voicemail_greeting(subpath: str) -> Response:
     """Delete custom voicemail greeting."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "voicemail_system"):

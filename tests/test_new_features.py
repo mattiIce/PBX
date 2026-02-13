@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.rtp.handler import RTPPlayer
 
 
-def test_wav_file_playback():
+def test_wav_file_playback() -> bool:
     """Test WAV file playback functionality"""
     print("Testing WAV file playback...")
 
@@ -81,7 +81,7 @@ def test_wav_file_playback():
         return False
 
 
-def test_call_transfer_message_building():
+def test_call_transfer_message_building() -> bool:
     """Test that call transfer REFER messages can be built"""
     print("\nTesting call transfer message building...")
 
@@ -126,13 +126,13 @@ def test_call_transfer_message_building():
         return False
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Testing New PBX Features")
     print("=" * 70)
 
-    results = []
+    results: list[bool] = []
     results.append(test_wav_file_playback())
     results.append(test_call_transfer_message_building())
 

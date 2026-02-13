@@ -1,9 +1,5 @@
 # High Availability (HA) Deployment Guide
 
-**Version**: 1.0.0  
-**Last Updated**: January 2, 2026  
-**Purpose**: Deploy Warden VoIP PBX in a highly available configuration
-
 ---
 
 ## Table of Contents
@@ -220,7 +216,7 @@ sudo -u postgres psql -c "SELECT * FROM pg_stat_replication;"
 sudo apt-get install -y python3-pip python3-psycopg2 etcd
 
 # Install Patroni
-sudo pip3 install patroni[etcd]
+uv pip install patroni[etcd]
 
 # Create Patroni configuration
 sudo tee /etc/patroni.yml << EOF
@@ -468,12 +464,7 @@ sudo git clone https://github.com/mattiIce/PBX.git
 cd PBX
 
 # Install dependencies
-sudo ./install_requirements.sh
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+make install-prod
 
 # Configure for HA
 sudo tee /opt/PBX/config.yml << EOF
@@ -860,7 +851,4 @@ See `docs/diagrams/ha-architecture.png`
 
 ---
 
-**Version History**:
-- 1.0.0 (Jan 2026) - Initial release
-
-**Maintained by**: PBX Development Team
+---

@@ -16,7 +16,7 @@ from pbx.features.skills_routing import (
 )
 
 
-def test_skill_creation():
+def test_skill_creation() -> bool:
     """Test creating a skill"""
     print("Testing skill creation...")
 
@@ -30,7 +30,7 @@ def test_skill_creation():
     return True
 
 
-def test_agent_skill():
+def test_agent_skill() -> bool:
     """Test agent skill with proficiency"""
     print("Testing agent skill...")
 
@@ -53,7 +53,7 @@ def test_agent_skill():
     return True
 
 
-def test_skill_requirement():
+def test_skill_requirement() -> bool:
     """Test skill requirement"""
     print("Testing skill requirement...")
 
@@ -67,7 +67,7 @@ def test_skill_requirement():
     return True
 
 
-def test_router_initialization():
+def test_router_initialization() -> bool:
     """Test router initialization"""
     print("Testing router initialization...")
 
@@ -80,7 +80,7 @@ def test_router_initialization():
     return True
 
 
-def test_add_skill():
+def test_add_skill() -> bool:
     """Test adding skills"""
     print("Testing add skill...")
 
@@ -99,7 +99,7 @@ def test_add_skill():
     return True
 
 
-def test_assign_skill_to_agent():
+def test_assign_skill_to_agent() -> bool:
     """Test assigning skills to agents"""
     print("Testing assign skill to agent...")
 
@@ -128,7 +128,7 @@ def test_assign_skill_to_agent():
     return True
 
 
-def test_remove_skill_from_agent():
+def test_remove_skill_from_agent() -> bool:
     """Test removing skill from agent"""
     print("Testing remove skill from agent...")
 
@@ -152,7 +152,7 @@ def test_remove_skill_from_agent():
     return True
 
 
-def test_queue_requirements():
+def test_queue_requirements() -> bool:
     """Test setting queue requirements"""
     print("Testing queue requirements...")
 
@@ -181,7 +181,7 @@ def test_queue_requirements():
     return True
 
 
-def test_find_best_agents():
+def test_find_best_agents() -> bool:
     """Test finding best agents for queue"""
     print("Testing find best agents...")
 
@@ -218,7 +218,7 @@ def test_find_best_agents():
     return True
 
 
-def test_fallback_to_any_agent():
+def test_fallback_to_any_agent() -> bool:
     """Test fallback when no agents match"""
     print("Testing fallback to any agent...")
 
@@ -243,7 +243,7 @@ def test_fallback_to_any_agent():
     return True
 
 
-def test_scoring_algorithm():
+def test_scoring_algorithm() -> bool:
     """Test agent scoring algorithm"""
     print("Testing scoring algorithm...")
 
@@ -288,7 +288,7 @@ def test_scoring_algorithm():
     return True
 
 
-def test_get_all_skills():
+def test_get_all_skills() -> bool:
     """Test getting all skills"""
     print("Testing get all skills...")
 
@@ -309,7 +309,7 @@ def test_get_all_skills():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all skills routing tests"""
     print("=" * 60)
     print("Skills-Based Routing Tests")

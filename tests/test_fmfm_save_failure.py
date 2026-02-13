@@ -17,7 +17,7 @@ from pbx.utils.database import DatabaseBackend
 class TestFMFMSaveFailure(unittest.TestCase):
     """Test FMFM configuration save failure handling"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test database"""
         self.temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
         self.temp_db.close()
@@ -31,14 +31,14 @@ class TestFMFMSaveFailure(unittest.TestCase):
         self.database = DatabaseBackend(self.config)
         self.database.connect()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test database"""
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
         if os.path.exists(self.temp_db.name):
             os.unlink(self.temp_db.name)
 
-    def test_set_config_with_database_failure(self):
+    def test_set_config_with_database_failure(self) -> None:
         """Test that set_config returns False if database save fails"""
         fmfm = FindMeFollowMe(config=self.config, database=self.database)
 
@@ -63,7 +63,7 @@ class TestFMFMSaveFailure(unittest.TestCase):
             loaded_config, "Config should not be saved to memory if database save fails"
         )
 
-    def test_set_config_without_database(self):
+    def test_set_config_without_database(self) -> None:
         """Test that set_config works without a database"""
         config = {"features": {"find_me_follow_me": {"enabled": True}}}
 
@@ -87,7 +87,7 @@ class TestFMFMSaveFailure(unittest.TestCase):
         self.assertIsNotNone(loaded_config, "Config should be saved to memory")
         self.assertEqual(loaded_config["mode"], "sequential")
 
-    def test_set_config_with_working_database(self):
+    def test_set_config_with_working_database(self) -> None:
         """Test that set_config succeeds with a working database"""
         fmfm = FindMeFollowMe(config=self.config, database=self.database)
 
@@ -115,7 +115,7 @@ class TestFMFMSaveFailure(unittest.TestCase):
         self.assertIsNotNone(loaded_config2, "Config should persist to database")
         self.assertEqual(loaded_config2["mode"], "simultaneous")
 
-    def test_set_config_with_fmfm_disabled_globally(self):
+    def test_set_config_with_fmfm_disabled_globally(self) -> None:
         """Test that set_config returns False and logs error when FMFM is disabled globally"""
         config = {"features": {"find_me_follow_me": {"enabled": False}}}  # Disabled globally
 

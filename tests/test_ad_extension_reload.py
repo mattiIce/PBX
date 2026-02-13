@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-def test_extension_registry_reload_after_ad_sync():
+def test_extension_registry_reload_after_ad_sync() -> None:
     """Test that extension registry reloads from database after AD sync"""
     print("\nTesting extension registry reload after AD sync...")
 
@@ -89,7 +89,7 @@ def test_extension_registry_reload_after_ad_sync():
     print("✓ Extension registry reload after AD sync works correctly")
 
 
-def test_reload_preserves_registration_state():
+def test_reload_preserves_registration_state() -> None:
     """Test that reloading registry preserves registration state"""
     print("\nTesting that reload preserves registration state...")
 
@@ -142,7 +142,7 @@ def test_reload_preserves_registration_state():
     print("✓ Reload behavior verified")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Running AD Extension Reload Tests")

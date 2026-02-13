@@ -11,6 +11,7 @@ import sys
 import time
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -22,14 +23,14 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def test_ssl_configuration():
+def test_ssl_configuration() -> bool:
     """Test SSL configuration loading"""
     print("=" * 60)
     print("Test 1: SSL Configuration Loading")
@@ -66,7 +67,7 @@ def test_ssl_configuration():
     return True
 
 
-def test_api_server_with_ssl_disabled():
+def test_api_server_with_ssl_disabled() -> bool:
     """Test API server starts with SSL disabled"""
     print("=" * 60)
     print("Test 2: API Server with SSL Disabled")
@@ -104,7 +105,7 @@ def test_api_server_with_ssl_disabled():
     return True
 
 
-def test_certificate_files():
+def test_certificate_files() -> bool:
     """Test certificate files are valid"""
     print("=" * 60)
     print("Test 3: Certificate File Validation")
@@ -138,7 +139,7 @@ def test_certificate_files():
     return True
 
 
-def test_api_server_with_ssl_enabled():
+def test_api_server_with_ssl_enabled() -> bool:
     """Test API server starts with SSL enabled"""
     print("=" * 60)
     print("Test 4: API Server with SSL Enabled")
@@ -159,7 +160,7 @@ def test_api_server_with_ssl_enabled():
     # Override the get method to return our SSL config
     original_get = config.get
 
-    def mock_get(key, default=None):
+    def mock_get(key: str, default: Any = None) -> Any:
         if key == "api.ssl":
             return {
                 "enabled": True,
@@ -202,7 +203,7 @@ def test_api_server_with_ssl_enabled():
     return True
 
 
-def test_https_connection():
+def test_https_connection() -> bool:
     """Test making HTTPS requests to the API server"""
     print("=" * 60)
     print("Test 5: HTTPS Connection to API Server")
@@ -223,7 +224,7 @@ def test_https_connection():
     # Override to enable SSL
     original_get = config.get
 
-    def mock_get(key, default=None):
+    def mock_get(key: str, default: Any = None) -> Any:
         if key == "api.ssl":
             return {
                 "enabled": True,
@@ -290,7 +291,7 @@ def test_https_connection():
     return True
 
 
-def main():
+def main() -> bool:
     """Run all tests"""
     print("\n" + "=" * 60)
     print("Comprehensive HTTPS/SSL API Server Tests")

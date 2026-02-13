@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
-def test_sdp_parsing():
+def test_sdp_parsing() -> None:
     """Test SDP parsing"""
     print("Testing SDP parsing...")
 
@@ -48,7 +48,7 @@ a=sendrecv
     print("  ✓ SDP parsing works")
 
 
-def test_sdp_audio_info():
+def test_sdp_audio_info() -> None:
     """Test extracting audio info from SDP"""
     print("Testing SDP audio info extraction...")
 
@@ -79,7 +79,7 @@ a=rtpmap:8 PCMA/8000
     print("  ✓ Audio info extraction works")
 
 
-def test_sdp_building():
+def test_sdp_building() -> None:
     """Test SDP building"""
     print("Testing SDP building...")
 
@@ -108,7 +108,7 @@ def test_sdp_building():
     print("  ✓ Built SDP is valid and parseable")
 
 
-def test_sdp_media_level_connection():
+def test_sdp_media_level_connection() -> None:
     """Test SDP with media-level connection info"""
     print("Testing SDP with media-level connection...")
 
@@ -134,7 +134,7 @@ a=rtpmap:0 PCMU/8000
     print("  ✓ Media-level connection works")
 
 
-def test_ilbc_mode_configuration():
+def test_ilbc_mode_configuration() -> None:
     """Test iLBC mode configuration in SDP"""
     print("Testing iLBC mode configuration...")
 
@@ -167,7 +167,7 @@ def test_ilbc_mode_configuration():
     print("  ✓ iLBC mode=20 configuration works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all SDP tests"""
     print("=" * 60)
     print("Running SDP Tests")

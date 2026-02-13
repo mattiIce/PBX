@@ -14,7 +14,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
-def test_mac_normalization():
+def test_mac_normalization() -> None:
     """Test MAC address normalization used in lookups"""
     print("Testing MAC address normalization...")
 
@@ -33,7 +33,7 @@ def test_mac_normalization():
     print("✓ MAC address normalization works correctly")
 
 
-def test_provisioned_device_structure():
+def test_provisioned_device_structure() -> None:
     """Test that provisioned devices have required fields for correlation"""
     print("Testing provisioned device data structure...")
 
@@ -59,7 +59,7 @@ def test_provisioned_device_structure():
     print("✓ Provisioned device structure is correct")
 
 
-def test_registered_phone_lookup_methods():
+def test_registered_phone_lookup_methods() -> None:
     """Test RegisteredPhonesDB lookup methods"""
     print("Testing registered phone lookup methods...")
 
@@ -106,7 +106,7 @@ def test_registered_phone_lookup_methods():
     print("✓ Registered phone lookup methods work correctly")
 
 
-def test_correlation_scenario_mac_to_ip():
+def test_correlation_scenario_mac_to_ip() -> None:
     """Test correlation: Given MAC, find IP"""
     print("Testing MAC-to-IP correlation scenario...")
 
@@ -152,7 +152,7 @@ def test_correlation_scenario_mac_to_ip():
     print("✓ MAC-to-IP correlation works")
 
 
-def test_correlation_scenario_ip_to_mac():
+def test_correlation_scenario_ip_to_mac() -> None:
     """Test correlation: Given IP, find MAC"""
     print("Testing IP-to-MAC correlation scenario...")
 
@@ -203,7 +203,7 @@ def test_correlation_scenario_ip_to_mac():
     print("✓ IP-to-MAC correlation works")
 
 
-def test_no_mac_in_sip_registration():
+def test_no_mac_in_sip_registration() -> None:
     """Test scenario where phone doesn't provide MAC in SIP REGISTER"""
     print("Testing scenario with no MAC in SIP registration...")
 
@@ -235,7 +235,7 @@ def test_no_mac_in_sip_registration():
     print("✓ Phone registration without MAC works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests"""
     print("=" * 60)
     print("Phone MAC-to-IP Correlation Tests")

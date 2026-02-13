@@ -5,6 +5,7 @@ Test WebRTC browser calling support
 
 import os
 import sys
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -12,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
 
 
-def test_webrtc_session_creation():
+def test_webrtc_session_creation() -> bool:
     """Test WebRTC session creation"""
     print("Testing WebRTC session creation...")
 
@@ -33,12 +34,12 @@ def test_webrtc_session_creation():
     return True
 
 
-def test_webrtc_signaling_initialization():
+def test_webrtc_signaling_initialization() -> bool:
     """Test WebRTC signaling server initialization"""
     print("\nTesting WebRTC signaling server initialization...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.webrtc.enabled": True,
                 "features.webrtc.session_timeout": 300,
@@ -62,12 +63,12 @@ def test_webrtc_signaling_initialization():
     return True
 
 
-def test_webrtc_session_management():
+def test_webrtc_session_management() -> bool:
     """Test WebRTC session management"""
     print("\nTesting WebRTC session management...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webrtc.enabled": True, "features.webrtc.session_timeout": 300}
             return config_map.get(key, default)
 
@@ -103,12 +104,12 @@ def test_webrtc_session_management():
     return True
 
 
-def test_webrtc_sdp_handling():
+def test_webrtc_sdp_handling() -> bool:
     """Test WebRTC SDP offer/answer handling"""
     print("\nTesting WebRTC SDP offer/answer handling...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webrtc.enabled": True}
             return config_map.get(key, default)
 
@@ -142,12 +143,12 @@ def test_webrtc_sdp_handling():
     return True
 
 
-def test_webrtc_ice_candidates():
+def test_webrtc_ice_candidates() -> bool:
     """Test WebRTC ICE candidate handling"""
     print("\nTesting WebRTC ICE candidate handling...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webrtc.enabled": True}
             return config_map.get(key, default)
 
@@ -176,12 +177,12 @@ def test_webrtc_ice_candidates():
     return True
 
 
-def test_webrtc_ice_servers_config():
+def test_webrtc_ice_servers_config() -> bool:
     """Test ICE servers configuration"""
     print("\nTesting ICE servers configuration...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.webrtc.enabled": True,
                 "features.webrtc.stun_servers": [
@@ -215,7 +216,7 @@ def test_webrtc_ice_servers_config():
     return True
 
 
-def test_webrtc_gateway():
+def test_webrtc_gateway() -> bool:
     """Test WebRTC gateway"""
     print("\nTesting WebRTC gateway...")
 
@@ -236,7 +237,7 @@ def test_webrtc_gateway():
     return True
 
 
-def test_sdp_transformations():
+def test_sdp_transformations() -> bool:
     """Test SDP transformations between WebRTC and SIP"""
     print("\nTesting SDP transformations...")
 
@@ -295,54 +296,54 @@ a=sendrecv
     return True
 
 
-def test_call_initiation():
+def test_call_initiation() -> bool:
     """Test call initiation through WebRTC gateway"""
     print("\nTesting call initiation...")
 
     # Create mock PBX core with necessary components
     class MockExtension:
-        def __init__(self, number):
+        def __init__(self, number: str) -> None:
             self.number = number
 
     class MockExtensionRegistry:
-        def get_extension(self, number):
+        def get_extension(self, number: str) -> MockExtension | None:
             if number in ["1001", "1002"]:
                 return MockExtension(number)
             return None
 
     class MockCallManager:
-        def __init__(self):
-            self.calls = {}
+        def __init__(self) -> None:
+            self.calls: dict[str, Any] = {}
 
-        def create_call(self, call_id, from_extension, to_extension):
+        def create_call(self, call_id: str, from_extension: str, to_extension: str) -> Any:
             from pbx.core.call import Call
 
             call = Call(call_id, from_extension, to_extension)
             self.calls[call_id] = call
             return call
 
-        def get_call(self, call_id):
+        def get_call(self, call_id: str) -> Any:
             return self.calls.get(call_id)
 
     class MockRTPRelay:
-        def allocate_relay(self, call_id):
+        def allocate_relay(self, call_id: str) -> tuple[int, int]:
             # Return mock RTP ports (local and remote)
             return (10000, 10001)
 
     class MockPBXCore:
-        def __init__(self):
+        def __init__(self) -> None:
             self.extension_registry = MockExtensionRegistry()
             self.call_manager = MockCallManager()
             self.rtp_relay = MockRTPRelay()
             self.auto_attendant = None  # No auto attendant in test
             self.voicemail_system = None  # No voicemail in test
 
-        def _check_dialplan(self, extension):
+        def _check_dialplan(self, extension: str) -> bool:
             # Simple dialplan check for test
             return False
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             return {"features.webrtc.enabled": True}.get(key, default)
 
     # Create WebRTC signaling server and gateway
@@ -385,31 +386,31 @@ a=sendrecv
     return True
 
 
-def test_incoming_call_routing():
+def test_incoming_call_routing() -> bool:
     """Test incoming call routing to WebRTC client"""
     print("\nTesting incoming call routing...")
 
     # Create mock PBX core
     class MockCallManager:
-        def __init__(self):
-            self.calls = {}
+        def __init__(self) -> None:
+            self.calls: dict[str, Any] = {}
 
-        def create_call(self, call_id, from_extension, to_extension):
+        def create_call(self, call_id: str, from_extension: str, to_extension: str) -> Any:
             from pbx.core.call import Call
 
             call = Call(call_id, from_extension, to_extension)
             self.calls[call_id] = call
             return call
 
-        def get_call(self, call_id):
+        def get_call(self, call_id: str) -> Any:
             return self.calls.get(call_id)
 
     class MockPBXCore:
-        def __init__(self):
+        def __init__(self) -> None:
             self.call_manager = MockCallManager()
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             return {"features.webrtc.enabled": True}.get(key, default)
 
     # Create WebRTC signaling server and gateway
@@ -456,12 +457,12 @@ a=sendrecv
     return True
 
 
-def test_webrtc_disabled():
+def test_webrtc_disabled() -> bool:
     """Test WebRTC when disabled"""
     print("\nTesting WebRTC when disabled...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {"features.webrtc.enabled": False}
             return config_map.get(key, default)
 
@@ -481,7 +482,7 @@ def test_webrtc_disabled():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Testing WebRTC Browser Calling Support")

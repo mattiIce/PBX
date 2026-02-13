@@ -71,7 +71,7 @@ The PBX includes auto-provisioning templates for popular ATAs:
 - Connect overhead paging amplifiers
 - Multi-zone paging support
 - Auto-answer configuration
-- See [Paging System Guide](FEATURES.md#paging-system) for details
+- See [Paging System Guide](../COMPLETE_GUIDE.md#46-paging-system) for details
 
 ## Setup Guide
 
@@ -183,7 +183,7 @@ curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
 3. Set up paging zones in admin panel
 4. Dial paging extension (e.g., 701) to page
 
-See [Paging System Guide](FEATURES.md#paging-system) for complete setup.
+See [Paging System Guide](../COMPLETE_GUIDE.md#46-paging-system) for complete setup.
 
 ### Use Case 4: Remote Office with Router
 
@@ -382,14 +382,14 @@ Sends SIP NOTIFY to trigger ATA reboot.
 - **T.38** - Fax over IP standard (enabled by default)
 - **G.711 Passthrough** - Fallback mode
 
-## Additional Resources
+## Related Documentation
 
 - [Grandstream HT801 Documentation](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht801)
 - [Grandstream HT802 Documentation](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht802)
 - [Cisco SPA112 Documentation](https://www.cisco.com/c/en/us/support/unified-communications/spa112-2-port-phone-adapter/model.html)
-- [Phone Provisioning Guide](PHONE_PROVISIONING.md)
-- [Paging System Guide](FEATURES.md#paging-system)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Phone Provisioning Guide](../COMPLETE_GUIDE.md#43-phone-provisioning)
+- [Paging System Guide](../COMPLETE_GUIDE.md#46-paging-system)
+- [Troubleshooting Guide](../TROUBLESHOOTING.md)
 
 ## Support
 
@@ -397,7 +397,7 @@ For issues not covered in this guide:
 
 1. Check PBX logs: `tail -f logs/pbx.log`
 2. Check ATA web interface system status
-3. Review [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+3. Review [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
 4. Search existing issues on GitHub
 5. Open a new issue with:
    - ATA make/model
@@ -406,6 +406,3 @@ For issues not covered in this guide:
    - Relevant log entries
 
 ---
-
-**Last Updated**: December 29, 2025
-**Version**: 1.0.0

@@ -2,7 +2,7 @@
 
 import json
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -22,7 +22,7 @@ qos_bp = Blueprint("qos", __name__)
 
 @qos_bp.route("/api/qos/metrics", methods=["GET"])
 @require_auth
-def handle_get_qos_metrics():
+def handle_get_qos_metrics() -> tuple[Response, int]:
     """Get QoS metrics for all active calls."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):
@@ -38,7 +38,7 @@ def handle_get_qos_metrics():
 
 @qos_bp.route("/api/qos/alerts", methods=["GET"])
 @require_auth
-def handle_get_qos_alerts():
+def handle_get_qos_alerts() -> tuple[Response, int]:
     """Get QoS quality alerts."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):
@@ -64,7 +64,7 @@ def handle_get_qos_alerts():
 
 @qos_bp.route("/api/qos/history", methods=["GET"])
 @require_auth
-def handle_get_qos_history():
+def handle_get_qos_history() -> tuple[Response, int]:
     """Get historical QoS metrics."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):
@@ -99,7 +99,7 @@ def handle_get_qos_history():
 
 @qos_bp.route("/api/qos/statistics", methods=["GET"])
 @require_auth
-def handle_get_qos_statistics():
+def handle_get_qos_statistics() -> tuple[Response, int]:
     """Get overall QoS statistics."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):
@@ -115,7 +115,7 @@ def handle_get_qos_statistics():
 
 @qos_bp.route("/api/qos/call/<call_id>", methods=["GET"])
 @require_auth
-def handle_get_qos_call_metrics(call_id):
+def handle_get_qos_call_metrics(call_id: str) -> tuple[Response, int]:
     """Get QoS metrics for a specific call."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):
@@ -134,7 +134,7 @@ def handle_get_qos_call_metrics(call_id):
 
 @qos_bp.route("/api/qos/clear-alerts", methods=["POST"])
 @require_admin
-def handle_clear_qos_alerts():
+def handle_clear_qos_alerts() -> tuple[Response, int]:
     """Handle clearing QoS alerts."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):
@@ -149,7 +149,7 @@ def handle_clear_qos_alerts():
 
 @qos_bp.route("/api/qos/thresholds", methods=["POST"])
 @require_admin
-def handle_update_qos_thresholds():
+def handle_update_qos_thresholds() -> tuple[Response, int]:
     """Handle updating QoS alert thresholds."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "qos_monitor"):

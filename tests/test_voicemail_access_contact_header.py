@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-def test_voicemail_access_contact_header_code_review():
+def test_voicemail_access_contact_header_code_review() -> None:
     """
     Test that the voicemail access code uses correct Contact header
 
@@ -69,7 +69,7 @@ def test_voicemail_access_contact_header_code_review():
     print("✓ Voicemail access Contact header code review passed!")
 
 
-def test_contact_header_pattern_consistency():
+def test_contact_header_pattern_consistency() -> None:
     """
     Test that Contact headers follow consistent pattern across voicemail features
     """
@@ -117,7 +117,7 @@ def test_contact_header_pattern_consistency():
     print("✓ Contact header pattern consistency check completed!")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Access Contact Header Tests")

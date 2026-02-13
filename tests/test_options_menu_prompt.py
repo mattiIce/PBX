@@ -14,7 +14,7 @@ from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 
 
-def test_options_menu_prompt_file_exists():
+def test_options_menu_prompt_file_exists() -> None:
     """Test that options_menu.wav file exists"""
     print("Testing options_menu.wav file exists...")
 
@@ -30,7 +30,7 @@ def test_options_menu_prompt_file_exists():
     print(f"✓ options_menu.wav exists ({file_size} bytes)")
 
 
-def test_options_menu_message_returned():
+def test_options_menu_message_returned() -> None:
     """Test that pressing 2 from main menu returns the options menu message"""
     print("Testing options menu message is returned...")
 
@@ -69,7 +69,7 @@ def test_options_menu_message_returned():
     print(f"✓ Options menu message returned: '{message}'")
 
 
-def test_options_menu_complete_flow():
+def test_options_menu_complete_flow() -> None:
     """Test complete flow: main menu -> press 2 -> options menu -> press 1 -> record greeting"""
     print("Testing complete options menu flow...")
 
@@ -95,7 +95,7 @@ def test_options_menu_complete_flow():
     print("✓ Complete options menu flow works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Options Menu Prompt Tests")

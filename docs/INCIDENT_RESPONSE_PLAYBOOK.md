@@ -1,9 +1,5 @@
 # Incident Response Playbook
 
-**Last Updated**: January 2, 2026  
-**Version**: 1.0.0  
-**Purpose**: Procedures for responding to PBX system incidents
-
 ---
 
 ## Table of Contents

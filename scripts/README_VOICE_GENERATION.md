@@ -2,22 +2,22 @@
 
 This directory contains scripts to generate voice prompts for the PBX system using **gTTS (Google Text-to-Speech)**.
 
-## Primary Script: `generate_espeak_voices.py` ⭐ RECOMMENDED
+## Primary Script: `generate_espeak_voices.py` (Recommended)
 
 Generates **PROFESSIONAL-QUALITY VOICE** prompts using gTTS (Google Text-to-Speech).
 
 **Advantages:**
-- ✅ Natural, human-like American English voice
-- ✅ Professional quality suitable for production
-- ✅ Free to use (no API key required)
-- ✅ Simple setup
-- ✅ Automatic generation from text prompts
-- ✅ Optimized for US English accent
+-Natural, human-like American English voice
+-Professional quality suitable for production
+-Free to use (no API key required)
+-Simple setup
+-Automatic generation from text prompts
+-Optimized for US English accent
 
 **Usage:**
 ```bash
 # Install dependencies
-pip install gTTS pydub
+uv pip install gTTS pydub
 
 # Generate all prompts with default company name
 python3 scripts/generate_espeak_voices.py
@@ -34,7 +34,7 @@ python3 scripts/generate_espeak_voices.py --vm-only
 
 **Requirements:**
 ```bash
-pip install gTTS pydub
+uv pip install gTTS pydub
 ```
 
 **Voice Quality:** Natural and professional-sounding American English voice. **This is the ONLY supported voice generation method.**
@@ -47,15 +47,15 @@ Same functionality as `generate_espeak_voices.py`, provided for compatibility. B
 
 **Usage:**
 ```bash
-pip install gTTS pydub
+uv pip install gTTS pydub
 python3 scripts/generate_tts_prompts.py --company "Your Company"
 ```
 
 ---
 
-## Admin Panel Integration 🎛️
+## Admin Panel Integration
 
-**NEW!** You can now configure voice prompts directly from the Admin Panel:
+You can configure voice prompts directly from the Admin Panel:
 
 1. Navigate to **Auto Attendant** tab
 2. Scroll to **Voice Prompts Configuration** section
@@ -98,7 +98,7 @@ These settings provide the most natural and professional-sounding voice for busi
 
 ## Customizing Voice Prompts
 
-### Option 1: Use Admin Panel (Recommended) 🎛️
+### Option 1: Use Admin Panel (Recommended)
 
 The easiest way to customize prompts:
 1. Open Admin Panel → Auto Attendant tab
@@ -141,7 +141,7 @@ Make sure they're in the correct format (8000 Hz, 16-bit, mono).
 
 ### "No module named 'gtts'"
 ```bash
-pip install gTTS pydub
+uv pip install gTTS pydub
 ```
 
 ### "Failed to connect" or Network Error
@@ -151,7 +151,7 @@ pip install gTTS pydub
 
 ### "No module named 'pydub'"
 ```bash
-pip install pydub
+uv pip install pydub
 ```
 
 ### Voice sounds choppy
@@ -172,19 +172,18 @@ Edit the script and change the `tld` parameter to your preferred accent.
 ## Why gTTS Only?
 
 **gTTS is the only supported voice generation method because:**
-1. ✅ **Best Quality:** Natural, human-like voice
-2. ✅ **Free:** No API keys or costs
-3. ✅ **Simple:** Easy to install and use
-4. ✅ **Reliable:** Backed by Google's TTS infrastructure
-5. ✅ **Professional:** Suitable for production business use
-6. ✅ **Maintained:** Active development and support
+1. **Best Quality** - Natural, human-like voice
+2. **Free** - No API keys or costs
+3. **Simple** - Easy to install and use
+4. **Reliable** - Backed by Google's TTS infrastructure
+5. **Professional** - Suitable for production business use
+6. **Maintained** - Active development and support
 
 Other TTS methods (espeak, pyttsx3, festival) produce robotic voices unsuitable for professional business use and have been removed.
 
 ---
 
-## Additional Resources
+## Related Documentation
 
-- [SETUP_GTTS_VOICES.md](../SETUP_GTTS_VOICES.md) - Detailed setup guide
-- [HOW_TO_ADD_VOICE_FILES.md](../HOW_TO_ADD_VOICE_FILES.md) - Voice file management
-- [ADMIN_PANEL_AUTO_ATTENDANT.md](../ADMIN_PANEL_AUTO_ATTENDANT.md) - Admin panel guide
+- [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive PBX documentation
+- [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide

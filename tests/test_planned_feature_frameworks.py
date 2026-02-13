@@ -29,7 +29,7 @@ from pbx.features.video_codec import VideoCodecManager
 from pbx.features.voice_biometrics import VoiceBiometrics
 
 
-def test_conversational_ai():
+def test_conversational_ai() -> bool:
     """Test Conversational AI framework"""
     print("Testing Conversational AI...")
 
@@ -58,7 +58,7 @@ def test_conversational_ai():
     return True
 
 
-def test_predictive_dialing():
+def test_predictive_dialing() -> bool:
     """Test Predictive Dialing framework"""
     print("\nTesting Predictive Dialing...")
 
@@ -85,7 +85,7 @@ def test_predictive_dialing():
     return True
 
 
-def test_voice_biometrics():
+def test_voice_biometrics() -> bool:
     """Test Voice Biometrics framework"""
     print("\nTesting Voice Biometrics...")
 
@@ -108,7 +108,7 @@ def test_voice_biometrics():
     return True
 
 
-def test_call_quality_prediction():
+def test_call_quality_prediction() -> bool:
     """Test Call Quality Prediction framework"""
     print("\nTesting Call Quality Prediction...")
 
@@ -133,7 +133,7 @@ def test_call_quality_prediction():
     return True
 
 
-def test_video_codec():
+def test_video_codec() -> bool:
     """Test Video Codec framework"""
     print("\nTesting Video Codec...")
 
@@ -156,7 +156,7 @@ def test_video_codec():
     return True
 
 
-def test_bi_integration():
+def test_bi_integration() -> bool:
     """Test Business Intelligence Integration framework"""
     print("\nTesting BI Integration...")
 
@@ -187,7 +187,7 @@ def test_bi_integration():
     return True
 
 
-def test_call_tagging():
+def test_call_tagging() -> bool:
     """Test Call Tagging framework"""
     print("\nTesting Call Tagging...")
 
@@ -213,7 +213,7 @@ def test_call_tagging():
     return True
 
 
-def test_mobile_apps():
+def test_mobile_apps() -> bool:
     """Test Mobile Apps framework"""
     print("\nTesting Mobile Apps...")
 
@@ -233,7 +233,7 @@ def test_mobile_apps():
     return True
 
 
-def test_mobile_number_portability():
+def test_mobile_number_portability() -> bool:
     """Test Mobile Number Portability framework"""
     print("\nTesting Mobile Number Portability...")
 
@@ -256,7 +256,7 @@ def test_mobile_number_portability():
     return True
 
 
-def test_call_recording_analytics():
+def test_call_recording_analytics() -> bool:
     """Test Call Recording Analytics framework"""
     print("\nTesting Call Recording Analytics...")
 
@@ -271,7 +271,7 @@ def test_call_recording_analytics():
     return True
 
 
-def test_call_blending():
+def test_call_blending() -> bool:
     """Test Call Blending framework"""
     print("\nTesting Call Blending...")
 
@@ -294,7 +294,7 @@ def test_call_blending():
     return True
 
 
-def test_predictive_voicemail_drop():
+def test_predictive_voicemail_drop() -> bool:
     """Test Predictive Voicemail Drop framework"""
     print("\nTesting Voicemail Drop...")
 
@@ -313,7 +313,7 @@ def test_predictive_voicemail_drop():
     return True
 
 
-def test_geographic_redundancy():
+def test_geographic_redundancy() -> bool:
     """Test Geographic Redundancy framework"""
     print("\nTesting Geographic Redundancy...")
 
@@ -332,7 +332,7 @@ def test_geographic_redundancy():
     return True
 
 
-def test_dns_srv_failover():
+def test_dns_srv_failover() -> bool:
     """Test DNS SRV Failover framework"""
     print("\nTesting DNS SRV Failover...")
 
@@ -347,7 +347,7 @@ def test_dns_srv_failover():
     return True
 
 
-def test_session_border_controller():
+def test_session_border_controller() -> bool:
     """Test Session Border Controller framework"""
     print("\nTesting Session Border Controller...")
 
@@ -366,7 +366,7 @@ def test_session_border_controller():
     return True
 
 
-def test_data_residency_controls():
+def test_data_residency_controls() -> bool:
     """Test Data Residency Controls framework"""
     print("\nTesting Data Residency Controls...")
 
@@ -390,7 +390,7 @@ def test_data_residency_controls():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all framework tests"""
     print("=" * 60)
     print("Testing Framework Implementations for Planned Features")

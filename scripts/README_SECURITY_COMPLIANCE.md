@@ -32,28 +32,28 @@ python scripts/security_compliance_check.py --quiet
 **What it checks**:
 
 #### FIPS 140-2 Compliance
-- ✓ Kernel FIPS mode enabled
-- ✓ OpenSSL FIPS provider available
-- ✓ Cryptography library installed and configured
-- ✓ PBX FIPS mode enabled in config.yml
-- ✓ FIPS-approved algorithms:
+- Kernel FIPS mode enabled
+- OpenSSL FIPS provider available
+- Cryptography library installed and configured
+- PBX FIPS mode enabled in config.yml
+- FIPS-approved algorithms:
   - PBKDF2-HMAC-SHA256 (600,000 iterations)
   - SHA-256 hashing
   - AES-256-GCM encryption
 
 #### SOC 2 Type 2 Compliance
-- ✓ Control implementation status
-- ✓ Control testing coverage
-- ✓ Category compliance (Security, Availability, Processing Integrity, Confidentiality)
-- ✓ Implementation percentage
+- Control implementation status
+- Control testing coverage
+- Category compliance (Security, Availability, Processing Integrity, Confidentiality)
+- Implementation percentage
 
 #### Security Configuration
-- ✓ Authentication required
-- ✓ Password policy (minimum 12 characters)
-- ✓ Failed login protection
-- ✓ TLS/SIPS enabled (recommended)
-- ✓ SRTP enabled (recommended)
-- ✓ API authentication
+- Authentication required
+- Password policy (minimum 12 characters)
+- Failed login protection
+- TLS/SIPS enabled (recommended)
+- SRTP enabled (recommended)
+- API authentication
 
 **Exit codes**:
 - `0` - Fully compliant or compliant with warnings
@@ -233,7 +233,7 @@ security:
 #### 3. Install Required Libraries
 
 ```bash
-pip install cryptography>=41.0.0
+uv pip install cryptography>=41.0.0
 ```
 
 #### 4. Verify Compliance
@@ -325,10 +325,10 @@ cat /proc/sys/crypto/fips_enabled
 **Solution**:
 ```bash
 # Verify cryptography library version
-pip show cryptography
+uv pip show cryptography
 
 # Upgrade if needed
-pip install --upgrade 'cryptography>=41.0.0'
+uv pip install --upgrade 'cryptography>=41.0.0'
 
 # Test encryption
 python -c "from pbx.utils.encryption import get_encryption; enc = get_encryption(fips_mode=True); print('OK')"
@@ -450,10 +450,9 @@ python scripts/security_compliance_check.py --quiet
 
 ## Related Documentation
 
-- [SECURITY_GUIDE.md](../SECURITY_GUIDE.md) - Comprehensive security documentation
-- [REGULATIONS_COMPLIANCE_GUIDE.md](../REGULATIONS_COMPLIANCE_GUIDE.md) - Regulatory compliance
-- [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) - Production deployment
-- [API_DOCUMENTATION.md](../API_DOCUMENTATION.md) - API reference for compliance endpoints
+- [COMPLETE_GUIDE.md - Section 6: Security & Compliance](../COMPLETE_GUIDE.md#6-security--compliance) - Comprehensive security documentation
+- [COMPLETE_GUIDE.md - Section 2: Production Deployment](../COMPLETE_GUIDE.md#2-production-deployment) - Production deployment
+- [COMPLETE_GUIDE.md - Section 9.2: REST API](../COMPLETE_GUIDE.md#92-rest-api-reference) - API reference
 
 ## Support
 
@@ -464,6 +463,3 @@ For issues or questions:
 4. Review logs in `/var/log/pbx/`
 
 ---
-
-**Last Updated**: 2024-12-29
-**Status**: Production Ready

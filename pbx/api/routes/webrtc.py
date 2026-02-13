@@ -8,7 +8,7 @@ phone configuration.
 import json
 import traceback
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -33,7 +33,7 @@ DEFAULT_WEBRTC_EXTENSION = "webrtc-admin"
 
 @webrtc_bp.route("/api/webrtc/session", methods=["POST"])
 @require_auth
-def handle_create_webrtc_session():
+def handle_create_webrtc_session() -> Response:
     """Create a new WebRTC session."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -88,7 +88,7 @@ def handle_create_webrtc_session():
 
 @webrtc_bp.route("/api/webrtc/offer", methods=["POST"])
 @require_auth
-def handle_webrtc_offer():
+def handle_webrtc_offer() -> Response:
     """Handle WebRTC SDP offer."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -129,7 +129,7 @@ def handle_webrtc_offer():
 
 @webrtc_bp.route("/api/webrtc/answer", methods=["POST"])
 @require_auth
-def handle_webrtc_answer():
+def handle_webrtc_answer() -> Response:
     """Handle WebRTC SDP answer."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -155,7 +155,7 @@ def handle_webrtc_answer():
 
 @webrtc_bp.route("/api/webrtc/ice-candidate", methods=["POST"])
 @require_auth
-def handle_webrtc_ice_candidate():
+def handle_webrtc_ice_candidate() -> Response:
     """Handle WebRTC ICE candidate."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -195,7 +195,7 @@ def handle_webrtc_ice_candidate():
 
 @webrtc_bp.route("/api/webrtc/call", methods=["POST"])
 @require_auth
-def handle_webrtc_call():
+def handle_webrtc_call() -> Response:
     """Initiate a call from WebRTC client."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_gateway"):
@@ -253,7 +253,7 @@ def handle_webrtc_call():
 
 @webrtc_bp.route("/api/webrtc/hangup", methods=["POST"])
 @require_auth
-def handle_webrtc_hangup():
+def handle_webrtc_hangup() -> Response:
     """Handle WebRTC call hangup/termination."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -313,7 +313,7 @@ def handle_webrtc_hangup():
 
 @webrtc_bp.route("/api/webrtc/dtmf", methods=["POST"])
 @require_auth
-def handle_webrtc_dtmf():
+def handle_webrtc_dtmf() -> Response:
     """Handle DTMF tone sending from WebRTC client."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -429,7 +429,7 @@ def handle_webrtc_dtmf():
 
 @webrtc_bp.route("/api/webrtc/sessions", methods=["GET"])
 @require_auth
-def handle_get_webrtc_sessions():
+def handle_get_webrtc_sessions() -> Response:
     """Get all WebRTC sessions."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -444,7 +444,7 @@ def handle_get_webrtc_sessions():
 
 @webrtc_bp.route("/api/webrtc/phone-config", methods=["GET"])
 @require_auth
-def handle_get_webrtc_phone_config():
+def handle_get_webrtc_phone_config() -> Response:
     """Get WebRTC phone extension configuration."""
     pbx_core = get_pbx_core()
     try:
@@ -460,7 +460,7 @@ def handle_get_webrtc_phone_config():
 
 @webrtc_bp.route("/api/webrtc/ice-servers", methods=["GET"])
 @require_auth
-def handle_get_ice_servers():
+def handle_get_ice_servers() -> Response:
     """Get ICE servers configuration."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -475,7 +475,7 @@ def handle_get_ice_servers():
 
 @webrtc_bp.route("/api/webrtc/session/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_webrtc_session(subpath):
+def handle_get_webrtc_session(subpath: str) -> Response:
     """Get specific WebRTC session."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "webrtc_signaling"):
@@ -498,7 +498,7 @@ def handle_get_webrtc_session(subpath):
 
 @webrtc_bp.route("/api/webrtc/phone-config", methods=["POST"])
 @require_auth
-def handle_set_webrtc_phone_config():
+def handle_set_webrtc_phone_config() -> Response:
     """Set WebRTC phone extension configuration."""
     pbx_core = get_pbx_core()
     try:

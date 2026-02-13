@@ -1,9 +1,5 @@
 # Production Readiness Checklist
 
-**Last Updated**: January 2, 2026  
-**Version**: 1.0.0  
-**Purpose**: Comprehensive checklist for deploying Warden VoIP PBX to production
-
 ---
 
 ## Overview
@@ -11,10 +7,10 @@
 This checklist ensures that all critical systems, security measures, monitoring, and documentation are in place before deploying the PBX system to production. Each section must be completed and verified.
 
 **Status Legend:**
-- ✅ **Complete** - Verified and tested
-- ⚠️ **Partial** - Implemented but needs verification
-- ❌ **Missing** - Not yet implemented
-- 🔄 **In Progress** - Currently being worked on
+- **[DONE]** - Verified and tested
+- **[PARTIAL]** - Implemented but needs verification
+- **[TODO]** - Not yet implemented
+- **[IN PROGRESS]** - Currently being worked on
 
 ---
 
@@ -86,8 +82,7 @@ This checklist ensures that all critical systems, security measures, monitoring,
 - [ ] **Code Deployment**
   - [ ] Repository cloned from stable branch/tag
   - [ ] Python 3.12 installed
-  - [ ] Virtual environment created
-  - [ ] Production dependencies installed (`requirements.txt`)
+  - [ ] Production dependencies installed (`make install-prod`)
   - [ ] System dependencies installed (espeak, ffmpeg, etc.)
   - [ ] Application user created (`pbx` user)
   - [ ] Directory permissions configured
@@ -538,11 +533,10 @@ Use this section to document any exceptions, deviations, or additional notes:
 ## Appendix
 
 ### A. Related Documentation
-- [README.md](README.md) - Project overview
-- [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md) - Comprehensive documentation
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Troubleshooting guide
-- [FIPS_COMPLIANCE_STATUS.md](FIPS_COMPLIANCE_STATUS.md) - FIPS compliance
-- [SECURITY_BEST_PRACTICES.md](docs/SECURITY_BEST_PRACTICES.md) - Security guide
+- [README.md](../README.md) - Project overview
+- [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive documentation
+- [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide
+- [COMPLETE_GUIDE.md - Section 6: Security & Compliance](../COMPLETE_GUIDE.md#6-security--compliance) - FIPS compliance and security
 
 ### B. Deployment Scripts
 - `scripts/deploy_production_pilot.sh` - Automated deployment script
@@ -556,7 +550,3 @@ Use this section to document any exceptions, deviations, or additional notes:
 - `pbx/features/qos_monitoring.py` - Call quality monitoring
 
 ---
-
-**Document Version**: 1.0.0  
-**Last Updated**: January 2, 2026  
-**Next Review**: [Schedule quarterly reviews]

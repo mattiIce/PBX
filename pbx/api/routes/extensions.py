@@ -1,6 +1,6 @@
 """Flask Blueprint for extension management routes."""
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify, request, current_app
 
 from pbx.api.utils import (
     get_pbx_core,
@@ -21,7 +21,7 @@ extensions_bp = Blueprint("extensions", __name__)
 
 
 @extensions_bp.route("/api/extensions", methods=["GET"])
-def get_extensions():
+def get_extensions() -> tuple[Response, int]:
     """Get extensions."""
     # SECURITY: Require authentication (but not necessarily admin)
     is_authenticated, payload = verify_authentication()
@@ -64,7 +64,7 @@ def get_extensions():
 
 @extensions_bp.route("/api/extensions", methods=["POST"])
 @require_admin
-def add_extension():
+def add_extension() -> tuple[Response, int]:
     """Add a new extension."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -147,7 +147,7 @@ def add_extension():
 
 @extensions_bp.route("/api/extensions/<number>", methods=["PUT"])
 @require_admin
-def update_extension(number):
+def update_extension(number: str) -> tuple[Response, int]:
     """Update an existing extension."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -218,7 +218,7 @@ def update_extension(number):
 
 @extensions_bp.route("/api/extensions/<number>", methods=["DELETE"])
 @require_admin
-def delete_extension(number):
+def delete_extension(number: str) -> tuple[Response, int]:
     """Delete an extension."""
     pbx_core = get_pbx_core()
     if not pbx_core:
