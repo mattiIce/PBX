@@ -66,7 +66,8 @@ def test_default_configs() -> bool:
     }
 
     for integration, config in defaults.items():
-        print(json.dumps(config, indent=2))
+        # Verify each config is valid JSON-serializable
+        json.dumps(config, indent=2)
 
     return True
 

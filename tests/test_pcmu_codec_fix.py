@@ -78,8 +78,7 @@ def test_pcm_to_pcmu_conversion() -> bool:
         result = player.play_file(pcm_file_8k)
         player.stop()
 
-        if result:
-        else:
+        if not result:
             return False
 
         # Test 16kHz PCM file
@@ -92,8 +91,7 @@ def test_pcm_to_pcmu_conversion() -> bool:
         result = player.play_file(pcm_file_16k)
         player.stop()
 
-        if result:
-        else:
+        if not result:
             return False
 
         # Test manual conversion
@@ -104,16 +102,9 @@ def test_pcm_to_pcmu_conversion() -> bool:
 
         ulaw_data = pcm16_to_ulaw(bytes(test_pcm_data))
 
-        if len(ulaw_data) == 100:  # Should be half the size (16-bit PCM -> 8-bit μ-law)
-            print(
-                f"   ✓ Manual conversion successful: {len(test_pcm_data)} bytes PCM -> {len(ulaw_data)} bytes PCMU"
-            )
-        else:
-            print(
-                f"   ✗ Manual conversion failed: expected 100 bytes, got {len(ulaw_data)} bytes"
-            )
+        # Should be half the size (16-bit PCM -> 8-bit u-law)
+        if len(ulaw_data) != 100:
             return False
-
 
         return True
 
