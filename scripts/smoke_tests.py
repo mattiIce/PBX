@@ -11,7 +11,7 @@ import os
 import sys
 import time
 import urllib.request
-from typing import Any, Dict, Tuple
+from typing import Any
 
 
 class SmokeTestRunner:
@@ -123,7 +123,7 @@ class SmokeTestRunner:
 
         return all_passed
 
-    def test_health_check(self) -> Tuple[bool, str]:
+    def test_health_check(self) -> tuple[bool, str]:
         """Test /health endpoint."""
         try:
             status, data = self._get_json("/health")
@@ -139,7 +139,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_liveness(self) -> Tuple[bool, str]:
+    def test_liveness(self) -> tuple[bool, str]:
         """Test /live endpoint."""
         try:
             status, data = self._get_json("/live")
@@ -155,7 +155,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_readiness(self) -> Tuple[bool, str]:
+    def test_readiness(self) -> tuple[bool, str]:
         """Test /ready endpoint."""
         try:
             status, data = self._get_json("/ready")
@@ -174,7 +174,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_api_status(self) -> Tuple[bool, str]:
+    def test_api_status(self) -> tuple[bool, str]:
         """Test /api/status endpoint."""
         try:
             status, data = self._get_json("/api/status")
@@ -194,7 +194,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_detailed_health(self) -> Tuple[bool, str]:
+    def test_detailed_health(self) -> tuple[bool, str]:
         """Test /api/health/detailed endpoint."""
         try:
             status, data = self._get_json("/api/health/detailed")
@@ -211,7 +211,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_metrics(self) -> Tuple[bool, str]:
+    def test_metrics(self) -> tuple[bool, str]:
         """Test /metrics endpoint (Prometheus format)."""
         try:
             status, text = self._get_text("/metrics")
@@ -227,7 +227,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_extensions(self) -> Tuple[bool, str]:
+    def test_extensions(self) -> tuple[bool, str]:
         """Test /api/extensions endpoint."""
         try:
             # Note: This endpoint requires authentication in production
@@ -243,7 +243,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_configuration(self) -> Tuple[bool, str]:
+    def test_configuration(self) -> tuple[bool, str]:
         """Test /api/config endpoint."""
         try:
             status, data = self._get_json("/api/config")
@@ -256,7 +256,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_statistics(self) -> Tuple[bool, str]:
+    def test_statistics(self) -> tuple[bool, str]:
         """Test /api/statistics endpoint."""
         try:
             status, data = self._get_json("/api/statistics")
@@ -269,7 +269,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def test_qos(self) -> Tuple[bool, str]:
+    def test_qos(self) -> tuple[bool, str]:
         """Test QoS monitoring endpoints."""
         try:
             status, data = self._get_json("/api/qos/statistics")
@@ -282,7 +282,7 @@ class SmokeTestRunner:
         except Exception as e:
             return False, str(e)
 
-    def _get_json(self, path: str) -> Tuple[int, Dict[str, Any]]:
+    def _get_json(self, path: str) -> tuple[int, dict[str, Any]]:
         """
         Make GET request and parse JSON response.
 
@@ -311,7 +311,7 @@ class SmokeTestRunner:
         except urllib.error.URLError as e:
             raise Exception(f"Connection failed: {e}")
 
-    def _get_text(self, path: str) -> Tuple[int, str]:
+    def _get_text(self, path: str) -> tuple[int, str]:
         """
         Make GET request and return text response.
 

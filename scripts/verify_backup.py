@@ -17,7 +17,6 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
 
 
 class BackupVerifier:
@@ -50,7 +49,7 @@ class BackupVerifier:
         if details and status:
             print(f"  {details}")
 
-    def find_latest_backup(self) -> Tuple[bool, str]:
+    def find_latest_backup(self) -> tuple[bool, str]:
         """Find the latest backup file."""
         # Check common backup locations
         backup_locations = [

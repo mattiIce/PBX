@@ -22,7 +22,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -48,13 +48,13 @@ class DRTestResults:
     timestamp: str
     duration: float
     overall_success: bool
-    backup_results: Dict[str, Any]
-    restore_results: Dict[str, Any]
-    verification_results: Dict[str, Any]
+    backup_results: dict[str, Any]
+    restore_results: dict[str, Any]
+    verification_results: dict[str, Any]
     rto_seconds: float  # Recovery Time Objective
     rpo_seconds: float  # Recovery Point Objective
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
 
 class DisasterRecoveryTester:
@@ -74,7 +74,7 @@ class DisasterRecoveryTester:
         self.backup_completed_time = None
         self.restore_completed_time = None
 
-    def run_command(self, cmd: List[str], check: bool = True) -> tuple[bool, str, str]:
+    def run_command(self, cmd: list[str], check: bool = True) -> tuple[bool, str, str]:
         """Run a shell command and return status and output"""
         if self.config.dry_run:
             self.logger.info(f"[DRY RUN] Would execute: {' '.join(cmd)}")

@@ -81,7 +81,7 @@ This checklist ensures that all critical systems, security measures, monitoring,
 ### 2.1 PBX Installation
 - [ ] **Code Deployment**
   - [ ] Repository cloned from stable branch/tag
-  - [ ] Python 3.12 installed
+  - [ ] Python 3.13+ installed
   - [ ] Production dependencies installed (`make install-prod`)
   - [ ] System dependencies installed (espeak, ffmpeg, etc.)
   - [ ] Application user created (`pbx` user)

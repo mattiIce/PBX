@@ -30,7 +30,6 @@ Exit codes:
 import argparse
 import os
 import sys
-from typing import Dict, List, Tuple
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -237,7 +236,7 @@ class ADIntegrationTester:
             )
             return False
 
-    def test_user_search(self) -> Tuple[bool, List[Dict]]:
+    def test_user_search(self) -> tuple[bool, list[dict]]:
         """Test 4: Test user search functionality"""
         self.print_header("Test 4: User Search and Discovery")
 
@@ -296,7 +295,7 @@ class ADIntegrationTester:
             self.print_test("Search for users", "FAIL", f"Error: {e}")
             return False, []
 
-    def test_user_attributes(self, users: List[Dict]) -> bool:
+    def test_user_attributes(self, users: list[dict]) -> bool:
         """Test 5: Verify user attributes are retrieved correctly"""
         self.print_header("Test 5: User Attributes Verification")
 
@@ -355,7 +354,7 @@ class ADIntegrationTester:
 
         return True
 
-    def test_extension_sync(self, users: List[Dict]) -> bool:
+    def test_extension_sync(self, users: list[dict]) -> bool:
         """Test 6: Verify extension sync would work correctly"""
         self.print_header("Test 6: Extension Synchronization Check")
 
@@ -426,7 +425,7 @@ class ADIntegrationTester:
 
         return True
 
-    def test_authentication(self, users: List[Dict]) -> bool:
+    def test_authentication(self, users: list[dict]) -> bool:
         """Test 7: Test user authentication (optional)"""
         self.print_header("Test 7: Authentication Test")
 

@@ -13,7 +13,7 @@ import sys
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -21,11 +21,11 @@ class BenchmarkResults:
     """Performance benchmark results."""
 
     timestamp: str
-    system_info: Dict[str, Any]
-    api_performance: Dict[str, float]
-    database_performance: Dict[str, float]
-    call_handling: Dict[str, Any]
-    resource_usage: Dict[str, float]
+    system_info: dict[str, Any]
+    api_performance: dict[str, float]
+    database_performance: dict[str, float]
+    call_handling: dict[str, Any]
+    resource_usage: dict[str, float]
     overall_score: float
 
 
@@ -42,7 +42,7 @@ class PerformanceBenchmark:
         self.api_url = api_url.rstrip("/")
         self.results = {}
 
-    def get_system_info(self) -> Dict[str, Any]:
+    def get_system_info(self) -> dict[str, Any]:
         """
         Get system information.
 
@@ -99,7 +99,7 @@ class PerformanceBenchmark:
 
         return info
 
-    def benchmark_api_performance(self) -> Dict[str, float]:
+    def benchmark_api_performance(self) -> dict[str, float]:
         """
         Benchmark API performance.
 
@@ -143,7 +143,7 @@ class PerformanceBenchmark:
 
         return metrics
 
-    def benchmark_database_performance(self) -> Dict[str, float]:
+    def benchmark_database_performance(self) -> dict[str, float]:
         """
         Benchmark database performance.
 
@@ -195,7 +195,7 @@ class PerformanceBenchmark:
 
         return metrics
 
-    def benchmark_call_handling(self) -> Dict[str, Any]:
+    def benchmark_call_handling(self) -> dict[str, Any]:
         """
         Benchmark call handling capacity.
 
@@ -220,7 +220,7 @@ class PerformanceBenchmark:
 
         return metrics
 
-    def benchmark_resource_usage(self) -> Dict[str, float]:
+    def benchmark_resource_usage(self) -> dict[str, float]:
         """
         Measure current resource usage.
 
@@ -279,10 +279,10 @@ class PerformanceBenchmark:
 
     def calculate_overall_score(
         self,
-        api_perf: Dict[str, float],
-        db_perf: Dict[str, float],
-        call_handling: Dict[str, Any],
-        resource_usage: Dict[str, float],
+        api_perf: dict[str, float],
+        db_perf: dict[str, float],
+        call_handling: dict[str, Any],
+        resource_usage: dict[str, float],
     ) -> float:
         """
         Calculate overall performance score (0-100).

@@ -37,10 +37,10 @@ def test_check_python_version() -> None:
 
     wizard = SetupWizard()
 
-    # Should pass for Python 3.12+
+    # Should pass for Python 3.13+
     result = wizard.check_python_version()
     if sys.version_info.major == 3 and sys.version_info.minor >= 12:
-        assert result is True, "Should pass for Python 3.12+"
+        assert result is True, "Should pass for Python 3.13+"
     else:
         assert result is False, "Should fail for Python < 3.12"
 

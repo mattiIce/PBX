@@ -158,8 +158,7 @@ ignore = [
     "B008",    # function call in default argument (Flask patterns)
     "RET504",  # unnecessary assignment before return
     "SIM108",  # ternary operator (readability preference)
-    "PTH123",  # open() vs Path.open() (gradual migration)
-    "UP031",   # printf-style formatting (legacy code)
+    "PTH123",  # open() vs Path.open() (acceptable pattern)
     "ISC001",  # single-line implicit string concat (conflicts with formatter)
 ]
 
@@ -247,7 +246,7 @@ ignore_errors = true
 # Pytest
 # =============================================================================
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "8.0"
 addopts = "-ra -q --strict-markers"
 testpaths = ["tests"]
 python_files = ["test_*.py"]

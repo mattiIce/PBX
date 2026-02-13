@@ -44,9 +44,19 @@ spec:
       
       containers:
       - name: pbx
-        image: pbx-system:latest  # Replace with your image
-        imagePullPolicy: Always  # Use 'Always' with 'latest' tag to ensure consistent deployments
-        
+        image: pbx-system:1.0.0  # Replace with your image and pinned version tag
+        imagePullPolicy: IfNotPresent
+
+        # Container-level security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
+
         ports:
         - name: https-api
           containerPort: 8080

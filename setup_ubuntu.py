@@ -20,7 +20,7 @@ Features:
 
 Requirements:
     - Ubuntu 24.04 LTS (recommended)
-    - Python 3.12+
+    - Python 3.13+
     - Root/sudo access
 """
 
@@ -32,7 +32,6 @@ import subprocess
 import sys
 import traceback
 from pathlib import Path
-from typing import Tuple
 
 
 # Color codes for terminal output
@@ -94,7 +93,7 @@ class SetupWizard:
         check: bool = True,
         shell: bool = True,
         timeout: int = 300,
-    ) -> Tuple[int, str, str]:
+    ) -> tuple[int, str, str]:
         """
         Run a shell command and return the result
 
@@ -161,7 +160,7 @@ class SetupWizard:
             return True
         else:
             self.print_error(
-                f"Python 3.12+ required. Current version: {version.major}.{version.minor}"
+                f"Python 3.13+ required. Current version: {version.major}.{version.minor}"
             )
             return False
 
