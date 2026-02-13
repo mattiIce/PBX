@@ -315,13 +315,13 @@ All tests pass with 100% success rate.
 
 ## Benefits
 
-✓ **Identify phones easily** - Know which MAC corresponds to which IP
-✓ **Better troubleshooting** - Find phone details quickly
-✓ **Asset tracking** - Complete inventory with MAC and IP
-✓ **Network management** - Identify devices on the network
-✓ **No manual correlation** - Automatic via extension number
-✓ **Works with phones that don't provide MAC in SIP** - Most common case
-✓ **Bidirectional lookup** - Find IP from MAC or MAC from IP
+- **Identify phones easily** - Know which MAC corresponds to which IP
+- **Better troubleshooting** - Find phone details quickly
+- **Asset tracking** - Complete inventory with MAC and IP
+- **Network management** - Identify devices on the network
+- **No manual correlation** - Automatic via extension number
+- **Works with phones that don't provide MAC in SIP** - Most common case
+- **Bidirectional lookup** - Find IP from MAC or MAC from IP
 
 ## Limitations
 
