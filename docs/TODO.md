@@ -17,17 +17,16 @@ This document tracks all features from the Executive Summary. All features now h
 - Operational guides organized into docs/ directory
 
 **Primary Documentation:**
-- **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - All-in-one comprehensive guide (start here)
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Complete troubleshooting reference
+- **[COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md)** - All-in-one comprehensive guide (start here)
+- **[TROUBLESHOOTING.md](../TROUBLESHOOTING.md)** - Complete troubleshooting reference
 - **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Full documentation index with navigation
 
 **Framework Feature Guides (December 16, 2025):**
-- **[FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)** - Complete overview of all 20+ framework features
-- **[BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md)** - Business Intelligence integration (Tableau, Power BI, Looker)
-- **[CALL_TAGGING_GUIDE.md](CALL_TAGGING_GUIDE.md)** - AI-powered call classification and tagging
-- **[MOBILE_APPS_GUIDE.md](MOBILE_APPS_GUIDE.md)** - Mobile app framework for iOS and Android
-- **[VOICE_BIOMETRICS_GUIDE.md](VOICE_BIOMETRICS_GUIDE.md)** - Speaker authentication and fraud detection
-- **[GEOGRAPHIC_REDUNDANCY_GUIDE.md](GEOGRAPHIC_REDUNDANCY_GUIDE.md)** - Multi-region failover and disaster recovery
+- **[FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)** - Complete overview of all 20+ framework features
+- **[CALL_TAGGING_GUIDE.md](reference/CALL_TAGGING_GUIDE.md)** - AI-powered call classification and tagging
+- **[MOBILE_APPS_GUIDE.md](reference/MOBILE_APPS_GUIDE.md)** - Mobile app framework for iOS and Android
+- **[VOICE_BIOMETRICS_GUIDE.md](reference/VOICE_BIOMETRICS_GUIDE.md)** - Speaker authentication and fraud detection
+- **[GEOGRAPHIC_REDUNDANCY_GUIDE.md](reference/GEOGRAPHIC_REDUNDANCY_GUIDE.md)** - Multi-region failover and disaster recovery
 
 All framework features now have complete backend implementations, database schemas, REST APIs, and admin UI support. External service integration required for production use.
 
@@ -252,7 +251,7 @@ Features with foundational implementations that can be extended:
   - Bitrates: 6-510 kbps adaptive
   - Sample rates: 8-48 kHz
   - Applications: VoIP, Audio, Low-Delay modes
-  - Added to requirements.txt (opuslib>=3.0.0)
+  - Added to pyproject.toml (opuslib>=3.0.0)
   - Test coverage: 35 tests (100% passing)
   - Impact: 50% bandwidth savings with equal or better quality than G.711
 

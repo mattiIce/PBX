@@ -310,8 +310,8 @@ All tests pass with 100% success rate.
 2. `pbx/features/phone_provisioning.py` - Improved error messages
 3. `tests/test_phone_mac_ip_correlation.py` - Comprehensive tests
 4. `examples/phone_lookup_example.py` - Usage examples
-5. `API_DOCUMENTATION.md` - API documentation
-6. `PHONE_PROVISIONING.md` - Feature documentation
+5. `COMPLETE_GUIDE.md` - API documentation (Section 9.2)
+6. `COMPLETE_GUIDE.md` - Phone provisioning (Section 4.3)
 
 ## Benefits
 

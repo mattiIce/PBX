@@ -157,7 +157,7 @@ These features have basic informational admin panels and complete backend framew
   - **Redash** - Connect and visualize your data
   - **Grafana** - Analytics and monitoring platform
 - **Paid Options (optional):** Tableau, Power BI, Looker, Qlik
-- **Guide:** [BI_INTEGRATION_GUIDE.md](BI_INTEGRATION_GUIDE.md) ✅
+- **Guide:** See [COMPLETE_GUIDE.md - Section 5](../../COMPLETE_GUIDE.md#5-integration-guides)
 
 #### Call Tagging & Categorization
 - **Purpose:** AI-powered call classification
@@ -544,9 +544,8 @@ Configure alerts for:
 
 ### Documentation
 - Feature-specific guides (see links above)
-- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-- [FRAMEWORK_IMPLEMENTATION_GUIDE.md](FRAMEWORK_IMPLEMENTATION_GUIDE.md)
-- [TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)
+- [COMPLETE_GUIDE.md - Section 9.2: REST API](../../COMPLETE_GUIDE.md#92-rest-api-reference)
+- [TROUBLESHOOTING.md](../../TROUBLESHOOTING.md)
 
 ### Support Channels
 - GitHub Issues for bug reports
@@ -561,7 +560,6 @@ For specific feature implementation details, refer to the individual feature gui
 
 ## See Also
 
-- [FRAMEWORK_IMPLEMENTATION_SUMMARY.md](FRAMEWORK_IMPLEMENTATION_SUMMARY.md)
-- [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)
-- [TODO.md](TODO.md) - Implementation tracking
-- [README.md](README.md) - Getting started guide
+- [EXECUTIVE_SUMMARY.md](../EXECUTIVE_SUMMARY.md)
+- [TODO.md](../../TODO.md) - Implementation tracking
+- [README.md](../../README.md) - Getting started guide

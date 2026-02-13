@@ -103,7 +103,7 @@ scrape_configs:
 ### 1. Add Prometheus Dependency
 
 ```bash
-pip install prometheus-client
+uv pip install prometheus-client
 ```
 
 ### 2. Initialize Metrics Exporter

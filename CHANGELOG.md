@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Documentation Cleanup Phase 3** (February 2026)
+  - Moved planning/status docs to docs/: EXECUTIVE_SUMMARY, FEATURES, IMPLEMENTATION_STATUS, PRODUCT_IMPROVEMENT_RECOMMENDATIONS, STRATEGIC_ROADMAP, TODO, DOCUMENTATION_INDEX
+  - Root directory now contains only essential files: README, CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, COMPLETE_GUIDE, TROUBLESHOOTING
+  - Fixed 13+ broken cross-references to deleted/consolidated files
+  - Fixed all remaining pip/requirements.txt references to uv/pyproject.toml
+  - Updated relative paths in DOCUMENTATION_INDEX.md, docs/reference/README.md, and all docs/ files
+  - Removed outdated AGENTS.md (Copilot instructions with venv/pip references)
 - **Documentation Modernization Update** (February 2026)
   - Updated COMPLETE_GUIDE.md to v1.2.0 reflecting codebase modernization
   - Section 1.2: Installation now uses uv package manager and Makefile targets

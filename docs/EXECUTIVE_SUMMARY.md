@@ -311,7 +311,7 @@ features:
 ```
 
 **Setup Process**:
-1. Install Vosk: `pip install vosk`
+1. Install Vosk: `uv pip install vosk`
 2. Download model (40 MB): Visit https://alphacephei.com/vosk/models for latest models (as of Dec 2025: vosk-model-small-en-us-0.15)
 3. Extract to `models/` directory
 4. Enable in config.yml
@@ -673,7 +673,7 @@ The PBX system prioritizes **free, open-source, offline** AI technologies to mai
 
 **Current (Already Available)**:
 1. Follow `VOICEMAIL_TRANSCRIPTION_VOSK.md` guide
-2. Install Vosk: `pip install vosk`
+2. Install Vosk: `uv pip install vosk`
 3. Download model (40 MB - 1.8 GB)
 4. Enable in config.yml
 5. Voicemail transcription works immediately!
@@ -1369,7 +1369,7 @@ integrations:
 ```bash
 git clone https://github.com/mattiIce/PBX.git
 cd PBX
-pip install -r requirements.txt
+make install
 python main.py
 ```
 - Minimal resource requirements

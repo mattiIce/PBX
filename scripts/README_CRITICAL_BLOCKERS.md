@@ -302,7 +302,7 @@ These scripts and procedures address the critical blockers from Section 1: "Prio
 **Solution**: Make scripts executable: `chmod +x scripts/*.py scripts/*.sh`
 
 **Problem**: Module import errors  
-**Solution**: Install requirements: `pip install -r requirements.txt`
+**Solution**: Install requirements: `make install-prod`
 
 **Problem**: Tests fail  
 **Solution**: Review error messages, check that PBX is properly configured
@@ -331,12 +331,8 @@ These scripts and procedures address the critical blockers from Section 1: "Prio
 ## References
 
 ### Documentation
-- `STRATEGIC_ROADMAP.md` - Overall roadmap and priorities
-- `E911_PROTECTION_GUIDE.md` - E911 system overview
-- `KARIS_LAW_GUIDE.md` - Kari's Law implementation
-- `MULTI_SITE_E911_GUIDE.md` - Multi-site E911 configuration
-- `WEBRTC_GUIDE.md` - WebRTC implementation guide
-- `DEPLOYMENT_GUIDE.md` - General deployment procedures
+- `docs/STRATEGIC_ROADMAP.md` - Overall roadmap and priorities
+- `COMPLETE_GUIDE.md` - Comprehensive PBX documentation (security, deployment, E911, WebRTC)
 
 ### Scripts Directory
 - `scripts/README.md` - Scripts documentation (this file)

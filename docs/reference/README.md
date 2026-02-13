@@ -31,7 +31,7 @@ These documents provide detailed technical information for:
 - Protocol-level specifications
 - Specialized feature configuration
 
-For general usage and common tasks, refer to the main [COMPLETE_GUIDE.md](/COMPLETE_GUIDE.md).
+For general usage and common tasks, refer to the main [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md).
 
 ## Organization
 
@@ -43,5 +43,5 @@ Reference documents are kept separate from the main guide because they:
 
 ---
 
-**Primary Documentation**: [COMPLETE_GUIDE.md](/COMPLETE_GUIDE.md)
-**Documentation Index**: [DOCUMENTATION_INDEX.md](/DOCUMENTATION_INDEX.md)
+**Primary Documentation**: [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md)
+**Documentation Index**: [DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md)
