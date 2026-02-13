@@ -117,9 +117,7 @@ class TestVoicemailIVREarlyTermination:
                 )
 
                 # Assert the call ended as expected
-                self.assertEqual(
-                    call.state, CallState.ENDED, "Call should be in ENDED state after test"
-                )
+                assert call.state == CallState.ENDED
 
                 # We should see the early termination message
                 # and NOT see the "IVR started" message

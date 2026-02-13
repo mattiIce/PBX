@@ -48,8 +48,6 @@ export function showNotification(message: string, type: NotificationType = 'info
         return; // Don't show error notifications during bulk operations
     }
 
-    console.log(`[${type.toUpperCase()}] ${message}`);
-
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;

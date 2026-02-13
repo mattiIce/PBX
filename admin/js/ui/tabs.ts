@@ -33,7 +33,6 @@ function refreshCallbackQueueTab(): void {
 function setupAutoRefresh(tabName: string): void {
     // Clear any existing auto-refresh interval
     if (autoRefreshInterval) {
-        console.log(`Clearing existing auto-refresh interval for tab: ${store.get('currentTab')}`);
         clearInterval(autoRefreshInterval);
         autoRefreshInterval = null;
     }
@@ -65,9 +64,7 @@ function setupAutoRefresh(tabName: string): void {
 
     // If the current tab supports auto-refresh, set it up
     if (autoRefreshTabs[tabName]) {
-        console.log(`Setting up auto-refresh for tab: ${tabName} (interval: ${AUTO_REFRESH_INTERVAL_MS}ms)`);
         autoRefreshInterval = setInterval(() => {
-            console.log(`Auto-refreshing tab: ${tabName}`);
             try {
                 const refreshFunction = autoRefreshTabs[tabName];
                 if (typeof refreshFunction === 'function') {
@@ -82,9 +79,6 @@ function setupAutoRefresh(tabName: string): void {
                 }
             }
         }, AUTO_REFRESH_INTERVAL_MS);
-        console.log(`Auto-refresh interval ID: ${autoRefreshInterval}`);
-    } else {
-        console.log(`Tab ${tabName} does not support auto-refresh`);
     }
 
     store.set('autoRefreshInterval', autoRefreshInterval as unknown as number | null);
@@ -95,8 +89,6 @@ function setupAutoRefresh(tabName: string): void {
  * and configure auto-refresh.
  */
 export function showTab(tabName: string): void {
-    console.log(`showTab called with: ${tabName}`);
-
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         (tab as HTMLElement).classList.remove('active');
@@ -185,14 +177,11 @@ export function showTab(tabName: string): void {
  * Bind click handlers to all .tab-button elements.
  */
 export function initializeTabs(): void {
-    console.log('Initializing tab click handlers');
     const tabButtons = document.querySelectorAll('.tab-button');
-    console.log(`Found ${tabButtons.length} tab buttons`);
 
     tabButtons.forEach(button => {
         button.addEventListener('click', function (this: HTMLElement) {
             const tabName = this.getAttribute('data-tab');
-            console.log(`Tab button clicked: ${tabName}`);
             showTab(tabName!);
         });
     });
