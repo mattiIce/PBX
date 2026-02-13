@@ -69,8 +69,7 @@ def test_early_rtp_packets() -> bool:
     time.sleep(0.1)
 
     # The relay should learn A's actual address and NOT drop the packet
-    if relay_handler.learned_a:
-    else:
+    if not relay_handler.learned_a:
         return False
 
     # Now set endpoint B (simulating 200 OK received)
@@ -82,8 +81,7 @@ def test_early_rtp_packets() -> bool:
     sock_b.sendto(packet_2, ("127.0.0.1", rtp_ports[0]))
     time.sleep(0.1)
 
-    if relay_handler.learned_b:
-    else:
+    if not relay_handler.learned_b:
         return False
 
     # Test bidirectional relay now that both endpoints are learned
@@ -95,8 +93,7 @@ def test_early_rtp_packets() -> bool:
 
     try:
         data_at_b, addr = sock_b.recvfrom(2048)
-        if len(data_at_b) > 0:
-        else:
+        if not len(data_at_b) > 0:
             return False
     except socket.timeout:
         return False
@@ -108,8 +105,7 @@ def test_early_rtp_packets() -> bool:
 
     try:
         data_at_a, addr = sock_a.recvfrom(2048)
-        if len(data_at_a) > 0:
-        else:
+        if not len(data_at_a) > 0:
             return False
     except socket.timeout:
         return False

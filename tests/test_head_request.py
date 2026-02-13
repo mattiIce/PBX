@@ -56,8 +56,7 @@ def test_head_request_for_static_files() -> bool:
             if status == 200:
                 # Verify no body is returned
                 body = response.read()
-                if len(body) == 0:
-                else:
+                if len(body) != 0:
                     conn.close()
                     return False
             elif status == 501:
@@ -81,8 +80,7 @@ def test_head_request_for_static_files() -> bool:
             if status in [200, 404]:  # 200 OK or 404 if file doesn't exist
                 # Verify no body is returned
                 body = response.read()
-                if len(body) == 0:
-                else:
+                if len(body) != 0:
                     conn.close()
                     return False
             elif status == 501:
@@ -102,8 +100,7 @@ def test_head_request_for_static_files() -> bool:
             if status == 200:
                 # Verify no body is returned
                 body = response.read()
-                if len(body) == 0:
-                else:
+                if len(body) != 0:
                     conn.close()
                     return False
             elif status == 501:

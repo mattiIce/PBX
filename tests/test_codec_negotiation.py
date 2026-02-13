@@ -52,6 +52,7 @@ def test_sdp_building_with_caller_codecs() -> None:
 
     for line in pbx_sdp.split("\r\n"):
         if line:
+            pass
 
     # Verify the SDP contains caller's codecs in correct order
     assert "m=audio 10000 RTP/AVP 8 9 0" in pbx_sdp, "SDP should contain caller's codec order"

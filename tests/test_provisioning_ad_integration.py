@@ -52,8 +52,8 @@ def test_ldap_config_from_ad_credentials() -> None:
         ad_server = config.get("integrations.active_directory.server", "")
         ad_bind_dn = config.get("integrations.active_directory.bind_dn", "")
 
-        if ad_server and ad_bind_dn:
-    else:
+        if not (ad_server and ad_bind_dn):
+            pass
 
 
 def test_server_config_includes_ldap() -> None:

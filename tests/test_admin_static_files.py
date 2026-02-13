@@ -58,8 +58,7 @@ def test_admin_static_files() -> bool:
 
         if response.status == 302:
             location = response.getheader("Location")
-            if location == "/admin/index.html":
-            else:
+            if location != "/admin/index.html":
                 conn.close()
                 return False
         else:
@@ -77,15 +76,13 @@ def test_admin_static_files() -> bool:
 
             # Check Content-Type header
             content_type = response.getheader("Content-Type")
-            if content_type and "text/html" in content_type:
-            else:
+            if content_type and "text/html" not in content_type:
                 conn.close()
                 return False
 
             # Read some content to verify it's actually HTML
             content = response.read(100).decode("utf-8", errors="ignore")
-            if "<!DOCTYPE" in content or "<html" in content:
-            else:
+            if "<!DOCTYPE" not in content or "<html" in content:
                 conn.close()
                 return False
         else:
@@ -102,8 +99,7 @@ def test_admin_static_files() -> bool:
         if response.status == 200:
             content_type = response.getheader("Content-Type")
             if content_type and "text/html" in content_type:
-            else:
-        else:
+                pass
             conn.close()
             return False
 

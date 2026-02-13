@@ -49,8 +49,7 @@ def test_license_routes() -> bool:
         data = json.loads(response.read().decode())
         conn.close()
 
-        if response.status == 200 and data.get("success"):
-        else:
+        if response.status != 200 and data.get("success"):
             return False
 
         # Test 2: License features endpoint (public)
@@ -60,8 +59,7 @@ def test_license_routes() -> bool:
         data = json.loads(response.read().decode())
         conn.close()
 
-        if response.status == 200 and data.get("success"):
-        else:
+        if response.status != 200 and data.get("success"):
             return False
 
         # Test 3: License generate endpoint (requires admin auth)
@@ -76,8 +74,7 @@ def test_license_routes() -> bool:
         json.loads(response.read().decode())
         conn.close()
 
-        if response.status == 401:
-        else:
+        if response.status != 401:
             return False
 
         # Test 4: Get license admin token
@@ -102,8 +99,7 @@ def test_license_routes() -> bool:
             data = json.loads(response.read().decode())
             conn.close()
 
-            if response.status == 200 and data.get("success"):
-            else:
+            if response.status != 200 and data.get("success"):
                 return False
         else:
 

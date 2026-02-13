@@ -73,8 +73,7 @@ def test_symmetric_rtp() -> bool:
 
     # The relay should learn A's actual address
     relay_handler = relay.active_relays[call_id]["handler"]
-    if relay_handler.learned_a:
-    else:
+    if not relay_handler.learned_a:
         return False
 
     # Test: Send packet from B to relay
@@ -83,8 +82,7 @@ def test_symmetric_rtp() -> bool:
     time.sleep(0.1)
 
     # The relay should learn B's actual address
-    if relay_handler.learned_b:
-    else:
+    if not relay_handler.learned_b:
         return False
 
     # Test: Verify packets are relayed bidirectionally
@@ -100,8 +98,7 @@ def test_symmetric_rtp() -> bool:
 
     try:
         data_at_b, addr = sock_b.recvfrom(2048)
-        if len(data_at_b) > 0:
-        else:
+        if not len(data_at_b) > 0:
             return False
     except socket.timeout:
         return False
@@ -113,8 +110,7 @@ def test_symmetric_rtp() -> bool:
 
     try:
         data_at_a, addr = sock_a.recvfrom(2048)
-        if len(data_at_a) > 0:
-        else:
+        if not len(data_at_a) > 0:
             return False
     except socket.timeout:
         return False

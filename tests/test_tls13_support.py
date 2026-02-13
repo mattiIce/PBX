@@ -86,8 +86,7 @@ def test_tls_version_availability() -> bool:
     # Check if TLS 1.3 is available
     has_tls13 = hasattr(ssl.TLSVersion, "TLSv1_3")
 
-    if has_tls13:
-    else:
+    if not has_tls13:
         return False
 
     # List all available TLS versions
@@ -122,8 +121,8 @@ def test_tls_manager_context() -> bool:
         # Check that no maximum version is set (allows TLS 1.3)
         max_version = getattr(ctx, "maximum_version", ssl.TLSVersion.MAXIMUM_SUPPORTED)
 
-        if max_version == ssl.TLSVersion.MAXIMUM_SUPPORTED:
-        else:
+        if max_version != ssl.TLSVersion.MAXIMUM_SUPPORTED:
+            pass
 
         # Test with FIPS mode enabled
         tls_manager_fips = TLSManager(cert_file=cert_file, key_file=key_file, fips_mode=True)
@@ -201,8 +200,8 @@ def test_api_server_tls13_support() -> bool:
         # Check that TLS 1.3 is allowed
         max_version = getattr(ctx, "maximum_version", ssl.TLSVersion.MAXIMUM_SUPPORTED)
 
-        if max_version == ssl.TLSVersion.MAXIMUM_SUPPORTED:
-        else:
+        if max_version != ssl.TLSVersion.MAXIMUM_SUPPORTED:
+            pass
 
 
     finally:
@@ -245,14 +244,12 @@ def test_ssl_context_security_options() -> bool:
 
         all_set = True
         for option, name in required_options:
-            if options & option:
-            else:
+            if not options & option:
                 all_set = False
 
         # Check OP_NO_SSLv2 separately as it may not be set in modern OpenSSL
         if hasattr(ssl, "OP_NO_SSLv2"):
-            if options & ssl.OP_NO_SSLv2:
-            else:
+            if not options & ssl.OP_NO_SSLv2:
                 # This is not a failure - modern OpenSSL may not have SSLv2 at all
 
         if not all_set:

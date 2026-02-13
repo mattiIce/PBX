@@ -282,8 +282,8 @@ def test_yubikey_otp_verification_without_api() -> bool:
 
     # We expect this to fail since we don't have real credentials/OTP
     # but it should fail gracefully with an appropriate error message
-    if not valid:
-    else:
+    if valid:
+        pass
 
     return True
 
@@ -368,8 +368,7 @@ def test_fido2_assertion_verification() -> bool:
 
     # In basic mode, this should succeed since all data is present and valid
     # length
-    if success:
-    else:
+    if not success:
         # If fido2 library is available and does full verification, it may fail
 
     return True

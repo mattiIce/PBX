@@ -27,8 +27,7 @@ def test_config_structure() -> bool:
     # Check each integration
     required_integrations = ["jitsi", "matrix", "espocrm"]
     for integration in required_integrations:
-        if integration not in config["integrations"]:
-        else:
+        if integration in config["integrations"]:
             int_config = config["integrations"][integration]
             if "enabled" in int_config:
                 status = "enabled" if int_config["enabled"] else "disabled"
@@ -86,8 +85,7 @@ def test_env_example() -> bool:
     missing = []
 
     for var in required_vars:
-        if var in content:
-        else:
+        if var not in content:
             missing.append(var)
 
     return len(missing) == 0
@@ -116,8 +114,7 @@ def test_admin_html() -> bool:
 
     missing = []
     for element in required_elements:
-        if element in content:
-        else:
+        if element not in content:
             missing.append(element)
 
     return len(missing) == 0
@@ -142,13 +139,12 @@ def test_javascript() -> bool:
 
     missing = []
     for func in required_functions:
-        if f"function {func}" in content or f"async function {func}" in content:
-        else:
+        if f"function {func}" not in content or f"async function {func}" in content:
             missing.append(func)
 
     # Check for correct API endpoint
-    if "/api/config/section" in content:
-    else:
+    if "/api/config/section" not in content:
+        pass
 
     return len(missing) == 0
 

@@ -201,8 +201,8 @@ def test_security_enforcement() -> None:
     # Should return True unless critical FIPS failure with enforcement
     assert isinstance(can_continue, bool), "Enforcement should return boolean"
 
-    if can_continue:
-    else:
+    if not can_continue:
+        pass
 
 
 def test_monitor_lifecycle() -> None:

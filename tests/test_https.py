@@ -42,11 +42,11 @@ def test_ssl_configuration() -> bool:
         key_file = ssl_config.get("key_file", "certs/server.key")
 
         # Check if files exist
-        if os.path.exists(cert_file):
-        else:
+        if not os.path.exists(cert_file):
+            pass
 
-        if os.path.exists(key_file):
-        else:
+        if not os.path.exists(key_file):
+            pass
 
     return True
 
@@ -63,8 +63,7 @@ def test_api_server_with_ssl_disabled() -> bool:
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8081)
 
 
-    if not api_server.ssl_enabled:
-    else:
+    if api_server.ssl_enabled:
         return False
 
     # Try to start server
@@ -200,8 +199,7 @@ def test_https_connection() -> bool:
         with urllib.request.urlopen(url, context=ctx, timeout=5) as response:
             data = json.loads(response.read().decode())
 
-            if "registered_extensions" in data:
-            else:
+            if "registered_extensions" not in data:
                 api_server.stop()
                 return False
 

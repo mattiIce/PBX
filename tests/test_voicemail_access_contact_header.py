@@ -94,8 +94,8 @@ def test_contact_header_pattern_consistency() -> None:
                 has_contact = True
                 # Verify it uses extension variable (not the prefixed version)
                 # Check if to_ext is used in the SIP URI context
-                if "to_ext}" in line and "sip:{to_ext}" in line:
-                else:
+                if "to_ext}" not in line and "sip:{to_ext}" in line:
+                    pass
                 break
 
         if not has_contact:

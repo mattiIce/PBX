@@ -39,8 +39,7 @@ def test_socket_reuse_options() -> bool:
 
         # Check SO_REUSEADDR
         reuse_addr = server_socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)
-        if reuse_addr:
-        else:
+        if not reuse_addr:
             api_server.stop()
             return False
 
@@ -48,8 +47,8 @@ def test_socket_reuse_options() -> bool:
         if hasattr(socket, "SO_REUSEPORT"):
             try:
                 reuse_port = server_socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
-                if reuse_port:
-                else:
+                if not reuse_port:
+                    pass
             except Exception as e:
         else:
 
@@ -91,8 +90,7 @@ def test_retry_on_port_in_use() -> bool:
 
         if not result:
             if elapsed >= MIN_RETRY_TIME:
-            else:
-        else:
+                pass
             api_server.stop()
             return False
 

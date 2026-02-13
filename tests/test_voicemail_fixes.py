@@ -140,14 +140,13 @@ def test_email_notification_checks_database() -> None:
         # Check if email notifications are enabled
         email_enabled = config.get("voicemail.email_notifications", False)
 
-        if not email_enabled:
-        else:
+        if email_enabled:
             # Check if SMTP is configured
             smtp_host = config.get("voicemail.smtp.host")
             from_addr = config.get("voicemail.email.from_address")
 
-            if not smtp_host or not from_addr:
-            else:
+            if smtp_host or not from_addr:
+                pass
 
         # The fix ensures that voicemail.py checks database first, then config
         # We can verify the code path by checking the save_message
@@ -159,8 +158,8 @@ def test_email_notification_checks_database() -> None:
         source = inspect.getsource(VoicemailBox.save_message)
 
         # Check if the code includes database checking logic for email
-        if "ExtensionDB" in source and "database" in source.lower():
-        else:
+        if "ExtensionDB" not in source and "database" in source.lower():
+            pass
 
 
     finally:
