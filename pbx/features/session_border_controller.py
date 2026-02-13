@@ -307,11 +307,11 @@ class SessionBorderController:
 
                 # Default to port-restricted for most home/office NATs
                 return NATType.PORT_RESTRICTED
-            except (OSError, socket.error):
+            except OSError:
                 sock.close()
                 # Symmetric NAT is most restrictive
                 return NATType.SYMMETRIC
-        except (OSError, socket.error):
+        except OSError:
             # If we can't determine, assume port-restricted (most common)
             return NATType.PORT_RESTRICTED
 

@@ -6,7 +6,7 @@ Provides caller information lookup and CRM integration capabilities
 import json
 import threading
 from datetime import datetime
-from typing import Callable
+from collections.abc import Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 

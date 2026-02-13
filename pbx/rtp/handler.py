@@ -584,7 +584,7 @@ class RTPRecorder:
         if self.socket:
             try:
                 self.socket.close()
-            except (OSError, socket.error) as e:
+            except OSError as e:
                 self.logger.debug(f"Error closing socket: {e}")
         self.logger.info(f"RTP recorder stopped on port {self.local_port}")
 
@@ -1137,7 +1137,7 @@ class RTPDTMFListener:
         if self.socket:
             try:
                 self.socket.close()
-            except (OSError, socket.error) as e:
+            except OSError as e:
                 self.logger.debug(f"Error closing socket: {e}")
             self.socket = None
         self.logger.info(f"RTP DTMF listener stopped for call {self.call_id}")
