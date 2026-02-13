@@ -13,7 +13,7 @@ from pbx.features.paging import PagingSystem
 from pbx.features.phone_book import PhoneBook
 
 
-def test_phone_book_basic():
+def test_phone_book_basic() -> None:
     """Test basic phone book operations"""
     print("Testing phone book basic operations...")
 
@@ -53,7 +53,7 @@ def test_phone_book_basic():
     print("✓ Phone book basic operations passed")
 
 
-def test_phone_book_export():
+def test_phone_book_export() -> None:
     """Test phone book export formats"""
     print("Testing phone book export formats...")
 
@@ -90,7 +90,7 @@ def test_phone_book_export():
     print("✓ Phone book export formats passed")
 
 
-def test_paging_system_basic():
+def test_paging_system_basic() -> None:
     """Test basic paging system operations"""
     print("Testing paging system basic operations...")
 
@@ -133,7 +133,7 @@ def test_paging_system_basic():
     print("✓ Paging system basic operations passed")
 
 
-def test_paging_system_devices():
+def test_paging_system_devices() -> None:
     """Test paging system DAC device configuration"""
     print("Testing paging system DAC device configuration...")
 
@@ -166,7 +166,7 @@ def test_paging_system_devices():
     print("✓ Paging system DAC device configuration passed")
 
 
-def test_phone_book_disabled():
+def test_phone_book_disabled() -> None:
     """Test phone book when disabled"""
     print("Testing phone book when disabled...")
 
@@ -182,7 +182,7 @@ def test_phone_book_disabled():
     print("✓ Phone book disabled test passed")
 
 
-def test_paging_system_disabled():
+def test_paging_system_disabled() -> None:
     """Test paging system when disabled"""
     print("Testing paging system when disabled...")
 
@@ -198,7 +198,7 @@ def test_paging_system_disabled():
     print("✓ Paging system disabled test passed")
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("\nRunning Phone Book and Paging Tests")
     print("=" * 60)
