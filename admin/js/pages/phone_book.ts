@@ -3,9 +3,9 @@
  * Handles phone book entries management.
  */
 
-import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
-import { escapeHtml } from '../utils/html.js';
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 
 interface PhoneBookEntry {
     id: string;
