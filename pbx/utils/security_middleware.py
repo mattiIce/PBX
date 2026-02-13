@@ -5,7 +5,6 @@ Provides security headers, rate limiting, and request validation.
 
 import threading
 import time
-from typing import Dict, Optional, Tuple
 
 
 class SecurityHeaders:
@@ -86,7 +85,7 @@ class RateLimiter:
         self.max_tracked_ips = max_tracked_ips
 
         # Store buckets per client IP
-        self.buckets: Dict[str, Dict] = {}
+        self.buckets: dict[str, Dict] = {}
         self.last_cleanup = time.time()
 
         # Thread lock for concurrent access
@@ -116,7 +115,7 @@ class RateLimiter:
         }
         self.last_cleanup = now
 
-    def is_allowed(self, client_ip: str) -> Tuple[bool, Optional[int]]:
+    def is_allowed(self, client_ip: str) -> tuple[bool, int | None]:
         """Check if request is allowed.
 
         Args:
@@ -205,7 +204,7 @@ class RequestValidator:
     ]
 
     @staticmethod
-    def validate_path(path: str) -> Tuple[bool, Optional[str]]:
+    def validate_path(path: str) -> tuple[bool, str | None]:
         """Validate request path.
 
         Args:
@@ -223,7 +222,7 @@ class RequestValidator:
         return True, None
 
     @staticmethod
-    def validate_content_length(content_length: Optional[int]) -> Tuple[bool, Optional[str]]:
+    def validate_content_length(content_length: int | None) -> tuple[bool, str | None]:
         """Validate content length.
 
         Args:
@@ -278,7 +277,7 @@ class SecretValidator:
     ]
 
     @staticmethod
-    def validate_secrets(config: dict) -> Tuple[bool, list]:
+    def validate_secrets(config: dict) -> tuple[bool, list]:
         """Validate secrets configuration.
 
         Args:

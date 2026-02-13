@@ -9,7 +9,7 @@ call quality monitoring and troubleshooting.
 import math
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -39,13 +39,13 @@ class RTCPStats:
     mos_score: float = 0.0  # Mean Opinion Score estimate
 
     # Timestamps
-    first_packet_time: Optional[float] = None
-    last_packet_time: Optional[float] = None
+    first_packet_time: float | None = None
+    last_packet_time: float | None = None
 
     # Sequence tracking
     highest_sequence: int = 0
     sequence_cycles: int = 0
-    last_sequence: Optional[int] = None
+    last_sequence: int | None = None
 
     # Timing
     last_sr_timestamp: int = 0  # Last Sender Report timestamp
@@ -67,7 +67,7 @@ class RTCPMonitor:
     - Quality thresholds and alerting
     """
 
-    def __init__(self, call_id: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, call_id: str, config: dict[str, Any] | None = None):
         """
         Initialize RTCP monitor
 
@@ -92,8 +92,8 @@ class RTCPMonitor:
         )
 
         # Internal tracking
-        self.transit_time: Optional[float] = None
-        self.last_arrival_time: Optional[float] = None
+        self.transit_time: float | None = None
+        self.last_arrival_time: float | None = None
 
         self.logger.info(f"RTCP monitor initialized for call {call_id}")
 
@@ -279,7 +279,7 @@ class RTCPMonitor:
         # Clamp to 1.0 - 5.0 range
         self.stats.mos_score = max(1.0, min(5.0, mos))
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get current RTCP statistics
 
@@ -326,7 +326,7 @@ class RTCPMonitor:
         else:
             return "Bad"
 
-    def check_quality_alerts(self) -> List[str]:
+    def check_quality_alerts(self) -> list[str]:
         """
         Check if any quality thresholds are exceeded
 
@@ -388,7 +388,7 @@ class RTCPMonitorManager:
         """
         self.pbx = pbx
         self.logger = get_logger()
-        self.monitors: Dict[str, RTCPMonitor] = {}
+        self.monitors: dict[str, RTCPMonitor] = {}
 
         # Get global config
         self.config = {}
@@ -397,7 +397,7 @@ class RTCPMonitorManager:
 
         self.logger.info("RTCP monitor manager initialized")
 
-    def create_monitor(self, call_id: str, config: Optional[Dict[str, Any]] = None) -> RTCPMonitor:
+    def create_monitor(self, call_id: str, config: dict[str, Any] | None = None) -> RTCPMonitor:
         """
         Create RTCP monitor for a call
 
@@ -415,7 +415,7 @@ class RTCPMonitorManager:
         self.logger.debug(f"Created RTCP monitor for call {call_id}")
         return monitor
 
-    def get_monitor(self, call_id: str) -> Optional[RTCPMonitor]:
+    def get_monitor(self, call_id: str) -> RTCPMonitor | None:
         """Get monitor for a call"""
         return self.monitors.get(call_id)
 
@@ -425,7 +425,7 @@ class RTCPMonitorManager:
             del self.monitors[call_id]
             self.logger.debug(f"Removed RTCP monitor for call {call_id}")
 
-    def get_all_statistics(self) -> List[Dict[str, Any]]:
+    def get_all_statistics(self) -> list[dict[str, Any]]:
         """Get statistics for all monitored calls"""
         return [monitor.get_statistics() for monitor in self.monitors.values()]
 
@@ -433,7 +433,7 @@ class RTCPMonitorManager:
         """Get number of active monitored calls"""
         return len(self.monitors)
 
-    def get_quality_summary(self) -> Dict[str, Any]:
+    def get_quality_summary(self) -> dict[str, Any]:
         """
         Get summary of call quality across all calls
 

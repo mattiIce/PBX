@@ -7,13 +7,13 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class AuditLogger:
     """Audit logger for administrative actions."""
 
-    def __init__(self, log_file: Optional[str] = None):
+    def __init__(self, log_file: str | None = None):
         """Initialize audit logger.
 
         Args:
@@ -62,11 +62,11 @@ class AuditLogger:
         action: str,
         user: str,
         resource: str,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
         success: bool = True,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
     ):
         """Log an administrative action.
 
@@ -109,7 +109,7 @@ class AuditLogger:
         else:
             self.logger.warning(message)
 
-    def _sanitize_details(self, details: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_details(self, details: dict[str, Any]) -> dict[str, Any]:
         """Remove sensitive information from details.
 
         Args:

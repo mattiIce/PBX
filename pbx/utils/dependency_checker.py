@@ -8,7 +8,6 @@ import importlib
 import os
 import re
 import sys
-from typing import Dict, List, Tuple
 
 # Map package names to module names (when they differ)
 PACKAGE_TO_MODULE = {
@@ -31,7 +30,7 @@ OPTIONAL_FEATURES = {
 CORE_PACKAGES = {"PyYAML", "cryptography"}
 
 
-def parse_requirements_txt(requirements_path: str = "requirements.txt") -> Dict[str, str]:
+def parse_requirements_txt(requirements_path: str = "requirements.txt") -> dict[str, str]:
     """
     Parse requirements.txt file
 
@@ -86,7 +85,7 @@ def check_module(module_name: str) -> bool:
 
 def check_dependencies(
     verbose: bool = False, requirements_path: str = "requirements.txt"
-) -> Tuple[bool, Dict[str, List]]:
+) -> tuple[bool, dict[str, List]]:
     """
     Check all dependencies from requirements.txt
 
@@ -160,7 +159,7 @@ def check_dependencies(
     return len(missing_core) == 0, report
 
 
-def print_dependency_report(report: Dict[str, List], verbose: bool = False) -> None:
+def print_dependency_report(report: dict[str, List], verbose: bool = False) -> None:
     """Print a formatted dependency report"""
     missing_core = report["missing_core"]
     missing_optional = report["missing_optional"]

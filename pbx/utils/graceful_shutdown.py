@@ -10,7 +10,7 @@ import signal
 import sys
 import threading
 import time
-from typing import Callable, Optional
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -280,7 +280,7 @@ class ConnectionRetry:
         logger.warning(f"Attempt {self.attempt} failed: {error}")
 
 
-def with_retry(func: Callable, max_retries: int = 3, on_error: Optional[Callable] = None):
+def with_retry(func: Callable, max_retries: int = 3, on_error: Callable | None = None):
     """
     Decorator or wrapper for retrying a function with exponential backoff.
 

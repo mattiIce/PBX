@@ -4,7 +4,6 @@ Implements Goertzel algorithm for detecting telephone keypad tones
 """
 
 import math
-from typing import List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -61,7 +60,7 @@ class DTMFDetector:
             f"DTMF detector initialized: {sample_rate}Hz, {samples_per_frame} samples/frame"
         )
 
-    def goertzel(self, samples: List[float], frequency: int) -> float:
+    def goertzel(self, samples: list[float], frequency: int) -> float:
         """
         Goertzel algorithm for detecting specific frequency
 
@@ -86,7 +85,7 @@ class DTMFDetector:
         magnitude = math.sqrt(q1 * q1 + q2 * q2 - q1 * q2 * coeff)
         return magnitude
 
-    def detect_tone(self, samples: List[float], threshold: float = 0.3) -> Optional[str]:
+    def detect_tone(self, samples: list[float], threshold: float = 0.3) -> str | None:
         """
         Detect DTMF tone from audio samples
 
@@ -147,7 +146,7 @@ class DTMFDetector:
 
         return None
 
-    def detect(self, audio_bytes: bytes, threshold: float = 0.3) -> Optional[str]:
+    def detect(self, audio_bytes: bytes, threshold: float = 0.3) -> str | None:
         """
         Detect DTMF tone from raw audio bytes (PCM 16-bit signed little-endian)
 
@@ -187,7 +186,7 @@ class DTMFDetector:
             # Invalid audio data
             return None
 
-    def detect_sequence(self, samples: List[float], max_digits: int = 10) -> str:
+    def detect_sequence(self, samples: list[float], max_digits: int = 10) -> str:
         """
         Detect sequence of DTMF tones from longer audio sample
 
@@ -254,7 +253,7 @@ class DTMFGenerator:
         self.sample_rate = sample_rate
         self.logger = get_logger()
 
-    def generate_tone(self, digit: str, duration_ms: int = 100) -> List[float]:
+    def generate_tone(self, digit: str, duration_ms: int = 100) -> list[float]:
         """
         Generate DTMF tone for a digit
 
@@ -284,7 +283,7 @@ class DTMFGenerator:
         self.logger.debug(f"Generated DTMF tone for '{digit}': {num_samples} samples")
         return samples
 
-    def generate_sequence(self, digits: str, tone_ms: int = 100, gap_ms: int = 50) -> List[float]:
+    def generate_sequence(self, digits: str, tone_ms: int = 100, gap_ms: int = 50) -> list[float]:
         """
         Generate sequence of DTMF tones
 

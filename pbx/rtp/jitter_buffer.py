@@ -9,7 +9,7 @@ Adapts buffer size based on network conditions.
 import threading
 import time
 from collections import deque
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -39,7 +39,7 @@ class JitterBuffer:
     - Late packet handling
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize jitter buffer
 
@@ -72,12 +72,12 @@ class JitterBuffer:
         self.packets_lost = 0
 
         # Timing
-        self.start_time: Optional[float] = None
+        self.start_time: float | None = None
         self.current_length_ms = self.initial_length_ms
 
         # Statistics for adaptive behavior
         self.jitter_estimate = 0.0
-        self.last_arrival_time: Optional[float] = None
+        self.last_arrival_time: float | None = None
         self.transit_time_variance = 0.0
 
         self.logger.info(
@@ -129,7 +129,7 @@ class JitterBuffer:
             self.packets_received += 1
             return True
 
-    def get(self) -> Optional[bytes]:
+    def get(self) -> bytes | None:
         """
         Get next packet from jitter buffer
 
@@ -241,7 +241,7 @@ class JitterBuffer:
             f"buffer={self.current_length_ms:.1f}ms"
         )
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get jitter buffer statistics
 
@@ -279,7 +279,7 @@ class JitterBuffer:
 
             self.logger.info("Jitter buffer reset")
 
-    def flush(self) -> List[bytes]:
+    def flush(self) -> list[bytes]:
         """
         Flush all packets from buffer
 
@@ -319,7 +319,7 @@ class JitterBufferManager:
         """
         self.pbx = pbx
         self.logger = get_logger()
-        self.buffers: Dict[str, JitterBuffer] = {}
+        self.buffers: dict[str, JitterBuffer] = {}
 
         # Get global config
         self.config = {}
@@ -329,7 +329,7 @@ class JitterBufferManager:
 
         self.logger.info("Jitter buffer manager initialized")
 
-    def create_buffer(self, call_id: str, config: Optional[Dict[str, Any]] = None) -> JitterBuffer:
+    def create_buffer(self, call_id: str, config: dict[str, Any] | None = None) -> JitterBuffer:
         """
         Create jitter buffer for a call
 
@@ -350,7 +350,7 @@ class JitterBufferManager:
         self.logger.debug(f"Created jitter buffer for call {call_id}")
         return buffer
 
-    def get_buffer(self, call_id: str) -> Optional[JitterBuffer]:
+    def get_buffer(self, call_id: str) -> JitterBuffer | None:
         """
         Get jitter buffer for a call
 
@@ -373,7 +373,7 @@ class JitterBufferManager:
             del self.buffers[call_id]
             self.logger.debug(f"Removed jitter buffer for call {call_id}")
 
-    def get_all_buffers(self) -> Dict[str, JitterBuffer]:
+    def get_all_buffers(self) -> dict[str, JitterBuffer]:
         """
         Get all jitter buffer instances
 
@@ -382,7 +382,7 @@ class JitterBufferManager:
         """
         return self.buffers.copy()
 
-    def get_statistics(self, call_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_statistics(self, call_id: str | None = None) -> dict[str, Any]:
         """
         Get statistics for one or all jitter buffers
 

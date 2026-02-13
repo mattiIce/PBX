@@ -3,7 +3,6 @@ Database migration system for PBX features
 Manages schema versioning and migrations
 """
 
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -108,7 +107,7 @@ class MigrationManager:
             self.logger.warning(f"Could not get current version: {e}")
             return 0
 
-    def apply_migrations(self, target_version: Optional[int] = None) -> bool:
+    def apply_migrations(self, target_version: int | None = None) -> bool:
         """
         Apply pending migrations
 
@@ -162,7 +161,7 @@ class MigrationManager:
             self.logger.error(f"Migration failed: {e}")
             return False
 
-    def get_migration_status(self) -> List[Dict]:
+    def get_migration_status(self) -> list[Dict]:
         """
         Get status of all migrations
 
