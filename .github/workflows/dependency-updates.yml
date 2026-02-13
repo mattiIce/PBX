@@ -2,9 +2,8 @@ name: Dependency Updates
 
 on:
   schedule:
-    # Run weekly on Monday at 9 AM UTC
     - cron: '0 9 * * 1'
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
 
 jobs:
   update-dependencies:
@@ -18,7 +17,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: Install pip-tools
       run: |
@@ -28,7 +27,6 @@ jobs:
     - name: Update requirements
       run: |
         set -e
-        # Generate updated requirements with latest versions
         pip-compile --upgrade requirements.txt --output-file requirements-updated.txt
 
     - name: Check for updates
@@ -62,7 +60,7 @@ jobs:
           - [ ] CI tests pass
           - [ ] Manual testing completed
 
-          **Note:** Review the changes carefully before merging. Check for breaking changes in the changelog of updated packages.
+          **Note:** Review the changes carefully before merging.
         branch: automated/dependency-updates
         delete-branch: true
         labels: |

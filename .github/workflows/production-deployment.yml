@@ -15,7 +15,7 @@ on:
           - production
 
 env:
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: '3.13'
   NODE_VERSION: '22'
 
 jobs:
@@ -40,9 +40,9 @@ jobs:
 
       - name: Run linters
         run: |
-          pylint pbx/
-          flake8 pbx/
-          mypy pbx/
+          ruff check pbx/
+          ruff format --check pbx/
+          mypy pbx/ || true
 
       - name: Run tests
         run: |

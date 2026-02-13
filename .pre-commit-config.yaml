@@ -1,7 +1,5 @@
 # Pre-commit hooks for PBX System
-# Install: pip install pre-commit
-# Setup: pre-commit install
-# Run manually: pre-commit run --all-files
+# Install: pip install pre-commit && pre-commit install
 
 repos:
   # General file checks
@@ -13,7 +11,7 @@ repos:
       - id: end-of-file-fixer
         exclude: '\.wav$'
       - id: check-yaml
-        args: ['--unsafe']  # Allow custom YAML tags
+        args: ['--unsafe']
       - id: check-json
       - id: check-toml
       - id: check-added-large-files
@@ -28,40 +26,20 @@ repos:
         args: ['--pytest-test-first']
         exclude: '^tests/conftest\.py$'
 
-  # Python code formatting with Black
-  - repo: https://github.com/psf/black
-    rev: 26.1.0
+  # Ruff - replaces Black, isort, flake8, and pylint
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
     hooks:
-      - id: black
-        language_version: python3.12
-        args: ['--line-length=100']
-
-  # Import sorting with isort
-  - repo: https://github.com/pycqa/isort
-    rev: 7.0.0
-    hooks:
-      - id: isort
-        language_version: python3.12
-        args: ['--profile=black', '--line-length=100']
-
-  # Linting with flake8
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
-        language_version: python3.12
-        args: ['--config=.flake8']
-        additional_dependencies:
-          - flake8-docstrings
-          - flake8-bugbear
+      - id: ruff
+        args: ['--fix']
+      - id: ruff-format
 
   # Type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
     hooks:
       - id: mypy
-        language_version: python3.12
-        args: ['--config-file=mypy.ini']
+        args: ['--config-file=pyproject.toml']
         additional_dependencies:
           - types-PyYAML
           - types-requests
@@ -72,8 +50,8 @@ repos:
     rev: 1.9.3
     hooks:
       - id: bandit
-        language_version: python3.12
-        args: ['-c', '.bandit', '-r', '.']
+        args: ['-c', 'pyproject.toml', '-r', '.']
+        additional_dependencies: ['bandit[toml]']
         exclude: 'tests/'
 
   # YAML linting
@@ -93,7 +71,6 @@ repos:
         args: ['--config', '.markdownlint.json']
         exclude: '^(CHANGELOG\.md|docs/)'
 
-# Configuration for specific file types
 ci:
   autofix_commit_msg: |
     [pre-commit.ci] auto fixes from pre-commit hooks
