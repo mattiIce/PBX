@@ -3,6 +3,7 @@ Tests for G.729 and G.726 codec support
 Validates codec initialization, SDP generation, and framework functionality
 """
 
+import pytest
 
 from pbx.features.g726_codec import G726Codec, G726CodecManager
 from pbx.features.g729_codec import G729Codec, G729CodecManager
