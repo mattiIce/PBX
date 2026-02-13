@@ -63,7 +63,7 @@ def test_head_request_for_static_files() -> bool:
                 conn.close()
                 return False
             elif status == 404:
-                # This is acceptable in test environment
+                pass  # Acceptable in test environment
             else:
                 conn.close()
                 return False
@@ -87,6 +87,7 @@ def test_head_request_for_static_files() -> bool:
                 conn.close()
                 return False
             else:
+                pass
 
             conn.close()
 
@@ -107,6 +108,7 @@ def test_head_request_for_static_files() -> bool:
                 conn.close()
                 return False
             else:
+                pass
 
             conn.close()
 

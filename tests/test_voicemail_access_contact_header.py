@@ -99,3 +99,4 @@ def test_contact_header_pattern_consistency() -> None:
                 break
 
         if not has_contact:
+            pass

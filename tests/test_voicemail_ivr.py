@@ -637,5 +637,5 @@ def test_voicemail_pin_from_database() -> None:
         try:
             if os.path.exists(temp_db.name):
                 os.unlink(temp_db.name)
-        except (OSError, PermissionError) as e:
-            # Log but don't fail the test on cleanup errors
+        except (OSError, PermissionError):
+            pass  # Don't fail the test on cleanup errors

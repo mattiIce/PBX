@@ -102,6 +102,7 @@ def test_license_routes() -> bool:
             if response.status != 200 and data.get("success"):
                 return False
         else:
+            pass
 
         return True
 

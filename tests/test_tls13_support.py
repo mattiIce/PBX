@@ -250,7 +250,7 @@ def test_ssl_context_security_options() -> bool:
         # Check OP_NO_SSLv2 separately as it may not be set in modern OpenSSL
         if hasattr(ssl, "OP_NO_SSLv2"):
             if not options & ssl.OP_NO_SSLv2:
-                # This is not a failure - modern OpenSSL may not have SSLv2 at all
+                pass  # Not a failure - modern OpenSSL may not have SSLv2
 
         if not all_set:
             return False

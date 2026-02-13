@@ -56,7 +56,8 @@ def test_fips_data_encryption() -> None:
         assert decrypted.decode() == data, "Decrypted data should match original"
 
 
-    except ImportError as e:
+    except ImportError:
+        pass
 
 
 def test_fips_secure_token() -> None:
@@ -104,4 +105,6 @@ def test_extension_authentication() -> None:
         # Should work with either plain text or hashed
 
     except FileNotFoundError:
-    except Exception as e:
+        pass
+    except Exception:
+        pass

@@ -42,6 +42,7 @@ def test_fips_encryption_active() -> None:
 
         assert decrypted.decode() == data, "Encryption/decryption should work"
     else:
+        pass
 
 
 def test_password_policy_enforcement() -> None:

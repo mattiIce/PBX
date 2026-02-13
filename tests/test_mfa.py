@@ -369,6 +369,6 @@ def test_fido2_assertion_verification() -> bool:
     # In basic mode, this should succeed since all data is present and valid
     # length
     if not success:
-        # If fido2 library is available and does full verification, it may fail
+        pass  # fido2 library may do full verification and fail
 
     return True

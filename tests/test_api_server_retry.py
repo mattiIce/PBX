@@ -49,8 +49,11 @@ def test_socket_reuse_options() -> bool:
                 reuse_port = server_socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
                 if not reuse_port:
                     pass
-            except Exception as e:
+            except Exception:
+                pass
+            pass
         else:
+            pass
 
         time.sleep(0.5)
         api_server.stop()

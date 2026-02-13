@@ -105,7 +105,7 @@ class SmokeTestRunner:
             with urllib.request.urlopen(req, timeout=2) as response:
                 assert response.status == 200, "Health endpoint returned non-200"
         except Exception:
-            # Server not running, skip this test
+            pass  # Server not running, skip this test
 
     def run_all(self) -> bool:
         """Run all smoke tests"""
@@ -129,6 +129,7 @@ class SmokeTestRunner:
 
         if self.errors:
             for name, error in self.errors:
+                pass
 
 
         return self.failed == 0
