@@ -485,7 +485,7 @@ CREATE TABLE fraud_detections (
 6. **Deploy Gradually:** Start with pilot group
 7. **Monitor Performance:** Track success rates and adjust
 
-## See Also
+## Related Documentation
 
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)
 - [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md) - Comprehensive documentation

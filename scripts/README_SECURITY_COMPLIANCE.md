@@ -463,6 +463,3 @@ For issues or questions:
 4. Review logs in `/var/log/pbx/`
 
 ---
-
-**Last Updated**: 2026-02-13
-**Status**: Production Ready

@@ -1,9 +1,5 @@
 # Capacity Planning Guide
 
-**Version:** 1.0.0  
-**Last Updated:** January 2026  
-**Purpose:** Help operations teams plan and scale PBX infrastructure
-
 ---
 
 ## Table of Contents
@@ -492,7 +488,3 @@ python3 scripts/benchmark_performance.py
 - [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive documentation
 
 ---
-
-**Document Version:** 1.0.0  
-**Last Updated:** January 2026  
-**Next Review:** April 2026

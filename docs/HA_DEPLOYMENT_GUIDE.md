@@ -1,9 +1,5 @@
 # High Availability (HA) Deployment Guide
 
-**Version**: 1.0.0  
-**Last Updated**: January 2, 2026  
-**Purpose**: Deploy Warden VoIP PBX in a highly available configuration
-
 ---
 
 ## Table of Contents
@@ -855,7 +851,4 @@ See `docs/diagrams/ha-architecture.png`
 
 ---
 
-**Version History**:
-- 1.0.0 (Jan 2026) - Initial release
-
-**Maintained by**: PBX Development Team
+---

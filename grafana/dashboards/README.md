@@ -286,7 +286,7 @@ avg(rate(pbx_call_duration_seconds_sum[5m]) /
 2. Update dashboard schema version if needed
 3. Check JSON syntax validity
 
-## Additional Resources
+## Related Documentation
 
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
@@ -302,6 +302,3 @@ For issues or questions:
 4. Consult [OPERATIONS_RUNBOOK.md](../../docs/OPERATIONS_RUNBOOK.md) for troubleshooting
 
 ---
-
-**Last Updated**: January 2, 2026  
-**Version**: 1.0.0

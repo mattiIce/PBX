@@ -94,7 +94,7 @@ def _handle_get_extensions(self):
 ```
 
 **API Endpoint**: `GET /api/extensions`  
-**Authentication**: Required ✅  
+**Authentication**: Required
 **PostgreSQL Query**: `SELECT * FROM extensions`
 
 #### Frontend JavaScript (admin/js/admin.js)
@@ -118,7 +118,7 @@ async function populateProvisioningFormDropdowns() {
 ```
 
 **HTML Element**: `<select id="device-extension">`  
-**Data Source**: PostgreSQL `extensions` table ✅
+**Data Source**: PostgreSQL `extensions` table
 
 ---
 
@@ -156,7 +156,7 @@ def _handle_get_provisioning_vendors(self):
 ```
 
 **API Endpoint**: `GET /api/provisioning/vendors`  
-**Authentication**: Required ✅ (FIXED IN THIS PR)  
+**Authentication**: Required (Fixed)
 **Data Source**: Built-in templates (static configuration)
 
 #### Frontend JavaScript (admin/js/admin.js)
@@ -183,7 +183,7 @@ async function loadSupportedVendors() {
 ```
 
 **HTML Element**: `<select id="device-vendor">`  
-**Data Source**: Built-in templates ✅
+**Data Source**: Built-in templates
 
 **Supported Vendors** (as of latest code in `pbx/features/phone_provisioning.py` lines 259-1017):
 - yealink
@@ -225,7 +225,7 @@ function updateModelOptions() {
 ```
 
 **HTML Element**: `<select id="device-model">`  
-**Data Source**: Built-in templates (filtered by selected vendor) ✅  
+**Data Source**: Built-in templates (filtered by selected vendor)  
 **Trigger**: `onchange` event from vendor dropdown
 
 ---
@@ -267,7 +267,7 @@ def _handle_get_provisioning_devices(self):
 ```
 
 **API Endpoint**: `GET /api/provisioning/devices`  
-**Authentication**: Required ✅ (FIXED IN THIS PR)  
+**Authentication**: Required (Fixed)
 **PostgreSQL Query**: `SELECT * FROM provisioned_devices`
 
 ---
@@ -309,22 +309,22 @@ const response = await fetch(`${API_BASE}/api/extensions`, {
 ## Security Enhancements (This PR)
 
 ### Before
-- ❌ `/api/provisioning/vendors` - No authentication required
-- ❌ `/api/provisioning/devices` - No authentication required
-- ❌ `/api/provisioning/templates` - No authentication required
-- ❌ `/api/provisioning/diagnostics` - No authentication required
-- ❌ `/api/provisioning/requests` - No authentication required
-- ✅ `/api/extensions` - Authentication required
+- `/api/provisioning/vendors` - No authentication required
+- `/api/provisioning/devices` - No authentication required
+- `/api/provisioning/templates` - No authentication required
+- `/api/provisioning/diagnostics` - No authentication required
+- `/api/provisioning/requests` - No authentication required
+- `/api/extensions` - Authentication required
 
 **Problem**: Inconsistent authentication caused extension dropdown to fail while vendor dropdown might work, creating confusion.
 
 ### After (Fixed)
-- ✅ `/api/provisioning/vendors` - Authentication required
-- ✅ `/api/provisioning/devices` - Authentication required
-- ✅ `/api/provisioning/templates` - Authentication required
-- ✅ `/api/provisioning/diagnostics` - Authentication required
-- ✅ `/api/provisioning/requests` - Authentication required
-- ✅ `/api/extensions` - Authentication required
+- `/api/provisioning/vendors` - Authentication required
+- `/api/provisioning/devices` - Authentication required
+- `/api/provisioning/templates` - Authentication required
+- `/api/provisioning/diagnostics` - Authentication required
+- `/api/provisioning/requests` - Authentication required
+- `/api/extensions` - Authentication required
 
 **Result**: All endpoints now consistently require authentication. Dropdowns will either all work (when authenticated) or all fail (when not authenticated), making troubleshooting easier.
 
@@ -372,7 +372,7 @@ When a user adds a new phone device:
        # Or UPDATE if device already exists
    ```
 
-**Result**: Device is stored in PostgreSQL and loaded on next startup ✅
+**Result**: Device is stored in PostgreSQL and loaded on next startup
 
 ---
 
@@ -395,18 +395,18 @@ Environment variables should be set in `.env` file (not committed to git).
 
 ## Summary
 
-### ✅ Data from PostgreSQL Database
+### Data from PostgreSQL Database
 1. **Extensions** - Loaded from `extensions` table
 2. **Provisioned Devices** - Loaded from `provisioned_devices` table
 
-### ✅ Data from Configuration (By Design)
+### Data from Configuration (By Design)
 3. **Phone Vendors** - From built-in templates (static)
 4. **Phone Models** - From built-in templates (static)
 
-### ✅ Security
+### Security
 - All API endpoints require authentication
 - JWT tokens used for session management
 - Passwords hashed with PBKDF2-HMAC-SHA256 (FIPS 140-2 compliant)
 
-### ✅ Issue Resolution
+### Issue Resolution
 The dropdowns were failing because provisioning endpoints didn't require authentication, causing inconsistent behavior. This PR fixes that by requiring authentication on all provisioning endpoints, ensuring all dropdowns work consistently when the user is properly authenticated.

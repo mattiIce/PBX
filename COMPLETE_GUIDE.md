@@ -1,9 +1,5 @@
 # Warden VoIP PBX - Complete Documentation
 
-**Version:** 1.2.0
-**Last Updated:** 2026-02-13
-**Project:** https://github.com/mattiIce/PBX
-
 ---
 
 ## Table of Contents
@@ -2553,8 +2549,4 @@ integrations:
 - Email: support@yourcompany.com
 
 ---
-
-**Document Version:** 1.2.0
-**Last Updated:** 2026-02-13
-**Copyright:** Warden VoIP PBX Project
 
