@@ -468,12 +468,7 @@ sudo git clone https://github.com/mattiIce/PBX.git
 cd PBX
 
 # Install dependencies
-sudo ./install_requirements.sh
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+make install-prod
 
 # Configure for HA
 sudo tee /opt/PBX/config.yml << EOF

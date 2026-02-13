@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Documentation Modernization Update** (February 2026)
+  - Updated COMPLETE_GUIDE.md to v1.2.0 reflecting codebase modernization
+  - Section 1.2: Installation now uses uv package manager and Makefile targets
+  - Section 8: Package management updated from pip/venv to uv/pyproject.toml
+  - Section 9: Completely rewritten Developer Guide covering Flask Blueprints, SQLAlchemy ORM, Alembic migrations, Pydantic schemas, TypeScript frontend modules, and OpenAPI docs
+  - Updated README.md and CONTRIBUTING.md install instructions
+  - Fixed all pip/requirements.txt references across documentation
+  - Updated docs/HA_DEPLOYMENT_GUIDE.md, docs/LICENSE_ADMIN_INTERFACE.md, docs/PRODUCTION_READINESS_CHECKLIST.md
 - **Documentation Consolidation Phase 2** (February 2026)
   - Reduced documentation from 87 to 53 markdown files (39% reduction)
   - Merged provisioning connection error fix content into TROUBLESHOOTING.md

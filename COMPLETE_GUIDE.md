@@ -1,7 +1,7 @@
 # Warden VoIP PBX - Complete Documentation
 
-**Version:** 1.1.0  
-**Last Updated:** 2026-01-02  
+**Version:** 1.2.0
+**Last Updated:** 2026-02-13
 **Project:** https://github.com/mattiIce/PBX
 
 ---
@@ -16,7 +16,7 @@
 6. [Security & Compliance](#6-security--compliance)
 7. [Operations & Troubleshooting](#7-operations--troubleshooting)
 8. [Update & Maintenance Guide](#8-update--maintenance-guide)
-9. [Developer Guide](#9-developer-guide)
+9. [Developer Guide](#9-developer-guide) (Architecture, API, Database, Frontend)
 10. [Appendices](#10-appendices)
 
 ---
@@ -41,7 +41,9 @@ Warden VoIP PBX is a comprehensive VoIP system built in Python. Choose your inst
 ### 1.2 Quick Development Setup
 
 #### Prerequisites
-- Python 3.12
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) package manager
+- Node.js (for frontend TypeScript compilation)
 - Ubuntu/Debian Linux (recommended)
 - 2GB+ RAM, 10GB+ disk space
 
@@ -56,27 +58,34 @@ cd PBX
 sudo apt-get update
 sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev postgresql
 
-# 3. Install Python dependencies
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# 3. Install Python dependencies (using uv)
+make install          # Development mode with dev dependencies
+# Or for production only:
+# make install-prod
 
-# 4. Set up environment
+# 4. Install frontend dependencies
+npm install
+
+# 5. Set up environment
 cp .env.example .env
 # Edit .env with your settings
 
-# 5. Configure system
+# 6. Configure system
 cp config.yml your_config.yml
 # Edit your_config.yml
 
-# 6. Generate SSL certificate
+# 7. Generate SSL certificate
 python scripts/generate_ssl_cert.py --hostname YOUR_IP_OR_HOSTNAME
 
-# 7. Generate voice prompts (REQUIRED)
+# 8. Generate voice prompts (REQUIRED)
 python scripts/generate_voice_prompts.py
 
-# 8. Start PBX
-python main.py
+# 9. Start PBX (with auto-reload for development)
+make dev              # Backend + frontend with hot reload
+# Or backend only:
+# make dev-backend
+# Or production mode (no auto-reload):
+# make run
 ```
 
 **Access Points:**
@@ -1493,7 +1502,7 @@ This section covers how to safely update your PBX system, including:
    # Record current versions
    cd /opt/pbx
    git log -1 --oneline > /tmp/pre-update-version.txt
-   pip freeze > /tmp/pre-update-packages.txt
+   uv pip freeze > /tmp/pre-update-packages.txt
    ```
 
 4. **Verify system health:**
@@ -1521,108 +1530,64 @@ Update Python packages when:
 - You see deprecation warnings in logs
 - Following a major release update
 
-#### Safe Package Update Procedure
+#### Dependency Management
 
-**Option 1: Update All Packages (Recommended for Development)**
+Dependencies are defined in `pyproject.toml` and managed via **uv**:
 
 ```bash
-# Navigate to PBX directory
+# Install/update all dependencies
+cd /opt/pbx
+make install-prod        # Production
+make install             # Development (includes dev tools)
+
+# Update a specific package
+uv pip install --upgrade cryptography
+
+# Generate a locked requirements file for reproducible builds
+make lock                # Creates requirements.lock from pyproject.toml
+make sync                # Install from requirements.lock
+```
+
+#### Safe Package Update Procedure
+
+```bash
+# 1. Navigate to PBX directory
 cd /opt/pbx
 
-# Activate virtual environment
-source venv/bin/activate
-
-# Stop PBX service
+# 2. Stop PBX service
 sudo systemctl stop pbx
 
-# Update pip itself first
-pip install --upgrade pip
+# 3. Update dependencies
+make install-prod
 
-# Update all packages to latest compatible versions
-pip install --upgrade -r requirements.txt
+# 4. Verify installation
+python -c "import pbx; print('Import successful')"
 
-# Verify installation
-pip check
+# 5. Run tests
+make test
 
-# Test the update
-python -c "import pbx; print('✓ Import successful')"
-
-# Restart service
+# 6. Restart service
 sudo systemctl start pbx
 
-# Monitor logs for errors
+# 7. Monitor logs for errors
 sudo journalctl -u pbx -f
 ```
 
-**Option 2: Update Specific Package (Recommended for Production)**
+#### Update Specific Package (Production)
 
 ```bash
-# Activate virtual environment
-source venv/bin/activate
-
 # Stop service
 sudo systemctl stop pbx
 
 # Update specific package
-pip install --upgrade package_name==version
+uv pip install --upgrade cryptography==46.0.5
 
-# Example: Update cryptography for security patch
-pip install --upgrade cryptography==46.0.3
+# Verify
+python -c "from cryptography.fernet import Fernet; print('OK')"
 
-# Verify the update
-pip show package_name
-
-# Test import
-python -c "import package_name; print('✓ Updated successfully')"
-
-# Restart service
+# Restart and verify
 sudo systemctl start pbx
-
-# Verify functionality
 curl -k https://localhost:8080/api/status
-```
-
-**Option 3: Conservative Update (Safest for Production)**
-
-```bash
-# Create a test environment first
-python3 -m venv /tmp/pbx-test-env
-source /tmp/pbx-test-env/bin/activate
-
-# Install current requirements
-pip install -r requirements.txt
-
-# Test updates in isolation
-pip install --upgrade package-name
-
-# Run tests
-pytest tests/
-
-# If tests pass, apply to production
-deactivate
-source /opt/pbx/venv/bin/activate
-sudo systemctl stop pbx
-pip install --upgrade package-name
-sudo systemctl start pbx
-```
-
-#### Handling Dependency Conflicts
-
-```bash
-# Check for conflicts
-pip check
-
-# If conflicts exist, use pip-tools to resolve
-pip install pip-tools
-
-# Compile requirements with pinned versions
-pip-compile requirements.txt
-
-# Review the output for conflicts
-# Manually adjust requirements.txt if needed
-
-# Install resolved dependencies
-pip install -r requirements.txt
 ```
 
 ### 8.4 Updating System Packages
@@ -1665,7 +1630,6 @@ sudo systemctl status pbx
 ```bash
 # Regenerate voice prompts (if espeak was updated)
 cd /opt/pbx
-source venv/bin/activate
 python scripts/generate_voice_prompts.py
 
 # Test audio functionality
@@ -1736,12 +1700,11 @@ git stash save "Backup before update $(date)"
 # Pull latest changes
 git pull origin main
 
-# Or hard reset to match repository exactly
-git reset --hard origin/main
-git clean -fd
+# Update dependencies (if pyproject.toml changed)
+make install-prod
 
-# Verify Python files
-find . -name "*.py" -type f ! -path "./.git/*" ! -path "./venv/*" -exec python3 -m py_compile {} \;
+# Run database migrations (if any)
+alembic upgrade head
 
 # Restart service
 sudo systemctl restart pbx
@@ -1771,15 +1734,20 @@ sudo systemctl restart pbx
 
 ### 8.6 Database Migrations
 
+The PBX uses **Alembic** for database schema migrations with **SQLAlchemy** ORM models.
+
 #### Checking for Database Changes
 
 ```bash
-# Check if update includes database changes
+# Check if update includes new migrations
 cd /opt/pbx
-git log HEAD..origin/main -- scripts/init_database.py scripts/*migrate*.py
+git log HEAD..origin/main -- alembic/versions/
 
-# Review migration scripts
-ls -la scripts/*migrate*.py
+# View current migration status
+alembic current
+
+# View pending migrations
+alembic history --indicate-current
 ```
 
 #### Running Database Migrations
@@ -1791,15 +1759,11 @@ sudo -u postgres pg_dump pbx_system > /var/backups/pbx/pre-migration-$(date +%Y%
 # Stop PBX service
 sudo systemctl stop pbx
 
-# Run migration script (if provided)
-source venv/bin/activate
-python scripts/migrate_database.py
+# Apply all pending migrations
+alembic upgrade head
 
 # Verify migration
 python scripts/verify_database.py
-
-# Check for errors
-psql -U pbx_user -d pbx_system -c "SELECT * FROM schema_version;"
 
 # Start service
 sudo systemctl start pbx
@@ -1808,21 +1772,18 @@ sudo systemctl start pbx
 curl -k https://localhost:8080/api/status
 ```
 
-#### Manual Database Updates
+#### Creating New Migrations (Developers)
 
 ```bash
-# Connect to database
-sudo -u postgres psql pbx_system
+# After modifying SQLAlchemy models in pbx/models/
+alembic revision --autogenerate -m "Add new_field to extensions"
 
-# Run manual migration queries
-ALTER TABLE extensions ADD COLUMN new_field VARCHAR(255);
-UPDATE extensions SET new_field = 'default_value';
+# Review the generated migration in alembic/versions/
+# Then apply it:
+alembic upgrade head
 
-# Verify changes
-\d extensions
-
-# Exit
-\q
+# Rollback one migration:
+alembic downgrade -1
 ```
 
 ### 8.7 Handling Update Failures
@@ -1838,14 +1799,14 @@ sudo journalctl -u pbx -n 100 --no-pager
 
 # Check for Python errors
 cd /opt/pbx
-source venv/bin/activate
 python main.py
 
 # Common issues:
 # 1. Syntax errors - Check logs for file and line number
-# 2. Import errors - Missing dependencies: pip install -r requirements.txt
+# 2. Import errors - Missing dependencies: make install-prod
 # 3. Configuration errors - Verify config.yml syntax: python -c "import yaml; yaml.safe_load(open('config.yml'))"
 # 4. Database errors - Check connection: python scripts/verify_database.py
+# 5. Migration errors - Run: alembic upgrade head
 ```
 
 #### Dependency Conflicts
@@ -1853,16 +1814,13 @@ python main.py
 ```bash
 # Reinstall all dependencies from scratch
 cd /opt/pbx
-source venv/bin/activate
 
-# Uninstall all packages
-pip freeze | xargs pip uninstall -y
+# Clean install
+make clean
+make install-prod
 
-# Reinstall from requirements
-pip install -r requirements.txt
-
-# Verify
-pip check
+# Or use locked dependencies for reproducible builds
+make sync
 ```
 
 #### Configuration Issues
@@ -1894,8 +1852,10 @@ git log --oneline -10  # Find previous commit
 git reset --hard COMMIT_HASH  # Replace with actual commit hash
 
 # Restore dependencies
-source venv/bin/activate
-pip install -r requirements.txt
+make install-prod
+
+# Rollback database migrations if needed
+alembic downgrade -1
 
 # Restart service
 sudo systemctl start pbx
@@ -1923,8 +1883,7 @@ sudo cp /var/backups/pbx/manual-20250115/config.yml .
 sudo cp /var/backups/pbx/manual-20250115/.env .
 
 # Restore dependencies
-source venv/bin/activate
-pip install -r requirements.txt
+make install-prod
 
 # Restore voicemail (if needed)
 sudo tar -xzf /var/backups/pbx/manual-20250115/voicemail.tar.gz -C /
@@ -1946,12 +1905,8 @@ git log --oneline --graph --all
 # Rollback to specific tag/release
 git checkout v1.0.0
 
-# Or rollback by date
-git checkout $(git rev-list -n 1 --before="2025-01-01" main)
-
-# Reinstall dependencies
-source venv/bin/activate
-pip install -r requirements.txt
+# Reinstall dependencies for that version
+make install-prod
 
 # Restart
 sudo systemctl restart pbx
@@ -1997,20 +1952,25 @@ sudo journalctl -u pbx -n 100 | grep -i error
 ```bash
 # Run automated tests
 cd /opt/pbx
-source venv/bin/activate
 
-# Basic smoke tests
-python scripts/smoke_tests.py
+# Full test suite (Python + JavaScript)
+make test
 
-# Audio tests
-python scripts/test_audio_comprehensive.py
+# Python tests only
+make test-python
 
-# Full test suite (if in development)
-pytest tests/
+# JavaScript tests only
+make test-js
 
-# Integration tests
-python scripts/test_ad_integration.py  # If using AD
-python scripts/test_menu_endpoints.py   # API tests
+# Unit tests only
+make test-unit
+
+# Integration tests only
+make test-integration
+
+# Coverage report
+make test-cov
+# View report: open htmlcov/index.html
 ```
 
 ### 8.10 Update Best Practices
@@ -2145,13 +2105,13 @@ time curl -k https://localhost:8080/api/status
 # Example: Cryptography library has a CVE
 
 # 1. Check current version
-pip show cryptography
+uv pip show cryptography
 
 # 2. Stop service
 sudo systemctl stop pbx
 
 # 3. Update package
-pip install --upgrade cryptography==46.0.3
+uv pip install --upgrade cryptography==46.0.5
 
 # 4. Test import
 python -c "from cryptography.fernet import Fernet; print('✓ OK')"
@@ -2179,12 +2139,11 @@ sudo /opt/pbx/scripts/backup_full.sh
 sudo systemctl stop pbx
 git pull origin main
 
-# 4. Update dependencies (if requirements.txt changed)
-source venv/bin/activate
-pip install -r requirements.txt
+# 4. Update dependencies (if pyproject.toml changed)
+make install-prod
 
 # 5. Run migrations (if any)
-python scripts/migrate_database.py
+alembic upgrade head
 
 # 6. Update configuration (review CHANGELOG)
 # Add new config options if required
@@ -2227,156 +2186,247 @@ sudo journalctl -u pbx -f
 
 ### 9.1 Architecture Overview
 
-**Component Structure:**
+The PBX uses a modular architecture with Flask Blueprints, SQLAlchemy ORM, and TypeScript frontend modules.
+
+**Backend Structure:**
 ```
 PBX System
-├── pbx/core/          - Core call handling logic
-├── pbx/sip/           - SIP protocol implementation
-├── pbx/rtp/           - RTP media handling
-├── pbx/features/      - Advanced features (VM, queues, etc.)
-├── pbx/integrations/  - External service integrations
-├── pbx/api/           - REST API server
-└── pbx/utils/         - Utilities and helpers
+├── pbx/
+│   ├── core/              - Core call handling logic
+│   ├── sip/               - SIP protocol implementation
+│   ├── rtp/               - RTP media handling
+│   ├── features/          - Advanced features (VM, queues, etc.)
+│   ├── integrations/      - External service integrations
+│   ├── api/
+│   │   ├── app.py         - Flask application factory
+│   │   ├── routes/        - 21 Flask Blueprint modules
+│   │   ├── schemas/       - Pydantic request/response validation
+│   │   ├── openapi.py     - Auto-generated OpenAPI spec
+│   │   └── errors.py      - Error handlers
+│   ├── models/            - SQLAlchemy ORM models
+│   │   ├── base.py        - Base model (id, created_at, updated_at)
+│   │   ├── extension.py   - Extension model
+│   │   ├── call_record.py - CDR model
+│   │   ├── voicemail.py   - Voicemail model
+│   │   └── registered_phone.py
+│   └── utils/             - Utilities and helpers
+├── admin/js/
+│   ├── pages/             - 13 TypeScript page modules
+│   ├── ui/                - UI components (tabs, notifications)
+│   ├── client.ts          - API client
+│   └── store.ts           - State management
+├── alembic/               - Database migration scripts
+├── Makefile               - Development workflow targets
+└── pyproject.toml         - Dependencies and tool config
 ```
+
+**Flask Blueprints (API Routes):**
+The API is organized into 21 Blueprints registered in `pbx/api/app.py`:
+`health`, `auth`, `extensions`, `calls`, `provisioning`, `phones`, `config`, `voicemail`, `webrtc`, `integrations`, `phone_book`, `paging`, `webhooks`, `emergency`, `security`, `qos`, `features`, `framework`, `static`, `license`, `compat`, `docs`
 
 **Call Flow:**
 1. SIP Server receives INVITE
 2. PBX Core validates and routes call
 3. RTP Handler establishes media session
 4. Features layer adds capabilities (transfer, hold, etc.)
-5. CDR logs call details
+5. CDR logs call details via SQLAlchemy model
 
 ### 9.2 REST API Reference
 
-**Authentication:**
-Currently API is open. For production, implement authentication:
-```python
-# Add to api/rest_api.py
-@app.before_request
-def check_auth():
-    api_key = request.headers.get('X-API-Key')
-    if not validate_api_key(api_key):
-        return jsonify({"error": "Unauthorized"}), 401
-```
+**Interactive API Documentation:**
+Full OpenAPI 3.0 documentation is auto-generated and available at:
+- **Swagger UI:** `https://your-server:8080/api/docs/swagger`
+- **OpenAPI JSON:** `https://your-server:8080/api/docs/openapi.json`
 
-**Endpoints:**
+**Request Validation:**
+API requests are validated using Pydantic schemas defined in `pbx/api/schemas/`:
+- `auth.py` - Authentication request/response models
+- `extensions.py` - Extension CRUD validation
+- `provisioning.py` - Phone provisioning models
+- `common.py` - Shared response models
 
-**System Status:**
+**Key Endpoints:**
+
 ```bash
+# System Status
 GET /api/status
-```
+GET /api/health
 
-**Extensions:**
-```bash
-# List all
-GET /api/extensions
-
-# Get specific
-GET /api/extensions/1001
-
-# Create
-POST /api/extensions
-{
-  "number": "1005",
-  "name": "New User",
-  "email": "user@company.com",
-  "password": "secure123"
-}
-
-# Update
-PUT /api/extensions/1005
-{
-  "name": "Updated Name",
-  "email": "newemail@company.com"
-}
-
-# Delete
+# Extensions
+GET    /api/extensions
+GET    /api/extensions/1001
+POST   /api/extensions
+PUT    /api/extensions/1005
 DELETE /api/extensions/1005
-```
 
-**Active Calls:**
-```bash
-# List active calls
-GET /api/calls
-
-# Get call details
-GET /api/calls/{call_id}
-
-# Transfer call
-POST /api/calls/{call_id}/transfer
-{
-  "to": "1002"
-}
-
-# Hangup call
+# Active Calls
+GET    /api/calls
+GET    /api/calls/{call_id}
+POST   /api/calls/{call_id}/transfer
 DELETE /api/calls/{call_id}
-```
 
-**Call Detail Records:**
-```bash
-# Get CDR
+# Call Detail Records
 GET /api/cdr?start_date=2025-01-01&end_date=2025-01-31
-
-# Get statistics
 GET /api/statistics
-```
 
-**Configuration:**
-```bash
-# Get config
+# Configuration
 GET /api/config
-
-# Update config
 PUT /api/config
-{
-  "voicemail": {
-    "no_answer_timeout": 25
-  }
-}
+
+# Phone Provisioning
+GET  /api/provisioning/devices
+POST /api/provisioning/devices
+
+# Voicemail
+GET /api/voicemail/{extension}
 ```
+
+**Adding a New API Endpoint:**
+
+1. Create a route in `pbx/api/routes/your_feature.py`:
+```python
+from flask import Blueprint, jsonify
+your_bp = Blueprint("your_feature", __name__)
+
+@your_bp.route("/api/your-feature", methods=["GET"])
+def get_feature():
+    return jsonify({"status": "ok"})
+```
+
+2. Register the Blueprint in `pbx/api/app.py`:
+```python
+from pbx.api.routes.your_feature import your_bp
+blueprints = [..., your_bp]
+```
+
+3. Add Pydantic schema validation in `pbx/api/schemas/` if needed.
 
 ### 9.3 Development Setup
 
 **Prerequisites:**
-```bash
-# Python 3.12
-python3 --version
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) (fast Python package manager)
+- Node.js 18+ and npm
 
-# Install dev dependencies
-pip install -r requirements-dev.txt
+**Quick Start:**
+```bash
+# Install all dependencies (Python + dev tools)
+make install
+
+# Install frontend dependencies
+npm install
 
 # Install pre-commit hooks
-pre-commit install
+make pre-commit-install
+```
+
+**Development Workflow:**
+```bash
+# Start backend + frontend with hot reload
+make dev
+
+# Backend only (Flask debug mode with auto-reload)
+make dev-backend
+
+# Frontend only (TypeScript dev server)
+make dev-frontend
+
+# Run production server (no auto-reload)
+make run
 ```
 
 **Code Quality:**
 ```bash
-# Format code
+# Auto-format code (black + isort)
 make format
 
-# Run linters
+# Check formatting without changes
+make format-check
+
+# Run all linters (pylint, flake8, mypy)
 make lint
 
-# Type checking
+# Type checking only
 make mypy
-
-# All quality checks
-make quality
 ```
 
 **Testing:**
 ```bash
-# Run all tests
+# Run all tests (Python + JavaScript)
 make test
 
-# Run specific test
-pytest tests/test_basic.py
+# Python tests only
+make test-python
 
-# Coverage report
+# JavaScript tests only
+make test-js
+
+# Unit tests only (pytest -m unit)
+make test-unit
+
+# Integration tests only (pytest -m integration)
+make test-integration
+
+# Coverage report (HTML)
 make test-cov
+# View: open htmlcov/index.html
 ```
 
-### 9.4 Contributing
+**Docker:**
+```bash
+make docker-build    # Build image
+make docker-up       # Start services
+make docker-down     # Stop services
+make docker-logs     # View logs
+make docker-shell    # Shell into container
+```
+
+### 9.4 Database Architecture
+
+**SQLAlchemy Models** are defined in `pbx/models/`:
+- `Base` - Common fields: `id`, `created_at`, `updated_at`
+- `Extension` - User extensions
+- `CallRecord` - Call detail records
+- `Voicemail` - Voicemail messages
+- `RegisteredPhone` - Phone registration tracking
+
+**Migrations** are managed by Alembic:
+```bash
+# Apply all pending migrations
+alembic upgrade head
+
+# Create a new migration after model changes
+alembic revision --autogenerate -m "description"
+
+# Rollback one migration
+alembic downgrade -1
+
+# View migration history
+alembic history --indicate-current
+```
+
+### 9.5 Frontend Architecture
+
+The admin panel uses **TypeScript ES modules** organized in `admin/js/`:
+
+**Page Modules** (`admin/js/pages/`):
+Each feature has a dedicated TypeScript module: `dashboard.ts`, `extensions.ts`, `calls.ts`, `voicemail.ts`, `phones.ts`, `provisioning.ts`, `config.ts`, `analytics.ts`, `emergency.ts`, `paging.ts`, `phone_book.ts`, `license.ts`, `security.ts`
+
+**Shared Modules:**
+- `admin/js/client.ts` - Centralized API client
+- `admin/js/store.ts` - State management
+- `admin/js/ui/tabs.ts` - Tab navigation
+- `admin/js/ui/notifications.ts` - Toast notifications
+- `admin/js/html.ts` - Safe HTML utilities
+
+**Building:**
+```bash
+npm run dev      # Watch mode with hot reload
+npm run build    # Production build
+npm test         # Run Jest tests
+```
+
+### 9.6 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Code style guidelines
@@ -2385,14 +2435,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Testing requirements
 
 **Quick Checklist:**
-- [ ] Code follows PEP 8 style
-- [ ] Type hints added
-- [ ] Docstrings written
-- [ ] Tests added/updated
-- [ ] All tests pass
-- [ ] Linters pass (black, flake8, pylint)
-- [ ] Type checking passes (mypy)
-- [ ] Documentation updated
+- [ ] Code follows PEP 8 style (enforced by `make format`)
+- [ ] Type hints added to all functions
+- [ ] Tests added/updated (`make test`)
+- [ ] All linters pass (`make lint`)
+- [ ] Type checking passes (`make mypy`)
+- [ ] Database migrations created if models changed (`alembic revision --autogenerate`)
+
+**Deprecation Notice:**
+The old `pbx/api/rest_api.py` module is deprecated. Use Flask Blueprints in `pbx/api/routes/` instead. Do not add new endpoints to `rest_api.py`.
 
 ---
 
@@ -2511,7 +2562,7 @@ integrations:
 
 ---
 
-**Document Version:** 1.1.0  
-**Last Updated:** 2026-01-02  
+**Document Version:** 1.2.0
+**Last Updated:** 2026-02-13
 **Copyright:** Warden VoIP PBX Project
 

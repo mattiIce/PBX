@@ -139,14 +139,12 @@ cd PBX
 
 2. Install dependencies:
 ```bash
-# For Debian/Ubuntu systems (with system-managed packages):
-./install_requirements.sh
+# Install Python dependencies (requires uv: https://docs.astral.sh/uv/)
+make install          # Development mode with dev tools
+# Or: make install-prod  # Production only
 
-# Or manually:
-pip install -r requirements.txt --break-system-packages --ignore-installed typing_extensions
-
-# For other systems or virtual environments:
-pip install -r requirements.txt
+# Install frontend dependencies
+npm install
 ```
 
 3. Set up database (optional but recommended):
