@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ main, develop ]
   schedule:
-    # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
 
@@ -21,7 +20,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
         cache: 'pip'
 
     - name: Install dependencies
@@ -63,7 +62,7 @@ jobs:
     - name: Check results
       if: steps.safety.outputs.safety_failed == 'true' || steps.pip-audit.outputs.audit_failed == 'true'
       run: |
-        echo "⚠️ Vulnerabilities detected in dependencies!"
+        echo "Vulnerabilities detected in dependencies!"
         echo "Review the uploaded artifacts for details."
         exit 1
 
@@ -77,19 +76,19 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: Install Bandit
       run: |
         set -e
         python -m pip install --upgrade pip
-        pip install bandit[toml]
+        pip install "bandit[toml]"
 
     - name: Run Bandit
       run: |
         set -e
-        bandit -r pbx/ -f json -o bandit-report.json -c .bandit || true
-        bandit -r pbx/ -c .bandit
+        bandit -r pbx/ -f json -o bandit-report.json -c pyproject.toml || true
+        bandit -r pbx/ -c pyproject.toml
 
     - name: Upload Bandit report
       if: always()
@@ -106,7 +105,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
       with:
-        fetch-depth: 0  # Full history for better detection
+        fetch-depth: 0
 
     - name: Run Gitleaks
       uses: gitleaks/gitleaks-action@v2
@@ -117,7 +116,7 @@ jobs:
   docker-scan:
     name: Docker Image Scan
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'  # Only on push/schedule
+    if: github.event_name != 'pull_request'
 
     steps:
     - uses: actions/checkout@v6
@@ -133,7 +132,7 @@ jobs:
         format: 'sarif'
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
-        exit-code: '0'  # Don't fail the build
+        exit-code: '0'
 
     - name: Upload Trivy results to GitHub Security
       uses: github/codeql-action/upload-sarif@v4
@@ -166,21 +165,21 @@ jobs:
       run: |
         echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ "${{ needs.dependency-check.result }}" == "success" ]; then
-          echo "✅ Dependency vulnerability scan: PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "Dependency vulnerability scan: PASSED" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Dependency vulnerability scan: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "Dependency vulnerability scan: FAILED" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ needs.bandit-scan.result }}" == "success" ]; then
-          echo "✅ Bandit security scan: PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "Bandit security scan: PASSED" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Bandit security scan: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "Bandit security scan: FAILED" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ needs.secrets-scan.result }}" == "success" ]; then
-          echo "✅ Secret detection: PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "Secret detection: PASSED" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Secret detection: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "Secret detection: FAILED" >> $GITHUB_STEP_SUMMARY
         fi

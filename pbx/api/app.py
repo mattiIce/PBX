@@ -1,6 +1,6 @@
 """Flask application factory for PBX API."""
 
-import os
+from pathlib import Path
 
 from flask import Flask
 
@@ -9,8 +9,7 @@ from pbx.utils.logger import get_logger
 
 logger = get_logger()
 
-# Admin directory path
-ADMIN_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "admin")
+ADMIN_DIR = str(Path(__file__).resolve().parent.parent.parent / "admin")
 
 
 def create_app(pbx_core=None):
@@ -26,7 +25,6 @@ def create_app(pbx_core=None):
     app.config["PBX_CORE"] = pbx_core
     app.config["ADMIN_DIR"] = ADMIN_DIR
 
-    # Security headers via after_request
     @app.after_request
     def add_security_headers(response):
         response.headers["Access-Control-Allow-Origin"] = "*"
@@ -48,10 +46,7 @@ def create_app(pbx_core=None):
         response.headers["Content-Security-Policy"] = csp
         return response
 
-    # Register error handlers
     register_error_handlers(app)
-
-    # Register all Blueprints
     _register_blueprints(app)
 
     return app
@@ -59,28 +54,28 @@ def create_app(pbx_core=None):
 
 def _register_blueprints(app):
     """Register all route Blueprints."""
-    from pbx.api.routes.health import health_bp
     from pbx.api.routes.auth import auth_bp
-    from pbx.api.routes.extensions import extensions_bp
     from pbx.api.routes.calls import calls_bp
-    from pbx.api.routes.provisioning import provisioning_bp
-    from pbx.api.routes.phones import phones_bp
+    from pbx.api.routes.compat import compat_bp
     from pbx.api.routes.config import config_bp
-    from pbx.api.routes.voicemail import voicemail_bp
-    from pbx.api.routes.webrtc import webrtc_bp
-    from pbx.api.routes.integrations import integrations_bp
-    from pbx.api.routes.phone_book import phone_book_bp
-    from pbx.api.routes.paging import paging_bp
-    from pbx.api.routes.webhooks import webhooks_bp
+    from pbx.api.routes.docs import docs_bp
     from pbx.api.routes.emergency import emergency_bp
-    from pbx.api.routes.security import security_bp
-    from pbx.api.routes.qos import qos_bp
+    from pbx.api.routes.extensions import extensions_bp
     from pbx.api.routes.features import features_bp
     from pbx.api.routes.framework import framework_bp
-    from pbx.api.routes.static import static_bp
+    from pbx.api.routes.health import health_bp
+    from pbx.api.routes.integrations import integrations_bp
     from pbx.api.routes.license import license_bp
-    from pbx.api.routes.compat import compat_bp
-    from pbx.api.routes.docs import docs_bp
+    from pbx.api.routes.paging import paging_bp
+    from pbx.api.routes.phone_book import phone_book_bp
+    from pbx.api.routes.phones import phones_bp
+    from pbx.api.routes.provisioning import provisioning_bp
+    from pbx.api.routes.qos import qos_bp
+    from pbx.api.routes.security import security_bp
+    from pbx.api.routes.static import static_bp
+    from pbx.api.routes.voicemail import voicemail_bp
+    from pbx.api.routes.webhooks import webhooks_bp
+    from pbx.api.routes.webrtc import webrtc_bp
 
     blueprints = [
         health_bp,
@@ -109,4 +104,4 @@ def _register_blueprints(app):
 
     for bp in blueprints:
         app.register_blueprint(bp)
-        logger.debug(f"Registered blueprint: {bp.name}")
+        logger.debug("Registered blueprint: %s", bp.name)

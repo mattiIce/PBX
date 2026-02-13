@@ -331,7 +331,7 @@ FROM pg_database;
 
 4. **Scale resources if needed:**
    - For bare metal: Add more resources
-   - For Docker: `docker-compose up -d --scale pbx=2`
+   - For Docker: `docker compose up -d --scale pbx=2`
    - For Kubernetes: `kubectl scale deployment pbx --replicas=3`
 
 ---

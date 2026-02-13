@@ -1,13 +1,16 @@
-"""
-Dependency Checker for Warden Voip System
-Verifies that all required and optional dependencies are installed at startup
-Reads dependencies from requirements.txt
+"""Dependency Checker for Warden VoIP System.
+
+Verifies that all required and optional dependencies are installed at startup.
+Reads dependencies from requirements.txt.
 """
 
 import importlib
-import os
+import logging
 import re
 import sys
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Map package names to module names (when they differ)
 PACKAGE_TO_MODULE = {
@@ -31,124 +34,105 @@ CORE_PACKAGES = {"PyYAML", "cryptography"}
 
 
 def parse_requirements_txt(requirements_path: str = "requirements.txt") -> dict[str, str]:
-    """
-    Parse requirements.txt file
+    """Parse requirements.txt file.
 
     Returns:
-        Dictionary mapping package names to version specs (without comments)
+        Dictionary mapping package names to version specs (without comments).
     """
     requirements = {}
+    req_path = Path(requirements_path)
 
-    if not os.path.exists(requirements_path):
+    if not req_path.exists():
         return requirements
 
-    with open(requirements_path, "r") as f:
-        for line in f:
-            line = line.strip()
+    for line in req_path.read_text().splitlines():
+        line = line.strip()
 
-            # Skip empty lines and comments
-            if not line or line.startswith("#"):
-                continue
+        # Skip empty lines and comments
+        if not line or line.startswith("#"):
+            continue
 
-            # Remove inline comments
-            if "#" in line:
-                line = line.split("#")[0].strip()
+        # Remove inline comments
+        if "#" in line:
+            line = line.split("#")[0].strip()
 
-            # Parse package name and version spec
-            # Matches: package>=1.0.0, package==1.0, package.subpackage>=1.0, etc.
-            match = re.match(r"^([a-zA-Z0-9_.-]+)([>=<!=]+.*)?", line)
-            if match:
-                package_name = match.group(1)
-                version_spec = match.group(2) or ""
-                requirements[package_name] = package_name + version_spec
+        # Parse package name and version spec
+        match = re.match(r"^([a-zA-Z0-9_.-]+)([>=<!=]+.*)?", line)
+        if match:
+            package_name = match.group(1)
+            version_spec = match.group(2) or ""
+            requirements[package_name] = package_name + version_spec
 
     return requirements
 
 
 def get_module_name(package_name: str) -> str:
-    """Convert package name to module name"""
+    """Convert package name to module name."""
     return PACKAGE_TO_MODULE.get(package_name, package_name.lower().replace("-", "_"))
 
 
 def check_module(module_name: str) -> bool:
-    """Check if a Python module is installed"""
+    """Check if a Python module is installed."""
     try:
         importlib.import_module(module_name)
-        return True
     except ImportError:
         return False
     except OSError:
         # Some modules like sounddevice raise OSError when system libraries
         # (e.g., PortAudio) are not installed, even though the Python package is installed
         return False
+    else:
+        return True
 
 
 def check_dependencies(
     verbose: bool = False, requirements_path: str = "requirements.txt"
 ) -> tuple[bool, dict[str, list]]:
-    """
-    Check all dependencies from requirements.txt
+    """Check all dependencies from requirements.txt.
 
     Args:
-        verbose: If True, print detailed information
-        requirements_path: Path to requirements.txt file
+        verbose: If True, log detailed information.
+        requirements_path: Path to requirements.txt file.
 
     Returns:
-        tuple of (all_core_ok, report_dict)
-        - all_core_ok: True if all core dependencies are satisfied
-        - report_dict: Dictionary with 'missing_core', 'missing_optional', 'available_optional'
+        tuple of (all_core_ok, report_dict).
     """
     missing_core = []
     missing_optional = []
     available_optional = []
 
-    # Parse requirements.txt
     requirements = parse_requirements_txt(requirements_path)
 
     if not requirements:
         if verbose:
-            print(f"  ⚠ Warning: No requirements found in {requirements_path}")
+            logger.warning("No requirements found in %s", requirements_path)
         return True, {
             "missing_core": [],
             "missing_optional": [],
             "available_optional": [],
         }
 
-    # Check each requirement
     for package_name, package_spec in requirements.items():
         module_name = get_module_name(package_name)
         is_core = package_name in CORE_PACKAGES
 
         if not check_module(module_name):
-            # Package is missing
             if is_core:
                 missing_core.append(package_spec)
                 if verbose:
-                    print(f"  ✗ Missing CORE: {package_spec}")
+                    logger.error("Missing CORE: %s", package_spec)
             else:
                 feature = OPTIONAL_FEATURES.get(package_name, "Additional features")
-                missing_optional.append(
-                    {
-                        "package": package_spec,
-                        "feature": feature,
-                    }
-                )
+                missing_optional.append({"package": package_spec, "feature": feature})
                 if verbose:
-                    print(f"  ⚠ Missing optional: {package_spec} - enables {feature}")
-        else:
-            # Package is available
-            if verbose:
-                if is_core:
-                    print(f"  ✓ Core: {package_name}")
-                else:
-                    feature = OPTIONAL_FEATURES.get(package_name, "Additional features")
-                    available_optional.append(
-                        {
-                            "package": package_spec,
-                            "feature": feature,
-                        }
-                    )
-                    print(f"  ✓ Optional: {package_name} - {feature}")
+                    logger.warning("Missing optional: %s - enables %s", package_spec, feature)
+        elif verbose:
+            if is_core:
+                logger.info("Core: %s", package_name)
+            else:
+                feature = OPTIONAL_FEATURES.get(package_name, "Additional features")
+                available_optional.append({"package": package_spec, "feature": feature})
+                logger.info("Optional: %s - %s", package_name, feature)
 
     report = {
         "missing_core": missing_core,
@@ -160,74 +144,66 @@ def check_dependencies(
 
 
 def print_dependency_report(report: dict[str, list], verbose: bool = False) -> None:
-    """Print a formatted dependency report"""
+    """Log a formatted dependency report."""
     missing_core = report["missing_core"]
     missing_optional = report["missing_optional"]
     available_optional = report["available_optional"]
 
-    # Core dependencies
     if missing_core:
-        print("\n✗ MISSING REQUIRED DEPENDENCIES:")
+        logger.error("MISSING REQUIRED DEPENDENCIES:")
         for package in missing_core:
-            print(f"  - {package}")
-        print("\nInstall missing dependencies with:")
-        print(f"  pip install {' '.join(missing_core)}")
+            logger.error("  - %s", package)
+        logger.error("Install missing dependencies with: pip install %s", " ".join(missing_core))
     else:
-        print("✓ All core dependencies satisfied")
+        logger.info("All core dependencies satisfied")
 
-    # Optional dependencies - only show details in verbose mode
     if missing_optional:
         if verbose:
-            print("\n⚠ MISSING OPTIONAL DEPENDENCIES:")
+            logger.warning("MISSING OPTIONAL DEPENDENCIES:")
             for dep in missing_optional:
-                print(f"  - {dep['package']}")
-                print(f"    Feature: {dep['feature']}")
-            print("\nTo enable these features, install:")
+                logger.warning("  - %s (Feature: %s)", dep["package"], dep["feature"])
             packages = " ".join([dep["package"] for dep in missing_optional])
-            print(f"  pip install {packages}")
+            logger.warning("To enable these features: pip install %s", packages)
         else:
-            # Concise output - just count
             count = len(missing_optional)
             dependency_word = "dependency" if count == 1 else "dependencies"
-            print(f"⚠ {count} optional {dependency_word} missing (use --verbose to see details)")
-    else:
-        if verbose:
-            print("\n✓ All optional dependencies installed")
+            logger.info(
+                "%d optional %s missing (use --verbose to see details)", count, dependency_word
+            )
+    elif verbose:
+        logger.info("All optional dependencies installed")
 
-    # Show available optional features - only in verbose mode
     if available_optional and verbose:
-        print("\n✓ ENABLED OPTIONAL FEATURES:")
+        logger.info("ENABLED OPTIONAL FEATURES:")
         for dep in available_optional:
-            print(f"  - {dep['feature']}")
+            logger.info("  - %s", dep["feature"])
 
 
 def check_and_report(
     verbose: bool = False, strict: bool = True, requirements_path: str = "requirements.txt"
 ) -> bool:
-    """
-    Check dependencies and print report
+    """Check dependencies and log report.
 
     Args:
-        verbose: Show detailed information including optional dependencies
-        strict: If True, fail if core dependencies are missing
-        requirements_path: Path to requirements.txt file
+        verbose: Show detailed information including optional dependencies.
+        strict: If True, fail if core dependencies are missing.
+        requirements_path: Path to requirements.txt file.
 
     Returns:
-        True if all required dependencies are satisfied (or strict=False)
+        True if all required dependencies are satisfied (or strict=False).
     """
     all_core_ok, report = check_dependencies(verbose=verbose, requirements_path=requirements_path)
 
     print_dependency_report(report, verbose=verbose)
 
     if not all_core_ok and strict:
-        print("\n✗ Cannot start: Missing required dependencies")
+        logger.error("Cannot start: Missing required dependencies")
         return False
 
     return True
 
 
 if __name__ == "__main__":
-    # Run dependency check
     verbose = "--verbose" in sys.argv or "-v" in sys.argv
     strict = "--strict" in sys.argv or "-s" in sys.argv
 

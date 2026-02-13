@@ -16,35 +16,27 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
         cache: 'pip'
 
     - name: Install dependencies
       run: |
         set -e
         python -m pip install --upgrade pip
-        pip install pylint flake8 black isort mypy
+        pip install ruff mypy
         pip install -r requirements.txt
 
-    - name: Check code formatting with Black
+    - name: Check formatting with Ruff
       run: |
-        black --check --diff pbx/ tests/
+        ruff format --check pbx/ tests/
 
-    - name: Check import sorting with isort
+    - name: Lint with Ruff
       run: |
-        isort --check-only --diff pbx/ tests/
-
-    - name: Lint with flake8
-      run: |
-        flake8 pbx/ tests/ --count --statistics
-
-    - name: Lint with pylint
-      run: |
-        pylint pbx/ --exit-zero
+        ruff check pbx/ tests/
 
     - name: Type check with mypy
       run: |
-        mypy pbx/ --ignore-missing-imports --no-strict-optional || echo "⚠️ MyPy found type issues (non-blocking)"
+        mypy pbx/ --ignore-missing-imports --no-strict-optional || echo "MyPy found type issues (non-blocking)"
 
   security:
     runs-on: ubuntu-latest
@@ -55,20 +47,20 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: Install dependencies
       run: |
         set -e
         python -m pip install --upgrade pip
-        pip install bandit safety
+        pip install "bandit[toml]" safety
 
     - name: Security check with bandit
       run: |
-        bandit -r pbx/ -ll
+        bandit -r pbx/ -ll -c pyproject.toml
 
     - name: Check dependencies with safety
       run: |
         set -e
         pip install -r requirements.txt
-        safety check --json || echo "⚠️ Safety check found issues or failed (non-blocking)"
+        safety check --json || echo "Safety check found issues or failed (non-blocking)"

@@ -77,7 +77,6 @@ class CallRecording:
         # Save audio buffer to WAV file
         if self.audio_buffer and self.file_path:
             try:
-                # pylint: disable=no-member
                 with wave.open(self.file_path, "wb") as wav_file:
                     wav_file.setnchannels(1)  # Mono
                     wav_file.setsampwidth(2)  # 16-bit
@@ -85,7 +84,6 @@ class CallRecording:
 
                     for audio_data in self.audio_buffer:
                         wav_file.writeframes(audio_data)
-                # pylint: enable=no-member
 
                 self.logger.info(f"Saved recording to {self.file_path}")
                 return self.file_path

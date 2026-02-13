@@ -1,13 +1,14 @@
-"""
-Configuration management for PBX system
-"""
+"""Configuration management for PBX system."""
 
+import logging
 import os
 import re
 
 import yaml
 
 from pbx.utils.env_loader import get_env_loader, load_env_file
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -117,13 +118,13 @@ class Config:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             return True
         except PermissionError as e:
-            print(f"Error saving config: Permission denied - {e}")
+            logger.error("Error saving config: Permission denied - %s", e)
             return False
         except OSError as e:
-            print(f"Error saving config: Disk error - {e}")
+            logger.error("Error saving config: Disk error - %s", e)
             return False
         except Exception as e:
-            print(f"Error saving config: {e}")
+            logger.error("Error saving config: %s", e)
             return False
 
     def add_extension(self, number, name, email, password, allow_external=True):
@@ -151,7 +152,7 @@ class Config:
 
             # Validate email format if provided
             if email and not self.validate_email(email):
-                print("Error adding extension: Invalid email format")
+                logger.error("Error adding extension: Invalid email format")
                 return False
 
             # Add new extension
@@ -168,7 +169,7 @@ class Config:
             self.config["extensions"].append(new_ext)
             return self.save()
         except Exception as e:
-            print(f"Error adding extension: {e}")
+            logger.error("Error adding extension: %s", e)
             return False
 
     def update_extension(self, number, name=None, email=None, password=None, allow_external=None):
@@ -191,7 +192,7 @@ class Config:
 
             # Validate email format if provided
             if email is not None and email and not self.validate_email(email):
-                print("Error updating extension: Invalid email format")
+                logger.error("Error updating extension: Invalid email format")
                 return False
 
             # Find and update extension
@@ -209,7 +210,7 @@ class Config:
 
             return False
         except Exception as e:
-            print(f"Error updating extension: {e}")
+            logger.error("Error updating extension: %s", e)
             return False
 
     def delete_extension(self, number):
@@ -237,7 +238,7 @@ class Config:
 
             return False
         except Exception as e:
-            print(f"Error deleting extension: {e}")
+            logger.error("Error deleting extension: %s", e)
             return False
 
     def update_email_config(self, config_data):
@@ -284,7 +285,7 @@ class Config:
 
             return self.save()
         except Exception as e:
-            print(f"Error updating email config: {e}")
+            logger.error("Error updating email config: %s", e)
             return False
 
     def update_voicemail_pin(self, extension_number, pin):
@@ -304,7 +305,7 @@ class Config:
 
             # Validate PIN format
             if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
-                print("Error updating voicemail PIN: Invalid PIN format")
+                logger.error("Error updating voicemail PIN: Invalid PIN format")
                 return False
 
             # Find and update extension
@@ -315,7 +316,7 @@ class Config:
 
             return False
         except Exception as e:
-            print(f"Error updating voicemail PIN: {e}")
+            logger.error("Error updating voicemail PIN: %s", e)
             return False
 
     def get_dtmf_config(self):
@@ -338,7 +339,7 @@ class Config:
             }
             return dtmf_config
         except Exception as e:
-            print(f"Error getting DTMF config: {e}")
+            logger.error("Error getting DTMF config: %s", e)
             return None
 
     def _ensure_dtmf_config_structure(self):
@@ -366,8 +367,9 @@ class Config:
         """Validate DTMF payload type"""
         payload_type = int(payload_type)
         if payload_type < 96 or payload_type > 127:
-            print(
-                f"Error updating DTMF config: Invalid payload type {payload_type}. Must be between 96 and 127"
+            logger.error(
+                "Error updating DTMF config: Invalid payload type %d. Must be between 96 and 127",
+                payload_type,
             )
             return None
         return payload_type
@@ -376,8 +378,9 @@ class Config:
         """Validate DTMF duration"""
         duration = int(duration)
         if duration < 80 or duration > 500:
-            print(
-                f"Error updating DTMF config: Invalid duration {duration}ms. Must be between 80 and 500ms"
+            logger.error(
+                "Error updating DTMF config: Invalid duration %dms. Must be between 80 and 500ms",
+                duration,
             )
             return None
         return duration
@@ -386,8 +389,9 @@ class Config:
         """Validate DTMF detection threshold"""
         threshold = float(threshold)
         if threshold < 0.1 or threshold > 0.9:
-            print(
-                f"Error updating DTMF config: Invalid detection threshold {threshold}. Must be between 0.1 and 0.9"
+            logger.error(
+                "Error updating DTMF config: Invalid detection threshold %s. Must be between 0.1 and 0.9",
+                threshold,
             )
             return None
         return threshold
@@ -430,5 +434,5 @@ class Config:
 
             return self.save()
         except Exception as e:
-            print(f"Error updating DTMF config: {e}")
+            logger.error("Error updating DTMF config: %s", e)
             return False

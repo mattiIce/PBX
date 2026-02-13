@@ -83,7 +83,7 @@ class SDPSession:
 
             elif type_char == "a" and current_media:
                 # Attribute (associated with current media)
-                current_media["attributes"].append(value)  # pylint: disable=unsubscriptable-object
+                current_media["attributes"].append(value)
 
     def get_audio_info(self):
         """

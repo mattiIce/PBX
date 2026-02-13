@@ -272,8 +272,8 @@ class FeatureInitializer:
             outlook = None
             if (
                 hasattr(pbx_core, "integrations") and "outlook" in pbx_core.integrations
-            ):  # pylint: disable=no-member
-                outlook = pbx_core.integrations["outlook"]  # pylint: disable=no-member
+            ):
+                outlook = pbx_core.integrations["outlook"]
 
             pbx_core.dnd_scheduler = get_dnd_scheduler(
                 presence_system=pbx_core.presence_system if hasattr(pbx_core, "presence_system") else None,
