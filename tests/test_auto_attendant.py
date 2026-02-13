@@ -4,9 +4,7 @@ Test suite for Auto Attendant functionality
 
 import os
 import shutil
-import sys
 import tempfile
-import unittest
 from typing import Any
 
 
@@ -247,10 +245,3 @@ class TestAudioPromptGeneration:
             with open(file_path, "rb") as f:
                 header = f.read(4)
                 assert header == b"RIFF", f"File {filename} should be a valid WAV file"
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    return result.wasSuccessful()

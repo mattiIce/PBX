@@ -4,8 +4,6 @@ Tests that DTMF detector properly filters noise and only detects real tones
 """
 
 import math
-import sys
-import unittest
 import pytest
 
 
@@ -180,10 +178,3 @@ class TestDTMFGenerator:
         # At 8000Hz: 450ms * 8 samples/ms = 3600 samples
         expected_samples = 3 * (800 + 400)  # 3 * (100ms tone + 50ms gap)
         assert len(samples) == pytest.approx(expected_samples, abs=50)
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    return result.wasSuccessful()

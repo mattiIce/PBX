@@ -220,10 +220,3 @@ class TestVoicemailTranscription:
         assert isinstance(result["success"], bool)
         assert isinstance(result["confidence"], float)
         assert isinstance(result["timestamp"], datetime)
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    return result.wasSuccessful()

@@ -5,9 +5,7 @@ Tests for Statistics and Analytics System
 import json
 import os
 import shutil
-import sys
 import tempfile
-import unittest
 from datetime import datetime, timedelta
 from typing import Any
 import pytest
@@ -253,10 +251,3 @@ class TestCDRSystem:
         assert stats["total_calls"] == 1
         assert stats["answered_calls"] == 1
         assert stats["answer_rate"] == 100.0
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    return result.wasSuccessful()

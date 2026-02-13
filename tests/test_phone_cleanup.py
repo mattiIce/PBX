@@ -293,16 +293,3 @@ def run_functional_tests() -> bool:
 
         traceback.print_exc()
         return False
-
-
-def run_unit_tests() -> bool:
-    """Run unit tests"""
-
-    # Create test suite
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPhoneCleanupStartup)
-
-    # Run tests
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-
-    return result.wasSuccessful()

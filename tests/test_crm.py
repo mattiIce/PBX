@@ -4,7 +4,6 @@ Comprehensive CRM Integration Tests
 Tests CRM integration framework, screen pop support, and specific integrations (HubSpot, Zendesk)
 """
 
-import unittest
 from typing import Any
 
 
@@ -622,18 +621,3 @@ def run_framework_tests() -> bool:
         return True
     else:
         return False
-
-
-def run_integration_tests() -> bool:
-    """Run specific CRM integration tests (HubSpot, Zendesk)"""
-
-    # Create test suite
-    suite = unittest.TestSuite()
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestHubSpotIntegration))
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestZendeskIntegration))
-
-    # Run tests
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-
-    return result.wasSuccessful()
