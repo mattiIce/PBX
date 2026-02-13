@@ -54,12 +54,32 @@ This index helps you navigate the PBX documentation system.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 - **[FEATURES.md](FEATURES.md)** - Complete list of all features
 
-### Reference Documentation
+### Operational Guides
+Located in [docs/](docs/):
+- **[OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md)** - Day-to-day production operations procedures
+- **[INCIDENT_RESPONSE_PLAYBOOK.md](docs/INCIDENT_RESPONSE_PLAYBOOK.md)** - Incident severity levels and response procedures
+- **[PRODUCTION_READINESS_CHECKLIST.md](docs/PRODUCTION_READINESS_CHECKLIST.md)** - Pre-deployment validation checklist
+- **[HA_DEPLOYMENT_GUIDE.md](docs/HA_DEPLOYMENT_GUIDE.md)** - High availability deployment
+- **[CAPACITY_PLANNING.md](docs/CAPACITY_PLANNING.md)** - Capacity planning guide
+- **[APACHE_REVERSE_PROXY_SETUP.md](docs/APACHE_REVERSE_PROXY_SETUP.md)** - Apache reverse proxy configuration
+- **[TLS_1.3_SUPPORT.md](docs/TLS_1.3_SUPPORT.md)** - TLS 1.3 configuration
+- **[ATA_SUPPORT_GUIDE.md](docs/ATA_SUPPORT_GUIDE.md)** - Analog telephone adapter setup
+- **[AUTO_ATTENDANT_SUBMENU_FEATURE.md](docs/AUTO_ATTENDANT_SUBMENU_FEATURE.md)** - Auto attendant submenu configuration
+- **[LICENSE_ADMIN_INTERFACE.md](docs/LICENSE_ADMIN_INTERFACE.md)** - License management admin interface
+
+### Technical Reference
 Located in [docs/reference/](docs/reference/):
-- **[FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)** - Advanced framework features
-- **[SIP_METHODS_IMPLEMENTATION.md](docs/reference/SIP_METHODS_IMPLEMENTATION.md)** - SIP protocol details
+- **[FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)** - Advanced framework features overview
+- **[SIP_METHODS_IMPLEMENTATION.md](docs/reference/SIP_METHODS_IMPLEMENTATION.md)** - SIP protocol implementation details
 - **[MOBILE_APPS_GUIDE.md](docs/reference/MOBILE_APPS_GUIDE.md)** - Mobile application framework
-- And more specialized technical references
+- **[VOICE_BIOMETRICS_GUIDE.md](docs/reference/VOICE_BIOMETRICS_GUIDE.md)** - Voice biometrics integration
+- **[GEOGRAPHIC_REDUNDANCY_GUIDE.md](docs/reference/GEOGRAPHIC_REDUNDANCY_GUIDE.md)** - Geographic redundancy setup
+- **[CALL_TAGGING_GUIDE.md](docs/reference/CALL_TAGGING_GUIDE.md)** - Call tagging and categorization
+- **[PHONE_BOOK_PAGING_API.md](docs/reference/PHONE_BOOK_PAGING_API.md)** - Phone book and paging API
+- **[MAC_TO_IP_CORRELATION.md](docs/reference/MAC_TO_IP_CORRELATION.md)** - MAC to IP correlation
+- **[SIP_SEND_LINE_MAC_GUIDE.md](docs/reference/SIP_SEND_LINE_MAC_GUIDE.md)** - SIP send line MAC configuration
+- **[DROPDOWN_DATABASE_INTEGRATION.md](docs/reference/DROPDOWN_DATABASE_INTEGRATION.md)** - Form dropdown database integration
+- **[OPEN_SOURCE_AI_INTEGRATION_COMPLETE.md](docs/reference/OPEN_SOURCE_AI_INTEGRATION_COMPLETE.md)** - Open source AI integration
 
 ---
 
@@ -134,26 +154,16 @@ Located in [docs/reference/](docs/reference/):
 
 ## Documentation Organization
 
-### Old Structure (Archived)
-Previously, documentation was spread across 50+ separate files in the root directory, creating:
-- Difficulty finding information
-- Duplicate content
-- Inconsistent formatting
-- Broken cross-references
+### Structure
 
-### New Structure (Current)
-Documentation is now organized into:
+Documentation is organized into four tiers:
 
-1. **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - Primary comprehensive guide (all-in-one)
-2. **Root directory** - Essential files (README, CHANGELOG, TODO, etc.)
-3. **[docs/reference/](docs/reference/)** - Technical reference documents
+1. **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - Primary comprehensive guide (all-in-one, start here)
+2. **Root directory** - Essential project files (README, CHANGELOG, TODO, CONTRIBUTING, etc.)
+3. **[docs/](docs/)** - Operational guides (runbooks, deployment, incident response, feature-specific setup)
+4. **[docs/reference/](docs/reference/)** - Technical reference documents (protocol specs, API details, framework guides)
 
-**Benefits:**
-- ✅ Single source of truth
-- ✅ Consistent formatting
-- ✅ Easier navigation
-- ✅ Reduced duplication (~94% reduction in documentation volume)
-- ✅ Better maintenance
+**Total documentation: 37 curated files** (down from 152+ original files)
 
 ---
 
@@ -164,14 +174,23 @@ If you had bookmarks to old documentation files, here's where to find the conten
 | Old File | New Location |
 |----------|--------------|
 | INSTALLATION.md | [COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start) |
+| SETUP_GUIDE.md | [COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start) |
 | PRODUCTION_DEPLOYMENT_GUIDE.md | [COMPLETE_GUIDE.md - Section 2](COMPLETE_GUIDE.md#2-production-deployment) |
+| DEPLOYMENT_GUIDE_STEPBYSTEP.md | [COMPLETE_GUIDE.md - Section 2](COMPLETE_GUIDE.md#2-production-deployment) |
 | SECURITY_GUIDE.md | [COMPLETE_GUIDE.md - Section 6](COMPLETE_GUIDE.md#6-security--compliance) |
-| TROUBLESHOOTING.md | [COMPLETE_GUIDE.md - Section 7](COMPLETE_GUIDE.md#7-operations--troubleshooting) |
-| API_DOCUMENTATION.md | [COMPLETE_GUIDE.md - Section 8.2](COMPLETE_GUIDE.md#82-rest-api-reference) |
+| LICENSING_GUIDE.md | [COMPLETE_GUIDE.md - Section 6](COMPLETE_GUIDE.md#6-security--compliance) |
+| TROUBLESHOOTING.md | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) (standalone) |
+| API_DOCUMENTATION.md | [COMPLETE_GUIDE.md - Section 9.2](COMPLETE_GUIDE.md#92-rest-api-reference) |
 | VOICEMAIL_GUIDE.md | [COMPLETE_GUIDE.md - Section 4.1](COMPLETE_GUIDE.md#41-voicemail-system) |
 | INTEGRATION_GUIDE.md | [COMPLETE_GUIDE.md - Section 5](COMPLETE_GUIDE.md#5-integration-guides) |
 | PHONE_PROVISIONING.md | [COMPLETE_GUIDE.md - Section 4.3](COMPLETE_GUIDE.md#43-phone-provisioning) |
 | CODEC_IMPLEMENTATION_GUIDE.md | [COMPLETE_GUIDE.md - Section 3.2](COMPLETE_GUIDE.md#32-audio-codec-support) |
+| OPERATIONS_MANUAL.md | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
+| PRODUCTION_RUNBOOK.md | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
+| PRODUCTION_READINESS_CHECKLIST.md | [docs/PRODUCTION_READINESS_CHECKLIST.md](docs/PRODUCTION_READINESS_CHECKLIST.md) |
+| INCIDENT_RESPONSE_PLAYBOOK.md | [docs/INCIDENT_RESPONSE_PLAYBOOK.md](docs/INCIDENT_RESPONSE_PLAYBOOK.md) |
+| APACHE_404_FIX.md | [TROUBLESHOOTING.md - Apache section](TROUBLESHOOTING.md) |
+| PROVISIONING_CONNECTION_ERROR_FIX.md | [TROUBLESHOOTING.md - Provisioning section](TROUBLESHOOTING.md) |
 
 ---
 
